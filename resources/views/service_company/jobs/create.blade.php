@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011j">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011k">
     @endif
 @endpush
 @section('content')
@@ -964,50 +964,61 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
+                    <div class="card ij-compensation-card">
                         <div class="card-body">
-                            <div class="section-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
-                                </svg>Compensation
-                            </div>
-                            <div class="form-grid form-grid-3">
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Minimum Salary</label>
-                                    <div class="salary-input-wrapper">
-                                        <select class="form-select currency-select" name="min_salary_currency" id="min_salary_currency">
+                            <div class="ij-comp-header">
+                                <div class="section-title">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+                                    </svg>Compensation
+                                </div>
+                                <div class="ij-comp-currency-wrap">
+                                    <label class="ij-comp-currency-label" for="min_salary_currency">Currency:</label>
+                                    <div class="ij-comp-currency-select-box">
+                                        <select class="form-select currency-select ij-header-currency-select" name="min_salary_currency" id="min_salary_currency">
                                             <?php
                                             foreach ($currency as $key => $val) {
                                                 $sel = '';
                                                 if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
                                                 else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
                                                 $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                                $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
-                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
+                                                $symbol = $cMeta['symbol'] ?? '';
+                                                $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
+                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
                                             }
                                             ?>
                                         </select>
-                                        <input type="number" class="form-input" name="minimum_salary" id="minimum_salary" value="<?php echo @$job->min_salary; ?>" placeholder="Enter min salary">
+                                    </div>
+                                </div>
+                            </div>
+                            <select name="max_salary_currency" id="max_salary_currency" class="d-none">
+                                <?php
+                                foreach ($currency as $key => $val) {
+                                    $sel = '';
+                                    if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
+                                    else { if (@$job->max_salary_currency == $key) { $sel = 'selected="selected"'; } }
+                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                    $symbol = $cMeta['symbol'] ?? '';
+                                    $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
+                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
+                                }
+                                ?>
+                            </select>
+                            <div class="form-grid form-grid-3">
+                                <div class="form-group-cus">
+                                    <label class="form-label required">Minimum Salary</label>
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper">
+                                        <span class="ij-currency-symbol-badge" id="min_salary_curr_symbol">₹</span>
+                                        <input type="number" class="form-input" name="minimum_salary" id="minimum_salary" value="<?php echo @$job->min_salary; ?>" placeholder="Enter min salary" min="0">
                                     </div>
                                     <span class="form-hint minimum_salary_word">*Minimum salary offered for this position.</span>
                                 </div>
                                 <div class="form-group-cus">
                                     <label class="form-label required">Maximum Salary</label>
-                                    <div class="salary-input-wrapper">
-                                        <select class="form-select currency-select" name="max_salary_currency" id="max_salary_currency">
-                                            <?php
-                                            foreach ($currency as $key => $val) {
-                                                $sel = '';
-                                                if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
-                                                else { if (@$job->max_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                                $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                                $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
-                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
-                                            }
-                                            ?>
-                                        </select>
-                                        <input type="number" class="form-input" name="maximum_salary" id="maximum_salary" value="<?php echo @$job->max_salary; ?>" placeholder="Enter max salary">
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper">
+                                        <span class="ij-currency-symbol-badge" id="max_salary_curr_symbol">₹</span>
+                                        <input type="number" class="form-input" name="maximum_salary" id="maximum_salary" value="<?php echo @$job->max_salary; ?>" placeholder="Enter max salary" min="0">
                                     </div>
                                     <span class="form-hint maximum_salary_word">*Maximum salary offered for this position.</span>
                                 </div>
@@ -2637,22 +2648,34 @@
             });
         }
 
-        $('body').on('change', '#min_salary_currency', function() {
-            var val = $(this).val();
-            if ($('#max_salary_currency').val() !== val) {
-                $('#max_salary_currency').val(val).trigger('change.select2');
+        function updateCompensationCurrencyContext() {
+            var $sel = $('#min_salary_currency');
+            if (!$sel.length) return;
+            var opt = $sel.find('option:selected');
+            var symbol = opt.data('symbol');
+            var code = opt.data('code') || opt.val() || '';
+            var displayBadge = symbol ? symbol : code;
+            if (displayBadge) {
+                $('#min_salary_curr_symbol').text(displayBadge);
+                $('#max_salary_curr_symbol').text(displayBadge);
             }
-            if ($('#salary_currency').length) {
+            var val = $sel.val();
+            if ($('#max_salary_currency').length && $('#max_salary_currency').val() !== val) {
+                $('#max_salary_currency').val(val);
+            }
+            if ($('#salary_currency').length && $('#salary_currency').val() !== val) {
                 $('#salary_currency').val(val);
             }
+        }
+        updateCompensationCurrencyContext();
+
+        $('body').on('change', '#min_salary_currency', function() {
+            updateCompensationCurrencyContext();
         });
         $('body').on('change', '#max_salary_currency', function() {
             var val = $(this).val();
             if ($('#min_salary_currency').val() !== val) {
                 $('#min_salary_currency').val(val).trigger('change.select2');
-            }
-            if ($('#salary_currency').length) {
-                $('#salary_currency').val(val);
             }
         });
         $('body').on('change', '#min_sal_mode', function() {
@@ -2829,7 +2852,7 @@
 
         // ---------- INIT ----------
         document.addEventListener('DOMContentLoaded', function() {
-            initCitySearch(); initQualSearch(); initSkillsInput(); initCharCount();
+            initCitySearch(); initQualSearch(); initSkillsInput(); initCharCount(); updateCompensationCurrencyContext();
 
             // EDIT prefill: locations
             if (__editLoc) {
@@ -3898,6 +3921,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011j"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011k"></script>
     @endif
 @endpush
