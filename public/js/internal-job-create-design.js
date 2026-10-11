@@ -69,7 +69,10 @@
         // Observe presentation changes made by the original navigation rather than replacing it.
         new MutationObserver(refreshHeader).observe(stepper, { attributes: true, subtree: true, attributeFilter: ['class'] });
         refreshHeader();
-        root.querySelectorAll('.form-footer button[onclick^="goToStep"], .submit-card:not(.ij-publish) button[onclick^="goToStep"]').forEach(function (button) { button.hidden = true; });
+        root.querySelectorAll('.form-footer, .submit-card:not(.ij-publish), button[onclick^="saveDraft"]').forEach(function (el) {
+            el.hidden = true;
+            el.style.display = 'none';
+        });
 
         const subtitles = {
             'Basic Information': 'Enter the basic details for this job opening.',
@@ -111,7 +114,19 @@
             group.classList.add('ij-source-control');
             select.tabIndex = -1;
             const descriptions = {'Work From Office':'Based at office location', 'Remote':'Work from anywhere', 'Hybrid':'Office + Remote', 'Day Shift':'Regular daytime working hours', 'Night Shift':'Regular night working hours', 'Rotational shift':'Rotating work schedule', 'UK Timezone':'Based on UK working hours', 'US Timezone':'Based on US working hours', 'Full-time':'Permanent employment', 'Contract':'Project-based hiring', 'Freelance':'Independent contractor', 'Part Time':'Flexible working hours'};
-            Array.from(select.options).filter(function (option) { return !option.disabled && option.value !== ''; }).forEach(function (option) {
+            const orderPreferences = {
+                'work_from_home': ['Remote', 'Hybrid', 'Work From Office']
+            };
+            let optionList = Array.from(select.options).filter(function (option) { return !option.disabled && option.value !== ''; });
+            if (orderPreferences[id]) {
+                const pref = orderPreferences[id];
+                optionList.sort(function (a, b) {
+                    const idxA = pref.indexOf(a.text.trim());
+                    const idxB = pref.indexOf(b.text.trim());
+                    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+                });
+            }
+            optionList.forEach(function (option) {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'ij-choice';
