@@ -114,8 +114,11 @@
             'Basic Information': 'Enter the basic details for this job opening.',
             'Job Location or Work Location': 'Select up to 15 cities where this job is based.',
             'Employment Details': 'Specify key employment details for this job opening.',
+            'Work Mode': 'Choose whether this position is Remote, Hybrid, or Work From Office.',
+            'Work Shift': 'Specify the operational working shift or timezone required.',
             'Compensation': 'Define the salary details for this position.',
             'Hiring Team': 'Assign the client contact and internal recruiters for this job position.',
+            'Educational Qualification': 'Select up to 5 eligible educational qualifications or degrees.',
             'Qualification / Education': 'Select up to 5 eligible educational qualifications or degrees.',
             'Additional Details': 'Configure job closing duration and preferences.',
             'Job Description': 'Provide a detailed and clear job description.',
@@ -134,78 +137,101 @@
             title.append(text);
         });
 
-        /** Choice buttons are an accessible facade over the original select and its exact options. */
-        function choiceSection(id, titleText, help, before) {
-            if (!before) return;
+        /** In-card choice buttons are an accessible facade over the original select and its exact options. */
+        function bindInCardChoices(id, titleText) {
             const select = document.getElementById(id);
             if (!select) return;
-            const group = select.closest('.form-group-cus');
-            if (!group) return;
-            const card = document.createElement('section');
-            card.className = 'card ij-choice-section';
-            card.innerHTML = '<div class="card-body"><div class="section-title"><span class="ij-choice-icon" aria-hidden="true">' + (id === 'work_shifts' ? '◷' : '▣') + '</span><span class="ij-section-copy">' + titleText + '<small>' + help + '</small></span></div><div class="ij-choices" role="group" aria-label="' + titleText + '"></div></div>';
-            card.querySelector('.ij-choice-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + (id === 'work_shifts' ? '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' : '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V3h8v4M3 12h18"/>') + '</svg>';
-            before.before(card);
-            card.querySelector('.card-body').append(group);
-            const choices = card.querySelector('.ij-choices');
-            group.classList.add('ij-source-control');
-            select.tabIndex = -1;
-            const descriptions = {'Work From Office':'Based at office location', 'Remote':'Work from anywhere', 'Hybrid':'Office + Remote', 'Day Shift':'Regular daytime working hours', 'Night Shift':'Regular night working hours', 'Rotational shift':'Rotating work schedule', 'UK Timezone':'Based on UK working hours', 'US Timezone':'Based on US working hours', 'Full-time':'Permanent employment', 'Contract':'Project-based hiring', 'Freelance':'Independent contractor', 'Part Time':'Flexible working hours'};
+            const card = select.closest('.card');
+            if (!card) return;
+            let choices = card.querySelector('.ij-choices');
+            const descriptions = {
+                'Work From Office': 'Based at office location',
+                'Remote': 'Work from anywhere',
+                'Hybrid': 'Office + Remote',
+                'Day Shift': 'Regular daytime working hours',
+                'Night Shift': 'Regular night working hours',
+                'Rotational shift': 'Rotating work schedule',
+                'UK Timezone': 'Based on UK working hours',
+                'US Timezone': 'Based on US working hours'
+            };
             const orderPreferences = {
                 'work_from_home': ['Remote', 'Hybrid', 'Work From Office']
             };
-            let optionList = Array.from(select.options).filter(function (option) { return !option.disabled && option.value !== ''; });
-            if (orderPreferences[id]) {
-                const pref = orderPreferences[id];
-                optionList.sort(function (a, b) {
-                    const idxA = pref.indexOf(a.text.trim());
-                    const idxB = pref.indexOf(b.text.trim());
-                    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+
+            // If Blade already rendered .ij-choices, bind events to them.
+            // If not, build .ij-choices in-place inside this card's body directly before the select/group.
+            if (!choices) {
+                choices = document.createElement('div');
+                choices.className = 'ij-choices';
+                choices.setAttribute('role', 'group');
+                choices.setAttribute('aria-label', titleText || id);
+
+                const group = select.closest('.form-group-cus');
+                if (group) {
+                    group.before(choices);
+                    group.classList.add('ij-source-control');
+                } else {
+                    select.before(choices);
+                    select.classList.add('ij-source-control');
+                }
+
+                let optionList = Array.from(select.options).filter(function (option) { return !option.disabled && option.value !== ''; });
+                if (orderPreferences[id]) {
+                    const pref = orderPreferences[id];
+                    optionList.sort(function (a, b) {
+                        const idxA = pref.indexOf(a.text.trim());
+                        const idxB = pref.indexOf(b.text.trim());
+                        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+                    });
+                }
+                optionList.forEach(function (option) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'ij-choice';
+                    button.dataset.value = option.value;
+                    const label = document.createElement('strong');
+                    label.textContent = option.text;
+                    const detail = document.createElement('small');
+                    detail.textContent = descriptions[option.text] || 'Select this employment option';
+                    button.append(label, detail);
+                    choices.append(button);
                 });
             }
-            optionList.forEach(function (option) {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'ij-choice';
-                button.dataset.value = option.value;
-                const label = document.createElement('strong');
-                label.textContent = option.text;
-                const detail = document.createElement('small');
-                detail.textContent = descriptions[option.text] || 'Select this employment option';
-                button.append(label, detail);
-                button.addEventListener('click', function () { select.value = option.value; select.dispatchEvent(new Event('change', { bubbles: true })); });
-                choices.append(button);
+
+            select.tabIndex = -1;
+
+            choices.querySelectorAll('.ij-choice').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    select.value = button.dataset.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (window.jQuery) { window.jQuery(select).trigger('change'); }
+                    sync();
+                });
             });
+
             function sync() {
-                choices.querySelectorAll('button').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.value === select.value)); });
+                choices.querySelectorAll('.ij-choice').forEach(function (button) {
+                    button.setAttribute('aria-pressed', String(button.dataset.value === select.value));
+                });
             }
+
             select.addEventListener('change', sync);
             if (window.jQuery) { window.jQuery(select).on('change', sync); }
-            // Existing validation focuses this select; forward that focus to its visible choice.
             select.addEventListener('focus', function () {
-                const target = choices.querySelector('[aria-pressed="true"]') || choices.querySelector('button');
+                const target = choices.querySelector('[aria-pressed="true"]') || choices.querySelector('.ij-choice');
                 if (target) target.focus();
             });
             sync();
         }
-        const minExpEl = document.getElementById('min_exp');
-        const minSalEl = document.getElementById('minimum_salary');
-        const employment = minExpEl ? minExpEl.closest('.card') : null;
-        const compensation = minSalEl ? minSalEl.closest('.card') : null;
-        if (employment) {
-            choiceSection('employment_type', 'Position Type', 'Select the type of employment for this opening.', employment);
+
+        bindInCardChoices('work_from_home', 'Work Mode');
+        bindInCardChoices('work_shifts', 'Work Shift');
+
+        const hmControl = document.getElementById('hmSearchDisplay');
+        if (hmControl) {
+            const teamCard = hmControl.closest('.card');
+            if (teamCard) teamCard.classList.add('ij-team');
         }
-        if (compensation) {
-            choiceSection('work_from_home', 'Work Mode', 'Select the work mode for this position.', compensation);
-            choiceSection('work_shifts', 'Work Shift', 'Select the work shift for this job.', compensation);
-        }
-        ['hmSearchDisplay', 'qualSearch'].forEach(function (id) {
-            const control = document.getElementById(id);
-            if (control) {
-                const card = control.closest('.card');
-                if (card) card.classList.add(id === 'qualSearch' ? 'ij-additional' : 'ij-team');
-            }
-        });
         root.querySelectorAll('label.form-label').forEach(function (label) {
             const control = label.parentElement.querySelector('input:not([type="hidden"]), select, textarea');
             if (control && control.id) label.htmlFor = control.id;
