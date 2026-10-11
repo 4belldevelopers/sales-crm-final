@@ -1,9 +1,5 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    {{-- Create-only presentation assets; edit and requisition contexts retain their existing UI. --}}
-    @if(request()->routeIs('service_company.jobs.create'))
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011b">
-    @endif
     <link href="{{ asset('demo/v7/css/wizard-1.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/v7/css/plugins.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/v7/css/prismjs.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
@@ -586,6 +582,10 @@
     #add_team_member .atm-save-btn:hover:not(:disabled) { background: #1e4fd4; }
     #add_team_member .atm-save-btn:disabled { opacity: .7; cursor: not-allowed; }
     </style>
+    {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
+    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011c">
+    @endif
 @endpush
 @section('content')
     <?php
@@ -686,7 +686,7 @@
     <!--end::Toolbar-->
 
 
-    <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create')) class="internal-job-create" @endif>
+    <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*')) class="internal-job-create" @endif>
         <div class="content"><br>
        
             <!-- Stepper -->
@@ -3597,7 +3597,7 @@
          when this file runs. No defer needed here because the script is already at the
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
-    @if(request()->routeIs('service_company.jobs.create'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011b"></script>
+    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011c"></script>
     @endif
 @endpush

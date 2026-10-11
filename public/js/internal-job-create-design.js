@@ -90,9 +90,11 @@
 
         /** Choice buttons are an accessible facade over the original select and its exact options. */
         function choiceSection(id, titleText, help, before) {
+            if (!before) return;
             const select = document.getElementById(id);
             if (!select) return;
             const group = select.closest('.form-group-cus');
+            if (!group) return;
             const card = document.createElement('section');
             card.className = 'card ij-choice-section';
             card.innerHTML = '<div class="card-body"><div class="section-title"><span class="ij-choice-icon" aria-hidden="true">' + (id === 'work_shifts' ? '◷' : '▣') + '</span><span class="ij-section-copy">' + titleText + '<small>' + help + '</small></span></div><div class="ij-choices" role="group" aria-label="' + titleText + '"></div></div>';
@@ -120,6 +122,7 @@
                 choices.querySelectorAll('button').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.value === select.value)); });
             }
             select.addEventListener('change', sync);
+            if (window.jQuery) { window.jQuery(select).on('change', sync); }
             // Existing validation focuses this select; forward that focus to its visible choice.
             select.addEventListener('focus', function () {
                 const target = choices.querySelector('[aria-pressed="true"]') || choices.querySelector('button');
@@ -127,14 +130,23 @@
             });
             sync();
         }
-        const employment = document.getElementById('min_exp').closest('.card');
-        const compensation = document.getElementById('minimum_salary').closest('.card');
-        choiceSection('employment_type', 'Position Type', 'Select the type of employment for this opening.', employment);
-        choiceSection('work_from_home', 'Work Mode', 'Select the work mode for this position.', compensation);
-        choiceSection('work_shifts', 'Work Shift', 'Select the work shift for this job.', compensation);
+        const minExpEl = document.getElementById('min_exp');
+        const minSalEl = document.getElementById('minimum_salary');
+        const employment = minExpEl ? minExpEl.closest('.card') : null;
+        const compensation = minSalEl ? minSalEl.closest('.card') : null;
+        if (employment) {
+            choiceSection('employment_type', 'Position Type', 'Select the type of employment for this opening.', employment);
+        }
+        if (compensation) {
+            choiceSection('work_from_home', 'Work Mode', 'Select the work mode for this position.', compensation);
+            choiceSection('work_shifts', 'Work Shift', 'Select the work shift for this job.', compensation);
+        }
         ['hmSearchDisplay', 'qualSearch'].forEach(function (id) {
             const control = document.getElementById(id);
-            if (control) control.closest('.card').classList.add(id === 'qualSearch' ? 'ij-additional' : 'ij-team');
+            if (control) {
+                const card = control.closest('.card');
+                if (card) card.classList.add(id === 'qualSearch' ? 'ij-additional' : 'ij-team');
+            }
         });
         root.querySelectorAll('label.form-label').forEach(function (label) {
             const control = label.parentElement.querySelector('input:not([type="hidden"]), select, textarea');
@@ -143,21 +155,30 @@
 
         // Move existing cards, retaining editor state, review IDs and all event handlers.
         const step2 = document.getElementById('step2');
-        const descriptionGrid = document.createElement('div');
-        descriptionGrid.className = 'ij-description-grid';
-        step2.prepend(descriptionGrid);
-        Array.from(step2.children).filter(function (child) { return child.classList.contains('card'); }).forEach(function (card) { descriptionGrid.append(card); });
+        if (step2) {
+            const descriptionGrid = document.createElement('div');
+            descriptionGrid.className = 'ij-description-grid';
+            step2.prepend(descriptionGrid);
+            Array.from(step2.children).filter(function (child) { return child.classList.contains('card'); }).forEach(function (card) { descriptionGrid.append(card); });
+        }
         const step4 = document.getElementById('step4');
-        const reviewGrid = document.createElement('div');
-        reviewGrid.className = 'ij-review-grid';
-        const columns = [0, 1, 2].map(function () { const column = document.createElement('div'); column.className = 'ij-review-column'; reviewGrid.append(column); return column; });
-        const reviewCards = Array.from(step4.querySelectorAll(':scope > .review-row > .card'));
-        // Identify cards by retained review IDs, so compensation and all summaries remain visible.
-        reviewCards.forEach(function (card) { columns[card.querySelector('#rvClient, #rvDescription, #rvCompensation') ? 0 : 1].append(card); });
-        const publishing = step4.querySelector(':scope > .publish-grid');
-        if (publishing) Array.from(publishing.children).forEach(function (card, index) { (index === 0 || index === 3 ? columns[2] : publishing).append(card); });
-        step4.querySelectorAll(':scope > .review-row').forEach(function (row) { if (!row.children.length) row.remove(); });
-        step4.insertBefore(reviewGrid, step4.querySelector('.publish-grid'));
+        if (step4) {
+            const reviewGrid = document.createElement('div');
+            reviewGrid.className = 'ij-review-grid';
+            const columns = [0, 1, 2].map(function () { const column = document.createElement('div'); column.className = 'ij-review-column'; reviewGrid.append(column); return column; });
+            const reviewCards = Array.from(step4.querySelectorAll(':scope > .review-row > .card'));
+            // Identify cards by retained review IDs, so compensation and all summaries remain visible.
+            reviewCards.forEach(function (card) { columns[card.querySelector('#rvClient, #rvDescription, #rvCompensation') ? 0 : 1].append(card); });
+            const publishing = step4.querySelector(':scope > .publish-grid');
+            if (publishing) Array.from(publishing.children).forEach(function (card, index) { (index === 0 || index === 3 ? columns[2] : publishing).append(card); });
+            step4.querySelectorAll(':scope > .review-row').forEach(function (row) { if (!row.children.length) row.remove(); });
+            const target = step4.querySelector('.publish-grid');
+            if (target) {
+                step4.insertBefore(reviewGrid, target);
+            } else {
+                step4.append(reviewGrid);
+            }
+        }
         // Keep header visible without overlapping the application shell at each viewport.
         function measureHeader() {
             const shell = document.getElementById('kt_header');
