@@ -592,7 +592,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011s">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011t">
     @endif
 @endpush
 @section('content')
@@ -883,19 +883,6 @@
                                     <span class="form-hint">Select the number of openings to be filled (1–500).</span>
                                 </div>
                                 <div class="form-group-cus">
-                                    <label class="form-label required">Position Type</label>
-                                    <select class="form-select" name="employment_type" id="employment_type">
-                                        <option value="">Select Position Type</option>
-                                        <?php
-                                        foreach ($employmentType as $key => $data_value) {
-                                            $sel = (@$job->employment_type == $key) ? 'selected="selected"' : '';
-                                            echo '<option value="' . $key . '" ' . $sel . '>' . $data_value . '</option>';
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="form-hint">Select the type of employment contract.</span>
-                                </div>
-                                <div class="form-group-cus">
                                     <label class="form-label">Gender Diversity</label>
                                     <select class="form-select" name="required_columns" id="required_columns">
                                         <option value="Rather Not Say" {{ (@$job->required_columns === 'Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
@@ -943,6 +930,84 @@
                             </div>
                             <div class="chips-container ij-selected-chips" id="selectedCities"></div>
                             <input type="hidden" id="kt_tagify_work_location" name="kt_tagify_work_location" value="">
+                        </div>
+                    </div>
+                    {{-- Position Type card restored as dedicated section immediately after Job Location --}}
+                    <div class="card ij-position-type-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                </svg>POSITION TYPE <span class="text-danger">*</span>
+                            </div>
+                            <?php
+                                $currEmp = isset($job->employment_type) && $job->employment_type !== '' ? (string)$job->employment_type : '0';
+                            ?>
+                            <div class="ij-choices ij-choices-4" role="group" aria-label="Position Type">
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="0" aria-pressed="<?php echo ((string)$currEmp === '0') ? 'true' : 'false'; ?>">
+                                    <span class="ij-choice-icon-wrap ij-icon-yellow">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                        </svg>
+                                    </span>
+                                    <span class="ij-choice-text">
+                                        <strong>Full-time</strong>
+                                        <small>Permanent employment</small>
+                                    </span>
+                                </button>
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="1" aria-pressed="<?php echo ((string)$currEmp === '1') ? 'true' : 'false'; ?>">
+                                    <span class="ij-choice-icon-wrap ij-icon-blue">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/>
+                                            <line x1="16" y1="17" x2="8" y2="17"/>
+                                        </svg>
+                                    </span>
+                                    <span class="ij-choice-text">
+                                        <strong>Contract</strong>
+                                        <small>Project-based hiring</small>
+                                    </span>
+                                </button>
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="2" aria-pressed="<?php echo ((string)$currEmp === '2') ? 'true' : 'false'; ?>">
+                                    <span class="ij-choice-icon-wrap ij-icon-slate">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </span>
+                                    <span class="ij-choice-text">
+                                        <strong>Freelance</strong>
+                                        <small>Independent contractor</small>
+                                    </span>
+                                </button>
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="3" aria-pressed="<?php echo ((string)$currEmp === '3') ? 'true' : 'false'; ?>">
+                                    <span class="ij-choice-icon-wrap ij-icon-purple">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                    </span>
+                                    <span class="ij-choice-text">
+                                        <strong>Part Time</strong>
+                                        <small>Flexible working hours</small>
+                                    </span>
+                                </button>
+                            </div>
+                            <div class="ij-source-control">
+                                <select class="form-select" name="employment_type" id="employment_type" tabindex="-1">
+                                    <option value="">Select Position Type</option>
+                                    <?php
+                                    foreach ($employmentType as $key => $data_value) {
+                                        $sel = ((string)$currEmp === (string)$key) ? 'selected="selected"' : '';
+                                        echo '<option value="' . $key . '" ' . $sel . '>' . $data_value . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <span class="form-hint" style="margin-top:10px;display:block;">Select the type of employment for this opening.</span>
                         </div>
                     </div>
                     <div class="card ij-work-mode-card">
@@ -4655,6 +4720,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011s"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011t"></script>
     @endif
 @endpush

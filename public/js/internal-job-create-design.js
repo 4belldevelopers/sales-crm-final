@@ -114,6 +114,8 @@
             'Basic Information': 'Enter the basic details for this job opening.',
             'Job Location or Work Location': 'Select up to 15 cities where this job is based.',
             'Employment Details': 'Specify key employment details for this job opening.',
+            'Position Type': 'Select the type of employment for this opening.',
+            'POSITION TYPE': 'Select the type of employment for this opening.',
             'Work Mode': 'Choose whether this position is Remote, Hybrid, or Work From Office.',
             'Work Shift': 'Specify the operational working shift or timezone required.',
             'Compensation': 'Define the salary details for this position.',
@@ -125,12 +127,13 @@
             'Key Skills': 'Add the key skills required for this position.'
         };
         root.querySelectorAll('.section-title').forEach(function (title) {
-            const label = title.textContent.trim();
-            const subtitle = subtitles[label];
+            const rawLabel = title.textContent.trim();
+            const cleanLabel = rawLabel.replace(/\*/g, '').trim();
+            const subtitle = subtitles[cleanLabel] || subtitles[rawLabel];
             if (!subtitle) return;
             const text = document.createElement('span');
             text.className = 'ij-section-copy';
-            Array.from(title.childNodes).filter(function (node) { return node.nodeType === 3; }).forEach(function (node) { text.append(node); });
+            Array.from(title.childNodes).filter(function (node) { return node.nodeType === 3 || (node.nodeType === 1 && node.nodeName.toLowerCase() !== 'svg'); }).forEach(function (node) { text.append(node); });
             const helper = document.createElement('small');
             helper.textContent = subtitle;
             text.append(helper);
@@ -152,7 +155,11 @@
                 'Night Shift': 'Regular night working hours',
                 'Rotational shift': 'Rotating work schedule',
                 'UK Timezone': 'Based on UK working hours',
-                'US Timezone': 'Based on US working hours'
+                'US Timezone': 'Based on US working hours',
+                'Full-time': 'Permanent employment',
+                'Contract': 'Project-based hiring',
+                'Freelance': 'Independent contractor',
+                'Part Time': 'Flexible working hours'
             };
             const orderPreferences = {
                 'work_from_home': ['Remote', 'Hybrid', 'Work From Office']
@@ -224,6 +231,7 @@
             sync();
         }
 
+        bindInCardChoices('employment_type', 'Position Type');
         bindInCardChoices('work_from_home', 'Work Mode');
         bindInCardChoices('work_shifts', 'Work Shift');
 
