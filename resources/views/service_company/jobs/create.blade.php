@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011g">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011h">
     @endif
 @endpush
 @section('content')
@@ -942,9 +942,9 @@
                                 <div class="form-group-cus">
                                     <label class="form-label required">Work Mode</label>
                                     <select name="work_from_home" id="work_from_home" class="form-select">
-                                        <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
                                         <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
                                         <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
+                                        <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
                                     </select>
                                 </div>
                                 <div class="form-group-cus">
@@ -1117,12 +1117,6 @@
                         </div>
                     </div>
                     <div class="form-footer">
-                        <button type="button" class="btn btn-secondary" onclick="saveDraft()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-                            </svg>Save Draft
-                        </button>
                         <button type="button" class="btn btn-primary" onclick="goToStep(2)">Continue
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
@@ -3605,6 +3599,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011g"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011h"></script>
     @endif
 @endpush
