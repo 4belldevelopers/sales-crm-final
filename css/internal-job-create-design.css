@@ -1805,6 +1805,7 @@
     background: #ecfdf5 !important;
 }
 
-#jrwrap.internal-job-create .ij-additional-card {
+#jrwrap.internal-job-create :is(.ij-additional-card, .ij-work-mode-card, .ij-work-shift-card, .ij-employment-card, .ij-hiring-team-card) {
     position: relative !important;
 }
+
