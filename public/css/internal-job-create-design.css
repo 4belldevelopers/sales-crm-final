@@ -73,25 +73,7 @@
     display: none !important;
 }
 #jrwrap.internal-job-create .ij-back-btn {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    border-radius: 50% !important;
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    color: #475569 !important;
-    transition: all 0.15s ease !important;
-    padding: 0 !important;
-    flex-shrink: 0 !important;
-}
-#jrwrap.internal-job-create .ij-back-btn:hover {
-    background: #f8fafc !important;
-    border-color: #94a3b8 !important;
-    color: #0f172a !important;
+    display: none !important;
 }
 
 /* Compact connected enterprise stepper */
@@ -238,29 +220,109 @@
     color:#0f172a;
 }
 #jrwrap.internal-job-create .btn-primary,
-#jrwrap.internal-job-create .ij-next {
-    background:#ffd21b;
-    border:1px solid #f5c400;
-    color:#10143b;
-    font-weight:600;
-    font-size:11px !important;
-    height:30px;
-    min-height:30px;
-    padding:0 14px;
-    border-radius:6px;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    cursor:pointer;
-    box-shadow:0 1px 2px rgba(0,0,0,0.05);
-    transition:all 0.15s ease;
-    white-space:nowrap;
+#jrwrap.internal-job-create .ij-next,
+#jrwrap.internal-job-create .ij-publish .btn-primary,
+#jrwrap.internal-job-create .ij-btn-publish,
+#jrwrap.internal-job-create .submit-card .btn-primary,
+.ij-header .ij-next,
+.ij-header .btn-primary,
+.ij-header .ij-btn-publish {
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    background-color: #ffd428 !important;
+    border: 1px solid #d4a017 !important;
+    color: #10143b !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    font-family: 'Poppins', sans-serif !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 16px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(16, 20, 59, 0.08), 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    white-space: nowrap !important;
+    outline: none !important;
+    text-decoration: none !important;
+}
+#jrwrap.internal-job-create .btn-primary svg,
+#jrwrap.internal-job-create .ij-next svg,
+#jrwrap.internal-job-create .ij-publish .btn-primary svg,
+#jrwrap.internal-job-create .ij-btn-publish svg,
+.ij-header .ij-next svg,
+.ij-header .btn-primary svg {
+    color: #10143b !important;
+    stroke: currentColor !important;
+}
+#jrwrap.internal-job-create .ij-publish .btn-primary svg,
+#jrwrap.internal-job-create .ij-btn-publish svg {
+    fill: currentColor !important;
+    stroke: none !important;
 }
 #jrwrap.internal-job-create .btn-primary:hover,
-#jrwrap.internal-job-create .ij-next:hover {
-    background:#f5c400;
-    color:#10143b;
-    box-shadow:0 2px 6px rgba(245,196,0,0.35);
+#jrwrap.internal-job-create .ij-next:hover,
+#jrwrap.internal-job-create .ij-publish .btn-primary:hover,
+#jrwrap.internal-job-create .ij-btn-publish:hover,
+#jrwrap.internal-job-create .submit-card .btn-primary:hover,
+.ij-header .ij-next:hover,
+.ij-header .btn-primary:hover,
+.ij-header .ij-btn-publish:hover {
+    background: linear-gradient(180deg, #fbc02d 0%, #f59e0b 100%) !important;
+    background-color: #f59e0b !important;
+    border-color: #b45309 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.32), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-1px) !important;
+    outline: none !important;
+}
+#jrwrap.internal-job-create .btn-primary:hover svg,
+#jrwrap.internal-job-create .ij-next:hover svg,
+#jrwrap.internal-job-create .ij-publish .btn-primary:hover svg,
+#jrwrap.internal-job-create .ij-btn-publish:hover svg,
+.ij-header .ij-next:hover svg,
+.ij-header .btn-primary:hover svg {
+    color: #0f172a !important;
+}
+#jrwrap.internal-job-create .btn-primary:active,
+#jrwrap.internal-job-create .ij-next:active,
+#jrwrap.internal-job-create .ij-publish .btn-primary:active,
+#jrwrap.internal-job-create .ij-btn-publish:active,
+#jrwrap.internal-job-create .submit-card .btn-primary:active,
+.ij-header .ij-next:active,
+.ij-header .btn-primary:active,
+.ij-header .ij-btn-publish:active {
+    background: #f59e0b !important;
+    border-color: #b45309 !important;
+    color: #0f172a !important;
+    transform: translateY(0) !important;
+    box-shadow: 0 1px 2px rgba(217, 119, 6, 0.2) !important;
+    outline: none !important;
+}
+#jrwrap.internal-job-create .btn-primary:focus,
+#jrwrap.internal-job-create .ij-next:focus,
+#jrwrap.internal-job-create .ij-publish .btn-primary:focus,
+#jrwrap.internal-job-create .ij-btn-publish:focus,
+#jrwrap.internal-job-create .submit-card .btn-primary:focus,
+.ij-header .ij-next:focus,
+.ij-header .btn-primary:focus,
+.ij-header .ij-btn-publish:focus {
+    outline: none !important;
+}
+#jrwrap.internal-job-create .btn-primary:focus-visible,
+#jrwrap.internal-job-create .ij-next:focus-visible,
+#jrwrap.internal-job-create .ij-publish .btn-primary:focus-visible,
+#jrwrap.internal-job-create .ij-btn-publish:focus-visible,
+#jrwrap.internal-job-create .submit-card .btn-primary:focus-visible,
+.ij-header .ij-next:focus-visible,
+.ij-header .btn-primary:focus-visible,
+.ij-header .ij-btn-publish:focus-visible {
+    outline: 2px solid #b45309 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 3px rgba(245, 196, 0, 0.35) !important;
 }
 #jrwrap.internal-job-create .ij-coin-rules {
     background:#fffdf5 !important;
@@ -290,16 +352,6 @@
     margin:0;
     background:none;
 }
-#jrwrap.internal-job-create .ij-publish .btn-primary {
-    height:30px;
-    min-height:30px;
-    font-size:11px !important;
-    border-radius:6px;
-    padding:0 14px;
-    display:inline-flex !important;
-    align-items:center !important;
-    gap:6px !important;
-}
 #jrwrap.internal-job-create [hidden] {display:none!important;}
 #jrwrap.internal-job-create .form-footer {display:none!important;margin:0!important;padding:0!important;height:0!important;}
 #jrwrap.internal-job-create .submit-card:not(.ij-publish) {display:none!important;margin:0!important;padding:0!important;height:0!important;}
@@ -315,7 +367,8 @@
 #jrwrap.internal-job-create .form-label {font-size:12px!important;font-weight:600!important;color:#334155!important;margin-bottom:4px!important;}
 #jrwrap.internal-job-create .form-hint {font-size:11px!important;color:#64748b!important;margin-top:3px!important;line-height:1.25!important;}
 #jrwrap.internal-job-create :is(input,select,textarea,button,[contenteditable],.step-v2) {scroll-margin-top:var(--ij-focus-offset);}
-#jrwrap.internal-job-create :is(button,.step-v2,a,input,select,textarea,[contenteditable]):focus-visible {outline:2px solid #9a6500;outline-offset:3px;}
+#jrwrap.internal-job-create :is(.step-v2,a,input,select,textarea,[contenteditable]):focus-visible {outline:2px solid #d4a017;outline-offset:2px;}
+#jrwrap.internal-job-create button:focus-visible {outline:none;}
 #jrwrap.internal-job-create :is(.form-input,.form-select,.form-textarea):focus {border-color:#d4a017!important;box-shadow:0 0 0 2.5px rgba(255,210,27,0.25)!important;}
 #jrwrap.internal-job-create .form-grid {gap:14px!important;min-width:0;}
 #jrwrap.internal-job-create .form-group-cus {min-width:0;gap:4px!important;}
