@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011n">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011o">
     @endif
 @endpush
 @section('content')
@@ -822,53 +822,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card ij-location-card">
-                        <div class="card-body">
-                            <div class="section-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                                    <circle cx="12" cy="10" r="3"/>
-                                </svg>Job Location or Work Location
-                            </div>
-                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 15 cities where this job is based.</p>
-
-                            <!-- L1 Quick-Select Popular Hubs Bar -->
-                            <div class="ij-popular-hubs-wrap">
-                                <span class="ij-popular-label">Popular Hubs:</span>
-                                <div class="ij-popular-pills" id="popularHubsPills"></div>
-                            </div>
-
-                            <div class="form-group-cus full-width">
-                                <div class="input-wrapper ij-location-input-wrap">
-                                    <div class="input-with-icon">
-                                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="11" cy="11" r="8"/>
-                                            <path d="m21 21-4.3-4.3"/>
-                                        </svg>
-                                        <input type="text" class="form-input" id="citySearch" placeholder="Search for cities (e.g. Bangalore, Mumbai, London, New York)..." autocomplete="off" spellcheck="false">
-                                    </div>
-                                    <span class="ij-search-spinner" id="citySearchSpinner" style="display:none;" title="Searching Elasticsearch..."></span>
-                                    <button type="button" class="ij-search-clear" id="citySearchClear" style="display:none;" onclick="clearCitySearchInput()" title="Clear input">&times;</button>
-                                    <div class="search-dropdown ij-city-dropdown" id="cityDropdown"></div>
-                                </div>
-                            </div>
-                            <div class="selected-header">
-                                <span class="selected-label">Selected Locations (<span id="selectedCount">0</span>/15)</span>
-                                <button type="button" class="clear-all" onclick="clearAllCities()">Clear All</button>
-                            </div>
-                            <div class="chips-container ij-selected-chips" id="selectedCities"></div>
-                            <input type="hidden" id="kt_tagify_work_location" name="kt_tagify_work_location" value="">
-                        </div>
-                    </div>
-                    <div class="card">
+                    <div class="card ij-employment-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                                    path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                 </svg>Employment Details
                             </div>
-                            <div class="form-grid form-grid-3">
+                            <div class="form-grid">
                                 <div class="form-group-cus">
                                     <label class="form-label required">Experience Range</label>
                                     <div class="range-group">
@@ -937,17 +899,85 @@
                                         }
                                         ?>
                                     </select>
+                                    <span class="form-hint">Select the type of employment contract.</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card ij-location-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>Job Location or Work Location
+                            </div>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 15 cities where this job is based.</p>
+
+                            <!-- L1 Quick-Select Popular Hubs Bar -->
+                            <div class="ij-popular-hubs-wrap">
+                                <span class="ij-popular-label">Popular Hubs:</span>
+                                <div class="ij-popular-pills" id="popularHubsPills"></div>
+                            </div>
+
+                            <div class="form-group-cus full-width">
+                                <div class="input-wrapper ij-location-input-wrap">
+                                    <div class="input-with-icon">
+                                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <path d="m21 21-4.3-4.3"/>
+                                        </svg>
+                                        <input type="text" class="form-input" id="citySearch" placeholder="Search for cities (e.g. Bangalore, Mumbai, London, New York)..." autocomplete="off" spellcheck="false">
+                                    </div>
+                                    <span class="ij-search-spinner" id="citySearchSpinner" style="display:none;" title="Searching Elasticsearch..."></span>
+                                    <button type="button" class="ij-search-clear" id="citySearchClear" style="display:none;" onclick="clearCitySearchInput()" title="Clear input">&times;</button>
+                                    <div class="search-dropdown ij-city-dropdown" id="cityDropdown"></div>
+                                </div>
+                            </div>
+                            <div class="selected-header">
+                                <span class="selected-label">Selected Locations (<span id="selectedCount">0</span>/15)</span>
+                                <button type="button" class="clear-all" onclick="clearAllCities()">Clear All</button>
+                            </div>
+                            <div class="chips-container ij-selected-chips" id="selectedCities"></div>
+                            <input type="hidden" id="kt_tagify_work_location" name="kt_tagify_work_location" value="">
+                        </div>
+                    </div>
+                    <div class="card ij-work-mode-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                                    <path d="M2 12h20"/>
+                                </svg>Work Mode
+                            </div>
+                            <div class="form-grid" style="max-width:480px;">
                                 <div class="form-group-cus">
-                                    <label class="form-label required">Work Mode</label>
+                                    <label class="form-label required">Select Work Mode</label>
                                     <select name="work_from_home" id="work_from_home" class="form-select">
                                         <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
                                         <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
                                         <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
                                     </select>
+                                    <span class="form-hint">Choose whether this position is Remote, Hybrid, or Work From Office.</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card ij-work-shift-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="4"/>
+                                    <path d="M12 2v2"/><path d="M12 20v2"/>
+                                    <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+                                    <path d="M2 12h2"/><path d="M20 12h2"/>
+                                    <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                                </svg>Work Shift
+                            </div>
+                            <div class="form-grid" style="max-width:480px;">
                                 <div class="form-group-cus">
-                                    <label class="form-label required">Work Shift</label>
+                                    <label class="form-label required">Select Work Shift</label>
                                     <select class="form-select" name="work_shifts" id="work_shifts">
                                         <option value="Day Shift" @if (@$job->work_shifts == 'Day Shift') selected @endif>Day Shift</option>
                                         <option value="Night Shift" @if (@$job->work_shifts == 'Night Shift') selected @endif>Night Shift</option>
@@ -955,6 +985,7 @@
                                         <option value="UK Timezone" @if (@$job->work_shifts == 'UK Timezone') selected @endif>UK Timezone</option>
                                         <option value="US Timezone" @if (@$job->work_shifts == 'US Timezone') selected @endif>US Timezone</option>
                                     </select>
+                                    <span class="form-hint">Specify the operational working shift or timezone required.</span>
                                 </div>
                             </div>
                         </div>
@@ -1091,22 +1122,70 @@
                                     <?php } ?>
                                 </div>
                             </div>
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Salary Type</label>
-                                    <select class="form-select" name="min_sal_mode" id="min_sal_mode">
-                                        <?php
-                                        foreach ($salaryMode as $key => $val) {
-                                            $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
-                                            echo '<option value="' . $key . '" ' . $sel . '>' . $val . '</option>';
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <span class="form-hint">Enter the expected CTC range for this position.</span>
+                            <span class="form-hint" style="margin-top:10px;display:block;">Enter the expected CTC range for this position.</span>
                         </div>
                     </div>
-                    <div class="card">
+                    <div class="card ij-additional-card ij-qual-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
+                                </svg>Additional Details
+                            </div>
+
+                            {{-- Educational Qualification Subsection --}}
+                            <div style="margin-bottom:20px;">
+                                <label class="form-label required" style="font-weight:600;margin-bottom:4px;">Educational Qualification (Select up to 5 options)</label>
+                                <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 5 eligible educational qualifications or degrees for this job posting.</p>
+
+                                <!-- L1 Quick-Select Enterprise Standards Bar -->
+                                <div class="ij-popular-hubs-wrap ij-quick-qual-wrap">
+                                    <span class="ij-popular-label">Quick Select:</span>
+                                    <div class="ij-popular-pills" id="quickQualPills"></div>
+                                </div>
+
+                                <div class="form-group-cus full-width" style="margin-top:10px;">
+                                    <div class="input-wrapper ij-qual-input-wrap">
+                                        <div class="input-with-icon">
+                                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="11" cy="11" r="8"/>
+                                                <path d="m21 21-4.3-4.3"/>
+                                            </svg>
+                                            <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
+                                        </div>
+                                        <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
+                                        <button type="button" class="chip-add" onclick="addCustomQual()">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M5 12h14"/><path d="M12 5v14"/>
+                                            </svg>Add More
+                                        </button>
+                                        <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
+                                    </div>
+                                </div>
+                                <div class="selected-header">
+                                    <span class="selected-label">Selected Qualifications (<span id="qualSelectedCount">0</span>/5)</span>
+                                    <button type="button" class="clear-all" onclick="clearAllQualifications()">Clear All</button>
+                                </div>
+                                <div class="chips-container ij-selected-chips ij-qual-selected-chips" id="qualList"></div>
+                                <input type="hidden" id="qualification" name="qualification" value="">
+                            </div>
+
+                            <div class="form-grid" style="max-width:480px;border-top:1px solid #f1f5f9;padding-top:16px;">
+                                <div class="form-group-cus">
+                                    @php $selected = (@$numberDays == '') ? 'selected' : ''; @endphp
+                                    <label class="form-label required" for="end_date">Job automatically closed in</label>
+                                    <select class="form-select" name="end_date" id="end_date">
+                                        <option value="15" @if (@$numberDays == 15) selected @endif>15 Days</option>
+                                        <option value="30" @if (@$numberDays == 30) selected @endif>30 Days</option>
+                                        <option value="45" @if (@$numberDays == 45) selected @endif>45 Days</option>
+                                        <option value="60" @if (@$numberDays == 60) selected @else {{ $selected }} @endif>60 Days</option>
+                                    </select>
+                                    <span class="form-hint">Job will be marked as closed after this duration.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card ij-hiring-team-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1156,70 +1235,6 @@
                                     <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>">
                                     <span class="form-hint">Assign internal team members / recruiters.</span>
                                     <div class="team-list" id="recruiterCardList"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card ij-qual-card">
-                        <div class="card-body">
-                            <div class="section-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                                </svg>Qualification / Education
-                            </div>
-                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 5 eligible educational qualifications or degrees for this job posting.</p>
-
-                            <!-- L1 Quick-Select Enterprise Standards Bar -->
-                            <div class="ij-popular-hubs-wrap ij-quick-qual-wrap">
-                                <span class="ij-popular-label">Quick Select:</span>
-                                <div class="ij-popular-pills" id="quickQualPills"></div>
-                            </div>
-
-                            <div class="form-group-cus full-width">
-                                <div class="input-wrapper ij-qual-input-wrap">
-                                    <div class="input-with-icon">
-                                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="11" cy="11" r="8"/>
-                                            <path d="m21 21-4.3-4.3"/>
-                                        </svg>
-                                        <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
-                                    </div>
-                                    <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
-                                    <button type="button" class="chip-add" onclick="addCustomQual()">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M5 12h14"/><path d="M12 5v14"/>
-                                        </svg>Add More
-                                    </button>
-                                    <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
-                                </div>
-                            </div>
-                            <div class="selected-header">
-                                <span class="selected-label">Selected Qualifications (<span id="qualSelectedCount">0</span>/5)</span>
-                                <button type="button" class="clear-all" onclick="clearAllQualifications()">Clear All</button>
-                            </div>
-                            <div class="chips-container ij-selected-chips ij-qual-selected-chips" id="qualList"></div>
-                            <input type="hidden" id="qualification" name="qualification" value="">
-                        </div>
-                    </div>
-                    <div class="card ij-additional-card">
-                        <div class="card-body">
-                            <div class="section-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
-                                </svg>Additional Details
-                            </div>
-                            <div class="form-grid" style="max-width:480px;">
-                                <div class="form-group-cus">
-                                    @php $selected = (@$numberDays == '') ? 'selected' : ''; @endphp
-                                    <label class="form-label required" for="end_date">Job automatically closed in</label>
-                                    <select class="form-select" name="end_date" id="end_date">
-                                        <option value="15" @if (@$numberDays == 15) selected @endif>15 Days</option>
-                                        <option value="30" @if (@$numberDays == 30) selected @endif>30 Days</option>
-                                        <option value="45" @if (@$numberDays == 45) selected @endif>45 Days</option>
-                                        <option value="60" @if (@$numberDays == 60) selected @else {{ $selected }} @endif>60 Days</option>
-                                    </select>
-                                    <span class="form-hint">Job will be marked as closed after this duration.</span>
                                 </div>
                             </div>
                         </div>
@@ -3237,11 +3252,11 @@
                 if (!val('address_id'))         return fail('address_id', 'Please select an Address');
                 if (!val('title'))              return fail('title', 'Please enter the Job Title / Designation');
                 if (!val('category_id'))        return fail('category_id', 'Please select a Job Department');
-                if (selectedCities.length === 0) { showToast('Please select at least one job location', 'error'); focusEl('citySearch'); return false; }
                 if (val('min_exp') === '')      return fail('min_exp', 'Please select Minimum Experience');
                 if (val('max_exp') === '')      return fail('max_exp', 'Please select Maximum Experience');
                 if (!val('total_positions'))    return fail('total_positions', 'Please select No. of Positions');
                 if (!val('employment_type'))    return fail('employment_type', 'Please select Position Type');
+                if (selectedCities.length === 0) { showToast('Please select at least one job location', 'error'); focusEl('citySearch'); return false; }
                 if (!val('work_from_home'))     return fail('work_from_home', 'Please select Work Mode');
                 if (!val('work_shifts'))        return fail('work_shifts', 'Please select Work Shift');
                 if (!val('min_salary_currency')) return fail('min_salary_currency', 'Please select Minimum Salary currency');
@@ -3249,10 +3264,10 @@
                 if (!val('max_salary_currency')) return fail('max_salary_currency', 'Please select Maximum Salary currency');
                 if (val('maximum_salary') === '') return fail('maximum_salary', 'Please enter Maximum Salary');
                 if (!val('min_sal_mode'))       return fail('min_sal_mode', 'Please select Salary Type');
-                if (!val('hiring_namager'))     return fail('hmSearchDisplay', 'Please select the Hiring Manager / HR');
-                if (!val('recruiter'))          return fail('recSearchDisplay', 'Please select your team for this job');
                 if (qualifications.length === 0) { showToast('Please add at least one Qualification', 'error'); focusEl('qualSearch'); return false; }
                 if (!val('end_date'))           return fail('end_date', 'Please select the auto-close duration');
+                if (!val('hiring_namager'))     return fail('hmSearchDisplay', 'Please select the Hiring Manager / HR');
+                if (!val('recruiter'))          return fail('recSearchDisplay', 'Please select your team for this job');
             }
             if (step === 2) {
                 var descEl = document.getElementById('jobDescription');
