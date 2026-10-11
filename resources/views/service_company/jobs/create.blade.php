@@ -592,7 +592,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011q">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011r">
     @endif
 @endpush
 @section('content')
@@ -883,15 +883,6 @@
                                     <span class="form-hint">Select the number of openings to be filled (1–500).</span>
                                 </div>
                                 <div class="form-group-cus">
-                                    <label class="form-label">Gender Diversity</label>
-                                    <select class="form-select" name="required_columns" id="required_columns">
-                                        <option value="Rather Not Say" {{ (@$job->required_columns === 'Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                                        <option value="Male" {{ (@$job->required_columns === 'Male') ? 'selected' : '' }}>Male</option>
-                                        <option value="Female" {{ (@$job->required_columns === 'Female') ? 'selected' : '' }}>Female</option>
-                                    </select>
-                                    <span class="form-hint">Encourage a diverse workplace.</span>
-                                </div>
-                                <div class="form-group-cus">
                                     <label class="form-label required">Position Type</label>
                                     <select class="form-select" name="employment_type" id="employment_type">
                                         <option value="">Select Position Type</option>
@@ -903,6 +894,15 @@
                                         ?>
                                     </select>
                                     <span class="form-hint">Select the type of employment contract.</span>
+                                </div>
+                                <div class="form-group-cus">
+                                    <label class="form-label">Gender Diversity</label>
+                                    <select class="form-select" name="required_columns" id="required_columns">
+                                        <option value="Rather Not Say" {{ (@$job->required_columns === 'Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                                        <option value="Male" {{ (@$job->required_columns === 'Male') ? 'selected' : '' }}>Male</option>
+                                        <option value="Female" {{ (@$job->required_columns === 'Female') ? 'selected' : '' }}>Female</option>
+                                    </select>
+                                    <span class="form-hint">Encourage a diverse workplace.</span>
                                 </div>
                             </div>
                         </div>
@@ -954,17 +954,28 @@
                                     <path d="M2 12h20"/>
                                 </svg>Work Mode
                             </div>
-                            <div class="form-grid" style="max-width:480px;">
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Select Work Mode</label>
-                                    <select name="work_from_home" id="work_from_home" class="form-select">
-                                        <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
-                                        <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
-                                        <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
-                                    </select>
-                                    <span class="form-hint">Choose whether this position is Remote, Hybrid, or Work From Office.</span>
-                                </div>
+                            <div class="ij-choices" role="group" aria-label="Work Mode">
+                                <button type="button" class="ij-choice" data-value="yes" aria-pressed="<?php echo (@$job->work_type == 'yes') ? 'true' : 'false'; ?>">
+                                    <strong>Remote</strong>
+                                    <small>Work from anywhere</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="other" aria-pressed="<?php echo (@$job->work_type == 'other') ? 'true' : 'false'; ?>">
+                                    <strong>Hybrid</strong>
+                                    <small>Office + Remote</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="no" aria-pressed="<?php echo (@$job->work_type == 'no' || empty(@$job->work_type)) ? 'true' : 'false'; ?>">
+                                    <strong>Work From Office</strong>
+                                    <small>Based at office location</small>
+                                </button>
                             </div>
+                            <div class="ij-source-control">
+                                <select name="work_from_home" id="work_from_home" class="form-select" tabindex="-1">
+                                    <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
+                                    <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
+                                    <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
+                                </select>
+                            </div>
+                            <span class="form-hint" style="margin-top:10px;display:block;">Choose whether this position is Remote, Hybrid, or Work From Office.</span>
                         </div>
                     </div>
                     <div class="card ij-work-shift-card">
@@ -978,19 +989,38 @@
                                     <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
                                 </svg>Work Shift
                             </div>
-                            <div class="form-grid" style="max-width:480px;">
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Select Work Shift</label>
-                                    <select class="form-select" name="work_shifts" id="work_shifts">
-                                        <option value="Day Shift" @if (@$job->work_shifts == 'Day Shift') selected @endif>Day Shift</option>
-                                        <option value="Night Shift" @if (@$job->work_shifts == 'Night Shift') selected @endif>Night Shift</option>
-                                        <option value="Rotational shift" @if (@$job->work_shifts == 'Rotational shift') selected @endif>Rotational shift</option>
-                                        <option value="UK Timezone" @if (@$job->work_shifts == 'UK Timezone') selected @endif>UK Timezone</option>
-                                        <option value="US Timezone" @if (@$job->work_shifts == 'US Timezone') selected @endif>US Timezone</option>
-                                    </select>
-                                    <span class="form-hint">Specify the operational working shift or timezone required.</span>
-                                </div>
+                            <div class="ij-choices" role="group" aria-label="Work Shift">
+                                <button type="button" class="ij-choice" data-value="Day Shift" aria-pressed="<?php echo (@$job->work_shifts == 'Day Shift' || empty(@$job->work_shifts)) ? 'true' : 'false'; ?>">
+                                    <strong>Day Shift</strong>
+                                    <small>Regular daytime working hours</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="Night Shift" aria-pressed="<?php echo (@$job->work_shifts == 'Night Shift') ? 'true' : 'false'; ?>">
+                                    <strong>Night Shift</strong>
+                                    <small>Regular night working hours</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="Rotational shift" aria-pressed="<?php echo (@$job->work_shifts == 'Rotational shift') ? 'true' : 'false'; ?>">
+                                    <strong>Rotational shift</strong>
+                                    <small>Rotating work schedule</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="UK Timezone" aria-pressed="<?php echo (@$job->work_shifts == 'UK Timezone') ? 'true' : 'false'; ?>">
+                                    <strong>UK Timezone</strong>
+                                    <small>Based on UK working hours</small>
+                                </button>
+                                <button type="button" class="ij-choice" data-value="US Timezone" aria-pressed="<?php echo (@$job->work_shifts == 'US Timezone') ? 'true' : 'false'; ?>">
+                                    <strong>US Timezone</strong>
+                                    <small>Based on US working hours</small>
+                                </button>
                             </div>
+                            <div class="ij-source-control">
+                                <select class="form-select" name="work_shifts" id="work_shifts" tabindex="-1">
+                                    <option value="Day Shift" @if (@$job->work_shifts == 'Day Shift') selected @endif>Day Shift</option>
+                                    <option value="Night Shift" @if (@$job->work_shifts == 'Night Shift') selected @endif>Night Shift</option>
+                                    <option value="Rotational shift" @if (@$job->work_shifts == 'Rotational shift') selected @endif>Rotational shift</option>
+                                    <option value="UK Timezone" @if (@$job->work_shifts == 'UK Timezone') selected @endif>UK Timezone</option>
+                                    <option value="US Timezone" @if (@$job->work_shifts == 'US Timezone') selected @endif>US Timezone</option>
+                                </select>
+                            </div>
+                            <span class="form-hint" style="margin-top:10px;display:block;">Specify the operational working shift or timezone required.</span>
                         </div>
                     </div>
                     <div class="card ij-compensation-card">
@@ -1001,6 +1031,14 @@
                                         <circle cx="12" cy="12" r="10"/>
                                         <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
                                     </svg>Compensation
+                                </div>
+                                <div class="ij-comp-currency-wrap">
+                                    <label class="ij-comp-currency-label" for="headerCurrTrigger">Currency:</label>
+                                    <button type="button" class="ij-header-curr-btn" id="headerCurrTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change currency">
+                                        <span class="ij-header-curr-symbol" id="headerCurrSymbol"><?php echo e($initialCurrSymbol); ?></span>
+                                        <span class="ij-header-curr-code" id="headerCurrCode"><?php echo e($initialCurrCode); ?></span>
+                                        <svg class="ij-header-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
                                 </div>
                             </div>
                             <?php
@@ -1128,52 +1166,57 @@
                             <span class="form-hint" style="margin-top:10px;display:block;">Enter the expected CTC range for this position.</span>
                         </div>
                     </div>
-                    <div class="card ij-additional-card ij-qual-card">
+                    <div class="card ij-qual-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                </svg>Educational Qualification
+                            </div>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 5 eligible educational qualifications or degrees for this job posting.</p>
+
+                            <!-- L1 Quick-Select Enterprise Standards Bar -->
+                            <div class="ij-popular-hubs-wrap ij-quick-qual-wrap">
+                                <span class="ij-popular-label">Quick Select:</span>
+                                <div class="ij-popular-pills" id="quickQualPills"></div>
+                            </div>
+
+                            <div class="form-group-cus full-width" style="margin-top:10px;">
+                                <div class="input-wrapper ij-qual-input-wrap">
+                                    <div class="input-with-icon">
+                                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <path d="m21 21-4.3-4.3"/>
+                                        </svg>
+                                        <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
+                                    </div>
+                                    <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
+                                    <button type="button" class="chip-add" onclick="addCustomQual()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M5 12h14"/><path d="M12 5v14"/>
+                                        </svg>Add More
+                                    </button>
+                                    <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
+                                </div>
+                            </div>
+                            <div class="selected-header">
+                                <span class="selected-label">Selected Qualifications (<span id="qualSelectedCount">0</span>/5)</span>
+                                <button type="button" class="clear-all" onclick="clearAllQualifications()">Clear All</button>
+                            </div>
+                            <div class="chips-container ij-selected-chips ij-qual-selected-chips" id="qualList"></div>
+                            <input type="hidden" id="qualification" name="qualification" value="">
+                        </div>
+                    </div>
+
+                    <div class="card ij-additional-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
                                 </svg>Additional Details
                             </div>
-
-                            {{-- Educational Qualification Subsection --}}
-                            <div style="margin-bottom:20px;">
-                                <label class="form-label required" style="font-weight:600;margin-bottom:4px;">Educational Qualification (Select up to 5 options)</label>
-                                <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 5 eligible educational qualifications or degrees for this job posting.</p>
-
-                                <!-- L1 Quick-Select Enterprise Standards Bar -->
-                                <div class="ij-popular-hubs-wrap ij-quick-qual-wrap">
-                                    <span class="ij-popular-label">Quick Select:</span>
-                                    <div class="ij-popular-pills" id="quickQualPills"></div>
-                                </div>
-
-                                <div class="form-group-cus full-width" style="margin-top:10px;">
-                                    <div class="input-wrapper ij-qual-input-wrap">
-                                        <div class="input-with-icon">
-                                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <circle cx="11" cy="11" r="8"/>
-                                                <path d="m21 21-4.3-4.3"/>
-                                            </svg>
-                                            <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
-                                        </div>
-                                        <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
-                                        <button type="button" class="chip-add" onclick="addCustomQual()">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M5 12h14"/><path d="M12 5v14"/>
-                                            </svg>Add More
-                                        </button>
-                                        <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
-                                    </div>
-                                </div>
-                                <div class="selected-header">
-                                    <span class="selected-label">Selected Qualifications (<span id="qualSelectedCount">0</span>/5)</span>
-                                    <button type="button" class="clear-all" onclick="clearAllQualifications()">Clear All</button>
-                                </div>
-                                <div class="chips-container ij-selected-chips ij-qual-selected-chips" id="qualList"></div>
-                                <input type="hidden" id="qualification" name="qualification" value="">
-                            </div>
-
-                            <div class="form-grid" style="max-width:480px;border-top:1px solid #f1f5f9;padding-top:16px;">
+                            <div class="form-grid" style="max-width:480px;">
                                 <div class="form-group-cus">
                                     @php $selected = (@$numberDays == '') ? 'selected' : ''; @endphp
                                     <label class="form-label required" for="end_date">Job automatically closed in</label>
@@ -2838,6 +2881,10 @@
             var code = (opt.data('code') || opt.val() || 'INR').toString().toUpperCase();
             var val = $sel.val();
 
+            // Update header currency trigger
+            $('#headerCurrSymbol').text(symbol || code);
+            $('#headerCurrCode').text(code);
+
             // Update both input trigger pills
             $('#minCurrTrigger .ij-curr-pill-symbol, #maxCurrTrigger .ij-curr-pill-symbol').text(symbol || code);
             $('#minCurrTrigger .ij-curr-pill-code, #maxCurrTrigger .ij-curr-pill-code').text(code);
@@ -2906,7 +2953,7 @@
                     zIndex: 99999
                 }).show();
 
-                $('#minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
+                $('#headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
                 $trigger.attr('aria-expanded', 'true');
 
                 // Clear search and reset list
@@ -2926,11 +2973,11 @@
 
             function closeCurrencyPopover() {
                 $pop.hide();
-                $('#minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
+                $('#headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
                 activeTrigger = null;
             }
 
-            $(document).on('click', '#minCurrTrigger, #maxCurrTrigger', function(e) {
+            $(document).on('click', '#headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if ($pop.is(':visible') && activeTrigger && activeTrigger[0] === this) {
@@ -2989,7 +3036,7 @@
 
             // Close on click outside or escape
             $(document).on('click', function(e) {
-                if ($pop.is(':visible') && !$(e.target).closest('#ijCurrencyPopover, #minCurrTrigger, #maxCurrTrigger').length) {
+                if ($pop.is(':visible') && !$(e.target).closest('#ijCurrencyPopover, #headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger').length) {
                     closeCurrencyPopover();
                 }
             });
@@ -4608,6 +4655,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011q"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011r"></script>
     @endif
 @endpush

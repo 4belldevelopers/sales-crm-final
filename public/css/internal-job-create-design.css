@@ -1315,6 +1315,60 @@
     white-space: nowrap !important;
 }
 
+#jrwrap.internal-job-create .ij-header-curr-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 12px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 2px rgba(16, 20, 59, 0.04) !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-btn:hover {
+    border-color: #d4a017 !important;
+    background: #fffdf2 !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-btn[aria-expanded="true"] {
+    border-color: #d4a017 !important;
+    box-shadow: 0 0 0 2.5px rgba(255, 210, 27, 0.25) !important;
+    background: #fff9df !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-symbol {
+    color: #9a6500 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-code {
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    font-size: 12px !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-arrow {
+    width: 12px !important;
+    height: 12px !important;
+    color: #64748b !important;
+    transition: transform 0.2s ease !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-header-curr-btn[aria-expanded="true"] .ij-header-curr-arrow {
+    transform: rotate(180deg) !important;
+    color: #9a6500 !important;
+}
+
 /* ==========================================================================
    Integrated Currency Selector & Salary Input Groups (Enterprise Finish)
    ========================================================================== */
@@ -1871,7 +1925,7 @@
     background: #ecfdf5 !important;
 }
 
-#jrwrap.internal-job-create :is(.ij-additional-card, .ij-work-mode-card, .ij-work-shift-card, .ij-employment-card, .ij-hiring-team-card) {
+#jrwrap.internal-job-create :is(.ij-qual-card, .ij-additional-card, .ij-work-mode-card, .ij-work-shift-card, .ij-employment-card, .ij-hiring-team-card) {
     position: relative !important;
 }
 
