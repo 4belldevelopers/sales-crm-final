@@ -2,7 +2,7 @@
 @push('head-script')
     {{-- Create-only presentation assets; edit and requisition contexts retain their existing UI. --}}
     @if(request()->routeIs('service_company.jobs.create'))
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011b">
     @endif
     <link href="{{ asset('demo/v7/css/wizard-1.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/v7/css/plugins.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
@@ -2342,9 +2342,8 @@
     <!--end::Add Contact Person Drawer-->
 @endsection
 @push('footer-script')
-    @if(request()->routeIs('service_company.jobs.create'))
-        <script defer src="{{ asset('js/internal-job-create-design.js') }}?v=20261011"></script>
-    @endif
+    {{-- internal-job-create-design.js is loaded at the end of this @push block (just before @endpush)
+         so that it runs AFTER all inline scripts that define currentStep / goToStep / __indexUrl. --}}
     {{-- =========================================================
          ORIGINAL BACKEND AJAX (preserved verbatim, only TinyMCE/wizard
          specific bits adapted to the new design)
@@ -3593,4 +3592,12 @@
         document.addEventListener('click', function(e) { if (!e.target.closest('.question-actions')) { document.querySelectorAll('.dropdown-menu').forEach(function(d) { d.classList.remove('show'); }); } });
         (function() { var m = document.getElementById('questionModal'); if (m) m.addEventListener('click', function(e) { if (e.target === e.currentTarget) closeQuestionModal(); }); })();
     </script>
+    {{-- Create-only enhancement script — placed LAST so all globals defined in the inline
+         scripts above (currentStep, goToStep, __indexUrl, validateStep, etc.) are available
+         when this file runs. No defer needed here because the script is already at the
+         bottom of <body>. The onReady() guard inside the file handles both the
+         readyState === 'loading' case and the already-interactive/complete case. --}}
+    @if(request()->routeIs('service_company.jobs.create'))
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011b"></script>
+    @endif
 @endpush

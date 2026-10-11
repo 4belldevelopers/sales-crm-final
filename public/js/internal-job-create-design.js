@@ -1,7 +1,20 @@
-/** Create-only presentation: reorganize existing controls without replacing form state or request contracts. */
+/** Create-only presentation: reorganize existing controls without replacing form state or request contracts.
+ *  NOTE: This file is loaded synchronously (no defer) at the bottom of <body> so that it runs after
+ *  the preceding inline scripts that define globals (currentStep, goToStep, __indexUrl).
+ *  The document-ready guard below fires immediately when readyState is already 'interactive'
+ *  or 'complete' (which can happen on fast/cached loads), and falls back to DOMContentLoaded
+ *  for the first-load case. */
 (function () {
     'use strict';
-    document.addEventListener('DOMContentLoaded', function () {
+    function onReady(fn) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn);
+        } else {
+            // DOM already parsed — run immediately (handles sync-load at bottom of body)
+            fn();
+        }
+    }
+    onReady(function () {
         const root = document.getElementById('jrwrap');
         if (!root || !root.classList.contains('internal-job-create')) return;
         const content = root.querySelector('.content');
