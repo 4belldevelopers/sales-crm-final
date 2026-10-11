@@ -402,6 +402,9 @@
     #jrwrap .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; outline: none; }
     #jrwrap .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
     #jrwrap .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    #jrwrap.internal-job-create .btn-primary { background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important; background-color: #ffd428 !important; color: #10143b !important; border: 1px solid #d4a017 !important; box-shadow: 0 1px 2px rgba(16, 20, 59, 0.08), 0 1px 3px rgba(245, 196, 0, 0.25) !important; }
+    #jrwrap.internal-job-create .btn-primary:hover { background: linear-gradient(180deg, #fbc02d 0%, #f59e0b 100%) !important; background-color: #f59e0b !important; color: #0f172a !important; border-color: #b45309 !important; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.32) !important; transform: translateY(-1px) !important; outline: none !important; }
+    #jrwrap.internal-job-create .btn-primary:focus { outline: none !important; }
     #jrwrap .btn-secondary { background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border); }
     #jrwrap .btn-secondary:hover { background: var(--bg); border-color: var(--text-muted); }
     #jrwrap .btn svg { width: 16px; height: 16px; }
@@ -589,7 +592,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011o">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011p">
     @endif
 @endpush
 @section('content')
@@ -4605,6 +4608,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011n"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011p"></script>
     @endif
 @endpush
