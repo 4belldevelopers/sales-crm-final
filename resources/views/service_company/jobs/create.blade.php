@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011k">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011l">
     @endif
 @endpush
 @section('content')
@@ -1091,35 +1091,59 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
+                    <div class="card ij-qual-card">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                </svg>Qualification / Education
+                            </div>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 5 eligible educational qualifications or degrees for this job posting.</p>
+
+                            <!-- L1 Quick-Select Enterprise Standards Bar -->
+                            <div class="ij-popular-hubs-wrap ij-quick-qual-wrap">
+                                <span class="ij-popular-label">Quick Select:</span>
+                                <div class="ij-popular-pills" id="quickQualPills"></div>
+                            </div>
+
+                            <div class="form-group-cus full-width">
+                                <div class="input-wrapper ij-qual-input-wrap">
+                                    <div class="input-with-icon">
+                                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"/>
+                                            <path d="m21 21-4.3-4.3"/>
+                                        </svg>
+                                        <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
+                                    </div>
+                                    <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
+                                    <button type="button" class="chip-add" onclick="addCustomQual()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M5 12h14"/><path d="M12 5v14"/>
+                                        </svg>Add More
+                                    </button>
+                                    <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
+                                </div>
+                            </div>
+                            <div class="selected-header">
+                                <span class="selected-label">Selected Qualifications (<span id="qualSelectedCount">0</span>/5)</span>
+                                <button type="button" class="clear-all" onclick="clearAllQualifications()">Clear All</button>
+                            </div>
+                            <div class="chips-container ij-selected-chips ij-qual-selected-chips" id="qualList"></div>
+                            <input type="hidden" id="qualification" name="qualification" value="">
+                        </div>
+                    </div>
+                    <div class="card ij-additional-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
                                 </svg>Additional Details
                             </div>
-                            <div class="form-grid">
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Qualification (Select up to 5 options)</label>
-                                    <div class="input-wrapper" style="position:relative;">
-                                        <div class="input-with-icon">
-                                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                                            </svg>
-                                            <input type="text" class="form-input" id="qualSearch" placeholder="Search or type qualification..." autocomplete="off">
-                                        </div>
-                                        <button type="button" class="chip-add" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);" onclick="addCustomQual()">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/>
-                                            </svg>Add More
-                                        </button>
-                                        <div class="search-dropdown" id="qualDropdown"></div>
-                                    </div>
-                                    <div class="chips-container" id="qualList" style="margin-top:10px;"></div>
-                                    <input type="hidden" id="qualification" name="qualification" value="">
-                                </div>
+                            <div class="form-grid" style="max-width:480px;">
                                 <div class="form-group-cus">
                                     @php $selected = (@$numberDays == '') ? 'selected' : ''; @endphp
-                                    <label class="form-label required">Job automatically closed in</label>
+                                    <label class="form-label required" for="end_date">Job automatically closed in</label>
                                     <select class="form-select" name="end_date" id="end_date">
                                         <option value="15" @if (@$numberDays == 15) selected @endif>15 Days</option>
                                         <option value="30" @if (@$numberDays == 30) selected @endif>30 Days</option>
@@ -3488,37 +3512,390 @@
             }
         }
 
-        // ---------- QUALIFICATIONS ----------
+        // ---------- QUALIFICATIONS (UNESCO ISCED-2011 / Enterprise Standard) ----------
+        var enterpriseQualTaxonomy = [
+            {
+                category: "General Eligibility & Universal Standard",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>',
+                badgeClass: "ij-qual-badge-universal",
+                items: [
+                    { name: "Any Qualification", label: "Any Qualification (Open Eligibility)", badge: "Universal", aliases: "any,all,open,qualification,no bar,any qualification" },
+                    { name: "Any Degree", label: "Any Degree (All Disciplines / Streams)", badge: "All Streams", aliases: "any degree,degree,all degrees,any discipline,graduate" },
+                    { name: "Any Graduation", label: "Any Graduation (Undergraduate Standard)", badge: "Undergraduate", aliases: "any graduation,graduation,graduate,any graduate,bachelors" },
+                    { name: "Any Post Graduation", label: "Any Post Graduation (Postgraduate Standard)", badge: "Postgraduate", aliases: "any post graduation,post graduation,postgraduate,pg,masters,any pg" }
+                ]
+            },
+            {
+                category: "Bachelor's / Undergraduate Degrees (ISCED 6)",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+                badgeClass: "ij-qual-badge-bachelor",
+                items: [
+                    { name: "B.Tech/B.E", label: "B.Tech / B.E (Engineering & Technology)", badge: "Engineering / Tech", aliases: "btech,be,b.tech,b.e,bachelor of technology,bachelor of engineering,beng,computer science,cse,it,software" },
+                    { name: "B.Sc", label: "B.Sc / B.S (Science, IT & Computing)", badge: "Science / IT", aliases: "bsc,bs,b.sc,b.s,bachelor of science,computer science,bs cs,bsc it,information technology" },
+                    { name: "BCA", label: "BCA (Bachelor of Computer Applications)", badge: "IT / Software", aliases: "bca,b.c.a,computer applications,software development,programming" },
+                    { name: "B.B.A/ B.M.S", label: "BBA / BMS (Business Administration & Management)", badge: "Business / Mgmt", aliases: "bba,bms,b.b.a,b.m.s,bachelor of business administration,management" },
+                    { name: "B.Com", label: "B.Com (Commerce, Accounting & Finance)", badge: "Commerce / Finance", aliases: "bcom,b.com,bachelor of commerce,accounting,finance,banking" },
+                    { name: "B.A", label: "B.A (Arts, Humanities & Social Sciences)", badge: "Arts / Humanities", aliases: "ba,b.a,bachelor of arts,humanities,economics,psychology,english" },
+                    { name: "B.Des", label: "B.Des (Design, UX/UI & Product)", badge: "Design / UX", aliases: "bdes,b.des,bachelor of design,ui,ux,product design,graphic design" },
+                    { name: "B.Arch", label: "B.Arch (Architecture & Urban Planning)", badge: "Architecture", aliases: "barch,b.arch,bachelor of architecture,architecture" },
+                    { name: "B.Pharma", label: "B.Pharma (Pharmacy & Healthcare)", badge: "Pharma / Health", aliases: "bpharma,b.pharma,b pharm,pharmacy,bachelor of pharmacy" },
+                    { name: "B.Ed", label: "B.Ed (Education & Pedagogy)", badge: "Education", aliases: "bed,b.ed,bachelor of education,teaching" },
+                    { name: "BAMS", label: "BAMS (Ayurvedic Medicine & Surgery)", badge: "AYUSH / Medicine", aliases: "bams,ayurveda,ayush" },
+                    { name: "BHMS", label: "BHMS (Homeopathic Medicine & Surgery)", badge: "Homeopathy", aliases: "bhms,homeopathy" },
+                    { name: "B.U.M.S", label: "B.U.M.S (Unani Medicine & Surgery)", badge: "Unani", aliases: "bums,b.u.m.s,unani" },
+                    { name: "BFA", label: "BFA (Fine Arts & Digital Media)", badge: "Fine Arts", aliases: "bfa,b.f.a,fine arts,visual arts" },
+                    { name: "BHM", label: "BHM (Hotel & Hospitality Management)", badge: "Hospitality", aliases: "bhm,hotel management,hospitality" },
+                    { name: "BVSC", label: "BVSC / DVM (Veterinary Science)", badge: "Veterinary", aliases: "bvsc,veterinary medicine" },
+                    { name: "Other Bachelor's Degree", label: "Other Bachelor's / Undergraduate Degree", badge: "Bachelor's / Other", aliases: "other bachelor,other bachelors,unlisted bachelor" }
+                ]
+            },
+            {
+                category: "Master's / Postgraduate Degrees (ISCED 7)",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+                badgeClass: "ij-qual-badge-master",
+                items: [
+                    { name: "MBA/PGDM", label: "MBA / PGDM (Business Administration & Strategy)", badge: "Management / MBA", aliases: "mba,pgdm,master of business administration,executive mba,strategy,business" },
+                    { name: "M.Tech", label: "M.Tech / M.E (Engineering & Technology)", badge: "Engineering / Postgrad", aliases: "mtech,me,m.tech,m.e,master of technology,master of engineering" },
+                    { name: "MS/M.Sc(Science)", label: "M.S. / M.Sc (Science, IT & Engineering)", badge: "Science / IT", aliases: "ms,msc,master of science,ms cs,msc it,data science,ai" },
+                    { name: "MCA", label: "MCA (Master of Computer Applications)", badge: "IT / Software", aliases: "mca,m.c.a,master of computer applications,software engineering" },
+                    { name: "M.Com", label: "M.Com (Commerce, Economics & Finance)", badge: "Commerce / Finance", aliases: "mcom,m.com,master of commerce,accounting,finance" },
+                    { name: "M.A", label: "M.A (Arts, Humanities & Social Sciences)", badge: "Arts / Humanities", aliases: "ma,m.a,master of arts,humanities,sociology,economics" },
+                    { name: "M.Des.", label: "M.Des (Master of Design / UX)", badge: "Design / Postgrad", aliases: "mdes,m.des,master of design,ux design" },
+                    { name: "M.Pharma", label: "M.Pharma (Master of Pharmacy)", badge: "Pharma Postgrad", aliases: "mpharma,m.pharma,master of pharmacy" },
+                    { name: "M.Ed", label: "M.Ed (Master of Education)", badge: "Education", aliases: "med,m.ed,master of education" },
+                    { name: "M.Arch", label: "M.Arch (Master of Architecture)", badge: "Architecture", aliases: "march,m.arch,master of architecture" },
+                    { name: "MCM", label: "MCM (Master of Computer Management)", badge: "Management & IT", aliases: "mcm,computer management" },
+                    { name: "Integrated PG", label: "Integrated PG / Dual Degree (B.Tech+M.Tech / BS+MS)", badge: "Dual Degree", aliases: "integrated pg,dual degree,5 year integrated" },
+                    { name: "Other Master's Degree", label: "Other Master's / Postgraduate Degree", badge: "Master's / Other", aliases: "other master,other masters,unlisted master" }
+                ]
+            },
+            {
+                category: "Doctorate & Research Degrees (ISCED 8)",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>',
+                badgeClass: "ij-qual-badge-doc",
+                items: [
+                    { name: "Ph.D/Doctorate", label: "Ph.D. / Doctorate / Post-Doc (Doctor of Philosophy)", badge: "Doctorate / Global", aliases: "phd,ph.d,doctorate,doctor of philosophy,dphil,postdoc,research" },
+                    { name: "Other Doctorate / Post-Doctoral", label: "Other Doctorate / Post-Doctoral Degree", badge: "Doctorate / Other", aliases: "other doctorate,other phd,dba,post-doctoral" }
+                ]
+            },
+            {
+                category: "Associate Degrees & Diplomas (ISCED 5)",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
+                badgeClass: "ij-qual-badge-dip",
+                items: [
+                    { name: "Diploma", label: "Diploma / Polytechnic Diploma (2-3 Years)", badge: "Polytechnic / Diploma", aliases: "diploma,polytechnic,associate degree,technical diploma" },
+                    { name: "PG Diploma", label: "PG Diploma (Post Graduate Diploma / Certificate)", badge: "PG Diploma", aliases: "pg diploma,pgd,post graduate diploma,pgdiploma" },
+                    { name: "HND/HNC", label: "HND / HNC (Higher National Diploma / Certificate)", badge: "UK / Commonwealth", aliases: "hnd,hnc,higher national diploma" },
+                    { name: "Other Associate / Diploma", label: "Other Associate / Diploma / Vocational Degree", badge: "Diploma / Other", aliases: "other diploma,other associate,vocational" }
+                ]
+            },
+            {
+                category: "Professional, Legal & Medical Degrees",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',
+                badgeClass: "ij-qual-badge-prof",
+                items: [
+                    { name: "CA (Chartered Accountant)", label: "CA / CPA / CFA / ACCA (Finance & Accounting)", badge: "Finance / Audit", aliases: "ca,cpa,cfa,acca,chartered accountant,accounting,audit" },
+                    { name: "CS (Company Secretary)", label: "CS (Company Secretary / Corporate Governance)", badge: "Corporate Governance", aliases: "cs,company secretary,corporate governance,icsi" },
+                    { name: "ICWA (CMA)", label: "ICWA / CMA (Cost & Management Accounting)", badge: "Cost Accounting", aliases: "icwa,cma,cost accountant,icmai" },
+                    { name: "LLB", label: "LLB / J.D. (Law Degree / Juris Doctor)", badge: "Legal / Law", aliases: "llb,jd,law,bachelor of laws,attorney,lawyer,advocate" },
+                    { name: "LLM", label: "LLM (Master of Laws / Legal Postgrad)", badge: "Legal Postgrad", aliases: "llm,master of laws,corporate law" },
+                    { name: "MBBS", label: "MBBS / M.D. (General Medicine & Surgery)", badge: "Medicine / Surgery", aliases: "mbbs,doctor,physician,medicine,surgery" },
+                    { name: "Medical-MS/MD", label: "MD / MS (Medical Specialty / Master of Surgery)", badge: "Medical Specialty", aliases: "md,ms general surgery,medical specialty,residency" },
+                    { name: "DM (Doctor of Medicine)", label: "DM (Doctor of Medicine - Super Specialty)", badge: "Super Specialty", aliases: "dm,super specialty,cardiology,neurology" },
+                    { name: "M.Ch", label: "M.Ch (Surgical Super Specialty)", badge: "Surgical Specialty", aliases: "mch,neurosurgery,cardiac surgery" },
+                    { name: "BDS", label: "BDS (Bachelor of Dental Surgery)", badge: "Dental", aliases: "bds,dental surgery,dentist" },
+                    { name: "MDS", label: "MDS (Master of Dental Surgery)", badge: "Dental Postgrad", aliases: "mds,master of dental surgery" }
+                ]
+            },
+            {
+                category: "Secondary & High School (ISCED 3)",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h13l4-3.5L18 6Z"/><path d="M12 13v8"/></svg>',
+                badgeClass: "ij-qual-badge-sec",
+                items: [
+                    { name: "12th", label: "12th Standard / Higher Secondary / High School / GED", badge: "High School", aliases: "12th,12th standard,hsc,intermediate,high school,plus two" },
+                    { name: "10th", label: "10th Standard / Matriculation / Secondary School", badge: "Secondary", aliases: "10th,10th standard,ssc,matric,matriculation,secondary" },
+                    { name: "A levels/Advanced", label: "A Levels / Advanced Level (UK / International)", badge: "A-Levels", aliases: "a levels,a-levels,alevel,advanced level" },
+                    { name: "GCSE/GNVQ/O level", label: "GCSE / O-Levels (UK / International)", badge: "GCSE / O-Level", aliases: "gcse,o levels,igcse,o-levels" }
+                ]
+            },
+            {
+                category: "Other Qualifications",
+                icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+                badgeClass: "ij-qual-badge-sec",
+                items: [
+                    { name: "Others", label: "Others / Intensive Bootcamp / Specialized Certification", badge: "Bootcamp / Cert", aliases: "others,other,bootcamp,certification,courses" }
+                ]
+            }
+        ];
+
+        // Dynamically merge any unmapped database qualifications from qualWhitelist
+        (function mergeUnmappedQuals() {
+            var mappedNames = {};
+            enterpriseQualTaxonomy.forEach(function(cat) {
+                cat.items.forEach(function(it) { mappedNames[it.name.toLowerCase()] = true; });
+            });
+            var unmappedList = [];
+            if (Array.isArray(qualWhitelist)) {
+                qualWhitelist.forEach(function(qw) {
+                    if (qw && !mappedNames[String(qw).toLowerCase()]) {
+                        unmappedList.push({ name: String(qw), label: String(qw), badge: "Other", aliases: String(qw).toLowerCase() });
+                    }
+                });
+            }
+            if (unmappedList.length > 0) {
+                enterpriseQualTaxonomy.push({
+                    category: "Additional Qualifications",
+                    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+                    badgeClass: "ij-qual-badge-sec",
+                    items: unmappedList
+                });
+            }
+        })();
+
+        var quickQualOptions = [
+            { label: 'Any Qualification', value: 'Any Qualification', isUniversal: true },
+            { label: 'Any Degree', value: 'Any Degree', isUniversal: true },
+            { label: 'Any Graduation', value: 'Any Graduation', isUniversal: true },
+            { label: 'Any Post Graduation', value: 'Any Post Graduation', isUniversal: true },
+            { label: 'B.Tech / B.E', value: 'B.Tech/B.E' },
+            { label: 'MBA / PGDM', value: 'MBA/PGDM' },
+            { label: 'MCA', value: 'MCA' },
+            { label: 'B.Sc', value: 'B.Sc' },
+            { label: 'B.Com', value: 'B.Com' },
+            { label: 'Diploma', value: 'Diploma' }
+        ];
+
+        function renderQuickQualPills() {
+            var wrap = document.getElementById('quickQualPills');
+            if (!wrap) return;
+            wrap.innerHTML = quickQualOptions.map(function(opt) {
+                var isActive = qualifications.indexOf(opt.value) !== -1;
+                var cls = 'ij-qual-pill' + (opt.isUniversal ? ' is-universal' : '') + (isActive ? ' is-active' : '');
+                var icon = isActive
+                    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+                    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+                return '<button type="button" class="' + cls + '" onclick="toggleQualPill(\'' + String(opt.value).replace(/'/g, "\\'") + '\')">' +
+                    icon + escapeHtml(opt.label) +
+                '</button>';
+            }).join('');
+        }
+
+        function toggleQualPill(val) {
+            if (qualifications.indexOf(val) !== -1) {
+                removeQualification(val);
+            } else {
+                addQualification(val);
+            }
+        }
+
+        var focusedQualIndex = -1;
+
+        function highlightMatch(text, query) {
+            if (!query) return escapeHtml(text);
+            var idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return escapeHtml(text);
+            var before = text.substring(0, idx);
+            var match = text.substring(idx, idx + query.length);
+            var after = text.substring(idx + query.length);
+            return escapeHtml(before) + '<span class="ij-qual-highlight">' + escapeHtml(match) + '</span>' + escapeHtml(after);
+        }
+
+        function renderQualDropdown(query) {
+            var dropdown = document.getElementById('qualDropdown');
+            if (!dropdown) return;
+            var q = (query || '').trim().toLowerCase();
+            focusedQualIndex = -1;
+
+            var html = '';
+            var totalMatches = 0;
+
+            enterpriseQualTaxonomy.forEach(function(cat) {
+                var filtered = cat.items.filter(function(item) {
+                    if (!q) return true;
+                    return item.name.toLowerCase().indexOf(q) !== -1 ||
+                        item.label.toLowerCase().indexOf(q) !== -1 ||
+                        (item.aliases && item.aliases.toLowerCase().indexOf(q) !== -1) ||
+                        cat.category.toLowerCase().indexOf(q) !== -1 ||
+                        item.badge.toLowerCase().indexOf(q) !== -1;
+                });
+
+                if (filtered.length > 0) {
+                    html += '<div class="ij-qual-group">';
+                    html += '<div class="ij-qual-group-title">' + cat.icon + escapeHtml(cat.category) + '</div>';
+                    filtered.forEach(function(item) {
+                        totalMatches++;
+                        var isSel = qualifications.indexOf(item.name) !== -1;
+                        var itemCls = 'ij-qual-item' + (isSel ? ' is-selected' : '');
+                        var icon = isSel
+                            ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+                            : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+                        var badgeCls = 'ij-qual-item-badge ' + (cat.badgeClass || '');
+                        html += '<div class="' + itemCls + '" data-qual-val="' + escapeHtml(item.name) + '" onclick="addQualification(\'' + String(item.name).replace(/'/g, "\\'") + '\')">' +
+                            '<div class="ij-qual-item-left">' +
+                                '<span class="ij-qual-item-icon">' + icon + '</span>' +
+                                '<span class="ij-qual-item-name">' + highlightMatch(item.label, q) + '</span>' +
+                            '</div>' +
+                            '<span class="' + badgeCls + '">' + escapeHtml(item.badge) + '</span>' +
+                        '</div>';
+                    });
+                    html += '</div>';
+                }
+            });
+
+            if (totalMatches === 0 && q) {
+                html = '<div class="ij-cd-empty">' +
+                    '<span>No matching qualifications found for "<strong>' + escapeHtml(q) + '</strong>".</span>' +
+                    '<button type="button" class="ij-btn-custom-add" onclick="addCustomQual()">' +
+                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+                        'Add "' + escapeHtml(q) + '" as custom qualification' +
+                    '</button>' +
+                '</div>';
+            }
+
+            dropdown.innerHTML = html;
+        }
+
+        function clearQualSearchInput() {
+            var input = document.getElementById('qualSearch');
+            var clearBtn = document.getElementById('qualSearchClear');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderQualDropdown('');
+        }
+
         function initQualSearch() {
             var input = document.getElementById('qualSearch');
             var dropdown = document.getElementById('qualDropdown');
-            function render(list) {
-                dropdown.innerHTML = list.map(function(q) { return '<div class="search-option" onclick="addQualification(\'' + String(q).replace(/'/g, "\\'") + '\')">' + escapeHtml(String(q)) + '</div>'; }).join('');
-            }
-            input.addEventListener('focus', function() { render(qualWhitelist.slice(0, 50)); dropdown.classList.add('active'); });
-            input.addEventListener('input', function(e) {
-                var v = e.target.value.toLowerCase();
-                var filtered = qualWhitelist.filter(function(q) { return String(q).toLowerCase().indexOf(v) !== -1; }).slice(0, 50);
-                render(filtered); dropdown.classList.add('active');
+            var clearBtn = document.getElementById('qualSearchClear');
+            if (!input || !dropdown) return;
+
+            renderQuickQualPills();
+
+            input.addEventListener('focus', function() {
+                renderQualDropdown(input.value);
+                dropdown.classList.add('active');
             });
-            document.addEventListener('click', function(e) { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('active'); });
+
+            input.addEventListener('input', function(e) {
+                var v = e.target.value.trim();
+                if (clearBtn) clearBtn.style.display = v ? 'inline-flex' : 'none';
+                renderQualDropdown(v);
+                dropdown.classList.add('active');
+            });
+
+            input.addEventListener('keydown', function(e) {
+                var items = dropdown.querySelectorAll('.ij-qual-item');
+                if (!items.length) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomQual();
+                    }
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    focusedQualIndex = Math.min(focusedQualIndex + 1, items.length - 1);
+                    items.forEach(function(el, i) { el.classList.toggle('is-focused', i === focusedQualIndex); });
+                    if (items[focusedQualIndex]) items[focusedQualIndex].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    focusedQualIndex = Math.max(focusedQualIndex - 1, 0);
+                    items.forEach(function(el, i) { el.classList.toggle('is-focused', i === focusedQualIndex); });
+                    if (items[focusedQualIndex]) items[focusedQualIndex].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (focusedQualIndex >= 0 && items[focusedQualIndex]) {
+                        var val = items[focusedQualIndex].getAttribute('data-qual-val');
+                        if (val) addQualification(val);
+                    } else {
+                        addCustomQual();
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target) && (!clearBtn || !clearBtn.contains(e.target))) {
+                    dropdown.classList.remove('active');
+                }
+            });
         }
+
         function addQualification(qual) {
-            if (qualifications.indexOf(qual) !== -1) return;
-            if (qualifications.length >= 5) { showToast('Maximum 5 qualifications allowed', 'error'); return; }
-            qualifications.push(qual); renderQualifications();
-            document.getElementById('qualSearch').value = '';
+            qual = String(qual || '').trim();
+            if (!qual) return;
+            if (qualifications.indexOf(qual) !== -1) {
+                var inputEl = document.getElementById('qualSearch');
+                if (inputEl) inputEl.value = '';
+                var clr = document.getElementById('qualSearchClear');
+                if (clr) clr.style.display = 'none';
+                document.getElementById('qualDropdown').classList.remove('active');
+                return;
+            }
+            if (qualifications.length >= 5) {
+                showToast('Maximum 5 qualifications allowed', 'error');
+                return;
+            }
+            qualifications.push(qual);
+            renderQualifications();
+            var inputEl = document.getElementById('qualSearch');
+            if (inputEl) inputEl.value = '';
+            var clr = document.getElementById('qualSearchClear');
+            if (clr) clr.style.display = 'none';
             document.getElementById('qualDropdown').classList.remove('active');
         }
-        function addCustomQual() { var val = document.getElementById('qualSearch').value.trim(); if (val) addQualification(val); }
-        function removeQualification(qual) { qualifications = qualifications.filter(function(q) { return q !== qual; }); renderQualifications(); }
-        function renderQualifications() {
-            document.getElementById('qualList').innerHTML = qualifications.map(function(q) {
-                return '<span class="chip selected">' + escapeHtml(q) + ' <span class="remove" onclick="removeQualification(\'' + String(q).replace(/'/g, "\\'") + '\')">&times;</span></span>';
-            }).join('');
-            syncQual();
+
+        function addCustomQual() {
+            var input = document.getElementById('qualSearch');
+            if (!input) return;
+            var val = input.value.trim();
+            if (val) addQualification(val);
         }
-        function syncQual() { document.getElementById('qualification').value = JSON.stringify(qualifications.map(function(q) { return { value: q }; })); }
+
+        function removeQualification(qual) {
+            qualifications = qualifications.filter(function(q) { return q !== qual; });
+            renderQualifications();
+        }
+
+        function clearAllQualifications() {
+            qualifications = [];
+            renderQualifications();
+        }
+
+        function renderQualifications() {
+            var list = document.getElementById('qualList');
+            var countEl = document.getElementById('qualSelectedCount');
+            if (countEl) countEl.textContent = qualifications.length;
+
+            if (list) {
+                if (qualifications.length === 0) {
+                    list.innerHTML = '<span class="ij-no-locs">No qualifications selected yet. Pick from above or search to add.</span>';
+                } else {
+                    list.innerHTML = qualifications.map(function(q) {
+                        var isUni = (['Any Qualification', 'Any Degree', 'Any Graduation', 'Any Post Graduation'].indexOf(q) !== -1);
+                        var extraClass = isUni ? ' is-universal' : '';
+                        return '<span class="ij-location-chip ij-qual-chip' + extraClass + '">' +
+                            '<span class="ij-chip-pin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>' +
+                            '<span class="ij-chip-label">' + escapeHtml(q) + '</span>' +
+                            '<button type="button" class="ij-chip-del" onclick="removeQualification(\'' + String(q).replace(/'/g, "\\'") + '\')" title="Remove">&times;</button>' +
+                        '</span>';
+                    }).join('');
+                }
+            }
+            syncQual();
+            renderQuickQualPills();
+        }
+
+        function syncQual() {
+            var hidden = document.getElementById('qualification');
+            if (hidden) {
+                hidden.value = JSON.stringify(qualifications.map(function(q) { return { value: q }; }));
+            }
+        }
 
         // ---------- SKILLS ----------
         function initSkillsInput() {
@@ -3921,6 +4298,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011k"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011l"></script>
     @endif
 @endpush

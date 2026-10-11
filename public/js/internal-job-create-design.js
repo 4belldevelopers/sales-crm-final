@@ -108,7 +108,8 @@
             'Employment Details': 'Specify key employment details for this job opening.',
             'Compensation': 'Define the salary details for this position.',
             'Hiring Team': 'Assign the client contact and internal recruiters for this job position.',
-            'Additional Details': 'Add qualification and other preferences for this position.',
+            'Qualification / Education': 'Select up to 5 eligible educational qualifications or degrees.',
+            'Additional Details': 'Configure job closing duration and preferences.',
             'Job Description': 'Provide a detailed and clear job description.',
             'Key Skills': 'Add the key skills required for this position.'
         };
