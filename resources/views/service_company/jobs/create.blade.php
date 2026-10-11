@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011m">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011n">
     @endif
 @endpush
 @section('content')
@@ -849,11 +849,6 @@
                                     </div>
                                     <span class="ij-search-spinner" id="citySearchSpinner" style="display:none;" title="Searching Elasticsearch..."></span>
                                     <button type="button" class="ij-search-clear" id="citySearchClear" style="display:none;" onclick="clearCitySearchInput()" title="Clear input">&times;</button>
-                                    <button type="button" class="chip-add" onclick="addCustomCity()">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M5 12h14"/><path d="M12 5v14"/>
-                                        </svg>Add More
-                                    </button>
                                     <div class="search-dropdown ij-city-dropdown" id="cityDropdown"></div>
                                 </div>
                             </div>
@@ -973,25 +968,39 @@
                                         <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
                                     </svg>Compensation
                                 </div>
-                                <div class="ij-comp-currency-wrap">
-                                    <label class="ij-comp-currency-label" for="min_salary_currency">Currency:</label>
-                                    <div class="ij-comp-currency-select-box">
-                                        <select class="form-select currency-select ij-header-currency-select" name="min_salary_currency" id="min_salary_currency">
-                                            <?php
-                                            foreach ($currency as $key => $val) {
-                                                $sel = '';
-                                                if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
-                                                else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                                $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                                $symbol = $cMeta['symbol'] ?? '';
-                                                $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
-                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                </div>
                             </div>
+                            <?php
+                            $initialCurrCode = $currency_code;
+                            $initialCurrSymbol = '₹';
+                            foreach ($currency as $key => $val) {
+                                $isSel = false;
+                                if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
+                                    if ($currency_code == $val) { $isSel = true; }
+                                } else {
+                                    if (@$job->min_salary_currency == $key) { $isSel = true; }
+                                }
+                                if ($isSel) {
+                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                    $initialCurrCode = $val;
+                                    $initialCurrSymbol = $cMeta['symbol'] ?? $val;
+                                    break;
+                                }
+                            }
+                            ?>
+                            {{-- Preserved backend select elements for full backward compatibility --}}
+                            <select name="min_salary_currency" id="min_salary_currency" class="d-none">
+                                <?php
+                                foreach ($currency as $key => $val) {
+                                    $sel = '';
+                                    if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
+                                    else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
+                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                    $symbol = $cMeta['symbol'] ?? '';
+                                    $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
+                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
+                                }
+                                ?>
+                            </select>
                             <select name="max_salary_currency" id="max_salary_currency" class="d-none">
                                 <?php
                                 foreach ($currency as $key => $val) {
@@ -1005,23 +1014,83 @@
                                 }
                                 ?>
                             </select>
+
                             <div class="form-grid form-grid-3">
                                 <div class="form-group-cus">
                                     <label class="form-label required">Minimum Salary</label>
-                                    <div class="salary-input-wrapper ij-salary-input-wrapper">
-                                        <span class="ij-currency-symbol-badge" id="min_salary_curr_symbol">₹</span>
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="minSalaryWrap">
+                                        <button type="button" class="ij-currency-btn" id="minCurrTrigger" data-target="minSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
+                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
+                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
+                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
                                         <input type="number" class="form-input" name="minimum_salary" id="minimum_salary" value="<?php echo @$job->min_salary; ?>" placeholder="Enter min salary" min="0">
                                     </div>
                                     <span class="form-hint minimum_salary_word">*Minimum salary offered for this position.</span>
                                 </div>
                                 <div class="form-group-cus">
                                     <label class="form-label required">Maximum Salary</label>
-                                    <div class="salary-input-wrapper ij-salary-input-wrapper">
-                                        <span class="ij-currency-symbol-badge" id="max_salary_curr_symbol">₹</span>
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="maxSalaryWrap">
+                                        <button type="button" class="ij-currency-btn" id="maxCurrTrigger" data-target="maxSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
+                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
+                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
+                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
                                         <input type="number" class="form-input" name="maximum_salary" id="maximum_salary" value="<?php echo @$job->max_salary; ?>" placeholder="Enter max salary" min="0">
                                     </div>
                                     <span class="form-hint maximum_salary_word">*Maximum salary offered for this position.</span>
                                 </div>
+                                <div class="form-group-cus">
+                                    <label class="form-label required">Salary Type</label>
+                                    <select class="form-select" name="min_sal_mode" id="min_sal_mode">
+                                        <?php
+                                        foreach ($salaryMode as $key => $val) {
+                                            $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
+                                            echo '<option value="' . $key . '" ' . $sel . '>' . $val . '</option>';
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Modern Enterprise Currency Dropdown Popover -->
+                            <div class="ij-curr-popover" id="ijCurrencyPopover" style="display:none;" tabindex="-1">
+                                <div class="ij-curr-pop-search-wrap">
+                                    <svg class="ij-curr-pop-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                                    </svg>
+                                    <input type="text" class="ij-curr-pop-search" id="ijCurrPopSearch" placeholder="Search currency (code, name, symbol)..." autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="ij-curr-pop-quick">
+                                    <span class="ij-curr-pop-quick-label">Popular:</span>
+                                    <div class="ij-curr-pop-quick-chips">
+                                        <button type="button" class="ij-curr-pop-chip" data-code="INR">INR (₹)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="USD">USD ($)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="EUR">EUR (€)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="GBP">GBP (£)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="AED">AED (د.إ)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="SGD">SGD (S$)</button>
+                                    </div>
+                                </div>
+                                <div class="ij-curr-pop-list" id="ijCurrPopList">
+                                    <?php
+                                    foreach ($currency as $key => $val) {
+                                        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                        $symbol = $cMeta['symbol'] ?? '';
+                                        $name = $cMeta['name'] ?? $val;
+                                        $search = strtolower($cMeta['keywords'] . ' ' . $val . ' ' . $name . ' ' . $symbol);
+                                        $isSel = ($val === $initialCurrCode);
+                                    ?>
+                                        <div class="ij-curr-pop-item <?php echo $isSel ? 'is-selected' : ''; ?>" data-val="<?php echo e($key); ?>" data-code="<?php echo e($val); ?>" data-symbol="<?php echo e($symbol); ?>" data-name="<?php echo e($name); ?>" data-search="<?php echo e($search); ?>">
+                                            <div class="ij-curr-item-left">
+                                                <span class="ij-curr-badge"><strong class="ij-curr-badge-code"><?php echo e($val); ?></strong> <span class="ij-curr-badge-symbol"><?php echo e($symbol); ?></span></span>
+                                                <span class="ij-curr-name"><?php echo e($name); ?></span>
+                                            </div>
+                                            <svg class="ij-curr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            </div>
                                 <div class="form-group-cus">
                                     <label class="form-label required">Salary Type</label>
                                     <select class="form-select" name="min_sal_mode" id="min_sal_mode">
@@ -2466,16 +2535,11 @@
                 });
             }).change();
 
-            // ---- Salary words (original) ----
-            $(document).on('keyup', '#minimum_salary', function() {
-                var number = parseInt($('#minimum_salary').val());
-                var result = convertToWords(number);
-                $('.minimum_salary_word').text(capitalizeFirstLetter(result));
-            });
-            $(document).on('keyup', '#maximum_salary', function() {
-                var number = parseInt($('#maximum_salary').val());
-                var result = convertToWords(number);
-                $('.maximum_salary_word').text(capitalizeFirstLetter(result));
+            // ---- Salary words (Enterprise Dynamic Multi-Currency) ----
+            $(document).on('input keyup change', '#minimum_salary, #maximum_salary', function() {
+                if (typeof updateSalaryWords === 'function') {
+                    updateSalaryWords();
+                }
             });
 
             // ---- Hiring Team: render selected people as cards (synced to hidden inputs) ----
@@ -2579,29 +2643,161 @@
             renderRecruiterCards();
         }
 
-        // ---- Salary words helpers (original) ----
-        var ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-        var teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-        var tens = ['', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-        function capitalizeFirstLetter(string) { return string.charAt(0).toUpperCase() + string.slice(1); }
-        function convertToWords(num) {
-            if (isNaN(num)) return '';
-            if (num < 10) { return ones[num]; }
-            else if (num < 20) { return teens[num - 10]; }
-            else if (num < 100) { return tens[Math.floor(num / 10)] + ' ' + ones[num % 10]; }
-            else if (num < 1000) { return ones[Math.floor(num / 100)] + ' hundred ' + convertToWords(num % 100); }
-            else if (num < 100000) { return convertToWords(Math.floor(num / 1000)) + ' thousand ' + convertToWords(num % 1000); }
-            else if (num < 10000000) { return convertToWords(Math.floor(num / 100000)) + ' lakh ' + convertToWords(num % 100000); }
-            else if (num < 1000000000) { return convertToWords(Math.floor(num / 10000000)) + ' crore ' + convertToWords(num % 10000000); }
-            return "Number out of range";
+        // ---- Salary words helpers (Enterprise Multi-Currency Engine) ----
+        var CURRENCY_DENOMINATIONS = {
+            'INR': { singular: 'Rupee', plural: 'Rupees', system: 'indian' },
+            'USD': { singular: 'Dollar', plural: 'Dollars', system: 'intl' },
+            'EUR': { singular: 'Euro', plural: 'Euros', system: 'intl' },
+            'GBP': { singular: 'Pound', plural: 'Pounds', system: 'intl' },
+            'AED': { singular: 'Dirham', plural: 'Dirhams', system: 'intl' },
+            'CAD': { singular: 'Canadian Dollar', plural: 'Canadian Dollars', system: 'intl' },
+            'AUD': { singular: 'Australian Dollar', plural: 'Australian Dollars', system: 'intl' },
+            'SGD': { singular: 'Singapore Dollar', plural: 'Singapore Dollars', system: 'intl' },
+            'CHF': { singular: 'Swiss Franc', plural: 'Swiss Francs', system: 'intl' },
+            'JPY': { singular: 'Yen', plural: 'Yen', system: 'intl' },
+            'NZD': { singular: 'New Zealand Dollar', plural: 'New Zealand Dollars', system: 'intl' },
+            'ZAR': { singular: 'Rand', plural: 'Rand', system: 'intl' },
+            'BRL': { singular: 'Real', plural: 'Reais', system: 'intl' },
+            'PHP': { singular: 'Philippine Peso', plural: 'Philippine Pesos', system: 'intl' },
+            'MYR': { singular: 'Malaysian Ringgit', plural: 'Malaysian Ringgits', system: 'intl' },
+            'THB': { singular: 'Thai Baht', plural: 'Thai Baht', system: 'intl' },
+            'IDR': { singular: 'Indonesian Rupiah', plural: 'Indonesian Rupiah', system: 'intl' },
+            'VND': { singular: 'Dong', plural: 'Dong', system: 'intl' },
+            'SEK': { singular: 'Swedish Krona', plural: 'Swedish Kronor', system: 'intl' },
+            'NOK': { singular: 'Norwegian Krone', plural: 'Norwegian Kroner', system: 'intl' },
+            'DKK': { singular: 'Danish Krone', plural: 'Danish Kroner', system: 'intl' },
+            'SAR': { singular: 'Saudi Riyal', plural: 'Saudi Riyals', system: 'intl' },
+            'QAR': { singular: 'Qatari Riyal', plural: 'Qatari Riyals', system: 'intl' },
+            'KWD': { singular: 'Kuwaiti Dinar', plural: 'Kuwaiti Dinars', system: 'intl' },
+            'BHD': { singular: 'Bahraini Dinar', plural: 'Bahraini Dinars', system: 'intl' },
+            'OMR': { singular: 'Omani Rial', plural: 'Omani Rials', system: 'intl' },
+            'CNY': { singular: 'Yuan', plural: 'Yuan', system: 'intl' },
+            'KRW': { singular: 'Won', plural: 'Won', system: 'intl' },
+            'RUB': { singular: 'Russian Ruble', plural: 'Russian Rubles', system: 'intl' },
+            'TRY': { singular: 'Turkish Lira', plural: 'Turkish Liras', system: 'intl' },
+            'PLN': { singular: 'Zloty', plural: 'Zlotys', system: 'intl' }
+        };
+
+        var _ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        var _tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        function convertUnderThousand(n) {
+            var str = '';
+            if (n >= 100) {
+                str += _ones[Math.floor(n / 100)] + ' Hundred ';
+                n %= 100;
+            }
+            if (n >= 20) {
+                str += _tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + _ones[n % 10] : '');
+            } else if (n > 0) {
+                str += _ones[n];
+            }
+            return str.trim();
         }
+
+        function convertIndianSystem(num) {
+            if (num === 0) return 'Zero';
+            var words = '';
+            var crore = Math.floor(num / 10000000);
+            num %= 10000000;
+            var lakh = Math.floor(num / 100000);
+            num %= 100000;
+            var thousand = Math.floor(num / 1000);
+            num %= 1000;
+            var rest = num;
+
+            if (crore > 0) {
+                words += convertIndianSystem(crore) + ' Crore ';
+            }
+            if (lakh > 0) {
+                words += convertIndianSystem(lakh) + ' Lakh ';
+            }
+            if (thousand > 0) {
+                words += convertIndianSystem(thousand) + ' Thousand ';
+            }
+            if (rest > 0) {
+                words += convertUnderThousand(rest);
+            }
+            return words.trim();
+        }
+
+        function convertIntlSystem(num) {
+            if (num === 0) return 'Zero';
+            var words = '';
+            var billion = Math.floor(num / 1000000000);
+            num %= 1000000000;
+            var million = Math.floor(num / 1000000);
+            num %= 1000000;
+            var thousand = Math.floor(num / 1000);
+            num %= 1000;
+            var rest = num;
+
+            if (billion > 0) {
+                words += convertUnderThousand(billion) + ' Billion ';
+            }
+            if (million > 0) {
+                words += convertUnderThousand(million) + ' Million ';
+            }
+            if (thousand > 0) {
+                words += convertUnderThousand(thousand) + ' Thousand ';
+            }
+            if (rest > 0) {
+                words += convertUnderThousand(rest);
+            }
+            return words.trim();
+        }
+
+        function formatAmountInWords(amount, currCode) {
+            if (isNaN(amount) || amount <= 0) return '';
+            var code = (currCode || 'INR').toUpperCase();
+            var denom = CURRENCY_DENOMINATIONS[code] || {
+                singular: code,
+                plural: code,
+                system: (code === 'INR' ? 'indian' : 'intl')
+            };
+
+            var words = (denom.system === 'indian') ? convertIndianSystem(amount) : convertIntlSystem(amount);
+            var unit = (amount === 1) ? denom.singular : denom.plural;
+            return (words + ' ' + unit).trim();
+        }
+
+        function getActiveCurrencyCode() {
+            var $opt = $('#min_salary_currency option:selected');
+            if ($opt.length && $opt.data('code')) return String($opt.data('code')).toUpperCase();
+            var curText = ($('#minCurrTrigger .ij-curr-pill-code').text() || 'INR').trim().toUpperCase();
+            return curText || 'INR';
+        }
+
+        function updateSalaryWords() {
+            var currCode = getActiveCurrencyCode();
+            var minVal = parseInt($('#minimum_salary').val(), 10);
+            var maxVal = parseInt($('#maximum_salary').val(), 10);
+
+            if (!isNaN(minVal) && minVal > 0) {
+                $('.minimum_salary_word').text(formatAmountInWords(minVal, currCode));
+            } else {
+                $('.minimum_salary_word').text('*Minimum salary offered for this position.');
+            }
+
+            if (!isNaN(maxVal) && maxVal > 0) {
+                $('.maximum_salary_word').text(formatAmountInWords(maxVal, currCode));
+            } else {
+                $('.maximum_salary_word').text('*Maximum salary offered for this position.');
+            }
+        }
+
+        // Backward compatibility aliases
+        function capitalizeFirstLetter(string) { return string ? string.charAt(0).toUpperCase() + string.slice(1) : ''; }
+        function convertToWords(num) { return formatAmountInWords(num, getActiveCurrencyCode()); }
+
         function salary_check() {
             var minimum_salary = parseInt($("#minimum_salary").val());
             var maximum_salary = parseInt($("#maximum_salary").val());
-            if (minimum_salary != '') {
+            if (!isNaN(minimum_salary) && !isNaN(maximum_salary) && minimum_salary > 0 && maximum_salary > 0) {
                 if (minimum_salary > maximum_salary) {
                     Swal.fire({ title: 'Warning', text: 'Enter the maximum salary greater than the minimum salary', icon: 'warning', allowOutsideClick: false });
                     $("#maximum_salary").val('');
+                    updateSalaryWords();
                 }
             }
         }
@@ -2616,59 +2812,39 @@
             }
         }
 
-        // ---- Currency Select2 & mirroring ----
-        if (window.jQuery && $.fn.select2) {
-            $('.currency-select').select2({
-                width: '140px',
-                dropdownParent: $(document.body),
-                dropdownCssClass: 'br-currency-select2-dropdown',
-                placeholder: 'Search currency...',
-                minimumResultsForSearch: 0,
-                templateSelection: function(data) {
-                    if (!data.id) return data.text;
-                    var $el = $(data.element);
-                    var short = $el.data('short') || $el.data('code');
-                    return short ? short : data.text;
-                },
-                matcher: function (params, data) {
-                    if ($.trim(params.term) === '') {
-                        return data;
-                    }
-                    if (typeof data.text === 'undefined') {
-                        return null;
-                    }
-                    var term = params.term.toLowerCase();
-                    var text = data.text.toLowerCase();
-                    var $el = $(data.element);
-                    var code = ($el.data('code') || '').toString().toLowerCase();
-                    var searchKw = ($el.data('search') || '').toString().toLowerCase();
-
-                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
-                        return data;
-                    }
-                    return null;
-                }
-            });
-        }
-
         function updateCompensationCurrencyContext() {
             var $sel = $('#min_salary_currency');
             if (!$sel.length) return;
             var opt = $sel.find('option:selected');
-            var symbol = opt.data('symbol');
-            var code = opt.data('code') || opt.val() || '';
-            var displayBadge = symbol ? symbol : code;
-            if (displayBadge) {
-                $('#min_salary_curr_symbol').text(displayBadge);
-                $('#max_salary_curr_symbol').text(displayBadge);
-            }
+            var symbol = opt.data('symbol') || '';
+            var code = (opt.data('code') || opt.val() || 'INR').toString().toUpperCase();
             var val = $sel.val();
+
+            // Update both input trigger pills
+            $('#minCurrTrigger .ij-curr-pill-symbol, #maxCurrTrigger .ij-curr-pill-symbol').text(symbol || code);
+            $('#minCurrTrigger .ij-curr-pill-code, #maxCurrTrigger .ij-curr-pill-code').text(code);
+
+            // Sync hidden inputs
             if ($('#max_salary_currency').length && $('#max_salary_currency').val() !== val) {
                 $('#max_salary_currency').val(val);
             }
-            if ($('#salary_currency').length && $('#salary_currency').val() !== val) {
-                $('#salary_currency').val(val);
+            if ($('#salary_currency').length && $('#salary_currency').val() !== code) {
+                $('#salary_currency').val(code);
             }
+
+            // Sync popover selection state
+            $('#ijCurrPopList .ij-curr-pop-item').each(function() {
+                var itemVal = $(this).data('val');
+                var itemCode = ($(this).data('code') || '').toString().toUpperCase();
+                if (String(itemVal) === String(val) || itemCode === code) {
+                    $(this).addClass('is-selected');
+                } else {
+                    $(this).removeClass('is-selected');
+                }
+            });
+
+            // Update salary amount in words immediately
+            updateSalaryWords();
         }
         updateCompensationCurrencyContext();
 
@@ -2678,9 +2854,148 @@
         $('body').on('change', '#max_salary_currency', function() {
             var val = $(this).val();
             if ($('#min_salary_currency').val() !== val) {
-                $('#min_salary_currency').val(val).trigger('change.select2');
+                $('#min_salary_currency').val(val).trigger('change');
             }
         });
+
+        // Enterprise Currency Popover Controller
+        (function initEnterpriseCurrencyPopover() {
+            var $pop = $('#ijCurrencyPopover');
+            if (!$pop.length) return;
+
+            // Move popover to document.body to avoid parent container overflow clipping
+            $('body').append($pop);
+
+            var activeTrigger = null;
+
+            function openCurrencyPopover($trigger) {
+                activeTrigger = $trigger;
+                var rect = $trigger[0].getBoundingClientRect();
+                var top = rect.bottom + window.scrollY + 4;
+                var left = rect.left + window.scrollX;
+                var popWidth = 320;
+
+                // Keep inside screen boundaries
+                if (left + popWidth > window.innerWidth - 16) {
+                    left = window.innerWidth - popWidth - 16;
+                }
+                if (left < 16) left = 16;
+
+                $pop.css({
+                    position: 'absolute',
+                    top: top + 'px',
+                    left: left + 'px',
+                    zIndex: 99999
+                }).show();
+
+                $('#minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
+                $trigger.attr('aria-expanded', 'true');
+
+                // Clear search and reset list
+                $('#ijCurrPopSearch').val('').focus();
+                $('#ijCurrPopList .ij-curr-pop-item').show();
+                $('.ij-curr-pop-empty').remove();
+
+                // Scroll current selected currency into view
+                var $selItem = $('#ijCurrPopList .ij-curr-pop-item.is-selected').first();
+                if ($selItem.length) {
+                    var list = document.getElementById('ijCurrPopList');
+                    if (list) {
+                        list.scrollTop = $selItem[0].offsetTop - list.offsetTop - 30;
+                    }
+                }
+            }
+
+            function closeCurrencyPopover() {
+                $pop.hide();
+                $('#minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
+                activeTrigger = null;
+            }
+
+            $(document).on('click', '#minCurrTrigger, #maxCurrTrigger', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if ($pop.is(':visible') && activeTrigger && activeTrigger[0] === this) {
+                    closeCurrencyPopover();
+                } else {
+                    openCurrencyPopover($(this));
+                }
+            });
+
+            // Search filter
+            $('#ijCurrPopSearch').on('input keyup', function() {
+                var term = $(this).val().trim().toLowerCase();
+                var matches = 0;
+                $('#ijCurrPopList .ij-curr-pop-item').each(function() {
+                    var searchData = ($(this).data('search') || '').toString().toLowerCase();
+                    var code = ($(this).data('code') || '').toString().toLowerCase();
+                    var name = ($(this).data('name') || '').toString().toLowerCase();
+                    var sym = ($(this).data('symbol') || '').toString().toLowerCase();
+
+                    if (!term || searchData.indexOf(term) > -1 || code.indexOf(term) > -1 || name.indexOf(term) > -1 || sym.indexOf(term) > -1) {
+                        $(this).show();
+                        matches++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                $('.ij-curr-pop-empty').remove();
+                if (matches === 0) {
+                    $('#ijCurrPopList').append('<div class="ij-curr-pop-empty">No currencies match your search</div>');
+                }
+            });
+
+            // Select currency from list item
+            $(document).on('click', '.ij-curr-pop-item', function(e) {
+                e.preventDefault();
+                var val = $(this).data('val');
+                $('#min_salary_currency').val(val).trigger('change');
+                closeCurrencyPopover();
+            });
+
+            // Select currency from popular chips
+            $(document).on('click', '.ij-curr-pop-chip', function(e) {
+                e.preventDefault();
+                var chipCode = $(this).data('code');
+                var $targetItem = $('#ijCurrPopList .ij-curr-pop-item').filter(function() {
+                    return ($(this).data('code') || '').toString().toUpperCase() === String(chipCode).toUpperCase();
+                }).first();
+
+                if ($targetItem.length) {
+                    var val = $targetItem.data('val');
+                    $('#min_salary_currency').val(val).trigger('change');
+                }
+                closeCurrencyPopover();
+            });
+
+            // Close on click outside or escape
+            $(document).on('click', function(e) {
+                if ($pop.is(':visible') && !$(e.target).closest('#ijCurrencyPopover, #minCurrTrigger, #maxCurrTrigger').length) {
+                    closeCurrencyPopover();
+                }
+            });
+
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $pop.is(':visible')) {
+                    closeCurrencyPopover();
+                }
+            });
+
+            $(window).on('resize scroll', function() {
+                if ($pop.is(':visible') && activeTrigger) {
+                    var rect = activeTrigger[0].getBoundingClientRect();
+                    var popWidth = 320;
+                    var top = rect.bottom + window.scrollY + 4;
+                    var left = rect.left + window.scrollX;
+                    if (left + popWidth > window.innerWidth - 16) {
+                        left = window.innerWidth - popWidth - 16;
+                    }
+                    if (left < 16) left = 16;
+                    $pop.css({ top: top + 'px', left: left + 'px' });
+                }
+            });
+        })();
         $('body').on('change', '#min_sal_mode', function() {
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
@@ -4275,6 +4590,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011m"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011n"></script>
     @endif
 @endpush
