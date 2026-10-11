@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011i">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011j">
     @endif
 @endpush
 @section('content')
@@ -822,7 +822,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
+                    <div class="card ij-location-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -831,33 +831,37 @@
                                 </svg>Job Location or Work Location
                             </div>
                             <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Select up to 15 cities where this job is based.</p>
+
+                            <!-- L1 Quick-Select Popular Hubs Bar -->
+                            <div class="ij-popular-hubs-wrap">
+                                <span class="ij-popular-label">Popular Hubs:</span>
+                                <div class="ij-popular-pills" id="popularHubsPills"></div>
+                            </div>
+
                             <div class="form-group-cus full-width">
-                                <div class="input-wrapper" style="position:relative;">
+                                <div class="input-wrapper ij-location-input-wrap">
                                     <div class="input-with-icon">
                                         <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <circle cx="11" cy="11" r="8"/>
                                             <path d="m21 21-4.3-4.3"/>
                                         </svg>
-                                        <input type="text" class="form-input" id="citySearch" placeholder="Search for cities..." autocomplete="off">
+                                        <input type="text" class="form-input" id="citySearch" placeholder="Search for cities (e.g. Bangalore, Mumbai, London, New York)..." autocomplete="off" spellcheck="false">
                                     </div>
-                                    <button type="button" class="chip-add" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);" onclick="addCustomCity()">
+                                    <span class="ij-search-spinner" id="citySearchSpinner" style="display:none;" title="Searching Elasticsearch..."></span>
+                                    <button type="button" class="ij-search-clear" id="citySearchClear" style="display:none;" onclick="clearCitySearchInput()" title="Clear input">&times;</button>
+                                    <button type="button" class="chip-add" onclick="addCustomCity()">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M5 12h14"/><path d="M12 5v14"/>
                                         </svg>Add More
                                     </button>
-                                    <div class="search-dropdown" id="cityDropdown"></div>
+                                    <div class="search-dropdown ij-city-dropdown" id="cityDropdown"></div>
                                 </div>
                             </div>
-                            {{-- <div style="margin-top:16px;">
-                                <div style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:10px;">Recommended Cities</div>
-                                <div class="chips-container" id="recommendedCities">
-                                </div>
-                            </div> --}}
                             <div class="selected-header">
                                 <span class="selected-label">Selected Locations (<span id="selectedCount">0</span>/15)</span>
                                 <button type="button" class="clear-all" onclick="clearAllCities()">Clear All</button>
                             </div>
-                            <div class="chips-container" id="selectedCities"></div>
+                            <div class="chips-container ij-selected-chips" id="selectedCities"></div>
                             <input type="hidden" id="kt_tagify_work_location" name="kt_tagify_work_location" value="">
                         </div>
                     </div>
@@ -2925,65 +2929,541 @@
             showToast(type === 'new' ? 'Creating new job from scratch' : type === 'template' ? 'Template selection coming soon' : 'Clone job coming soon', 'info');
         }
 
-        // ---------- CITY SELECTION ----------
+        // ---------- GOD-LEVEL CANONICAL LOCATION ENGINE (V4 ARCHITECTURE) ----------
         function debounce(func, delay) { let timer; return function (...args) { clearTimeout(timer); timer = setTimeout(() => func.apply(this, args), delay); }; }
-        var fetchCitySuggestions = debounce(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query), method: 'GET',
-                success: function(data) {
-                    var dd = document.getElementById('cityDropdown');
-                    if (Array.isArray(data) && data.length) {
-                        dd.innerHTML = data.map(function(c) { return '<div class="search-option" onclick="selectCity(\'' + String(c).replace(/'/g, "\\'") + '\')">' + escapeHtml(String(c)) + '</div>'; }).join('');
-                    } else { dd.innerHTML = '<div class="search-option" style="color:var(--text-muted);cursor:default;">No matches</div>'; }
-                    dd.classList.add('active');
+
+        // Layer 1: In-Browser Curated Global Hubs (30 worldwide hubs grouped by Region)
+        var curatedLocationGroups = [
+            {
+                region: 'India Tech Hubs',
+                items: [
+                    { city: 'Bengaluru', state: 'Karnataka', country: 'India', badge: 'Metro Hub', canonical: 'Bengaluru, Karnataka, India' },
+                    { city: 'Mumbai', state: 'Maharashtra', country: 'India', badge: 'Financial Capital', canonical: 'Mumbai, Maharashtra, India' },
+                    { city: 'New Delhi', state: 'Delhi', country: 'India', badge: 'National Capital', canonical: 'New Delhi, Delhi, India' },
+                    { city: 'Hyderabad', state: 'Telangana', country: 'India', badge: 'Tech Hub', canonical: 'Hyderabad, Telangana, India' },
+                    { city: 'Pune', state: 'Maharashtra', country: 'India', badge: 'IT Hub', canonical: 'Pune, Maharashtra, India' },
+                    { city: 'Chennai', state: 'Tamil Nadu', country: 'India', badge: 'SaaS Capital', canonical: 'Chennai, Tamil Nadu, India' },
+                    { city: 'Gurugram', state: 'Haryana', country: 'India', badge: 'NCR Hub', canonical: 'Gurugram, Haryana, India' },
+                    { city: 'Noida', state: 'Uttar Pradesh', country: 'India', badge: 'NCR Hub', canonical: 'Noida, Uttar Pradesh, India' },
+                    { city: 'Kolkata', state: 'West Bengal', country: 'India', badge: 'Metro Hub', canonical: 'Kolkata, West Bengal, India' },
+                    { city: 'Ahmedabad', state: 'Gujarat', country: 'India', badge: 'Commercial Hub', canonical: 'Ahmedabad, Gujarat, India' }
+                ]
+            },
+            {
+                region: 'North America',
+                items: [
+                    { city: 'San Francisco', state: 'California', country: 'United States', badge: 'Silicon Valley', canonical: 'San Francisco, California, United States' },
+                    { city: 'New York City', state: 'New York', country: 'United States', badge: 'Global Hub', canonical: 'New York City, New York, United States' },
+                    { city: 'Seattle', state: 'Washington', country: 'United States', badge: 'Cloud Hub', canonical: 'Seattle, Washington, United States' },
+                    { city: 'Austin', state: 'Texas', country: 'United States', badge: 'Tech Hub', canonical: 'Austin, Texas, United States' },
+                    { city: 'Boston', state: 'Massachusetts', country: 'United States', badge: 'Biotech / AI', canonical: 'Boston, Massachusetts, United States' },
+                    { city: 'Toronto', state: 'Ontario', country: 'Canada', badge: 'Canada Tech Hub', canonical: 'Toronto, Ontario, Canada' },
+                    { city: 'Vancouver', state: 'British Columbia', country: 'Canada', badge: 'Tech Center', canonical: 'Vancouver, British Columbia, Canada' }
+                ]
+            },
+            {
+                region: 'Europe & UK',
+                items: [
+                    { city: 'London', state: 'England', country: 'United Kingdom', badge: 'FinTech Capital', canonical: 'London, England, United Kingdom' },
+                    { city: 'Berlin', state: 'Berlin', country: 'Germany', badge: 'Startup Capital', canonical: 'Berlin, Germany' },
+                    { city: 'Amsterdam', state: 'North Holland', country: 'Netherlands', badge: 'Tech Hub', canonical: 'Amsterdam, Netherlands' },
+                    { city: 'Dublin', state: 'Leinster', country: 'Ireland', badge: 'EMEA HQ Hub', canonical: 'Dublin, Ireland' },
+                    { city: 'Paris', state: 'Île-de-France', country: 'France', badge: 'Tech Hub', canonical: 'Paris, France' }
+                ]
+            },
+            {
+                region: 'APAC & Middle East',
+                items: [
+                    { city: 'Singapore', state: 'Central', country: 'Singapore', badge: 'Asia Gateway', canonical: 'Singapore, Singapore' },
+                    { city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates', badge: 'MENA Hub', canonical: 'Dubai, United Arab Emirates' },
+                    { city: 'Tokyo', state: 'Tokyo', country: 'Japan', badge: 'Asia Metro', canonical: 'Tokyo, Japan' },
+                    { city: 'Sydney', state: 'New South Wales', country: 'Australia', badge: 'ANZ Hub', canonical: 'Sydney, New South Wales, Australia' },
+                    { city: 'Melbourne', state: 'Victoria', country: 'Australia', badge: 'Tech Center', canonical: 'Melbourne, Victoria, Australia' }
+                ]
+            }
+        ];
+
+        // Layer 1 Instant Quick-Select Popular Hubs
+        var popularPillList = [
+            { label: 'Bengaluru', canonical: 'Bengaluru, Karnataka, India' },
+            { label: 'Mumbai', canonical: 'Mumbai, Maharashtra, India' },
+            { label: 'Delhi NCR', canonical: 'New Delhi, Delhi, India' },
+            { label: 'Hyderabad', canonical: 'Hyderabad, Telangana, India' },
+            { label: 'Pune', canonical: 'Pune, Maharashtra, India' },
+            { label: 'London', canonical: 'London, England, United Kingdom' },
+            { label: 'New York', canonical: 'New York City, New York, United States' },
+            { label: 'Singapore', canonical: 'Singapore, Singapore' }
+        ];
+
+        // Layer 1 In-Memory Synonym Aliases
+        var citySynonymAliases = {
+            'baroda': 'Vadodara',
+            'vizag': 'Visakhapatnam',
+            'bombay': 'Mumbai',
+            'calcutta': 'Kolkata',
+            'madras': 'Chennai',
+            'poona': 'Pune',
+            'bangalore': 'Bengaluru',
+            'bengaluru': 'Bengaluru',
+            'gurgaon': 'Gurugram',
+            'gurugram': 'Gurugram',
+            'trivandrum': 'Thiruvananthapuram',
+            'cochin': 'Kochi',
+            'sf': 'San Francisco',
+            'bay area': 'San Francisco',
+            'nyc': 'New York City',
+            'ny': 'New York City',
+            'la': 'Los Angeles',
+            'dc': 'Washington',
+            'kl': 'Kuala Lumpur',
+            'sg': 'Singapore',
+            'uae': 'Dubai'
+        };
+
+        // Layer 2 Session LRU In-Memory Cache (Capacity: 100, TTL: 30 minutes)
+        var cityLruCache = new Map();
+        var CITY_CACHE_MAX = 100;
+        var CITY_CACHE_TTL = 1800000;
+        var citySearchAbortCtrl = null;
+        var cityHighlightedIdx = -1;
+
+        function getCachedCities(key) {
+            var entry = cityLruCache.get(key);
+            if (!entry) return null;
+            if (Date.now() - entry.ts > CITY_CACHE_TTL) {
+                cityLruCache.delete(key);
+                return null;
+            }
+            cityLruCache.delete(key);
+            cityLruCache.set(key, entry);
+            return entry.data;
+        }
+
+        function setCachedCities(key, data) {
+            if (cityLruCache.size >= CITY_CACHE_MAX) {
+                var firstKey = cityLruCache.keys().next().value;
+                cityLruCache.delete(firstKey);
+            }
+            cityLruCache.set(key, { ts: Date.now(), data: data });
+        }
+
+        function escapeJsStr(val) {
+            return String(val || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        function isCitySelected(canonical, label) {
+            var cNorm = String(canonical || '').toLowerCase().trim();
+            var lNorm = String(label || '').toLowerCase().trim();
+            return selectedCities.some(function(item) {
+                var it = String(item || '').toLowerCase().trim();
+                if (it === cNorm || (lNorm && it === lNorm)) return true;
+                var cityPart = it.split(/[,|]/)[0].trim();
+                if (lNorm && cityPart === lNorm) return true;
+                if (cNorm && it.indexOf(cNorm) === 0) return true;
+                return false;
+            });
+        }
+
+        function renderPopularPills() {
+            var container = document.getElementById('popularHubsPills');
+            if (!container) return;
+            container.innerHTML = popularPillList.map(function(p) {
+                var active = isCitySelected(p.canonical, p.label);
+                var activeClass = active ? ' is-active' : '';
+                var prefix = active ? '✓ ' : '+ ';
+                return '<button type="button" class="ij-pop-pill' + activeClass + '" onclick="togglePopularPill(\'' + escapeJsStr(p.canonical) + '\', \'' + escapeJsStr(p.label) + '\')">' +
+                    prefix + escapeHtml(p.label) + '</button>';
+            }).join('');
+        }
+
+        function togglePopularPill(canonical, label) {
+            var existingIdx = selectedCities.findIndex(function(item) {
+                var it = String(item || '').toLowerCase().trim();
+                var cNorm = String(canonical || '').toLowerCase().trim();
+                var lNorm = String(label || '').toLowerCase().trim();
+                return it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm);
+            });
+            if (existingIdx !== -1) {
+                selectedCities.splice(existingIdx, 1);
+            } else {
+                if (selectedCities.length >= 15) {
+                    showToast('Maximum 15 cities allowed', 'error');
+                    return;
+                }
+                selectedCities.push(canonical);
+            }
+            renderSelectedCities();
+        }
+
+        function renderCuratedDropdown() {
+            var dd = document.getElementById('cityDropdown');
+            if (!dd) return;
+            cityHighlightedIdx = -1;
+            var html = '';
+            curatedLocationGroups.forEach(function(group) {
+                html += '<div class="ij-cd-group">';
+                html += '<div class="ij-cd-group-title">' + escapeHtml(group.region) + '</div>';
+                group.items.forEach(function(item) {
+                    var selected = isCitySelected(item.canonical, item.city);
+                    var itemClass = 'ij-cd-item' + (selected ? ' is-selected' : '');
+                    var clickAttr = selected ? '' : 'onclick="selectCity(\'' + escapeJsStr(item.canonical) + '\')"';
+                    var statusBadge = selected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
+                    var subText = item.state ? (item.state + ', ' + item.country) : item.country;
+                    html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(item.canonical) + '">';
+                    html += '  <div class="ij-cd-left">';
+                    html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+                    html += '    <div class="ij-cd-text">';
+                    html += '      <span class="ij-cd-name">' + escapeHtml(item.city) + '</span>';
+                    html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    html += '  <div class="ij-cd-right">';
+                    if (item.badge) {
+                        html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+                    }
+                    html += statusBadge;
+                    html += '  </div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            });
+            dd.innerHTML = html;
+            dd.classList.add('active');
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return escapeHtml(text);
+            var regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            return escapeHtml(text).replace(regex, '<strong style="color:#2563eb;">$1</strong>');
+        }
+
+        function renderCitySearchResults(results, query) {
+            var dd = document.getElementById('cityDropdown');
+            if (!dd) return;
+            cityHighlightedIdx = -1;
+            if (!results || results.length === 0) {
+                var safeQ = escapeHtml(query);
+                var safeJsQ = escapeJsStr(query);
+                dd.innerHTML = '<div class="ij-cd-empty">' +
+                    '<div>No matching cities found for &ldquo;' + safeQ + '&rdquo;</div>' +
+                    '<button type="button" class="ij-btn-custom-add" onclick="addCustomCityDirect(\'' + safeJsQ + '\')">' +
+                    '+ Add &ldquo;' + safeQ + '&rdquo; as custom location</button>' +
+                    '</div>';
+                dd.classList.add('active');
+                return;
+            }
+            var html = '<div class="ij-cd-group">';
+            html += '<div class="ij-cd-group-title">Search Results (' + results.length + ')</div>';
+            results.forEach(function(item) {
+                var canonical = item.canonical || item.label || (item.city + (item.state ? ', ' + item.state : '') + (item.country ? ', ' + item.country : ''));
+                var selected = isCitySelected(canonical, item.city);
+                var itemClass = 'ij-cd-item' + (selected ? ' is-selected' : '');
+                var clickAttr = selected ? '' : 'onclick="selectCity(\'' + escapeJsStr(canonical) + '\')"';
+                var statusBadge = selected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
+                var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
+                html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(canonical) + '">';
+                html += '  <div class="ij-cd-left">';
+                html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+                html += '    <div class="ij-cd-text">';
+                html += '      <span class="ij-cd-name">' + highlightMatch(item.city, query) + '</span>';
+                html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="ij-cd-right">';
+                if (item.badge) {
+                    html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+                }
+                html += statusBadge;
+                html += '  </div>';
+                html += '</div>';
+            });
+            html += '</div>';
+            dd.innerHTML = html;
+            dd.classList.add('active');
+        }
+
+        function parseRawCityData(data) {
+            var rawList = [];
+            if (data && Array.isArray(data.results)) {
+                rawList = data.results;
+            } else if (Array.isArray(data)) {
+                rawList = data;
+            }
+            return rawList.map(function(c) {
+                if (typeof c === 'object' && c !== null) {
+                    var cityName = c.city || (c.label ? c.label.split(',')[0].trim() : '');
+                    var stateName = c.state || (c.label ? (c.label.split(',')[1] || '').trim() : '');
+                    var countryName = c.country || (c.label ? (c.label.split(',')[2] || '').trim() : '');
+                    var canon = c.canonical || c.label || [cityName, stateName, countryName].filter(Boolean).join(', ');
+                    var badge = c.badge || (countryName === 'India' ? (stateName || 'India') : countryName);
+                    return {
+                        id: c.id,
+                        city: cityName || canon,
+                        state: stateName,
+                        country: countryName,
+                        label: c.label || canon,
+                        canonical: canon,
+                        badge: badge
+                    };
+                } else {
+                    var str = String(c || '').trim();
+                    var parts = str.split(/[,|]/).map(function(s) { return s.trim(); });
+                    var cityName = parts[0] || str;
+                    var stateName = parts[1] || '';
+                    var countryName = parts[2] || '';
+                    return {
+                        city: cityName,
+                        state: stateName,
+                        country: countryName,
+                        label: str,
+                        canonical: str,
+                        badge: countryName || stateName || ''
+                    };
                 }
             });
-        }, 200);
+        }
+
+        function performCitySearch(query) {
+            var trimmed = query.trim();
+            var spinner = document.getElementById('citySearchSpinner');
+            var clearBtn = document.getElementById('citySearchClear');
+            if (clearBtn) clearBtn.style.display = trimmed ? 'inline-flex' : 'none';
+
+            if (!trimmed) {
+                if (spinner) spinner.style.display = 'none';
+                renderCuratedDropdown();
+                return;
+            }
+
+            // In-Memory Alias Normalization
+            var lookupQuery = trimmed.toLowerCase();
+            var normalizedQ = citySynonymAliases[lookupQuery] || trimmed;
+
+            // Check L2 Session LRU Cache
+            var cacheKey = normalizedQ.toLowerCase().trim();
+            var cached = getCachedCities(cacheKey);
+            if (cached) {
+                if (spinner) spinner.style.display = 'none';
+                renderCitySearchResults(cached, trimmed);
+                return;
+            }
+
+            // Abort prior in-flight request
+            if (citySearchAbortCtrl) {
+                citySearchAbortCtrl.abort();
+            }
+            citySearchAbortCtrl = new AbortController();
+
+            if (spinner) spinner.style.display = 'inline-block';
+
+            var targetUrl = "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(normalizedQ) + "&format=canonical&limit=25";
+
+            fetch(targetUrl, {
+                method: 'GET',
+                signal: citySearchAbortCtrl.signal,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Network error: ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                if (spinner) spinner.style.display = 'none';
+                var parsed = parseRawCityData(data);
+                setCachedCities(cacheKey, parsed);
+                renderCitySearchResults(parsed, trimmed);
+            })
+            .catch(function(err) {
+                if (err.name === 'AbortError') return;
+                if (spinner) spinner.style.display = 'none';
+                // Fallback to local filter of curated list if network fails
+                var filtered = [];
+                curatedLocationGroups.forEach(function(g) {
+                    g.items.forEach(function(item) {
+                        if (item.city.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1 ||
+                            item.canonical.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1) {
+                            filtered.push(item);
+                        }
+                    });
+                });
+                renderCitySearchResults(filtered, trimmed);
+            });
+        }
+
+        var debounceCitySearch = debounce(function(val) {
+            performCitySearch(val);
+        }, 180);
+
+        function clearCitySearchInput() {
+            var input = document.getElementById('citySearch');
+            var clearBtn = document.getElementById('citySearchClear');
+            var spinner = document.getElementById('citySearchSpinner');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (spinner) spinner.style.display = 'none';
+            renderCuratedDropdown();
+        }
+
         function initCitySearch() {
             var input = document.getElementById('citySearch');
             var dropdown = document.getElementById('cityDropdown');
-            input.addEventListener('input', function(e) {
-                var v = e.target.value.trim();
-                if (v.length < 2) { dropdown.classList.remove('active'); return; }
-                fetchCitySuggestions(v);
+            var clearBtn = document.getElementById('citySearchClear');
+            renderPopularPills();
+
+            if (!input || !dropdown) return;
+
+            input.addEventListener('focus', function() {
+                if (!input.value.trim()) {
+                    renderCuratedDropdown();
+                } else {
+                    performCitySearch(input.value);
+                }
             });
-            document.addEventListener('click', function(e) { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('active'); });
+
+            input.addEventListener('input', function(e) {
+                var v = e.target.value;
+                if (clearBtn) clearBtn.style.display = v.trim() ? 'inline-flex' : 'none';
+                debounceCitySearch(v);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                var items = dropdown.querySelectorAll('.ij-cd-item');
+                if (!dropdown.classList.contains('active') || items.length === 0) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomCity();
+                    }
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    cityHighlightedIdx = (cityHighlightedIdx + 1) % items.length;
+                    items.forEach(function(el, i) {
+                        if (i === cityHighlightedIdx) {
+                            el.classList.add('is-highlighted');
+                            el.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            el.classList.remove('is-highlighted');
+                        }
+                    });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    cityHighlightedIdx = (cityHighlightedIdx - 1 + items.length) % items.length;
+                    items.forEach(function(el, i) {
+                        if (i === cityHighlightedIdx) {
+                            el.classList.add('is-highlighted');
+                            el.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            el.classList.remove('is-highlighted');
+                        }
+                    });
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (cityHighlightedIdx >= 0 && items[cityHighlightedIdx]) {
+                        items[cityHighlightedIdx].click();
+                    } else {
+                        addCustomCity();
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target) && !(clearBtn && clearBtn.contains(e.target))) {
+                    dropdown.classList.remove('active');
+                }
+            });
         }
+
         function selectCity(city) {
-            if (selectedCities.indexOf(city) === -1) {
-                if (selectedCities.length >= 15) { showToast('Maximum 15 cities allowed', 'error'); return; }
-                selectedCities.push(city); renderSelectedCities();
+            if (!city) return;
+            var clean = String(city).trim();
+            if (isCitySelected(clean, clean.split(',')[0].trim())) {
+                showToast('City already selected', 'info');
+                return;
             }
-            document.getElementById('citySearch').value = '';
-            document.getElementById('cityDropdown').classList.remove('active');
-        }
-        function toggleCity(el, city) {
-            if (selectedCities.indexOf(city) !== -1) { selectedCities = selectedCities.filter(function(c) { return c !== city; }); el.classList.remove('selected'); }
-            else { if (selectedCities.length >= 15) { showToast('Maximum 15 cities allowed', 'error'); return; } selectedCities.push(city); el.classList.add('selected'); }
+            if (selectedCities.length >= 15) {
+                showToast('Maximum 15 cities allowed', 'error');
+                return;
+            }
+            selectedCities.push(clean);
             renderSelectedCities();
+            var input = document.getElementById('citySearch');
+            if (input) input.value = '';
+            var clearBtn = document.getElementById('citySearchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+            var dd = document.getElementById('cityDropdown');
+            if (dd) dd.classList.remove('active');
         }
+
+        function addCustomCityDirect(val) {
+            if (!val) return;
+            selectCity(val);
+        }
+
         function addCustomCity() {
-            var val = document.getElementById('citySearch').value.trim();
-            if (val && selectedCities.indexOf(val) === -1) {
-                if (selectedCities.length >= 15) { showToast('Maximum 15 cities allowed', 'error'); return; }
-                selectedCities.push(val); renderSelectedCities(); document.getElementById('citySearch').value = '';
+            var input = document.getElementById('citySearch');
+            if (!input) return;
+            var val = input.value.trim();
+            if (!val) {
+                showToast('Please type a city name', 'info');
+                return;
             }
+            selectCity(val);
         }
-        function clearAllCities() { selectedCities = []; document.querySelectorAll('#recommendedCities .chip').forEach(function(c) { c.classList.remove('selected'); }); renderSelectedCities(); }
-        function renderSelectedCities() {
-            document.getElementById('selectedCount').textContent = selectedCities.length;
-            document.getElementById('selectedCities').innerHTML = selectedCities.map(function(city) {
-                var disp = String(city).split(' | ')[0];
-                return '<span class="chip selected">' + escapeHtml(disp) + ' <span class="remove" onclick="removeCity(\'' + String(city).replace(/'/g, "\\'") + '\')">&times;</span></span>';
-            }).join('');
-            syncCities();
-        }
-        function removeCity(city) {
-            selectedCities = selectedCities.filter(function(c) { return c !== city; });
-            document.querySelectorAll('#recommendedCities .chip').forEach(function(el) { if (el.textContent.indexOf(String(city).split(' | ')[0]) !== -1) el.classList.remove('selected'); });
+
+        function clearAllCities() {
+            selectedCities = [];
             renderSelectedCities();
         }
-        function syncCities() { document.getElementById('kt_tagify_work_location').value = JSON.stringify(selectedCities.map(function(c) { return { value: c }; })); }
+
+        function removeCity(city) {
+            var cNorm = String(city || '').toLowerCase().trim();
+            var lNorm = cNorm.split(/[,|]/)[0].trim();
+            selectedCities = selectedCities.filter(function(c) {
+                var it = String(c || '').toLowerCase().trim();
+                return !(it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm));
+            });
+            renderSelectedCities();
+        }
+
+        function renderSelectedCities() {
+            var countEl = document.getElementById('selectedCount');
+            if (countEl) countEl.textContent = selectedCities.length;
+            var container = document.getElementById('selectedCities');
+            if (!container) return;
+
+            if (selectedCities.length === 0) {
+                container.innerHTML = '<span class="ij-no-locs">No locations selected yet. Choose from popular hubs above or search.</span>';
+            } else {
+                container.innerHTML = selectedCities.map(function(city) {
+                    var str = String(city || '').trim();
+                    var parts = str.split(/[,|]/).map(function(s) { return s.trim(); });
+                    var primaryName = parts[0] || str;
+                    var regionMeta = parts.slice(1).join(', ');
+                    var metaHtml = regionMeta ? '<span class="ij-chip-region">(' + escapeHtml(regionMeta) + ')</span>' : '';
+                    return '<span class="ij-location-chip">' +
+                        '<span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>' +
+                        '<span class="ij-chip-label">' + escapeHtml(primaryName) + '</span>' +
+                        metaHtml +
+                        '<button type="button" class="ij-chip-del" onclick="removeCity(\'' + escapeJsStr(str) + '\')" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
+                        '</span>';
+                }).join('');
+            }
+            syncCities();
+            renderPopularPills();
+        }
+
+        function syncCities() {
+            var hidden = document.getElementById('kt_tagify_work_location');
+            if (hidden) {
+                hidden.value = JSON.stringify(selectedCities.map(function(c) { return { value: c }; }));
+            }
+        }
 
         // ---------- QUALIFICATIONS ----------
         function initQualSearch() {
@@ -3418,6 +3898,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011i"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011j"></script>
     @endif
 @endpush
