@@ -70,24 +70,7 @@
     white-space:nowrap;
 }
 #jrwrap.internal-job-create .ij-back {
-    width:28px;
-    height:28px;
-    border:1px solid #e2e8f0;
-    background:#ffffff;
-    border-radius:6px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    color:#334155;
-    flex-shrink:0;
-    cursor:pointer;
-    transition:all 0.15s ease;
-    padding:0;
-}
-#jrwrap.internal-job-create .ij-back:hover {
-    background:#f8fafc;
-    border-color:#cbd5e1;
-    color:#0f172a;
+    display: none !important;
 }
 
 /* Compact connected enterprise stepper */
@@ -335,7 +318,6 @@
     #jrwrap.internal-job-create .ij-header {margin:0 -10px 12px -10px;width:calc(100% + 20px);padding:6px 10px;}
     #jrwrap.internal-job-create .ij-heading h1 {font-size:12px !important;}
     #jrwrap.internal-job-create .ij-heading p {font-size:9px !important;}
-    #jrwrap.internal-job-create .ij-back {width:26px;height:26px;}
     #jrwrap.internal-job-create :is(.form-grid,.ij-description-grid,.ij-review-grid,.publish-grid) {grid-template-columns:1fr;}
     #jrwrap.internal-job-create .ij-review-column:last-child {display:block;}
     #jrwrap.internal-job-create .ij-choices {grid-template-columns:1fr;}
