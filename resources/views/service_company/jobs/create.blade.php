@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011h">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011i">
     @endif
 @endpush
 @section('content')
@@ -1323,616 +1323,383 @@
                     </div>
                 </div>
                 <div class="step-content" id="step4">
-                    <div class="job-badges" id="reviewBadges">
-                        <span class="badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                            </svg>
-                            <span id="badgeEmployment">Full Time</span>
-                        </span>
-                        <span class="badge primary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
-                            </svg>
-                            <span id="badgeWorkMode">Hybrid</span>
-                        </span>
-                        <span class="badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <span id="badgeExp">3 - 5 Years</span>
-                        </span>
-                        <span class="badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                                <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            <span id="badgeLocation">Location</span>
-                        </span>
-                        <span class="badge primary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                <path d="M12 18V6"/>
-                            </svg>
-                            <span id="badgeSalary">Salary</span>
-                        </span>
+                    <div class="r4-grid">
+                        {{-- ==================== COLUMN 1 ==================== --}}
+                        <div class="r4-col">
+                            {{-- Card 1: Basic Information --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                                <line x1="10" y1="9" x2="8" y2="9"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Basic Information</h3>
+                                            <p>Enter the basic details for this job opening.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="r4-edit-btn" onclick="goToStep(1)">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-kv-list">
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-blue">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+                                                </span>
+                                                <span class="r4-label">Client</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvClient">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-purple">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                                </span>
+                                                <span class="r4-label">Department</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvDepartment">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-amber">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                </span>
+                                                <span class="r4-label">Job Title</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvJobTitle">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-slate">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                                </span>
+                                                <span class="r4-label">Job Type</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvJobType">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-green">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                                                </span>
+                                                <span class="r4-label">Work Mode</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvWorkMode">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-indigo">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+                                                </span>
+                                                <span class="r4-label">Compensation</span>
+                                            </div>
+                                            <div class="r4-kv-val r4-val-comp">
+                                                <span id="rvCompensation">-</span>
+                                                <span class="r4-sublabel">Annual CTC</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Card 2: Job Description --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Job Description</h3>
+                                            <p>Provide a detailed and clear job description.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="r4-edit-btn" onclick="goToStep(2)">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-desc-box">
+                                        <div class="review-text" id="rvDescription">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ==================== COLUMN 2 ==================== --}}
+                        <div class="r4-col">
+                            {{-- Card 3: Location & Employment --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                                <circle cx="12" cy="10" r="3"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Location &amp; Employment</h3>
+                                            <p>Specify key employment details for this job opening.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="r4-edit-btn" onclick="goToStep(1)">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-kv-list">
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-red">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                </span>
+                                                <span class="r4-label">Location</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvLocation">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-green">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                                                </span>
+                                                <span class="r4-label">Work Mode</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvWorkMode2">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-amber">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                </span>
+                                                <span class="r4-label">Experience</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvExp">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-indigo">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                                </span>
+                                                <span class="r4-label">Shift</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvShift">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-purple">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                                </span>
+                                                <span class="r4-label">Employment Type</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvEmployment">-</div>
+                                        </div>
+                                        <div class="r4-kv-row">
+                                            <div class="r4-kv-key">
+                                                <span class="r4-row-icon r4-icon-blue">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                                </span>
+                                                <span class="r4-label">Notice Period</span>
+                                            </div>
+                                            <div class="r4-kv-val" id="rvNoticePeriod">Immediate Joiner Preferred</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Card 4: Key Skills --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                                                <line x1="7" y1="7" x2="7.01" y2="7"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Key Skills <span id="rvSkillsCount">(0)</span></h3>
+                                            <p>Add the key skills required for this position.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="r4-edit-btn" onclick="goToStep(2)">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-skills-list" id="rvSkills"></div>
+                                </div>
+                            </div>
+
+                            {{-- Card 5: Screening Questions --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M9 11l3 3L22 4"/>
+                                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Screening Questions <span id="rvQuestionsCount">(0)</span></h3>
+                                            <p>Add screening questions for applicants.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="r4-edit-btn" onclick="goToStep(3)">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-questions-list" id="rvQuestions"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ==================== COLUMN 3 ==================== --}}
+                        <div class="r4-col">
+                            {{-- Card 6: Publishing Visibility --}}
+                            <div class="r4-card r4-card-blue">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-blue-box">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M3 11l18-5v12L3 13v-2z"/>
+                                                <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Publishing Visibility</h3>
+                                            <p>Control where this job opening is published and who can view it.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="r4-card-body">
+                                    <div class="r4-visibility-list">
+                                        <label class="r4-check-item">
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_career" checked>
+                                            <span class="r4-check-box">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                            <span class="r4-check-content">
+                                                <span class="r4-check-text">Publish on Company Career Page</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="r4-check-item">
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_marketplace" checked>
+                                            <span class="r4-check-box">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                            <span class="r4-check-content">
+                                                <span class="r4-check-title-row">
+                                                    <span class="r4-check-text">Publish on Agency Marketplace</span>
+                                                    <span class="r4-badge-recommended">Recommended</span>
+                                                </span>
+                                                <span class="r4-check-sublabel">Visible to 250+ partner agencies</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="r4-check-item">
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_internal">
+                                            <span class="r4-check-box">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                            <span class="r4-check-content">
+                                                <span class="r4-check-text">Publish Internally Only</span>
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <div class="r4-info-box">
+                                        <span class="r4-info-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                            </svg>
+                                        </span>
+                                        <div class="r4-info-text">
+                                            This job will be visible to approved agency partners and their recruiters.
+                                            <a href="javascript:void(0)" onclick="if(typeof showCoinRulesModal==='function')showCoinRulesModal();else showToast('Learn more about marketplace','info');">Learn more about marketplace</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Card 7: Important Notes --}}
+                            <div class="r4-card">
+                                <div class="r4-card-header">
+                                    <div class="r4-header-left">
+                                        <div class="r4-header-icon r4-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                            </svg>
+                                        </div>
+                                        <div class="r4-header-text">
+                                            <h3>Important Notes</h3>
+                                            <p>Key points to keep in mind.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="r4-card-body">
+                                    <ul class="r4-notes-list">
+                                        <li><span class="r4-dot"></span><span>Job will auto close after 60 days</span></li>
+                                        <li><span class="r4-dot"></span><span>Coins will be deducted daily</span></li>
+                                        <li><span class="r4-dot"></span><span>You can pause the job anytime</span></li>
+                                        <li><span class="r4-dot"></span><span>Applications will be saved</span></li>
+                                        <li><span class="r4-dot"></span><span>Extend duration anytime using coins</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="review-row">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                            <path d="M14 2v6h6"/>
-                                            <path d="M16 13H8"/>
-                                            <path d="M16 17H8"/>
-                                            <path d="M10 9H8"/>
-                                        </svg>Basic Information
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(1)">Edit</button>
-                                </div>
-                                <div class="review-row" style="gap:12px 20px;margin-bottom:0;">
-                                    <div class="review-col" style="gap:12px;">
-                                        <div class="review-item">
-                                            <div class="review-label">Client</div>
-                                            <div class="review-value" id="rvClient">-</div>
-                                        </div>
-                                        <div class="review-item">
-                                            <div class="review-label">Department</div>
-                                            <div class="review-value" id="rvDepartment">-</div>
-                                        </div>
-                                    </div>
-                                    <div class="review-col" style="gap:12px;">
-                                        <div class="review-item">
-                                            <div class="review-label">Job Type</div>
-                                            <div class="review-value" id="rvJobType">-</div>
-                                        </div>
-                                        <div class="review-item">
-                                            <div class="review-label">Work Mode</div>
-                                            <div class="review-value" id="rvWorkMode">-</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                                            <circle cx="12" cy="10" r="3"/>
-                                        </svg>Location &amp; Employment
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(1)">Edit</button>
-                                </div>
-                                <div class="review-row" style="gap:12px 20px;margin-bottom:0;">
-                                    <div class="review-col" style="gap:12px;">
-                                        <div class="review-item">
-                                            <div class="review-label">Location</div>
-                                            <div class="review-value" id="rvLocation">-</div>
-                                        </div>
-                                        <div class="review-item">
-                                            <div class="review-label">Experience</div>
-                                            <div class="review-value" id="rvExp">-</div>
-                                        </div>
-                                        <div class="review-item">
-                                            <div class="review-label">Employment Type</div>
-                                            <div class="review-value" id="rvEmployment">-</div>
-                                        </div>
-                                    </div>
-                                    <div class="review-col" style="gap:12px;">
-                                        <div class="review-item">
-                                            <div class="review-label">Work Mode</div>
-                                            <div class="review-value" id="rvWorkMode2">-</div>
-                                        </div>
-                                        <div class="review-item">
-                                            <div class="review-label">Shift</div>
-                                            <div class="review-value" id="rvShift">-</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="review-row">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                            <path d="M12 18V6"/>
-                                        </svg>Compensation
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(1)">Edit</button>
-                                </div>
-                                <div class="review-compensation" id="rvCompensation">-</div>
-                                <div class="review-compensation-note">Annual CTC</div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                                            <line x1="7" x2="7.01" y1="7" y2="7"/>
-                                        </svg>Key Skills 
-                                        <span id="rvSkillsCount">(0)</span>
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(2)">Edit</button>
-                                </div>
-                                <div class="review-tags" id="rvSkills"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="review-row">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                            <path d="M14 2v6h6"/>
-                                            <path d="M16 13H8"/>
-                                            <path d="M16 17H8"/>
-                                            <path d="M10 9H8"/>
-                                        </svg>Job Description
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(2)">Edit</button>
-                                </div>
-                                <div class="review-text" id="rvDescription">-</div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="card-header-row">
-                                    <div class="card-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                            <line x1="12" x2="12.01" y1="17" y2="17"/>
-                                        </svg>Screening Questions 
-                                        <span id="rvQuestionsCount">(0)</span>
-                                    </div>
-                                    <button type="button" class="card-edit" onclick="goToStep(3)">Edit</button>
-                                </div>
-                                <div class="review-questions-list" id="rvQuestions"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:14px;">Publishing Settings</div>
-                    <div class="publish-grid">
-                        <div class="publish-card">
-                            <div class="publish-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
-                                </svg>Job Visibility
-                            </div>
-                            <label class="checkbox-item">
-                                <input type="checkbox" checked>
-                                <span class="checkbox-label">Publish on Company Career Page</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" checked>
-                                <span class="checkbox-label">Publish on Agency Marketplace
-                                    <span class="checkbox-sublabel">Visible to 250+ partner agencies 
-                                        <span class="checkbox-badge">Recommended</span>
-                                    </span>
-                                </span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox">
-                                <span class="checkbox-label">Publish Internally Only</span>
-                            </label>
-                            <div class="info-box">This job will be visible to approved agency partners and their recruiters.
-                                <a onclick="showToast('Learn more','info')">Learn more about marketplace</a>
-                            </div>
-                        </div>
-                        <div class="publish-card">
-                            <div class="publish-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                    <path d="M12 18V6"/>
-                                </svg>Coin Consumption
-                            </div>
-                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">When published on Agency Marketplace</div>
-                            <div class="coin-row">
-                                <span class="coin-row-label">{{ @$job_coins->deductions }} Coins / Day</span>
-                            </div>
-                            <div class="coin-row">
-                                <span class="coin-row-label">+ {{ @$candidates_coins->deductions }} Coin / Candidate Contacted</span>
-                            </div>
-                            <div class="coin-link" onclick="showToast('Coin terms','info')">View coin consumption terms
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                    <polyline points="15 3 21 3 21 9"/>
-                                    <line x1="10" x2="21" y1="14" y2="3"/>
-                                </svg>
-                            </div>
-                            <div class="coin-divider"></div>
-                            <div class="coin-row">
-                                <span class="coin-row-label">Estimated Monthly Usage</span>
-                            </div>
-                            <div class="coin-row">
-                                <span class="coin-row-value green">{{ @$job_coins->deductions*30 }} Coins</span>
-                            </div>
-                            <div class="coin-row" style="margin-top:6px;">
-                                <span class="coin-row-label">Current Operational Coins</span>
-                            </div>
-                            <div class="coin-row">
-                                <span class="coin-row-value">{{ @$company_coins->coins }} Coins</span>
-                            </div>
-                            <div class="coin-alert">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 6 9 17l-5-5"/>
-                                </svg>Sufficient Balance Available
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>Candidate Sources
-                            </div>
-                            <div class="summary-list">
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/>
-                                    </svg>Direct Applications
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Agency Marketplace
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Internal Team
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Employee Referrals
-                                </div>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                    <line x1="12" x2="12.01" y1="17" y2="17"/>
-                                </svg>Important Notes
-                            </div>
-                            <div class="summary-list">
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Job will auto close after 60 days
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Coins will be deducted daily
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>You can pause the job anytime
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Applications will be saved
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Extend duration anytime using coins
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {{-- <div class="summary-grid">
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>Candidate Sources
-                            </div>
-                            <div class="summary-list">
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/>
-                                    </svg>Direct Applications
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Agency Marketplace
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Internal Team
-                                </div>
-                                <div class="summary-list-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 6 9 17l-5-5"/>
-                                    </svg>Employee Referrals
-                                </div>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" x2="18" y1="20" y2="10"/>
-                                    <line x1="12" x2="12" y1="20" y2="4"/>
-                                    <line x1="6" x2="6" y1="20" y2="14"/>
-                                </svg>Estimated Results
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Duration</span>
-                                <span class="summary-metric-value">60 Days</span>
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Est. Applications</span>
-                                <span class="summary-metric-value">50 - 100</span>
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Visibility</span>
-                                <span class="summary-metric-value">High</span>
-                            </div>
-                            <div class="summary-note">Estimates are based on similar roles and may vary.</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                    <path d="M12 18V6"/>
-                                </svg>Estimated Coin Usage
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Daily Usage</span>
-                                <span class="summary-metric-value">2 Coins</span>
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Per Candidate Contact</span>
-                                <span class="summary-metric-value">1 Coin</span>
-                            </div>
-                            <div class="summary-metric">
-                                <span class="summary-metric-label">Estimated Total</span>
-                                <span class="summary-metric-value">120 Coins</span>
-                            </div>
-                            <div class="summary-note">Figures are estimates based on performance.</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                    <line x1="12" x2="12.01" y1="17" y2="17"/>
-                                </svg>Important Notes
-                            </div>
-                            <div class="summary-list">
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Job will auto close after 60 days
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Coins will be deducted daily
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>You can pause the job anytime
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Applications will be saved
-                                </div>
-                                <div class="summary-list-item" style="color:var(--text-muted);font-size:11px;line-height:1.5;">
-                                    <span style="color:var(--text-muted);margin-right:4px;">
-                                        •</span>Extend duration anytime using coins
-                                </div>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-card-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                </svg>Compliance
-                            </div>
-                            <label class="summary-check">
-                                <input type="checkbox" checked>
-                                <span>I confirm job details are accurate</span>
-                            </label>
-                            <label class="summary-check">
-                                <input type="checkbox" checked>
-                                <span>I understand coin usage rules</span>
-                            </label>
-                            <label class="summary-check">
-                                <input type="checkbox" checked>
-                                <span>I agree to marketplace terms</span>
-                            </label>
-                            <div class="coin-link" style="margin-top:6px;" onclick="showToast('Terms &amp; Conditions','info')">View Terms &amp; Conditions
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                    <polyline points="15 3 21 3 21 9"/>
-                                    <line x1="10" x2="21" y1="14" y2="3"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <div class="compact-summary">
-                        <div class="compact-summary-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <path d="M14 2v6h6"/>
-                                <path d="M16 13H8"/>
-                                <path d="M16 17H8"/>
-                                <path d="M10 9H8"/>
-                            </svg>
-                            Summary Before Publishing
-                        </div>
-                        <div class="compact-summary-subtitle">Review the details below before publishing your job.</div>
-                        <div class="compact-grid">
-                            <div class="compact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                                </svg>
-                                <div class="compact-item-text">
-                                    <strong>Job Title</strong><br>
-                                    <span id="csTitle">-</span>
-                                </div>
-                            </div>
-                            <div class="compact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                                    <circle cx="12" cy="10" r="3"/>
-                                </svg>
-                                <div class="compact-item-text">
-                                    <strong>Location</strong><br>
-                                    <span id="csLocation">-</span>
-                                </div>
-                            </div>
-                            <div class="compact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <polyline points="12 6 12 12 16 14"/>
-                                </svg>
-                                <div class="compact-item-text">
-                                    <strong>Experience</strong><br>
-                                    <span id="csExp">-</span>
-                                </div>
-                            </div>
-                            <div class="compact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                                </svg>
-                                <div class="compact-item-text">
-                                    <strong>Employment Type</strong><br>
-                                    <span id="csEmployment">-</span>
-                                </div>
-                            </div>
-                            <div class="compact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                                    <path d="M2 12h20"/>
-                                </svg>
-                                <div class="compact-item-text">
-                                    <strong>Work Mode</strong><br>
-                                    <span id="csWorkMode">-</span>
-                                </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                        <path d="M12 18V6"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Salary</strong><br>
-                                        <span id="csSalary">-</span>
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Duration</strong><br>60 Days
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                        <circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Visibility</strong><br>Agency Marketplace
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                        <path d="M12 18V6"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Daily Coin Cost</strong><br>2 Coins
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="9" cy="7" r="4"/>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Per Candidate Contact</strong><br>1 Coin
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                                        <path d="M12 18V6"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Estimated Total Cost</strong><br>120 Coins
-                                    </div>
-                                </div>
-                                <div class="compact-item">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                    <div class="compact-item-text">
-                                        <strong>Auto Close</strong><br>After 60 Days
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+                    {{-- ===== HIDDEN BACKWARD COMPATIBILITY BLOCK ===== --}}
+                    {{-- Preserves all legacy IDs queried by validateStep/publishJob/populateReview so zero runtime errors occur --}}
+                    <div class="d-none" aria-hidden="true">
+                        <label class="summary-check"><input type="checkbox" checked></label>
+                        <label class="summary-check"><input type="checkbox" checked></label>
+                        <label class="summary-check"><input type="checkbox" checked></label>
                         <div class="submit-card">
-                            <div class="submit-card-title">Ready to Publish?</div>
-                            <div class="submit-card-desc">Your job is ready to go live and start receiving applications.</div>
-                            <div style="display:flex;gap:12px;justify-content:center;">
-                                <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M5 12h14"/>
-                                        <path d="m12 19-7-7 7-7"/>
-                                    </svg>Back
-                                </button>
-                                <button type="button" class="btn btn-primary" onclick="publishJob()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                                    </svg><?php echo @$buttontext ? $buttontext : 'Publish Job'; ?>
-                                </button>
-                            </div>
-                            <div class="submit-card-footer">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                </svg>By publishing, your job will be live and visible to selected audiences.
-                            </div>
+                            <button type="button" class="btn btn-primary" onclick="publishJob()">
+                                <?php echo @$buttontext ? $buttontext : 'Publish Job'; ?>
+                            </button>
                         </div>
+                        <span id="badgeEmployment"></span>
+                        <span id="badgeWorkMode"></span>
+                        <span id="badgeExp"></span>
+                        <span id="badgeLocation"></span>
+                        <span id="badgeSalary"></span>
+                        <span id="csTitle"></span>
+                        <span id="csLocation"></span>
+                        <span id="csExp"></span>
+                        <span id="csEmployment"></span>
+                        <span id="csWorkMode"></span>
+                        <span id="csSalary"></span>
                     </div>
+                </div>
                     {{-- ===== HIDDEN / BACKEND-ONLY FIELDS (kept so the original store/update controller keeps working) ===== --}}<input type="hidden" name="show_client_name" id="show_client_name" value="no">
                     {{-- Legacy d-none salary block (kept verbatim so backend receives the same fields) --}}
                     <div class="d-none">
@@ -3484,41 +3251,93 @@
         }
         function populateReview() {
             var cities = selectedCities.map(function(c) { return String(c).split(' | ')[0]; }).join(', ');
+            var titleVal = (document.getElementById('title') ? document.getElementById('title').value : '') || '-';
             setText('rvClient', clientName());
             setText('rvDepartment', getSelText('category_id'));
+            setText('rvJobTitle', titleVal);
             setText('rvJobType', getSelText('employment_type'));
             setText('rvWorkMode', getSelText('work_from_home'));
-            setText('rvLocation', cities);
-            setText('rvExp', expText());
-            setText('rvEmployment', getSelText('employment_type'));
-            setText('rvWorkMode2', getSelText('work_from_home'));
-            setText('rvShift', getSelText('work_shifts'));
             setText('rvCompensation', salaryText());
+
+            setText('rvLocation', cities);
+            setText('rvWorkMode2', getSelText('work_from_home'));
+            setText('rvExp', expText());
+            setText('rvShift', getSelText('work_shifts'));
+            setText('rvEmployment', getSelText('employment_type'));
+            setText('rvNoticePeriod', 'Immediate Joiner Preferred');
+
             // skills
-            document.getElementById('rvSkillsCount').textContent = '(' + skills.length + ')';
-            document.getElementById('rvSkills').innerHTML = skills.map(function(s) { return '<span class="review-tag">' + escapeHtml(s) + '</span>'; }).join('') || '<span style="color:var(--text-muted);font-size:12px;">No skills added</span>';
+            var countEl = document.getElementById('rvSkillsCount');
+            if (countEl) countEl.textContent = '(' + skills.length + ')';
+            var skillsEl = document.getElementById('rvSkills');
+            if (skillsEl) {
+                skillsEl.innerHTML = skills.map(function(s) {
+                    return '<span class="r4-skill-pill">' + escapeHtml(s) + '</span>';
+                }).join('') || '<span style="color:var(--text-muted);font-size:12px;">No skills added</span>';
+            }
+
             // description
-            var descPlain = (document.getElementById('jobDescription').innerText || '').trim();
+            var descBox = document.getElementById('jobDescription');
+            var descPlain = (descBox ? (descBox.innerText || '') : '').trim();
             setText('rvDescription', descPlain || '-');
+
             // questions
-            document.getElementById('rvQuestionsCount').textContent = '(' + questions.length + ')';
-            document.getElementById('rvQuestions').innerHTML = questions.map(function(q, i) {
-                return '<div class="review-question-item"><div class="review-question-num">' + (i + 1) + '</div><div class="review-question-text">' + escapeHtml(q.text) + '</div></div>';
-            }).join('') || '<span style="color:var(--text-muted);font-size:12px;">No screening questions</span>';
-            // badges
+            var qCountEl = document.getElementById('rvQuestionsCount');
+            if (qCountEl) qCountEl.textContent = '(' + questions.length + ')';
+            var qEl = document.getElementById('rvQuestions');
+            if (qEl) {
+                qEl.innerHTML = questions.map(function(q, i) {
+                    var isReq = q.required !== false;
+                    var badgeClass = isReq ? 'r4-q-badge-req' : 'r4-q-badge-opt';
+                    var badgeText = isReq ? 'Required' : 'Optional';
+                    return '<div class="r4-question-row">' +
+                        '<span class="r4-question-num">' + (i + 1) + '</span>' +
+                        '<span class="r4-question-text">' + escapeHtml(q.text) + '</span>' +
+                        '<span class="r4-question-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '</div>';
+                }).join('') || '<span style="color:var(--text-muted);font-size:12px;">No screening questions</span>';
+            }
+
+            // badges (fallback/hidden)
             setText('badgeEmployment', getSelText('employment_type') || 'Job Type');
             setText('badgeWorkMode', getSelText('work_from_home') || 'Work Mode');
             setText('badgeExp', expText() || 'Experience');
             setText('badgeLocation', cities || 'Location');
             setText('badgeSalary', salaryText() || 'Salary');
-            // compact summary
-            setText('csTitle', document.getElementById('title').value);
+
+            // compact summary (fallback/hidden)
+            setText('csTitle', titleVal);
             setText('csLocation', cities);
             setText('csExp', expText());
             setText('csEmployment', getSelText('employment_type'));
             setText('csWorkMode', getSelText('work_from_home'));
             setText('csSalary', salaryText());
         }
+
+        window.showCoinRulesModal = function() {
+            Swal.fire({
+                title: '<div style="font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;justify-content:center;gap:8px;"><span>🪙</span> Coin Consumption Rules</div>',
+                html: '<div style="text-align:left;font-size:12px;color:#334155;line-height:1.6;display:flex;flex-direction:column;gap:10px;padding:4px 8px;">' +
+                    '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;">' +
+                        '<div style="font-weight:600;color:#1e40af;margin-bottom:2px;">Marketplace Daily Deduction</div>' +
+                        '<div><strong>2 Coins / Day</strong> when published on Agency Marketplace.</div>' +
+                    '</div>' +
+                    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;">' +
+                        '<div style="font-weight:600;color:#0f172a;margin-bottom:2px;">Per Candidate Contact</div>' +
+                        '<div><strong>1 Coin / Candidate Contacted</strong> through the marketplace.</div>' +
+                    '</div>' +
+                    '<div style="background:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:10px 12px;">' +
+                        '<div style="font-weight:600;color:#854d0e;margin-bottom:2px;">Duration &amp; Lifecycle</div>' +
+                        '<div>Job automatically closes after <strong>60 days</strong>. You can pause or extend anytime.</div>' +
+                    '</div>' +
+                '</div>',
+                confirmButtonText: 'Got it',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    popup: 'swal2-enterprise-popup'
+                }
+            });
+        };
 
         // ---------- SYNC ALL HIDDEN INPUTS ----------
         function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); }
@@ -3599,6 +3418,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011h"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011i"></script>
     @endif
 @endpush
