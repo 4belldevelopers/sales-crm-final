@@ -1,5 +1,9 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
+    {{-- Create-only presentation assets; edit and requisition contexts retain their existing UI. --}}
+    @if(request()->routeIs('service_company.jobs.create'))
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011">
+    @endif
     <link href="{{ asset('demo/v7/css/wizard-1.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/v7/css/plugins.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/v7/css/prismjs.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
@@ -682,7 +686,7 @@
     <!--end::Toolbar-->
 
 
-    <div id="jrwrap">
+    <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create')) class="internal-job-create" @endif>
         <div class="content"><br>
        
             <!-- Stepper -->
@@ -2338,6 +2342,9 @@
     <!--end::Add Contact Person Drawer-->
 @endsection
 @push('footer-script')
+    @if(request()->routeIs('service_company.jobs.create'))
+        <script defer src="{{ asset('js/internal-job-create-design.js') }}?v=20261011"></script>
+    @endif
     {{-- =========================================================
          ORIGINAL BACKEND AJAX (preserved verbatim, only TinyMCE/wizard
          specific bits adapted to the new design)
