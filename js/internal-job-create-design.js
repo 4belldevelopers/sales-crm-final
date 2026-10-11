@@ -22,7 +22,7 @@
         const toolbar = document.getElementById('kt_toolbar');
         const header = document.createElement('header');
         header.className = 'ij-header';
-        header.innerHTML = '<div class="ij-heading"><button type="button" class="ij-back" aria-label="Back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><div><h1>Add Internal Jobs</h1><p>Enter job details and publish</p></div></div><div class="ij-actions"><button type="button" class="btn ij-close" aria-label="Close and return to job listings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg><span>Close</span></button><button type="button" class="btn btn-primary ij-next"><span>Next Page</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>';
+        header.innerHTML = '<div class="ij-heading"><div><h1>Add Internal Jobs</h1><p>Enter job details and publish</p></div></div><div class="ij-actions"><button type="button" class="btn ij-close" aria-label="Close and return to job listings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg><span>Close</span></button><button type="button" class="btn btn-primary ij-next"><span>Next Page</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>';
         if (toolbar) toolbar.remove();
         const wrapper = document.getElementById('kt_wrapper');
         if (wrapper) wrapper.style.paddingTop = '65px';
@@ -44,13 +44,6 @@
         if (publish) publishHost.append(publish);
         header.querySelector('.ij-actions').append(publishHost);
         next.addEventListener('click', function () { goToStep(currentStep + 1); });
-        header.querySelector('.ij-back').addEventListener('click', function () {
-            if (currentStep > 1) goToStep(currentStep - 1);
-            else {
-                var targetUrl = (typeof __indexUrl !== 'undefined' && __indexUrl) ? __indexUrl : '/service_company/jobs';
-                window.location.assign(targetUrl);
-            }
-        });
         stepper.querySelectorAll('.step-v2').forEach(function (step) {
             step.setAttribute('role', 'button');
             step.tabIndex = 0;
