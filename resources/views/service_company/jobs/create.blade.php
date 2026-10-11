@@ -584,7 +584,12 @@
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011d">
+        <style>
+            #kt_toolbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
+            .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
+            #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
+        </style>
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011e">
     @endif
 @endpush
 @section('content')
@@ -660,6 +665,7 @@
     }
     ?>
 
+    @if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))
       <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
         <!--begin::Container-->
@@ -684,10 +690,11 @@
         <!--end::Container-->
     </div>
     <!--end::Toolbar-->
+    @endif
 
 
     <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*')) class="internal-job-create" @endif>
-        <div class="content"><br>
+        <div class="content">@if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))<br>@endif
        
             <!-- Stepper -->
             <div class="stepper-v2" id="stepper">
@@ -3598,6 +3605,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011d"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011e"></script>
     @endif
 @endpush
