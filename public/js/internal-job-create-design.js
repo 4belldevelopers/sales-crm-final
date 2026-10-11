@@ -22,7 +22,7 @@
         const toolbar = document.getElementById('kt_toolbar');
         const header = document.createElement('header');
         header.className = 'ij-header';
-        header.innerHTML = '<div class="ij-heading"><div><h1>Add Internal Jobs</h1><p>Enter job details and publish</p></div></div><div class="ij-actions"><button type="button" class="btn ij-close" aria-label="Close and return to job listings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg><span>Close</span></button><button type="button" class="btn ij-coin-rules"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/></svg><span>Coin Rules</span></button><button type="button" class="btn btn-primary ij-next"><span>Next Page</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>';
+        header.innerHTML = '<div class="ij-heading"><div><h1>Add Internal Jobs</h1><p>Enter job details and publish</p></div></div><div class="ij-actions"><button type="button" class="btn ij-close" aria-label="Close and return to job listings"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg><span>Close</span></button><button type="button" class="btn ij-back-nav" aria-label="Go to previous step" style="display:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>Back</span></button><button type="button" class="btn ij-coin-rules"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/></svg><span>Coin Rules</span></button><button type="button" class="btn btn-primary ij-next"><span>Next Page</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></div>';
         if (toolbar) toolbar.remove();
         const wrapper = document.getElementById('kt_wrapper');
         if (wrapper) wrapper.style.paddingTop = '65px';
@@ -31,11 +31,19 @@
         stepper.setAttribute('aria-label', 'Job creation steps');
         const next = header.querySelector('.ij-next');
         const closeBtn = header.querySelector('.ij-close');
+        const backNavBtn = header.querySelector('.ij-back-nav');
         const coinRulesBtn = header.querySelector('.ij-coin-rules');
         if (closeBtn) {
             closeBtn.addEventListener('click', function () {
                 var targetUrl = (typeof __indexUrl !== 'undefined' && __indexUrl) ? __indexUrl : '/service_company/jobs';
                 window.location.assign(targetUrl);
+            });
+        }
+        if (backNavBtn) {
+            backNavBtn.addEventListener('click', function () {
+                if (typeof goToStep === 'function' && typeof currentStep !== 'undefined' && currentStep > 1) {
+                    goToStep(currentStep - 1);
+                }
             });
         }
         if (coinRulesBtn) {
@@ -73,11 +81,22 @@
                 if (number === currentStep) step.setAttribute('aria-current', 'step');
                 else step.removeAttribute('aria-current');
             });
+            const isStep1 = currentStep === 1;
             const isStep4 = currentStep === 4;
+
+            // Page 1: Keep existing Close button. Page 2 onward: Replace Close with Back button.
+            if (closeBtn) {
+                closeBtn.hidden = !isStep1;
+                closeBtn.style.display = isStep1 ? '' : 'none';
+            }
+            if (backNavBtn) {
+                backNavBtn.hidden = isStep1;
+                backNavBtn.style.display = isStep1 ? 'none' : '';
+            }
+
             next.hidden = isStep4;
             publishHost.hidden = !isStep4;
             if (coinRulesBtn) coinRulesBtn.hidden = !isStep4;
-            if (closeBtn) closeBtn.hidden = isStep4;
             const nextLabel = currentStep === 3 ? 'Review &amp; Publish' : 'Next Page';
             next.innerHTML = '<span>' + nextLabel + '</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
             const active = stepper.querySelector('.current');
