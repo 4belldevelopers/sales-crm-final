@@ -592,7 +592,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011r">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011s">
     @endif
 @endpush
 @section('content')
@@ -1025,22 +1025,6 @@
                     </div>
                     <div class="card ij-compensation-card">
                         <div class="card-body">
-                            <div class="ij-comp-header">
-                                <div class="section-title">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
-                                    </svg>Compensation
-                                </div>
-                                <div class="ij-comp-currency-wrap">
-                                    <label class="ij-comp-currency-label" for="headerCurrTrigger">Currency:</label>
-                                    <button type="button" class="ij-header-curr-btn" id="headerCurrTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change currency">
-                                        <span class="ij-header-curr-symbol" id="headerCurrSymbol"><?php echo e($initialCurrSymbol); ?></span>
-                                        <span class="ij-header-curr-code" id="headerCurrCode"><?php echo e($initialCurrCode); ?></span>
-                                        <svg class="ij-header-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                    </button>
-                                </div>
-                            </div>
                             <?php
                             $initialCurrCode = $currency_code;
                             $initialCurrSymbol = '₹';
@@ -1059,6 +1043,22 @@
                                 }
                             }
                             ?>
+                            <div class="ij-comp-header">
+                                <div class="section-title">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+                                    </svg>Compensation
+                                </div>
+                                <div class="ij-comp-currency-wrap">
+                                    <label class="ij-comp-currency-label" for="headerCurrTrigger">Currency:</label>
+                                    <button type="button" class="ij-header-curr-btn" id="headerCurrTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change currency">
+                                        <span class="ij-header-curr-symbol" id="headerCurrSymbol"><?php echo e($initialCurrSymbol); ?></span>
+                                        <span class="ij-header-curr-code" id="headerCurrCode"><?php echo e($initialCurrCode); ?></span>
+                                        <svg class="ij-header-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
+                                </div>
+                            </div>
                             {{-- Preserved backend select elements for full backward compatibility --}}
                             <select name="min_salary_currency" id="min_salary_currency" class="d-none">
                                 <?php
@@ -4655,6 +4655,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011r"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011s"></script>
     @endif
 @endpush
