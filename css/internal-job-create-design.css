@@ -425,10 +425,14 @@
     align-items: center !important;
     justify-content: space-between !important;
     gap: 10px !important;
+    min-height: 58px !important;
+    box-sizing: border-box !important;
 }
 #jrwrap.internal-job-create .r4-card-blue .r4-card-header {
     background: #f8fbff !important;
     border-bottom: 1px solid #e0edfe !important;
+    min-height: 58px !important;
+    box-sizing: border-box !important;
 }
 #jrwrap.internal-job-create .r4-header-left {
     display: flex !important;
@@ -786,6 +790,37 @@
     border-radius: 50% !important;
     background: #eab308 !important;
     flex-shrink: 0 !important;
+}
+
+@media (min-width: 1200px) {
+    #jrwrap.internal-job-create .r4-card-top {
+        height: 348px !important;
+        min-height: 348px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    #jrwrap.internal-job-create .r4-card-top .r4-card-body {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        box-sizing: border-box !important;
+    }
+    #jrwrap.internal-job-create .r4-card-top .r4-kv-list {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+    #jrwrap.internal-job-create .r4-card-top .r4-visibility-list {
+        flex: 0 0 auto !important;
+    }
+    #jrwrap.internal-job-create .r4-card-top .r4-info-box {
+        margin-top: auto !important;
+    }
+    #jrwrap.internal-job-create .r4-desc-box {
+        min-height: 125px !important;
+    }
 }
 
 @media(max-width: 1199px) {
