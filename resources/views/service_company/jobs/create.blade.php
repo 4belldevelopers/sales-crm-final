@@ -589,7 +589,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011l">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011m">
     @endif
 @endpush
 @section('content')
@@ -1366,7 +1366,7 @@
                         {{-- ==================== COLUMN 1 ==================== --}}
                         <div class="r4-col">
                             {{-- Card 1: Basic Information --}}
-                            <div class="r4-card">
+                            <div class="r4-card r4-card-top">
                                 <div class="r4-card-header">
                                     <div class="r4-header-left">
                                         <div class="r4-header-icon r4-icon-yellow">
@@ -1428,12 +1428,12 @@
                                         </div>
                                         <div class="r4-kv-row">
                                             <div class="r4-kv-key">
-                                                <span class="r4-row-icon r4-icon-green">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                                                <span class="r4-row-icon r4-icon-amber">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                                 </span>
-                                                <span class="r4-label">Work Mode</span>
+                                                <span class="r4-label">Experience</span>
                                             </div>
-                                            <div class="r4-kv-val" id="rvWorkMode">-</div>
+                                            <div class="r4-kv-val" id="rvExp">-</div>
                                         </div>
                                         <div class="r4-kv-row">
                                             <div class="r4-kv-key">
@@ -1442,10 +1442,7 @@
                                                 </span>
                                                 <span class="r4-label">Compensation</span>
                                             </div>
-                                            <div class="r4-kv-val r4-val-comp">
-                                                <span id="rvCompensation">-</span>
-                                                <span class="r4-sublabel">Annual CTC</span>
-                                            </div>
+                                            <div class="r4-kv-val" id="rvCompensation">-</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1484,7 +1481,7 @@
                         {{-- ==================== COLUMN 2 ==================== --}}
                         <div class="r4-col">
                             {{-- Card 3: Location & Employment --}}
-                            <div class="r4-card">
+                            <div class="r4-card r4-card-top">
                                 <div class="r4-card-header">
                                     <div class="r4-header-left">
                                         <div class="r4-header-icon r4-icon-yellow">
@@ -1525,15 +1522,6 @@
                                         </div>
                                         <div class="r4-kv-row">
                                             <div class="r4-kv-key">
-                                                <span class="r4-row-icon r4-icon-amber">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                                </span>
-                                                <span class="r4-label">Experience</span>
-                                            </div>
-                                            <div class="r4-kv-val" id="rvExp">-</div>
-                                        </div>
-                                        <div class="r4-kv-row">
-                                            <div class="r4-kv-key">
                                                 <span class="r4-row-icon r4-icon-indigo">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                                                 </span>
@@ -1549,15 +1537,6 @@
                                                 <span class="r4-label">Employment Type</span>
                                             </div>
                                             <div class="r4-kv-val" id="rvEmployment">-</div>
-                                        </div>
-                                        <div class="r4-kv-row">
-                                            <div class="r4-kv-key">
-                                                <span class="r4-row-icon r4-icon-blue">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                                </span>
-                                                <span class="r4-label">Notice Period</span>
-                                            </div>
-                                            <div class="r4-kv-val" id="rvNoticePeriod">Immediate Joiner Preferred</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1617,7 +1596,7 @@
                         {{-- ==================== COLUMN 3 ==================== --}}
                         <div class="r4-col">
                             {{-- Card 6: Publishing Visibility --}}
-                            <div class="r4-card r4-card-blue">
+                            <div class="r4-card r4-card-blue r4-card-top">
                                 <div class="r4-card-header">
                                     <div class="r4-header-left">
                                         <div class="r4-header-icon r4-icon-blue-box">
@@ -4136,15 +4115,13 @@
             setText('rvDepartment', getSelText('category_id'));
             setText('rvJobTitle', titleVal);
             setText('rvJobType', getSelText('employment_type'));
-            setText('rvWorkMode', getSelText('work_from_home'));
+            setText('rvExp', expText());
             setText('rvCompensation', salaryText());
 
             setText('rvLocation', cities);
             setText('rvWorkMode2', getSelText('work_from_home'));
-            setText('rvExp', expText());
             setText('rvShift', getSelText('work_shifts'));
             setText('rvEmployment', getSelText('employment_type'));
-            setText('rvNoticePeriod', 'Immediate Joiner Preferred');
 
             // skills
             var countEl = document.getElementById('rvSkillsCount');
@@ -4298,6 +4275,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011l"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011m"></script>
     @endif
 @endpush
