@@ -111,6 +111,10 @@
             "pestphp/pest-plugin": true,
             "php-http/discovery": true,
             "wikimedia/composer-merge-plugin": true
+        },
+        "platform": {
+            "ext-pcntl": "8.3.35",
+            "ext-posix": "8.3.35"
         }
     },
     "minimum-stability": "stable",
