@@ -5446,7 +5446,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
         $this->pageTitle = __('Bench Requisition');
         $company_id = auth()->user()->company_id;
-        $this->stage = $stage;
+        $this->stage = ($stage == '8' || empty($stage)) ? 'all' : $stage;
         $this->bench_id = $id;
 
         /**
