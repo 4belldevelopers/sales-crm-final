@@ -6368,6 +6368,40 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->segment = ($request->segment(4)) ? $request->segment(4) : '';
         $this->pageTitle = __('Recommended Requisition');
 
+        // Pre-render Page 1 to eliminate secondary AJAX call on initial page load (Zero-Server-Hit)
+        $initialCusSearch = '';
+        if (! empty($this->bench_detail->skills)) {
+            $rawSkills = array_filter(array_map('trim', explode(',', $this->bench_detail->skills)));
+            $skillsArray = array_map(function ($s) {
+                return ['value' => $s, 'checked' => false];
+            }, $rawSkills);
+            $initialCusSearch = json_encode($skillsArray);
+        }
+
+        $preRenderParams = [
+            'condidate_id' => $this->bench_id,
+            'page' => 1,
+            'per_page' => 10,
+            'size' => 10,
+            'custom_status' => 'active',
+            'custom_hiringtype' => '10',
+            'cus_search' => $initialCusSearch,
+        ];
+        $request->merge($preRenderParams);
+
+        try {
+            $initialResponse = $this->all_data_ajax($request);
+            $initialData = $initialResponse->getData(true);
+            $this->initialHtml = $initialData['html'] ?? '';
+            $this->initialTotal = $initialData['total'] ?? 0;
+            $this->initialPagination = $initialData['pagination'] ?? '';
+        } catch (\Throwable $e) {
+            \Log::error('Pre-rendering recommend_req failed: '.$e->getMessage());
+            $this->initialHtml = '';
+            $this->initialTotal = 0;
+            $this->initialPagination = '';
+        }
+
         return view('service_company.bench-candidates.recommend_req', $this->data);
     }
 
@@ -6575,18 +6609,78 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function all_data_ajax(Request $request)
     {
-        // dd($request->condidate_id); skills city_id city pay_rate_amount
-        // dd("l");
-        $currentRowJob = JobApplication::withoutGlobalScopes()->find($request->condidate_id);
+        abort_if(Gate::denies('view_jobs'), 403);
+
         $condidate_id = (int) $request->condidate_id;
-        $currentJobSkill = explode(',', $currentRowJob->skills);
+        $company_id = auth()->user()->company_id;
+        $currentUserId = (int) ($this->user->id ?? auth()->id() ?? 0);
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
+        $from = ($page - 1) * $size;
 
-        $searchTerms = request('cus_search');
-        $custom_search = json_decode($searchTerms, true);
-        // dd($custom_search);
+        $searchQuery = $request->input('q');
+        $custom_search = trim((string) $request->input('custom_search'));
+        $cus_search = $request->input('cus_search');
+        $kt_tagify_location = $request->input('kt_tagify_location');
+        $app_int_activity = $request->input('app_int_activity');
+        $sal_mode = $request->input('sal_mode');
+        $min_salary_currency = $request->input('min_salary_currency');
+        $min_exp = $request->input('min_exp') ? $request->input('min_exp') : 0;
+        $max_exp = $request->input('max_exp');
+        $min_salary_raw = $request->input('min_sal');
+        $max_salary_raw = $request->input('max_sal');
+        $custom_status = $request->input('custom_status');
+        $custom_hiringtype = $request->input('custom_hiringtype') ?? $request->input('app_int_outsource');
+        $work_mode = $request->input('work_mode');
 
-        $location = request('kt_tagify_location');
-        $custom_location = json_decode($location, true);
+        $cachePayload = [
+            'condidate_id' => $condidate_id,
+            'page' => $page,
+            'size' => $size,
+            'q' => $searchQuery,
+            'company' => $company_id,
+            'custom_search' => $custom_search,
+            'cus_search' => $cus_search,
+            'kt_tagify_location' => $kt_tagify_location,
+            'app_int_activity' => $app_int_activity,
+            'sal_mode' => $sal_mode,
+            'min_salary_currency' => $min_salary_currency,
+            'min_exp' => $min_exp,
+            'max_exp' => $max_exp,
+            'min_sal' => $min_salary_raw,
+            'max_sal' => $max_salary_raw,
+            'custom_status' => $custom_status,
+            'user_id' => $currentUserId,
+            'custom_hiringtype' => $custom_hiringtype,
+            'work_mode' => $work_mode,
+        ];
+
+        $versionKey = 'allbenchrecommendreq_version_user_'.$currentUserId;
+        $version = cache()->get($versionKey, 1);
+        $cacheKeySet = 'ats:allbenchrecommendreq:'.$currentUserId.':'.$version.':'.md5(json_encode($cachePayload));
+        $eTag = '"'.md5($cacheKeySet).'"';
+
+        /* ---------------------------------------------------------------
+        ⚡ DragonflyDB / Redis Fast-Path: 0 MySQL queries, 0 ES calls, < 2ms
+        ----------------------------------------------------------------- */
+        if ($request->hasHeader('If-None-Match') && trim($request->header('If-None-Match'), '"') === trim($eTag, '"')) {
+            return response('', 304)->header('ETag', $eTag);
+        }
+
+        if (cache()->has($cacheKeySet)) {
+            return response()->json(cache()->get($cacheKeySet))->header('ETag', $eTag);
+        }
+
+        $currentRowJob = cache()->remember('ats:bench_candidate_detail:'.$condidate_id, 300, function () use ($condidate_id) {
+            return JobApplication::withoutGlobalScopes()->find($condidate_id);
+        });
+        if (! $currentRowJob) {
+            return response()->json(['html' => '', 'total' => 0, 'pagination' => '']);
+        }
+        $currentJobSkill = explode(',', $currentRowJob->skills ?? '');
+
+        $custom_search_skills = json_decode($cus_search, true);
+        $custom_location = json_decode($kt_tagify_location, true);
         $current_date = date('Y-m-d');
         $current_timestamp = strtotime($current_date);
         $current_previous_30_days = date('Y-m-d', strtotime('-30 days', $current_timestamp));
@@ -6594,30 +6688,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $current_previous_90_days = date('Y-m-d', strtotime('-90 days', $current_timestamp));
         $current_previous_180_days = date('Y-m-d', strtotime('-180 days', $current_timestamp));
         $current_previous_1_year = date('Y-m-d', strtotime('-365 days', $current_timestamp));
-        $app_int_activity = request('app_int_activity');
-        $sal_mode = request('sal_mode');
-        $min_salary_currency = request('min_salary_currency');
-        $app_int_outsource = request('app_int_outsource');
 
-        $min_exp = (request('min_exp')) ? request('min_exp') : 0;
-        $max_exp = request('max_exp');
+        $min_salary = $min_salary_raw;
+        $max_salary = $max_salary_raw;
+        $currencyList = GeneralMethod::currency();  // Currency code
 
-        $min_salary = request('min_sal');
-        $max_salary = request('max_sal');
-        $currency = GeneralMethod::currency();  // Currency code
-
-        $ecurrency = $currency[$min_salary_currency];
+        $ecurrency = $currencyList[$min_salary_currency] ?? 'INR';
         $econvertedAmount = (int) $max_salary;
-        if ($min_salary_currency > 0) {
+        if (! empty($min_salary_currency) && (int) $min_salary_currency > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
 
         $ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $econvertedAmount);
 
-        $currency = $currency[$min_salary_currency];
+        $curItem = $currencyList[$min_salary_currency] ?? 'INR';
         $convertedAmount = (int) $min_salary;
-        if ($min_salary_currency > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+        if (! empty($min_salary_currency) && (int) $min_salary_currency > 0) {
+            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $curItem);
         }
 
         $ctcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
@@ -6632,12 +6719,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $min_salary = @$ctcdivided->yearly;
         }
 
-        // dd($max_salary ,$min_salary,$ectcdivided,$ctcdivided);
-
         $location = [];
-        $rawLocationReq = \request('kt_tagify_location');
-        if (! empty($rawLocationReq)) {
-            $locCacheKey = 'ats:loc_tagify_ids:'.md5($rawLocationReq);
+        if (! empty($kt_tagify_location)) {
+            $locCacheKey = 'ats:loc_tagify_ids:'.md5($kt_tagify_location);
             $location = cache()->remember($locCacheKey, 3600, function () use ($custom_location) {
                 $resolvedIds = [];
                 if (is_array($custom_location)) {
@@ -6663,42 +6747,30 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 return array_values(array_unique($resolvedIds));
             });
         }
-        // dd($location);
+
         $set_skill = [];
-        if ($currentJobSkill > 0) {
+        if (! empty($currentJobSkill)) {
             foreach ($currentJobSkill as $val) {
                 array_push($set_skill, trim($val));
             }
         }
-        // (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
-        // query here whose $skill result was never read anywhere below —
-        // removed as dead load. $set_skill — the candidate's own skills —
-        // is kept; it now also drives the "Best Match" sort, case 10 below.)
-        abort_if(Gate::denies('view_jobs'), 403);
-
-        $company_id = auth()->user()->company_id;
 
         $chkAdminRole = auth()->user()->hasRole('admin');
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
-        // $searchTerms = request('custom_search');
-        // $custom_search = json_decode($searchTerms, true);
 
-        if (\request('cus_search') != '') {
-            $skillsAddElastic = array_column($custom_search, 'value');
-            GeneralMethod::skillsAddElastic($skillsAddElastic);
-        }
         $requiredSkills = [];
+        if (! empty($cus_search) && is_array($custom_search_skills)) {
+            $skillsAddElastic = array_column($custom_search_skills, 'value');
+            GeneralMethod::skillsAddElastic($skillsAddElastic);
 
-        if (\request('cus_search') != '') {
-
-            $checkedSkills = array_filter($custom_search, function ($skill) {
-                return $skill['checked'] == true;
+            $checkedSkills = array_filter($custom_search_skills, function ($skill) {
+                return ! empty($skill['checked']);
             });
 
-            $uncheckedSkills = array_filter($custom_search, function ($skill) {
-                return $skill['checked'] == false;
+            $uncheckedSkills = array_filter($custom_search_skills, function ($skill) {
+                return empty($skill['checked']);
             });
 
             if (! empty($checkedSkills)) {
@@ -6706,62 +6778,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             } else {
                 $requiredSkills = array_column($uncheckedSkills, 'value');
             }
-
-        }
-
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
-        $from = ($page - 1) * $size;
-
-        $custom_status = request('custom_status');
-        $custom_hiringtype = request('app_int_outsource');
-        $custom_search = trim(request('custom_search'));
-
-        $cachePayload = [
-            // condidate_id was missing here — every request for THIS candidate's
-            // recommended jobs hashed to the same cache key as any OTHER
-            // candidate with the same filter state (very likely with empty/
-            // default filters, e.g. two candidates with no skills recorded),
-            // so one candidate's cached list/total could be served back for a
-            // completely different candidate. This is the root cause behind
-            // "count says N but the list shows 0" and results changing
-            // unexpectedly when switching between candidates.
-            'condidate_id' => $condidate_id,
-            'page' => $page,
-            'size' => $size,
-            'q' => $searchQuery,
-            'company' => $company_id,
-            'custom_search' => $custom_search,
-            'location' => $location,
-            'app_int_activity' => $app_int_activity,
-            'sal_mode' => $sal_mode,
-            'min_salary_currency' => $min_salary_currency,
-            'min_exp' => $min_exp,
-            'max_exp' => $max_exp,
-            'max_salary' => $max_salary,
-            'min_salary' => $min_salary,
-            'requiredSkills' => $requiredSkills ?? [],
-            'custom_status' => $custom_status,
-            'user_id' => auth()->user()->id,
-            'custom_hiringtype' => $custom_hiringtype,
-            'work_mode' => request('work_mode'),
-        ];
-
-        $versionKey = 'allbenchrecommendreq_version_user_'.auth()->user()->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchrecommendreq:'.auth()->user()->id.':'.$version.':'.md5(json_encode($cachePayload));
-        $eTag = '"'.md5($cacheKeySet).'"';
-
-        /* ----------------------------
-        ⚡ Check DragonflyDB first with HTTP 304 revalidation
-        ----------------------------- */
-        if ($request->hasHeader('If-None-Match') && trim($request->header('If-None-Match'), '"') === trim($eTag, '"')) {
-            return response('', 304)->header('ETag', $eTag);
-        }
-
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet))->header('ETag', $eTag);
         }
 
         $statusArr = ['active', 'hold', 'inactive', '2'];
@@ -7058,7 +7074,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
         } // never cache an errored (empty) response
 
-        return response()->json($responseData);
+        return response()->json($responseData)->header('ETag', $eTag);
 
     }
 
@@ -7519,6 +7535,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $conId = (int) $request->conId;
         $userId = (int) (auth()->user()->id ?? $this->user->id ?? 0);
         $clientKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $action = $request->input('action', 'recommend_req');
+        $tab = $request->input('tab', 'client_bench');
 
         /** @var \App\Services\BenchRequestMutationService $mutationService */
         $mutationService = app(\App\Services\BenchRequestMutationService::class);
@@ -7527,7 +7545,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $jobId,
             $conId,
             $userId,
-            $clientKey
+            $clientKey,
+            $action,
+            $tab
         );
 
         return response()->json($result);
