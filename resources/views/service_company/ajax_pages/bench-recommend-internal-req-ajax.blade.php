@@ -100,7 +100,8 @@
                 $isSelf = isset($cDetails) ? (((int) ($cDetails->self_company ?? 0)) === 1) : false;
                 $clientBadgeLabel = $isSelf ? 'Internal' : 'Internal Client';
             }
-            $clientTypeId = (string) ($row->comId ?? '');
+            // Job Reference ID displayed next to client/internal badge (e.g. "Internal Client • 3" or "Internal • 3")
+            $clientTypeId = (string) ($row->id ?? '');
 
             $deptName = $row->v2_category_name ?? ($row->category_name ?? ($categoriesMap[$row->category_id ?? 0] ?? ''));
             if (empty($deptName)) {
@@ -179,7 +180,7 @@
             $createdDateStr = GeneralMethod::ymdTodmyNotTime($row->created_at ?? date('Y-m-d'));
             $benchRequestCheck = $benchReqMap[$row->id] ?? null;
             $requestsend = "checkrequestsend";
-            if ($currentRowJob->status == 2) {
+            if (($currentRowJob->status ?? $currentRowJob->statusCheck ?? null) == 2) {
                 $requestsend = "request-send";
             }
 

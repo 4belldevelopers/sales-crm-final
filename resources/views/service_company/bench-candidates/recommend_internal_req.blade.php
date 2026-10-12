@@ -1674,8 +1674,8 @@ $(document).ready(function() {
         var ele = $(this);
         if (ele.hasClass('disabled') || ele.prop('disabled')) return;
 
-        var jobId = ele.attr('data-jobId');
-        var conId = ele.attr('data-conId');
+        var jobId = ele.attr('data-jobId') || ele.data('jobid') || ele.attr('data-jobid');
+        var conId = ele.attr('data-conId') || ele.data('conid') || ele.attr('data-conid');
         if (!jobId || !conId) return;
 
         var originalHtml = ele.html();
@@ -1694,11 +1694,15 @@ $(document).ready(function() {
             headers: {
                 'X-Idempotency-Key': idempotencyKey
             },
+            data: {
+                action: 'recommend_req',
+                tab: 'internal_bench'
+            },
             success: function (response) {
                 if (response && (response.status === 'success' || response.status === true)) {
                     swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
 
-                    ele.replaceWith('<a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;"><i class="fa-regular fa-clock me-1"></i> Request Sent</a>');
+                    ele.replaceWith('<span class="badge badge-light-warning py-1 px-2 w-100 text-center mt-1 disabled" style="font-size:10.5px;font-weight:600;pointer-events:none;"><i class="ti ti-clock me-1"></i> Request Sent</span>');
 
                     // Invalidate client in-memory cache to guarantee freshness on subsequent pagination/filters
                     if (window.RecommendInternalReqCache) {

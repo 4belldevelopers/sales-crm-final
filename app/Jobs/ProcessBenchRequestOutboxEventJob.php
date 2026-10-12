@@ -210,12 +210,115 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
             $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
             $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
 
-            $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
-            $template_description = str_replace(
-                ['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]', '[{BENCH_CANDIDATE_NAME}]', '[{BILL_RATE}]', '[{EXPERENCE}]', '[{LOCATION}]', '[{CONTACT_PERSON_NAME}]', '[{PHONE}]', '[{EMAIL}]', '[{SKILL}]'],
-                [$detailsVendorSide->client_company, $job->title, $job->id, $detailsVendorSide->vendor_company, $jobRow->full_name, $salaryRange, $jobRow->total_exp, $jobRow->city, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $jobRow->skills],
-                $mailTypeSubject->body_description
-            );
+            // Notice Period formatting
+            $npDate = '';
+            if ((int) ($jobRow->serving_notice_period_mode ?? 0) === 0) {
+                if (! empty($jobRow->np_id)) {
+                    $npDate = ((int) $jobRow->np_id === 1) ? '1 Day' : $jobRow->np_id.' Days';
+                } else {
+                    $npDate = 'Immediate';
+                }
+            } elseif ((int) ($jobRow->serving_notice_period_mode ?? 0) === 1) {
+                if (! empty($jobRow->np_id) && $jobRow->np_id !== 'Immediate') {
+                    $timestamp = strtotime($jobRow->np_id);
+                    $npDate = $timestamp ? date('d-M-y', $timestamp) : $jobRow->np_id;
+                } else {
+                    $npDate = 'Immediate';
+                }
+            } else {
+                $npDate = ! empty($jobRow->np_id) ? $jobRow->np_id : 'Immediate';
+            }
+
+            // Outsourcing type
+            $outsourcing = ((int) ($jobRow->outsourcing_type ?? 0) === 1) ? 'Fulltime' : 'Contract';
+
+            // Commission type
+            $comission = ((int) ($jobRow->comission_type ?? 0) === 1) ? 'Free Service' : 'Paid Service';
+
+            // Experience formatting (clean trailing dot and handle freshers)
+            $totalExpVal = trim((string) ($jobRow->total_exp ?? ''));
+            $expClean = rtrim($totalExpVal, '.');
+            if ($expClean === '' || $expClean === '0') {
+                $expDisplay = '0 Years';
+            } elseif (is_numeric($expClean)) {
+                $expFloat = (float) $expClean;
+                $expDisplay = ($expFloat == 1) ? '1 Year' : (($expFloat == (int) $expFloat ? (int) $expFloat : $expFloat).' Years');
+            } else {
+                $expDisplay = $expClean;
+            }
+
+            // Candidate Name & Resume link
+            $candidateName = $jobRow->full_name ?? 'Candidate';
+            $resumeUrl = ! empty($jobRow->resume) ? $jobRow->resume : '';
+            if (! empty($resumeUrl)) {
+                $candidateNameHtml = '<a href="'.htmlspecialchars($resumeUrl, ENT_QUOTES, 'UTF-8').'" target="_blank" style="color:#0066cc;text-decoration:underline;font-weight:600;">'.htmlspecialchars($candidateName, ENT_QUOTES, 'UTF-8').'</a>';
+            } else {
+                $candidateNameHtml = htmlspecialchars($candidateName, ENT_QUOTES, 'UTF-8');
+            }
+
+            // Subject replacements (including VENDOR_COMPANY_NAME and CLIENT_COMPANY_NAME)
+            $subjectSearch = [
+                '[{JOB_TITLE}]', '[ {JOB_TITLE}]',
+                '[{JOB_ID}]', '[ {JOB_ID}]', '[{job_id}]', '[ {job_id}]',
+                '[{VENDOR_COMPANY_NAME}]', '[ {VENDOR_COMPANY_NAME}]',
+                '[{CLIENT_COMPANY_NAME}]', '[ {CLIENT_COMPANY_NAME}]',
+                '[{BENCH_CANDIDATE_NAME}]', '[ {BENCH_CANDIDATE_NAME}]',
+                '[{CANDIDATE_NAME}]', '[ {CANDIDATE_NAME}]',
+                '[{BENCH_ID}]', '[ {BENCH_ID}]',
+            ];
+            $subjectReplace = [
+                $job->title, $job->title,
+                $job->id, $job->id, $job->id, $job->id,
+                $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company,
+                $detailsVendorSide->client_company, $detailsVendorSide->client_company,
+                $candidateName, $candidateName,
+                $candidateName, $candidateName,
+                $candidateId, $candidateId,
+            ];
+            $subject = str_replace($subjectSearch, $subjectReplace, $mailTypeSubject->subject);
+
+            // Body replacements (complete parameter map)
+            $bodySearch = [
+                '[{CLIENT_COMPANY_NAME}]', '[ {CLIENT_COMPANY_NAME}]',
+                '[{VENDOR_COMPANY_NAME}]', '[ {VENDOR_COMPANY_NAME}]',
+                '[{JOB_TITLE}]', '[ {JOB_TITLE}]',
+                '[{JOB_ID}]', '[ {JOB_ID}]', '[{job_id}]', '[ {job_id}]',
+                '[{BENCH_CANDIDATE_NAME}]', '[ {BENCH_CANDIDATE_NAME}]',
+                '[{CANDIDATE_NAME}]', '[ {CANDIDATE_NAME}]',
+                '[{BENCH_ID}]', '[ {BENCH_ID}]',
+                '[{BILL_RATE}]', '[ {BILL_RATE}]',
+                '[{EXPERENCE}]', '[ {EXPERENCE}]', '[{EXPERIENCE}]', '[ {EXPERIENCE}]',
+                '[{LOCATION}]', '[ {LOCATION}]',
+                '[{NP}]', '[ {NP}]',
+                '[{OUTSOURCE}]', '[ {OUTSOURCE}]',
+                '[{COMMISSION}]', '[ {COMMISSION}]',
+                '[{SKILL}]', '[ {SKILL}]', '[{SKILLS}]', '[ {SKILLS}]',
+                '[{CONTACT_PERSON_NAME}]', '[ {CONTACT_PERSON_NAME}]',
+                '[{PHONE}]', '[ {PHONE}]',
+                '[{EMAIL}]', '[ {EMAIL}]',
+                '[{RESUME}]', '[{RESUME_URL}]', '[{RESUME_LINK}]',
+            ];
+            $bodyReplace = [
+                $detailsVendorSide->client_company, $detailsVendorSide->client_company,
+                $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company,
+                $job->title, $job->title,
+                $job->id, $job->id, $job->id, $job->id,
+                $candidateNameHtml, $candidateNameHtml,
+                $candidateNameHtml, $candidateNameHtml,
+                $candidateId, $candidateId,
+                $salaryRange, $salaryRange,
+                $expDisplay, $expDisplay, $expDisplay, $expDisplay,
+                $jobRow->city ?? 'N/A', $jobRow->city ?? 'N/A',
+                $npDate, $npDate,
+                $outsourcing, $outsourcing,
+                $comission, $comission,
+                $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A',
+                $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_name,
+                $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_phone,
+                $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_email,
+                $resumeUrl, $resumeUrl, $resumeUrl,
+            ];
+            $template_description = str_replace($bodySearch, $bodyReplace, $mailTypeSubject->body_description);
 
             $notificationemail = GeneralMethod::notification($sourceCompanyId, 'Recuitment');
             $defaultEmail = DB::table('companies')->where('id', $sourceCompanyId)->value('company_email');

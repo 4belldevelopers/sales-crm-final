@@ -186,7 +186,7 @@
                     $deadlineStr = date('d M Y', strtotime('+30 days', strtotime($row->created_at)));
                     $benchRequestCheck = $benchReqMap[$row->id] ?? null;
                     $requestsend = "checkrequestsend";
-                    if ($currentRowJob->status == 2) {
+                    if (($currentRowJob->status ?? $currentRowJob->statusCheck ?? null) == 2) {
                         $requestsend = "request-send";
                     }
                     $rawStatus = strtolower($row->status ?? 'active');

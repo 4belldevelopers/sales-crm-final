@@ -6337,7 +6337,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($request->id);
         $this->bench_id = $request->id;
         $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
-            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
                 ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
                 ->join('countries', 'countries.id', '=', 'job_applications.country')
                 ->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -6410,7 +6410,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($request->id);
         $this->bench_id = $request->id;
         $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
-            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
                 ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
                 ->join('countries', 'countries.id', '=', 'job_applications.country')
                 ->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -7605,34 +7605,115 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
             $salaryRange = $bill_rate_currency.' '.$bill_rate_amount.'/'.$bill_rate_mode;
 
-            $npDate = $jobRow->np_id;
-            if ($jobRow->serving_notice_period_mode == 0) {
-                $npDate = ($jobRow->np_id == 1) ? $jobRow->np_id.' Day' : $jobRow->np_id.' Days';
-            } elseif ($jobRow->serving_notice_period_mode == 1) {
-                $originalDate = $jobRow->np_id;
-                $npDate = date('d-M-y', strtotime($originalDate));
+            // Notice Period formatting
+            $npDate = '';
+            if ((int) ($jobRow->serving_notice_period_mode ?? 0) === 0) {
+                if (! empty($jobRow->np_id)) {
+                    $npDate = ((int) $jobRow->np_id === 1) ? '1 Day' : $jobRow->np_id.' Days';
+                } else {
+                    $npDate = 'Immediate';
+                }
+            } elseif ((int) ($jobRow->serving_notice_period_mode ?? 0) === 1) {
+                if (! empty($jobRow->np_id) && $jobRow->np_id !== 'Immediate') {
+                    $timestamp = strtotime($jobRow->np_id);
+                    $npDate = $timestamp ? date('d-M-y', $timestamp) : $jobRow->np_id;
+                } else {
+                    $npDate = 'Immediate';
+                }
             } else {
-                $npDate = '';
+                $npDate = ! empty($jobRow->np_id) ? $jobRow->np_id : 'Immediate';
             }
 
-            if ($jobRow->outsourcing_type == 1) {
-                $outsourcing = 'Fulltime';
+            // Outsourcing type
+            $outsourcing = ((int) ($jobRow->outsourcing_type ?? 0) === 1) ? 'Fulltime' : 'Contract';
+
+            // Commission type
+            $comission = ((int) ($jobRow->comission_type ?? 0) === 1) ? 'Free Service' : 'Paid Service';
+
+            // Experience formatting (clean trailing dot and handle freshers)
+            $totalExpVal = trim((string) ($jobRow->total_exp ?? ''));
+            $expClean = rtrim($totalExpVal, '.');
+            if ($expClean === '' || $expClean === '0') {
+                $expDisplay = '0 Years';
+            } elseif (is_numeric($expClean)) {
+                $expFloat = (float) $expClean;
+                $expDisplay = ($expFloat == 1) ? '1 Year' : (($expFloat == (int) $expFloat ? (int) $expFloat : $expFloat).' Years');
             } else {
-                $outsourcing = 'Contract';
+                $expDisplay = $expClean;
             }
 
-            if ($jobRow->comission_type == 1) {
-                $comission = 'Free Service';
+            // Candidate Name & Resume link
+            $candidateName = $jobRow->full_name ?? 'Candidate';
+            $resumeUrl = ! empty($jobRow->resume) ? $jobRow->resume : '';
+            if (! empty($resumeUrl)) {
+                $candidateNameHtml = '<a href="'.htmlspecialchars($resumeUrl, ENT_QUOTES, 'UTF-8').'" target="_blank" style="color:#0066cc;text-decoration:underline;font-weight:600;">'.htmlspecialchars($candidateName, ENT_QUOTES, 'UTF-8').'</a>';
             } else {
-                $comission = 'Paid Service';
+                $candidateNameHtml = htmlspecialchars($candidateName, ENT_QUOTES, 'UTF-8');
             }
 
-            $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]'], [$job->title, $job->id, $detailsVendorSide->vendor_company], $mailTypeSubject->subject);
-            $template_description = str_replace(
-                ['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]', '[{BENCH_CANDIDATE_NAME}]', '[{BILL_RATE}]', '[{EXPERENCE}]', '[{LOCATION}]', '[{CONTACT_PERSON_NAME}]', '[{PHONE}]', '[{EMAIL}]', '[{SKILL}]', '[{NP}]', '[{OUTSOURCE}]', '[{COMMISSION}]'],
-                [$detailsVendorSide->client_company, $job->title, $job->id, $detailsVendorSide->vendor_company, $jobRow->full_name, $salaryRange, $jobRow->total_exp, $jobRow->city, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $jobRow->skills, $npDate, $outsourcing, $comission],
-                $mailTypeSubject->body_description
-            );
+            // Subject replacements (including VENDOR_COMPANY_NAME and CLIENT_COMPANY_NAME)
+            $subjectSearch = [
+                '[{JOB_TITLE}]', '[ {JOB_TITLE}]',
+                '[{JOB_ID}]', '[ {JOB_ID}]', '[{job_id}]', '[ {job_id}]',
+                '[{VENDOR_COMPANY_NAME}]', '[ {VENDOR_COMPANY_NAME}]',
+                '[{CLIENT_COMPANY_NAME}]', '[ {CLIENT_COMPANY_NAME}]',
+                '[{BENCH_CANDIDATE_NAME}]', '[ {BENCH_CANDIDATE_NAME}]',
+                '[{CANDIDATE_NAME}]', '[ {CANDIDATE_NAME}]',
+                '[{BENCH_ID}]', '[ {BENCH_ID}]',
+            ];
+            $subjectReplace = [
+                $job->title, $job->title,
+                $job->id, $job->id, $job->id, $job->id,
+                $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company,
+                $detailsVendorSide->client_company, $detailsVendorSide->client_company,
+                $candidateName, $candidateName,
+                $candidateName, $candidateName,
+                $source_application_id, $source_application_id,
+            ];
+            $subject = str_replace($subjectSearch, $subjectReplace, $mailTypeSubject->subject);
+
+            // Body replacements (complete parameter map)
+            $bodySearch = [
+                '[{CLIENT_COMPANY_NAME}]', '[ {CLIENT_COMPANY_NAME}]',
+                '[{VENDOR_COMPANY_NAME}]', '[ {VENDOR_COMPANY_NAME}]',
+                '[{JOB_TITLE}]', '[ {JOB_TITLE}]',
+                '[{JOB_ID}]', '[ {JOB_ID}]', '[{job_id}]', '[ {job_id}]',
+                '[{BENCH_CANDIDATE_NAME}]', '[ {BENCH_CANDIDATE_NAME}]',
+                '[{CANDIDATE_NAME}]', '[ {CANDIDATE_NAME}]',
+                '[{BENCH_ID}]', '[ {BENCH_ID}]',
+                '[{BILL_RATE}]', '[ {BILL_RATE}]',
+                '[{EXPERENCE}]', '[ {EXPERENCE}]', '[{EXPERIENCE}]', '[ {EXPERIENCE}]',
+                '[{LOCATION}]', '[ {LOCATION}]',
+                '[{NP}]', '[ {NP}]',
+                '[{OUTSOURCE}]', '[ {OUTSOURCE}]',
+                '[{COMMISSION}]', '[ {COMMISSION}]',
+                '[{SKILL}]', '[ {SKILL}]', '[{SKILLS}]', '[ {SKILLS}]',
+                '[{CONTACT_PERSON_NAME}]', '[ {CONTACT_PERSON_NAME}]',
+                '[{PHONE}]', '[ {PHONE}]',
+                '[{EMAIL}]', '[ {EMAIL}]',
+                '[{RESUME}]', '[{RESUME_URL}]', '[{RESUME_LINK}]',
+            ];
+            $bodyReplace = [
+                $detailsVendorSide->client_company, $detailsVendorSide->client_company,
+                $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company,
+                $job->title, $job->title,
+                $job->id, $job->id, $job->id, $job->id,
+                $candidateNameHtml, $candidateNameHtml,
+                $candidateNameHtml, $candidateNameHtml,
+                $source_application_id, $source_application_id,
+                $salaryRange, $salaryRange,
+                $expDisplay, $expDisplay, $expDisplay, $expDisplay,
+                $jobRow->city ?? 'N/A', $jobRow->city ?? 'N/A',
+                $npDate, $npDate,
+                $outsourcing, $outsourcing,
+                $comission, $comission,
+                $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A', $jobRow->skills ?? 'N/A',
+                $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_name,
+                $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_phone,
+                $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_email,
+                $resumeUrl, $resumeUrl, $resumeUrl,
+            ];
+            $template_description = str_replace($bodySearch, $bodyReplace, $mailTypeSubject->body_description);
 
             $message = $template_description;
             $notificationemail = GeneralMethod::notification($source_company_id, 'Recuitment');
@@ -7642,17 +7723,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             $mailService = new MailService;
 
-            QueueNotificationMailService::dispatch(
-                '4belldevelopers@gmail.com',
-                $subject,
-                'email.common.index',
-                (object) $datamail,
-                [],
-                $fromAddress,
-                $senderName,
-                $cc,
-                $company_id
-            )->onConnection('emails');
+            if (! empty($to_Mail_Id)) {
+                QueueNotificationMailService::dispatch(
+                    $to_Mail_Id,
+                    $subject,
+                    'email.common.index',
+                    (object) $datamail,
+                    [],
+                    $fromAddress,
+                    $senderName,
+                    $cc,
+                    $company_id
+                )->onConnection('emails');
+            }
 
             // $result =   $mailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $datamail, [], $fromAddress, $senderName, $cc);
 
