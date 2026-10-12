@@ -584,6 +584,49 @@
     }
     #add_team_member .atm-save-btn:hover:not(:disabled) { background: #1e4fd4; }
     #add_team_member .atm-save-btn:disabled { opacity: .7; cursor: not-allowed; }
+
+    /* ==========================================================================
+       Gender Diversity Dropdown — God-Level Metronic SaaS Redesign
+       Scope: #jrwrap.internal-job-create .ij-gender-group
+       ========================================================================== */
+    #jrwrap .ij-gender-group { position: relative !important; display: flex !important; flex-direction: column !important; gap: 4px !important; }
+    #jrwrap .ij-gender-label { display: inline-flex !important; align-items: center !important; gap: 6px !important; font-size: 12px !important; font-weight: 500 !important; color: #1e293b !important; margin-bottom: 2px !important; user-select: none; }
+    #jrwrap .ij-gender-info-icon { display: inline-flex !important; align-items: center !important; justify-content: center !important; color: #94a3b8 !important; cursor: pointer !important; transition: color 0.15s ease, transform 0.15s ease !important; line-height: 1 !important; }
+    #jrwrap .ij-gender-info-icon:hover { color: #2563eb !important; transform: scale(1.08) !important; }
+    #jrwrap .ij-gender-dropdown-wrapper { position: relative !important; width: 100% !important; }
+    #jrwrap .ij-gender-trigger { width: 100% !important; height: 36px !important; min-height: 36px !important; padding: 0 12px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; background: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important; color: #0f172a !important; font-family: 'Poppins', sans-serif !important; font-size: 12.5px !important; cursor: pointer; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; outline: none !important; box-sizing: border-box !important; text-align: left !important; }
+    #jrwrap .ij-gender-trigger:hover { border-color: #94a3b8 !important; background: #fafbfc !important; }
+    #jrwrap .ij-gender-trigger:focus, #jrwrap .ij-gender-trigger.is-active { border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important; background: #ffffff !important; }
+    #jrwrap .ij-gender-trigger-left { display: flex !important; align-items: center !important; gap: 9px !important; min-width: 0 !important; flex: 1 1 auto !important; overflow: hidden !important; }
+    #jrwrap .ij-gender-trigger-badge { width: 24px !important; height: 24px !important; border-radius: 5px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; transition: all 0.15s ease !important; }
+    #jrwrap .ij-gender-trigger-text { font-size: 12.5px !important; font-weight: 400 !important; color: #94a3b8 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; transition: color 0.15s ease, font-weight 0.15s ease !important; }
+    #jrwrap .ij-gender-trigger-text.has-value { color: #0f172a !important; font-weight: 500 !important; }
+    #jrwrap .ij-gender-chevron { color: #64748b !important; flex-shrink: 0 !important; margin-left: 8px !important; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease !important; }
+    #jrwrap .ij-gender-trigger.is-active .ij-gender-chevron { transform: rotate(180deg) !important; color: #2563eb !important; }
+    #jrwrap .ij-gender-menu { position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important; width: 100% !important; min-width: 290px !important; max-width: 380px !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important; padding: 6px !important; z-index: 1060 !important; display: flex !important; flex-direction: column !important; gap: 2px !important; max-height: 330px !important; overflow-y: auto !important; overscroll-behavior: contain !important; transform-origin: top center !important; opacity: 0 !important; transform: translateY(-4px) scale(0.98) !important; transition: opacity 0.15s cubic-bezier(0, 0, 0.2, 1), transform 0.15s cubic-bezier(0, 0, 0.2, 1) !important; box-sizing: border-box !important; }
+    #jrwrap .ij-gender-menu.is-open { opacity: 1 !important; transform: translateY(0) scale(1) !important; }
+    #jrwrap .ij-gender-menu::-webkit-scrollbar { width: 5px !important; }
+    #jrwrap .ij-gender-menu::-webkit-scrollbar-track { background: transparent !important; }
+    #jrwrap .ij-gender-menu::-webkit-scrollbar-thumb { background: #cbd5e1 !important; border-radius: 4px !important; }
+    #jrwrap .ij-gender-option { display: flex !important; align-items: center !important; gap: 10px !important; padding: 8px 10px !important; border-radius: 7px !important; cursor: pointer !important; background: transparent !important; border: 1px solid transparent !important; transition: background 0.15s ease, border-color 0.15s ease !important; user-select: none !important; outline: none !important; box-sizing: border-box !important; }
+    #jrwrap .ij-gender-option:hover { background: #f8fafc !important; border-color: #f1f5f9 !important; }
+    #jrwrap .ij-gender-option.is-focused { background: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+    #jrwrap .ij-gender-option.is-selected { background: #eff6ff !important; border-color: #bfdbfe !important; }
+    #jrwrap .ij-gender-option.is-selected .ij-gender-option-title { color: #1d4ed8 !important; font-weight: 600 !important; }
+    #jrwrap .ij-gender-option-info { display: flex !important; flex-direction: column !important; gap: 1px !important; flex: 1 1 auto !important; min-width: 0 !important; }
+    #jrwrap .ij-gender-option-title { font-size: 12.5px !important; font-weight: 600 !important; color: #1e293b !important; line-height: 1.3 !important; font-family: 'Poppins', sans-serif !important; }
+    #jrwrap .ij-gender-option-desc { font-size: 11px !important; color: #64748b !important; line-height: 1.25 !important; font-family: 'Poppins', sans-serif !important; }
+    #jrwrap .ij-gender-badge { width: 32px !important; height: 32px !important; border-radius: 7px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; transition: transform 0.15s ease !important; }
+    #jrwrap .ij-gender-option:hover .ij-gender-badge { transform: scale(1.05) !important; }
+    #jrwrap .ij-badge-default { background: #f8fafc !important; color: #64748b !important; border: 1px solid #e2e8f0 !important; }
+    #jrwrap .ij-badge-neutral { background: #f1f5f9 !important; color: #475569 !important; }
+    #jrwrap .ij-badge-male { background: #eff6ff !important; color: #2563eb !important; }
+    #jrwrap .ij-badge-female { background: #fff1f2 !important; color: #e11d48 !important; }
+    #jrwrap .ij-badge-balanced { background: #ecfdf5 !important; color: #059669 !important; }
+    #jrwrap .ij-badge-other { background: #f5f3ff !important; color: #7c3aed !important; }
+    #jrwrap .ij-gender-check { display: flex !important; align-items: center !important; justify-content: center !important; color: #2563eb !important; flex-shrink: 0 !important; width: 18px !important; height: 18px !important; opacity: 0 !important; transform: scale(0.6) !important; transition: opacity 0.15s ease, transform 0.15s ease !important; }
+    #jrwrap .ij-gender-option.is-selected .ij-gender-check { opacity: 1 !important; transform: scale(1) !important; }
+    #jrwrap .ij-gender-hint { font-size: 11px !important; color: #64748b !important; margin-top: 3px !important; line-height: 1.25 !important; font-family: 'Poppins', sans-serif !important; }
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
@@ -592,7 +635,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011t">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012b">
     @endif
 @endpush
 @section('content')
@@ -833,12 +876,12 @@
                                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                                 </svg>Employment Details
                             </div>
-                            <div class="form-grid">
-                                <div class="form-group-cus">
+                            <div class="form-grid form-grid-3 ij-employment-grid">
+                                <div class="form-group-cus ij-exp-group">
                                     <label class="form-label required">Experience Range</label>
-                                    <div class="range-group">
+                                    <div class="range-group ij-range-group">
                                         <div class="range-field">
-                                            <select class="form-select" name="min_exp" id="min_exp">
+                                            <select class="form-select ij-exp-select" name="min_exp" id="min_exp">
                                                 <option value="" disabled <?php echo (@$job->min_exp === null) ? 'selected' : ''; ?>>Select</option>
                                                 <option value="0" <?php if (@$job->min_exp === 0 || @$job->min_exp === '0') echo 'selected'; ?>>Freshers</option>
                                                 <?php
@@ -854,7 +897,7 @@
                                         </div>
                                         <span class="range-separator">-</span>
                                         <div class="range-field">
-                                            <select class="form-select" name="max_exp" id="max_exp">
+                                            <select class="form-select ij-exp-select" name="max_exp" id="max_exp">
                                                 <option value="" disabled <?php echo (@$job->max_exp === null) ? 'selected' : ''; ?>>Select</option>
                                                 <option value="0" <?php if (@$job->max_exp === 0 || @$job->max_exp === '0') echo 'selected'; ?>>Freshers</option>
                                                 <?php
@@ -870,7 +913,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group-cus">
+                                <div class="form-group-cus ij-positions-group">
                                     <label class="form-label required">No. of Positions</label>
                                     <select class="form-select" id="total_positions" name="total_positions">
                                         <?php
@@ -880,16 +923,236 @@
                                         }
                                         ?>
                                     </select>
-                                    <span class="form-hint">Select the number of openings to be filled (1–500).</span>
+                                    <span class="form-hint">Select openings to fill (1–500).</span>
                                 </div>
-                                <div class="form-group-cus">
-                                    <label class="form-label">Gender Diversity</label>
-                                    <select class="form-select" name="required_columns" id="required_columns">
-                                        <option value="Rather Not Say" {{ (@$job->required_columns === 'Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                                        <option value="Male" {{ (@$job->required_columns === 'Male') ? 'selected' : '' }}>Male</option>
-                                        <option value="Female" {{ (@$job->required_columns === 'Female') ? 'selected' : '' }}>Female</option>
-                                    </select>
-                                    <span class="form-hint">Encourage a diverse workplace.</span>
+                                {{--
+                                    Gender Diversity Custom Selector
+                                    Purpose: Provides an enterprise-grade, accessible custom dropdown for candidate gender diversity preferences.
+                                    Saves selection to the `required_columns` job attribute (synced with hidden input for seamless form submission).
+                                    Options: No Preference, Male Only, Female Only, Balanced / Equal Opportunity, Other / Prefer Not to Say.
+                                --}}
+                                @php
+                                    $rawGender = @$job->required_columns;
+                                    if (is_array($rawGender)) {
+                                        $rawGender = $rawGender['gender'] ?? ($rawGender[0] ?? '');
+                                    }
+                                    $rawGender = (string) $rawGender;
+                                    $initialGenderVal = '';
+                                    if ($rawGender === 'Male' || $rawGender === 'Male Only') {
+                                        $initialGenderVal = 'Male Only';
+                                    } elseif ($rawGender === 'Female' || $rawGender === 'Female Only') {
+                                        $initialGenderVal = 'Female Only';
+                                    } elseif ($rawGender === 'Balanced / Equal Opportunity' || $rawGender === 'Balanced') {
+                                        $initialGenderVal = 'Balanced / Equal Opportunity';
+                                    } elseif ($rawGender === 'Other / Prefer Not to Say') {
+                                        $initialGenderVal = 'Other / Prefer Not to Say';
+                                    } elseif ($rawGender === 'No Preference') {
+                                        $initialGenderVal = 'No Preference';
+                                    } elseif ($rawGender === 'Rather Not Say') {
+                                        $initialGenderVal = 'Other / Prefer Not to Say';
+                                    }
+                                @endphp
+
+                                <div class="form-group-cus ij-gender-group">
+                                    <label class="form-label ij-gender-label" for="genderDiversityTrigger">
+                                        <span>Gender Diversity</span>
+                                        <span class="ij-gender-info-icon" 
+                                              data-bs-toggle="tooltip" 
+                                              data-bs-placement="top" 
+                                              title="Specify gender diversity preferences to encourage inclusive hiring.">
+                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <path d="M12 16v-4"></path>
+                                                <path d="M12 8h.01"></path>
+                                            </svg>
+                                        </span>
+                                    </label>
+
+                                    <div class="ij-gender-dropdown-wrapper" id="genderDropdownWrapper">
+                                        <input type="hidden" name="required_columns" id="required_columns" value="{{ $initialGenderVal }}">
+
+                                        <button type="button" 
+                                                class="ij-gender-trigger {{ $initialGenderVal ? 'has-selected' : '' }}" 
+                                                id="genderDiversityTrigger" 
+                                                aria-haspopup="listbox" 
+                                                aria-expanded="false" 
+                                                aria-controls="genderDiversityMenu"
+                                                aria-label="Gender Diversity Preference">
+                                            <div class="ij-gender-trigger-left">
+                                                <span class="ij-gender-trigger-badge {{ $initialGenderVal ? ('ij-badge-' . ($initialGenderVal === 'No Preference' ? 'neutral' : ($initialGenderVal === 'Male Only' ? 'male' : ($initialGenderVal === 'Female Only' ? 'female' : ($initialGenderVal === 'Balanced / Equal Opportunity' ? 'balanced' : 'other'))))) : 'ij-badge-default' }}" id="genderTriggerBadge">
+                                                    @if($initialGenderVal === 'Male Only')
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                                            <circle cx="12" cy="4.5" r="2.5"/>
+                                                            <path d="M8.5 8.5C7.7 8.5 7 9.2 7 10v4.2c0 .5.4.8.9.8h1.1v6c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-5h0v5c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-6h1.1c.5 0 .9-.3.9-.8V10c0-.8-.7-1.5-1.5-1.5h-7z"/>
+                                                        </svg>
+                                                    @elseif($initialGenderVal === 'Female Only')
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                                            <circle cx="12" cy="4.5" r="2.5"/>
+                                                            <path d="M10 8.5c-.8 0-1.5.7-1.5 1.5l-1 5.2c-.1.5.3.8.8.8h1.7v5c0 .6.4 1 1 1h2c.6 0 1-.4 1-1v-5h1.7c.5 0 .9-.3.8-.8l-1-5.2c0-.8-.7-1.5-1.5-1.5h-4z"/>
+                                                        </svg>
+                                                    @elseif($initialGenderVal === 'Balanced / Equal Opportunity')
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                                            <circle cx="9" cy="7" r="4"/>
+                                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                        </svg>
+                                                    @elseif($initialGenderVal === 'Other / Prefer Not to Say')
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="10" cy="8" r="4"/>
+                                                            <path d="M4 20v-2a5 5 0 0 1 10 0v2"/>
+                                                            <path d="M18 11v6"/>
+                                                            <path d="M21 14h-6"/>
+                                                        </svg>
+                                                    @elseif($initialGenderVal === 'No Preference')
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                            <circle cx="9" cy="7" r="4"/>
+                                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                        </svg>
+                                                    @else
+                                                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                            <circle cx="9" cy="7" r="4"/>
+                                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                        </svg>
+                                                    @endif
+                                                </span>
+                                                <span class="ij-gender-trigger-text {{ $initialGenderVal ? 'has-value' : '' }}" id="genderTriggerText">
+                                                    {{ $initialGenderVal ?: 'Select preference' }}
+                                                </span>
+                                            </div>
+                                            <svg class="ij-gender-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="m6 9 6 6 6-9"/>
+                                            </svg>
+                                        </button>
+
+                                        <div class="ij-gender-menu" id="genderDiversityMenu" role="listbox" aria-label="Gender Diversity Options" style="display: none;">
+                                            {{-- Option 1: No Preference --}}
+                                            <div class="ij-gender-option {{ $initialGenderVal === 'No Preference' ? 'is-selected' : '' }}" 
+                                                 role="option" 
+                                                 tabindex="0"
+                                                 data-value="No Preference"
+                                                 aria-selected="{{ $initialGenderVal === 'No Preference' ? 'true' : 'false' }}">
+                                                <div class="ij-gender-badge ij-badge-neutral">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                                        <circle cx="9" cy="7" r="4"/>
+                                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ij-gender-option-info">
+                                                    <span class="ij-gender-option-title">No Preference</span>
+                                                    <span class="ij-gender-option-desc">Open to all candidates</span>
+                                                </div>
+                                                <span class="ij-gender-check" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                            </div>
+
+                                            {{-- Option 2: Male Only --}}
+                                            <div class="ij-gender-option {{ $initialGenderVal === 'Male Only' ? 'is-selected' : '' }}" 
+                                                 role="option" 
+                                                 tabindex="0"
+                                                 data-value="Male Only"
+                                                 aria-selected="{{ $initialGenderVal === 'Male Only' ? 'true' : 'false' }}">
+                                                <div class="ij-gender-badge ij-badge-male">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                        <circle cx="12" cy="4.5" r="2.5"/>
+                                                        <path d="M8.5 8.5C7.7 8.5 7 9.2 7 10v4.2c0 .5.4.8.9.8h1.1v6c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-5h0v5c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-6h1.1c.5 0 .9-.3.9-.8V10c0-.8-.7-1.5-1.5-1.5h-7z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ij-gender-option-info">
+                                                    <span class="ij-gender-option-title">Male Only</span>
+                                                    <span class="ij-gender-option-desc">Prefer male candidates only</span>
+                                                </div>
+                                                <span class="ij-gender-check" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                            </div>
+
+                                            {{-- Option 3: Female Only --}}
+                                            <div class="ij-gender-option {{ $initialGenderVal === 'Female Only' ? 'is-selected' : '' }}" 
+                                                 role="option" 
+                                                 tabindex="0"
+                                                 data-value="Female Only"
+                                                 aria-selected="{{ $initialGenderVal === 'Female Only' ? 'true' : 'false' }}">
+                                                <div class="ij-gender-badge ij-badge-female">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                                        <circle cx="12" cy="4.5" r="2.5"/>
+                                                        <path d="M10 8.5c-.8 0-1.5.7-1.5 1.5l-1 5.2c-.1.5.3.8.8.8h1.7v5c0 .6.4 1 1 1h2c.6 0 1-.4 1-1v-5h1.7c.5 0 .9-.3.8-.8l-1-5.2c0-.8-.7-1.5-1.5-1.5h-4z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ij-gender-option-info">
+                                                    <span class="ij-gender-option-title">Female Only</span>
+                                                    <span class="ij-gender-option-desc">Prefer female candidates only</span>
+                                                </div>
+                                                <span class="ij-gender-check" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                            </div>
+
+                                            {{-- Option 4: Balanced / Equal Opportunity --}}
+                                            <div class="ij-gender-option {{ $initialGenderVal === 'Balanced / Equal Opportunity' ? 'is-selected' : '' }}" 
+                                                 role="option" 
+                                                 tabindex="0"
+                                                 data-value="Balanced / Equal Opportunity"
+                                                 aria-selected="{{ $initialGenderVal === 'Balanced / Equal Opportunity' ? 'true' : 'false' }}">
+                                                <div class="ij-gender-badge ij-badge-balanced">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                                        <circle cx="9" cy="7" r="4"/>
+                                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ij-gender-option-info">
+                                                    <span class="ij-gender-option-title">Balanced / Equal Opportunity</span>
+                                                    <span class="ij-gender-option-desc">Encourage gender diversity (M/F/Other)</span>
+                                                </div>
+                                                <span class="ij-gender-check" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                            </div>
+
+                                            {{-- Option 5: Other / Prefer Not to Say --}}
+                                            <div class="ij-gender-option {{ $initialGenderVal === 'Other / Prefer Not to Say' ? 'is-selected' : '' }}" 
+                                                 role="option" 
+                                                 tabindex="0"
+                                                 data-value="Other / Prefer Not to Say"
+                                                 aria-selected="{{ $initialGenderVal === 'Other / Prefer Not to Say' ? 'true' : 'false' }}">
+                                                <div class="ij-gender-badge ij-badge-other">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="10" cy="8" r="4"/>
+                                                        <path d="M4 20v-2a5 5 0 0 1 10 0v2"/>
+                                                        <path d="M18 11v6"/>
+                                                        <path d="M21 14h-6"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ij-gender-option-info">
+                                                    <span class="ij-gender-option-title">Other / Prefer Not to Say</span>
+                                                    <span class="ij-gender-option-desc">Open to all, no specific preference</span>
+                                                </div>
+                                                <span class="ij-gender-check" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="form-hint ij-gender-hint">Help us promote an inclusive workplace.</span>
                                 </div>
                             </div>
                         </div>
@@ -939,7 +1202,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
                                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                                </svg>POSITION TYPE <span class="text-danger">*</span>
+                                </svg>Position Type <span class="text-danger">*</span>
                             </div>
                             <?php
                                 $currEmp = isset($job->employment_type) && $job->employment_type !== '' ? (string)$job->employment_type : '0';
@@ -1257,11 +1520,6 @@
                                         <input type="text" class="form-input" id="qualSearch" placeholder="Search or select qualifications (e.g. Any Graduation, B.Tech, MBA, MCA)..." autocomplete="off" spellcheck="false">
                                     </div>
                                     <button type="button" class="ij-search-clear" id="qualSearchClear" style="display:none;" onclick="clearQualSearchInput()" title="Clear input">&times;</button>
-                                    <button type="button" class="chip-add" onclick="addCustomQual()">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M5 12h14"/><path d="M12 5v14"/>
-                                        </svg>Add More
-                                    </button>
                                     <div class="search-dropdown ij-qual-dropdown" id="qualDropdown"></div>
                                 </div>
                             </div>
@@ -1274,25 +1532,75 @@
                         </div>
                     </div>
 
-                    <div class="card ij-additional-card">
+                    <div class="card ij-autoclose-card ij-additional-card">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
-                                </svg>Additional Details
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>Job Auto Close
                             </div>
-                            <div class="form-grid" style="max-width:480px;">
-                                <div class="form-group-cus">
-                                    @php $selected = (@$numberDays == '') ? 'selected' : ''; @endphp
-                                    <label class="form-label required" for="end_date">Job automatically closed in</label>
-                                    <select class="form-select" name="end_date" id="end_date">
-                                        <option value="15" @if (@$numberDays == 15) selected @endif>15 Days</option>
-                                        <option value="30" @if (@$numberDays == 30) selected @endif>30 Days</option>
-                                        <option value="45" @if (@$numberDays == 45) selected @endif>45 Days</option>
-                                        <option value="60" @if (@$numberDays == 60) selected @else {{ $selected }} @endif>60 Days</option>
-                                    </select>
-                                    <span class="form-hint">Job will be marked as closed after this duration.</span>
+                            <?php
+                                $currDays = isset($numberDays) && $numberDays != '' ? (string)$numberDays : '60';
+                                if (!in_array($currDays, ['15', '30', '45', '60'])) {
+                                    $currDays = '60';
+                                }
+                            ?>
+                            <div class="form-group-cus">
+                                <label class="form-label required mb-2" for="end_date">Job automatically closed in</label>
+                                <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-blue">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="ij-choice-text">
+                                            <strong>15 Days</strong>
+                                            <small>Closes in 2 weeks</small>
+                                        </span>
+                                    </button>
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="30" aria-pressed="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-yellow">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="ij-choice-text">
+                                            <strong>30 Days</strong>
+                                            <small>Standard 1 month</small>
+                                        </span>
+                                    </button>
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="45" aria-pressed="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-purple">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="ij-choice-text">
+                                            <strong>45 Days</strong>
+                                            <small>Extended 1.5 months</small>
+                                        </span>
+                                    </button>
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="60" aria-pressed="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-green">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="ij-choice-text">
+                                            <strong>60 Days</strong>
+                                            <small>Maximum 2 months (Default)</small>
+                                        </span>
+                                    </button>
                                 </div>
+                                <select class="form-select d-none" name="end_date" id="end_date">
+                                    <option value="15" <?php echo ($currDays === '15') ? 'selected' : ''; ?>>15 Days</option>
+                                    <option value="30" <?php echo ($currDays === '30') ? 'selected' : ''; ?>>30 Days</option>
+                                    <option value="45" <?php echo ($currDays === '45') ? 'selected' : ''; ?>>45 Days</option>
+                                    <option value="60" <?php echo ($currDays === '60') ? 'selected' : ''; ?>>60 Days</option>
+                                </select>
+                                <span class="form-hint" style="margin-top:8px;">Job will be automatically marked as closed after this duration.</span>
                             </div>
                         </div>
                     </div>
@@ -2942,9 +3250,13 @@
             var $sel = $('#min_salary_currency');
             if (!$sel.length) return;
             var opt = $sel.find('option:selected');
-            var symbol = opt.data('symbol') || '';
-            var code = (opt.data('code') || opt.val() || 'INR').toString().toUpperCase();
+            if (!opt.length) {
+                opt = $sel.find('option').first();
+                if (opt.length) $sel.val(opt.val());
+            }
             var val = $sel.val();
+            var symbol = opt.attr('data-symbol') || opt.data('symbol') || '';
+            var code = (opt.attr('data-code') || opt.data('code') || opt.val() || 'INR').toString().toUpperCase();
 
             // Update header currency trigger
             $('#headerCurrSymbol').text(symbol || code);
@@ -2955,17 +3267,17 @@
             $('#minCurrTrigger .ij-curr-pill-code, #maxCurrTrigger .ij-curr-pill-code').text(code);
 
             // Sync hidden inputs
-            if ($('#max_salary_currency').length && $('#max_salary_currency').val() !== val) {
+            if ($('#max_salary_currency').length && String($('#max_salary_currency').val()) !== String(val)) {
                 $('#max_salary_currency').val(val);
             }
-            if ($('#salary_currency').length && $('#salary_currency').val() !== code) {
-                $('#salary_currency').val(code);
+            if ($('#salary_currency').length && String($('#salary_currency').val()) !== String(val)) {
+                $('#salary_currency').val(val);
             }
 
             // Sync popover selection state
             $('#ijCurrPopList .ij-curr-pop-item').each(function() {
-                var itemVal = $(this).data('val');
-                var itemCode = ($(this).data('code') || '').toString().toUpperCase();
+                var itemVal = $(this).attr('data-val');
+                var itemCode = ($(this).attr('data-code') || '').toString().toUpperCase();
                 if (String(itemVal) === String(val) || itemCode === code) {
                     $(this).addClass('is-selected');
                 } else {
@@ -2994,37 +3306,53 @@
             if (!$pop.length) return;
 
             // Move popover to document.body to avoid parent container overflow clipping
-            $('body').append($pop);
+            if ($pop.parent()[0] !== document.body) {
+                $('body').append($pop);
+            }
 
             var activeTrigger = null;
 
-            function openCurrencyPopover($trigger) {
-                activeTrigger = $trigger;
+            function positionPopover($trigger) {
+                if (!$trigger || !$trigger.length) return;
                 var rect = $trigger[0].getBoundingClientRect();
-                var top = rect.bottom + window.scrollY + 4;
-                var left = rect.left + window.scrollX;
                 var popWidth = 320;
+                var popHeight = $pop.outerHeight() || 340;
+                var left = rect.left;
 
-                // Keep inside screen boundaries
+                // Screen boundary horizontal clamping
                 if (left + popWidth > window.innerWidth - 16) {
                     left = window.innerWidth - popWidth - 16;
                 }
                 if (left < 16) left = 16;
 
+                // Vertical positioning: default below, flip above if not enough room
+                var top = rect.bottom + 4;
+                if (top + popHeight > window.innerHeight - 10 && rect.top > popHeight + 10) {
+                    top = rect.top - popHeight - 4;
+                }
+
                 $pop.css({
-                    position: 'absolute',
+                    position: 'fixed',
                     top: top + 'px',
                     left: left + 'px',
-                    zIndex: 99999
-                }).show();
+                    zIndex: 999999
+                });
+            }
+
+            function openCurrencyPopover($trigger) {
+                activeTrigger = $trigger;
+                $pop.show();
+                positionPopover($trigger);
 
                 $('#headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger').attr('aria-expanded', 'false');
                 $trigger.attr('aria-expanded', 'true');
 
                 // Clear search and reset list
-                $('#ijCurrPopSearch').val('').focus();
+                var $search = $('#ijCurrPopSearch');
+                $search.val('');
                 $('#ijCurrPopList .ij-curr-pop-item').show();
                 $('.ij-curr-pop-empty').remove();
+                setTimeout(function() { $search.focus().select(); }, 50);
 
                 // Scroll current selected currency into view
                 var $selItem = $('#ijCurrPopList .ij-curr-pop-item.is-selected').first();
@@ -3042,6 +3370,17 @@
                 activeTrigger = null;
             }
 
+            function selectCurrency(val, code) {
+                $('#min_salary_currency').val(String(val)).trigger('change');
+                $('#max_salary_currency').val(String(val)).trigger('change');
+                $('#salary_currency').val(String(val)).trigger('change');
+                updateCompensationCurrencyContext();
+                closeCurrencyPopover();
+                if (activeTrigger && activeTrigger.length) {
+                    try { activeTrigger.focus(); } catch (e) {}
+                }
+            }
+
             $(document).on('click', '#headerCurrTrigger, #minCurrTrigger, #maxCurrTrigger', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3052,15 +3391,29 @@
                 }
             });
 
-            // Search filter
-            $('#ijCurrPopSearch').on('input keyup', function() {
+            // Search filter with instant matching and Enter key selection
+            $('#ijCurrPopSearch').on('input keyup', function(e) {
+                if (e.key === 'Escape') {
+                    closeCurrencyPopover();
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var $firstVis = $('#ijCurrPopList .ij-curr-pop-item:visible').first();
+                    if ($firstVis.length) {
+                        var val = $firstVis.attr('data-val');
+                        var code = ($firstVis.attr('data-code') || '').toUpperCase();
+                        selectCurrency(val, code);
+                    }
+                    return;
+                }
                 var term = $(this).val().trim().toLowerCase();
                 var matches = 0;
                 $('#ijCurrPopList .ij-curr-pop-item').each(function() {
-                    var searchData = ($(this).data('search') || '').toString().toLowerCase();
-                    var code = ($(this).data('code') || '').toString().toLowerCase();
-                    var name = ($(this).data('name') || '').toString().toLowerCase();
-                    var sym = ($(this).data('symbol') || '').toString().toLowerCase();
+                    var searchData = ($(this).attr('data-search') || $(this).data('search') || '').toString().toLowerCase();
+                    var code = ($(this).attr('data-code') || $(this).data('code') || '').toString().toLowerCase();
+                    var name = ($(this).attr('data-name') || $(this).data('name') || '').toString().toLowerCase();
+                    var sym = ($(this).attr('data-symbol') || $(this).data('symbol') || '').toString().toLowerCase();
 
                     if (!term || searchData.indexOf(term) > -1 || code.indexOf(term) > -1 || name.indexOf(term) > -1 || sym.indexOf(term) > -1) {
                         $(this).show();
@@ -3072,31 +3425,33 @@
 
                 $('.ij-curr-pop-empty').remove();
                 if (matches === 0) {
-                    $('#ijCurrPopList').append('<div class="ij-curr-pop-empty">No currencies match your search</div>');
+                    $('#ijCurrPopList').append('<div class="ij-curr-pop-empty" style="padding:16px 12px;text-align:center;font-size:12px;color:#94a3b8;">No currencies match your search</div>');
                 }
             });
 
-            // Select currency from list item
+            // Select currency from list item (using robust closest selector)
             $(document).on('click', '.ij-curr-pop-item', function(e) {
                 e.preventDefault();
-                var val = $(this).data('val');
-                $('#min_salary_currency').val(val).trigger('change');
-                closeCurrencyPopover();
+                var $item = $(this).closest('.ij-curr-pop-item');
+                var val = $item.attr('data-val');
+                var code = ($item.attr('data-code') || '').toUpperCase();
+                selectCurrency(val, code);
             });
 
             // Select currency from popular chips
             $(document).on('click', '.ij-curr-pop-chip', function(e) {
                 e.preventDefault();
-                var chipCode = $(this).data('code');
+                var chipCode = ($(this).attr('data-code') || $(this).data('code') || '').toString().toUpperCase();
                 var $targetItem = $('#ijCurrPopList .ij-curr-pop-item').filter(function() {
-                    return ($(this).data('code') || '').toString().toUpperCase() === String(chipCode).toUpperCase();
+                    return ($(this).attr('data-code') || '').toString().toUpperCase() === chipCode;
                 }).first();
 
                 if ($targetItem.length) {
-                    var val = $targetItem.data('val');
-                    $('#min_salary_currency').val(val).trigger('change');
+                    var val = $targetItem.attr('data-val');
+                    selectCurrency(val, chipCode);
+                } else {
+                    closeCurrencyPopover();
                 }
-                closeCurrencyPopover();
             });
 
             // Close on click outside or escape
@@ -3112,17 +3467,16 @@
                 }
             });
 
-            $(window).on('resize scroll', function() {
-                if ($pop.is(':visible') && activeTrigger) {
-                    var rect = activeTrigger[0].getBoundingClientRect();
-                    var popWidth = 320;
-                    var top = rect.bottom + window.scrollY + 4;
-                    var left = rect.left + window.scrollX;
-                    if (left + popWidth > window.innerWidth - 16) {
-                        left = window.innerWidth - popWidth - 16;
-                    }
-                    if (left < 16) left = 16;
-                    $pop.css({ top: top + 'px', left: left + 'px' });
+            // Reposition or update when window or any scroll container scrolls
+            window.addEventListener('scroll', function() {
+                if ($pop.is(':visible') && activeTrigger && activeTrigger.length) {
+                    positionPopover(activeTrigger);
+                }
+            }, true);
+
+            window.addEventListener('resize', function() {
+                if ($pop.is(':visible') && activeTrigger && activeTrigger.length) {
+                    positionPopover(activeTrigger);
                 }
             });
         })();
@@ -4077,10 +4431,10 @@
         })();
 
         var quickQualOptions = [
-            { label: 'Any Qualification', value: 'Any Qualification', isUniversal: true },
-            { label: 'Any Degree', value: 'Any Degree', isUniversal: true },
-            { label: 'Any Graduation', value: 'Any Graduation', isUniversal: true },
-            { label: 'Any Post Graduation', value: 'Any Post Graduation', isUniversal: true },
+            { label: 'Any Qualification', value: 'Any Qualification' },
+            { label: 'Any Degree', value: 'Any Degree' },
+            { label: 'Any Graduation', value: 'Any Graduation' },
+            { label: 'Any Post Graduation', value: 'Any Post Graduation' },
             { label: 'B.Tech / B.E', value: 'B.Tech/B.E' },
             { label: 'MBA / PGDM', value: 'MBA/PGDM' },
             { label: 'MCA', value: 'MCA' },
@@ -4094,7 +4448,7 @@
             if (!wrap) return;
             wrap.innerHTML = quickQualOptions.map(function(opt) {
                 var isActive = qualifications.indexOf(opt.value) !== -1;
-                var cls = 'ij-qual-pill' + (opt.isUniversal ? ' is-universal' : '') + (isActive ? ' is-active' : '');
+                var cls = 'ij-qual-pill' + (isActive ? ' is-active' : '');
                 var icon = isActive
                     ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
                     : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
@@ -4713,6 +5067,255 @@
 
         document.addEventListener('click', function(e) { if (!e.target.closest('.question-actions')) { document.querySelectorAll('.dropdown-menu').forEach(function(d) { d.classList.remove('show'); }); } });
         (function() { var m = document.getElementById('questionModal'); if (m) m.addEventListener('click', function(e) { if (e.target === e.currentTarget) closeQuestionModal(); }); })();
+
+        // ==========================================================================
+        // GENDER DIVERSITY CUSTOM DROPDOWN
+        // Purpose: Accessible custom dropdown controller for Gender Diversity.
+        // Handles: Click toggle, outside click dismiss, keyboard navigation
+        //          (ArrowUp/Down, Enter, Space, Escape, Tab, Home, End), screen bounds
+        //          overflow protection, and synchronization with hidden #required_columns input.
+        // Tenancy: Client UI behavior only, scoped strictly to #genderDropdownWrapper.
+        // ==========================================================================
+        (function initGenderDiversityDropdown() {
+            function setupGenderDropdown() {
+                var wrapper = document.getElementById('genderDropdownWrapper');
+                if (!wrapper || wrapper.dataset.initialized === 'true') return;
+                wrapper.dataset.initialized = 'true';
+
+                var trigger = document.getElementById('genderDiversityTrigger');
+                var menu = document.getElementById('genderDiversityMenu');
+                var input = document.getElementById('required_columns');
+                var triggerBadge = document.getElementById('genderTriggerBadge');
+                var triggerText = document.getElementById('genderTriggerText');
+                if (!trigger || !menu || !input) return;
+
+                var options = Array.from(menu.querySelectorAll('.ij-gender-option'));
+
+                var optionConfigs = {
+                    'No Preference': {
+                        title: 'No Preference',
+                        desc: 'Open to all candidates',
+                        badgeClass: 'ij-badge-neutral',
+                        badgeHtml: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+                    },
+                    'Male Only': {
+                        title: 'Male Only',
+                        desc: 'Prefer male candidates only',
+                        badgeClass: 'ij-badge-male',
+                        badgeHtml: '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M8.5 8.5C7.7 8.5 7 9.2 7 10v4.2c0 .5.4.8.9.8h1.1v6c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-5h0v5c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-6h1.1c.5 0 .9-.3.9-.8V10c0-.8-.7-1.5-1.5-1.5h-7z"/></svg>'
+                    },
+                    'Female Only': {
+                        title: 'Female Only',
+                        desc: 'Prefer female candidates only',
+                        badgeClass: 'ij-badge-female',
+                        badgeHtml: '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M10 8.5c-.8 0-1.5.7-1.5 1.5l-1 5.2c-.1.5.3.8.8.8h1.7v5c0 .6.4 1 1 1h2c.6 0 1-.4 1-1v-5h1.7c.5 0 .9-.3.8-.8l-1-5.2c0-.8-.7-1.5-1.5-1.5h-4z"/>                </svg>'
+                    },
+                    'Balanced / Equal Opportunity': {
+                        title: 'Balanced / Equal Opportunity',
+                        desc: 'Encourage gender diversity (M/F/Other)',
+                        badgeClass: 'ij-badge-balanced',
+                        badgeHtml: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+                    },
+                    'Other / Prefer Not to Say': {
+                        title: 'Other / Prefer Not to Say',
+                        desc: 'Open to all, no specific preference',
+                        badgeClass: 'ij-badge-other',
+                        badgeHtml: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="4"/><path d="M4 20v-2a5 5 0 0 1 10 0v2"/><path d="M18 11v6"/><path d="M21 14h-6"/></svg>'
+                    }
+                };
+
+                var focusedIndex = -1;
+
+                function positionMenu() {
+                    menu.style.left = '0';
+                    menu.style.right = 'auto';
+                    var rect = menu.getBoundingClientRect();
+                    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                    if (rect.right > viewportWidth - 12) {
+                        menu.style.left = 'auto';
+                        menu.style.right = '0';
+                    }
+                }
+
+                function openMenu() {
+                    menu.style.display = 'flex';
+                    void menu.offsetHeight;
+                    menu.classList.add('is-open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    trigger.classList.add('is-active');
+                    positionMenu();
+
+                    var selectedIdx = options.findIndex(function(opt) {
+                        return opt.getAttribute('aria-selected') === 'true';
+                    });
+                    focusedIndex = selectedIdx >= 0 ? selectedIdx : 0;
+                    updateFocus();
+                }
+
+                function closeMenu(focusTrigger) {
+                    menu.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    trigger.classList.remove('is-active');
+                    clearFocus();
+                    setTimeout(function() {
+                        if (trigger.getAttribute('aria-expanded') !== 'true') {
+                            menu.style.display = 'none';
+                        }
+                    }, 150);
+                    if (focusTrigger) {
+                        trigger.focus();
+                    }
+                }
+
+                function updateFocus() {
+                    options.forEach(function(opt, idx) {
+                        if (idx === focusedIndex) {
+                            opt.classList.add('is-focused');
+                            if (typeof opt.scrollIntoView === 'function') {
+                                opt.scrollIntoView({ block: 'nearest' });
+                            }
+                        } else {
+                            opt.classList.remove('is-focused');
+                        }
+                    });
+                }
+
+                function clearFocus() {
+                    options.forEach(function(opt) {
+                        opt.classList.remove('is-focused');
+                    });
+                    focusedIndex = -1;
+                }
+
+                function selectOption(val) {
+                    var config = optionConfigs[val];
+                    if (!config) return;
+
+                    input.value = val;
+                    if (triggerText) {
+                        triggerText.textContent = config.title;
+                        triggerText.classList.add('has-value');
+                    }
+                    if (triggerBadge) {
+                        triggerBadge.className = 'ij-gender-trigger-badge ' + config.badgeClass;
+                        triggerBadge.innerHTML = config.badgeHtml;
+                    }
+                    trigger.classList.add('has-selected');
+
+                    options.forEach(function(opt) {
+                        var isMatch = opt.getAttribute('data-value') === val;
+                        opt.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+                        opt.classList.toggle('is-selected', isMatch);
+                    });
+
+                    // Trigger input and change events for any observers or form serializations
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (window.jQuery) {
+                        window.jQuery(input).trigger('change');
+                    }
+
+                    closeMenu(true);
+                }
+
+                // Click toggle on trigger
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var expanded = trigger.getAttribute('aria-expanded') === 'true';
+                    if (expanded) {
+                        closeMenu(false);
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                // Click on option items
+                options.forEach(function(opt) {
+                    opt.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var val = this.getAttribute('data-value');
+                        selectOption(val);
+                    });
+                });
+
+                // Outside click dismissal
+                document.addEventListener('click', function(e) {
+                    if (!wrapper.contains(e.target)) {
+                        if (trigger.getAttribute('aria-expanded') === 'true') {
+                            closeMenu(false);
+                        }
+                    }
+                });
+
+                // Window resize reposition
+                window.addEventListener('resize', function() {
+                    if (trigger.getAttribute('aria-expanded') === 'true') {
+                        positionMenu();
+                    }
+                });
+
+                // Keyboard interactions
+                trigger.addEventListener('keydown', function(e) {
+                    var expanded = trigger.getAttribute('aria-expanded') === 'true';
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (!expanded) {
+                            openMenu();
+                        }
+                    }
+                });
+
+                wrapper.addEventListener('keydown', function(e) {
+                    var expanded = trigger.getAttribute('aria-expanded') === 'true';
+                    if (!expanded) return;
+
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeMenu(true);
+                    } else if (e.key === 'Tab') {
+                        closeMenu(false);
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        focusedIndex = (focusedIndex + 1) % options.length;
+                        updateFocus();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        focusedIndex = (focusedIndex - 1 + options.length) % options.length;
+                        updateFocus();
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        focusedIndex = 0;
+                        updateFocus();
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        focusedIndex = options.length - 1;
+                        updateFocus();
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (focusedIndex >= 0 && focusedIndex < options.length) {
+                            var val = options[focusedIndex].getAttribute('data-value');
+                            selectOption(val);
+                        }
+                    }
+                });
+
+                // Tooltip initialization if Bootstrap tooltips are active
+                if (window.bootstrap && window.bootstrap.Tooltip) {
+                    var tipEl = wrapper.querySelector('[data-bs-toggle="tooltip"]');
+                    if (tipEl) {
+                        try { new window.bootstrap.Tooltip(tipEl); } catch (err) {}
+                    }
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupGenderDropdown);
+            } else {
+                setupGenderDropdown();
+            }
+        })();
     </script>
     {{-- Create-only enhancement script — placed LAST so all globals defined in the inline
          scripts above (currentStep, goToStep, __indexUrl, validateStep, etc.) are available
