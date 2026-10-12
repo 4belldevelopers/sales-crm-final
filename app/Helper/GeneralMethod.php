@@ -14912,7 +14912,7 @@ END:VCALENDAR";
                     'status_counts' => [
                         'filters' => [
                             'filters' => [
-                                '1' => ['terms' => ['job_master_status_id' => [1, 8]]],
+                                '1' => ['term' => ['job_master_status_id' => 1]],
                                 '2' => ['term' => ['job_master_status_id' => 2]],
                                 '3' => ['term' => ['job_master_status_id' => 3]],
                                 '4' => ['term' => ['job_master_status_id' => 4]],
