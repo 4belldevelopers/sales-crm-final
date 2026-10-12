@@ -11,6 +11,7 @@ Date			:	28-JUNE-2022
 namespace App\Http\Controllers\ServiceCompany;
 
 use App\Enums\ResumeUploadStatus;
+use App\Events\PlacementRecordUpdated;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\ElasticBenchCandidateIndex;
@@ -21,13 +22,13 @@ use App\Jobs\RecordBenchResumeDownloadJob;
 use App\Jobs\UploadResumeToTestRTwo;
 use App\Models\ApplicationStatus;
 use App\Models\BenchApplication;
+use App\Models\CandidateOutboxEvent;
 use App\Models\Client;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\NoticePeriod;
 use App\Models\ResumeUpload;
 use App\Models\SysIdempotencyKey;
-use App\Models\ForwardAttachment;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
 use App\Services\BenchTalentHeroAnalytics;
@@ -44,6 +45,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Validator;
@@ -4552,31 +4554,34 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     public function placedListing()
     {
         $this->pageTitle = __('Bench Placed Listing');
-        $company_id = auth()->user()->company_id ?? null;
-        $this->allBenchApplication = $company_id
-            ? BenchApplication::where('company_id', $company_id)->count()
-            : BenchApplication::count();
+        $user = $this->user ?? auth()->user();
+        $company_id = $user ? $user->company_id : (int) auth()->user()->company_id;
+        $this->company_id = $company_id;
+        $this->currencySymbols = GeneralMethod::currencySymbole();
+        $this->salaryModes = GeneralMethod::salaryModeOffer();
+        if (! isset($this->userPermissions) || empty($this->userPermissions)) {
+            $this->userPermissions = $user ? ($user->permission_type ?? ['view_bench']) : ['view_bench'];
+        }
 
         return view('service_company.bench-candidates.placedListing', $this->data);
     }
 
     public function placedListingData_ajax(Request $request)
     {
-
         abort_if(Gate::denies('view_job_applications'), 403);
-        $company_id = auth()->user()->company_id;
+        $user = $this->user ?? auth()->user();
+        $company_id = $user ? $user->company_id : (int) auth()->user()->company_id;
+
+        if ($request->input('format') === 'json' || $request->wantsJson()) {
+            return $this->placedListingData_v2($request);
+        }
 
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
         $currency = GeneralMethod::currency();
 
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $placedApplications = DB::table('bench_place')->select('bench_place.*');
-        // $placedApplications = $placedApplications->where('bench_place.source_comapny_id', '=', $company_id);
-        // $placedApplications = $placedApplications->orderBy('bench_place.id', 'DESC');
-
         $searchTerms = request('cus_search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
+        $custom_search = $searchTerms;
 
         $searchQuery = $request->input('q');
         $valCheck = $request->input('sortingfilter');
@@ -4592,13 +4597,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'company' => $company_id,
             'cus_search' => $request->input('cus_search'),
             'country' => $request->input('country'),
-            'user_id' => $this->user->id,
             'sortingfilter' => $valCheck,
         ];
 
-        $versionKey = 'allbenchplacedListing_version_user_'.$this->user->id;
+        $versionKey = 'allbenchplacedListing_version_company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchplacedListing:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allbenchplacedListing:comp_'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -4770,7 +4774,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     public function placedListingData_v2(Request $request)
     {
         abort_if(Gate::denies('view_job_applications'), 403);
-        $company_id = auth()->user()->company_id;
+        $user = $this->user ?? auth()->user();
+        $company_id = $user ? $user->company_id : (int) auth()->user()->company_id;
 
         $searchQuery = $request->input('q');
         $valCheck = $request->input('sortingfilter');
@@ -4786,13 +4791,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'q' => $searchQuery,
             'company' => $company_id,
             'cus_search' => $custom_search,
-            'user_id' => $this->user->id,
             'sortingfilter' => $valCheck,
         ];
 
-        $versionKey = 'allbenchplacedListing_version_user_'.$this->user->id;
+        $versionKey = 'allbenchplacedListing_version_company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:v2:allbenchplacedListing:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:v2:allbenchplacedListing:comp_'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
 
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
@@ -4927,6 +4931,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'per_page' => $size,
             'last_page' => (int) ceil($total / max($size, 1)),
             'candidates' => $candidates,
+            'company_id' => $company_id,
+            'currency_symbols' => GeneralMethod::currencySymbole(),
+            'salary_modes' => GeneralMethod::salaryModeOffer(),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_BENCH_PLACED_LISTING_TIME));
@@ -4934,9 +4941,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         return response()->json($responseData);
     }
 
+    /**
+     * Intent: Save placed assignment details with Gate authorization, tenant boundary enforcement,
+     * end-to-end idempotency, MySQL 1054 column-safety, Transactional Outbox durability,
+     * and real-time Reverb broadcast synchronization.
+     * Tenancy: Strictly scoped to auth user's company_id and candidate ownership.
+     */
     public function savePlacedAssignmentDetails(Request $request)
     {
-        $company_id = auth()->user()->company_id;
+        abort_if(Gate::denies('edit_job_applications'), 403);
+
+        $company_id = (int) auth()->user()->company_id;
         $candidate_id = (int) $request->candidate_id;
         $is_bench = (int) $request->is_bench;
 
@@ -4946,9 +4961,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         // candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
         $wiseRecord = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
-        $wiseId = $wiseRecord ? $wiseRecord->id : null;
-        $job_id = $wiseRecord ? $wiseRecord->job_id : null;
-        $jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
+        if (! $wiseRecord) {
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Candidate record not found.']);
+        }
+
+        // Tenant boundary enforcement
+        $isTenantOwned = ((int) $wiseRecord->company_id === $company_id)
+            || ((int) ($wiseRecord->other_company ?? 0) === $company_id)
+            || ((int) ($wiseRecord->thirdparty_company_id ?? 0) === $company_id);
+        if (! $isTenantOwned) {
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Unauthorized access to candidate record.']);
+        }
+
+        $wiseId = (int) $wiseRecord->id;
+        $job_id = $wiseRecord->job_id ? (int) $wiseRecord->job_id : null;
+        $jobApplicationId = $wiseRecord->job_application_id ? (int) $wiseRecord->job_application_id : null;
 
         $assignmentFields = [
             'assignment_status' => $request->assignment_status ?: null,
@@ -4965,29 +4992,93 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'assignment_replacement_reason' => $request->replacement_reason ?: null,
         ];
 
-        // Dual Persistence: Write to MySQL source table offer_job_applications first
-        if ($jobApplicationId) {
-            DB::table('offer_job_applications')
-                ->where('application_id', $jobApplicationId)
-                ->where('job_id', $job_id)
-                ->update([
-                    'assignment_status' => $request->assignment_status ?: null,
-                    'assignment_expected_end_date' => $request->expected_end_date ?: null,
-                    'assignment_employment_type' => $request->employment_type ?: null,
-                    'assignment_client_location' => $request->client_location ?: null,
-                    'assignment_exit_reason' => $request->exit_reason ?: null,
-                    'assignment_project_outcome' => $request->project_outcome ?: null,
-                    'assignment_remarks' => $request->remarks ?: null,
-                    'assignment_internal_notes' => $request->internal_notes ?: null,
-                    'assignment_replacement_required' => $request->replacement_required !== null ? (int) $request->replacement_required : null,
-                    'assignment_replacement_status' => $request->replacement_status ?: null,
-                    'assignment_replacement_requested_on' => $request->replacement_requested_on ?: null,
-                    'assignment_replacement_reason' => $request->replacement_reason ?: null,
-                    'updated_at' => now(),
-                ]);
+        // Layer 2 & 3: End-to-End Idempotency
+        $clientUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: (string) Str::uuid());
+        $requestHash = hash('xxh128', json_encode($assignmentFields));
+        $idempotencyKey = "placement:assign:{$company_id}:{$candidate_id}:{$clientUuid}";
+
+        try {
+            $redisAcquired = Redis::connection('default')->set($idempotencyKey, 'LOCKED', 'EX', 60, 'NX');
+            if (! $redisAcquired) {
+                $existing = SysIdempotencyKey::where('tenant_id', $company_id)->where('idempotency_key', $clientUuid)->first();
+                if ($existing && $existing->status === 'COMPLETED') {
+                    return response()->json(json_decode($existing->response_body, true) ?? [], $existing->response_status ?? 200);
+                }
+            }
+        } catch (\Throwable $re) {
+            Log::warning('Placement assignment Redis idempotency check failed: '.$re->getMessage());
         }
 
-        // Sync to ELASTIC_CANDIDATES
+        $outboxId = null;
+
+        // Layer 3: Durable MySQL Persistence inside Transaction with Outbox
+        DB::beginTransaction();
+        try {
+            // Safe MySQL write to offer_job_applications: only update columns that actually exist in the schema (prevents SQL 1054)
+            if ($jobApplicationId) {
+                $existingColumns = Schema::getColumnListing('offer_job_applications');
+                $validOfferCols = array_intersect_key($assignmentFields, array_flip($existingColumns));
+                if (! empty($validOfferCols)) {
+                    $validOfferCols['updated_at'] = now();
+                    DB::table('offer_job_applications')
+                        ->where('application_id', $jobApplicationId)
+                        ->where('job_id', $job_id)
+                        ->update($validOfferCols);
+                }
+            }
+
+            // Persist domain event to Transactional Outbox
+            $outboxEvent = CandidateOutboxEvent::create([
+                'company_id' => $company_id,
+                'dedupe_key' => "placement:assign:{$company_id}:{$candidate_id}:{$clientUuid}",
+                'aggregate_type' => 'Candidate',
+                'aggregate_id' => $wiseId,
+                'event_type' => 'placement.assignment.updated',
+                'event_version' => 1,
+                'payload' => [
+                    'candidate_id' => $candidate_id,
+                    'wise_id' => $wiseId,
+                    'company_id' => $company_id,
+                    'job_id' => $job_id,
+                    'doc' => $assignmentFields,
+                ],
+                'status' => 'pending',
+                'available_at' => now(),
+            ]);
+            $outboxId = $outboxEvent->id;
+
+            // Mark Idempotency key completed
+            $successPayload = ['status' => 'success', 'message' => 'Assignment details saved successfully.'];
+            SysIdempotencyKey::updateOrCreate(
+                ['tenant_id' => $company_id, 'idempotency_key' => $clientUuid],
+                [
+                    'request_hash' => $requestHash,
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($successPayload),
+                    'completed_at' => now(),
+                    'expires_at' => now()->addDays(2),
+                ]
+            );
+
+            DB::commit();
+        } catch (\Throwable $txEx) {
+            DB::rollBack();
+            Log::error('Placement assignment transaction failed: '.$txEx->getMessage());
+
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Failed to save assignment details.']);
+        }
+
+        // Asynchronous queue dispatch to outbox processor (candidate-index queue)
+        if ($outboxId) {
+            try {
+                ProcessOutboxEventJob::dispatch($outboxId)->onQueue('candidate-index');
+            } catch (\Throwable $qEx) {
+                Log::warning('Placement assignment outbox dispatch warning: '.$qEx->getMessage());
+            }
+        }
+
+        // Authoritative immediate consistency: sync to Elasticsearch
         if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             try {
                 $this->elasticService->getClient()->update([
@@ -4999,19 +5090,45 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'doc_as_upsert' => true,
                     ],
                 ]);
-            } catch (\Exception $e) {
-                \Log::error('ES assignment update failed for wiseId='.$wiseId.': '.$e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error('ES assignment update failed for wiseId='.$wiseId.': '.$e->getMessage());
             }
         }
 
-        GeneralMethod::cacheClean('allbenchplacedListing_version_user_'.$this->user->id);
+        // Multi-Tenant Atomic Cache Invalidation
+        GeneralMethod::cacheClean('allbenchplacedListing_version_company_'.$company_id, $company_id);
+        cache()->forget('ats:v2:placedStats:comp_'.$company_id);
+        if ($this->user) {
+            GeneralMethod::cacheClean('allbenchplacedListing_version_user_'.$this->user->id, $company_id);
+        }
+
+        // Phase 4: Laravel Reverb Real-Time Broadcast to all tenant recruiter sessions
+        try {
+            event(new PlacementRecordUpdated(
+                $company_id,
+                $candidate_id,
+                $wiseId,
+                'assignment_updated',
+                $assignmentFields
+            ));
+        } catch (\Throwable $bEx) {
+            Log::warning('Placement assignment Reverb broadcast warning: '.$bEx->getMessage());
+        }
 
         return Reply::dataOnly(['status' => 'success', 'message' => 'Assignment details saved successfully.']);
     }
 
+    /**
+     * Intent: Save placed commercial configuration with Gate authorization, tenant boundary enforcement,
+     * end-to-end idempotency, MySQL 1054 column-safety, Transactional Outbox durability,
+     * and real-time Reverb broadcast synchronization.
+     * Tenancy: Strictly scoped to auth user's company_id and candidate ownership.
+     */
     public function savePlacedCommercialConfig(Request $request)
     {
-        $company_id = auth()->user()->company_id;
+        abort_if(Gate::denies('edit_job_applications'), 403);
+
+        $company_id = (int) auth()->user()->company_id;
         $candidate_id = (int) $request->candidate_id;
 
         if (! $candidate_id) {
@@ -5020,13 +5137,24 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         // candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
         $wiseRecord = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
-        $wiseId = $wiseRecord ? $wiseRecord->id : null;
-        $job_id = $wiseRecord ? $wiseRecord->job_id : null;
-        $jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
+        if (! $wiseRecord) {
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Candidate record not found.']);
+        }
+
+        // Tenant boundary enforcement
+        $isTenantOwned = ((int) $wiseRecord->company_id === $company_id)
+            || ((int) ($wiseRecord->other_company ?? 0) === $company_id)
+            || ((int) ($wiseRecord->thirdparty_company_id ?? 0) === $company_id);
+        if (! $isTenantOwned) {
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Unauthorized access to candidate record.']);
+        }
+
+        $wiseId = (int) $wiseRecord->id;
+        $job_id = $wiseRecord->job_id ? (int) $wiseRecord->job_id : null;
+        $jobApplicationId = $wiseRecord->job_application_id ? (int) $wiseRecord->job_application_id : null;
 
         $feeFixed = $request->fee_fixed ? (float) str_replace(',', '', $request->fee_fixed) : null;
         $feePct = $request->fee_pct ? (float) $request->fee_pct : null;
-
         $billingAmount = $request->billing_amount ? (float) str_replace(',', '', $request->billing_amount) : null;
 
         $commercialFields = [
@@ -5049,23 +5177,93 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'commercial_free_effective_date' => $request->free_effective_date ?: null,
         ];
 
-        // Dual Persistence: Write to MySQL source table offer_job_applications first
-        if ($jobApplicationId) {
-            DB::table('offer_job_applications')
-                ->where('application_id', $jobApplicationId)
-                ->where('job_id', $job_id)
-                ->update([
-                    'commercial_service_type' => $request->service_type ?: null,
-                    'commercial_model' => $request->commercial_model ?: null,
-                    'commercial_fee_method' => $request->fee_method ?: null,
-                    'commercial_fee_base' => $request->fee_base ?: null,
-                    'commercial_fee_pct' => $feePct,
-                    'commercial_fee_fixed' => $feeFixed,
-                    'updated_at' => now(),
-                ]);
+        // Layer 2 & 3: End-to-End Idempotency
+        $clientUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: (string) Str::uuid());
+        $requestHash = hash('xxh128', json_encode($commercialFields));
+        $idempotencyKey = "placement:comm:{$company_id}:{$candidate_id}:{$clientUuid}";
+
+        try {
+            $redisAcquired = Redis::connection('default')->set($idempotencyKey, 'LOCKED', 'EX', 60, 'NX');
+            if (! $redisAcquired) {
+                $existing = SysIdempotencyKey::where('tenant_id', $company_id)->where('idempotency_key', $clientUuid)->first();
+                if ($existing && $existing->status === 'COMPLETED') {
+                    return response()->json(json_decode($existing->response_body, true) ?? [], $existing->response_status ?? 200);
+                }
+            }
+        } catch (\Throwable $re) {
+            Log::warning('Placement commercial Redis idempotency check failed: '.$re->getMessage());
         }
 
-        // Sync to ELASTIC_CANDIDATES
+        $outboxId = null;
+
+        // Layer 3: Durable MySQL Persistence inside Transaction with Outbox
+        DB::beginTransaction();
+        try {
+            // Safe MySQL write to offer_job_applications: only update columns that actually exist in the schema (prevents SQL 1054)
+            if ($jobApplicationId) {
+                $existingColumns = Schema::getColumnListing('offer_job_applications');
+                $validOfferCols = array_intersect_key($commercialFields, array_flip($existingColumns));
+                if (! empty($validOfferCols)) {
+                    $validOfferCols['updated_at'] = now();
+                    DB::table('offer_job_applications')
+                        ->where('application_id', $jobApplicationId)
+                        ->where('job_id', $job_id)
+                        ->update($validOfferCols);
+                }
+            }
+
+            // Persist domain event to Transactional Outbox
+            $outboxEvent = CandidateOutboxEvent::create([
+                'company_id' => $company_id,
+                'dedupe_key' => "placement:comm:{$company_id}:{$candidate_id}:{$clientUuid}",
+                'aggregate_type' => 'Candidate',
+                'aggregate_id' => $wiseId,
+                'event_type' => 'placement.commercial.updated',
+                'event_version' => 1,
+                'payload' => [
+                    'candidate_id' => $candidate_id,
+                    'wise_id' => $wiseId,
+                    'company_id' => $company_id,
+                    'job_id' => $job_id,
+                    'doc' => $commercialFields,
+                ],
+                'status' => 'pending',
+                'available_at' => now(),
+            ]);
+            $outboxId = $outboxEvent->id;
+
+            // Mark Idempotency key completed
+            $successPayload = ['status' => 'success', 'message' => 'Commercial configuration saved successfully.'];
+            SysIdempotencyKey::updateOrCreate(
+                ['tenant_id' => $company_id, 'idempotency_key' => $clientUuid],
+                [
+                    'request_hash' => $requestHash,
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($successPayload),
+                    'completed_at' => now(),
+                    'expires_at' => now()->addDays(2),
+                ]
+            );
+
+            DB::commit();
+        } catch (\Throwable $txEx) {
+            DB::rollBack();
+            Log::error('Placement commercial transaction failed: '.$txEx->getMessage());
+
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Failed to save commercial configuration.']);
+        }
+
+        // Asynchronous queue dispatch to outbox processor (candidate-index queue)
+        if ($outboxId) {
+            try {
+                ProcessOutboxEventJob::dispatch($outboxId)->onQueue('candidate-index');
+            } catch (\Throwable $qEx) {
+                Log::warning('Placement commercial outbox dispatch warning: '.$qEx->getMessage());
+            }
+        }
+
+        // Authoritative immediate consistency: sync to Elasticsearch
         if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             try {
                 $this->elasticService->getClient()->update([
@@ -5077,23 +5275,41 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'doc_as_upsert' => true,
                     ],
                 ]);
-            } catch (\Exception $e) {
-
-                \Log::error('ES commercial update failed for wiseId='.$wiseId.': '.$e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error('ES commercial update failed for wiseId='.$wiseId.': '.$e->getMessage());
             }
         }
 
-        GeneralMethod::cacheClean('allbenchplacedListing_version_user_'.$this->user->id);
+        // Multi-Tenant Atomic Cache Invalidation
+        GeneralMethod::cacheClean('allbenchplacedListing_version_company_'.$company_id, $company_id);
+        cache()->forget('ats:v2:placedStats:comp_'.$company_id);
+        if ($this->user) {
+            GeneralMethod::cacheClean('allbenchplacedListing_version_user_'.$this->user->id, $company_id);
+        }
+
+        // Phase 4: Laravel Reverb Real-Time Broadcast to all tenant recruiter sessions
+        try {
+            event(new PlacementRecordUpdated(
+                $company_id,
+                $candidate_id,
+                $wiseId,
+                'commercial_updated',
+                $commercialFields
+            ));
+        } catch (\Throwable $bEx) {
+            Log::warning('Placement commercial Reverb broadcast warning: '.$bEx->getMessage());
+        }
 
         return Reply::dataOnly(['status' => 'success', 'message' => 'Commercial configuration saved successfully.']);
     }
 
-    public function placedListingStats_v2(Request $request)
+    public function placedListingStats_v2(?Request $request = null)
     {
         abort_if(Gate::denies('view_job_applications'), 403);
-        $company_id = auth()->user()->company_id;
+        $user = $this->user ?? auth()->user();
+        $company_id = $user ? $user->company_id : (int) auth()->user()->company_id;
 
-        $cacheKeyStats = 'ats:v2:placedStats:'.$this->user->id;
+        $cacheKeyStats = 'ats:v2:placedStats:comp_'.$company_id;
         if (cache()->has($cacheKeyStats)) {
             return response()->json(cache()->get($cacheKeyStats));
         }
@@ -6187,6 +6403,39 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->segment = ($request->segment(4)) ? $request->segment(4) : '';
         $this->pageTitle = __('Recommended Requisition');
 
+        // Pre-render Page 1 to eliminate secondary AJAX call on initial page load (Zero-Server-Hit)
+        $initialCusSearch = '';
+        if (! empty($this->bench_detail->skills)) {
+            $rawSkills = array_filter(array_map('trim', explode(',', $this->bench_detail->skills)));
+            $skillsArray = array_map(function ($s) {
+                return ['value' => $s, 'checked' => false];
+            }, $rawSkills);
+            $initialCusSearch = json_encode($skillsArray);
+        }
+
+        $internalReq = new Request([
+            'condidate_id' => $this->bench_id,
+            'page' => 1,
+            'per_page' => 10,
+            'size' => 10,
+            'custom_status' => 'active',
+            'custom_hiringtype' => '10',
+            'cus_search' => $initialCusSearch,
+        ]);
+
+        try {
+            $initialResponse = $this->all_internal_data_ajax($internalReq);
+            $initialData = $initialResponse->getData(true);
+            $this->initialHtml = $initialData['html'] ?? '';
+            $this->initialTotal = $initialData['total'] ?? 0;
+            $this->initialPagination = $initialData['pagination'] ?? '';
+        } catch (\Throwable $e) {
+            \Log::error('Pre-rendering recommend_internal_req failed: '.$e->getMessage());
+            $this->initialHtml = '';
+            $this->initialTotal = 0;
+            $this->initialPagination = '';
+        }
+
         return view('service_company.bench-candidates.recommend_internal_req', $this->data);
     }
 
@@ -6815,18 +7064,73 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function all_internal_data_ajax(Request $request)
     {
-        // dd($request->condidate_id); skills city_id city pay_rate_amount
-        // dd("l");
-        $currentRowJob = JobApplication::withoutGlobalScopes()->find($request->condidate_id);
+        abort_if(Gate::denies('view_jobs'), 403);
+
         $condidate_id = (int) $request->condidate_id;
-        $currentJobSkill = explode(',', $currentRowJob->skills);
+        $company_id = auth()->user()->company_id;
+        $currentUserId = (int) ($this->user->id ?? auth()->id() ?? 0);
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
+        $from = ($page - 1) * $size;
 
-        $searchTerms = request('cus_search');
-        $custom_search = json_decode($searchTerms, true);
-        // dd($custom_search);
+        $searchQuery = $request->input('q');
+        $custom_search_text = trim((string) $request->input('custom_search'));
+        $cus_search = $request->input('cus_search');
+        $kt_tagify_location = $request->input('kt_tagify_location');
+        $app_int_activity = $request->input('app_int_activity');
+        $sal_mode = $request->input('sal_mode');
+        $min_salary_currency = $request->input('min_salary_currency');
+        $min_exp = $request->input('min_exp') ? $request->input('min_exp') : 0;
+        $max_exp = $request->input('max_exp');
+        $min_salary_raw = $request->input('min_sal');
+        $max_salary_raw = $request->input('max_sal');
+        $custom_status = $request->input('custom_status');
+        $custom_hiringtype = $request->input('custom_hiringtype') ?? $request->input('app_int_outsource');
+        $work_mode = $request->input('work_mode');
 
-        $location = request('kt_tagify_location');
-        $custom_location = json_decode($location, true);
+        $cachePayload = [
+            'condidate_id' => $condidate_id,
+            'page' => $page,
+            'size' => $size,
+            'q' => $searchQuery,
+            'company' => $company_id,
+            'custom_search' => $custom_search_text,
+            'cus_search' => $cus_search,
+            'kt_tagify_location' => $kt_tagify_location,
+            'app_int_activity' => $app_int_activity,
+            'sal_mode' => $sal_mode,
+            'min_salary_currency' => $min_salary_currency,
+            'min_exp' => $min_exp,
+            'max_exp' => $max_exp,
+            'min_sal' => $min_salary_raw,
+            'max_sal' => $max_salary_raw,
+            'custom_status' => $custom_status,
+            'user_id' => $currentUserId,
+            'custom_hiringtype' => $custom_hiringtype,
+            'work_mode' => $work_mode,
+        ];
+
+        $versionKey = 'allbenchrecommendinternalreq_version_user_'.$currentUserId;
+        $version = cache()->get($versionKey, 1);
+        $cacheKeySet = 'ats:allbenchrecommendinternalreq:'.$currentUserId.':'.$version.':'.md5(json_encode($cachePayload));
+
+        /* ---------------------------------------------------------------
+        ⚡ DragonflyDB / Redis Fast-Path: 0 MySQL queries, 0 ES calls, < 2ms
+        ----------------------------------------------------------------- */
+        if (cache()->has($cacheKeySet)) {
+            return response()->json(cache()->get($cacheKeySet));
+        }
+
+        $currentRowJob = cache()->remember('ats:bench_candidate_detail:'.$condidate_id, 300, function () use ($condidate_id) {
+            return JobApplication::withoutGlobalScopes()->find($condidate_id);
+        });
+        if (! $currentRowJob) {
+            return response()->json(['html' => '', 'total' => 0, 'pagination' => '']);
+        }
+        $currentJobSkill = explode(',', $currentRowJob->skills ?? '');
+
+        $custom_search_tags = json_decode($cus_search, true);
+        $custom_location = json_decode($kt_tagify_location, true);
         $current_date = date('Y-m-d');
         $current_timestamp = strtotime($current_date);
         $current_previous_30_days = date('Y-m-d', strtotime('-30 days', $current_timestamp));
@@ -6834,30 +7138,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $current_previous_90_days = date('Y-m-d', strtotime('-90 days', $current_timestamp));
         $current_previous_180_days = date('Y-m-d', strtotime('-180 days', $current_timestamp));
         $current_previous_1_year = date('Y-m-d', strtotime('-365 days', $current_timestamp));
-        $app_int_activity = request('app_int_activity');
-        $sal_mode = request('sal_mode');
-        $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
 
-        $min_exp = (request('min_exp')) ? request('min_exp') : 0;
-        $max_exp = request('max_exp');
-
-        $min_salary = request('min_sal');
-        $max_salary = request('max_sal');
+        $min_salary = $min_salary_raw;
+        $max_salary = $max_salary_raw;
         $currency = GeneralMethod::currency();  // Currency code
 
-        $ecurrency = $currency[$min_salary_currency];
+        $currKey = ! empty($min_salary_currency) ? $min_salary_currency : 0;
+        $ecurrency = $currency[$currKey] ?? 'INR';
         $econvertedAmount = (int) $max_salary;
-        if ($min_salary_currency > 0) {
+        if ((int) $min_salary_currency > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
 
         $ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $econvertedAmount);
 
-        $currency = $currency[$min_salary_currency];
+        $currencyCode = $currency[$currKey] ?? 'INR';
         $convertedAmount = (int) $min_salary;
-        if ($min_salary_currency > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+        if ((int) $min_salary_currency > 0) {
+            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currencyCode);
         }
 
         $ctcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
@@ -6872,10 +7171,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $min_salary = @$ctcdivided->yearly;
         }
 
-        // dd($max_salary ,$min_salary,$ectcdivided,$ctcdivided);
-
         $location = [];
-        if (\request('kt_tagify_location') != '') {
+        if (! empty($kt_tagify_location) && is_array($custom_location)) {
             foreach ($custom_location as $sval) {
                 $loc_datas = DB::table('countries')
                     ->select('city_list.city_id')
@@ -6886,7 +7183,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     ->join('city_list', 'city_list.state_id', '=', 'state_list.id')
                     ->get();
 
-                // $loc_data = DB::table('city_list')->where('city_list.city_id', '=', $sval['value'])->first();
                 if ($loc_datas) {
                     foreach ($loc_datas as $loc_data) {
                         array_push($location, $loc_data->city_id);
@@ -6895,44 +7191,31 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
-        // dd($location);
-
         $set_skill = [];
         if ($currentJobSkill > 0) {
             foreach ($currentJobSkill as $val) {
                 array_push($set_skill, trim($val));
             }
         }
-        // (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
-        // query here whose $skill result was never read anywhere below —
-        // removed as dead load. $set_skill — the candidate's own skills —
-        // is kept; it now also drives the "Best Match" sort, case 10 below.)
-        abort_if(Gate::denies('view_jobs'), 403);
 
-        $company_id = auth()->user()->company_id;
-
-        $chkAdminRole = $this->user->hasRole('admin');
+        $chkAdminRole = ($this->user ?? auth()->user()) ? ($this->user ?? auth()->user())->hasRole('admin') : false;
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
-        // $searchTerms = request('custom_search');
-        // $custom_search = json_decode($searchTerms, true);
 
-        if (\request('cus_search') != '') {
-            $skillsAddElastic = array_column($custom_search, 'value');
+        if (! empty($cus_search) && is_array($custom_search_tags)) {
+            $skillsAddElastic = array_column($custom_search_tags, 'value');
             GeneralMethod::skillsAddElastic($skillsAddElastic);
         }
 
         $requiredSkills = [];
-
-        if (\request('cus_search') != '') {
-
-            $checkedSkills = array_filter($custom_search, function ($skill) {
-                return $skill['checked'] == true;
+        if (! empty($cus_search) && is_array($custom_search_tags)) {
+            $checkedSkills = array_filter($custom_search_tags, function ($skill) {
+                return ! empty($skill['checked']);
             });
 
-            $uncheckedSkills = array_filter($custom_search, function ($skill) {
-                return $skill['checked'] == false;
+            $uncheckedSkills = array_filter($custom_search_tags, function ($skill) {
+                return empty($skill['checked']);
             });
 
             if (! empty($checkedSkills)) {
@@ -6940,57 +7223,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             } else {
                 $requiredSkills = array_column($uncheckedSkills, 'value');
             }
-
         }
 
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
-        $from = ($page - 1) * $size;
-
-        $custom_status = request('custom_status');
-        $custom_hiringtype = request('app_int_outsource');
-        $custom_search = trim(request('custom_search'));
-
-        $cachePayload = [
-            // condidate_id was missing here — every request for THIS candidate's
-            // recommended jobs hashed to the same cache key as any OTHER
-            // candidate with the same filter state (very likely with empty/
-            // default filters, e.g. two candidates with no skills recorded),
-            // so one candidate's cached list/total could be served back for a
-            // completely different candidate. This is the root cause behind
-            // "count says N but the list shows 0" and results changing
-            // unexpectedly when switching between candidates.
-            'condidate_id' => $condidate_id,
-            'page' => $page,
-            'size' => $size,
-            'q' => $searchQuery,
-            'company' => $company_id,
-            'custom_search' => $custom_search,
-            'location' => $location,
-            'app_int_activity' => $app_int_activity,
-            'sal_mode' => $sal_mode,
-            'min_salary_currency' => $min_salary_currency,
-            'min_exp' => $min_exp,
-            'max_exp' => $max_exp,
-            'max_salary' => $max_salary,
-            'min_salary' => $min_salary,
-            'requiredSkills' => $requiredSkills ?? [],
-            'custom_status' => $custom_status,
-            'user_id' => $this->user->id,
-            'custom_hiringtype' => $custom_hiringtype,
-            'work_mode' => request('work_mode'),
-        ];
-
-        $versionKey = 'allbenchrecommendinternalreq_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchrecommendinternalreq:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
-        }
+        $custom_search = $custom_search_text;
 
         $statusArr = ['active', 'hold', 'inactive', '2'];
         $must = [];
@@ -7279,209 +7514,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function recommandedrequestcondidate(Request $request)
     {
-
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
         $jobId = (int) $request->jobId;
         $conId = (int) $request->conId;
+        $userId = (int) (auth()->user()->id ?? $this->user->id ?? 0);
+        $clientKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
 
-        // Phase 5: Atomic idempotency lock to prevent double-submit and race conditions (10s TTL)
-        $idempotencyKey = $request->header('X-Idempotency-Key')
-            ?: "idemp:bench_req:{$company_id}:{$jobId}:{$conId}";
-        $lockKey = 'lock:'.md5($idempotencyKey);
-        $lock = Cache::lock($lockKey, 10);
+        /** @var \App\Services\BenchRequestMutationService $mutationService */
+        $mutationService = app(\App\Services\BenchRequestMutationService::class);
+        $result = $mutationService->executeRecommendationMutation(
+            $company_id,
+            $jobId,
+            $conId,
+            $userId,
+            $clientKey
+        );
 
-        if (! $lock->get()) {
-            return Reply::dataOnly(['status' => 'warning', 'message' => 'Request already processing. Please wait.']);
-        }
-
-        try {
-            $job = Job::withoutGlobalScopes()->findOrFail($jobId);
-
-            //   $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id,$company_id);
-            //   $mailTypeSubject = GeneralMethod::mailTypeSubject(21,1);
-
-            //   dd($detailsVendorSide,$mailTypeSubject);
-
-            $source_from_company_id = $company_id;
-            $source_from_user_id = auth()->user()->id;
-            //   $source_from_id	 = '';
-            $source_from_type = 1;
-            $source_company_id = $job->company_id;
-            //   $source_user_id	 = '';
-            $source_application_id = $conId;
-            $source_jobid = $jobId;
-
-            // Phase 5: Concurrency check — prevent duplicate assignment submission
-            $alreadyAssigned = DB::table('rec_candidate_assign')
-                ->where('source_jobid', $source_jobid)
-                ->where('source_application_id', $source_application_id)
-                ->where('source_from_company_id', $source_from_company_id)
-                ->whereIn('ac_status', [0, 1])
-                ->exists();
-
-            if ($alreadyAssigned) {
-                return Reply::dataOnly(['status' => 'warning', 'message' => 'Candidate request already submitted for this job.']);
-            }
-
-            $eventId = 25;
-            $coinsDeductions = GeneralMethod::coinsValidations((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
-            // dd($coinsDeductions);
-            if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-            }
-            //  dd("djd");
-            //   dd($source_company_id);
-
-            $values = ['source_from_company_id' => $source_from_company_id, 'source_from_user_id' => $source_from_user_id, 'source_from_type' => $source_from_type, 'source_company_id' => $source_company_id, 'source_application_id' => $source_application_id, 'source_from_id' => $source_application_id, 'source_jobid' => $source_jobid];
-            $row_data = DB::table('job_applications')->select('*')->where('id', @$source_application_id)->first();
-            $jobcountry = GeneralMethod::JobCountries($source_jobid);
-            $country = @$row_data->country;
-
-            // dd($values);
-            $query = false;
-            if (@$source_jobid > 0) {
-
-                if (in_array($country, $jobcountry)) {
-                    $event_name = 'BenchSalesIndia';
-                } else {
-                    $event_name = 'BenchSalesInternational';
-                }
-
-                // $source_from_company_id = $source_from_company_id;
-                // $event_name = $event_name;
-                $event_table_name = 'jobs';
-                $query = DB::table('rec_candidate_assign')->insert($values);
-                $rec_id = DB::getPdo()->lastInsertId();
-
-                /**
-                 * Intent: Offload Elasticsearch candidate request document indexing to Horizon queue (Rule 2 & Rule 6).
-                 * Zero direct UI writes to ES; executes strictly after database transaction commits.
-                 * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
-                 */
-
-                /**
-                 * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
-                 * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
-                 */
-                \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
-                app()->terminating(function () use ($rec_id) {
-                    try {
-                        GeneralMethod::candidateRequestIndexElastic((int) $rec_id);
-                    } catch (\Throwable $e) {}
-                });
-                GeneralMethod::invalidateJobCounters((int) $source_jobid, [(int) $source_company_id, (int) $source_from_company_id]);
-                \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
-                \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_from_company_id}:epoch");
-                if ((int) $source_company_id !== (int) $source_from_company_id) {
-                    \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_company_id}:epoch");
-                }
-
-                // Phase 4: Real-time Reverb WebSocket delta broadcasting
-                try {
-                    event(new \App\Events\BenchRequestCreated(
-                        (int) $source_from_company_id,
-                        (int) $source_jobid,
-                        (int) $rec_id,
-                        (int) $source_application_id,
-                        'internal_bench'
-                    ));
-                    if ((int) $source_company_id !== (int) $source_from_company_id) {
-                        event(new \App\Events\BenchRequestCreated(
-                            (int) $source_company_id,
-                            (int) $source_jobid,
-                            (int) $rec_id,
-                            (int) $source_application_id,
-                            'internal_bench'
-                        ));
-                    }
-                } catch (\Throwable $e) {
-                    \Log::warning('BenchRequestCreated event broadcast failed: '.$e->getMessage());
-                }
-
-            }
-
-            // $query = true;
-            if ($query) {
-
-                // $packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                $eventId = 25;
-                $coinsDeductions = GeneralMethod::coinsDeductions((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
-
-                $data = ['status' => 'success', 'message' => ''];
-
-                $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id, $company_id);
-
-                $basecompany = GeneralMethod::baseCompany();
-                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                $attachments = [];
-
-                $cc = [];
-                $checkMailPermision = GeneralMethod::mailPermission(21);
-                if ($checkMailPermision) {
-
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
-
-                    $jobRow = DB::table('job_applications')->select('job_applications.*', 'city_list.city')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')->where('job_applications.id', '=', $source_application_id)->first();
-
-                    $salaryMode = GeneralMethod::salaryMode();
-                    $currencySymbole = GeneralMethod::currencySymbole();
-                    $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
-                    $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
-                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
-                    $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
-
-                    $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
-
-                    $template_description = $mailTypeSubject->body_description;
-
-                    $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]', '[{BENCH_CANDIDATE_NAME}]', '[{BILL_RATE}]', '[{EXPERENCE}]', '[{LOCATION}]', '[{CONTACT_PERSON_NAME}]', '[{PHONE}]', '[{EMAIL}]', '[{SKILL}]'], [$detailsVendorSide->client_company, $job->title, $job->id, $detailsVendorSide->vendor_company, $jobRow->full_name, $salaryRange, $jobRow->total_exp, $jobRow->city, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $jobRow->skills], $template_description);
-
-                    $message = $template_description;
-
-                    $notificationemail = GeneralMethod::notification($source_company_id, 'Recuitment'); // Recuitment Sales
-                    $defailsEmail = DB::table('companies')->where('id', $source_company_id)->first()->company_email;
-                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-
-                    if (! empty($to_Mail_Id)) {
-                        /**
-                         * Intent: Asynchronously offload email dispatch to Horizon queue (mail queue).
-                         * Tenancy Note: Multi-tenant safe, scoped by tenant notification recipient.
-                         */
-                        \App\Jobs\SendEmailJob::dispatch(
-                            $to_Mail_Id,
-                            $subject,
-                            'email.common.index',
-                            ['message' => $message],
-                            $attachments,
-                            $fromAddress,
-                            $senderName,
-                            $cc
-                        );
-                    }
-
-                }
-
-            } else {
-                $data = ['status' => 'warning', 'message' => 'Failed'];
-
-            }
-
-            $userId = auth()->user()->id ?? $this->user->id ?? 0;
-            $cachekeys = [
-                'allbenchrecommendreq_version_user_'.$userId,
-                'allbenchrecommendinternalreq_version_user_'.$userId,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
-            return response()->json($data);
-        } finally {
-            $lock->release();
-        }
-
+        return response()->json($result);
     }
 
     public function mailrecommandedrequestcondidate(Request $request)
@@ -8584,7 +8633,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $candItem->resume_filename ?? '',
             ]);
         }
-        $fingerprintComponents[] = $companyName . ':' . md5((string) $companyLogo);
+        $fingerprintComponents[] = $companyName.':'.md5((string) $companyLogo);
         $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
 
         // Fast Circuit: If client sent the exact matching fingerprint, data is 100% current and authoritative.
@@ -9672,4 +9721,3 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ]);
     }
 }
-

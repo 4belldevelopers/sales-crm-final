@@ -1268,7 +1268,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9m0 10h9M4 7h1m0 0v10m0 0h1M4 12h6"/></svg>
           </span>
           <div>
-            <div class="rrj-footer-number" id="rrj_footer_number">0</div>
+            <div class="rrj-footer-number" id="rrj_footer_number">{{ $initialTotal ?? $recomCount['recommend_internal_req_counter'] ?? 0 }}</div>
             <div class="rrj-footer-label">Jobs Match</div>
           </div>
         </div>
@@ -1308,11 +1308,11 @@ body > .tagify__dropdown{ z-index:1400 !important; }
             <th style="min-width:140px;">AGENCY</th>
           </tr>
         </thead>
-        <tbody id="benchCandidateRecommendedReqAjax"></tbody>
+        <tbody id="benchCandidateRecommendedReqAjax">{!! $initialHtml ?? '' !!}</tbody>
       </table>
     </div>
 
-    <div id="paginationbenchCandidateRecommendedReq"></div>
+    <div id="paginationbenchCandidateRecommendedReq">{!! $initialPagination ?? '' !!}</div>
     @include('sections.service_company.pipeline')
   </div>
 
@@ -1389,8 +1389,8 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 @endsection
 @push('footer-script')
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+<link rel="stylesheet" href="{{ asset('assets/node_modules/sweetalert/sweetalert.css') }}{{ TM_VERSION }}">
+<script src="{{ asset('assets/node_modules/sweetalert/sweetalert.min.js') }}{{ TM_VERSION }}"></script>
 
 {{-- ── Skills Tagify — exact template/behavior ported from
      apptracker/similar_candidates.blade.php (star toggles mandatory,
@@ -1636,8 +1636,14 @@ function rrjRenderAppliedFiltersCard(){
     $('#rrj_applied_card').toggleClass('d-none', items.length===0);
     $('#rrj_applied_count').text('('+items.length+')');
 }
-$(document).on('click','#rrj_applied_clear_all',function(){ $('#rrj_clear_all').trigger('click'); fetchBenchRecommendedReqCandidateList(); rrjRenderAppliedFiltersCard(); });
+$(document).on('click','#rrj_applied_clear_all',function(){ 
+    window.RecommendInternalReqCache = {};
+    $('#rrj_clear_all').trigger('click'); 
+    fetchBenchRecommendedReqCandidateList(1, '', true); 
+    rrjRenderAppliedFiltersCard(); 
+});
 $(document).on('click','#rrj_clear_all, #rrj_reset_btn',function(){
+    window.RecommendInternalReqCache = {};
     rrjTagifySkills.removeAllTags();
     rrjTagifyLocation.removeAllTags();
     $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#max_sal').val('');
@@ -1647,7 +1653,8 @@ $(document).on('click','#rrj_clear_all, #rrj_reset_btn',function(){
     rrjUpdateActiveFiltersUI();
 });
 $(document).on('click','#rrj_apply_btn',function(){
-    fetchBenchRecommendedReqCandidateList();
+    window.RecommendInternalReqCache = {};
+    fetchBenchRecommendedReqCandidateList(1, '', true);
     rrjRenderAppliedFiltersCard();
     $('#rrj_filter_close').trigger('click');
 });
@@ -1675,25 +1682,28 @@ $(document).ready(function() {
         ele.addClass('disabled').prop('disabled', true).css('pointer-events', 'none')
            .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...');
 
+        // Client-side idempotency key to prevent accidental duplicate submission
+        var idempotencyKey = 'bench-req-' + conId + '-' + jobId + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
         var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
         url = url.replace(':id', jobId) + "?conId=" + conId;
 
         $.ajax({
             type: 'GET',
             url: url,
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             success: function (response) {
                 if (response && (response.status === 'success' || response.status === true)) {
                     swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
 
                     ele.replaceWith('<a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;"><i class="fa-regular fa-clock me-1"></i> Request Sent</a>');
 
-                    var mailUrl = "{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
-                    mailUrl = mailUrl.replace(':id', jobId) + "?conId=" + conId + "&matlaccess=1";
-
-                    if (typeof fetchBenchRecommendedReqCandidateList === 'function') {
-                        fetchBenchRecommendedReqCandidateList();
+                    // Invalidate client in-memory cache to guarantee freshness on subsequent pagination/filters
+                    if (window.RecommendInternalReqCache) {
+                        window.RecommendInternalReqCache = {};
                     }
-                    $.ajax({ type: 'GET', url: mailUrl, success: function (res) {} });
                 } else {
                     ele.removeClass('disabled').prop('disabled', false).css('pointer-events', 'auto').html(originalHtml);
                     var msg = (response && response.message) ? response.message : "Failed to send request.";
@@ -1857,38 +1867,108 @@ $(document).on('click', '.client-terms-listing-find-job', function (e){
      card number and the list's response.total in agreement instead of the
      card being skill-filtered while the list's first paint wasn't. ── --}}
 <script>
-function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
-    $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
+window.RecommendInternalReqCache = {};
+
+function getRecommendRequestData(page) {
     var perPage = localStorage.getItem('candidatePerPage') || 10;
     var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
+    return {
+        search: $('#inputSearch').val() || '',
+        condidate_id: "{{$segment}}",
+        custom_search: $('#kt_tagify_2').val() || '',
+        custom_status: 'active',
+        custom_hiringtype: $('#hiringtype').val() || '10',
+        cus_search: $('#kt_tagify_users').val() || '',
+        min_exp: $('#min_exp').val() || '',
+        max_exp: $('#max_exp').val() || '',
+        kt_tagify_location: $('#kt_tagify_location').val() || '',
+        min_sal: $('#min_sal').val() || '',
+        max_sal: $('#max_sal').val() || '',
+        min_salary_currency: $('#min_salary_currency').val() || '',
+        sal_mode: $('#sal_mode').val() || '',
+        work_mode: workModeVal,
+        app_int_activity: $('[name="app_int_activity"]:checked').val() || '',
+        app_int_outsource: $('[name="app_int_outsource"]:checked').val() || '',
+        per_page: perPage,
+        size: perPage
+    };
+}
+
+// 2-tier client cache: Tier 1 = RAM, Tier 2 = sessionStorage (120s TTL)
+function getRecommendPageCache(cacheKey) {
+    var now = Date.now();
+    if (window.RecommendInternalReqCache[cacheKey] && (now - window.RecommendInternalReqCache[cacheKey].ts < 60000)) {
+        return window.RecommendInternalReqCache[cacheKey].data;
+    }
+    try {
+        var sKey = 'ats_rrj_cache_{{ (int)$segment }}_' + btoa(unescape(encodeURIComponent(cacheKey))).slice(0, 36);
+        var stored = sessionStorage.getItem(sKey);
+        if (stored) {
+            var parsed = JSON.parse(stored);
+            if (now - parsed.ts < 120000) {
+                window.RecommendInternalReqCache[cacheKey] = parsed;
+                return parsed.data;
+            } else {
+                sessionStorage.removeItem(sKey);
+            }
+        }
+    } catch(e) {}
+    return null;
+}
+
+function setRecommendPageCache(cacheKey, data) {
+    var payload = { data: data, ts: Date.now() };
+    window.RecommendInternalReqCache[cacheKey] = payload;
+    try {
+        var sKey = 'ats_rrj_cache_{{ (int)$segment }}_' + btoa(unescape(encodeURIComponent(cacheKey))).slice(0, 36);
+        sessionStorage.setItem(sKey, JSON.stringify(payload));
+    } catch(e) {}
+}
+
+function clearAllRecommendPageCache() {
+    window.RecommendInternalReqCache = {};
+    try {
+        var prefix = 'ats_rrj_cache_{{ (int)$segment }}_';
+        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+            var k = sessionStorage.key(i);
+            if (k && k.indexOf(prefix) === 0) {
+                sessionStorage.removeItem(k);
+            }
+        }
+    } catch(e) {}
+}
+
+function fetchBenchRecommendedReqCandidateList(page = 1, search = '', forceRefresh = false) {
+    var requestData = getRecommendRequestData(page);
+    var cacheKey = 'p_' + page + '_' + JSON.stringify(requestData);
+
+    // Serve from Client Browser RAM or sessionStorage if available (0 server hits)
+    if (!forceRefresh) {
+        var cached = getRecommendPageCache(cacheKey);
+        if (cached) {
+            $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
+            $('#benchCandidateRecommendedReqAjax').html(cached.html);
+            $('#recommend_req_internal_id').html(cached.total);
+            $('#rrj_footer_number').text(cached.total);
+            $('#paginationbenchCandidateRecommendedReq').html(cached.pagination);
+            return Promise.resolve(cached);
+        }
+    }
+
+    $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
     /* return the jqXHR so pagination's .then()/.catch() work — without it
        they were called on undefined and threw a TypeError on every click */
     return $.ajax({
         url: `{!! route('service_company.recommend.all_internal_data_ajax') !!}?page=${page}`,
         type: 'GET',
-        data: {
-            search: $('#inputSearch').val(),
-            condidate_id: "{{$segment}}",
-            custom_search: $('#kt_tagify_2').val(),
-            custom_status: 'active',
-            custom_hiringtype: $('#hiringtype').val(),
-            cus_search: $('#kt_tagify_users').val(),
-            min_exp: $('#min_exp').val(),
-            max_exp: $('#max_exp').val(),
-            kt_tagify_location: $('#kt_tagify_location').val(),
-            min_sal: $('#min_sal').val(),
-            max_sal: $('#max_sal').val(),
-            min_salary_currency: $('#min_salary_currency').val(),
-            sal_mode: $('#sal_mode').val(),
-            work_mode: workModeVal,
-            app_int_activity: $('[name="app_int_activity"]:checked').val(),
-            app_int_outsource: $('[name="app_int_outsource"]:checked').val(),
-            per_page: perPage,
-            size: perPage
-        },
+        data: requestData,
         success: function(response) {
             $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
             if (!response || typeof response.html === 'undefined') { console.error('all_internal_data_ajax: unexpected response', response); return; }
+            
+            // Store in 2-tier client cache
+            setRecommendPageCache(cacheKey, response);
+
             $('#benchCandidateRecommendedReqAjax').html(response.html);
             $('#recommend_req_internal_id').html(response.total);
             $('#rrj_footer_number').text(response.total);
@@ -1900,9 +1980,56 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
         }
     });
 }
-function filtersdataget(){ fetchBenchRecommendedReqCandidateList(); }
+
+function filtersdataget(){ 
+    clearAllRecommendPageCache();
+    fetchBenchRecommendedReqCandidateList(1, '', true); 
+}
+
+function initRecommendInternalReqReverbSync() {
+    var tenantCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
+    var currentCandId = {{ (int) $segment }};
+
+    if (tenantCompanyId > 0 && typeof window.Echo !== 'undefined') {
+        try {
+            window.Echo.private('company.' + tenantCompanyId)
+                .listen('.bench.request.created', function(e) {
+                    if (!e || parseInt(e.candidate_id) !== parseInt(currentCandId)) return;
+
+                    // Invalidate client-side memory cache
+                    clearAllRecommendPageCache();
+
+                    // If button for this job is in current DOM view, update it smoothly
+                    var $btn = $('.request-send[data-jobId="' + e.job_id + '"]');
+                    if ($btn.length) {
+                        $btn.replaceWith('<a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;"><i class="fa-regular fa-clock me-1"></i> Request Sent</a>');
+                    }
+                });
+        } catch (err) {
+            console.warn('[Reverb] BenchRequestCreated subscription error:', err);
+        }
+    }
+}
+
 $(document).ready(function() {
-    fetchBenchRecommendedReqCandidateList();
+    initRecommendInternalReqReverbSync();
+
+    // Check if initial Page 1 rows were pre-rendered on the server
+    var hasServerRenderedRows = $('#benchCandidateRecommendedReqAjax tr').length > 0 || {!! !empty($initialHtml) ? 'true' : 'false' !!};
+    if (hasServerRenderedRows) {
+        var initialData = {
+            html: $('#benchCandidateRecommendedReqAjax').html(),
+            total: parseInt($('#recommend_req_internal_id').text()) || {{ (int)($initialTotal ?? 0) }},
+            pagination: $('#paginationbenchCandidateRecommendedReq').html()
+        };
+        var reqData = getRecommendRequestData(1);
+        var initialCacheKey = 'p_1_' + JSON.stringify(reqData);
+        setRecommendPageCache(initialCacheKey, initialData);
+        // Pre-rendered HTML is already in DOM: zero secondary server hits!
+    } else {
+        fetchBenchRecommendedReqCandidateList();
+    }
+
     /* The shared pagination partial renders .pagi-page/.pagi-arrow buttons —
        the old handler listened for Bootstrap's .page-link, which the partial
        never outputs, so pagination clicks did nothing at all. A boolean
@@ -1923,7 +2050,8 @@ $(document).ready(function() {
         var selectedPerPage = $(this).val();
         if (selectedPerPage) {
             localStorage.setItem('candidatePerPage', selectedPerPage);
-            fetchBenchRecommendedReqCandidateList(1);
+            clearAllRecommendPageCache();
+            fetchBenchRecommendedReqCandidateList(1, '', true);
         }
     });
 });

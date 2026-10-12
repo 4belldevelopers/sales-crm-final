@@ -4204,41 +4204,43 @@ END:VCALENDAR";
 
     public static function canGgdFilterData($CandId)
     {
-        $company_id = auth()->user()->company_id;
-        $candidateDetaiks = JobApplication::withoutGlobalScopes()->findOrFail($CandId);
-        $qualification_master = DB::table('qualification_master')->select('name')->where('id', $candidateDetaiks->qualification)->first();
+        $cacheKey = "ats:bench_filter_data:{$CandId}";
+        return cache()->remember($cacheKey, 300, function () use ($CandId) {
+            $company_id = auth()->user()->company_id ?? 0;
+            $candidateDetaiks = JobApplication::withoutGlobalScopes()->findOrFail($CandId);
+            $qualification_master = DB::table('qualification_master')->select('name')->where('id', $candidateDetaiks->qualification)->first();
 
-        $loc_data = DB::table('job_applications')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->where('job_applications.id', $CandId)
-            ->pluck('city_list.city as city_name')
-            ->toArray();
+            $loc_data = DB::table('job_applications')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->where('job_applications.id', $CandId)
+                ->pluck('city_list.city as city_name')
+                ->toArray();
 
-        $default_loc = implode(',', $loc_data);
+            $default_loc = implode(',', $loc_data);
 
-        $default_skill = $candidateDetaiks->skills; // implode(",",$skill_arr);
+            $default_skill = $candidateDetaiks->skills; // implode(",",$skill_arr);
 
-        $default_skill = $default_skill.','.$candidateDetaiks->current_designation;
+            $default_skill = $default_skill.','.$candidateDetaiks->current_designation;
 
-        $data = [
-            'jobid' => $candidateDetaiks->id,
-            'title' => $candidateDetaiks->current_designation,
-            'min_exp' => 0,
-            'max_exp' => $candidateDetaiks->total_exp,
-            'min_salary' => round($candidateDetaiks->bill_rate_amount),
-            'max_salary' => round($candidateDetaiks->bill_rate_amount),
-            'min_salary_currency' => $candidateDetaiks->bill_rate_currency,
-            'max_salary_currency' => $candidateDetaiks->bill_rate_currency,
-            'min_sal_mode' => $candidateDetaiks->bill_rate_mode,
-            'city_id' => $candidateDetaiks->city_id,
-            'qualification' => $qualification_master->name,
-            'default_skill' => $default_skill,
-            'default_loc' => $default_loc,
-            'js_array' => '',
-        ];
+            $data = [
+                'jobid' => $candidateDetaiks->id,
+                'title' => $candidateDetaiks->current_designation,
+                'min_exp' => 0,
+                'max_exp' => $candidateDetaiks->total_exp,
+                'min_salary' => round($candidateDetaiks->bill_rate_amount),
+                'max_salary' => round($candidateDetaiks->bill_rate_amount),
+                'min_salary_currency' => $candidateDetaiks->bill_rate_currency,
+                'max_salary_currency' => $candidateDetaiks->bill_rate_currency,
+                'min_sal_mode' => $candidateDetaiks->bill_rate_mode,
+                'city_id' => $candidateDetaiks->city_id,
+                'qualification' => $qualification_master->name ?? '',
+                'default_skill' => $default_skill,
+                'default_loc' => $default_loc,
+                'js_array' => '',
+            ];
 
-        return (object) $data;
-
+            return (object) $data;
+        });
     }
 
     public static function currency()

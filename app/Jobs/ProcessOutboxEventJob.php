@@ -210,6 +210,38 @@ class ProcessOutboxEventJob implements ShouldQueue
                     }
                     break;
 
+                case 'placement.assignment.updated':
+                case 'placement.commercial.updated':
+                    $wiseId = (int) ($payload['wise_id'] ?? $event->aggregate_id);
+                    $doc = (array) ($payload['doc'] ?? []);
+                    if ($wiseId > 0 && ! empty($doc)) {
+                        try {
+                            $elasticService = app(\App\Services\ElasticService::class);
+                            if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                                $elasticService->getClient()->update([
+                                    'index' => ELASTIC_CANDIDATES,
+                                    'id' => $wiseId,
+                                    'retry_on_conflict' => 5,
+                                    'body' => [
+                                        'doc' => $doc,
+                                        'doc_as_upsert' => true,
+                                    ],
+                                ]);
+                            }
+                        } catch (\Throwable $esEx) {
+                            Log::warning('ProcessOutboxEventJob: Placement ES update warning', [
+                                'wise_id' => $wiseId,
+                                'error' => $esEx->getMessage(),
+                            ]);
+                        }
+                    }
+                    $companyId = (int) ($event->company_id ?: ($payload['company_id'] ?? 0));
+                    if ($companyId > 0) {
+                        GeneralMethod::cacheClean('allbenchplacedListing_version_company_'.$companyId, $companyId);
+                        cache()->forget('ats:v2:placedStats:comp_'.$companyId);
+                    }
+                    break;
+
                 default:
                     if ($event->aggregate_type === 'bench_candidate' && $candidateId > 0) {
                         try {
