@@ -426,11 +426,422 @@
     #jrwrap .divider { height: 1px; background: var(--border); margin: 24px 0; }
     #jrwrap .form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 12px; }
 
-    /* Job-title suggestions (backend) */
-    #jrwrap #suggestions { top: 64px; position: absolute; z-index: 1000; background-color: white; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; width: 100%; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    #jrwrap #suggestions-list { list-style: none; padding: 0; margin: 0; }
-    #jrwrap #suggestions-list li { padding: 10px 15px; cursor: pointer; transition: background-color 0.3s; }
-    #jrwrap #suggestions-list li:hover { background-color: #f0f0f0; }
+    /* =========================================================================
+       Job Title Intelligence Engine Styles (Metronic Enterprise / 15.6" Screen Fitted)
+       ========================================================================= */
+    #jrwrap .jero-title-form-group { position: relative; }
+    #jrwrap .jero-title-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #10B981;
+        background: #ECFDF5;
+        border: 1px solid #A7F3D0;
+        padding: 2px 8px;
+        border-radius: 12px;
+        line-height: 1.2;
+    }
+    #jrwrap .jero-title-select-wrap {
+        position: relative;
+        width: 100%;
+    }
+    #jrwrap .jero-title-input-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    #jrwrap .jero-title-search-icon {
+        position: absolute;
+        left: 12px;
+        color: #A1A5B7;
+        pointer-events: none;
+        transition: color 0.2s;
+    }
+    #jrwrap .jero-title-input {
+        width: 100%;
+        padding-left: 34px !important;
+        padding-right: 56px !important;
+        height: 40px;
+        font-size: 13px;
+        color: #181C32;
+        background: #FFFFFF;
+        border: 1px solid #E4E6EF;
+        border-radius: 6px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #jrwrap .jero-title-input:focus {
+        border-color: #3E97FF;
+        box-shadow: 0 0 0 3px rgba(62, 151, 255, 0.12);
+        outline: none;
+    }
+    #jrwrap .jero-title-input-box:focus-within .jero-title-search-icon {
+        color: #3E97FF;
+    }
+    #jrwrap .jero-title-clear-btn {
+        position: absolute;
+        right: 28px;
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        color: #A1A5B7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.15s;
+    }
+    #jrwrap .jero-title-clear-btn:hover {
+        color: #181C32;
+        background: #F1F1F4;
+    }
+    #jrwrap .jero-title-chevron {
+        position: absolute;
+        right: 10px;
+        color: #A1A5B7;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        transition: transform 0.2s ease, color 0.2s;
+    }
+    #jrwrap .jero-title-select-wrap.is-open .jero-title-chevron {
+        transform: rotate(180deg);
+        color: #3E97FF;
+    }
+    #jrwrap .jero-title-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #FFFFFF;
+        border: 1px solid #E1E3EA;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        animation: jeroDropdownFadeIn 0.15s ease-out;
+    }
+    #jrwrap .jero-title-dropdown.drop-up {
+        top: auto;
+        bottom: calc(100% + 4px);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
+    }
+    @keyframes jeroDropdownFadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    #jrwrap .jero-title-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 6px 10px;
+        background: #FFFFFF;
+        border-bottom: 1px solid #F1F1F4;
+    }
+    #jrwrap .jero-title-tab-btn {
+        font-size: 11px;
+        font-weight: 500;
+        color: #7E8299;
+        background: none;
+        border: none;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    #jrwrap .jero-title-tab-btn:hover {
+        color: #181C32;
+        background: #F1F1F4;
+    }
+    #jrwrap .jero-title-tab-btn.active {
+        background: #EEF6FF;
+        color: #3E97FF;
+        font-weight: 600;
+    }
+    #jrwrap .jero-title-tab-btn .tab-count {
+        font-size: 10px;
+        opacity: 0.85;
+        padding: 1px 5px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+    }
+    #jrwrap .jero-title-tab-btn.active .tab-count {
+        background: rgba(62, 151, 255, 0.15);
+    }
+    #jrwrap .jero-title-list-container {
+        max-height: min(280px, 42vh);
+        overflow-y: auto;
+        padding: 4px 0;
+        scrollbar-width: thin;
+        scrollbar-color: #D1D5DB transparent;
+    }
+    #jrwrap .jero-title-list-container::-webkit-scrollbar {
+        width: 5px;
+    }
+    #jrwrap .jero-title-list-container::-webkit-scrollbar-thumb {
+        background: #D1D5DB;
+        border-radius: 3px;
+    }
+    #jrwrap .jero-title-section-header {
+        padding: 6px 12px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #A1A5B7;
+    }
+    #jrwrap .jero-title-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: background 0.1s, border-color 0.1s;
+    }
+    #jrwrap .jero-title-item:hover,
+    #jrwrap .jero-title-item.focused {
+        background: #F8F9FA;
+        border-left-color: #3E97FF;
+    }
+    #jrwrap .jero-title-item.selected {
+        background: #F1F7FF;
+        border-left-color: #3E97FF;
+    }
+    #jrwrap .jero-title-item-main {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+    #jrwrap .jero-title-item-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #181C32;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #jrwrap .jero-title-item-name mark {
+        background: #FFF3CD;
+        color: #181C32;
+        padding: 0 1px;
+        border-radius: 2px;
+    }
+    #jrwrap .jero-title-item-sub {
+        font-size: 11px;
+        color: #7E8299;
+    }
+    #jrwrap .jero-title-item-side {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-title-badge {
+        font-size: 10px;
+        font-weight: 500;
+        padding: 2px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+    #jrwrap .badge-autofill {
+        background: #ECFDF5;
+        color: #059669;
+        border: 1px solid #A7F3D0;
+    }
+    #jrwrap .badge-exp {
+        background: #F1F5F9;
+        color: #475569;
+    }
+    #jrwrap .badge-source-org {
+        background: #EFF6FF;
+        color: #2563EB;
+    }
+    #jrwrap .badge-source-std {
+        background: #F8FAFC;
+        color: #64748B;
+    }
+    #jrwrap .jero-title-item-check {
+        color: #3E97FF;
+        display: flex;
+        align-items: center;
+    }
+    #jrwrap .jero-title-custom-action {
+        padding: 6px 10px;
+        border-top: 1px solid #F1F1F4;
+        background: #FAFAFB;
+    }
+    #jrwrap .jero-title-custom-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #FFFFFF;
+        border: 1px dashed #CBD5E1;
+        transition: all 0.15s;
+    }
+    #jrwrap .jero-title-custom-pill:hover,
+    #jrwrap .jero-title-custom-pill.focused {
+        border-color: #3E97FF;
+        background: #F0F7FF;
+    }
+    #jrwrap .jero-title-custom-pill .custom-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        background: #E0F2FE;
+        color: #0284C7;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-title-custom-pill .custom-text-wrap {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    #jrwrap .jero-title-custom-pill .custom-title-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1E293B;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #jrwrap .jero-title-custom-pill .custom-title-sub {
+        font-size: 10px;
+        color: #64748B;
+    }
+    #jrwrap .jero-title-empty-state {
+        padding: 18px 12px;
+        text-align: center;
+        color: #64748B;
+        font-size: 12px;
+    }
+    #jrwrap .jero-title-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px;
+        background: #FAFAFB;
+        border-top: 1px solid #F1F1F4;
+        font-size: 10px;
+        color: #94A3B8;
+    }
+    #jrwrap .jero-title-sync-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #0284C7;
+        font-weight: 500;
+    }
+    #jrwrap .jero-title-footer-hint {
+        color: #94A3B8;
+    }
+    /* Safe Auto-Fill Transactional Undo Snackbar */
+    #jrwrap .jero-autofill-undo-toast {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 6px;
+        padding: 6px 12px;
+        background: #F0FDF4;
+        border: 1px solid #86EFAC;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #166534;
+        animation: jeroToastIn 0.2s ease;
+    }
+    @keyframes jeroToastIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    #jrwrap .jero-autofill-undo-toast .undo-icon {
+        display: flex;
+        align-items: center;
+        color: #16A34A;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-autofill-undo-toast .undo-msg {
+        flex: 1;
+        font-weight: 500;
+    }
+    #jrwrap .jero-autofill-undo-toast .undo-btn {
+        background: #DCFCE7;
+        border: 1px solid #86EFAC;
+        color: #15803D;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    #jrwrap .jero-autofill-undo-toast .undo-btn:hover {
+        background: #BBF7D0;
+    }
+    /* Non-blocking Conflict Confirmation Dialog */
+    #jrwrap .jero-autofill-confirm-dialog {
+        margin-top: 6px;
+        padding: 10px 14px;
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-radius: 6px;
+        animation: jeroToastIn 0.2s ease;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #92400E;
+        margin-bottom: 2px;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-sub {
+        font-size: 11px;
+        color: #B45309;
+        margin-bottom: 8px;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-actions {
+        display: flex;
+        gap: 8px;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-btn {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.15s;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-keep {
+        background: #FFFFFF;
+        border-color: #D1D5DB;
+        color: #374151;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-keep:hover {
+        background: #F3F4F6;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-apply {
+        background: #F59E0B;
+        color: #FFFFFF;
+        border-color: #D97706;
+    }
+    #jrwrap .jero-autofill-confirm-dialog .confirm-apply:hover {
+        background: #D97706;
+    }
 
     /* Toast (global, top-right) */
     .jr-toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; font-family:'Poppins',sans-serif; }
@@ -1204,7 +1615,7 @@
                             </div>
                             <div class="form-grid">
                                 <div class="form-group-cus" id="form_group_client_select" style="position:relative;">
-                                    <label class="form-label required">Select Client</label>
+                                    <label class="form-label required">Hiring Organization</label>
                                     <?php
                                     $selected_client_id = 0;
                                     if (isset($job->client_id) && $job->client_id > 0) { $selected_client_id = (int) $job->client_id; }
@@ -1215,9 +1626,9 @@
                                     <?php } else { ?>
                                     <select class="form-select jero-legacy-client-select" id="client_id" name="client_id" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0; margin: 0; padding: 0; border: 0; z-index: -1;">
                                     @if (@$direct_add)
-                                        <option value="">Select Client</option>
+                                        <option value="">Select Hiring Organization</option>
                                     @endif
-                                        <optgroup label="Internal">
+                                        <optgroup label="My Organization">
                                             <?php
                                             foreach ($client as $clientarr) {
                                                 if ($clientarr->self_company) {
@@ -1247,19 +1658,19 @@
 
                                     <!-- God-Level Enterprise Client Select Component (Client-First, User RAM & IndexedDB) -->
                                     <div class="jero-client-select-wrap" id="jero_client_select_wrap">
-                                        <div class="jero-client-trigger" id="jero_client_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Select Client">
+                                        <div class="jero-client-trigger" id="jero_client_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Select Hiring Organization">
                                             <div class="jero-client-trigger-content">
                                                 <div class="jero-client-avatar" id="jero_trigger_avatar">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
                                                 </div>
                                                 <div class="jero-client-info">
-                                                    <span class="jero-client-label placeholder" id="jero_trigger_label">Select Client</span>
+                                                    <span class="jero-client-label placeholder" id="jero_trigger_label">Select Hiring Organization</span>
                                                     <span class="jero-client-sub" id="jero_trigger_sub" style="display:none;"></span>
                                                 </div>
                                                 <span class="jero-client-badge" id="jero_trigger_badge" style="display:none;"></span>
                                             </div>
                                             <div class="jero-client-trigger-actions">
-                                                <button type="button" class="jero-client-clear-btn" id="jero_trigger_clear" title="Clear selection" style="display:none;" aria-label="Clear client selection">
+                                                <button type="button" class="jero-client-clear-btn" id="jero_trigger_clear" title="Clear selection" style="display:none;" aria-label="Clear organization selection">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                                 </button>
                                                 <span class="jero-client-chevron" id="jero_trigger_chevron">
@@ -1273,7 +1684,7 @@
                                             <!-- Sticky Search Bar -->
                                             <div class="jero-client-search-box">
                                                 <svg class="jero-client-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                                <input type="text" class="jero-client-search-input" id="jero_client_search_input" placeholder="Search client name, industry, code..." autocomplete="off">
+                                                <input type="text" class="jero-client-search-input" id="jero_client_search_input" placeholder="Search company, organization, industry, code..." autocomplete="off">
                                                 <button type="button" class="jero-client-search-clear" id="jero_search_clear" style="display:none;" aria-label="Clear search">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                                 </button>
@@ -1281,8 +1692,8 @@
 
                                             <!-- Category Segment Tabs -->
                                             <div class="jero-client-tabs">
-                                                <button type="button" class="jero-tab-btn active" data-filter="all">All <span class="tab-count" id="jero_count_all">0</span></button>
-                                                <button type="button" class="jero-tab-btn" data-filter="internal">Internal <span class="tab-count" id="jero_count_internal">0</span></button>
+                                                <button type="button" class="jero-tab-btn active" data-filter="all">All Companies <span class="tab-count" id="jero_count_all">0</span></button>
+                                                <button type="button" class="jero-tab-btn" data-filter="internal">My Organization <span class="tab-count" id="jero_count_internal">0</span></button>
                                                 <button type="button" class="jero-tab-btn" data-filter="client">Clients <span class="tab-count" id="jero_count_clients">0</span></button>
                                             </div>
 
@@ -1291,7 +1702,7 @@
                                                 <div class="jero-virtual-phantom" id="jero_virtual_phantom" style="height: 0px;">
                                                     <div class="jero-virtual-window" id="jero_virtual_window" style="transform: translateY(0px);">
                                                         <div class="jero-client-loading" style="padding: 16px; text-align: center; color: #7E8299; font-size: 12px;">
-                                                            Loading clients...
+                                                            Loading organizations...
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1307,7 +1718,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="form-hint">*Please select the client with openings</span>
+                                    <span class="form-hint">*Please select the hiring organization with openings</span>
                                     <?php } ?>
                                 </div>
                                 <div class="form-group-cus" style="position:relative;">
@@ -1323,15 +1734,95 @@
                                             </svg>Add Address
                                         </a>
                                     </div>
-                                    <span class="form-hint">Please select the address of your company/client</span>
+                                    <span class="form-hint">Please select the address of your organization/client</span>
                                 </div>
-                                <div class="form-group-cus" style="position:relative;">
-                                    <label class="form-label required">Job Title / Designation</label>
-                                    <input type="text" class="form-input" id="title" name="title" value="<?php echo @$job->title; ?>" placeholder="e.g. Senior Java Developer" onkeyup="getSuggestions(this.value)" autocomplete="off">
-                                    <div id="suggestions" style="display:none;">
-                                        <ul id="suggestions-list"></ul>
+                                <div class="form-group-cus jero-title-form-group" style="position:relative;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                        <label class="form-label required mb-0">Job Title / Designation</label>
+                                        <span class="jero-title-status-chip" id="jero_title_status_chip" style="display:none;">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span id="jero_title_status_text">Template active</span>
+                                        </span>
                                     </div>
-                                    <span class="form-hint">*Please enter the job title or designation of the openings.</span>
+
+                                    <!-- Combobox Container -->
+                                    <div class="jero-title-select-wrap" id="jero_title_select_wrap">
+                                        <div class="jero-title-input-box" id="jero_title_input_box">
+                                            <svg class="jero-title-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                            </svg>
+                                            <input type="text" 
+                                                   class="form-input jero-title-input" 
+                                                   id="title" 
+                                                   name="title" 
+                                                   value="<?php echo @$job->title; ?>" 
+                                                   placeholder="Search or enter job title" 
+                                                   autocomplete="off" 
+                                                   role="combobox" 
+                                                   aria-autocomplete="list" 
+                                                   aria-expanded="false" 
+                                                   aria-controls="jero_title_dropdown" 
+                                                   aria-haspopup="listbox">
+                                            <button type="button" class="jero-title-clear-btn" id="jero_title_clear_btn" style="display:none;" aria-label="Clear job title" title="Clear">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            </button>
+                                            <div class="jero-title-chevron" id="jero_title_chevron">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Decision-Centric Dropdown Menu -->
+                                        <div class="jero-title-dropdown" id="jero_title_dropdown" style="display:none;" role="listbox" aria-label="Job Titles">
+                                            <!-- Category Segment Tabs (All | My Organization | Standard Library) -->
+                                            <div class="jero-title-tabs">
+                                                <button type="button" class="jero-title-tab-btn active" data-filter="all">All <span class="tab-count" id="jero_title_count_all">0</span></button>
+                                                <button type="button" class="jero-title-tab-btn" data-filter="company">My Organization <span class="tab-count" id="jero_title_count_company">0</span></button>
+                                                <button type="button" class="jero-title-tab-btn" data-filter="standard">Standard Library <span class="tab-count" id="jero_title_count_standard">0</span></button>
+                                            </div>
+
+                                            <!-- Scrollable Options List Container -->
+                                            <div class="jero-title-list-container" id="jero_title_list_container">
+                                                <!-- Dynamically populated by JeroTitleIntelligenceEngine -->
+                                            </div>
+
+                                            <!-- Custom Title Action Pill -->
+                                            <div class="jero-title-custom-action" id="jero_title_custom_action" style="display:none;">
+                                                <div class="jero-title-custom-pill" id="jero_title_custom_pill">
+                                                    <span class="custom-icon">+</span>
+                                                    <div class="custom-text-wrap">
+                                                        <div class="custom-title-label">Use "<span id="jero_custom_title_text"></span>" as custom title</div>
+                                                        <div class="custom-title-sub">Enter job description and skills manually</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Sticky Footer Bar -->
+                                            <div class="jero-title-footer">
+                                                <span class="jero-title-sync-status" id="jero_title_sync_status"></span>
+                                                <span class="jero-title-footer-hint">↑↓ Navigate · ↵ Select · Esc Close</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="form-hint">*Select from the library for automated JD & skills, or enter a custom designation.</span>
+
+                                    <!-- Safe Auto-Fill Transactional Undo Snackbar -->
+                                    <div class="jero-autofill-undo-toast" id="jero_autofill_undo_toast" style="display:none;">
+                                        <span class="undo-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                        <span class="undo-msg">Template applied: Description • Experience • Skills</span>
+                                        <button type="button" class="undo-btn" id="jero_autofill_undo_btn">Undo</button>
+                                    </div>
+
+                                    <!-- Non-blocking Conflict Confirmation Dialog -->
+                                    <div class="jero-autofill-confirm-dialog" id="jero_autofill_confirm_dialog" style="display:none;">
+                                        <div class="confirm-content">
+                                            <div class="confirm-title">Job description already contains custom content.</div>
+                                            <div class="confirm-sub">Do you want to replace it with the standard template or keep your custom writing?</div>
+                                            <div class="confirm-actions">
+                                                <button type="button" class="confirm-btn confirm-keep" id="jero_confirm_keep_btn">Keep My Writing</button>
+                                                <button type="button" class="confirm-btn confirm-apply" id="jero_confirm_apply_btn">Apply Template</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group-cus">
                                     <label class="form-label required">Job Department</label>
@@ -2473,7 +2964,7 @@
                                                 <span class="r4-row-icon r4-icon-blue">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
                                                 </span>
-                                                <span class="r4-label">Client</span>
+                                                <span class="r4-label">Hiring Organization</span>
                                             </div>
                                             <div class="r4-kv-val" id="rvClient">-</div>
                                         </div>
@@ -3266,38 +3757,20 @@
     <script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}<?php echo TM_VERSION; ?>"></script>
 
     <script>
-        // ---- Job title suggestions (original) ----
+        // ---- Job title suggestions forwarders (backward compatibility) ----
         function getSuggestions(query) {
-            if (query.length > 2) {
-                $.ajax({
-                    url: "{{ url('service_company/') }}" + '/get-job-suggestions',
-                    type: 'GET',
-                    data: { search: query },
-                    success: function(data) {
-                        let suggestions = data;
-                        $('#suggestions-list').empty();
-                        if (suggestions.length > 0) {
-                            $('#suggestions').show();
-                            suggestions.forEach(function(suggestion) {
-                                $('#suggestions-list').append('<li onclick="selectSuggestion(\'' + suggestion + '\')">' + suggestion + '</li>');
-                            });
-                        } else { $('#suggestions').hide(); }
-                    }
-                });
-            } else { $('#suggestions').hide(); }
+            if (window.JeroTitleIntelligenceEngine) {
+                window.JeroTitleIntelligenceEngine.search(query);
+            }
         }
 
-        $(document).click(function(event) {
-            const target = $(event.target);
-            if (!target.closest('#suggestions').length && !target.is('#title')) { $('#suggestions').hide(); }
-        });
-
-        $(document).on('change', '#title', function() { changeautofillfield(); });
-
         function selectSuggestion(suggestion) {
-            $('#title').val(suggestion);
-            $('#suggestions').hide();
-            changeautofillfield();
+            if (window.JeroTitleIntelligenceEngine) {
+                window.JeroTitleIntelligenceEngine.selectByTitle(suggestion);
+            } else {
+                $('#title').val(suggestion);
+                changeautofillfield();
+            }
         }
 
         $(document).ready(function() {
@@ -3453,7 +3926,7 @@
                     $('#light_address_caption').html(strVal.toUpperCase());
                     $('#light_address_caption').addClass(bgTextDecore);
                 } else {
-                    Swal.fire({ title: 'Warning', text: 'Please Select client', icon: 'warning', allowOutsideClick: false });
+                    Swal.fire({ title: 'Warning', text: 'Please select Hiring Organization', icon: 'warning', allowOutsideClick: false });
                 }
             });
 
@@ -3536,7 +4009,7 @@
                     window.__BYPASS_NEXT_CLIENT_AJAX__ = false;
                     return;
                 }
-                $('#address_id').html('<option value="">Select the address</option>');
+                $('#address_id').html('<option value="">Select Address</option>');
                 if (!id || id <= 0) {
                     $('.address_show').hide();
                     return;
@@ -3548,6 +4021,9 @@
                     success: function(response) {
                         if (response.address_show) { $('.address_show').show(); } else { $('.address_show').hide(); }
                         $('#address_id').html(response.locArr);
+                        if (typeof window.sanitizeAddressSelectOptions === 'function') {
+                            window.sanitizeAddressSelectOptions();
+                        }
                     }
                 });
             }).change();
@@ -4067,10 +4543,18 @@
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
 
-        // ---- Auto-fill JD from title (original, adapted to contenteditable + skills chips) ----
+        // ---- Auto-fill JD from title (safe client-first execution + AJAX fallback) ----
         function changeautofillfield() {
+            var rawTitle = ($('#title').val() || '').trim();
+            if (!rawTitle) return;
+
+            if (window.JeroTitleIntelligenceEngine && window.JeroTitleIntelligenceEngine.hasLocalTemplate(rawTitle)) {
+                window.JeroTitleIntelligenceEngine.applyLocalTemplate(rawTitle);
+                return;
+            }
+
             var data = new FormData();
-            data.append("title", $('#title').val());
+            data.append("title", rawTitle);
             $.ajax({
                 url: '{{ route('service_company.jobs.jdDetails') }}',
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
@@ -4078,15 +4562,13 @@
                 success: function(data) {
                     if (data.status == 'success') {
                         var ed = document.getElementById('jobDescription');
-                        // Only auto-fill description when it is empty (new job); skip on edit to preserve existing JD
                         var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
                         if (ed && currentDesc === '') {
                             ed.innerHTML = data.jd || '';
                             syncDescription();
                         }
-                        $("#min_exp").val(data.minimum_exp).change();
-                        $("#max_exp").val(data.maxmum_exp).change();
-                        // Only auto-fill skills when none are already added
+                        if (data.minimum_exp !== null && data.minimum_exp !== '') $("#min_exp").val(data.minimum_exp).change();
+                        if (data.maxmum_exp !== null && data.maxmum_exp !== '') $("#max_exp").val(data.maxmum_exp).change();
                         if (data.skills && skills.length === 0) {
                             (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
                             renderSkills();
@@ -4300,7 +4782,7 @@
             var fail = function(id, msg) { showToast(msg, 'error'); focusEl(id); return false; };
 
             if (step === 1) {
-                if (!val('client_id'))          return fail('client_id', 'Please select a Client');
+                if (!val('client_id'))          return fail('client_id', 'Please select a Hiring Organization');
                 if (!val('address_id'))         return fail('address_id', 'Please select an Address');
                 if (!val('title'))              return fail('title', 'Please enter the Job Title / Designation');
                 if (!val('category_id'))        return fail('category_id', 'Please select a Job Department');
@@ -6078,21 +6560,64 @@
                 .replace(/'/g, '&#039;');
         }
 
+        /**
+         * Standard enterprise title-casing for location names, cities, states, countries, and addresses.
+         * Formats 1st letter in capital across words while preserving standard acronyms (USA, UK, etc.).
+         */
+        function formatTitleCase(str) {
+            if (!str) return '';
+            var acronyms = { 'usa': 'USA', 'uk': 'UK', 'uae': 'UAE', 'ncr': 'NCR', 'ii': 'II', 'iii': 'III', 'iv': 'IV' };
+            return String(str).replace(/\b[a-zA-Z]+(?:\b|(?=[,\/\-\(\)]))/g, function(word) {
+                var lower = word.toLowerCase();
+                if (acronyms[lower]) return acronyms[lower];
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+        }
+
+        /**
+         * Enforces standard 1st letter capital across all options in the Address dropdown.
+         */
+        function sanitizeAddressSelectOptions() {
+            var $select = $('#address_id');
+            if (!$select.length) return;
+            $select.find('option').each(function() {
+                var val = $(this).val();
+                var text = $(this).text();
+                if (!val) {
+                    if (text !== 'Select Address' && text !== 'No Address') {
+                        $(this).text('Select Address');
+                    }
+                    return;
+                }
+                $(this).text(formatTitleCase(text));
+            });
+        }
+        window.sanitizeAddressSelectOptions = sanitizeAddressSelectOptions;
+
         // Schema Normalizer: decodes Option A envelope keys { id, n, t, s, i, c, l, loc, cc }
         function normalizeClient(c) {
             if (!c) return null;
             var name = c.n || c.name || '';
             var cleanChars = name.replace(/[^A-Za-z0-9]/g, '');
             var code = c.c || c.code || cleanChars.substring(0, 4).toUpperCase();
+            var locs = [];
+            if (c.loc && Array.isArray(c.loc)) {
+                locs = c.loc.map(function(l) {
+                    return {
+                        id: parseInt(l.id, 10),
+                        l: formatTitleCase(l.l || l.label || l.address || '')
+                    };
+                });
+            }
             return {
                 id: parseInt(c.id, 10),
                 name: name,
                 self_company: (c.t !== undefined ? !!c.t : (c.self_company !== undefined ? !!c.self_company : false)),
                 status: (c.s !== undefined ? parseInt(c.s, 10) : (c.status !== undefined ? parseInt(c.status, 10) : 1)),
-                industry: c.i || c.industry || '',
+                industry: formatTitleCase(c.i || c.industry || ''),
                 code: code,
                 logo: c.l || c.logo || '',
-                loc: c.loc || [],
+                loc: locs,
                 cc: c.cc || []
             };
         }
@@ -6100,7 +6625,7 @@
         // =========================================================================
         // L2 IndexedDB Store (Multi-Tenant & Security Hardened Partitioning)
         // =========================================================================
-        var DB_NAME = 'jero_service_clients_db_v5';
+        var DB_NAME = 'jero_service_clients_db_v6';
         var DB_VERSION = 1;
         var dbPromise = null;
 
@@ -6400,7 +6925,8 @@
             if (locList && Array.isArray(locList) && locList.length > 0) {
                 var html = '<option value="">Select Address</option>';
                 locList.forEach(function(loc) {
-                    var label = loc.l || loc.label || loc.address || 'Registered Location';
+                    var rawLabel = loc.l || loc.label || loc.address || 'Registered Location';
+                    var label = formatTitleCase(rawLabel);
                     html += '<option value="' + loc.id + '">' + escapeHtml(label) + '</option>';
                 });
                 $addressSelect.html(html);
@@ -6471,8 +6997,8 @@
                 phantom.style.height = '0px';
                 win.style.transform = 'translateY(0px)';
                 win.innerHTML = '<div style="padding: 24px 16px; text-align: center; color: #7E8299; font-size: 12px;">' +
-                    '<div style="font-weight: 500; margin-bottom: 4px; color: #181C32;">No clients found</div>' +
-                    '<div>No matching clients for "' + escapeHtml(currentSearch) + '"</div>' +
+                    '<div style="font-weight: 500; margin-bottom: 4px; color: #181C32;">No organizations found</div>' +
+                    '<div>No matching organizations for "' + escapeHtml(currentSearch) + '"</div>' +
                     '</div>';
                 lastStartIndex = -1;
                 lastEndIndex = -1;
@@ -6543,7 +7069,7 @@
                 avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';">' + getInitials(c.name) + '</div>';
             }
 
-            var badgeText = c.self_company ? 'Internal' : 'Client';
+            var badgeText = c.self_company ? 'My Organization' : 'Client';
             var badgeClass = c.self_company ? 'badge-internal' : 'badge-client';
             if (c.status === 0) {
                 badgeText = 'Inactive';
@@ -6553,9 +7079,9 @@
                 badgeClass = 'badge-recent';
             }
 
-            var subText = c.industry ? c.industry : (c.self_company ? 'Internal Organization' : 'External Client');
+            var subText = c.industry ? formatTitleCase(c.industry) : (c.self_company ? 'My Organization' : 'Client');
             if (c.loc && c.loc.length > 0) {
-                subText = c.loc[0].l || subText;
+                subText = formatTitleCase(c.loc[0].l) || subText;
             }
 
             return '<div class="jero-client-item ' + (isSel ? 'selected ' : '') + (isFocused ? 'focused ' : '') + '" data-id="' + c.id + '" role="option" aria-selected="' + (isSel ? 'true' : 'false') + '">' +
@@ -6657,7 +7183,7 @@
             var $nativeSelect = $('#client_id');
             if ($nativeSelect.length) {
                 $nativeSelect.val('');
-                $('#address_id').html('<option value="">Select the address</option>');
+                $('#address_id').html('<option value="">Select Address</option>');
                 $('.address_show').hide();
                 window.__BYPASS_NEXT_CLIENT_AJAX__ = true;
                 $nativeSelect.trigger('change');
@@ -6709,7 +7235,7 @@
                 badgeEl.style.display = 'inline-block';
                 if (client.self_company) {
                     badgeEl.className = 'jero-client-badge badge-internal';
-                    badgeEl.textContent = 'Internal';
+                    badgeEl.textContent = 'My Organization';
                 } else {
                     badgeEl.className = 'jero-client-badge badge-client';
                     badgeEl.textContent = 'Client';
@@ -6722,7 +7248,7 @@
                     subEl.textContent = locCount === 1 ? '1 Registered Address' : locCount + ' Registered Addresses';
                     subEl.style.display = 'block';
                 } else if (client.industry) {
-                    subEl.textContent = client.industry;
+                    subEl.textContent = formatTitleCase(client.industry);
                     subEl.style.display = 'block';
                 } else {
                     subEl.style.display = 'none';
@@ -6753,7 +7279,7 @@
             if (trigger) trigger.classList.remove('selection-invalid');
 
             if (labelEl) {
-                labelEl.textContent = 'Select Client';
+                labelEl.textContent = 'Select Hiring Organization';
                 labelEl.classList.add('placeholder');
             }
             if (avatarEl) {
@@ -7141,8 +7667,10 @@
                 }
             });
 
-            // Boundary recalculation on scroll or resize
-            window.addEventListener('resize', positionPopover, { passive: true });
+            // Address change auto-sanitization to maintain Title Case
+            $(document).on('change', '#address_id', function() {
+                sanitizeAddressSelectOptions();
+            });
         }
 
         // Global export for backward compatibility & cross-module inspection
@@ -7165,11 +7693,934 @@
                 initCacheAndHydrate();
                 initEventListeners();
                 initReverbListener();
+                sanitizeAddressSelectOptions();
             });
         } else {
             initCacheAndHydrate();
             initEventListeners();
             initReverbListener();
+            sanitizeAddressSelectOptions();
+        }
+    })();
+    </script>
+
+    <!-- =========================================================================
+         Job Title Intelligence Engine (Client-First Execution / 10K Concurrency)
+         ========================================================================= -->
+    <script id="jero_titles_seed_data" type="application/json">
+        {!! json_encode(@$titlesManifest ?? ['manifest_id'=>'empty','version'=>1,'titles'=>[]]) !!}
+    </script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        var CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+        var BUNDLE_URL = "{{ route('service_company.jobs.jobTitlesBundle') }}";
+
+        // Internal State
+        var titlesList = [];
+        var titlesMap = new Map();
+        var tokenIndex = new Map();
+        var currentSearch = '';
+        var currentFilter = 'all'; // 'all' | 'company' | 'standard'
+        var focusedIndex = -1;
+        var currentMatches = [];
+        var isOpen = false;
+        var priorSnapshot = null;
+        var undoTimer = null;
+        var pendingTemplateItem = null;
+        var indexBroadcast = null;
+
+        // Synonym Intelligence Dictionary
+        var TITLE_SYNONYMS = {
+            'sde': ['software development engineer', 'software engineer'],
+            'dev': ['developer', 'engineer'],
+            'sr': ['senior', 'lead'],
+            'jr': ['junior', 'associate'],
+            'pm': ['product manager', 'project manager'],
+            'qa': ['quality assurance', 'test engineer', 'sdit'],
+            'ui': ['user interface', 'product designer'],
+            'ux': ['user experience', 'product designer'],
+            'backend': ['back end', 'backend developer', 'api developer'],
+            'frontend': ['front end', 'frontend developer', 'ui developer'],
+            'fullstack': ['full stack', 'fullstack developer']
+        };
+
+        // Recency storage key
+        var RECENT_KEY = 'jero_recent_titles_' + CURRENT_USER_ID;
+
+        function getRecentTitles() {
+            try {
+                var raw = localStorage.getItem(RECENT_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveRecentTitle(item) {
+            try {
+                var list = getRecentTitles();
+                list = list.filter(function(r) { return r.id !== item.id && r.title.toLowerCase() !== item.title.toLowerCase(); });
+                list.unshift({
+                    id: item.id,
+                    title: item.title,
+                    dept_name: item.dept_name,
+                    is_standard: item.is_standard,
+                    timestamp: Date.now()
+                });
+                if (list.length > 5) list = list.slice(0, 5);
+                localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // IndexedDB L1 Persistent Storage (JeroLocalStore_v2)
+        // =========================================================================
+        var DB_NAME = 'JeroLocalStore_v2';
+        var STORE_NAME = 'job_titles';
+        var idbInstance = null;
+
+        function openDatabase() {
+            return new Promise(function(resolve, reject) {
+                if (idbInstance) return resolve(idbInstance);
+                if (!window.indexedDB) return reject(new Error('IndexedDB not supported'));
+
+                var req = window.indexedDB.open(DB_NAME, 2);
+                req.onupgradeneeded = function(e) {
+                    var db = e.target.result;
+                    if (!db.objectStoreNames.contains('clients')) {
+                        db.createObjectStore('clients', { keyPath: 'key' });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                    }
+                };
+                req.onsuccess = function(e) {
+                    idbInstance = e.target.result;
+                    resolve(idbInstance);
+                };
+                req.onerror = function(e) {
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function idbGet(key) {
+            return openDatabase().then(function(db) {
+                return new Promise(function(resolve) {
+                    try {
+                        var tx = db.transaction(STORE_NAME, 'readonly');
+                        var store = tx.objectStore(STORE_NAME);
+                        var req = store.get(key);
+                        req.onsuccess = function() { resolve(req.result ? req.result.value : null); };
+                        req.onerror = function() { resolve(null); };
+                    } catch (err) {
+                        resolve(null);
+                    }
+                });
+            }).catch(function() {
+                try {
+                    var fallback = sessionStorage.getItem('idb_fallback_' + key);
+                    return fallback ? JSON.parse(fallback) : null;
+                } catch (e) { return null; }
+            });
+        }
+
+        function idbSet(key, value) {
+            return openDatabase().then(function(db) {
+                return new Promise(function(resolve) {
+                    try {
+                        var tx = db.transaction(STORE_NAME, 'readwrite');
+                        var store = tx.objectStore(STORE_NAME);
+                        store.put({ key: key, value: value });
+                        tx.oncomplete = function() { resolve(true); };
+                        tx.onerror = function() { resolve(false); };
+                    } catch (err) {
+                        resolve(false);
+                    }
+                });
+            }).catch(function() {
+                try {
+                    sessionStorage.setItem('idb_fallback_' + key, JSON.stringify(value));
+                    return true;
+                } catch (e) { return false; }
+            });
+        }
+
+        // =========================================================================
+        // Token Prefix Indexing & Multi-Tier Scoring Engine
+        // =========================================================================
+        function buildInvertedIndex(list) {
+            tokenIndex.clear();
+            titlesMap.clear();
+
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i];
+                titlesMap.set(item.id, item);
+
+                var cleanText = ((item.title || '') + ' ' + (item.dept_name || '')).toLowerCase();
+                var words = cleanText.split(/[^a-z0-9]+/i).filter(Boolean);
+
+                for (var w = 0; w < words.length; w++) {
+                    var word = words[w];
+                    for (var len = 2; len <= word.length; len++) {
+                        var prefix = word.substring(0, len);
+                        var idSet = tokenIndex.get(prefix);
+                        if (!idSet) {
+                            idSet = new Set();
+                            tokenIndex.set(prefix, idSet);
+                        }
+                        idSet.add(item.id);
+                    }
+                }
+            }
+        }
+
+        function levenshteinDistance(a, b, maxDist) {
+            var al = a.length, bl = b.length;
+            if (Math.abs(al - bl) > maxDist) return maxDist + 1;
+            var v0 = new Array(bl + 1);
+            var v1 = new Array(bl + 1);
+            for (var i = 0; i <= bl; i++) v0[i] = i;
+            for (var i = 0; i < al; i++) {
+                v1[0] = i + 1;
+                var minRow = v1[0];
+                for (var j = 0; j < bl; j++) {
+                    var cost = (a[i] === b[j]) ? 0 : 1;
+                    v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+                    if (v1[j + 1] < minRow) minRow = v1[j + 1];
+                }
+                if (minRow > maxDist) return maxDist + 1;
+                for (var j = 0; j <= bl; j++) v0[j] = v1[j];
+            }
+            return v0[bl];
+        }
+
+        function scoreCandidate(item, query, queryTokens, recentIdSet) {
+            var score = 0;
+            var titleLower = (item.title || '').toLowerCase();
+
+            // 1. Exact Substring Match
+            if (titleLower === query) {
+                score += 150;
+            } else if (titleLower.indexOf(query) === 0) {
+                score += 100;
+            } else if (titleLower.indexOf(query) > 0) {
+                score += 70;
+            }
+
+            // 2. Multi-Token Set Match
+            var allTokensMatched = true;
+            for (var t = 0; t < queryTokens.length; t++) {
+                var tok = queryTokens[t];
+                if (titleLower.indexOf(tok) !== -1) {
+                    score += 25;
+                } else {
+                    // Check synonyms
+                    var synonyms = TITLE_SYNONYMS[tok] || [];
+                    var synMatch = false;
+                    for (var s = 0; s < synonyms.length; s++) {
+                        if (titleLower.indexOf(synonyms[s]) !== -1) {
+                            score += 20;
+                            synMatch = true;
+                            break;
+                        }
+                    }
+                    if (!synMatch) allTokensMatched = false;
+                }
+            }
+            if (allTokensMatched) score += 30;
+
+            // 3. Organization / Standard Bonus
+            if (item.is_standard === 0) score += 25; // Org boost
+            if (item.has_template === 1) score += 15; // Template boost
+
+            // 4. Recency Bonus
+            if (recentIdSet.has(item.id)) score += 35;
+
+            // 5. Typo tolerance fallback if score is low
+            if (score < 40 && query.length >= 4) {
+                var words = titleLower.split(/\s+/);
+                for (var w = 0; w < words.length; w++) {
+                    if (levenshteinDistance(words[w], query, 2) <= 1) {
+                        score += 20;
+                        break;
+                    }
+                }
+            }
+
+            return score;
+        }
+
+        function searchTitles(query, filter) {
+            var baseList = titlesList;
+            if (filter === 'company') {
+                baseList = titlesList.filter(function(r) { return r.is_standard === 0; });
+            } else if (filter === 'standard') {
+                baseList = titlesList.filter(function(r) { return r.is_standard === 1; });
+            }
+
+            var recentItems = getRecentTitles();
+            var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
+
+            var cleanQ = (query || '').trim().toLowerCase();
+            if (!cleanQ) {
+                // Empty query: Return recent items first, then popular standard titles
+                return baseList.slice(0, 30);
+            }
+
+            var queryTokens = cleanQ.split(/[^a-z0-9]+/i).filter(Boolean);
+            if (queryTokens.length === 0) return baseList.slice(0, 30);
+
+            var scored = [];
+            for (var i = 0; i < baseList.length; i++) {
+                var item = baseList[i];
+                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet);
+                if (score > 15) {
+                    scored.push({ item: item, score: score });
+                }
+            }
+
+            scored.sort(function(a, b) { return b.score - a.score; });
+            return scored.slice(0, 30).map(function(s) { return s.item; });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function highlightMatch(text, query) {
+            if (!query || !query.trim()) return escapeHtml(text);
+            var safeText = escapeHtml(text);
+            var safeQ = query.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+            var regex = new RegExp('(' + safeQ + ')', 'gi');
+            return safeText.replace(regex, '<mark>$1</mark>');
+        }
+
+        // =========================================================================
+        // Render & Dropdown UI Engine (Top 30 Slice, 0 Virtualization Flicker)
+        // =========================================================================
+        function updateTabCounts() {
+            var stdCount = 0;
+            var orgCount = 0;
+            for (var i = 0; i < titlesList.length; i++) {
+                if (titlesList[i].is_standard === 1) stdCount++;
+                else orgCount++;
+            }
+            var elAll = document.getElementById('jero_title_count_all');
+            var elStd = document.getElementById('jero_title_count_standard');
+            var elComp = document.getElementById('jero_title_count_company');
+            if (elAll) elAll.textContent = titlesList.length;
+            if (elStd) elStd.textContent = stdCount;
+            if (elComp) elComp.textContent = orgCount;
+        }
+
+        function renderDropdownList() {
+            var container = document.getElementById('jero_title_list_container');
+            var customWrap = document.getElementById('jero_title_custom_action');
+            var customText = document.getElementById('jero_custom_title_text');
+            if (!container) return;
+
+            currentMatches = searchTitles(currentSearch, currentFilter);
+            focusedIndex = -1;
+
+            var q = currentSearch.trim();
+            var exactMatchExists = false;
+
+            for (var m = 0; m < currentMatches.length; m++) {
+                if (currentMatches[m].title.toLowerCase() === q.toLowerCase()) {
+                    exactMatchExists = true;
+                    break;
+                }
+            }
+
+            // Render Custom Title Action Pill if user has typed something non-empty and non-exact
+            if (customWrap && customText) {
+                if (q && !exactMatchExists) {
+                    customText.textContent = q;
+                    customWrap.style.display = 'block';
+                } else {
+                    customWrap.style.display = 'none';
+                }
+            }
+
+            if (currentMatches.length === 0) {
+                container.innerHTML = '<div class="jero-title-empty-state">' +
+                    'No standardized titles match "' + escapeHtml(q) + '"' +
+                    '</div>';
+                adjustDropdownPosition();
+                return;
+            }
+
+            var html = '';
+            var recentItems = getRecentTitles();
+            var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
+            var currentVal = ($('#title').val() || '').trim().toLowerCase();
+
+            // When search is empty and viewing 'all', show RECENTLY USED header if available
+            if (!q && currentFilter === 'all' && recentItems.length > 0) {
+                html += '<div class="jero-title-section-header">Recently Used</div>';
+                for (var r = 0; r < recentItems.length; r++) {
+                    var rec = recentItems[r];
+                    var isSel = (rec.title.toLowerCase() === currentVal);
+                    html += buildItemHtml(rec, '', r, isSel, true);
+                }
+                html += '<div class="jero-title-section-header">Standard & Organization Library</div>';
+            }
+
+            for (var i = 0; i < currentMatches.length; i++) {
+                var item = currentMatches[i];
+                var isSelected = (item.title.toLowerCase() === currentVal);
+                html += buildItemHtml(item, q, i, isSelected, false);
+            }
+
+            container.innerHTML = html;
+            adjustDropdownPosition();
+        }
+
+        function buildItemHtml(item, query, index, isSelected, isRecentSection) {
+            var badgeHtml = '';
+            if (item.has_template === 1) {
+                badgeHtml += '<span class="jero-title-badge badge-autofill">Auto-fill ✓</span>';
+            }
+            if (item.min_exp !== null && item.min_exp !== undefined && item.max_exp) {
+                badgeHtml += '<span class="jero-title-badge badge-exp">' + item.min_exp + '–' + item.max_exp + ' yrs</span>';
+            } else if (item.is_standard === 0) {
+                badgeHtml += '<span class="jero-title-badge badge-source-org">My Org</span>';
+            }
+
+            var checkHtml = isSelected
+                ? '<span class="jero-title-item-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>'
+                : '';
+
+            var itemIdxAttr = isRecentSection ? ('data-recent-idx="' + index + '"') : ('data-idx="' + index + '"');
+
+            return '<div class="jero-title-item ' + (isSelected ? 'selected' : '') + '" ' + itemIdxAttr + ' data-id="' + item.id + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-title-item-main">' +
+                    '<div class="jero-title-item-name">' + highlightMatch(item.title, query) + '</div>' +
+                    '<div class="jero-title-item-sub">' + escapeHtml(item.dept_name || 'Standard Library') + '</div>' +
+                '</div>' +
+                '<div class="jero-title-item-side">' +
+                    badgeHtml +
+                    checkHtml +
+                '</div>' +
+            '</div>';
+        }
+
+        function adjustDropdownPosition() {
+            var wrap = document.getElementById('jero_title_select_wrap');
+            var dropdown = document.getElementById('jero_title_dropdown');
+            if (!wrap || !dropdown || !isOpen) return;
+
+            var rect = wrap.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 280 && rect.top > 280) {
+                dropdown.classList.add('drop-up');
+            } else {
+                dropdown.classList.remove('drop-up');
+            }
+        }
+
+        function openDropdown() {
+            var dropdown = document.getElementById('jero_title_dropdown');
+            var wrap = document.getElementById('jero_title_select_wrap');
+            var input = document.getElementById('title');
+            if (!dropdown || !wrap) return;
+
+            isOpen = true;
+            wrap.classList.add('is-open');
+            dropdown.style.display = 'block';
+            if (input) input.setAttribute('aria-expanded', 'true');
+
+            renderDropdownList();
+        }
+
+        function closeDropdown() {
+            var dropdown = document.getElementById('jero_title_dropdown');
+            var wrap = document.getElementById('jero_title_select_wrap');
+            var input = document.getElementById('title');
+            if (!dropdown || !wrap) return;
+
+            isOpen = false;
+            wrap.classList.remove('is-open');
+            dropdown.style.display = 'none';
+            if (input) input.setAttribute('aria-expanded', 'false');
+            focusedIndex = -1;
+        }
+
+        // =========================================================================
+        // Safe Auto-Fill Contract & Transactional Undo Protocol
+        // =========================================================================
+        function showUndoToast(msg) {
+            var toast = document.getElementById('jero_autofill_undo_toast');
+            if (!toast) return;
+
+            clearTimeout(undoTimer);
+            toast.querySelector('.undo-msg').textContent = msg || 'Template applied: Description • Experience • Skills';
+            toast.style.display = 'flex';
+
+            undoTimer = setTimeout(function() {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+
+        function hideUndoToast() {
+            var toast = document.getElementById('jero_autofill_undo_toast');
+            if (toast) toast.style.display = 'none';
+            clearTimeout(undoTimer);
+        }
+
+        function performUndo() {
+            if (!priorSnapshot) return;
+
+            $('#title').val(priorSnapshot.title);
+            var ed = document.getElementById('jobDescription');
+            if (ed) {
+                ed.innerHTML = priorSnapshot.jd;
+                if (typeof syncDescription === 'function') syncDescription();
+            }
+            if (priorSnapshot.min_exp !== undefined) $('#min_exp').val(priorSnapshot.min_exp).change();
+            if (priorSnapshot.max_exp !== undefined) $('#max_exp').val(priorSnapshot.max_exp).change();
+
+            if (Array.isArray(priorSnapshot.skills) && typeof skills !== 'undefined') {
+                skills.length = 0;
+                priorSnapshot.skills.forEach(function(s) { skills.push(s); });
+                if (typeof renderSkills === 'function') renderSkills();
+            }
+
+            hideUndoToast();
+            updateStatusChip(false);
+            priorSnapshot = null;
+        }
+
+        function updateStatusChip(isActive, isCustom) {
+            var chip = document.getElementById('jero_title_status_chip');
+            var text = document.getElementById('jero_title_status_text');
+            if (!chip || !text) return;
+
+            if (isActive) {
+                chip.style.display = 'inline-flex';
+                chip.style.background = isCustom ? '#F1F5F9' : '#ECFDF5';
+                chip.style.borderColor = isCustom ? '#CBD5E1' : '#A7F3D0';
+                chip.style.color = isCustom ? '#475569' : '#10B981';
+                text.textContent = isCustom ? 'Custom designation' : 'Template active';
+            } else {
+                chip.style.display = 'none';
+            }
+        }
+
+        function applyTemplateSafely(item, forceOverwrite) {
+            var ed = document.getElementById('jobDescription');
+            var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
+            var currentSkills = (typeof skills !== 'undefined' && Array.isArray(skills)) ? [...skills] : [];
+
+            priorSnapshot = {
+                title: $('#title').val(),
+                jd: ed ? ed.innerHTML : '',
+                min_exp: $('#min_exp').val(),
+                max_exp: $('#max_exp').val(),
+                skills: currentSkills
+            };
+
+            // Detect if user has manually entered custom copy in JD
+            if (!forceOverwrite && currentDesc !== '' && item.jd && item.jd.trim() !== '') {
+                pendingTemplateItem = item;
+                var dialog = document.getElementById('jero_autofill_confirm_dialog');
+                if (dialog) dialog.style.display = 'block';
+                return;
+            }
+
+            // Apply Description
+            if (item.jd && (currentDesc === '' || forceOverwrite)) {
+                if (ed) {
+                    ed.innerHTML = item.jd;
+                    if (typeof syncDescription === 'function') syncDescription();
+                }
+            }
+
+            // Apply Experience
+            if (item.min_exp !== null && item.min_exp !== undefined) {
+                $('#min_exp').val(item.min_exp).change();
+            }
+            if (item.max_exp !== null && item.max_exp !== undefined) {
+                $('#max_exp').val(item.max_exp).change();
+            }
+
+            // Apply Skills (Merge unique)
+            if (item.skills && typeof skills !== 'undefined') {
+                var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                var existingSet = new Set(skills.map(function(s) { return s.toLowerCase(); }));
+                var added = false;
+                newSkills.forEach(function(s) {
+                    if (!existingSet.has(s.toLowerCase())) {
+                        skills.push(s);
+                        existingSet.add(s.toLowerCase());
+                        added = true;
+                    }
+                });
+                if (added && typeof renderSkills === 'function') renderSkills();
+            }
+
+            showUndoToast('Template applied: Description • Experience • Skills');
+            updateStatusChip(true, false);
+        }
+
+        function selectItem(item) {
+            if (!item) return;
+
+            $('#title').val(item.title);
+            saveRecentTitle(item);
+            closeDropdown();
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = 'flex';
+
+            if (item.has_template === 1) {
+                applyTemplateSafely(item, false);
+            } else {
+                updateStatusChip(true, true);
+            }
+
+            trackTelemetry('title_selected', { id: item.id, title: item.title, is_standard: item.is_standard });
+        }
+
+        function selectCustomTitle(customTitle) {
+            var clean = (customTitle || '').trim();
+            if (!clean) return;
+
+            $('#title').val(clean);
+            closeDropdown();
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = 'flex';
+
+            updateStatusChip(true, true);
+            trackTelemetry('custom_title_created', { title: clean });
+        }
+
+        function trackTelemetry(event, payload) {
+            try {
+                var buffer = JSON.parse(sessionStorage.getItem('jero_title_telemetry') || '[]');
+                buffer.push({ event: event, payload: payload, ts: Date.now() });
+                if (buffer.length > 20) buffer = buffer.slice(-20);
+                sessionStorage.setItem('jero_title_telemetry', JSON.stringify(buffer));
+            } catch (e) {}
+        }
+
+        function ingestManifest(manifest) {
+            if (!manifest || !Array.isArray(manifest.titles)) return;
+            titlesList = manifest.titles;
+            buildInvertedIndex(titlesList);
+            updateTabCounts();
+        }
+
+        async function initCacheAndSync() {
+            var cacheKey = 'titles_tenant_' + CURRENT_TENANT_ID;
+
+            // 1. Check Pre-Seeded HTML DOM script tag (0ms Cold Start)
+            var seedEl = document.getElementById('jero_titles_seed_data');
+            if (seedEl && seedEl.textContent.trim()) {
+                try {
+                    var seedManifest = JSON.parse(seedEl.textContent);
+                    if (seedManifest && Array.isArray(seedManifest.titles) && seedManifest.titles.length > 0) {
+                        ingestManifest(seedManifest);
+                        idbSet(cacheKey, { manifest: seedManifest, timestamp: Date.now() });
+                        checkServerVersion(seedManifest.version);
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Check IndexedDB L1 Persistent Store
+            try {
+                var cached = await idbGet(cacheKey);
+                if (cached && cached.manifest && Array.isArray(cached.manifest.titles)) {
+                    ingestManifest(cached.manifest);
+                    checkServerVersion(cached.manifest.version);
+                    return;
+                }
+            } catch (err) {}
+
+            // 3. Fallback: Fetch bundle from server
+            fetchBundleFromServer(1);
+        }
+
+        function checkServerVersion(localVersion) {
+            fetch(BUNDLE_URL, {
+                method: 'GET',
+                headers: {
+                    'If-None-Match': 'W/"tindex_' + CURRENT_TENANT_ID + '_s4_titles-tenant-' + CURRENT_TENANT_ID + '-v' + localVersion + '"'
+                }
+            }).then(function(res) {
+                if (res.status === 304) return null;
+                if (res.ok) return res.json();
+                return null;
+            }).then(function(newManifest) {
+                if (newManifest && Array.isArray(newManifest.titles)) {
+                    ingestManifest(newManifest);
+                    idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
+                    if (indexBroadcast) {
+                        indexBroadcast.postMessage({ type: 'TITLES_UPDATED', version: newManifest.version });
+                    }
+                }
+            }).catch(function() {});
+        }
+
+        function fetchBundleFromServer(version) {
+            var statusEl = document.getElementById('jero_title_sync_status');
+            if (statusEl) statusEl.innerHTML = '<span style="font-size:10px;">Syncing latest catalog...</span>';
+
+            fetch(BUNDLE_URL)
+                .then(function(res) { return res.json(); })
+                .then(function(manifest) {
+                    if (manifest && Array.isArray(manifest.titles)) {
+                        ingestManifest(manifest);
+                        idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: manifest, timestamp: Date.now() });
+                    }
+                    if (statusEl) statusEl.innerHTML = '';
+                })
+                .catch(function() {
+                    if (statusEl) statusEl.innerHTML = '';
+                });
+        }
+
+        function initEventListeners() {
+            var input = document.getElementById('title');
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            var tabsContainer = document.querySelector('.jero-title-tabs');
+            var container = document.getElementById('jero_title_list_container');
+            var customWrap = document.getElementById('jero_title_custom_action');
+            var undoBtn = document.getElementById('jero_autofill_undo_btn');
+            var keepBtn = document.getElementById('jero_confirm_keep_btn');
+            var applyBtn = document.getElementById('jero_confirm_apply_btn');
+
+            if (input) {
+                input.addEventListener('focus', function() {
+                    currentSearch = this.value;
+                    openDropdown();
+                });
+
+                input.addEventListener('input', function() {
+                    currentSearch = this.value;
+                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
+                    if (!isOpen) openDropdown();
+                    renderDropdownList();
+                });
+
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeDropdown();
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(-1);
+                    } else if (e.key === 'Enter') {
+                        if (isOpen) {
+                            e.preventDefault();
+                            selectFocusedOrCustom();
+                        }
+                    } else if (e.key === 'Tab') {
+                        if (isOpen) closeDropdown();
+                    }
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (input) {
+                        input.value = '';
+                        input.focus();
+                    }
+                    currentSearch = '';
+                    this.style.display = 'none';
+                    updateStatusChip(false);
+                    renderDropdownList();
+                });
+            }
+
+            if (tabsContainer) {
+                tabsContainer.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.jero-title-tab-btn');
+                    if (!btn) return;
+                    tabsContainer.querySelectorAll('.jero-title-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    currentFilter = btn.getAttribute('data-filter') || 'all';
+                    renderDropdownList();
+                });
+            }
+
+            if (container) {
+                container.addEventListener('click', function(e) {
+                    var itemEl = e.target.closest('.jero-title-item');
+                    if (!itemEl) return;
+                    var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                    var item = titlesMap.get(id);
+                    if (!item && itemEl.hasAttribute('data-recent-idx')) {
+                        var recentIdx = parseInt(itemEl.getAttribute('data-recent-idx'), 10);
+                        item = getRecentTitles()[recentIdx];
+                    }
+                    if (item) selectItem(item);
+                });
+            }
+
+            if (customWrap) {
+                customWrap.addEventListener('click', function() {
+                    var q = currentSearch.trim();
+                    if (q) selectCustomTitle(q);
+                });
+            }
+
+            if (undoBtn) {
+                undoBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    performUndo();
+                });
+            }
+
+            if (keepBtn) {
+                keepBtn.addEventListener('click', function() {
+                    var dialog = document.getElementById('jero_autofill_confirm_dialog');
+                    if (dialog) dialog.style.display = 'none';
+                    if (pendingTemplateItem) {
+                        applyTemplateSafely(pendingTemplateItem, false);
+                        pendingTemplateItem = null;
+                    }
+                });
+            }
+
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function() {
+                    var dialog = document.getElementById('jero_autofill_confirm_dialog');
+                    if (dialog) dialog.style.display = 'none';
+                    if (pendingTemplateItem) {
+                        applyTemplateSafely(pendingTemplateItem, true);
+                        pendingTemplateItem = null;
+                    }
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                var wrap = document.getElementById('jero_title_select_wrap');
+                if (wrap && !wrap.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+
+            try {
+                indexBroadcast = new BroadcastChannel('jero-titles-sync');
+                indexBroadcast.onmessage = function(ev) {
+                    if (ev && ev.data && ev.data.type === 'TITLES_UPDATED') {
+                        idbGet('titles_tenant_' + CURRENT_TENANT_ID).then(function(cached) {
+                            if (cached && cached.manifest) ingestManifest(cached.manifest);
+                        });
+                    }
+                };
+            } catch (e) {}
+        }
+
+        function moveFocus(direction) {
+            var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+            var customPill = document.getElementById('jero_title_custom_pill');
+            var total = items.length + (customPill && customPill.offsetParent !== null ? 1 : 0);
+            if (total === 0) return;
+
+            focusedIndex = focusedIndex + direction;
+            if (focusedIndex >= total) focusedIndex = 0;
+            if (focusedIndex < 0) focusedIndex = total - 1;
+
+            items.forEach(function(el) { el.classList.remove('focused'); });
+            if (customPill) customPill.classList.remove('focused');
+
+            if (focusedIndex < items.length) {
+                var el = items[focusedIndex];
+                el.classList.add('focused');
+                el.scrollIntoView({ block: 'nearest' });
+            } else if (customPill) {
+                customPill.classList.add('focused');
+                customPill.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function selectFocusedOrCustom() {
+            var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+            if (focusedIndex >= 0 && focusedIndex < items.length) {
+                var itemEl = items[focusedIndex];
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                var item = titlesMap.get(id);
+                if (item) { selectItem(item); return; }
+            }
+
+            var customPill = document.getElementById('jero_title_custom_pill');
+            if (customPill && customPill.classList.contains('focused')) {
+                selectCustomTitle(currentSearch);
+                return;
+            }
+
+            if (currentMatches.length > 0) {
+                selectItem(currentMatches[0]);
+            } else if (currentSearch.trim()) {
+                selectCustomTitle(currentSearch.trim());
+            }
+        }
+
+        // Global export for backward compatibility & testing
+        window.JeroTitleIntelligenceEngine = {
+            search: function(q) {
+                currentSearch = q;
+                renderDropdownList();
+            },
+            selectByTitle: function(title) {
+                for (var i = 0; i < titlesList.length; i++) {
+                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
+                        selectItem(titlesList[i]);
+                        return;
+                    }
+                }
+                selectCustomTitle(title);
+            },
+            hasLocalTemplate: function(title) {
+                for (var i = 0; i < titlesList.length; i++) {
+                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
+                        return titlesList[i].has_template === 1;
+                    }
+                }
+                return false;
+            },
+            applyLocalTemplate: function(title) {
+                for (var i = 0; i < titlesList.length; i++) {
+                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
+                        applyTemplateSafely(titlesList[i], false);
+                        return;
+                    }
+                }
+            },
+            refresh: function() {
+                fetchBundleFromServer(1);
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initCacheAndSync();
+                initEventListeners();
+            });
+        } else {
+            initCacheAndSync();
+            initEventListeners();
         }
     })();
     </script>
