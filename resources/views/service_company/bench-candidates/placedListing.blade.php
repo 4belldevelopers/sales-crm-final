@@ -123,7 +123,126 @@
         .placed-change-link i { font-size: 8.5px; }
         .placed-change-link:hover { color: #0077b5; }
 
+        .placed-row.row-reverb-updated {
+            transition: background-color 0.6s ease;
+            background-color: rgba(59, 91, 219, 0.08) !important;
+        }
+
         .rows-per-page-select { cursor: pointer; }
+
+        /* ── Pagination bar (Standard Metronic/JERO styling) ───────────────────── */
+        .pagi-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px 20px;
+            border-top: 1px solid #F0F2F5;
+            background: #fff;
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+        }
+        .pagi-info {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748B;
+        }
+        .pagi-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        /* Prev / Next arrow buttons */
+        .pagi-arrow {
+            width: 32px;
+            height: 32px;
+            border: 1.5px solid #E5E9F0;
+            border-radius: 8px;
+            background: #fff;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all .15s ease;
+            outline: none;
+            padding: 0;
+        }
+        .pagi-arrow:hover:not(.pagi-disabled) {
+            background: #2563EB;
+            color: #fff;
+            border-color: #2563EB;
+        }
+        .pagi-arrow.pagi-disabled {
+            opacity: .35;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        /* Page number buttons */
+        .pagi-page {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1.5px solid #E5E9F0;
+            border-radius: 8px;
+            background: #fff;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .15s ease;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+        }
+        .pagi-page:hover:not(.pagi-active-disabled) {
+            background: #F5F8FF;
+            border-color: #2563EB;
+            color: #2563EB;
+        }
+        .pagi-page.pagi-active {
+            background: #2563EB;
+            color: #fff;
+            border-color: #2563EB;
+            pointer-events: none;
+        }
+        .pagi-page.pagi-active-disabled {
+            pointer-events: none;
+        }
+        .pagi-dots {
+            font-size: 13px;
+            color: #94A3B8;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+        }
+        /* Page-size dropdown */
+        .pagi-perpage {
+            height: 32px;
+            padding: 0 26px 0 10px;
+            display: inline-flex;
+            align-items: center;
+            border: 1.5px solid #E5E9F0;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #374151;
+            background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right 8px center/10px;
+            font-family: 'Poppins', sans-serif;
+            margin-left: 8px;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .pagi-perpage:hover, .pagi-perpage:focus {
+            border-color: #2563EB;
+        }
 
         /* ---- commercial configuration drawer ---- */
         #kt_commercialConfig .card-header { border-bottom: 1px solid #eef0f4; }
@@ -312,10 +431,8 @@
                 <div id="kt_content_container" class="container-fluid px-3">
 
                     {{-- =====================================================
-                         Overview stat cards.
-                         No aggregation endpoint exists for these yet, so the
-                         values below are static placeholders — swap for real
-                         numbers once a backend summary API is available.
+                         Overview stat cards — populated dynamically from
+                         placedListingStats_v2 (Elasticsearch aggregations).
                     ====================================================== --}}
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-4 col-xl-2">
@@ -323,9 +440,9 @@
                                 <div class="placed-stat-icon bg-light-primary text-primary"><i class="fa-solid fa-user-check"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Currently Working</div>
-                                    <div class="placed-stat-value">186</div>
+                                    <div class="placed-stat-value" id="placedStatWorking">--</div>
                                     <div class="placed-stat-caption">Active Assignments</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 14 vs Apr 2025 (172)</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Active</div>
                                 </div>
                             </div>
                         </div>
@@ -334,9 +451,9 @@
                                 <div class="placed-stat-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Projects Completed</div>
-                                    <div class="placed-stat-value">34</div>
-                                    <div class="placed-stat-caption">This Month</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 6 vs Apr 2025 (28)</div>
+                                    <div class="placed-stat-value" id="placedStatCompleted">--</div>
+                                    <div class="placed-stat-caption">Completed</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Total</div>
                                 </div>
                             </div>
                         </div>
@@ -345,9 +462,9 @@
                                 <div class="placed-stat-icon bg-light-purple text-purple" style="background:#f8f5ff;color:#7239ea;"><i class="fa-solid fa-shield-halved"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Replacement Active</div>
-                                    <div class="placed-stat-value">18</div>
+                                    <div class="placed-stat-value" id="placedStatReplacement">--</div>
                                     <div class="placed-stat-caption">Permanent Hiring</div>
-                                    <div class="placed-stat-delta down mt-1"><i class="fa-solid fa-arrow-down"></i> 2 vs Apr 2025 (20)</div>
+                                    <div class="placed-stat-delta down mt-1"><i class="fa-solid fa-arrow-down"></i> Under Review</div>
                                 </div>
                             </div>
                         </div>
@@ -356,7 +473,7 @@
                                 <div class="placed-stat-icon bg-light-warning text-warning"><i class="fa-solid fa-calendar-week"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Joining This Week</div>
-                                    <div class="placed-stat-value">6</div>
+                                    <div class="placed-stat-value" id="placedStatJoining">--</div>
                                     <div class="placed-stat-caption">Confirmed</div>
                                     <div class="placed-stat-delta up mt-1">Next 7 Days</div>
                                 </div>
@@ -367,9 +484,9 @@
                                 <div class="placed-stat-icon bg-light-info text-info"><i class="fa-solid fa-clock-rotate-left"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Available Soon</div>
-                                    <div class="placed-stat-value">12</div>
+                                    <div class="placed-stat-value" id="placedStatAvailable">--</div>
                                     <div class="placed-stat-caption">Project Ending &lt; 30 Days</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 4 vs Apr 2025 (8)</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Rolling Off</div>
                                 </div>
                             </div>
                         </div>
@@ -378,9 +495,9 @@
                                 <div class="placed-stat-icon bg-light-danger text-danger"><i class="fa-solid fa-building"></i></div>
                                 <div>
                                     <div class="placed-stat-label">Companies Served</div>
-                                    <div class="placed-stat-value">42</div>
+                                    <div class="placed-stat-value" id="placedStatCompanies">--</div>
                                     <div class="placed-stat-caption">Active Clients</div>
-                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 5 vs Apr 2025 (37)</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> Client Network</div>
                                 </div>
                             </div>
                         </div>
@@ -1111,13 +1228,17 @@
 
     <script>
         $(document).ready(function() {
-            $('#kt_tagify_2').keyup(function() {
-                fetchBenchBenchCandidatesCandidateList();
+            var searchDebounceTimer = null;
+            $('#kt_tagify_2').on('input keyup', function() {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    fetchBenchBenchCandidatesCandidateList(1);
+                }, 300);
             });
         });
 
         function filtersdataget() {
-            fetchBenchBenchCandidatesCandidateList();
+            fetchBenchBenchCandidatesCandidateList(1);
         }
     </script>
 
@@ -1164,18 +1285,15 @@
         });
 
         $(document).ready(function() {
-            fetchBenchBenchCandidatesCandidateList();
+            fetchBenchBenchCandidatesCandidateList(1);
+            fetchPlacedListingStats();
+            initPlacedListingReverbSync();
 
             $(document).on('click', '#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
                 if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-                $(this).addClass('disabled');
-                fetchBenchBenchCandidatesCandidateList(page).then(() => {
-                    $('#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow').removeClass('disabled');
-                }).catch(() => {
-                    $('#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow').removeClass('disabled');
-                });
+                fetchBenchBenchCandidatesCandidateList(page);
             });
 
             $(document).on('change', '#paginationbenchCandidatePlace .pagi-perpage, #paginationbenchCandidatePlace #rowsPerPageSelect', function() {
@@ -1184,6 +1302,11 @@
                     localStorage.setItem('candidatePerPage', selectedPerPage);
                 }
                 fetchBenchBenchCandidatesCandidateList(1);
+            });
+
+            // Master checkbox toggle for table
+            $(document).on('change', '#myTable thead .form-check-input', function() {
+                $('.chk_list_item').prop('checked', $(this).is(':checked'));
             });
         });
 
@@ -1466,6 +1589,7 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
+                    client_submission_uuid: (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).substring(2))),
                     candidate_id: candidateId,
                     is_bench: $('#ccIsBench').val(),
                     service_type: serviceType,
@@ -1489,6 +1613,29 @@
                 success: function(res) {
                     $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration');
                     if (res.status === 'success') {
+                        if (window.PlacedListingStore && window.PlacedListingStore.cache) {
+                            window.PlacedListingStore.cache.clear();
+                        }
+                        if (typeof PlacedListingDB !== 'undefined') {
+                            PlacedListingDB.clearSnapshots();
+                        }
+                        if (typeof PlacedListingChannel !== 'undefined') {
+                            PlacedListingChannel.broadcast({
+                                type: 'COMMERCIAL_UPDATED',
+                                candidateId: candidateId,
+                                serviceType: serviceType,
+                                commercialModel: commercialModel,
+                                feeMethod: feeMethod,
+                                feeBase: feeBase,
+                                feePct: feePct,
+                                feeFixed: feeFixed,
+                                billingAmount: billingAmount,
+                                billingCycle: billingCycle,
+                                marginPct: marginPct,
+                                replacementPeriod: replacementPeriod,
+                                internalNote: internalNote
+                            });
+                        }
                         // Update commercials cell in the matching row
                         var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
                         if ($row.length) {
@@ -1747,6 +1894,7 @@
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
+                    client_submission_uuid: (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).substring(2))),
                     candidate_id: candidateId,
                     is_bench: $('#adIsBench').val(),
                     expected_end_date: expectedEndDate,
@@ -1765,6 +1913,33 @@
                 success: function(res) {
                     $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Changes');
                     if (res.status === 'success') {
+                        if (window.PlacedListingStore && window.PlacedListingStore.cache) {
+                            window.PlacedListingStore.cache.clear();
+                        }
+                        if (typeof PlacedListingDB !== 'undefined') {
+                            PlacedListingDB.clearSnapshots();
+                        }
+                        if (typeof fetchPlacedListingStats === 'function') {
+                            fetchPlacedListingStats();
+                        }
+                        if (typeof PlacedListingChannel !== 'undefined') {
+                            PlacedListingChannel.broadcast({
+                                type: 'ASSIGNMENT_UPDATED',
+                                candidateId: candidateId,
+                                assignmentStatus: assignmentStatus,
+                                expectedEndDate: expectedEndDate,
+                                employmentType: employmentType,
+                                clientLocation: clientLocation,
+                                exitReason: exitReason,
+                                projectOutcome: projectOutcome,
+                                remarks: remarks,
+                                internalNotes: internalNotes,
+                                replacementRequired: replacementRequired,
+                                replacementStatus: replacementStatus,
+                                replacementRequestedOn: replacementRequestedOn,
+                                replacementReason: replacementReason
+                            });
+                        }
                         // Update work status cell in the matching row
                         var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
                         if ($row.length) {
@@ -1838,30 +2013,1026 @@
             });
         });
 
-        function fetchBenchBenchCandidatesCandidateList(page = 1) {
-            var sortingfilter = $('#sortingfilter').val();
-            var country = $('#country').val();
-            var cus_search = $('#kt_tagify_2').val();
-            var size = localStorage.getItem('candidatePerPage') || $('#rowsPerPageSelect').val() || 10;
+        // =========================================================================
+        // CLIENT-FIRST ARCHITECTURE: Bounded Browser RAM Store, Helpers, & Renderers
+        // =========================================================================
+        window.PlacedListingStore = {
+            candidates: [],
+            total: 0,
+            page: 1,
+            perPage: parseInt(localStorage.getItem('candidatePerPage') || '10', 10),
+            lastPage: 1,
+            inFlightRequest: null,
+            cache: new Map(), // LRU memory store
+            maxCacheEntries: 20,
+            companyId: {{ (int) ($company_id ?? auth()->user()->company_id ?? 0) }},
+            currencySymbols: {!! json_encode($currencySymbols ?? \App\Helper\GeneralMethod::currencySymbole()) !!},
+            salaryModes: {!! json_encode($salaryModes ?? \App\Helper\GeneralMethod::salaryModeOffer()) !!}
+        };
 
-            $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'block' });
-            return $.ajax({
-                url: `{!! route('service_company.bench-candidates.placedListingData_ajax') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    cus_search: cus_search,
-                    country: country,
-                    sortingfilter: sortingfilter,
-                    size: size,
-                    per_page: size
+        // =========================================================================
+        // INDEXEDDB L2 CACHE & MULTI-TAB BROADCASTCHANNEL ARCHITECTURE
+        // =========================================================================
+        var PlacedListingDB = (function() {
+            var DB_NAME = 'JeroPlacedListingDB_' + (window.PlacedListingStore ? window.PlacedListingStore.companyId : 0);
+            var DB_VERSION = 1;
+            var dbPromise = null;
+
+            function getDB() {
+                if (dbPromise) return dbPromise;
+                if (!window.indexedDB) {
+                    return Promise.resolve(null);
+                }
+                dbPromise = new Promise(function(resolve) {
+                    try {
+                        var req = indexedDB.open(DB_NAME, DB_VERSION);
+                        req.onupgradeneeded = function(e) {
+                            var db = e.target.result;
+                            if (!db.objectStoreNames.contains('lookups')) {
+                                db.createObjectStore('lookups', { keyPath: 'key' });
+                            }
+                            if (!db.objectStoreNames.contains('snapshots')) {
+                                var store = db.createObjectStore('snapshots', { keyPath: 'key' });
+                                store.createIndex('timestamp', 'timestamp', { unique: false });
+                            }
+                        };
+                        req.onsuccess = function(e) {
+                            resolve(e.target.result);
+                        };
+                        req.onerror = function(err) {
+                            console.warn('[PlacedListingDB] Open error, falling back to RAM cache:', err);
+                            resolve(null);
+                        };
+                    } catch (err) {
+                        console.warn('[PlacedListingDB] Exception opening IndexedDB:', err);
+                        resolve(null);
+                    }
+                });
+                return dbPromise;
+            }
+
+            return {
+                getSnapshot: function(key) {
+                    return getDB().then(function(db) {
+                        if (!db) return null;
+                        return new Promise(function(resolve) {
+                            try {
+                                var tx = db.transaction('snapshots', 'readonly');
+                                var store = tx.objectStore('snapshots');
+                                var req = store.get(key);
+                                req.onsuccess = function(e) {
+                                    var record = e.target.result;
+                                    if (!record) { resolve(null); return; }
+                                    var now = Date.now();
+                                    if (record.ttlMs && (now - record.timestamp > record.ttlMs)) {
+                                        PlacedListingDB.deleteSnapshot(key);
+                                        resolve(null);
+                                    } else {
+                                        resolve(record.data);
+                                    }
+                                };
+                                req.onerror = function() { resolve(null); };
+                            } catch (e) {
+                                resolve(null);
+                            }
+                        });
+                    });
                 },
-                success: function(response) {
-                    $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });
-                    $('#totalPlace').html(response.total);
-                    $('#benchCandidatePlaceAjax').html(response.html);
-                    $('#paginationbenchCandidatePlace').html(response.pagination);
+
+                setSnapshot: function(key, data, ttlMs) {
+                    ttlMs = ttlMs || 300000; // 5 minutes TTL
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction('snapshots', 'readwrite');
+                            var store = tx.objectStore('snapshots');
+                            store.put({
+                                key: key,
+                                data: data,
+                                timestamp: Date.now(),
+                                ttlMs: ttlMs
+                            });
+
+                            // Bound snapshot storage to max 30 entries (LRU cleanup)
+                            var countReq = store.count();
+                            countReq.onsuccess = function() {
+                                if (countReq.result > 30) {
+                                    var index = store.index('timestamp');
+                                    var cursorReq = index.openCursor();
+                                    cursorReq.onsuccess = function(e) {
+                                        var cursor = e.target.result;
+                                        if (cursor) {
+                                            store.delete(cursor.primaryKey);
+                                        }
+                                    };
+                                }
+                            };
+                        } catch (e) {
+                            console.warn('[PlacedListingDB] setSnapshot error:', e);
+                        }
+                    });
+                },
+
+                deleteSnapshot: function(key) {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction('snapshots', 'readwrite');
+                            tx.objectStore('snapshots').delete(key);
+                        } catch (e) {}
+                    });
+                },
+
+                clearSnapshots: function() {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction('snapshots', 'readwrite');
+                            tx.objectStore('snapshots').clear();
+                        } catch (e) {}
+                    });
+                },
+
+                getLookup: function(key) {
+                    return getDB().then(function(db) {
+                        if (!db) return null;
+                        return new Promise(function(resolve) {
+                            try {
+                                var tx = db.transaction('lookups', 'readonly');
+                                var req = tx.objectStore('lookups').get(key);
+                                req.onsuccess = function(e) {
+                                    resolve(e.target.result ? e.target.result.value : null);
+                                };
+                                req.onerror = function() { resolve(null); };
+                            } catch (e) { resolve(null); }
+                        });
+                    });
+                },
+
+                setLookup: function(key, value) {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction('lookups', 'readwrite');
+                            tx.objectStore('lookups').put({ key: key, value: value });
+                        } catch (e) {}
+                    });
+                }
+            };
+        })();
+
+        // =========================================================================
+        // MULTI-TAB SYNCHRONIZATION VIA BROADCASTCHANNEL
+        // =========================================================================
+        var PlacedListingChannel = (function() {
+            var channelName = 'jero_placed_listing_' + (window.PlacedListingStore ? window.PlacedListingStore.companyId : 0);
+            var channel = null;
+
+            if (typeof window.BroadcastChannel !== 'undefined') {
+                try {
+                    channel = new BroadcastChannel(channelName);
+                    channel.onmessage = function(event) {
+                        handleChannelMessage(event.data);
+                    };
+                } catch (e) {
+                    console.warn('[PlacedListingChannel] BroadcastChannel init error:', e);
+                }
+            } else {
+                // Fallback via localStorage storage event for older browsers
+                window.addEventListener('storage', function(e) {
+                    if (e.key === channelName && e.newValue) {
+                        try {
+                            var data = JSON.parse(e.newValue);
+                            handleChannelMessage(data);
+                        } catch (err) {}
+                    }
+                });
+            }
+
+            function handleChannelMessage(msg) {
+                if (!msg || !msg.type) return;
+
+                // Invalidate local in-memory L1 cache and IndexedDB L2 snapshots
+                if (window.PlacedListingStore && window.PlacedListingStore.cache) {
+                    window.PlacedListingStore.cache.clear();
+                }
+                if (typeof PlacedListingDB !== 'undefined') {
+                    PlacedListingDB.clearSnapshots();
+                }
+
+                if (msg.type === 'COMMERCIAL_UPDATED') {
+                    var candidateId = msg.candidateId;
+                    var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                    if ($row.length) {
+                        var feeLabel = '';
+                        if (msg.serviceType === 'free') {
+                            feeLabel = 'Free Placement';
+                        } else if (msg.feeMethod === 'percentage' && msg.feePct) {
+                            feeLabel = msg.feePct + '% (' + (msg.feeBase === 'offered' ? 'CTC' : 'Billing') + ')';
+                        } else if (msg.feeMethod === 'fixed' && msg.feeFixed) {
+                            feeLabel = '₹' + parseInt(msg.feeFixed).toLocaleString('en-IN') + ' Fixed Fee';
+                        } else {
+                            feeLabel = 'Fee Configured';
+                        }
+                        var modelLabel = msg.commercialModel === 'contract' ? 'Contract' : (msg.commercialModel === 'fulltime' ? 'Full-time' : msg.commercialModel);
+                        $row.find('[data-cc-fee]').html(escapeHtml(feeLabel) + ' <span class="text-muted fw-normal">(Placement Fee)</span>');
+                        $row.find('[data-cc-model]').text(modelLabel);
+
+                        var $btn = $row.find('.commercial-change-btn');
+                        if ($btn.length) {
+                            $btn.attr('data-service-type', msg.serviceType);
+                            $btn.attr('data-commercial-model', msg.commercialModel);
+                            $btn.attr('data-fee-method', msg.feeMethod);
+                            $btn.attr('data-fee-base', msg.feeBase);
+                            $btn.attr('data-fee-pct', msg.feePct);
+                            $btn.attr('data-fee-fixed', msg.feeFixed);
+                            $btn.attr('data-billing-amount', msg.billingAmount);
+                            $btn.attr('data-billing-cycle', msg.billingCycle);
+                            $btn.attr('data-margin-pct', msg.marginPct);
+                            $btn.attr('data-replacement-period', msg.replacementPeriod);
+                            $btn.attr('data-internal-note', msg.internalNote);
+                        }
+                    }
+                } else if (msg.type === 'ASSIGNMENT_UPDATED') {
+                    var candidateId = msg.candidateId;
+                    var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                    if ($row.length) {
+                        var statusMap = {
+                            working:   { label: 'Currently Working', icon: 'fa-circle-check', cls: 'is-success' },
+                            completed: { label: 'Project Completed',  icon: 'fa-check-double',  cls: 'is-info'    },
+                            left:      { label: 'Candidate Left',     icon: 'fa-circle-xmark', cls: 'is-danger'  }
+                        };
+                        var s = statusMap[msg.assignmentStatus] || statusMap.working;
+                        var $pill = $row.find('[data-ad-status]');
+                        $pill.removeClass('is-success is-info is-danger').addClass(s.cls);
+                        $pill.find('[data-ad-status-icon]').removeClass('fa-circle-check fa-check-double fa-circle-xmark').addClass(s.icon);
+                        $pill.find('[data-ad-status-label]').text(s.label);
+                        if (msg.expectedEndDate) {
+                            var d = new Date(msg.expectedEndDate);
+                            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var formatted = String(d.getDate()).padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                            $row.find('[data-ad-end-date]').text(formatted);
+                        }
+
+                        var $btn = $row.find('.assignment-change-btn');
+                        if ($btn.length) {
+                            $btn.attr('data-assignment-status', msg.assignmentStatus);
+                            $btn.attr('data-expected-end-date', msg.expectedEndDate);
+                            $btn.attr('data-client-location', msg.clientLocation);
+                            $btn.attr('data-exit-reason', msg.exitReason);
+                            $btn.attr('data-project-outcome', msg.projectOutcome);
+                            $btn.attr('data-remarks', msg.remarks);
+                            $btn.attr('data-internal-notes', msg.internalNotes);
+                            $btn.attr('data-replacement-required', msg.replacementRequired);
+                            $btn.attr('data-replacement-status', msg.replacementStatus);
+                            $btn.attr('data-replacement-requested-on', msg.replacementRequestedOn);
+                            $btn.attr('data-replacement-reason', msg.replacementReason);
+                        }
+                    }
+                } else if (msg.type === 'STATS_UPDATED') {
+                    if (msg.stats) {
+                        $('#placedStatWorking').text(msg.stats.currently_working || 0);
+                        $('#placedStatCompleted').text(msg.stats.projects_completed || 0);
+                        $('#placedStatReplacement').text(msg.stats.replacement_active || 0);
+                        $('#placedStatJoining').text(msg.stats.joining_this_week || 0);
+                        $('#placedStatAvailable').text(msg.stats.available_soon || 0);
+                        $('#placedStatCompanies').text(msg.stats.companies_served || 0);
+                    }
+                }
+            }
+
+            return {
+                broadcast: function(messageObj) {
+                    if (!messageObj) return;
+                    if (channel) {
+                        try {
+                            channel.postMessage(messageObj);
+                        } catch (e) {
+                            console.warn('[PlacedListingChannel] postMessage error:', e);
+                        }
+                    } else {
+                        try {
+                            localStorage.setItem(channelName, JSON.stringify(messageObj));
+                            localStorage.removeItem(channelName);
+                        } catch (e) {}
+                    }
+                }
+            };
+        })();
+
+        // Seed store lookups from IndexedDB if available
+        if (typeof PlacedListingDB !== 'undefined') {
+            PlacedListingDB.getLookup('currency_symbols').then(function(syms) {
+                if (syms && (!window.PlacedListingStore.currencySymbols || Object.keys(window.PlacedListingStore.currencySymbols).length === 0)) {
+                    window.PlacedListingStore.currencySymbols = syms;
                 }
             });
+            PlacedListingDB.getLookup('salary_modes').then(function(modes) {
+                if (modes && (!window.PlacedListingStore.salaryModes || Object.keys(window.PlacedListingStore.salaryModes).length === 0)) {
+                    window.PlacedListingStore.salaryModes = modes;
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatTimelineDate(dateStr) {
+            if (!dateStr || String(dateStr).indexOf('0000-00-00') === 0) return '--';
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '--';
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return String(d.getDate()).padStart(2, '0') + ' ' + months[d.getMonth()] + ' ' + String(d.getFullYear()).slice(-2);
+        }
+
+        function formatDisplayDate(dateStr) {
+            if (!dateStr || String(dateStr).indexOf('0000-00-00') === 0) return '--';
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '--';
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return String(d.getDate()).padStart(2, '0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        function calcDurationDays(startStr, endStr) {
+            if (!startStr || !endStr || String(startStr).indexOf('0000-00-00') === 0 || String(endStr).indexOf('0000-00-00') === 0) return null;
+            var d1 = new Date(startStr);
+            var d2 = new Date(endStr);
+            if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return null;
+            return Math.floor(Math.abs((d2 - d1) / 86400000));
+        }
+
+        function getAvatarClass(name) {
+            var str = (name || '').trim();
+            if (!str) return 'fs-3 bg-light-secondary text-dark';
+            var code = str.toLowerCase().charCodeAt(0);
+            if (code >= 97 && code <= 101) return 'fs-3 bg-light-danger text-danger';
+            if (code >= 102 && code <= 106) return 'fs-3 bg-light-warning text-warning';
+            if (code >= 107 && code <= 111) return 'fs-3 bg-light-primary text-primary';
+            if (code >= 112 && code <= 116) return 'fs-3 bg-light-success text-success';
+            if (code >= 117 && code <= 121) return 'fs-3 bg-dark text-secondary';
+            return 'fs-3 bg-light-secondary text-dark';
+        }
+
+        function renderBenchTimeline(row) {
+            var benchRaw = row.created_at || '';
+            var hasBench = !!benchRaw;
+            var offerRaw = row.offer_released_at || row.of_created_date || row.of_offer_release || row.of_offer_approved || row.of_offer_acceptance || row.send_accept_date_time || row.of_joined_date || '';
+            var hasOffer = !!offerRaw;
+            var joinedRaw = (row.of_joined_date && String(row.of_joined_date).indexOf('0000-00-00') !== 0) ? row.of_joined_date : '';
+            var hasJoined = !!joinedRaw;
+
+            var benchLabel = formatTimelineDate(benchRaw);
+            var offerLabel = formatTimelineDate(offerRaw);
+            var joinedLabel = formatTimelineDate(joinedRaw);
+
+            var benchNodeCls = hasBench ? 'is-done' : 'is-static';
+            var lineAfterBench = hasBench ? 'is-done' : '';
+            var offerNodeCls = hasOffer ? 'is-done' : 'is-static';
+            var lineAfterOffer = hasOffer ? 'is-done' : '';
+            var joinedNodeCls = hasJoined ? 'is-done' : 'is-static';
+            var lineAfterJoined = hasJoined ? 'is-done' : '';
+            var placedNodeCls = hasJoined ? 'is-done' : 'is-static';
+
+            var durationDays = calcDurationDays(benchRaw, joinedRaw);
+            var durationText = durationDays !== null ? ('Total Duration: ' + durationDays + ' Days') : '';
+
+            return '<div class="placed-timeline">' +
+                '<div class="placed-timeline-track">' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + benchNodeCls + '" data-toggle="tooltip" title="Bench"></div><span class="placed-timeline-node-label">' + benchLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterBench + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + offerNodeCls + '" data-toggle="tooltip" title="Offer"></div><span class="placed-timeline-node-label">' + offerLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterOffer + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + joinedNodeCls + '" data-toggle="tooltip" title="Joined"></div><span class="placed-timeline-node-label">' + joinedLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterJoined + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + placedNodeCls + '" data-toggle="tooltip" title="Placed"></div><span class="placed-timeline-node-label">' + joinedLabel + '</span></div>' +
+                '</div>' +
+                '<div class="placed-timeline-labels"><span>Bench</span><span>Offer</span><span>Joined</span><span>Placed</span></div>' +
+                '<div class="text-muted fw-bold fs-9 mt-1">' + durationText + '</div>' +
+            '</div>';
+        }
+
+        function renderDirectTimeline(row) {
+            var sourcingRaw = row.sourcing_date || row.created_at || '';
+            var hasSourcing = !!sourcingRaw;
+            var evalRaw = row.evaluation_date || row.schedule_date || row.interview_schedule_date || '';
+            var hasEval = !!evalRaw;
+            var tlOfferRaw = row.offer_released_at || row.of_created_date || row.of_offer_release || row.of_offer_approved || row.of_offer_acceptance || '';
+            var hasTlOffer = !!tlOfferRaw;
+            var tlJoinedRaw = (row.of_joined_date && String(row.of_joined_date).indexOf('0000-00-00') !== 0) ? row.of_joined_date : '';
+            var hasTlJoined = !!tlJoinedRaw;
+
+            var sourcingLabel = formatTimelineDate(sourcingRaw);
+            var evalLabel = formatTimelineDate(evalRaw);
+            var tlOfferLabel = formatTimelineDate(tlOfferRaw);
+            var tlJoinedLabel = formatTimelineDate(tlJoinedRaw);
+
+            var sourcingNodeCls = hasSourcing ? 'is-done' : 'is-static';
+            var lineAfterSourcing = hasSourcing ? 'is-done' : '';
+            var evalNodeCls = hasEval ? 'is-done' : 'is-static';
+            var lineAfterEval = hasEval ? 'is-done' : '';
+            var tlOfferNodeCls = hasTlOffer ? 'is-done' : 'is-static';
+            var lineAfterTlOffer = hasTlOffer ? 'is-done' : '';
+            var tlJoinedNodeCls = hasTlJoined ? 'is-done' : 'is-static';
+
+            var durationDays = calcDurationDays(sourcingRaw, tlJoinedRaw);
+            var durationText = durationDays !== null ? ('Total Duration: ' + durationDays + ' Days') : '';
+
+            return '<div class="placed-timeline">' +
+                '<div class="placed-timeline-track">' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + sourcingNodeCls + '" data-toggle="tooltip" title="Sourcing"></div><span class="placed-timeline-node-label">' + sourcingLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterSourcing + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + evalNodeCls + '" data-toggle="tooltip" title="Evaluation"></div><span class="placed-timeline-node-label">' + evalLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterEval + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + tlOfferNodeCls + '" data-toggle="tooltip" title="Offer"></div><span class="placed-timeline-node-label">' + tlOfferLabel + '</span></div>' +
+                    '<span class="placed-timeline-line ' + lineAfterTlOffer + '"></span>' +
+                    '<div class="placed-timeline-node-wrap"><div class="placed-timeline-node ' + tlJoinedNodeCls + '" data-toggle="tooltip" title="Joined"></div><span class="placed-timeline-node-label">' + tlJoinedLabel + '</span></div>' +
+                '</div>' +
+                '<div class="placed-timeline-labels"><span>Sourcing</span><span>Evaluation</span><span>Offer</span><span>Joined</span></div>' +
+                '<div class="text-muted fw-bold fs-9 mt-1">' + durationText + '</div>' +
+            '</div>';
+        }
+
+        function renderCandidateRow(row) {
+            var store = window.PlacedListingStore;
+            var companyId = store.companyId;
+
+            // 1. Candidate Info & Avatar
+            var fullName = (row.full_name || '').trim();
+            var strVal = fullName.length > 0 ? fullName[0].toUpperCase() : '';
+            var bgClass = getAvatarClass(fullName);
+            var flag = (row.is_duplicate || row.duplicate == 1) ? 1 : 0;
+            var isBench = (row.condidate_type === 'bench_condidate');
+            var tredmark = isBench ? '<span style="display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#e8f0fe;color:#3b5bdb;margin-left:4px;vertical-align:middle;letter-spacing:.3px;">Bench</span>' : '';
+            var profileSidebarCss = 'show-application-detail';
+            var nameImg = '';
+
+            if (row.photo) {
+                nameImg = '<img src="' + escapeHtml(row.photo) + '" alt="image" style="width: 40px; height: 40px; object-fit: cover;">' +
+                          '<div class="position-absolute translate-middle bottom-0 start-100 mb-1 bg-success rounded-circle border border-2 border-white h-10px w-10px"></div>';
+            } else {
+                if (flag === 1) {
+                    nameImg = '<span class="fs-6 fw-bolder">' + escapeHtml(strVal) + '</span>';
+                } else {
+                    nameImg = '<div class="symbol-label placed-avatar ' + bgClass + '">' + escapeHtml(strVal) + '</div>';
+                }
+            }
+
+            var skilltag = '';
+            if (row.skills) {
+                var skillsArr = String(row.skills).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                var shown = 0;
+                for (var sIdx = 0; sIdx < skillsArr.length; sIdx++) {
+                    if (shown >= 2) break;
+                    skilltag += '<span class="badge placed-skill-badge">' + escapeHtml(skillsArr[sIdx]) + '</span>';
+                    shown++;
+                }
+                if (skillsArr.length > 2) {
+                    skilltag += '<span class="badge placed-skill-badge">+' + (skillsArr.length - 2) + '</span>';
+                }
+            }
+
+            var expLocBits = [];
+            if (row.total_exp) expLocBits.push(String(row.total_exp).replace(/\.+$/, '') + ' Yrs');
+            var cityName = row.city || row.city_name || '';
+            if (cityName) expLocBits.push(cityName);
+            var expLocLine = expLocBits.join(' &middot; ');
+
+            var nameLinkClass = flag === 1 ? 'text-danger' : 'text-dark';
+            var subLinkClass = flag === 1 ? 'text-danger' : 'text-muted';
+            var designation = row.current_designation || '-';
+
+            // 2. Timeline
+            var timelineHtml = isBench ? renderBenchTimeline(row) : renderDirectTimeline(row);
+
+            // 3. Client & Job
+            var clientName = row.client_name || '-';
+            var jobTitle = row.title || '-';
+            var jobLocation = row.location || [row.city_name, row.state_name].filter(Boolean).join(', ');
+
+            var recId = parseInt(row.recommendation_id, 10) || 0;
+            var fromCompId = parseInt(row.from_company_id, 10) || 0;
+            var isDirectClient = (recId > 0 && fromCompId > 0 && fromCompId !== companyId);
+            var recText = isDirectClient ? 'Direct Client' : (row.client_self_company == 1 ? 'Internal' : 'Internal Client');
+            var recIcon = isDirectClient ? 'fa-handshake text-warning' : 'fa-building-shield text-primary';
+
+            // 4. Recruiter
+            var agencyCompName = row.submitted_by_company_name || row.post_company_name || row.from_company_name || row.uc_company_name || '';
+            var agencyCompId = parseInt(row.thirdparty_company_id || row.other_company || 0, 10);
+            var isAgency = (agencyCompId > 0 && agencyCompId !== companyId) || !!agencyCompName;
+            var recruiterName = isAgency ? (row.agency_root_name || row.posted_by || row.submitted_by_name || 'Recruiter') : (row.posted_by || row.submitted_by_name || row.spokperson_name || 'Recruiter');
+            var recruiterSub = isAgency ? (agencyCompName || row.company_name || 'Recruiter') : 'Recruiter';
+
+            // 5. Commercials
+            var empType = (row.of_employment_type || '-----').toString();
+            var offerCurSym = (store.currencySymbols && store.currencySymbols[row.of_offer_currency]) ? store.currencySymbols[row.of_offer_currency] : '₹';
+            var offerAmtParsed = parseFloat(row.of_offer_amount) || 0;
+            var offerAmtFormatted = Math.round(offerAmtParsed).toLocaleString('en-IN');
+            var offerMode = (store.salaryModes && store.salaryModes[row.of_offer_mode]) ? store.salaryModes[row.of_offer_mode] : 'Annual';
+            var offerDisplay = row.confidential == 1 ? 'Confidential' : (offerCurSym + ' ' + offerAmtFormatted + '/' + offerMode.charAt(0));
+
+            var ccServiceType = row.commercial_service_type || '';
+            var ccFeeMethod = row.commercial_fee_method || '';
+            var ccFeeBase = row.commercial_fee_base || 'offered';
+            var ccFeePct = parseFloat(row.commercial_fee_pct) || 0;
+            var ccFeeFixed = parseFloat(row.commercial_fee_fixed) || 0;
+            var ccModel = row.commercial_model || '';
+
+            var ccFeeLabel = '--';
+            if (ccServiceType === 'free') {
+                ccFeeLabel = 'Free Placement';
+            } else if (ccFeeMethod === 'percentage' && ccFeePct > 0) {
+                var baseLabel = ccFeeBase === 'offered' ? 'CTC' : 'Billing';
+                ccFeeLabel = ccFeePct + '% (' + baseLabel + ')';
+            } else if (ccFeeMethod === 'fixed' && ccFeeFixed > 0) {
+                ccFeeLabel = '₹' + Math.round(ccFeeFixed).toLocaleString('en-IN') + ' Fixed Fee';
+            }
+
+            var isContract = empType.toLowerCase().indexOf('contract') !== -1 || empType.toLowerCase().indexOf('hour') !== -1;
+            var marginLabel = isContract ? 'Gross Margin' : '(Placement Fee)';
+            var ccModelLabel = ccModel ? (ccModel.charAt(0).toUpperCase() + ccModel.slice(1)) : empType;
+
+            // 6. Work Status
+            var savedAssignStatus = row.assignment_status || 'working';
+            var adStatusMap = {
+                working:   { label: 'Currently Working', icon: 'fa-circle-check',  cls: 'is-success' },
+                completed: { label: 'Project Completed',  icon: 'fa-check-double', cls: 'is-info'    },
+                left:      { label: 'Candidate Left',     icon: 'fa-circle-xmark', cls: 'is-danger'  }
+            };
+            var adStatus = adStatusMap[savedAssignStatus] || adStatusMap.working;
+            var adEndDateDisp = formatDisplayDate(row.assignment_expected_end_date);
+            var joinedIsoForAssign = (row.of_joined_date && String(row.of_joined_date).indexOf('0000-00-00') !== 0) ? String(row.of_joined_date).slice(0, 10) : '';
+
+            // Assemble row HTML
+            return '<tr class="placed-row" data-candidate-id="' + escapeHtml(row.id) + '">' +
+                '<td>' +
+                    '<div class="form-check form-check-sm form-check-custom form-check-solid">' +
+                        '<input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" data-jobId="' + escapeHtml(row.jobId || '') + '" value="' + escapeHtml(row.candidate_id || '') + '" />' +
+                    '</div>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="d-flex align-items-start">' +
+                        '<div class="symbol symbol-circle symbol-40px overflow-hidden me-3 position-relative flex-shrink-0">' +
+                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + profileSidebarCss + '">' + nameImg + '</a>' +
+                        '</div>' +
+                        '<div class="d-flex flex-column">' +
+                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + nameLinkClass + ' fw-bolder text-hover-primary fs-6 ' + profileSidebarCss + '" data-toggle="tooltip" title="' + escapeHtml(fullName) + '">' + escapeHtml(fullName.substring(0, 22)) + tredmark + '</a>' +
+                            '<a href="javascript:void(0);" data-row-id="' + escapeHtml(row.wiseId || '') + '" class="' + subLinkClass + ' fw-bold d-block fs-8 text-hover-primary ' + profileSidebarCss + '" data-toggle="tooltip" title="' + escapeHtml(designation) + '">' + escapeHtml(designation.substring(0, 24)) + '</a>' +
+                            '<span class="text-muted fw-semibold fs-9 d-block">' + expLocLine + '</span>' +
+                            '<div class="mt-1">' + skilltag + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' + timelineHtml + '</td>' +
+                '<td>' +
+                    '<div class="d-flex flex-column">' +
+                        '<span class="placed-detail-line"><i class="fa-solid fa-building text-muted"></i>' +
+                            '<span class="text-muted fw-bold fs-8" data-toggle="tooltip" title="' + escapeHtml(clientName) + '">' + escapeHtml(clientName.substring(0, 18)) + '</span>' +
+                        '</span>' +
+                        '<span class="placed-detail-line"><i class="fa-solid fa-briefcase text-muted"></i>' +
+                            '<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' + escapeHtml(jobTitle) + '">' + escapeHtml(jobTitle.substring(0, 18)) + '</a>' +
+                        '</span>' +
+                        (jobLocation ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i><span class="text-muted fw-semibold fs-9">' + escapeHtml(jobLocation) + '</span></span>' : '') +
+                        '<span class="placed-detail-line mt-1"><i class="fa-solid ' + recIcon + '"></i>' +
+                            '<span class="fw-bold fs-9 text-muted">' + recText + ' &middot; ' + escapeHtml(row.jobId || '') + '</span>' +
+                        '</span>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="d-flex flex-column">' +
+                        '<span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' + escapeHtml(recruiterName) + '">' + escapeHtml(recruiterName.substring(0, 20)) + '</span>' +
+                        '<span class="text-muted fw-semibold d-block fs-9" data-toggle="tooltip" title="' + escapeHtml(recruiterSub) + '">' + escapeHtml(recruiterSub.substring(0, 20)) + '</span>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="d-flex flex-column">' +
+                        '<span class="text-dark fw-bolder fs-6">' + offerDisplay + '</span>' +
+                        '<span class="placed-commercial-line">' +
+                            '<i class="fa-solid fa-circle-check text-success"></i>' +
+                            '<span class="text-dark fw-semibold fs-9" data-cc-fee>' + escapeHtml(ccFeeLabel) + ' <span class="text-muted fw-normal">' + marginLabel + '</span></span>' +
+                        '</span>' +
+                        '<span class="placed-commercial-line">' +
+                            '<i class="fa-solid fa-user-tie text-muted"></i>' +
+                            '<span class="text-muted fw-semibold fs-9" data-cc-model>' + escapeHtml(ccModelLabel) + '</span>' +
+                        '</span>' +
+                        '<a href="javascript:void(0);" class="placed-change-link commercial-change-btn"' +
+                            ' data-candidate-id="' + escapeHtml(row.id) + '"' +
+                            ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
+                            ' data-amount="' + escapeHtml(row.of_offer_amount || 0) + '"' +
+                            ' data-employment-type="' + escapeHtml(empType) + '"' +
+                            ' data-service-type="' + escapeHtml(row.commercial_service_type || '') + '"' +
+                            ' data-commercial-model="' + escapeHtml(row.commercial_model || '') + '"' +
+                            ' data-fee-method="' + escapeHtml(row.commercial_fee_method || '') + '"' +
+                            ' data-fee-base="' + escapeHtml(row.commercial_fee_base || '') + '"' +
+                            ' data-fee-pct="' + escapeHtml(row.commercial_fee_pct || 0) + '"' +
+                            ' data-fee-fixed="' + escapeHtml(row.commercial_fee_fixed || 0) + '"' +
+                            ' data-billing-amount="' + escapeHtml(row.commercial_billing_amount || 0) + '"' +
+                            ' data-billing-cycle="' + escapeHtml(row.commercial_billing_cycle || '') + '"' +
+                            ' data-margin-pct="' + escapeHtml(row.commercial_margin_pct || 0) + '"' +
+                            ' data-replacement-period="' + escapeHtml(row.commercial_replacement_period || '') + '"' +
+                            ' data-internal-note="' + escapeHtml(row.commercial_internal_note || '') + '"' +
+                        '><i class="fa-solid fa-pen"></i>Change</a>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="d-flex flex-column">' +
+                        '<span class="placed-status-pill ' + adStatus.cls + '" data-ad-status>' +
+                            '<i class="fa-solid ' + adStatus.icon + ' me-1" data-ad-status-icon></i><span data-ad-status-label>' + adStatus.label + '</span>' +
+                        '</span>' +
+                        '<span class="text-muted fw-semibold fs-9 mt-2">Expected End</span>' +
+                        '<span class="placed-commercial-line">' +
+                            '<i class="fa-solid fa-calendar-days text-muted"></i>' +
+                            '<span class="text-dark fw-semibold fs-9" data-ad-end-date>' + escapeHtml(adEndDateDisp) + '</span>' +
+                        '</span>' +
+                        '<a href="javascript:void(0);" class="placed-change-link assignment-change-btn"' +
+                            ' data-candidate-id="' + escapeHtml(row.id) + '"' +
+                            ' data-is-bench="' + (isBench ? 1 : 0) + '"' +
+                            ' data-name="' + escapeHtml(fullName) + '"' +
+                            ' data-designation="' + escapeHtml(designation) + '"' +
+                            ' data-exp-loc="' + escapeHtml(expLocLine) + '"' +
+                            ' data-client="' + escapeHtml(clientName) + '"' +
+                            ' data-employment-type="' + escapeHtml(empType) + '"' +
+                            ' data-joined-date="' + escapeHtml(joinedIsoForAssign) + '"' +
+                            ' data-avatar-class="' + bgClass + '"' +
+                            ' data-avatar-letter="' + escapeHtml(strVal) + '"' +
+                            ' data-assignment-status="' + escapeHtml(row.assignment_status || '') + '"' +
+                            ' data-expected-end-date="' + escapeHtml(row.assignment_expected_end_date || '') + '"' +
+                            ' data-client-location="' + escapeHtml(row.assignment_client_location || '') + '"' +
+                            ' data-exit-reason="' + escapeHtml(row.assignment_exit_reason || '') + '"' +
+                            ' data-project-outcome="' + escapeHtml(row.assignment_project_outcome || '') + '"' +
+                            ' data-remarks="' + escapeHtml(row.assignment_remarks || '') + '"' +
+                            ' data-internal-notes="' + escapeHtml(row.assignment_internal_notes || '') + '"' +
+                            ' data-replacement-required="' + escapeHtml(row.assignment_replacement_required || 0) + '"' +
+                            ' data-replacement-status="' + escapeHtml(row.assignment_replacement_status || '') + '"' +
+                            ' data-replacement-requested-on="' + escapeHtml(row.assignment_replacement_requested_on || '') + '"' +
+                            ' data-replacement-reason="' + escapeHtml(row.assignment_replacement_reason || '') + '"' +
+                        '><i class="fa-solid fa-pen"></i>Change</a>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="dropdown">' +
+                        '<button class="btn btn-sm btn-icon btn-light placed-action-btn" type="button" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false">' +
+                            '<i class="fa-solid fa-ellipsis-vertical fs-6"></i>' +
+                        '</button>' +
+                        '<ul class="dropdown-menu dropdown-menu-end">' +
+                            '<li><a href="javascript:void(0);" class="dropdown-item stage_sub_stage" data-row-id="' + escapeHtml(row.wiseId || '') + '">View Placement Status</a></li>' +
+                            '<li><a href="javascript:void(0);" class="dropdown-item text-danger placed-row-delete-btn" data-candidate-name="' + escapeHtml(fullName) + '"><i class="fa-solid fa-trash-can me-2"></i>Delete</a></li>' +
+                        '</ul>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
+        }
+
+        function renderCandidatesTable(candidates) {
+            if (!candidates || candidates.length === 0) {
+                $('#benchCandidatePlaceAjax').html('<tr style="height: 102px;"><td colspan="8" class="text-center text-muted">No data available in table</td></tr>');
+                return;
+            }
+            var rowsHtml = '';
+            for (var i = 0; i < candidates.length; i++) {
+                rowsHtml += renderCandidateRow(candidates[i]);
+            }
+            $('#benchCandidatePlaceAjax').html(rowsHtml);
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+
+        function renderPaginationHtml(total, curPage, lastPage, perPage) {
+            if (total <= 0) return '';
+            curPage = parseInt(curPage, 10) || 1;
+            lastPage = parseInt(lastPage, 10) || 1;
+            perPage = parseInt(perPage, 10) || 10;
+            var from = (curPage - 1) * perPage + 1;
+            var to = Math.min(curPage * perPage, total);
+
+            var html = '<div class="pagi-bar">';
+            html += '<div class="pagi-info">Showing ' + from + ' to ' + to + ' of ' + total + ' records</div>';
+            html += '<div class="pagi-right">';
+
+            var prevDisabled = curPage <= 1 ? 'pagi-disabled' : '';
+            html += '<button class="pagi-arrow ' + prevDisabled + '" data-page="' + (curPage - 1) + '" type="button" aria-label="Previous page">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
+                '</button>';
+
+            for (var i = 1; i <= lastPage; i++) {
+                if (i === 1 || i === lastPage || (i >= curPage - 2 && i <= curPage + 2)) {
+                    var activeCls = i === curPage ? 'pagi-active pagi-active-disabled' : '';
+                    html += '<button class="pagi-page ' + activeCls + '" data-page="' + i + '" type="button">' + i + '</button>';
+                } else if (i === curPage - 3 || i === curPage + 3) {
+                    html += '<span class="pagi-dots">&hellip;</span>';
+                }
+            }
+
+            var nextDisabled = curPage >= lastPage ? 'pagi-disabled' : '';
+            html += '<button class="pagi-arrow ' + nextDisabled + '" data-page="' + (curPage + 1) + '" type="button" aria-label="Next page">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+                '</button>';
+
+            html += '<select class="pagi-perpage" id="rowsPerPageSelect" aria-label="Records per page">' +
+                '<option value="10"' + (perPage === 10 ? ' selected' : '') + '>10 / page</option>' +
+                '<option value="25"' + (perPage === 25 ? ' selected' : '') + '>25 / page</option>' +
+                '<option value="50"' + (perPage === 50 ? ' selected' : '') + '>50 / page</option>' +
+                '<option value="100"' + (perPage === 100 ? ' selected' : '') + '>100 / page</option>' +
+            '</select>';
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function fetchPlacedListingStats() {
+            $.ajax({
+                url: `{!! route('service_company.bench-candidates.placedListingStats_v2') !!}`,
+                type: 'GET',
+                success: function(res) {
+                    if (res && res.status === 'success') {
+                        window.PlacedListingStore.stats = res;
+                        $('#placedStatWorking').text(res.currently_working || 0);
+                        $('#placedStatCompleted').text(res.projects_completed || 0);
+                        $('#placedStatReplacement').text(res.replacement_active || 0);
+                        $('#placedStatJoining').text(res.joining_this_week || 0);
+                        $('#placedStatAvailable').text(res.available_soon || 0);
+                        $('#placedStatCompanies').text(res.companies_served || 0);
+
+                        // Broadcast to other tabs so they sync with 0 extra queries
+                        if (typeof PlacedListingChannel !== 'undefined') {
+                            PlacedListingChannel.broadcast({
+                                type: 'STATS_UPDATED',
+                                stats: res
+                            });
+                        }
+                    }
+                },
+                error: function(err) {
+                    console.warn('Placed listing stats fetch error:', err);
+                }
+            });
+        }
+
+        function fetchBenchBenchCandidatesCandidateList(page = 1, bypassCache = false) {
+            page = parseInt(page, 10) || 1;
+            var sortingfilter = $('#sortingfilter').val() || '';
+            var country = $('#country').val() || '';
+            var cus_search = ($('#kt_tagify_2').val() || '').trim();
+            var size = parseInt(localStorage.getItem('candidatePerPage') || $('#rowsPerPageSelect').val() || 10, 10);
+
+            var cacheKey = 'p_' + page + '_s_' + size + '_q_' + cus_search + '_sort_' + sortingfilter + '_c_' + country;
+
+            // 1. Check L1 in-memory RAM cache (0 ms)
+            if (!bypassCache && window.PlacedListingStore.cache.has(cacheKey)) {
+                var cached = window.PlacedListingStore.cache.get(cacheKey);
+                window.PlacedListingStore.candidates = cached.candidates;
+                window.PlacedListingStore.page = cached.page;
+                window.PlacedListingStore.total = cached.total;
+                window.PlacedListingStore.lastPage = cached.last_page;
+                $('#totalPlace').text(cached.total);
+                renderCandidatesTable(cached.candidates);
+                $('#paginationbenchCandidatePlace').html(renderPaginationHtml(cached.total, cached.page, cached.last_page, cached.per_page));
+                return Promise.resolve(cached);
+            }
+
+            // 2. Check L2 IndexedDB persistent snapshot cache (0 network)
+            if (!bypassCache && typeof PlacedListingDB !== 'undefined') {
+                return PlacedListingDB.getSnapshot(cacheKey).then(function(idbCached) {
+                    if (idbCached) {
+                        // Populate L1 cache for subsequent synchronous hits
+                        if (window.PlacedListingStore.cache.size >= window.PlacedListingStore.maxCacheEntries) {
+                            var firstKey = window.PlacedListingStore.cache.keys().next().value;
+                            window.PlacedListingStore.cache.delete(firstKey);
+                        }
+                        window.PlacedListingStore.cache.set(cacheKey, idbCached);
+
+                        window.PlacedListingStore.candidates = idbCached.candidates;
+                        window.PlacedListingStore.page = idbCached.page;
+                        window.PlacedListingStore.total = idbCached.total;
+                        window.PlacedListingStore.lastPage = idbCached.last_page;
+                        $('#totalPlace').text(idbCached.total);
+                        renderCandidatesTable(idbCached.candidates);
+                        $('#paginationbenchCandidatePlace').html(renderPaginationHtml(idbCached.total, idbCached.page, idbCached.last_page, idbCached.per_page));
+                        return idbCached;
+                    }
+                    return executeNetworkFetch();
+                }).catch(function() {
+                    return executeNetworkFetch();
+                });
+            }
+
+            return executeNetworkFetch();
+
+            function executeNetworkFetch() {
+                if (window.PlacedListingStore.inFlightRequest && typeof window.PlacedListingStore.inFlightRequest.abort === 'function') {
+                    window.PlacedListingStore.inFlightRequest.abort();
+                }
+
+                $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'block' });
+
+                window.PlacedListingStore.inFlightRequest = $.ajax({
+                    url: `{!! route('service_company.bench-candidates.placedListingData_v2') !!}?page=${page}`,
+                    type: 'GET',
+                    data: {
+                        cus_search: cus_search,
+                        country: country,
+                        sortingfilter: sortingfilter,
+                        size: size,
+                        per_page: size
+                    },
+                    success: function(response) {
+                        $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });
+                        if (response && response.status === 'success') {
+                            if (response.currency_symbols) {
+                                window.PlacedListingStore.currencySymbols = response.currency_symbols;
+                                if (typeof PlacedListingDB !== 'undefined') {
+                                    PlacedListingDB.setLookup('currency_symbols', response.currency_symbols);
+                                }
+                            }
+                            if (response.salary_modes) {
+                                window.PlacedListingStore.salaryModes = response.salary_modes;
+                                if (typeof PlacedListingDB !== 'undefined') {
+                                    PlacedListingDB.setLookup('salary_modes', response.salary_modes);
+                                }
+                            }
+                            if (response.company_id) window.PlacedListingStore.companyId = response.company_id;
+
+                            // Store in L1 in-memory LRU cache
+                            if (window.PlacedListingStore.cache.size >= window.PlacedListingStore.maxCacheEntries) {
+                                var firstKey = window.PlacedListingStore.cache.keys().next().value;
+                                window.PlacedListingStore.cache.delete(firstKey);
+                            }
+                            window.PlacedListingStore.cache.set(cacheKey, response);
+
+                            // Store in L2 IndexedDB snapshot cache (5 minutes TTL)
+                            if (typeof PlacedListingDB !== 'undefined') {
+                                PlacedListingDB.setSnapshot(cacheKey, response, 300000);
+                            }
+
+                            window.PlacedListingStore.candidates = response.candidates || [];
+                            window.PlacedListingStore.page = response.page;
+                            window.PlacedListingStore.total = response.total;
+                            window.PlacedListingStore.lastPage = response.last_page;
+
+                            $('#totalPlace').text(response.total);
+                            renderCandidatesTable(response.candidates || []);
+                            $('#paginationbenchCandidatePlace').html(renderPaginationHtml(response.total, response.page, response.last_page, response.per_page));
+                        }
+                    },
+                    error: function(xhr, status) {
+                        if (status !== 'abort') {
+                            $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });
+                            console.error('Placed listing fetch error:', xhr);
+                        }
+                    }
+                });
+
+                return window.PlacedListingStore.inFlightRequest;
+            }
+        }
+
+        // =====================================================
+        // Phase 4: Laravel Reverb Real-Time WebSocket Synchronization
+        // In-place DOM cell updates with zero page reload & reconnection recovery
+        // =====================================================
+        function initPlacedListingReverbSync() {
+            if (typeof window.Echo === 'undefined') {
+                return;
+            }
+            var store = window.PlacedListingStore;
+            var companyId = store.companyId || {{ (int) auth()->user()->company_id }};
+            if (!companyId) return;
+
+            try {
+                window.Echo.private('company.' + companyId)
+                    .listen('.placement.record.updated', function(event) {
+                        if (!event) return;
+                        handlePlacementRecordUpdatedEvent(event);
+                    });
+
+                // WebSocket Reconnection Recovery: if socket connection re-establishes, quietly sync
+                if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                    window.Echo.connector.pusher.connection.bind('state_change', function(states) {
+                        if (states.current === 'connected' && (states.previous === 'unavailable' || states.previous === 'connecting')) {
+                            if (window.PlacedListingStore && window.PlacedListingStore.cache) {
+                                window.PlacedListingStore.cache.clear();
+                            }
+                            if (typeof PlacedListingDB !== 'undefined') {
+                                PlacedListingDB.clear();
+                            }
+                            fetchPlacedListingStats();
+                        }
+                    });
+                }
+            } catch (echoEx) {
+                console.warn('[Reverb] Placed listing subscription error:', echoEx);
+            }
+        }
+
+        function handlePlacementRecordUpdatedEvent(event) {
+            var candidateId = event.candidate_id;
+            var wiseId = event.wise_id;
+            var action = event.action;
+            var payload = event.payload || {};
+
+            // 1. Invalidate L1 in-memory LRU store and L2 IndexedDB cache
+            if (window.PlacedListingStore && window.PlacedListingStore.cache) {
+                window.PlacedListingStore.cache.clear();
+            }
+            if (typeof PlacedListingDB !== 'undefined') {
+                PlacedListingDB.clear();
+            }
+
+            // 2. Refresh live overview stats
+            fetchPlacedListingStats();
+
+            // 3. Find target candidate row in DOM
+            var $row = $('tr.placed-row').filter(function() {
+                var rowId = String($(this).data('candidate-id'));
+                return (candidateId && rowId === String(candidateId)) || (wiseId && rowId === String(wiseId));
+            });
+
+            if (!$row.length) {
+                return;
+            }
+
+            // 4. In-place DOM update without page reload
+            if (action === 'commercial_updated') {
+                var store = window.PlacedListingStore;
+                var ccServiceType = payload.commercial_service_type || '';
+                var ccFeeMethod = payload.commercial_fee_method || '';
+                var ccFeeBase = payload.commercial_fee_base || 'offered';
+                var ccFeePct = parseFloat(payload.commercial_fee_pct) || 0;
+                var ccFeeFixed = parseFloat(payload.commercial_fee_fixed) || 0;
+                var ccModel = payload.commercial_model || '';
+
+                var ccFeeLabel = '--';
+                if (ccServiceType === 'free') {
+                    ccFeeLabel = 'Free Placement';
+                } else if (ccFeeMethod === 'percentage' && ccFeePct > 0) {
+                    var baseLabel = ccFeeBase === 'offered' ? 'CTC' : 'Billing';
+                    ccFeeLabel = ccFeePct + '% (' + baseLabel + ')';
+                } else if (ccFeeMethod === 'fixed' && ccFeeFixed > 0) {
+                    ccFeeLabel = '₹' + Math.round(ccFeeFixed).toLocaleString('en-IN') + ' Fixed Fee';
+                }
+
+                var $cBtn = $row.find('.commercial-change-btn');
+                var empType = ($cBtn.data('employment-type') || '').toString();
+                var isContract = empType.toLowerCase().indexOf('contract') !== -1 || empType.toLowerCase().indexOf('hour') !== -1;
+                var marginLabel = isContract ? 'Gross Margin' : '(Placement Fee)';
+                var ccModelLabel = ccModel ? (ccModel.charAt(0).toUpperCase() + ccModel.slice(1)) : (empType || '--');
+
+                $row.find('[data-cc-fee]').html(escapeHtml(ccFeeLabel) + ' <span class="text-muted fw-normal">' + marginLabel + '</span>');
+                $row.find('[data-cc-model]').text(ccModelLabel);
+
+                $cBtn.data('service-type', ccServiceType)
+                    .data('commercial-model', ccModel)
+                    .data('fee-method', ccFeeMethod)
+                    .data('fee-base', ccFeeBase)
+                    .data('fee-pct', ccFeePct)
+                    .data('fee-fixed', ccFeeFixed)
+                    .data('billing-amount', payload.commercial_billing_amount || 0)
+                    .data('billing-cycle', payload.commercial_billing_cycle || '')
+                    .data('margin-pct', payload.commercial_margin_pct || 0)
+                    .data('replacement-period', payload.commercial_replacement_period || '')
+                    .data('internal-note', payload.commercial_internal_note || '');
+            } else if (action === 'assignment_updated') {
+                var savedAssignStatus = payload.assignment_status || 'working';
+                var adStatusMap = {
+                    working:   { label: 'Currently Working', icon: 'fa-circle-check',  cls: 'is-success' },
+                    completed: { label: 'Project Completed',  icon: 'fa-check-double', cls: 'is-info'    },
+                    left:      { label: 'Candidate Left',     icon: 'fa-circle-xmark', cls: 'is-danger'  }
+                };
+                var adStatus = adStatusMap[savedAssignStatus] || adStatusMap.working;
+                var adEndDateDisp = formatDisplayDate(payload.assignment_expected_end_date);
+
+                var $pill = $row.find('[data-ad-status]');
+                $pill.removeClass('is-success is-info is-danger').addClass(adStatus.cls);
+                $pill.find('[data-ad-status-icon]').attr('class', 'fa-solid ' + adStatus.icon + ' me-1');
+                $pill.find('[data-ad-status-label]').text(adStatus.label);
+
+                $row.find('[data-ad-end-date]').text(adEndDateDisp);
+
+                var $aBtn = $row.find('.assignment-change-btn');
+                $aBtn.data('assignment-status', payload.assignment_status || '')
+                    .data('expected-end-date', payload.assignment_expected_end_date || '')
+                    .data('employment-type', payload.assignment_employment_type || '')
+                    .data('client-location', payload.assignment_client_location || '')
+                    .data('exit-reason', payload.assignment_exit_reason || '')
+                    .data('project-outcome', payload.assignment_project_outcome || '')
+                    .data('remarks', payload.assignment_remarks || '')
+                    .data('internal-notes', payload.assignment_internal_notes || '')
+                    .data('replacement-required', payload.assignment_replacement_required ? 1 : 0)
+                    .data('replacement-status', payload.assignment_replacement_status || '')
+                    .data('replacement-requested-on', payload.assignment_replacement_requested_on || '')
+                    .data('replacement-reason', payload.assignment_replacement_reason || '');
+            }
+
+            // Visual feedback: smooth highlight fade
+            $row.addClass('row-reverb-updated');
+            setTimeout(function() {
+                $row.removeClass('row-reverb-updated');
+            }, 2500);
         }
     </script>
 @endpush

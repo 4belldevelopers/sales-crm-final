@@ -49,6 +49,7 @@ class BenchRequestCreated implements ShouldBroadcast
     {
         return [
             new PrivateChannel("company.{$this->companyId}.job.{$this->jobId}"),
+            new PrivateChannel("company.{$this->companyId}"),
         ];
     }
 
