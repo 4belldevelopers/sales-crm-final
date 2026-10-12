@@ -271,7 +271,7 @@ class BenchRequestMutationService
                 ];
             }
 
-            // 7. Post-Commit Asynchronous Outbox Worker & Cache Invalidation
+            // 7. Post-Commit Asynchronous Outbox Worker & Immediate Elastic Sync Hook
             if ($outboxId) {
                 try {
                     ProcessBenchRequestOutboxEventJob::dispatch($outboxId)->onQueue('candidate-index');
@@ -280,16 +280,32 @@ class BenchRequestMutationService
                 }
             }
 
+            // Post-HTTP response terminating hook: guarantee immediate ES indexing and counter invalidation
+            // executed post-HTTP response without delaying the recruiter's UI
+            app()->terminating(function () use ($recId, $source_jobid, $source_company_id, $source_from_company_id, $userId) {
+                try {
+                    GeneralMethod::candidateRequestIndexElastic((int) $recId);
+                    GeneralMethod::invalidateJobCounters((int) $source_jobid, [(int) $source_company_id, (int) $source_from_company_id]);
+                    GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$userId);
+                } catch (\Throwable $e) {
+                    Log::warning('[BenchRequestMutationService] Terminating sync failed: '.$e->getMessage());
+                }
+            });
+
             // Invalidate recommendation version caches for this user & tenant
             $cachekeys = [
                 'allbenchrecommendreq_version_user_'.$userId,
                 'allbenchrecommendinternalreq_version_user_'.$userId,
                 'allbenchrecommendreq_version_company_'.$source_from_company_id,
                 'allbenchrecommendinternalreq_version_company_'.$source_from_company_id,
+                'allcandidatesrequest_version_user_'.$userId,
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
             }
+
+            GeneralMethod::invalidateJobCounters((int) $source_jobid, [(int) $source_company_id, (int) $source_from_company_id]);
+            \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
 
             return $successResponse;
 
