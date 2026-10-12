@@ -1051,7 +1051,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012b">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012c">
     @endif
 @endpush
 @section('content')
@@ -2016,77 +2016,169 @@
                     </div>
 
                     <div class="card ij-autoclose-card ij-additional-card">
-                        <div class="card-body">
-                            <div class="section-title">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <!-- Header Banner matching attached design -->
+                        <div class="ij-autoclose-header">
+                            <div class="ij-autoclose-header-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 16 14"/>
-                                </svg>Job Auto Close
+                                </svg>
                             </div>
+                            <div class="ij-autoclose-header-content">
+                                <h3 class="ij-autoclose-header-title">Job Auto Close</h3>
+                                <p class="ij-autoclose-header-desc">Automatically close the job after a selected duration.</p>
+                            </div>
+                        </div>
+
+                        <div class="card-body ij-autoclose-body">
                             <?php
                                 $currDays = isset($numberDays) && $numberDays != '' ? (string)$numberDays : '60';
                                 if (!in_array($currDays, ['15', '30', '45', '60'])) {
                                     $currDays = '60';
                                 }
                             ?>
-                            <div class="form-group-cus">
-                                <label class="form-label required mb-2" for="end_date">Job automatically closed in</label>
-                                <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
-                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
-                                        <span class="ij-choice-icon-wrap ij-icon-blue">
+                            <div class="form-group-cus mb-0">
+                                <label class="ij-autoclose-label" for="end_date">
+                                    Auto-close job after <span class="text-danger">*</span>
+                                </label>
+                                <div class="ij-autoclose-grid" role="radiogroup" aria-label="Auto-close job after">
+                                    <!-- 15 Days -->
+                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '15') ? 'is-selected' : ''; ?>" data-value="15" role="radio" aria-checked="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('15')">
+                                        <span class="ij-autoclose-radio <?php echo ($currDays === '15') ? 'is-selected' : ''; ?>">
+                                            <span class="ij-autoclose-radio-dot"></span>
+                                        </span>
+                                        <span class="ij-autoclose-icon-box ij-box-blue">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-choice-text">
+                                        <span class="ij-autoclose-text">
                                             <strong>15 Days</strong>
-                                            <small>Closes in 2 weeks</small>
+                                            <small>2 weeks</small>
                                         </span>
                                     </button>
-                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="30" aria-pressed="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>">
-                                        <span class="ij-choice-icon-wrap ij-icon-yellow">
+
+                                    <!-- 30 Days -->
+                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '30') ? 'is-selected' : ''; ?>" data-value="30" role="radio" aria-checked="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('30')">
+                                        <span class="ij-autoclose-radio <?php echo ($currDays === '30') ? 'is-selected' : ''; ?>">
+                                            <span class="ij-autoclose-radio-dot"></span>
+                                        </span>
+                                        <span class="ij-autoclose-icon-box ij-box-yellow">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-choice-text">
+                                        <span class="ij-autoclose-text">
                                             <strong>30 Days</strong>
-                                            <small>Standard 1 month</small>
+                                            <small>1 month</small>
                                         </span>
                                     </button>
-                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="45" aria-pressed="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>">
-                                        <span class="ij-choice-icon-wrap ij-icon-purple">
+
+                                    <!-- 45 Days -->
+                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '45') ? 'is-selected' : ''; ?>" data-value="45" role="radio" aria-checked="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('45')">
+                                        <span class="ij-autoclose-radio <?php echo ($currDays === '45') ? 'is-selected' : ''; ?>">
+                                            <span class="ij-autoclose-radio-dot"></span>
+                                        </span>
+                                        <span class="ij-autoclose-icon-box ij-box-purple">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-choice-text">
+                                        <span class="ij-autoclose-text">
                                             <strong>45 Days</strong>
-                                            <small>Extended 1.5 months</small>
+                                            <small>1.5 months</small>
                                         </span>
                                     </button>
-                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="60" aria-pressed="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>">
-                                        <span class="ij-choice-icon-wrap ij-icon-green">
+
+                                    <!-- 60 Days (Default) -->
+                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '60') ? 'is-selected' : ''; ?>" data-value="60" role="radio" aria-checked="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('60')">
+                                        <span class="ij-autoclose-radio <?php echo ($currDays === '60') ? 'is-selected' : ''; ?>">
+                                            <span class="ij-autoclose-radio-dot"></span>
+                                        </span>
+                                        <span class="ij-autoclose-icon-box ij-box-yellow">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-choice-text">
+                                        <span class="ij-autoclose-text">
                                             <strong>60 Days</strong>
-                                            <small>Maximum 2 months (Default)</small>
+                                            <small>2 months</small>
                                         </span>
+                                        <span class="ij-autoclose-default-pill">Default</span>
                                     </button>
                                 </div>
+
                                 <select class="form-select d-none" name="end_date" id="end_date">
                                     <option value="15" <?php echo ($currDays === '15') ? 'selected' : ''; ?>>15 Days</option>
                                     <option value="30" <?php echo ($currDays === '30') ? 'selected' : ''; ?>>30 Days</option>
                                     <option value="45" <?php echo ($currDays === '45') ? 'selected' : ''; ?>>45 Days</option>
                                     <option value="60" <?php echo ($currDays === '60') ? 'selected' : ''; ?>>60 Days</option>
                                 </select>
-                                <span class="form-hint" style="margin-top:8px;">Job will be automatically marked as closed after this duration.</span>
+
+                                <!-- Information Notice Bar -->
+                                <div class="ij-autoclose-info-banner">
+                                    <svg class="ij-autoclose-info-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                    </svg>
+                                    <span class="ij-autoclose-info-text">The job will automatically move to Closed after the selected duration.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <script>
+                        function selectJobAutoClose(days) {
+                            var strVal = String(days);
+                            var select = document.getElementById('end_date');
+                            if (select) {
+                                select.value = strVal;
+                                for (var i = 0; i < select.options.length; i++) {
+                                    select.options[i].selected = (select.options[i].value === strVal);
+                                }
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                                if (window.jQuery) {
+                                    window.jQuery(select).trigger('change');
+                                }
+                            }
+                            var options = document.querySelectorAll('.ij-autoclose-card .ij-autoclose-option');
+                            options.forEach(function(btn) {
+                                var isSelected = (btn.getAttribute('data-value') === strVal);
+                                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+                                btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+                                btn.classList.toggle('is-selected', isSelected);
+                                var radio = btn.querySelector('.ij-autoclose-radio');
+                                if (radio) {
+                                    radio.classList.toggle('is-selected', isSelected);
+                                }
+                            });
+                        }
+
+                        (function() {
+                            function initAutoCloseSync() {
+                                var card = document.querySelector('.ij-autoclose-card');
+                                if (card) {
+                                    card.addEventListener('click', function(e) {
+                                        var btn = e.target.closest('.ij-autoclose-option');
+                                        if (btn) {
+                                            e.preventDefault();
+                                            var val = btn.getAttribute('data-value');
+                                            if (val) {
+                                                selectJobAutoClose(val);
+                                            }
+                                        }
+                                    });
+                                }
+                                var select = document.getElementById('end_date');
+                                var initial = select ? (select.value || '60') : '60';
+                                selectJobAutoClose(initial);
+                            }
+
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', initAutoCloseSync);
+                            } else {
+                                initAutoCloseSync();
+                            }
+                        })();
+                    </script>
                     <div class="card ij-hiring-team-card">
                         <div class="card-body">
                             <div class="section-title">
@@ -7087,6 +7179,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011t"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012c"></script>
     @endif
 @endpush
