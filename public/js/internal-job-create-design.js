@@ -122,6 +122,7 @@
             'Hiring Team': 'Assign the client contact and internal recruiters for this job position.',
             'Educational Qualification': 'Select up to 5 eligible educational qualifications or degrees.',
             'Qualification / Education': 'Select up to 5 eligible educational qualifications or degrees.',
+            'Job Auto Close': 'Configure job closing duration and preferences.',
             'Additional Details': 'Configure job closing duration and preferences.',
             'Job Description': 'Provide a detailed and clear job description.',
             'Key Skills': 'Add the key skills required for this position.'
@@ -133,7 +134,10 @@
             if (!subtitle) return;
             const text = document.createElement('span');
             text.className = 'ij-section-copy';
-            Array.from(title.childNodes).filter(function (node) { return node.nodeType === 3 || (node.nodeType === 1 && node.nodeName.toLowerCase() !== 'svg'); }).forEach(function (node) { text.append(node); });
+            const heading = document.createElement('span');
+            heading.className = 'ij-section-heading';
+            Array.from(title.childNodes).filter(function (node) { return node.nodeType === 3 || (node.nodeType === 1 && node.nodeName.toLowerCase() !== 'svg'); }).forEach(function (node) { heading.append(node); });
+            text.append(heading);
             const helper = document.createElement('small');
             helper.textContent = subtitle;
             text.append(helper);
@@ -159,7 +163,11 @@
                 'Full-time': 'Permanent employment',
                 'Contract': 'Project-based hiring',
                 'Freelance': 'Independent contractor',
-                'Part Time': 'Flexible working hours'
+                'Part Time': 'Flexible working hours',
+                '15 Days': 'Closes in 2 weeks',
+                '30 Days': 'Standard 1 month',
+                '45 Days': 'Extended 1.5 months',
+                '60 Days': 'Maximum 2 months (Default)'
             };
             const orderPreferences = {
                 'work_from_home': ['Remote', 'Hybrid', 'Work From Office']
@@ -234,6 +242,7 @@
         bindInCardChoices('employment_type', 'Position Type');
         bindInCardChoices('work_from_home', 'Work Mode');
         bindInCardChoices('work_shifts', 'Work Shift');
+        bindInCardChoices('end_date', 'Job Auto Close');
 
         const hmControl = document.getElementById('hmSearchDisplay');
         if (hmControl) {
