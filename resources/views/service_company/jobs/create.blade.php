@@ -750,6 +750,278 @@
     #jrwrap .jero-title-footer-hint {
         color: #94A3B8;
     }
+    /* =========================================================================
+       Job Department Intelligence Combobox Styles (15.6" Screen Fit & Metronic)
+       ========================================================================= */
+    #jrwrap .jero-dept-form-group { position: relative; }
+    #jrwrap .jero-dept-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #059669;
+        background: #ECFDF5;
+        border: 1px solid #A7F3D0;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+    }
+    #jrwrap .jero-dept-select-wrap {
+        position: relative;
+        width: 100%;
+    }
+    #jrwrap .jero-dept-input-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    #jrwrap .jero-dept-search-icon {
+        position: absolute;
+        left: 12px;
+        color: #A1A5B7;
+        pointer-events: none;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+    }
+    #jrwrap .jero-dept-input {
+        width: 100%;
+        padding-left: 34px !important;
+        padding-right: 56px !important;
+        height: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #181C32;
+        background-color: #FFFFFF;
+        border: 1px solid #E1E3EA;
+        border-radius: 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        font-family: inherit;
+    }
+    #jrwrap .jero-dept-input:focus {
+        border-color: #3E97FF;
+        box-shadow: 0 0 0 3px rgba(62, 151, 255, 0.12);
+        outline: none;
+    }
+    #jrwrap .jero-dept-input-box:focus-within .jero-dept-search-icon {
+        color: #3E97FF;
+    }
+    #jrwrap .jero-dept-clear-btn {
+        position: absolute;
+        right: 28px;
+        background: none;
+        border: none;
+        padding: 4px;
+        color: #A1A5B7;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.15s;
+    }
+    #jrwrap .jero-dept-clear-btn:hover {
+        color: #181C32;
+        background: #F1F1F4;
+    }
+    #jrwrap .jero-dept-chevron {
+        position: absolute;
+        right: 10px;
+        color: #A1A5B7;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        transition: transform 0.2s ease, color 0.2s;
+    }
+    #jrwrap .jero-dept-select-wrap.is-open .jero-dept-chevron {
+        transform: rotate(180deg);
+        color: #3E97FF;
+    }
+    #jrwrap .jero-dept-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #FFFFFF;
+        border: 1px solid #E1E3EA;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        animation: jeroDropdownFadeIn 0.15s ease-out;
+    }
+    #jrwrap .jero-dept-dropdown.drop-up {
+        top: auto;
+        bottom: calc(100% + 4px);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
+    }
+    #jrwrap .jero-dept-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 6px 10px;
+        background: #FFFFFF;
+        border-bottom: 1px solid #F1F1F4;
+    }
+    #jrwrap .jero-dept-tab-btn {
+        font-size: 11px;
+        font-weight: 500;
+        color: #7E8299;
+        background: none;
+        border: none;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    #jrwrap .jero-dept-tab-btn:hover {
+        color: #181C32;
+        background: #F1F1F4;
+    }
+    #jrwrap .jero-dept-tab-btn.active {
+        background: #EEF6FF;
+        color: #3E97FF;
+        font-weight: 600;
+    }
+    #jrwrap .jero-dept-tab-btn .tab-count {
+        font-size: 10px;
+        opacity: 0.85;
+        padding: 1px 5px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+    }
+    #jrwrap .jero-dept-tab-btn.active .tab-count {
+        background: rgba(62, 151, 255, 0.15);
+    }
+    #jrwrap .jero-dept-list-container {
+        max-height: min(280px, 42vh);
+        overflow-y: auto;
+        padding: 4px 0;
+        scrollbar-width: thin;
+        scrollbar-color: #D1D5DB transparent;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar {
+        width: 5px;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
+        background: #D1D5DB;
+        border-radius: 3px;
+    }
+    #jrwrap .jero-dept-section-header {
+        padding: 6px 12px 2px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #A1A5B7;
+        background: #F9FAFB;
+        border-top: 1px solid #F1F1F4;
+        border-bottom: 1px solid #F1F1F4;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    #jrwrap .jero-dept-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: background 0.1s, border-color 0.1s;
+    }
+    #jrwrap .jero-dept-item:hover,
+    #jrwrap .jero-dept-item.focused {
+        background: #F8F9FA;
+        border-left-color: #3E97FF;
+    }
+    #jrwrap .jero-dept-item.selected {
+        background: #F1F7FF;
+        border-left-color: #3E97FF;
+    }
+    #jrwrap .jero-dept-item-main {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+    #jrwrap .jero-dept-item-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #181C32;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #jrwrap .jero-dept-item-name mark {
+        background: #FFF3CD;
+        color: #181C32;
+        padding: 0 1px;
+        border-radius: 2px;
+    }
+    #jrwrap .jero-dept-item-sub {
+        font-size: 11px;
+        color: #7E8299;
+    }
+    #jrwrap .jero-dept-item-side {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-dept-badge {
+        font-size: 10px;
+        font-weight: 500;
+        padding: 2px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+    #jrwrap .badge-dept-org {
+        background: #EFF6FF;
+        color: #2563EB;
+        border: 1px solid #DBEAFE;
+    }
+    #jrwrap .badge-dept-std {
+        background: #F8FAFC;
+        color: #64748B;
+        border: 1px solid #E2E8F0;
+    }
+    #jrwrap .jero-dept-item-check {
+        color: #3E97FF;
+        display: flex;
+        align-items: center;
+    }
+    #jrwrap .jero-dept-empty-state {
+        padding: 18px 12px;
+        text-align: center;
+        color: #64748B;
+        font-size: 12px;
+    }
+    #jrwrap .jero-dept-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px;
+        background: #FAFAFB;
+        border-top: 1px solid #F1F1F4;
+        font-size: 10px;
+        color: #94A3B8;
+    }
+    #jrwrap .jero-dept-sync-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #0284C7;
+        font-weight: 500;
+    }
+    #jrwrap .jero-dept-footer-hint {
+        color: #94A3B8;
+    }
     /* Safe Auto-Fill Transactional Undo Snackbar */
     #jrwrap .jero-autofill-undo-toast {
         display: flex;
@@ -1462,7 +1734,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012c">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012d">
     @endif
 @endpush
 @section('content')
@@ -1824,20 +2096,77 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Job Department</label>
-                                    <select class="form-select" id="category_id" name="category_id">
+                                <div class="form-group-cus jero-dept-form-group">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label required mb-0">Job Department</label>
+                                        <div id="jero_dept_status_wrap" style="display:none;">
+                                            <span class="jero-dept-status-chip" id="jero_dept_status_chip">Standard ✓</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hidden Synchronized Native Select (Preserves 100% Backward Compatibility with Validation & Submit) -->
+                                    <select id="category_id" name="category_id" style="display:none;" tabindex="-1" aria-hidden="true">
                                         <option value="">Select Department</option>
                                         <?php
+                                        $selectedDeptName = '';
                                         foreach ($categories as $category) {
-                                            $category_id = $sel = '';
-                                            $category_id = @$job->category_id;
-                                            if ($category_id == @$category->id) { $sel = 'selected="selected"'; }
+                                            $sel = '';
+                                            if (@$job->category_id == @$category->id) {
+                                                $sel = 'selected="selected"';
+                                                $selectedDeptName = $category->name;
+                                            }
                                             echo '<option value="' . @$category->id . '" ' . $sel . '>' . ucfirst($category->name) . '</option>';
                                         }
                                         ?>
                                     </select>
-                                    <span class="form-hint">*Please select the department for this job.</span>
+
+                                    <!-- God-Level Enterprise Combobox Component (Client-First / 10K Concurrency) -->
+                                    <div class="jero-dept-select-wrap" id="jero_dept_select_wrap">
+                                        <div class="jero-dept-input-box">
+                                            <span class="jero-dept-search-icon">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            </span>
+                                            <input type="text"
+                                                   class="jero-dept-input"
+                                                   id="category_id_display"
+                                                   placeholder="Search or select department..."
+                                                   autocomplete="off"
+                                                   spellcheck="false"
+                                                   role="combobox"
+                                                   aria-expanded="false"
+                                                   aria-haspopup="listbox"
+                                                   aria-autocomplete="list"
+                                                   value="<?php echo htmlspecialchars($selectedDeptName); ?>">
+                                            <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            </button>
+                                            <div class="jero-dept-chevron">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Decision-Centric Hierarchical Dropdown Menu -->
+                                        <div class="jero-dept-dropdown" id="jero_dept_dropdown" style="display:none;" role="listbox" aria-label="Job Departments">
+                                            <!-- Segment Filter Tabs (All | My Organization | Standard Library) -->
+                                            <div class="jero-dept-tabs">
+                                                <button type="button" class="jero-dept-tab-btn active" data-filter="all">All <span class="tab-count" id="jero_dept_count_all">0</span></button>
+                                                <button type="button" class="jero-dept-tab-btn" data-filter="company">My Organization <span class="tab-count" id="jero_dept_count_company">0</span></button>
+                                                <button type="button" class="jero-dept-tab-btn" data-filter="standard">Standard Library <span class="tab-count" id="jero_dept_count_standard">0</span></button>
+                                            </div>
+
+                                            <!-- Scrollable Options List Container -->
+                                            <div class="jero-dept-list-container" id="jero_dept_list_container">
+                                                <!-- Dynamically populated by JeroDeptIntelligenceEngine -->
+                                            </div>
+
+                                            <!-- Sticky Footer Bar -->
+                                            <div class="jero-dept-footer">
+                                                <span class="jero-dept-sync-status" id="jero_dept_sync_status"></span>
+                                                <span class="jero-dept-footer-hint">↑↓ Navigate · ↵ Select · Esc Close</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="form-hint">*Please select or search the department for this job.</span>
                                 </div>
                             </div>
                         </div>
@@ -2507,169 +2836,77 @@
                     </div>
 
                     <div class="card ij-autoclose-card ij-additional-card">
-                        <!-- Header Banner matching attached design -->
-                        <div class="ij-autoclose-header">
-                            <div class="ij-autoclose-header-icon">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <div class="card-body">
+                            <div class="section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 16 14"/>
-                                </svg>
+                                </svg>Job Auto Close
                             </div>
-                            <div class="ij-autoclose-header-content">
-                                <h3 class="ij-autoclose-header-title">Job Auto Close</h3>
-                                <p class="ij-autoclose-header-desc">Automatically close the job after a selected duration.</p>
-                            </div>
-                        </div>
-
-                        <div class="card-body ij-autoclose-body">
                             <?php
                                 $currDays = isset($numberDays) && $numberDays != '' ? (string)$numberDays : '60';
                                 if (!in_array($currDays, ['15', '30', '45', '60'])) {
                                     $currDays = '60';
                                 }
                             ?>
-                            <div class="form-group-cus mb-0">
-                                <label class="ij-autoclose-label" for="end_date">
-                                    Auto-close job after <span class="text-danger">*</span>
-                                </label>
-                                <div class="ij-autoclose-grid" role="radiogroup" aria-label="Auto-close job after">
-                                    <!-- 15 Days -->
-                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '15') ? 'is-selected' : ''; ?>" data-value="15" role="radio" aria-checked="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('15')">
-                                        <span class="ij-autoclose-radio <?php echo ($currDays === '15') ? 'is-selected' : ''; ?>">
-                                            <span class="ij-autoclose-radio-dot"></span>
-                                        </span>
-                                        <span class="ij-autoclose-icon-box ij-box-blue">
+                            <div class="form-group-cus">
+                                <label class="form-label required mb-2" for="end_date">Job automatically closed in</label>
+                                <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-blue">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-autoclose-text">
+                                        <span class="ij-choice-text">
                                             <strong>15 Days</strong>
-                                            <small>2 weeks</small>
+                                            <small>Closes in 2 weeks</small>
                                         </span>
                                     </button>
-
-                                    <!-- 30 Days -->
-                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '30') ? 'is-selected' : ''; ?>" data-value="30" role="radio" aria-checked="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('30')">
-                                        <span class="ij-autoclose-radio <?php echo ($currDays === '30') ? 'is-selected' : ''; ?>">
-                                            <span class="ij-autoclose-radio-dot"></span>
-                                        </span>
-                                        <span class="ij-autoclose-icon-box ij-box-yellow">
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="30" aria-pressed="<?php echo ($currDays === '30') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-yellow">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-autoclose-text">
+                                        <span class="ij-choice-text">
                                             <strong>30 Days</strong>
-                                            <small>1 month</small>
+                                            <small>Standard 1 month</small>
                                         </span>
                                     </button>
-
-                                    <!-- 45 Days -->
-                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '45') ? 'is-selected' : ''; ?>" data-value="45" role="radio" aria-checked="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('45')">
-                                        <span class="ij-autoclose-radio <?php echo ($currDays === '45') ? 'is-selected' : ''; ?>">
-                                            <span class="ij-autoclose-radio-dot"></span>
-                                        </span>
-                                        <span class="ij-autoclose-icon-box ij-box-purple">
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="45" aria-pressed="<?php echo ($currDays === '45') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-purple">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-autoclose-text">
+                                        <span class="ij-choice-text">
                                             <strong>45 Days</strong>
-                                            <small>1.5 months</small>
+                                            <small>Extended 1.5 months</small>
                                         </span>
                                     </button>
-
-                                    <!-- 60 Days (Default) -->
-                                    <button type="button" class="ij-autoclose-option <?php echo ($currDays === '60') ? 'is-selected' : ''; ?>" data-value="60" role="radio" aria-checked="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>" aria-pressed="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>" onclick="selectJobAutoClose('60')">
-                                        <span class="ij-autoclose-radio <?php echo ($currDays === '60') ? 'is-selected' : ''; ?>">
-                                            <span class="ij-autoclose-radio-dot"></span>
-                                        </span>
-                                        <span class="ij-autoclose-icon-box ij-box-yellow">
+                                    <button type="button" class="ij-choice ij-choice-with-icon" data-value="60" aria-pressed="<?php echo ($currDays === '60') ? 'true' : 'false'; ?>">
+                                        <span class="ij-choice-icon-wrap ij-icon-green">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                         </span>
-                                        <span class="ij-autoclose-text">
+                                        <span class="ij-choice-text">
                                             <strong>60 Days</strong>
-                                            <small>2 months</small>
+                                            <small>Maximum 2 months (Default)</small>
                                         </span>
-                                        <span class="ij-autoclose-default-pill">Default</span>
                                     </button>
                                 </div>
-
                                 <select class="form-select d-none" name="end_date" id="end_date">
                                     <option value="15" <?php echo ($currDays === '15') ? 'selected' : ''; ?>>15 Days</option>
                                     <option value="30" <?php echo ($currDays === '30') ? 'selected' : ''; ?>>30 Days</option>
                                     <option value="45" <?php echo ($currDays === '45') ? 'selected' : ''; ?>>45 Days</option>
                                     <option value="60" <?php echo ($currDays === '60') ? 'selected' : ''; ?>>60 Days</option>
                                 </select>
-
-                                <!-- Information Notice Bar -->
-                                <div class="ij-autoclose-info-banner">
-                                    <svg class="ij-autoclose-info-icon" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                                    </svg>
-                                    <span class="ij-autoclose-info-text">The job will automatically move to Closed after the selected duration.</span>
-                                </div>
+                                <span class="form-hint" style="margin-top:8px;">Job will be automatically marked as closed after this duration.</span>
                             </div>
                         </div>
                     </div>
-                    <script>
-                        function selectJobAutoClose(days) {
-                            var strVal = String(days);
-                            var select = document.getElementById('end_date');
-                            if (select) {
-                                select.value = strVal;
-                                for (var i = 0; i < select.options.length; i++) {
-                                    select.options[i].selected = (select.options[i].value === strVal);
-                                }
-                                select.dispatchEvent(new Event('change', { bubbles: true }));
-                                if (window.jQuery) {
-                                    window.jQuery(select).trigger('change');
-                                }
-                            }
-                            var options = document.querySelectorAll('.ij-autoclose-card .ij-autoclose-option');
-                            options.forEach(function(btn) {
-                                var isSelected = (btn.getAttribute('data-value') === strVal);
-                                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-                                btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
-                                btn.classList.toggle('is-selected', isSelected);
-                                var radio = btn.querySelector('.ij-autoclose-radio');
-                                if (radio) {
-                                    radio.classList.toggle('is-selected', isSelected);
-                                }
-                            });
-                        }
-
-                        (function() {
-                            function initAutoCloseSync() {
-                                var card = document.querySelector('.ij-autoclose-card');
-                                if (card) {
-                                    card.addEventListener('click', function(e) {
-                                        var btn = e.target.closest('.ij-autoclose-option');
-                                        if (btn) {
-                                            e.preventDefault();
-                                            var val = btn.getAttribute('data-value');
-                                            if (val) {
-                                                selectJobAutoClose(val);
-                                            }
-                                        }
-                                    });
-                                }
-                                var select = document.getElementById('end_date');
-                                var initial = select ? (select.value || '60') : '60';
-                                selectJobAutoClose(initial);
-                            }
-
-                            if (document.readyState === 'loading') {
-                                document.addEventListener('DOMContentLoaded', initAutoCloseSync);
-                            } else {
-                                initAutoCloseSync();
-                            }
-                        })();
-                    </script>
                     <div class="card ij-hiring-team-card">
                         <div class="card-body">
                             <div class="section-title">
@@ -7788,7 +8025,7 @@
                 if (idbInstance) return resolve(idbInstance);
                 if (!window.indexedDB) return reject(new Error('IndexedDB not supported'));
 
-                var req = window.indexedDB.open(DB_NAME, 2);
+                var req = window.indexedDB.open(DB_NAME, 3);
                 req.onupgradeneeded = function(e) {
                     var db = e.target.result;
                     if (!db.objectStoreNames.contains('clients')) {
@@ -7796,6 +8033,9 @@
                     }
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
                         db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                    }
+                    if (!db.objectStoreNames.contains('departments')) {
+                        db.createObjectStore('departments', { keyPath: 'key' });
                     }
                 };
                 req.onsuccess = function(e) {
@@ -8630,6 +8870,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012c"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012d"></script>
     @endif
 @endpush

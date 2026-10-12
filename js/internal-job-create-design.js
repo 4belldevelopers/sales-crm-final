@@ -149,7 +149,7 @@
             const select = document.getElementById(id);
             if (!select) return;
             const card = select.closest('.card');
-            if (!card || card.classList.contains('ij-autoclose-card')) return;
+            if (!card) return;
             let choices = card.querySelector('.ij-choices');
             const descriptions = {
                 'Work From Office': 'Based at office location',
@@ -242,6 +242,7 @@
         bindInCardChoices('employment_type', 'Position Type');
         bindInCardChoices('work_from_home', 'Work Mode');
         bindInCardChoices('work_shifts', 'Work Shift');
+        bindInCardChoices('end_date', 'Job Auto Close');
 
         const hmControl = document.getElementById('hmSearchDisplay');
         if (hmControl) {
