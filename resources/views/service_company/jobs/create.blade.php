@@ -751,25 +751,35 @@
         color: #94A3B8;
     }
     /* =========================================================================
-       Job Department Intelligence Combobox Styles (15.6" Screen Fit & Metronic)
+       God-Level Enterprise Job Department Combobox (Client-First / 10K Concurrency)
+       Metronic 8, Poppins Font, 15.6" Screen Fit (1366x768 & 1920x1080)
        ========================================================================= */
     #jrwrap .jero-dept-form-group { position: relative; }
     #jrwrap .jero-dept-status-chip {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
         font-size: 11px;
-        font-weight: 500;
-        color: #059669;
-        background: #ECFDF5;
-        border: 1px solid #A7F3D0;
-        padding: 2px 8px;
+        font-weight: 600;
+        padding: 2px 9px;
         border-radius: 12px;
         margin-left: 8px;
+        transition: all 0.2s ease;
+    }
+    #jrwrap .jero-dept-status-chip.chip-std {
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+    #jrwrap .jero-dept-status-chip.chip-org {
+        color: #059669;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
     }
     #jrwrap .jero-dept-select-wrap {
         position: relative;
         width: 100%;
+        font-family: 'Poppins', sans-serif;
     }
     #jrwrap .jero-dept-input-box {
         position: relative;
@@ -780,193 +790,298 @@
     #jrwrap .jero-dept-search-icon {
         position: absolute;
         left: 12px;
-        color: #A1A5B7;
+        color: #94a3b8;
         pointer-events: none;
-        transition: color 0.2s;
+        transition: color 0.2s ease;
         display: flex;
         align-items: center;
     }
     #jrwrap .jero-dept-input {
         width: 100%;
-        padding-left: 34px !important;
-        padding-right: 56px !important;
+        padding-left: 36px !important;
+        padding-right: 68px !important;
         height: 40px;
         font-size: 13px;
         font-weight: 500;
-        color: #181C32;
-        background-color: #FFFFFF;
-        border: 1px solid #E1E3EA;
-        border-radius: 6px;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        color: #1e293b;
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
         font-family: inherit;
     }
+    #jrwrap .jero-dept-input:hover {
+        border-color: #94a3b8;
+    }
     #jrwrap .jero-dept-input:focus {
-        border-color: #3E97FF;
-        box-shadow: 0 0 0 3px rgba(62, 151, 255, 0.12);
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
         outline: none;
+        background-color: #ffffff;
+    }
+    #jrwrap .jero-dept-input.is-invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+        animation: jeroShake 0.3s ease;
+    }
+    @keyframes jeroShake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-4px); }
+        40%, 80% { transform: translateX(4px); }
     }
     #jrwrap .jero-dept-input-box:focus-within .jero-dept-search-icon {
-        color: #3E97FF;
+        color: #2563eb;
+    }
+    #jrwrap .jero-dept-kbd {
+        position: absolute;
+        right: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 20px;
+        min-width: 20px;
+        padding: 0 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        pointer-events: none;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        font-family: inherit;
+    }
+    #jrwrap .jero-dept-input-box:focus-within .jero-dept-kbd {
+        display: none;
     }
     #jrwrap .jero-dept-clear-btn {
         position: absolute;
-        right: 28px;
+        right: 30px;
         background: none;
         border: none;
         padding: 4px;
-        color: #A1A5B7;
+        color: #94a3b8;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
         border-radius: 4px;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
     }
     #jrwrap .jero-dept-clear-btn:hover {
-        color: #181C32;
-        background: #F1F1F4;
+        color: #ef4444;
+        background: #fef2f2;
     }
     #jrwrap .jero-dept-chevron {
         position: absolute;
-        right: 10px;
-        color: #A1A5B7;
+        right: 12px;
+        color: #94a3b8;
         pointer-events: none;
         display: flex;
         align-items: center;
-        transition: transform 0.2s ease, color 0.2s;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
     }
     #jrwrap .jero-dept-select-wrap.is-open .jero-dept-chevron {
         transform: rotate(180deg);
-        color: #3E97FF;
+        color: #2563eb;
     }
     #jrwrap .jero-dept-dropdown {
         position: absolute;
-        top: calc(100% + 4px);
+        top: calc(100% + 5px);
         left: 0;
         right: 0;
-        z-index: 1050;
-        background: #FFFFFF;
-        border: 1px solid #E1E3EA;
-        border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        z-index: 1060;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
         overflow: hidden;
         animation: jeroDropdownFadeIn 0.15s ease-out;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
         top: auto;
-        bottom: calc(100% + 4px);
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
+        bottom: calc(100% + 5px);
+        box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08);
+    }
+    @keyframes jeroDropdownFadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     #jrwrap .jero-dept-tabs {
         display: flex;
         gap: 4px;
         padding: 6px 10px;
-        background: #FFFFFF;
-        border-bottom: 1px solid #F1F1F4;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
     }
     #jrwrap .jero-dept-tab-btn {
         font-size: 11px;
         font-weight: 500;
-        color: #7E8299;
+        color: #64748b;
         background: none;
         border: none;
-        padding: 3px 8px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 4px;
-        transition: all 0.15s;
+        gap: 5px;
+        transition: all 0.15s ease;
         font-family: inherit;
     }
     #jrwrap .jero-dept-tab-btn:hover {
-        color: #181C32;
-        background: #F1F1F4;
+        color: #0f172a;
+        background: #f1f5f9;
     }
     #jrwrap .jero-dept-tab-btn.active {
-        background: #EEF6FF;
-        color: #3E97FF;
+        background: #ffffff;
+        color: #1e293b;
         font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
     #jrwrap .jero-dept-tab-btn .tab-count {
         font-size: 10px;
-        opacity: 0.85;
-        padding: 1px 5px;
+        font-weight: 600;
+        padding: 1px 6px;
         border-radius: 10px;
-        background: rgba(0, 0, 0, 0.05);
+        background: #f1f5f9;
+        color: #64748b;
     }
     #jrwrap .jero-dept-tab-btn.active .tab-count {
-        background: rgba(62, 151, 255, 0.15);
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    #jrwrap .jero-dept-recent-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    #jrwrap .jero-dept-recent-bar::-webkit-scrollbar { display: none; }
+    #jrwrap .jero-dept-recent-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-dept-recent-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #1e293b;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 2px 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.12s ease;
+    }
+    #jrwrap .jero-dept-recent-chip:hover {
+        background: #eff6ff;
+        border-color: #93c5fd;
+        color: #1d4ed8;
     }
     #jrwrap .jero-dept-list-container {
-        max-height: min(280px, 42vh);
+        max-height: min(300px, 45vh);
         overflow-y: auto;
         padding: 4px 0;
         scrollbar-width: thin;
-        scrollbar-color: #D1D5DB transparent;
+        scrollbar-color: #cbd5e1 transparent;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
         width: 5px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
-        background: #D1D5DB;
-        border-radius: 3px;
+        background: #cbd5e1;
+        border-radius: 4px;
     }
     #jrwrap .jero-dept-section-header {
-        padding: 6px 12px 2px;
-        font-size: 10px;
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        font-size: 10.5px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #A1A5B7;
-        background: #F9FAFB;
-        border-top: 1px solid #F1F1F4;
-        border-bottom: 1px solid #F1F1F4;
+        color: #475569;
+        background: rgba(248, 250, 252, 0.96);
+        backdrop-filter: blur(4px);
+        border-top: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f1f5f9;
         position: sticky;
         top: 0;
         z-index: 2;
+    }
+    #jrwrap .jero-dept-div-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        margin-right: 6px;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-dept-div-icon svg {
+        width: 12px;
+        height: 12px;
     }
     #jrwrap .jero-dept-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 12px;
+        padding: 7px 12px;
+        margin: 1px 6px;
+        border-radius: 6px;
         cursor: pointer;
         border-left: 3px solid transparent;
-        transition: background 0.1s, border-color 0.1s;
+        transition: background 0.12s ease, border-color 0.12s ease;
     }
     #jrwrap .jero-dept-item:hover,
     #jrwrap .jero-dept-item.focused {
-        background: #F8F9FA;
-        border-left-color: #3E97FF;
+        background: #f1f5f9;
+        border-left-color: #2563eb;
     }
     #jrwrap .jero-dept-item.selected {
-        background: #F1F7FF;
-        border-left-color: #3E97FF;
+        background: #eff6ff;
+        border-left-color: #2563eb;
     }
     #jrwrap .jero-dept-item-main {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 1px;
         min-width: 0;
     }
     #jrwrap .jero-dept-item-name {
-        font-size: 13px;
-        font-weight: 500;
-        color: #181C32;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #1e293b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.35;
     }
-    #jrwrap .jero-dept-item-name mark {
-        background: #FFF3CD;
-        color: #181C32;
-        padding: 0 1px;
-        border-radius: 2px;
+    #jrwrap .jero-dept-mark {
+        background: #fef08a !important;
+        color: #854d0e !important;
+        font-weight: 700 !important;
+        padding: 0 2px !important;
+        border-radius: 2px !important;
     }
     #jrwrap .jero-dept-item-sub {
         font-size: 11px;
-        color: #7E8299;
+        color: #64748b;
+        line-height: 1.25;
     }
     #jrwrap .jero-dept-item-side {
         display: flex;
@@ -976,30 +1091,100 @@
     }
     #jrwrap .jero-dept-badge {
         font-size: 10px;
-        font-weight: 500;
-        padding: 2px 6px;
+        font-weight: 600;
+        padding: 2px 7px;
         border-radius: 4px;
         white-space: nowrap;
+        letter-spacing: 0.2px;
     }
     #jrwrap .badge-dept-org {
-        background: #EFF6FF;
-        color: #2563EB;
-        border: 1px solid #DBEAFE;
+        background: #f5f3ff;
+        color: #7c3aed;
+        border: 1px solid #ddd6fe;
     }
     #jrwrap .badge-dept-std {
-        background: #F8FAFC;
-        color: #64748B;
-        border: 1px solid #E2E8F0;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
     }
     #jrwrap .jero-dept-item-check {
-        color: #3E97FF;
+        color: #2563eb;
         display: flex;
         align-items: center;
     }
+    #jrwrap .jero-dept-create-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        margin: 6px 8px;
+        background: #f8faff;
+        border: 1px dashed #93c5fd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    #jrwrap .jero-dept-create-action:hover,
+    #jrwrap .jero-dept-create-action.focused {
+        background: #eff6ff;
+        border-color: #2563eb;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+    }
+    #jrwrap .jero-dept-create-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    #jrwrap .jero-dept-create-plus {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    #jrwrap .jero-dept-create-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #jrwrap .jero-dept-create-title strong {
+        color: #2563eb;
+    }
+    #jrwrap .jero-dept-create-desc {
+        font-size: 10.5px;
+        color: #64748b;
+    }
+    #jrwrap .jero-dept-create-btn {
+        font-size: 11px;
+        font-weight: 600;
+        color: #2563eb;
+        background: #ffffff;
+        border: 1px solid #bfdbfe;
+        padding: 3px 9px;
+        border-radius: 5px;
+        flex-shrink: 0;
+        transition: all 0.12s ease;
+    }
+    #jrwrap .jero-dept-create-action:hover .jero-dept-create-btn {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
     #jrwrap .jero-dept-empty-state {
-        padding: 18px 12px;
+        padding: 20px 14px;
         text-align: center;
-        color: #64748B;
+        color: #64748b;
         font-size: 12px;
     }
     #jrwrap .jero-dept-footer {
@@ -1007,20 +1192,32 @@
         justify-content: space-between;
         align-items: center;
         padding: 6px 12px;
-        background: #FAFAFB;
-        border-top: 1px solid #F1F1F4;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
         font-size: 10px;
-        color: #94A3B8;
+        color: #64748b;
     }
     #jrwrap .jero-dept-sync-status {
         display: flex;
         align-items: center;
-        gap: 4px;
-        color: #0284C7;
-        font-weight: 500;
+        gap: 5px;
+        color: #059669;
+        font-weight: 600;
+    }
+    #jrwrap .jero-dept-sync-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        animation: jeroPulseDot 2s infinite;
+    }
+    @keyframes jeroPulseDot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.7; }
     }
     #jrwrap .jero-dept-footer-hint {
-        color: #94A3B8;
+        color: #94a3b8;
     }
     /* Safe Auto-Fill Transactional Undo Snackbar */
     #jrwrap .jero-autofill-undo-toast {
@@ -2129,7 +2326,7 @@
                                             <input type="text"
                                                    class="jero-dept-input"
                                                    id="category_id_display"
-                                                   placeholder="Search or select department..."
+                                                   placeholder="Search 60+ departments or type to create..."
                                                    autocomplete="off"
                                                    spellcheck="false"
                                                    role="combobox"
@@ -2137,6 +2334,7 @@
                                                    aria-haspopup="listbox"
                                                    aria-autocomplete="list"
                                                    value="<?php echo htmlspecialchars($selectedDeptName); ?>">
+                                            <kbd class="jero-dept-kbd" id="jero_dept_kbd" title="Press / to search">/</kbd>
                                             <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
@@ -2154,6 +2352,9 @@
                                                 <button type="button" class="jero-dept-tab-btn" data-filter="standard">Standard Library <span class="tab-count" id="jero_dept_count_standard">0</span></button>
                                             </div>
 
+                                            <!-- Recently Used Bar (1-Click Quick Picks) -->
+                                            <div class="jero-dept-recent-bar" id="jero_dept_recent_bar" style="display:none;"></div>
+
                                             <!-- Scrollable Options List Container -->
                                             <div class="jero-dept-list-container" id="jero_dept_list_container">
                                                 <!-- Dynamically populated by JeroDeptIntelligenceEngine -->
@@ -2161,7 +2362,10 @@
 
                                             <!-- Sticky Footer Bar -->
                                             <div class="jero-dept-footer">
-                                                <span class="jero-dept-sync-status" id="jero_dept_sync_status"></span>
+                                                <div class="jero-dept-sync-status" id="jero_dept_sync_status">
+                                                    <span class="jero-dept-sync-dot"></span>
+                                                    <span>Live Synced</span>
+                                                </div>
                                                 <span class="jero-dept-footer-hint">↑↓ Navigate · ↵ Select · Esc Close</span>
                                             </div>
                                         </div>
@@ -5015,7 +5219,20 @@
         }
         function validateStep(step) {
             var val = function(id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
-            var focusEl = function(id) { var el = document.getElementById(id); if (el && typeof el.focus === 'function') { try { el.focus(); } catch (e) {} } };
+            var focusEl = function(id) {
+                var el = document.getElementById(id);
+                if (el && (el.style.display === 'none' || el.offsetParent === null)) {
+                    var disp = document.getElementById(id + '_display') || document.getElementById(id + 'Display');
+                    if (disp) el = disp;
+                }
+                if (el && typeof el.focus === 'function') {
+                    try {
+                        el.focus();
+                        el.classList.add('is-invalid');
+                        setTimeout(function() { el.classList.remove('is-invalid'); }, 2500);
+                    } catch (e) {}
+                }
+            };
             var fail = function(id, msg) { showToast(msg, 'error'); focusEl(id); return false; };
 
             if (step === 1) {
@@ -8861,6 +9078,971 @@
         } else {
             initCacheAndSync();
             initEventListeners();
+        }
+    })();
+    </script>
+
+    <!-- =========================================================================
+         Job Department Intelligence Engine (Client-First Execution / 10K Concurrency)
+         ========================================================================= -->
+    <script id="jero_dept_seed_data" type="application/json">
+        {!! json_encode(@$departmentsManifest ?? ['manifest_id'=>'empty','version'=>1,'departments'=>[],'divisions'=>[]]) !!}
+    </script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        var CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+        var BUNDLE_URL = "{{ route('service_company.jobs.departmentsBundle') }}";
+
+        // Internal State
+        var deptList = [];
+        var divisionsList = [];
+        var divisionsMap = new Map();
+        var deptMap = new Map();
+        var currentSearch = '';
+        var currentFilter = 'all'; // 'all' | 'company' | 'standard'
+        var focusedIndex = -1;
+        var currentMatches = [];
+        var isOpen = false;
+        var deptBroadcast = null;
+        var localManifestVersion = 1;
+        var lastFocusCheck = 0;
+
+        // Recency storage key
+        var RECENT_KEY = 'jero_recent_depts_' + CURRENT_USER_ID;
+
+        // Division Icons Dictionary (Metronic & Modern SVG Icons)
+        var DIVISION_ICONS = {
+            1: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>', bg: '#eff6ff', color: '#2563eb' }, // Engineering & Tech
+            2: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>', bg: '#fdf4ff', color: '#c026d3' }, // Product & Design
+            3: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>', bg: '#ecfdf5', color: '#059669' }, // Sales & BD
+            4: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>', bg: '#fffbeb', color: '#d97706' }, // Marketing & Growth
+            5: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>', bg: '#ecfeff', color: '#0891b2' }, // Operations & Logistics
+            6: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>', bg: '#f1f5f9', color: '#475569' }, // Finance & Legal
+            7: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', bg: '#fff1f2', color: '#e11d48' }, // People & HR
+            8: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>', bg: '#eef2ff', color: '#4f46e5' }, // Customer Success
+            9: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>', bg: '#f0fdfa', color: '#0d9488' }, // Healthcare & Clinical
+            10: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>', bg: '#f5f3ff', color: '#7c3aed' } // Corporate & Strategy
+        };
+        var DEFAULT_DIV_ICON = { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>', bg: '#f1f5f9', color: '#64748b' };
+
+        function getRecentDepts() {
+            try {
+                var raw = localStorage.getItem(RECENT_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveRecentDept(item) {
+            try {
+                var list = getRecentDepts();
+                list = list.filter(function(r) { return r.id !== item.id; });
+                list.unshift({
+                    id: item.id,
+                    name: item.name,
+                    division_id: item.division_id,
+                    division_name: item.division_name,
+                    is_standard: item.is_standard,
+                    timestamp: Date.now()
+                });
+                if (list.length > 5) list = list.slice(0, 5);
+                localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // IndexedDB Persistent Storage (JeroLocalStore_v2 - departments)
+        // =========================================================================
+        var DB_NAME = 'JeroLocalStore_v2';
+        var STORE_NAME = 'departments';
+        var idbInstance = null;
+
+        function openDatabase() {
+            return new Promise(function(resolve, reject) {
+                if (idbInstance) return resolve(idbInstance);
+                if (!window.indexedDB) return reject(new Error('IndexedDB not supported'));
+
+                try {
+                    var req = window.indexedDB.open(DB_NAME, 3);
+                    req.onupgradeneeded = function(e) {
+                        var db = e.target.result;
+                        if (!db.objectStoreNames.contains('clients')) {
+                            db.createObjectStore('clients', { keyPath: 'key' });
+                        }
+                        if (!db.objectStoreNames.contains('job_titles')) {
+                            db.createObjectStore('job_titles', { keyPath: 'key' });
+                        }
+                        if (!db.objectStoreNames.contains('departments')) {
+                            db.createObjectStore('departments', { keyPath: 'key' });
+                        }
+                    };
+                    req.onsuccess = function(e) {
+                        idbInstance = e.target.result;
+                        resolve(idbInstance);
+                    };
+                    req.onerror = function(e) {
+                        reject(e.target ? e.target.error : new Error('IDB open error'));
+                    };
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+
+        function idbGet(key) {
+            return openDatabase().then(function(db) {
+                return new Promise(function(resolve) {
+                    try {
+                        var tx = db.transaction(STORE_NAME, 'readonly');
+                        var store = tx.objectStore(STORE_NAME);
+                        var req = store.get(key);
+                        req.onsuccess = function() { resolve(req.result ? req.result.value : null); };
+                        req.onerror = function() { resolve(null); };
+                    } catch (err) {
+                        resolve(null);
+                    }
+                });
+            }).catch(function() {
+                try {
+                    var fallback = sessionStorage.getItem('idb_fallback_dept_' + key);
+                    return fallback ? JSON.parse(fallback) : null;
+                } catch (e) { return null; }
+            });
+        }
+
+        function idbSet(key, value) {
+            return openDatabase().then(function(db) {
+                return new Promise(function(resolve) {
+                    try {
+                        var tx = db.transaction(STORE_NAME, 'readwrite');
+                        var store = tx.objectStore(STORE_NAME);
+                        store.put({ key: key, value: value });
+                        tx.oncomplete = function() { resolve(true); };
+                        tx.onerror = function() { resolve(false); };
+                    } catch (err) {
+                        resolve(false);
+                    }
+                });
+            }).catch(function() {
+                try {
+                    sessionStorage.setItem('idb_fallback_dept_' + key, JSON.stringify(value));
+                } catch (e) {}
+            });
+        }
+
+        // =========================================================================
+        // In-Memory Search Engine (< 2ms Latency)
+        // =========================================================================
+        function scoreCandidate(item, query, queryTokens, recentIdSet) {
+            var score = 0;
+            var nameLower = (item.name || '').toLowerCase();
+            var divLower = (item.division_name || '').toLowerCase();
+            var kwLower = (item.keywords || '').toLowerCase();
+
+            // 1. Exact Name Match
+            if (nameLower === query) {
+                score += 150;
+            } else if (nameLower.indexOf(query) === 0) {
+                score += 100;
+            } else if (nameLower.indexOf(query) > 0) {
+                score += 70;
+            }
+
+            // 2. Multi-Token Set Match
+            var allTokensMatched = true;
+            for (var t = 0; t < queryTokens.length; t++) {
+                var tok = queryTokens[t];
+                if (nameLower.indexOf(tok) !== -1) {
+                    score += 25;
+                } else if (divLower.indexOf(tok) !== -1) {
+                    score += 15;
+                } else if (kwLower.indexOf(tok) !== -1) {
+                    score += 20;
+                } else {
+                    allTokensMatched = false;
+                }
+            }
+            if (allTokensMatched) score += 30;
+
+            // 3. Organization Boost
+            if (item.is_standard === 0) score += 15;
+
+            // 4. Recency Bonus
+            if (recentIdSet.has(item.id)) score += 35;
+
+            return score;
+        }
+
+        function searchDepartments(query, filter) {
+            var baseList = deptList;
+            if (filter === 'company') {
+                baseList = deptList.filter(function(r) { return r.is_standard === 0; });
+            } else if (filter === 'standard') {
+                baseList = deptList.filter(function(r) { return r.is_standard === 1; });
+            }
+
+            var recentItems = getRecentDepts();
+            var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
+
+            var cleanQ = (query || '').trim().toLowerCase();
+            if (!cleanQ) {
+                return baseList;
+            }
+
+            var queryTokens = cleanQ.split(/[^a-z0-9]+/i).filter(Boolean);
+            if (queryTokens.length === 0) return baseList;
+
+            var scored = [];
+            for (var i = 0; i < baseList.length; i++) {
+                var item = baseList[i];
+                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet);
+                if (score > 15) {
+                    scored.push({ item: item, score: score });
+                }
+            }
+
+            scored.sort(function(a, b) { return b.score - a.score; });
+            return scored.map(function(s) { return s.item; });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeRegex(str) {
+            if (!str) return '';
+            return String(str).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        }
+
+        function highlightMatch(text, query) {
+            if (!query || !query.trim()) return escapeHtml(text);
+            var safeText = escapeHtml(text);
+            var safeQ = escapeRegex(query.trim());
+            try {
+                var regex = new RegExp('(' + safeQ + ')', 'gi');
+                return safeText.replace(regex, '<mark class="jero-dept-mark">$1</mark>');
+            } catch (e) {
+                return safeText;
+            }
+        }
+
+        // =========================================================================
+        // Render & Dropdown UI Engine
+        // =========================================================================
+        function updateTabCounts() {
+            var stdCount = 0;
+            var orgCount = 0;
+            for (var i = 0; i < deptList.length; i++) {
+                if (deptList[i].is_standard === 1) stdCount++;
+                else orgCount++;
+            }
+            var elAll = document.getElementById('jero_dept_count_all');
+            var elStd = document.getElementById('jero_dept_count_standard');
+            var elComp = document.getElementById('jero_dept_count_company');
+            if (elAll) elAll.textContent = deptList.length;
+            if (elStd) elStd.textContent = stdCount;
+            if (elComp) elComp.textContent = orgCount;
+        }
+
+        function updateRecentBar() {
+            var bar = document.getElementById('jero_dept_recent_bar');
+            if (!bar) return;
+
+            var q = currentSearch.trim();
+            if (q || currentFilter !== 'all') {
+                bar.style.display = 'none';
+                return;
+            }
+
+            var recentItems = getRecentDepts();
+            if (!recentItems || recentItems.length === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+
+            var html = '<span class="jero-dept-recent-label">Recent:</span>';
+            var count = Math.min(recentItems.length, 3);
+            for (var r = 0; r < count; r++) {
+                var item = recentItems[r];
+                var iconData = DIVISION_ICONS[item.division_id] || DEFAULT_DIV_ICON;
+                html += '<span class="jero-dept-recent-chip" data-id="' + item.id + '" title="' + escapeHtml(item.division_name || '') + '">' +
+                    '<span style="display:inline-flex;width:12px;height:12px;color:' + iconData.color + ';">' + iconData.icon + '</span> ' +
+                    escapeHtml(item.name) +
+                '</span>';
+            }
+
+            bar.innerHTML = html;
+            bar.style.display = 'flex';
+        }
+
+        function renderDropdownList() {
+            var container = document.getElementById('jero_dept_list_container');
+            if (!container) return;
+
+            updateRecentBar();
+            currentMatches = searchDepartments(currentSearch, currentFilter);
+            focusedIndex = -1;
+
+            var q = currentSearch.trim();
+            var html = '';
+
+            // 1. Inline Quick-Add Card when user is searching and no exact match exists
+            var exactMatchExists = false;
+            if (q) {
+                for (var d = 0; d < deptList.length; d++) {
+                    if (deptList[d].name.toLowerCase() === q.toLowerCase()) {
+                        exactMatchExists = true;
+                        break;
+                    }
+                }
+
+                if (!exactMatchExists) {
+                    html += '<div class="jero-dept-create-action" id="jero_dept_create_action" data-create-name="' + escapeHtml(q) + '" role="button" tabindex="0">' +
+                        '<div class="jero-dept-create-left">' +
+                            '<div class="jero-dept-create-plus">+</div>' +
+                            '<div>' +
+                                '<div class="jero-dept-create-title">Create "<strong>' + escapeHtml(q) + '</strong>" as custom department</div>' +
+                                '<div class="jero-dept-create-desc">Add to your organization\'s department library</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<button type="button" class="jero-dept-create-btn">+ Add</button>' +
+                    '</div>';
+                }
+            }
+
+            // 2. Empty State when 0 matches and no query
+            if (currentMatches.length === 0 && !q) {
+                container.innerHTML = '<div class="jero-dept-empty-state">No departments available in this category.</div>';
+                adjustDropdownPosition();
+                return;
+            }
+
+            // 3. Empty State with matches
+            if (currentMatches.length === 0 && q) {
+                container.innerHTML = html + '<div class="jero-dept-empty-state">No existing departments match "' + escapeHtml(q) + '". Click above to create it!</div>';
+                adjustDropdownPosition();
+                return;
+            }
+
+            var currentVal = ($('#category_id').val() || '').trim();
+
+            // Group by division when query is empty
+            var currentDivId = null;
+            for (var i = 0; i < currentMatches.length; i++) {
+                var item = currentMatches[i];
+                if (!q && item.division_id !== currentDivId) {
+                    currentDivId = item.division_id;
+                    var divIconData = DIVISION_ICONS[item.division_id] || DEFAULT_DIV_ICON;
+                    html += '<div class="jero-dept-section-header">' +
+                        '<span class="jero-dept-div-icon" style="background:' + divIconData.bg + '; color:' + divIconData.color + ';">' +
+                            divIconData.icon +
+                        '</span>' +
+                        '<span>' + escapeHtml(item.division_name || 'General') + '</span>' +
+                    '</div>';
+                }
+                var isSelected = (String(item.id) === currentVal);
+                html += buildItemHtml(item, q, i, isSelected);
+            }
+
+            container.innerHTML = html;
+            adjustDropdownPosition();
+        }
+
+        function buildItemHtml(item, query, index, isSelected) {
+            var badgeHtml = item.is_standard === 0
+                ? '<span class="jero-dept-badge badge-dept-org">My Org</span>'
+                : '<span class="jero-dept-badge badge-dept-std">Standard</span>';
+
+            var checkHtml = isSelected
+                ? '<span class="jero-dept-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>'
+                : '';
+
+            return '<div class="jero-dept-item ' + (isSelected ? 'selected' : '') + '" data-idx="' + index + '" data-id="' + item.id + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-dept-item-main">' +
+                    '<div class="jero-dept-item-name">' + highlightMatch(item.name, query) + '</div>' +
+                    '<div class="jero-dept-item-sub">' + escapeHtml(item.division_name || 'General') + '</div>' +
+                '</div>' +
+                '<div class="jero-dept-item-side">' +
+                    badgeHtml +
+                    checkHtml +
+                '</div>' +
+            '</div>';
+        }
+
+        function adjustDropdownPosition() {
+            var wrap = document.getElementById('jero_dept_select_wrap');
+            var dropdown = document.getElementById('jero_dept_dropdown');
+            if (!wrap || !dropdown || !isOpen) return;
+
+            var rect = wrap.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 320 && rect.top > 280) {
+                dropdown.classList.add('drop-up');
+            } else {
+                dropdown.classList.remove('drop-up');
+            }
+        }
+
+        function openDropdown() {
+            var dropdown = document.getElementById('jero_dept_dropdown');
+            var wrap = document.getElementById('jero_dept_select_wrap');
+            var input = document.getElementById('category_id_display');
+            if (!dropdown || !wrap) return;
+
+            isOpen = true;
+            wrap.classList.add('is-open');
+            dropdown.style.display = 'block';
+            if (input) {
+                input.setAttribute('aria-expanded', 'true');
+                input.classList.remove('is-invalid');
+            }
+
+            renderDropdownList();
+        }
+
+        function closeDropdown() {
+            var dropdown = document.getElementById('jero_dept_dropdown');
+            var wrap = document.getElementById('jero_dept_select_wrap');
+            var input = document.getElementById('category_id_display');
+            if (!dropdown || !wrap) return;
+
+            isOpen = false;
+            wrap.classList.remove('is-open');
+            dropdown.style.display = 'none';
+            if (input) input.setAttribute('aria-expanded', 'false');
+            focusedIndex = -1;
+        }
+
+        function moveFocus(delta) {
+            var container = document.getElementById('jero_dept_list_container');
+            if (!container) return;
+            var items = container.querySelectorAll('.jero-dept-item, .jero-dept-create-action');
+            if (items.length === 0) return;
+
+            if (focusedIndex >= 0 && focusedIndex < items.length) {
+                items[focusedIndex].classList.remove('focused');
+            }
+
+            focusedIndex += delta;
+            if (focusedIndex < 0) focusedIndex = items.length - 1;
+            if (focusedIndex >= items.length) focusedIndex = 0;
+
+            var target = items[focusedIndex];
+            target.classList.add('focused');
+            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+
+        function selectFocusedItem() {
+            var container = document.getElementById('jero_dept_list_container');
+            if (!container) return;
+            var items = container.querySelectorAll('.jero-dept-item, .jero-dept-create-action');
+            if (focusedIndex >= 0 && focusedIndex < items.length) {
+                var el = items[focusedIndex];
+                if (el.classList.contains('jero-dept-create-action')) {
+                    var nameToCreate = el.getAttribute('data-create-name');
+                    inlineCreateDepartment(nameToCreate);
+                    return;
+                }
+                var id = el.getAttribute('data-id');
+                if (id) {
+                    var item = deptMap.get(parseInt(id, 10));
+                    if (item) selectItem(item);
+                }
+            } else if (currentMatches.length > 0) {
+                selectItem(currentMatches[0]);
+            } else if (currentSearch.trim()) {
+                inlineCreateDepartment(currentSearch.trim());
+            }
+        }
+
+        function updateStatusChip(item) {
+            var wrap = document.getElementById('jero_dept_status_wrap');
+            var chip = document.getElementById('jero_dept_status_chip');
+            if (!wrap || !chip) return;
+            if (!item) {
+                wrap.style.display = 'none';
+                return;
+            }
+            wrap.style.display = 'block';
+            if (item.is_standard === 1) {
+                chip.className = 'jero-dept-status-chip chip-std';
+                chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Standard Taxonomy';
+            } else {
+                chip.className = 'jero-dept-status-chip chip-org';
+                chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg> Organization Dept';
+            }
+        }
+
+        function selectItem(item) {
+            if (!item) return;
+
+            var select = document.getElementById('category_id');
+            var displayInput = document.getElementById('category_id_display');
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+
+            // 1. Update native select (add option if not present)
+            if (select) {
+                var exists = false;
+                for (var o = 0; o < select.options.length; o++) {
+                    if (select.options[o].value == item.id) {
+                        select.selectedIndex = o;
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.text = item.name;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                }
+                $(select).val(item.id).trigger('change');
+            }
+
+            // 2. Update display input
+            if (displayInput) {
+                displayInput.value = item.name;
+                displayInput.classList.remove('is-invalid');
+            }
+
+            // 3. Update status chip
+            updateStatusChip(item);
+
+            // 4. Update clear button
+            if (clearBtn) {
+                clearBtn.style.display = 'flex';
+            }
+
+            // 5. Update review text
+            if (typeof setText === 'function') {
+                setText('rvDepartment', item.name);
+            }
+
+            // 6. Recency
+            saveRecentDept(item);
+            closeDropdown();
+        }
+
+        function clearSelection() {
+            var select = document.getElementById('category_id');
+            var displayInput = document.getElementById('category_id_display');
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+
+            if (select) {
+                select.selectedIndex = 0;
+                $(select).val('').trigger('change');
+            }
+            if (displayInput) {
+                displayInput.value = '';
+                displayInput.focus();
+            }
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+            updateStatusChip(null);
+
+            if (typeof setText === 'function') {
+                setText('rvDepartment', '-');
+            }
+
+            currentSearch = '';
+            renderDropdownList();
+        }
+
+        // =========================================================================
+        // God-Level Inline Quick-Create Department Handler
+        // =========================================================================
+        function inlineCreateDepartment(name) {
+            if (!name || !name.trim()) return;
+            var cleanName = name.trim();
+            var createBtn = document.querySelector('.jero-dept-create-btn');
+            if (createBtn) {
+                createBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Saving...';
+                createBtn.disabled = true;
+            }
+
+            var csrfToken = document.querySelector('meta[name="csrf-token"]')
+                ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                : '{{ csrf_token() }}';
+
+            $.ajax({
+                url: "{{ route('service_company.account.storeDept') }}",
+                type: 'POST',
+                data: {
+                    _token: csrfToken,
+                    dept_name: cleanName
+                },
+                success: function(res) {
+                    if (res && res.status === 'success' && res.category_id) {
+                        var newDept = {
+                            id: parseInt(res.category_id, 10),
+                            name: res.category_name || cleanName,
+                            division_id: 1,
+                            division_name: 'General',
+                            is_standard: res.is_standard ? 1 : 0,
+                            keywords: cleanName
+                        };
+
+                        if (!deptMap.has(newDept.id)) {
+                            deptList.unshift(newDept);
+                            deptMap.set(newDept.id, newDept);
+                        }
+
+                        updateTabCounts();
+                        selectItem(newDept);
+
+                        // Cross-tab broadcast & localStorage sync
+                        if (deptBroadcast) {
+                            deptBroadcast.postMessage({ type: 'DEPT_UPDATED', timestamp: Date.now() });
+                        }
+                        try {
+                            localStorage.setItem('jero_dept_sync_timestamp', Date.now());
+                        } catch(e) {}
+
+                        if (typeof showToast === 'function') {
+                            var msg = res.already_exists
+                                ? (res.is_standard ? 'Selected standard global department: ' + newDept.name : 'Selected existing organization department: ' + newDept.name)
+                                : 'Department "' + newDept.name + '" successfully created and selected!';
+                            showToast(msg, res.already_exists ? 'info' : 'success');
+                        }
+                    } else {
+                        if (typeof showToast === 'function') {
+                            showToast(res.message || 'Error creating department', 'error');
+                        }
+                    }
+                },
+                error: function() {
+                    if (typeof showToast === 'function') {
+                        showToast('Failed to create department. Please try again.', 'error');
+                    }
+                },
+                complete: function() {
+                    if (createBtn) {
+                        createBtn.innerHTML = '+ Add';
+                        createBtn.disabled = false;
+                    }
+                }
+            });
+        }
+
+        function ingestManifest(manifest) {
+            if (!manifest || !Array.isArray(manifest.departments)) return;
+            deptList = manifest.departments;
+            divisionsList = manifest.divisions || [];
+            deptMap.clear();
+            divisionsMap.clear();
+            localManifestVersion = manifest.version || 1;
+
+            for (var d = 0; d < divisionsList.length; d++) {
+                divisionsMap.set(divisionsList[d].id, divisionsList[d]);
+            }
+            for (var i = 0; i < deptList.length; i++) {
+                deptMap.set(deptList[i].id, deptList[i]);
+            }
+
+            updateTabCounts();
+
+            // Check if initial selection needs name resolution & status chip
+            var select = document.getElementById('category_id');
+            var displayInput = document.getElementById('category_id_display');
+            if (select && select.value) {
+                var curr = deptMap.get(parseInt(select.value, 10));
+                if (curr) {
+                    if (displayInput && !displayInput.value) {
+                        displayInput.value = curr.name;
+                    }
+                    var clearBtn = document.getElementById('jero_dept_clear_btn');
+                    if (clearBtn) clearBtn.style.display = 'flex';
+                    updateStatusChip(curr);
+                }
+            }
+        }
+
+        async function initCacheAndSync() {
+            var cacheKey = 'dept_tenant_' + CURRENT_TENANT_ID;
+
+            // 1. Check Pre-Seeded HTML DOM script tag (0ms Cold Start)
+            var seedEl = document.getElementById('jero_dept_seed_data');
+            if (seedEl && seedEl.textContent.trim()) {
+                try {
+                    var seedManifest = JSON.parse(seedEl.textContent);
+                    if (seedManifest && Array.isArray(seedManifest.departments) && seedManifest.departments.length > 0) {
+                        ingestManifest(seedManifest);
+                        idbSet(cacheKey, { manifest: seedManifest, timestamp: Date.now() });
+                        checkServerVersion(seedManifest.version);
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Check IndexedDB L1 Persistent Store (< 5ms)
+            try {
+                var cached = await idbGet(cacheKey);
+                if (cached && cached.manifest && Array.isArray(cached.manifest.departments)) {
+                    ingestManifest(cached.manifest);
+                    checkServerVersion(cached.manifest.version);
+                    return;
+                }
+            } catch (err) {}
+
+            // 3. Fallback: Fetch bundle from server
+            fetchBundleFromServer(1);
+        }
+
+        function checkServerVersion(localVersion) {
+            fetch(BUNDLE_URL, {
+                method: 'GET',
+                headers: {
+                    'If-None-Match': 'W/"tindex_' + CURRENT_TENANT_ID + '_s4_dept-tenant-' + CURRENT_TENANT_ID + '-v' + localVersion + '"'
+                }
+            }).then(function(res) {
+                if (res.status === 304) return null;
+                if (res.ok) return res.json();
+                return null;
+            }).then(function(newManifest) {
+                if (newManifest && Array.isArray(newManifest.departments)) {
+                    ingestManifest(newManifest);
+                    idbSet('dept_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
+                    if (deptBroadcast) {
+                        deptBroadcast.postMessage({ type: 'DEPT_UPDATED', version: newManifest.version });
+                    }
+                }
+            }).catch(function() {});
+        }
+
+        function fetchBundleFromServer(version) {
+            var statusEl = document.getElementById('jero_dept_sync_status');
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="jero-dept-sync-dot"></span><span>Syncing...</span>';
+            }
+
+            fetch(BUNDLE_URL)
+                .then(function(res) { return res.json(); })
+                .then(function(manifest) {
+                    if (manifest && Array.isArray(manifest.departments)) {
+                        ingestManifest(manifest);
+                        idbSet('dept_tenant_' + CURRENT_TENANT_ID, { manifest: manifest, timestamp: Date.now() });
+                    }
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="jero-dept-sync-dot"></span><span>Live Synced</span>';
+                    }
+                })
+                .catch(function() {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="jero-dept-sync-dot" style="background:#f59e0b;"></span><span>Cached</span>';
+                    }
+                });
+        }
+
+        function initEventListeners() {
+            var input = document.getElementById('category_id_display');
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var tabsContainer = document.querySelector('.jero-dept-tabs');
+            var container = document.getElementById('jero_dept_list_container');
+            var recentBar = document.getElementById('jero_dept_recent_bar');
+
+            if (input) {
+                input.addEventListener('focus', function() {
+                    currentSearch = this.value;
+                    openDropdown();
+                });
+
+                input.addEventListener('input', function() {
+                    currentSearch = this.value;
+                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
+                    if (!isOpen) openDropdown();
+                    renderDropdownList();
+                });
+
+                // Real-World Defense: Prevent Enter key from submitting form prematurely
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeDropdown();
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(-1);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (isOpen) {
+                            selectFocusedItem();
+                        } else {
+                            openDropdown();
+                        }
+                    } else if (e.key === 'Tab') {
+                        if (isOpen) closeDropdown();
+                    }
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    clearSelection();
+                });
+            }
+
+            if (tabsContainer) {
+                tabsContainer.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.jero-dept-tab-btn');
+                    if (!btn) return;
+                    tabsContainer.querySelectorAll('.jero-dept-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    currentFilter = btn.getAttribute('data-filter') || 'all';
+                    renderDropdownList();
+                });
+            }
+
+            if (recentBar) {
+                recentBar.addEventListener('click', function(e) {
+                    var chip = e.target.closest('.jero-dept-recent-chip');
+                    if (!chip) return;
+                    var id = chip.getAttribute('data-id');
+                    if (id) {
+                        var item = deptMap.get(parseInt(id, 10));
+                        if (item) selectItem(item);
+                    }
+                });
+            }
+
+            if (container) {
+                container.addEventListener('click', function(e) {
+                    // Check for inline create action
+                    var createAction = e.target.closest('.jero-dept-create-action');
+                    if (createAction) {
+                        var nameToCreate = createAction.getAttribute('data-create-name');
+                        inlineCreateDepartment(nameToCreate);
+                        return;
+                    }
+
+                    // Check for department item click
+                    var itemEl = e.target.closest('.jero-dept-item');
+                    if (!itemEl) return;
+                    var id = itemEl.getAttribute('data-id');
+                    if (id) {
+                        var item = deptMap.get(parseInt(id, 10));
+                        if (item) selectItem(item);
+                    }
+                });
+            }
+
+            // Click Outside Handler
+            document.addEventListener('click', function(e) {
+                var wrap = document.getElementById('jero_dept_select_wrap');
+                if (wrap && !wrap.contains(e.target)) {
+                    if (isOpen) closeDropdown();
+                }
+            });
+
+            // Keyboard Shortcut: '/' to focus Department Search
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && !isOpen) {
+                    var activeTag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : '';
+                    if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select' && !document.activeElement.isContentEditable) {
+                        e.preventDefault();
+                        if (input) {
+                            input.focus();
+                        }
+                    }
+                }
+            });
+
+            // Window resize / scroll position auto-adjustment
+            window.addEventListener('resize', adjustDropdownPosition, { passive: true });
+        }
+
+        function initSyncListeners() {
+            // 1. Cross-tab BroadcastChannel
+            if ('BroadcastChannel' in window) {
+                try {
+                    deptBroadcast = new BroadcastChannel('jero_dept_channel');
+                    deptBroadcast.onmessage = function(ev) {
+                        if (ev.data && ev.data.type === 'DEPT_UPDATED') {
+                            fetchBundleFromServer(ev.data.version || 1);
+                        }
+                    };
+                } catch (e) {}
+            }
+
+            // 2. Storage event fallback for older / restricted browsers
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'jero_dept_sync_timestamp') {
+                    fetchBundleFromServer(1);
+                }
+            });
+
+            // 3. Tab focus reconciliation
+            window.addEventListener('focus', function() {
+                var now = Date.now();
+                if (now - lastFocusCheck > 25000) {
+                    lastFocusCheck = now;
+                    checkServerVersion(localManifestVersion);
+                }
+            });
+
+            // 4. Real-time Reverb WebSocket listener
+            if (window.Echo && CURRENT_TENANT_ID > 0) {
+                try {
+                    window.Echo.private('company.' + CURRENT_TENANT_ID)
+                        .listen('.department.mutated', function(e) {
+                            fetchBundleFromServer(e.version || 1);
+                        });
+                } catch (e) {}
+            }
+        }
+
+        // Global export for backward compatibility & testing
+        window.JeroDeptIntelligenceEngine = {
+            search: function(q) {
+                currentSearch = q;
+                renderDropdownList();
+            },
+            selectById: function(id) {
+                var item = deptMap.get(parseInt(id, 10));
+                if (item) selectItem(item);
+            },
+            selectByName: function(name) {
+                for (var i = 0; i < deptList.length; i++) {
+                    if (deptList[i].name.toLowerCase() === (name || '').toLowerCase()) {
+                        selectItem(deptList[i]);
+                        return;
+                    }
+                }
+            },
+            inlineCreate: function(name) {
+                inlineCreateDepartment(name);
+            },
+            refresh: function() {
+                fetchBundleFromServer(1);
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initCacheAndSync();
+                initEventListeners();
+                initSyncListeners();
+            });
+        } else {
+            initCacheAndSync();
+            initEventListeners();
+            initSyncListeners();
         }
     })();
     </script>

@@ -1278,7 +1278,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $manifest = $this->buildTitlesManifest($companyId, 1);
 
         foreach ($manifest['titles'] as $item) {
-            if (strcasecmp($item['title'], $search) === 0 && !empty($item['is_standard'])) {
+            if (strcasecmp($item['title'], $search) === 0 && ! empty($item['is_standard'])) {
                 return Reply::dataOnly([
                     'status' => 'success',
                     'jd' => $item['jd'] ?? '',
@@ -5688,9 +5688,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        // 4. Tenant-scoped data — cached 5 min; busted by JobCategoryObserver / ClientObserver
-        $this->categories = Cache::remember('tenant:'.$companyId.':categories', 300, function () use ($companyId) {
-            return JobCategory::where('company_id', $companyId)->get();
+        // 4. Tenant + Master categories (cached 5 min; busted by JobCategoryObserver) and clients
+        $this->categories = Cache::remember('tenant:'.$companyId.':all_categories', 300, function () use ($companyId) {
+            return JobCategory::where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)->orWhereNull('company_id');
+            })->orderBy('name', 'ASC')->get();
         });
         $this->client = Cache::remember('tenant:'.$companyId.':clients', 300, function () use ($companyId) {
             return Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
@@ -5773,6 +5775,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 10. Pre-seed job titles manifest for 0ms client-first browser execution (10K concurrency)
         $this->titlesManifest = $this->buildTitlesManifest($companyId, (int) Cache::get('tenant:'.$companyId.':titles_version', 1));
 
+        // 11. Pre-seed departments manifest for 0ms client-first browser execution (10K concurrency)
+        $this->departmentsManifest = \App\Services\DepartmentTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':dept_version', 1));
+
         return view('service_company.jobs.create', $this->data);
     }
 
@@ -5794,7 +5799,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      */
     public function clientsBundle()
     {
-        abort_if(!auth()->check(), 401);
+        abort_if(! auth()->check(), 401);
         $companyId = (int) auth()->user()->company_id;
         $version = (int) Cache::get('tenant:'.$companyId.':clients_version', 1);
         $cacheKey = 'tenant:'.$companyId.':dataset:clients:perm:default';
@@ -5812,14 +5817,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             } catch (\Throwable $esEx) {
                 // Dual catastrophic outage (Redis + ES) -> return 503 degraded status
                 return response()->json([
-                    'status'   => 'degraded',
-                    'message'  => 'Client catalog temporarily unavailable',
+                    'status' => 'degraded',
+                    'message' => 'Client catalog temporarily unavailable',
                     'fallback' => 'use_l2_cache',
                 ], 503)->header('Retry-After', '5');
             }
         }
 
-        if (!$bundle) {
+        if (! $bundle) {
             // Non-blocking distributed mutex (zero worker thread starvation)
             $lockKey = 'tenant:'.$companyId.':clients:refresh_lock';
             $lock = Cache::lock($lockKey, 10);
@@ -5863,7 +5868,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             if ($elastic->indexExists($indexName)) {
                 $esResult = $elastic->getClient()->search([
                     'index' => $indexName,
-                    'body'  => [
+                    'body' => [
                         'query' => [
                             'bool' => [
                                 'filter' => [
@@ -5871,22 +5876,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 ],
                             ],
                         ],
-                        'size'  => 5000,
+                        'size' => 5000,
                         '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'industries', 'td_industries', 'client_location', 'client_contact_info'],
                     ],
                 ]);
 
                 $hits = $esResult['hits']['hits'] ?? [];
-                if (!empty($hits)) {
+                if (! empty($hits)) {
                     $clientList = [];
                     foreach ($hits as $hit) {
                         $src = $hit['_source'] ?? [];
                         $id = (int) ($src['id'] ?? $src['client_id'] ?? $hit['_id']);
                         $name = (string) ($src['name'] ?? $src['company_name'] ?? '');
-                        if (!$id || !$name) continue;
+                        if (! $id || ! $name) {
+                            continue;
+                        }
 
                         $locList = [];
-                        if (!empty($src['client_location']) && is_array($src['client_location'])) {
+                        if (! empty($src['client_location']) && is_array($src['client_location'])) {
                             foreach (array_slice($src['client_location'], 0, 3) as $l) {
                                 $city = $l['city_name'] ?? '';
                                 $state = $l['state_name'] ?? '';
@@ -5894,17 +5901,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 $addr = implode(', ', array_filter([$city, $state, $country]));
                                 $locList[] = [
                                     'id' => (int) ($l['city_id'] ?? $l['id'] ?? 0),
-                                    'l'  => $addr ?: 'Address',
+                                    'l' => $addr ?: 'Address',
                                 ];
                             }
                         }
 
                         $contactList = [];
-                        if (!empty($src['client_contact_info']) && is_array($src['client_contact_info'])) {
+                        if (! empty($src['client_contact_info']) && is_array($src['client_contact_info'])) {
                             foreach (array_slice($src['client_contact_info'], 0, 2) as $c) {
                                 $contactList[] = [
                                     'id' => (int) ($c['id'] ?? 0),
-                                    'n'  => (string) ($c['contact_person_name'] ?? ''),
+                                    'n' => (string) ($c['contact_person_name'] ?? ''),
                                 ];
                             }
                         }
@@ -5914,19 +5921,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
 
                         $clientList[] = [
-                            'id'  => $id,
-                            'n'   => $name,
-                            't'   => (int) ($src['self_company'] ?? 0),
-                            's'   => 1,
-                            'i'   => $industry,
-                            'c'   => $code,
-                            'l'   => $src['logo'] ?? null,
+                            'id' => $id,
+                            'n' => $name,
+                            't' => (int) ($src['self_company'] ?? 0),
+                            's' => 1,
+                            'i' => $industry,
+                            'c' => $code,
+                            'l' => $src['logo'] ?? null,
                             'loc' => $locList,
-                            'cc'  => $contactList,
+                            'cc' => $contactList,
                         ];
                     }
 
-                    if (!empty($clientList)) {
+                    if (! empty($clientList)) {
                         return $this->formatManifestEnvelope($companyId, $version, $clientList);
                     }
                 }
@@ -5944,7 +5951,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $clientIds = $clients->pluck('id')->toArray();
         $locationsByClient = [];
-        if (!empty($clientIds)) {
+        if (! empty($clientIds)) {
             $rawLocs = DB::table('client_location')
                 ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
@@ -5963,7 +5970,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->get();
 
             foreach ($rawLocs as $loc) {
-                if (!isset($locationsByClient[$loc->client_id])) {
+                if (! isset($locationsByClient[$loc->client_id])) {
                     $locationsByClient[$loc->client_id] = [];
                 }
                 if (count($locationsByClient[$loc->client_id]) < 3) {
@@ -5973,30 +5980,30 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
                     $countryPart = $loc->country_name ? ucwords($loc->country_name) : '';
                     $extra = implode(', ', array_filter([$cityPart, $statePart, $countryPart]));
-                    $label = $addressPart ? ($addressPart . ($extra ? ' - ' . $extra : '')) : $extra;
+                    $label = $addressPart ? ($addressPart.($extra ? ' - '.$extra : '')) : $extra;
                     $locationsByClient[$loc->client_id][] = [
                         'id' => (int) $loc->id,
-                        'l'  => $label ?: 'Address #'.$loc->id,
+                        'l' => $label ?: 'Address #'.$loc->id,
                     ];
                 }
             }
         }
 
         $contactsByClient = [];
-        if (!empty($clientIds)) {
+        if (! empty($clientIds)) {
             $rawContacts = DB::table('client_contact_info')
                 ->select('id', 'client_id', 'contact_person_name')
                 ->whereIn('client_id', $clientIds)
                 ->get();
 
             foreach ($rawContacts as $c) {
-                if (!isset($contactsByClient[$c->client_id])) {
+                if (! isset($contactsByClient[$c->client_id])) {
                     $contactsByClient[$c->client_id] = [];
                 }
                 if (count($contactsByClient[$c->client_id]) < 2) {
                     $contactsByClient[$c->client_id][] = [
                         'id' => (int) $c->id,
-                        'n'  => (string) ucwords($c->contact_person_name),
+                        'n' => (string) ucwords($c->contact_person_name),
                     ];
                 }
             }
@@ -6007,15 +6014,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $c->name);
             $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
             $clientList[] = [
-                'id'  => (int) $c->id,
-                'n'   => (string) $c->name,
-                't'   => (int) $c->self_company,
-                's'   => 1,
-                'i'   => (string) ($c->industry ?: ''),
-                'c'   => $code,
-                'l'   => $c->logo ?: null,
+                'id' => (int) $c->id,
+                'n' => (string) $c->name,
+                't' => (int) $c->self_company,
+                's' => 1,
+                'i' => (string) ($c->industry ?: ''),
+                'c' => $code,
+                'l' => $c->logo ?: null,
                 'loc' => $locationsByClient[$c->id] ?? [],
-                'cc'  => $contactsByClient[$c->id] ?? [],
+                'cc' => $contactsByClient[$c->id] ?? [],
             ];
         }
 
@@ -6028,20 +6035,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     protected function formatManifestEnvelope(int $companyId, int $version, array $clientList): array
     {
         $json = json_encode($clientList);
-        $checksum = 'sha256:' . hash('sha256', $json);
+        $checksum = 'sha256:'.hash('sha256', $json);
         $shortHash = substr(md5($checksum), 0, 8);
         $manifestId = "tenant-{$companyId}-v{$version}-{$shortHash}";
 
         return [
-            'manifest_id'        => $manifestId,
-            'schema_version'     => 4,
-            'tenant_id'          => $companyId,
-            'source_version'     => $version,
+            'manifest_id' => $manifestId,
+            'schema_version' => 4,
+            'tenant_id' => $companyId,
+            'source_version' => $version,
             'read_model_version' => $version,
-            'checksum'           => $checksum,
-            'generated_at'       => time(),
-            'total'              => count($clientList),
-            'clients'            => $clientList,
+            'checksum' => $checksum,
+            'generated_at' => time(),
+            'total' => count($clientList),
+            'clients' => $clientList,
         ];
     }
 
@@ -6051,12 +6058,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      * Intent: Serves extended detail lookups for clients with overflow locations (> 10).
      * Tenancy Note: Scoped strictly by company_id.
      *
-     * @param int $client_id
+     * @param  int  $client_id
      * @return \Illuminate\Http\JsonResponse
      */
     public function clientDetails($client_id)
     {
-        abort_if(!auth()->check(), 401);
+        abort_if(! auth()->check(), 401);
         $companyId = (int) auth()->user()->company_id;
         $client_id = (int) $client_id;
 
@@ -6065,7 +6072,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('company_id', $companyId)
             ->exists();
 
-        if (!$clientExists) {
+        if (! $clientExists) {
             return response()->json(['status' => 'error', 'message' => 'Client not found'], 404);
         }
 
@@ -6103,11 +6110,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
                 $countryPart = $loc->country_name ? ucwords($loc->country_name) : '';
                 $extra = implode(', ', array_filter([$cityPart, $statePart, $countryPart]));
-                $label = $addressPart ? ($addressPart . ($extra ? ' - ' . $extra : '')) : $extra;
+                $label = $addressPart ? ($addressPart.($extra ? ' - '.$extra : '')) : $extra;
                 $locList[] = [
-                    'id'      => (int) $loc->id,
-                    'label'   => $label ?: 'Address #'.$loc->id,
-                    'city'    => (string) ($cityName ?: ''),
+                    'id' => (int) $loc->id,
+                    'label' => $label ?: 'Address #'.$loc->id,
+                    'city' => (string) ($cityName ?: ''),
                     'country' => (string) ($loc->country_name ?: ''),
                 ];
             }
@@ -6118,17 +6125,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->get()
                 ->map(function ($c) {
                     return [
-                        'id'   => (int) $c->id,
+                        'id' => (int) $c->id,
                         'name' => (string) ucwords($c->contact_person_name),
                     ];
                 })
                 ->toArray();
 
             return [
-                'status'    => 'success',
+                'status' => 'success',
                 'client_id' => $client_id,
                 'locations' => $locList,
-                'contacts'  => $contacts,
+                'contacts' => $contacts,
             ];
         });
 
@@ -6148,7 +6155,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      */
     public function jobTitlesBundle()
     {
-        abort_if(!auth()->check(), 401);
+        abort_if(! auth()->check(), 401);
         $companyId = (int) auth()->user()->company_id;
         $version = (int) Cache::get('tenant:'.$companyId.':titles_version', 1);
         $cacheKey = 'tenant:'.$companyId.':dataset:job_titles_bundle:v'.$version;
@@ -6162,7 +6169,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $bundle = null;
         }
 
-        if (!$bundle) {
+        if (! $bundle) {
             $lockKey = 'tenant:'.$companyId.':titles:refresh_lock';
             $lock = Cache::lock($lockKey, 10);
 
@@ -6193,6 +6200,60 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
+     * Return tenant-scoped versioned departments bundle with ETag HTTP 304 caching.
+     *
+     * Intent: Client-first department autocomplete and classification (10K concurrent users, 0% server read strain).
+     * Tenancy Note: Tenant custom categories scoped strictly by company_id; global catalog is shared read-only.
+     *
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     */
+    public function departmentsBundle()
+    {
+        abort_if(! auth()->check(), 401);
+        $companyId = (int) auth()->user()->company_id;
+        $version = (int) Cache::get('tenant:'.$companyId.':dept_version', 1);
+        $cacheKey = 'tenant:'.$companyId.':dataset:departments_bundle:v'.$version;
+
+        $clientEtag = request()->header('If-None-Match');
+
+        try {
+            $bundle = Cache::get($cacheKey);
+        } catch (\Throwable $e) {
+            \Log::warning('Redis connection error in departmentsBundle: '.$e->getMessage());
+            $bundle = null;
+        }
+
+        if (! $bundle) {
+            $lockKey = 'tenant:'.$companyId.':departments:refresh_lock';
+            $lock = Cache::lock($lockKey, 10);
+
+            if ($lock->get()) {
+                try {
+                    $bundle = \App\Services\DepartmentTaxonomyService::buildTenantManifest($companyId, $version);
+                    Cache::put($cacheKey, $bundle, 86400);
+                } finally {
+                    $lock->release();
+                }
+            } else {
+                $bundle = \App\Services\DepartmentTaxonomyService::buildTenantManifest($companyId, $version);
+            }
+        }
+
+        $manifestId = $bundle['manifest_id'] ?? ('dept-tenant-'.$companyId.'-v'.$version);
+        $etag = 'W/"tindex_'.$companyId.'_s4_'.$manifestId.'"';
+
+        if ($clientEtag && trim($clientEtag) === trim($etag)) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, must-revalidate');
+        }
+
+        return response()->json($bundle)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, must-revalidate');
+    }
+
+    /**
      * Assemble job titles manifest from cached standard titles and tenant designations.
      *
      * Intent: Generates unified in-memory title catalog for client RAM/IndexedDB engine.
@@ -6209,7 +6270,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         });
 
         $companyDesignations = Cache::remember('tenant:'.$companyId.':custom_designations', 3600, function () use ($companyId) {
-            if ($companyId <= 0) return collect();
+            if ($companyId <= 0) {
+                return collect();
+            }
+
             return DB::table('designations')
                 ->where('company_id', $companyId)
                 ->select('id', 'name as title')
@@ -6222,7 +6286,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         foreach ($standardTitles as $st) {
             $norm = strtolower(trim($st->title ?? ''));
-            if (!$norm) continue;
+            if (! $norm) {
+                continue;
+            }
             $seenTitles[$norm] = true;
             $titles[] = [
                 'id' => (int) $st->id,
@@ -6239,7 +6305,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         foreach ($companyDesignations as $cd) {
             $norm = strtolower(trim($cd->title ?? ''));
-            if (!$norm || isset($seenTitles[$norm])) continue;
+            if (! $norm || isset($seenTitles[$norm])) {
+                continue;
+            }
             $seenTitles[$norm] = true;
             $titles[] = [
                 'id' => 1000000 + (int) $cd->id,
@@ -6255,18 +6323,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $json = json_encode($titles);
-        $checksum = 'sha256:' . hash('sha256', $json);
+        $checksum = 'sha256:'.hash('sha256', $json);
         $shortHash = substr(md5($checksum), 0, 8);
         $manifestId = "titles-tenant-{$companyId}-v{$version}-{$shortHash}";
 
         return [
-            'manifest_id'     => $manifestId,
-            'version'         => $version,
-            'checksum'        => $checksum,
-            'total'           => count($titles),
-            'standard_count'  => count($standardTitles),
-            'company_count'   => count($companyDesignations),
-            'titles'          => $titles,
+            'manifest_id' => $manifestId,
+            'version' => $version,
+            'checksum' => $checksum,
+            'total' => count($titles),
+            'standard_count' => count($standardTitles),
+            'company_count' => count($companyDesignations),
+            'titles' => $titles,
         ];
     }
 
@@ -6288,96 +6356,96 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
 
             $locInfo = DB::table('client_location')
-            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select(
-                'client_location.id',
-                'client_location.city',
-                'client_location.address',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name',
-                'state_list.state as state_name',
-                'countries.country_name'
-            )
-            ->where('client_id', $client_id)
-            ->get();
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.postcode',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_id', $client_id)
+                ->get();
 
-        // dd( count($locInfo ));
+            // dd( count($locInfo ));
 
-        if (count(@$locInfo) > 0) {
-            foreach ($locInfo as $lArr) {
+            if (count(@$locInfo) > 0) {
+                foreach ($locInfo as $lArr) {
 
-                $city_name = $lArr->city;
-                $selected = '';
-                if ($lArr->country_id == 101) {
-                    $city_name = $lArr->city_name;
+                    $city_name = $lArr->city;
+                    $selected = '';
+                    if ($lArr->country_id == 101) {
+                        $city_name = $lArr->city_name;
+                    }
+                    if (in_array($lArr->id, $jobLocation)) {
+                        $selected = 'selected';
+                    }
+
+                    $locArr .= '<option   value="'.$lArr->id.'" '.$selected.'>'.ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($city_name).' , '.ucwords($lArr->state_name).' , '.ucwords($lArr->country_name).'</option>';
+
                 }
-                if (in_array($lArr->id, $jobLocation)) {
-                    $selected = 'selected';
-                }
-
-                $locArr .= '<option   value="'.$lArr->id.'" '.$selected.'>'.ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($city_name).' , '.ucwords($lArr->state_name).' , '.ucwords($lArr->country_name).'</option>';
-
+            } else {
+                $locArr = ' <option value="" >No Address</option>';
+                $address_show = true;
             }
-        } else {
-            $locArr = ' <option value="" >No Address</option>';
-            $address_show = true;
-        }
 
-        $job_id = @$_REQUEST['job_id'];
-        if ($_REQUEST['job_id'] > 0) {
-            $client_location_jobs = DB::table('client_location_jobs')
-                ->select('client_location_jobs.id', 'client_location_jobs.client_location_id')
-                ->where('client_location_jobs.job_id', $job_id)
-                ->get()
-                ->toArray();
-        }
+            $job_id = @$_REQUEST['job_id'];
+            if ($_REQUEST['job_id'] > 0) {
+                $client_location_jobs = DB::table('client_location_jobs')
+                    ->select('client_location_jobs.id', 'client_location_jobs.client_location_id')
+                    ->where('client_location_jobs.job_id', $job_id)
+                    ->get()
+                    ->toArray();
+            }
 
-        $city = DB::table('client_location')
-            ->join('countries', 'countries.id', '=', 'client_location.country_id')
-            ->select('client_location.id', 'client_location.city', 'client_location.address', 'client_location.postcode', 'countries.country_name')
-            ->where('client_id', $client_id)
-            ->groupBy('client_location.city')
-            ->get();
-        $clientcity = '';
-        foreach ($city as $arr) {
+            $city = DB::table('client_location')
+                ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                ->select('client_location.id', 'client_location.city', 'client_location.address', 'client_location.postcode', 'countries.country_name')
+                ->where('client_id', $client_id)
+                ->groupBy('client_location.city')
+                ->get();
+            $clientcity = '';
+            foreach ($city as $arr) {
 
-            $sel = '';
-            if ($job_id > 0) {
-                foreach ($client_location_jobs as $locVal) {
-                    if ($locVal->client_location_id == $arr->id) {
-                        $sel = 'selected="selected"';
+                $sel = '';
+                if ($job_id > 0) {
+                    foreach ($client_location_jobs as $locVal) {
+                        if ($locVal->client_location_id == $arr->id) {
+                            $sel = 'selected="selected"';
+                        }
                     }
                 }
+
+                $clientcity .= '<option   value="'.$arr->id.'"  '.@$sel.'>'.ucwords($arr->city).' '.$arr->postcode.' '.$arr->postcode.'</option>';
             }
 
-            $clientcity .= '<option   value="'.$arr->id.'"  '.@$sel.'>'.ucwords($arr->city).' '.$arr->postcode.' '.$arr->postcode.'</option>';
-        }
+            $addresses = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.postcode',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_id', $client_id)
+                ->get()->map(function ($lArr) {
 
-        $addresses = DB::table('client_location')
-            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select(
-                'client_location.id',
-                'client_location.city',
-                'client_location.address',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name',
-                'state_list.state as state_name',
-                'countries.country_name'
-            )
-            ->where('client_id', $client_id)
-            ->get()->map(function ($lArr) {
+                    // $locArr .= '<option   value="' . $lArr->id . '" ' . $selected . '>' . . '</option>';
+                    return ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($lArr->city_name).' '.ucwords($lArr->state_name).' - '.ucwords($lArr->country_name);
+                });
 
-                // $locArr .= '<option   value="' . $lArr->id . '" ' . $selected . '>' . . '</option>';
-                return ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($lArr->city_name).' '.ucwords($lArr->state_name).' - '.ucwords($lArr->country_name);
-            });
-
-        // dd($addresses);
+            // dd($addresses);
 
             return ['status' => 'success', 'ccArr' => $ccArr, 'locArr' => $locArr, 'clientcity' => $clientcity, 'addresses' => $addresses, 'address_show' => $address_show];
         });
@@ -6772,9 +6840,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->where('company_id', $companyId)
                 ->first(['id', 'name']);
 
-            if (!$client) {
+            if (! $client) {
                 return Reply::dataOnly([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'msgType' => 'danger',
                     'message' => 'The selected client could not be found or has been removed. Please select an active client to proceed.',
                 ]);
@@ -13624,9 +13692,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 2. Primary Job Model load
         $this->job = Job::where('company_id', $company_id)->withoutGlobalScopes()->findOrFail($id);
 
-        // 3. Tenant-scoped categories and clients — cached 5 min
-        $this->categories = Cache::remember('tenant:'.$company_id.':categories', 300, function () use ($company_id) {
-            return JobCategory::where('company_id', $company_id)->get();
+        // 3. Tenant + Master categories and clients — cached 5 min
+        $this->categories = Cache::remember('tenant:'.$company_id.':all_categories', 300, function () use ($company_id) {
+            return JobCategory::where(function ($q) use ($company_id) {
+                $q->where('company_id', $company_id)->orWhereNull('company_id');
+            })->orderBy('name', 'ASC')->get();
         });
 
         $this->client = Cache::remember('tenant:'.$company_id.':clients', 300, function () use ($company_id) {
@@ -13763,6 +13833,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->orderBy('id', 'DESC')
                 ->first();
         });
+
+        // 9. Pre-seed job titles manifest for 0ms client-first browser execution (10K concurrency)
+        $this->titlesManifest = $this->buildTitlesManifest($company_id, (int) Cache::get('tenant:'.$company_id.':titles_version', 1));
+
+        // 10. Pre-seed departments manifest for 0ms client-first browser execution (10K concurrency)
+        $this->departmentsManifest = \App\Services\DepartmentTaxonomyService::buildTenantManifest($company_id, (int) Cache::get('tenant:'.$company_id.':dept_version', 1));
 
         return view('service_company.jobs.create', $this->data);
     }

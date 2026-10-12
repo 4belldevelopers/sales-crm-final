@@ -1577,11 +1577,76 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
     public function storeDept(Request $request)
     {
 
-        $company_id = auth()->user()->company_id;
-        $dept_name = $request->dept_name;
-        $values = ['company_id' => $company_id, 'name' => $dept_name];
-        $insertGetId = DB::table('job_categories')->insertGetId($values);
-        // dd($insertGetId,auth()->user()->company_id,ELASTIC_JOB_CATEGORIES);
+        $company_id = (int) auth()->user()->company_id;
+        $dept_name = trim($request->dept_name ?? ($request->name ?? ''));
+        if ($dept_name === '') {
+            return Reply::error(__('errors.addCategory'));
+        }
+
+        // 1. Check if department already exists in this organization (case-insensitive)
+        $existing = \App\Models\JobCategory::where('company_id', $company_id)
+            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($dept_name)])
+            ->first();
+
+        // 2. Check if department already exists in standard global taxonomy
+        $standard = \App\Models\JobCategory::whereNull('company_id')
+            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($dept_name)])
+            ->first();
+
+        if ($existing || $standard) {
+            $matched = $existing ?: $standard;
+            $departmentArr = DB::table('job_categories')->select('*')->where('company_id', $company_id)->orderBy('job_categories.name', 'ASC')->get();
+            $html = '';
+            $cnt = 0;
+            if (! empty($departmentArr)) {
+                foreach ($departmentArr as $dval) {
+                    if ($cnt % 3 == 0) {
+                        $html .= '<div class="form-group fv-plugins-icon-container has-success"><div class="row">';
+                    }
+                    $cnt++;
+                    $html .= '<div class="col-lg-4">
+                                <div class="badge badge-secondary d-flex align-items-center justify-content-between py-4 px-5" data-class="secondary">
+                                  <div class="fs-4">'.$dval->name.'</div>
+                                  <div class="edit_delete cursor-pointer">
+                                     <a class="text-danger dept_delete" href="javascript:void(0);" rel="'.$dval->id.'">
+                                        <span class="svg-icon svg-icon-danger svg-icon-2x">
+                                           <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"></path><path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"></path></g></svg>
+                                        </span>
+                                     </a>
+                                  </div>
+                               </div>
+                            </div>';
+                    if ($cnt % 3 == 0) {
+                        $html .= '</div><div class="form-check"></div><div class="form-text text-muted"></div></div>';
+                    }
+                }
+            }
+
+            $alertMsg = $standard
+                ? 'Department "'.$matched->name.'" is already available in the standard global catalog.'
+                : 'Department "'.$matched->name.'" already exists in your organization.';
+
+            $message = '<div class="alert alert-info" id="success-alert">
+                          <button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button>
+                          <strong>Notice: </strong> '.$alertMsg.'
+                        </div>';
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'html' => $html,
+                'message' => $message,
+                'category_id' => $matched->id,
+                'category_name' => $matched->name,
+                'is_standard' => empty($matched->company_id),
+                'already_exists' => true,
+            ]);
+        }
+
+        $category = \App\Models\JobCategory::create([
+            'company_id' => $company_id,
+            'name' => $dept_name,
+        ]);
+        $insertGetId = $category->id;
         $response = $this->elasticService->getClient()->update([
             'index' => ELASTIC_JOB_CATEGORIES,
             'id' => $insertGetId,
@@ -1600,9 +1665,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         ]);
 
         $message = '<div class="alert alert-success" id="success-alert">
-									  <button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button>
-									  <strong>Success! </strong> New Process have added successfully.
-									</div>';
+					  <button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button>
+					  <strong>Success! </strong> New Process have added successfully.
+					</div>';
 
         $departmentArr = DB::table('job_categories')->select('*')->where('company_id', $company_id)->orderBy('job_categories.name', 'ASC')->get();
         $html = '';
@@ -1657,7 +1722,15 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             }
         }
 
-        return Reply::dataOnly(['status' => 'success', 'html' => $html, 'message' => $message]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'html' => $html,
+            'message' => $message,
+            'category_id' => $insertGetId,
+            'category_name' => $category->name,
+            'is_standard' => false,
+            'already_exists' => false,
+        ]);
 
     }
 
