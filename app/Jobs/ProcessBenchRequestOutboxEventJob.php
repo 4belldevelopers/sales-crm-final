@@ -48,6 +48,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
     {
         if ($this->specificEventId !== null) {
             $this->processEvent($this->specificEventId);
+
             return;
         }
 
@@ -77,12 +78,12 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                 'attempts' => DB::raw('attempts + 1'),
             ]);
 
-        if (!$claimed) {
+        if (! $claimed) {
             return;
         }
 
         $event = DB::table('sys_outbox_events')->where('id', $eventId)->first();
-        if (!$event) {
+        if (! $event) {
             return;
         }
 
@@ -99,19 +100,20 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                 try {
                     SyncCandidateRequestToElasticJob::dispatch((int) $recId);
                 } catch (\Throwable $esEx) {
-                    Log::warning('[ProcessBenchRequestOutboxEventJob] Elastic sync dispatch failed: ' . $esEx->getMessage());
+                    Log::warning('[ProcessBenchRequestOutboxEventJob] Elastic sync dispatch failed: '.$esEx->getMessage());
                 }
             }
 
             // 2. Real-Time Reverb WebSocket Broadcasting (Phase 4)
             if ($sourceFromCompanyId > 0 && $sourceJobId > 0) {
                 try {
+                    $broadcastTab = (string) ($payload['tab'] ?? 'internal_bench');
                     event(new BenchRequestCreated(
                         (int) $sourceFromCompanyId,
                         (int) $sourceJobId,
                         (int) $recId,
                         (int) $sourceApplicationId,
-                        'internal_bench'
+                        $broadcastTab
                     ));
 
                     if ($sourceCompanyId !== $sourceFromCompanyId && $sourceCompanyId > 0) {
@@ -120,11 +122,11 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                             (int) $sourceJobId,
                             (int) $recId,
                             (int) $sourceApplicationId,
-                            'internal_bench'
+                            $broadcastTab
                         ));
                     }
                 } catch (\Throwable $bEx) {
-                    Log::warning('[ProcessBenchRequestOutboxEventJob] Reverb broadcast failed: ' . $bEx->getMessage());
+                    Log::warning('[ProcessBenchRequestOutboxEventJob] Reverb broadcast failed: '.$bEx->getMessage());
                 }
             }
 
@@ -149,7 +151,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                 ]);
 
         } catch (\Throwable $e) {
-            Log::error('[ProcessBenchRequestOutboxEventJob] Execution failed: ' . $e->getMessage(), [
+            Log::error('[ProcessBenchRequestOutboxEventJob] Execution failed: '.$e->getMessage(), [
                 'event_id' => $eventId,
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -172,17 +174,17 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
     protected function dispatchNotificationEmail(int $jobId, int $candidateId, int $fromCompanyId, int $sourceCompanyId): void
     {
         try {
-            if (!GeneralMethod::mailPermission(21)) {
+            if (! GeneralMethod::mailPermission(21)) {
                 return;
             }
 
             $job = Job::withoutGlobalScopes()->find($jobId);
-            if (!$job) {
+            if (! $job) {
                 return;
             }
 
             $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
-            if (!$mailTypeSubject) {
+            if (! $mailTypeSubject) {
                 return;
             }
 
@@ -192,7 +194,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                 ->where('job_applications.id', '=', $candidateId)
                 ->first();
 
-            if (!$jobRow) {
+            if (! $jobRow) {
                 return;
             }
 
@@ -206,7 +208,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
             $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
             $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
             $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
-            $salaryRange = $bill_rate_currency . $bill_rate_amount . '/' . $bill_rate_mode;
+            $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
 
             $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
             $template_description = str_replace(
@@ -219,7 +221,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
             $defaultEmail = DB::table('companies')->where('id', $sourceCompanyId)->value('company_email');
             $to_Mail_Id = $notificationemail->email ?? $defaultEmail ?? '';
 
-            if (!empty($to_Mail_Id)) {
+            if (! empty($to_Mail_Id)) {
                 SendEmailJob::dispatch(
                     $to_Mail_Id,
                     $subject,
@@ -232,7 +234,7 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
                 );
             }
         } catch (\Throwable $mailEx) {
-            Log::warning('[ProcessBenchRequestOutboxEventJob] Notification email failed: ' . $mailEx->getMessage());
+            Log::warning('[ProcessBenchRequestOutboxEventJob] Notification email failed: '.$mailEx->getMessage());
         }
     }
 }

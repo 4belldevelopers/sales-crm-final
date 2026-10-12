@@ -482,7 +482,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::resource('bench-candidates', ServiceCompanyBenchCandidatesController::class);
                 Route::post('bench-candidates/update_placed_end_date', [ServiceCompanyBenchCandidatesController::class, 'update_placed_end_date'])->name('bench-candidates.update_placed_end_date');
                 Route::post('bench-candidates/status_submit', [ServiceCompanyBenchCandidatesController::class, 'status_submit'])->name('bench-candidates.status_submit');
-                Route::get('jobs/recommandedrequestcondidate/{jobId}', [ServiceCompanyBenchCandidatesController::class, 'recommandedrequestcondidate'])->name('jobs.recommandedrequestcondidate');
+                Route::match(['get', 'post'], 'jobs/recommandedrequestcondidate/{jobId}', [ServiceCompanyBenchCandidatesController::class, 'recommandedrequestcondidate'])->name('jobs.recommandedrequestcondidate');
                 Route::get('jobs/mailrecommandedrequestcondidate/{jobId}', [ServiceCompanyBenchCandidatesController::class, 'mailrecommandedrequestcondidate'])->name('jobs.mailrecommandedrequestcondidate');
                 Route::get('services-job', [ServiceCompanyJobsController::class, 'jobServices'])->name('jobs.jobServices');
                 Route::get('jobs/serviceviewmore/{id?}', [ServiceCompanyJobsController::class, 'serviceviewmore'])->name('jobs.serviceviewmore');

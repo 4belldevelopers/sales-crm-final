@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Helper\GeneralMethod;
 use App\Jobs\ProcessBenchRequestOutboxEventJob;
 use App\Models\Job;
-use App\Models\JobApplication;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,11 +29,11 @@ class BenchRequestMutationService
     /**
      * Executes an authoritative candidate recommendation mutation with idempotency and transactional outbox.
      *
-     * @param int $tenantId Current company ID (source_from_company_id)
-     * @param int $jobId Target job requirement ID
-     * @param int $candidateId Target bench candidate ID (job_applications ID)
-     * @param int $userId Authenticated user ID
-     * @param string|null $clientKey Client-supplied idempotency key
+     * @param  int  $tenantId  Current company ID (source_from_company_id)
+     * @param  int  $jobId  Target job requirement ID
+     * @param  int  $candidateId  Target bench candidate ID (job_applications ID)
+     * @param  int  $userId  Authenticated user ID
+     * @param  string|null  $clientKey  Client-supplied idempotency key
      * @return array Standardized response array with status, message, and optional metadata
      */
     public function executeRecommendationMutation(
@@ -42,20 +41,22 @@ class BenchRequestMutationService
         int $jobId,
         int $candidateId,
         int $userId,
-        ?string $clientKey = null
+        ?string $clientKey = null,
+        string $action = 'recommend_internal_req',
+        string $tab = 'internal_bench'
     ): array {
         $canonicalPayload = [
             'tenant_id' => $tenantId,
             'job_id' => $jobId,
             'candidate_id' => $candidateId,
-            'action' => 'recommend_internal_req',
+            'action' => $action,
         ];
         $canonicalHash = hash('xxh128', json_encode($canonicalPayload));
 
         // 1. Fallback or validate client idempotency key
-        $idempotencyKey = !empty($clientKey)
+        $idempotencyKey = ! empty($clientKey)
             ? $clientKey
-            : "idemp:bench_req:{$tenantId}:{$jobId}:{$candidateId}:" . substr($canonicalHash, 0, 16);
+            : "idemp:bench_req:{$tenantId}:{$jobId}:{$candidateId}:".substr($canonicalHash, 0, 16);
 
         // 2. Atomic Idempotency Claim via sys_idempotency_keys
         $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
@@ -68,7 +69,7 @@ class BenchRequestMutationService
             'updated_at' => now(),
         ]);
 
-        if (!$inserted) {
+        if (! $inserted) {
             $existing = DB::table('sys_idempotency_keys')
                 ->where('tenant_id', $tenantId)
                 ->where('idempotency_key', $idempotencyKey)
@@ -85,6 +86,7 @@ class BenchRequestMutationService
 
                 if ($existing->status === 'COMPLETED') {
                     $cachedBody = json_decode($existing->response_body, true);
+
                     return is_array($cachedBody) ? $cachedBody : ['status' => 'success', 'message' => 'Request already submitted.'];
                 }
 
@@ -97,16 +99,17 @@ class BenchRequestMutationService
 
                 if ($existing->status === 'FAILED_FINAL') {
                     $cachedBody = json_decode($existing->response_body, true);
+
                     return is_array($cachedBody) ? $cachedBody : ['status' => 'error', 'message' => $existing->last_error ?: 'Request previously failed.'];
                 }
             }
         }
 
         // 3. Acquire short-lived Redis lock for distributed concurrency protection
-        $lockKey = 'lock:' . md5($idempotencyKey);
+        $lockKey = 'lock:'.md5($idempotencyKey);
         $lock = Cache::lock($lockKey, 10);
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return [
                 'status' => 'warning',
                 'message' => 'Request already processing. Please wait.',
@@ -203,6 +206,8 @@ class BenchRequestMutationService
                     'source_company_id' => $source_company_id,
                     'user_id' => $userId,
                     'epoch' => $newEpoch,
+                    'action' => $action,
+                    'tab' => $tab,
                     'timestamp' => now()->toIso8601String(),
                 ];
 
@@ -244,7 +249,7 @@ class BenchRequestMutationService
 
             } catch (\Throwable $txException) {
                 DB::rollBack();
-                Log::error('[BenchRequestMutationService] Transaction failed: ' . $txException->getMessage(), [
+                Log::error('[BenchRequestMutationService] Transaction failed: '.$txException->getMessage(), [
                     'tenant_id' => $tenantId,
                     'job_id' => $jobId,
                     'candidate_id' => $candidateId,
@@ -271,16 +276,16 @@ class BenchRequestMutationService
                 try {
                     ProcessBenchRequestOutboxEventJob::dispatch($outboxId)->onQueue('candidate-index');
                 } catch (\Throwable $qEx) {
-                    Log::warning('[BenchRequestMutationService] Outbox worker queue dispatch deferred: ' . $qEx->getMessage());
+                    Log::warning('[BenchRequestMutationService] Outbox worker queue dispatch deferred: '.$qEx->getMessage());
                 }
             }
 
             // Invalidate recommendation version caches for this user & tenant
             $cachekeys = [
-                'allbenchrecommendreq_version_user_' . $userId,
-                'allbenchrecommendinternalreq_version_user_' . $userId,
-                'allbenchrecommendreq_version_company_' . $source_from_company_id,
-                'allbenchrecommendinternalreq_version_company_' . $source_from_company_id,
+                'allbenchrecommendreq_version_user_'.$userId,
+                'allbenchrecommendinternalreq_version_user_'.$userId,
+                'allbenchrecommendreq_version_company_'.$source_from_company_id,
+                'allbenchrecommendinternalreq_version_company_'.$source_from_company_id,
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
