@@ -5049,7 +5049,24 @@ $(document).ready(function(){
 																																$("#dept_success_alert").fadeTo(2000, 500).slideUp(500, function() {
 																																	$("#dept_success_alert").slideUp(500);
 																																});
-																																$('.dept_content').html(response.html);																																	
+																																$('.dept_content').html(response.html);
+																																if ('BroadcastChannel' in window) {
+																																	try {
+																																		var bc = new BroadcastChannel('jero_dept_channel');
+																																		bc.postMessage({ type: 'DEPT_UPDATED', timestamp: Date.now() });
+																																	} catch(e) {}
+																																}
+																																try {
+																																	localStorage.setItem('jero_dept_sync_timestamp', Date.now());
+																																} catch(e) {}
+																																if (response.already_exists && response.message) {
+																																	Swal.fire({
+																																		title: 'Department Exists',
+																																		html: response.message,
+																																		icon: 'info',
+																																		confirmButtonColor: '#2563eb'
+																																	});
+																																}
 																														  }
 																				 }
 									});
@@ -5082,10 +5099,21 @@ $(document).ready(function(){
 																						success	: function (response) {
 																														  if(response.status == "success") {
 																																Swal.fire('Deleted!', 'Your record has been deleted.', 'success');
-                                                                $('.dept_content').html(response.html);	
-																														   }
-																													  }
-																				});											   																			
+                                                                $('.dept_content').html(response.html);
+                                                                if ('BroadcastChannel' in window) {
+                                                                      try {
+                                                                          var bc = new BroadcastChannel('jero_dept_channel');
+                                                                          bc.postMessage({ type: 'DEPT_UPDATED', timestamp: Date.now() });
+                                                                      } catch(e) {}
+                                                                  }
+                                                                  try {
+                                                                      localStorage.setItem('jero_dept_sync_timestamp', Date.now());
+                                                                  } catch(e) {}
+                                                               } else {
+                                                                  Swal.fire('Cannot Delete', response.message || 'Unable to delete department.', 'error');
+                                                               }
+                                                            }
+                                                        });											   																			
 																	  }
 						   })	
    			});				
