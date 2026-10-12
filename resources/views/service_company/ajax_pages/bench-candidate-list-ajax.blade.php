@@ -285,8 +285,8 @@
                     <div>
                         <div class="pipe-grid">
                             <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">OFF</div><div class="h">JOI</div><div class="h">REJ</div>
-                            {{-- Intent: Clicking INW (InReview) opens the full bench explore list with stage = 'all' --}}
-                            <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></div>
+                            {{-- Intent: Clicking INW (InReview) opens the bench explore list with stage = 8 (InReview) --}}
+                            <div class="v"><a href="{{ $exploreBase }}/8" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary" data-bench-pipe="screening">{{ $row->Screening }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a></div>

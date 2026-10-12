@@ -5541,9 +5541,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
 
         $versionKey = 'allbenchexplore_version_user_'.$this->user->id;
-        $version = 11;
+        $version = 12;
         try {
-            $version = cache()->get($versionKey, 11);
+            $version = cache()->get($versionKey, 12);
         } catch (\Throwable $e) {
         }
 
@@ -5646,14 +5646,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $status = explode(',', $status);
             }
 
-            // Stage 1 (Sourcing) encompasses master_status_ids [1, 8] (Sourcing + InReview)
-            if (in_array(1, $status) || in_array('1', $status) || in_array(8, $status) || in_array('8', $status)) {
-                $status = array_unique(array_merge($status, [1, 8]));
-            }
-
             // Stage 7 (Rejected) encompasses master_status_ids [7, 9].
             if (in_array(7, $status) || in_array('7', $status)) {
-                $status = array_unique(array_merge($status, [9]));
+                $status = array_unique(array_merge($status, [7, 9]));
             }
 
             $filters[] = [

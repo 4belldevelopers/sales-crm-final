@@ -566,7 +566,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
         <input type="text"   name="inputSearch" id="inputSearch" value="">
     </form>
     <div id="bg_all" class="bg-total-active"></div>
-    <span id="tx_1"></span><span id="tx_2"></span><span id="tx_3"></span>
+    <span id="tx_8"></span><span id="tx_1"></span><span id="tx_2"></span><span id="tx_3"></span>
     <span id="tx_4"></span><span id="tx_5"></span><span id="tx_6"></span><span id="tx_7"></span>
     <span class="nav_status"></span><span class="bg d-none"></span>
 </div>
@@ -783,10 +783,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
        AppTracker's Hiring Pipeline card ══ --}}
   @php
       $bxrStages = [
+          ['rel'=>'8','label'=>'InReview',   'icon'=>'ti-eye',             'color'=>'#D97706','bg'=>'#FEF3C7'],
           ['rel'=>'1','label'=>'Sourcing',   'icon'=>'ti-users-group',     'color'=>'#7C3AED','bg'=>'#EEEBFF'],
           ['rel'=>'2','label'=>'Screening',  'icon'=>'ti-clipboard-list',  'color'=>'#0284C7','bg'=>'#E0F2FE'],
           ['rel'=>'3','label'=>'Evaluation', 'icon'=>'ti-search',          'color'=>'#0EA5E9','bg'=>'#E0F2FE'],
-          ['rel'=>'4','label'=>'Negotiation','icon'=>'ti-3d-cube-sphere',  'color'=>'#D97706','bg'=>'#FEF3C7'],
+          ['rel'=>'4','label'=>'Negotiation','icon'=>'ti-3d-cube-sphere',  'color'=>'#EA580C','bg'=>'#FFEDD5'],
           ['rel'=>'5','label'=>'Offer',      'icon'=>'ti-briefcase',       'color'=>'#059669','bg'=>'#D1FAE5'],
           ['rel'=>'6','label'=>'Joined',     'icon'=>'ti-circle-check',    'color'=>'#16A34A','bg'=>'#DCFCE7'],
       ];
@@ -899,6 +900,7 @@ function bxrSetActiveStage(stage){
         $('.bxr-stage-label[data-bxr-label="'+stage+'"]').addClass('bxr-l-active');
         $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
         var stageLabels = {
+            8: ['InReview', {background:'#fff4de',color:'#d97706'}],
             1: ['Sourcing', {background:'#efefef',color:'#000'}],
             2: ['Screening', {background:'#fff9ed',color:'#ffab00'}],
             3: ['Evaluation', {background:'#f0f8ff',color:'#2896ff'}],
@@ -1105,6 +1107,7 @@ var BenchExploreTabManager = (function(){
             if (res.counters) {
                 var d = res.counters;
                 var totalCandidateCnt = d.allCandidate || d.all || overallTotal;
+                $('#bg_8').html(d.InReview || d.Interview || 0);
                 $('#bg_1').html(d.Sourcing || 0);   $('#bg_2').html(d.Screening || 0);
                 $('#bg_3').html(d.Evaluation || 0); $('#bg_4').html(d.Negotiation || 0);
                 $('#bg_5').html(d.Offered || 0);    $('#bg_6').html(d.Joined || 0);
@@ -1127,13 +1130,14 @@ function tableLoad(){
     var url='{{ route('service_company.bench-candidates.bench_explore_listing_counter',[':bench_id',':stage',':inputSearch']) }}';
     url=url.replace(':bench_id',bid).replace(':stage',stage).replace(':inputSearch',q);
     $.ajax({type:'GET',url:url,success:function(r){
-        var d={allCandidate:0,Sourcing:0,Screening:0,Rejected:0,Offered:0,Negotiation:0,Joined:0,Evaluation:0};
+        var d={allCandidate:0,InReview:0,Interview:0,Sourcing:0,Screening:0,Rejected:0,Offered:0,Negotiation:0,Joined:0,Evaluation:0};
         if(r.allCounter>0) d=r.data;
         setTimeout(function(){
-            $('#bg_1').html(d.Sourcing);   $('#bg_2').html(d.Screening);
-            $('#bg_3').html(d.Evaluation); $('#bg_4').html(d.Negotiation);
-            $('#bg_5').html(d.Offered);    $('#bg_6').html(d.Joined);
-            $('#bg_7').html(d.Rejected);   $('#totalcnt').html(d.allCandidate);
+            $('#bg_8').html(d.InReview || d.Interview || 0);
+            $('#bg_1').html(d.Sourcing || 0);   $('#bg_2').html(d.Screening || 0);
+            $('#bg_3').html(d.Evaluation || 0); $('#bg_4').html(d.Negotiation || 0);
+            $('#bg_5').html(d.Offered || 0);    $('#bg_6').html(d.Joined || 0);
+            $('#bg_7').html(d.Rejected || 0);   $('#totalcnt').html(d.allCandidate);
             $('#totalcnt_plain').html(d.allCandidate);
             syncPillCounts();
         },100);
