@@ -1282,8 +1282,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 return Reply::dataOnly([
                     'status' => 'success',
                     'jd' => $item['jd'] ?? '',
-                    'minimum_exp' => $item['min_exp'] ?? '',
-                    'maxmum_exp' => $item['max_exp'] ?? '',
+                    'minimum_exp' => '',
+                    'maxmum_exp' => '',
                     'skills' => $item['skills'] ?? '',
                 ]);
             }
@@ -1292,7 +1292,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $jobTitles = DB::table('jd_details')
             ->where('title', '=', $search)->where('status', '=', 1)->first();
 
-        return Reply::dataOnly(['status' => 'success', 'jd' => @$jobTitles->jd, 'minimum_exp' => round(@$jobTitles->minimum_exp), 'maxmum_exp' => round(@$jobTitles->maxmum_exp), 'skills' => @$jobTitles->skills]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'jd' => @$jobTitles->jd,
+            'minimum_exp' => '',
+            'maxmum_exp' => '',
+            'skills' => @$jobTitles->skills,
+        ]);
 
     }
 
@@ -6296,8 +6302,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'is_standard' => 1,
                 'has_template' => 1,
                 'dept_name' => 'Standard Library',
-                'min_exp' => $st->minimum_exp !== null ? round((float) $st->minimum_exp) : null,
-                'max_exp' => $st->maxmum_exp !== null ? round((float) $st->maxmum_exp) : null,
+                'min_exp' => null,
+                'max_exp' => null,
                 'skills' => (string) ($st->skills ?? ''),
                 'jd' => (string) ($st->jd ?? ''),
             ];

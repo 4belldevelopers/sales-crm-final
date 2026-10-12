@@ -5008,8 +5008,6 @@
                             ed.innerHTML = data.jd || '';
                             syncDescription();
                         }
-                        if (data.minimum_exp !== null && data.minimum_exp !== '') $("#min_exp").val(data.minimum_exp).change();
-                        if (data.maxmum_exp !== null && data.maxmum_exp !== '') $("#max_exp").val(data.maxmum_exp).change();
                         if (data.skills && skills.length === 0) {
                             (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
                             renderSkills();
@@ -8549,9 +8547,7 @@
             if (item.has_template === 1) {
                 badgeHtml += '<span class="jero-title-badge badge-autofill">Auto-fill ✓</span>';
             }
-            if (item.min_exp !== null && item.min_exp !== undefined && item.max_exp) {
-                badgeHtml += '<span class="jero-title-badge badge-exp">' + item.min_exp + '–' + item.max_exp + ' yrs</span>';
-            } else if (item.is_standard === 0) {
+            if (item.is_standard === 0) {
                 badgeHtml += '<span class="jero-title-badge badge-source-org">My Org</span>';
             }
 
@@ -8622,7 +8618,7 @@
             if (!toast) return;
 
             clearTimeout(undoTimer);
-            toast.querySelector('.undo-msg').textContent = msg || 'Template applied: Description • Experience • Skills';
+            toast.querySelector('.undo-msg').textContent = msg || 'Template applied: Job description • Recommended skills';
             toast.style.display = 'flex';
 
             undoTimer = setTimeout(function() {
@@ -8645,8 +8641,6 @@
                 ed.innerHTML = priorSnapshot.jd;
                 if (typeof syncDescription === 'function') syncDescription();
             }
-            if (priorSnapshot.min_exp !== undefined) $('#min_exp').val(priorSnapshot.min_exp).change();
-            if (priorSnapshot.max_exp !== undefined) $('#max_exp').val(priorSnapshot.max_exp).change();
 
             if (Array.isArray(priorSnapshot.skills) && typeof skills !== 'undefined') {
                 skills.length = 0;
@@ -8683,8 +8677,6 @@
             priorSnapshot = {
                 title: $('#title').val(),
                 jd: ed ? ed.innerHTML : '',
-                min_exp: $('#min_exp').val(),
-                max_exp: $('#max_exp').val(),
                 skills: currentSkills
             };
 
@@ -8704,14 +8696,6 @@
                 }
             }
 
-            // Apply Experience
-            if (item.min_exp !== null && item.min_exp !== undefined) {
-                $('#min_exp').val(item.min_exp).change();
-            }
-            if (item.max_exp !== null && item.max_exp !== undefined) {
-                $('#max_exp').val(item.max_exp).change();
-            }
-
             // Apply Skills (Merge unique)
             if (item.skills && typeof skills !== 'undefined') {
                 var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
@@ -8727,7 +8711,7 @@
                 if (added && typeof renderSkills === 'function') renderSkills();
             }
 
-            showUndoToast('Template applied: Description • Experience • Skills');
+            showUndoToast('Template applied: Job description • Recommended skills');
             updateStatusChip(true, false);
         }
 
