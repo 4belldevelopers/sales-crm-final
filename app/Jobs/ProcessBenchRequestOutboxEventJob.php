@@ -98,9 +98,9 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
             // 1. Elasticsearch Candidate Request Indexing (Rule 2 & Rule 6)
             if ($recId > 0) {
                 try {
-                    SyncCandidateRequestToElasticJob::dispatch((int) $recId);
+                    GeneralMethod::candidateRequestIndexElastic((int) $recId);
                 } catch (\Throwable $esEx) {
-                    Log::warning('[ProcessBenchRequestOutboxEventJob] Elastic sync dispatch failed: '.$esEx->getMessage());
+                    Log::warning('[ProcessBenchRequestOutboxEventJob] Elastic sync failed: '.$esEx->getMessage());
                 }
             }
 
@@ -134,6 +134,10 @@ class ProcessBenchRequestOutboxEventJob implements ShouldQueue
             if ($sourceJobId > 0) {
                 GeneralMethod::invalidateJobCounters((int) $sourceJobId, [(int) $sourceCompanyId, (int) $sourceFromCompanyId]);
                 \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $sourceFromCompanyId);
+                $reqUserId = (int) ($payload['user_id'] ?? 0);
+                if ($reqUserId > 0) {
+                    GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$reqUserId);
+                }
             }
 
             // 4. Notification Email Dispatch
