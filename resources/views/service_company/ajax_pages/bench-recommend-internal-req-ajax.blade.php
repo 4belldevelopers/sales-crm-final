@@ -15,25 +15,33 @@
         $pageViewerCompanyId = auth()->user()->company_id;
         $relationMap = GeneralMethod::getrRcommendationRelationDataBulk($pageViewerCompanyId, $pageJobIds);
         $benchReqMap = GeneralMethod::benchRequestCheckBulk($condidate_id, $pageJobIds);
-        $skillsByJob = DB::table('job_metronics_skills')->whereIn('job_id', $pageJobIds)->get()->groupBy('job_id');
+        $skillsByJob = !empty($pageJobIds) ? cache()->remember('ats:job_skills:'.md5(implode(',', $pageJobIds)), 300, function() use ($pageJobIds) {
+            return DB::table('job_metronics_skills')->whereIn('job_id', $pageJobIds)->get()->groupBy('job_id');
+        }) : collect();
         $pageCategoryIds = array_values(array_filter(array_map(fn ($r) => $r['category_id'] ?? null, $data)));
-        $categoriesMap = !empty($pageCategoryIds) ? DB::table('job_categories')->whereIn('id', $pageCategoryIds)->pluck('name', 'id')->toArray() : [];
+        $categoriesMap = !empty($pageCategoryIds) ? cache()->remember('ats:job_cats:'.implode(',', $pageCategoryIds), 3600, function() use ($pageCategoryIds) {
+            return DB::table('job_categories')->whereIn('id', $pageCategoryIds)->pluck('name', 'id')->toArray();
+        }) : [];
         $pageComIds = array_values(array_filter(array_map(fn ($r) => $r['comId'] ?? ($r['company_id'] ?? null), $data)));
-        $companiesMap = !empty($pageComIds) ? DB::table('companies')->whereIn('id', $pageComIds)->pluck('company_name', 'id')->toArray() : [];
-        $jobClientCompanyMap = DB::table('jobs')
-            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-            ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
-            ->whereIn('jobs.id', $pageJobIds)
-            ->select(
-                'jobs.id as job_id',
-                'clients.name as client_name',
-                'clients.logo_logical_path as client_logo',
-                'clients.self_company',
-                'companies.company_name',
-                'companies.logo as company_logo'
-            )
-            ->get()
-            ->keyBy('job_id');
+        $companiesMap = !empty($pageComIds) ? cache()->remember('ats:comps:'.implode(',', $pageComIds), 3600, function() use ($pageComIds) {
+            return DB::table('companies')->whereIn('id', $pageComIds)->pluck('company_name', 'id')->toArray();
+        }) : [];
+        $jobClientCompanyMap = !empty($pageJobIds) ? cache()->remember('ats:job_client_comp:'.md5(implode(',', $pageJobIds)), 300, function() use ($pageJobIds) {
+            return DB::table('jobs')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->whereIn('jobs.id', $pageJobIds)
+                ->select(
+                    'jobs.id as job_id',
+                    'clients.name as client_name',
+                    'clients.logo_logical_path as client_logo',
+                    'clients.self_company',
+                    'companies.company_name',
+                    'companies.logo as company_logo'
+                )
+                ->get()
+                ->keyBy('job_id');
+        }) : collect();
     @endphp
     @foreach ($data as $rowArr)
         @php
