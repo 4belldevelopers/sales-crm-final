@@ -173,6 +173,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('jobs_hiring_contact_person/{id?}', [ServiceCompanyJobsController::class, 'hiring_contact_person'])->name('jobs.hiring_contact_person');
                 Route::post('jobs_mail_contact_person/{id?}', [ServiceCompanyJobsController::class, 'mail_contact_person'])->name('jobs.mail_contact_person');
                 Route::get('jobs/recruiter/{id?}', [ServiceCompanyJobsController::class, 'recruiter'])->name('jobs.recruiter');
+                Route::get('jobs/clients-bundle', [ServiceCompanyJobsController::class, 'clientsBundle'])->name('jobs.clientsBundle');
+                Route::get('jobs/client-details/{client_id}', [ServiceCompanyJobsController::class, 'clientDetails'])->name('jobs.clientDetails');
                 Route::get('jobs/getContactPerson/{client_id}', [ServiceCompanyJobsController::class, 'getContactPerson'])->name('jobs.getContactPerson');
                 Route::get('jobs/getlocationCity/{location_id}', [ServiceCompanyJobsController::class, 'getlocationCity'])->name('jobs.getlocationCity');
                 Route::get('jobs/editJobStatus/{id?}', [ServiceCompanyJobsController::class, 'editJobStatus'])->name('jobs.editJobStatus')->middleware('recruiter.throttle');

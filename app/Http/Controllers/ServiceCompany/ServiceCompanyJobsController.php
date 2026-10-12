@@ -5759,19 +5759,378 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         return $this->job;
     }
 
-    public function getContactPerson($client_id)
+    /**
+     * Return ultra-compact tenant-scoped client manifest index for client-first browser execution.
+     *
+     * Intent: Serves compact client headers with pre-distributed dependencies (loc, cc) for 0ms local selection.
+     * Implements non-blocking distributed lock, Circuit Breaker against MySQL, and L5 Elasticsearch recovery.
+     * Tenancy Note: Scoped strictly by company_id via authenticated user context.
+     *
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     */
+    public function clientsBundle()
     {
-        $jobLocation = explode(',', request()->jobLocation);
-        // dd($jobLocation);
-        $ccArr = '';
-        $locArr = '';
-        $address_show = false;
-        $client_arr = DB::table('client_contact_info')->select('*')->where('client_id', $client_id)->get();
-        foreach ($client_arr as $cArr) {
-            $ccArr .= '<option  value="'.$cArr->id.'">'.ucwords($cArr->contact_person_name).'</option>';
+        abort_if(!auth()->check(), 401);
+        $companyId = (int) auth()->user()->company_id;
+        $version = (int) Cache::get('tenant:'.$companyId.':clients_version', 1);
+        $cacheKey = 'tenant:'.$companyId.':dataset:clients:perm:default';
+
+        $clientEtag = request()->header('If-None-Match');
+
+        // Fast path: Attempt to read from Redis distributed cache
+        try {
+            $bundle = Cache::get($cacheKey);
+        } catch (\Throwable $e) {
+            Log::emergency('Redis connection error in clientsBundle: '.$e->getMessage());
+            // RULE #3: Circuit breaker - route to Elasticsearch derived read model
+            try {
+                $bundle = $this->buildClientsManifest($companyId, $version);
+            } catch (\Throwable $esEx) {
+                // Dual catastrophic outage (Redis + ES) -> return 503 degraded status
+                return response()->json([
+                    'status'   => 'degraded',
+                    'message'  => 'Client catalog temporarily unavailable',
+                    'fallback' => 'use_l2_cache',
+                ], 503)->header('Retry-After', '5');
+            }
         }
 
-        $locInfo = DB::table('client_location')
+        if (!$bundle) {
+            // Non-blocking distributed mutex (zero worker thread starvation)
+            $lockKey = 'tenant:'.$companyId.':clients:refresh_lock';
+            $lock = Cache::lock($lockKey, 10);
+
+            if ($lock->get()) {
+                try {
+                    $bundle = $this->buildClientsManifest($companyId, $version);
+                    Cache::put($cacheKey, $bundle, 86400);
+                } finally {
+                    $lock->release();
+                }
+            } else {
+                // Non-blocking: never block or sleep Octane worker threads!
+                $bundle = $this->buildClientsManifest($companyId, $version);
+            }
+        }
+
+        $manifestId = $bundle['manifest_id'] ?? ('tenant-'.$companyId.'-v'.$version);
+        $etag = 'W/"cindex_'.$companyId.'_s4_'.$manifestId.'"';
+
+        if ($clientEtag && trim($clientEtag) === trim($etag)) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, must-revalidate');
+        }
+
+        return response()->json($bundle)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, must-revalidate');
+    }
+
+    /**
+     * Assemble tenant client manifest from Elasticsearch derived read model with MySQL fallback on cache assembly.
+     */
+    protected function buildClientsManifest(int $companyId, int $version): array
+    {
+        // 1. Primary path: Query Elasticsearch derived read model (ELASTIC_CLIENT_LIST)
+        try {
+            $elastic = app(ElasticService::class);
+            $indexName = defined('ELASTIC_CLIENT_LIST') ? ELASTIC_CLIENT_LIST : 'local_client_list_elastic';
+            if ($elastic->indexExists($indexName)) {
+                $esResult = $elastic->getClient()->search([
+                    'index' => $indexName,
+                    'body'  => [
+                        'query' => [
+                            'bool' => [
+                                'filter' => [
+                                    ['term' => ['company_id' => $companyId]],
+                                ],
+                            ],
+                        ],
+                        'size'  => 5000,
+                        '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'industries', 'td_industries', 'client_location', 'client_contact_info'],
+                    ],
+                ]);
+
+                $hits = $esResult['hits']['hits'] ?? [];
+                if (!empty($hits)) {
+                    $clientList = [];
+                    foreach ($hits as $hit) {
+                        $src = $hit['_source'] ?? [];
+                        $id = (int) ($src['id'] ?? $src['client_id'] ?? $hit['_id']);
+                        $name = (string) ($src['name'] ?? $src['company_name'] ?? '');
+                        if (!$id || !$name) continue;
+
+                        $locList = [];
+                        if (!empty($src['client_location']) && is_array($src['client_location'])) {
+                            foreach (array_slice($src['client_location'], 0, 3) as $l) {
+                                $city = $l['city_name'] ?? '';
+                                $state = $l['state_name'] ?? '';
+                                $country = $l['country_name'] ?? '';
+                                $addr = implode(', ', array_filter([$city, $state, $country]));
+                                $locList[] = [
+                                    'id' => (int) ($l['city_id'] ?? $l['id'] ?? 0),
+                                    'l'  => $addr ?: 'Address',
+                                ];
+                            }
+                        }
+
+                        $contactList = [];
+                        if (!empty($src['client_contact_info']) && is_array($src['client_contact_info'])) {
+                            foreach (array_slice($src['client_contact_info'], 0, 2) as $c) {
+                                $contactList[] = [
+                                    'id' => (int) ($c['id'] ?? 0),
+                                    'n'  => (string) ($c['contact_person_name'] ?? ''),
+                                ];
+                            }
+                        }
+
+                        $industry = (string) ($src['industries'] ?? ($src['td_industries'][0]['ind_name'] ?? ''));
+                        $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $name);
+                        $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
+
+                        $clientList[] = [
+                            'id'  => $id,
+                            'n'   => $name,
+                            't'   => (int) ($src['self_company'] ?? 0),
+                            's'   => 1,
+                            'i'   => $industry,
+                            'c'   => $code,
+                            'l'   => $src['logo'] ?? null,
+                            'loc' => $locList,
+                            'cc'  => $contactList,
+                        ];
+                    }
+
+                    if (!empty($clientList)) {
+                        return $this->formatManifestEnvelope($companyId, $version, $clientList);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('buildClientsManifest ES read notice: '.$e->getMessage());
+        }
+
+        // 2. Controlled cache-construction read from MySQL (strictly off web user path)
+        $clients = DB::table('clients')
+            ->select('id', 'name', 'self_company', 'logo', 'industry')
+            ->where('company_id', $companyId)
+            ->orderBy('name', 'ASC')
+            ->get();
+
+        $clientIds = $clients->pluck('id')->toArray();
+        $locationsByClient = [];
+        if (!empty($clientIds)) {
+            $rawLocs = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.client_id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->whereIn('client_location.client_id', $clientIds)
+                ->get();
+
+            foreach ($rawLocs as $loc) {
+                if (!isset($locationsByClient[$loc->client_id])) {
+                    $locationsByClient[$loc->client_id] = [];
+                }
+                if (count($locationsByClient[$loc->client_id]) < 3) {
+                    $cityName = $loc->country_id == 101 ? $loc->city_name : $loc->city;
+                    $addressPart = $loc->address ? ucwords($loc->address) : '';
+                    $cityPart = $cityName ? ucwords($cityName) : '';
+                    $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
+                    $countryPart = $loc->country_name ? ucwords($loc->country_name) : '';
+                    $extra = implode(', ', array_filter([$cityPart, $statePart, $countryPart]));
+                    $label = $addressPart ? ($addressPart . ($extra ? ' - ' . $extra : '')) : $extra;
+                    $locationsByClient[$loc->client_id][] = [
+                        'id' => (int) $loc->id,
+                        'l'  => $label ?: 'Address #'.$loc->id,
+                    ];
+                }
+            }
+        }
+
+        $contactsByClient = [];
+        if (!empty($clientIds)) {
+            $rawContacts = DB::table('client_contact_info')
+                ->select('id', 'client_id', 'contact_person_name')
+                ->whereIn('client_id', $clientIds)
+                ->get();
+
+            foreach ($rawContacts as $c) {
+                if (!isset($contactsByClient[$c->client_id])) {
+                    $contactsByClient[$c->client_id] = [];
+                }
+                if (count($contactsByClient[$c->client_id]) < 2) {
+                    $contactsByClient[$c->client_id][] = [
+                        'id' => (int) $c->id,
+                        'n'  => (string) ucwords($c->contact_person_name),
+                    ];
+                }
+            }
+        }
+
+        $clientList = [];
+        foreach ($clients as $c) {
+            $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $c->name);
+            $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
+            $clientList[] = [
+                'id'  => (int) $c->id,
+                'n'   => (string) $c->name,
+                't'   => (int) $c->self_company,
+                's'   => 1,
+                'i'   => (string) ($c->industry ?: ''),
+                'c'   => $code,
+                'l'   => $c->logo ?: null,
+                'loc' => $locationsByClient[$c->id] ?? [],
+                'cc'  => $contactsByClient[$c->id] ?? [],
+            ];
+        }
+
+        return $this->formatManifestEnvelope($companyId, $version, $clientList);
+    }
+
+    /**
+     * Format manifest envelope with unique manifest_id, contract versions, and SHA-256 checksum.
+     */
+    protected function formatManifestEnvelope(int $companyId, int $version, array $clientList): array
+    {
+        $json = json_encode($clientList);
+        $checksum = 'sha256:' . hash('sha256', $json);
+        $shortHash = substr(md5($checksum), 0, 8);
+        $manifestId = "tenant-{$companyId}-v{$version}-{$shortHash}";
+
+        return [
+            'manifest_id'        => $manifestId,
+            'schema_version'     => 4,
+            'tenant_id'          => $companyId,
+            'source_version'     => $version,
+            'read_model_version' => $version,
+            'checksum'           => $checksum,
+            'generated_at'       => time(),
+            'total'              => count($clientList),
+            'clients'            => $clientList,
+        ];
+    }
+
+    /**
+     * Return lazy-loaded client detail data (locations and contacts) for a specific client.
+     *
+     * Intent: Serves extended detail lookups for clients with overflow locations (> 10).
+     * Tenancy Note: Scoped strictly by company_id.
+     *
+     * @param int $client_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function clientDetails($client_id)
+    {
+        abort_if(!auth()->check(), 401);
+        $companyId = (int) auth()->user()->company_id;
+        $client_id = (int) $client_id;
+
+        $clientExists = DB::table('clients')
+            ->where('id', $client_id)
+            ->where('company_id', $companyId)
+            ->exists();
+
+        if (!$clientExists) {
+            return response()->json(['status' => 'error', 'message' => 'Client not found'], 404);
+        }
+
+        $version = (int) Cache::get('tenant:'.$companyId.':clients_version', 1);
+        $etag = '"cdetails_'.$companyId.'_'.$client_id.'_v'.$version.'"';
+
+        if (request()->header('If-None-Match') === $etag) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, must-revalidate');
+        }
+
+        $details = Cache::remember('tenant:'.$companyId.':client_details:'.$client_id, 86400, function () use ($client_id) {
+            $locations = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_location.client_id', $client_id)
+                ->get();
+
+            $locList = [];
+            foreach ($locations as $loc) {
+                $cityName = $loc->country_id == 101 ? $loc->city_name : $loc->city;
+                $addressPart = $loc->address ? ucwords($loc->address) : '';
+                $cityPart = $cityName ? ucwords($cityName) : '';
+                $statePart = $loc->state_name ? ucwords($loc->state_name) : '';
+                $countryPart = $loc->country_name ? ucwords($loc->country_name) : '';
+                $extra = implode(', ', array_filter([$cityPart, $statePart, $countryPart]));
+                $label = $addressPart ? ($addressPart . ($extra ? ' - ' . $extra : '')) : $extra;
+                $locList[] = [
+                    'id'      => (int) $loc->id,
+                    'label'   => $label ?: 'Address #'.$loc->id,
+                    'city'    => (string) ($cityName ?: ''),
+                    'country' => (string) ($loc->country_name ?: ''),
+                ];
+            }
+
+            $contacts = DB::table('client_contact_info')
+                ->select('id', 'contact_person_name', 'email', 'contact_number')
+                ->where('client_id', $client_id)
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id'   => (int) $c->id,
+                        'name' => (string) ucwords($c->contact_person_name),
+                    ];
+                })
+                ->toArray();
+
+            return [
+                'status'    => 'success',
+                'client_id' => $client_id,
+                'locations' => $locList,
+                'contacts'  => $contacts,
+            ];
+        });
+
+        return response()->json($details)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, must-revalidate');
+    }
+
+    public function getContactPerson($client_id)
+    {
+        $companyId = (int) (auth()->user()->company_id ?? 0);
+        $job_id = (int) (@$_REQUEST['job_id'] ?? 0);
+        $jobLocParam = (string) (request()->jobLocation ?? '');
+        $cacheKey = 'tenant:'.$companyId.':contact_person:'.$client_id.':j_'.$job_id.':loc_'.md5($jobLocParam);
+
+        $cached = Cache::remember($cacheKey, 3600, function () use ($client_id, $jobLocParam, $job_id) {
+            $jobLocation = explode(',', $jobLocParam);
+            $ccArr = '';
+            $locArr = '';
+            $address_show = false;
+            $client_arr = DB::table('client_contact_info')->select('*')->where('client_id', $client_id)->get();
+            foreach ($client_arr as $cArr) {
+                $ccArr .= '<option  value="'.$cArr->id.'">'.ucwords($cArr->contact_person_name).'</option>';
+            }
+
+            $locInfo = DB::table('client_location')
             ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
             ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
@@ -5863,8 +6222,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // dd($addresses);
 
-        return Reply::dataOnly(['status' => 'success', 'ccArr' => $ccArr, 'locArr' => $locArr, 'clientcity' => $clientcity, 'addresses' => $addresses, 'address_show' => $address_show]);
+            return ['status' => 'success', 'ccArr' => $ccArr, 'locArr' => $locArr, 'clientcity' => $clientcity, 'addresses' => $addresses, 'address_show' => $address_show];
+        });
 
+        return Reply::dataOnly($cached);
     }
 
     public function getlocationCity($location_id)
@@ -6243,6 +6604,25 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function store(Request $request, JobService $jobService)
     {
         abort_if(Gate::denies('add_jobs'), 403);
+
+        // Authoritative Server-Side Client Validation (Rule #4 & Selection Validity Lifecycle)
+        if ($request->filled('client_id')) {
+            $clientId = (int) $request->client_id;
+            $companyId = (int) auth()->user()->company_id;
+
+            $client = DB::table('clients')
+                ->where('id', $clientId)
+                ->where('company_id', $companyId)
+                ->first(['id', 'name']);
+
+            if (!$client) {
+                return Reply::dataOnly([
+                    'status'  => 'error',
+                    'msgType' => 'danger',
+                    'message' => 'The selected client could not be found or has been removed. Please select an active client to proceed.',
+                ]);
+            }
+        }
 
         try {
             $job = $jobService->createJob($request->all(), auth()->user());
