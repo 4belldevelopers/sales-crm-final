@@ -1020,6 +1020,18 @@
 #jrwrap.internal-job-create :is(.ij-location-input-wrap, .ij-qual-input-wrap) .form-input {
     padding-left: 38px !important;
 }
+#jrwrap.internal-job-create :is(.jero-title-select-wrap, .jero-title-input-box) input#title.jero-title-input,
+#jrwrap.internal-job-create input#title.jero-title-input,
+#jrwrap.internal-job-create .jero-title-input {
+    padding-left: 40px !important;
+    padding-right: 56px !important;
+}
+#jrwrap.internal-job-create :is(.jero-dept-select-wrap, .jero-dept-input-box) input#category_id_display.jero-dept-input,
+#jrwrap.internal-job-create input#category_id_display.jero-dept-input,
+#jrwrap.internal-job-create .jero-dept-input {
+    padding-left: 36px !important;
+    padding-right: 68px !important;
+}
 
 #jrwrap.internal-job-create .ij-location-input-wrap {
     position: relative !important;
@@ -1997,12 +2009,53 @@
     line-height: 1.25 !important;
 }
 
+#jrwrap.internal-job-create .ij-exp-group.has-validation-error {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+}
+
+#jrwrap.internal-job-create .ij-exp-error-slot {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    margin-top: 5px !important;
+    width: 100% !important;
+}
+
+#jrwrap.internal-job-create .ij-exp-error-slot:empty {
+    display: none !important;
+}
+
+#jrwrap.internal-job-create .ij-exp-error-slot .field-error-message {
+    margin-top: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+}
+
+#jrwrap.internal-job-create .ij-exp-select.has-validation-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    background-color: #fff !important;
+}
+
+#jrwrap.internal-job-create .ij-exp-select.has-validation-error:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
+}
+
 @media (max-width: 900px) {
     #jrwrap.internal-job-create .ij-employment-grid {
         grid-template-columns: 1fr !important;
         gap: 14px !important;
     }
 }
+
 
 /* ==========================================================================
    Position Type & Job Auto Close Cards
