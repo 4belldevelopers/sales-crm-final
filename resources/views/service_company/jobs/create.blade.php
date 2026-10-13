@@ -932,6 +932,7 @@
         flex-direction: column;
         max-height: min(340px, calc(100vh - 140px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
+        user-select: none;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
         top: auto;
@@ -944,6 +945,7 @@
     }
     #jrwrap .jero-dept-tabs {
         display: flex;
+        flex-shrink: 0;
         gap: 4px;
         padding: 6px 10px;
         background: #f8fafc;
@@ -988,6 +990,7 @@
     }
     #jrwrap .jero-dept-recent-bar {
         display: flex;
+        flex-shrink: 0;
         align-items: center;
         gap: 6px;
         padding: 6px 12px;
@@ -1027,20 +1030,30 @@
     }
     #jrwrap .jero-dept-list-container {
         flex: 1 1 auto;
-        min-height: 0;
-        max-height: 220px;
+        min-height: 80px;
+        max-height: 240px;
         overflow-y: auto;
-        overscroll-behavior: contain;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
         padding: 4px 0;
         scrollbar-width: thin;
-        scrollbar-color: #cbd5e1 transparent;
+        scrollbar-color: #94a3b8 #f1f5f9;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
-        width: 5px;
+        width: 8px;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: #94a3b8;
         border-radius: 4px;
+        border: 2px solid #f1f5f9;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
     }
     #jrwrap .jero-dept-section-header {
         display: flex;
@@ -1051,13 +1064,14 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: #475569;
-        background: rgba(248, 250, 252, 0.96);
-        backdrop-filter: blur(4px);
+        background: #f8fafc;
         border-top: 1px solid #f1f5f9;
         border-bottom: 1px solid #f1f5f9;
         position: sticky;
         top: 0;
         z-index: 2;
+        pointer-events: none;
+        user-select: none;
     }
     #jrwrap .jero-dept-div-icon {
         display: inline-flex;
@@ -1226,6 +1240,7 @@
     }
     #jrwrap .jero-dept-footer {
         display: flex;
+        flex-shrink: 0;
         justify-content: space-between;
         align-items: center;
         padding: 6px 12px;
@@ -2325,6 +2340,53 @@
         background: #fef2f2 !important;
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
     }
+
+    /* Employment Details Experience Range Error Isolation & Visual Excellence */
+    #jrwrap .ij-exp-group.has-validation-error,
+    .ij-exp-group.has-validation-error {
+        border-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+    }
+
+    #jrwrap .ij-exp-error-slot,
+    .ij-exp-error-slot {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        margin-top: 5px !important;
+        width: 100% !important;
+    }
+
+    #jrwrap .ij-exp-error-slot:empty,
+    .ij-exp-error-slot:empty {
+        display: none !important;
+    }
+
+    #jrwrap .ij-exp-error-slot .field-error-message,
+    .ij-exp-error-slot .field-error-message {
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+    }
+
+    #jrwrap .ij-exp-select.has-validation-error,
+    .ij-exp-select.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+        background-color: #fff !important;
+    }
+
+    #jrwrap .ij-exp-select.has-validation-error:focus,
+    .ij-exp-select.has-validation-error:focus {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
+    }
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
@@ -2333,7 +2395,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012d">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261013a">
     @endif
 @endpush
 @section('content')
@@ -2565,7 +2627,7 @@
                                             <div class="jero-client-tabs">
                                                 <button type="button" class="jero-tab-btn active" data-filter="all">All Companies <span class="tab-count" id="jero_count_all">0</span></button>
                                                 <button type="button" class="jero-tab-btn" data-filter="internal">My Organization <span class="tab-count" id="jero_count_internal">0</span></button>
-                                                <button type="button" class="jero-tab-btn" data-filter="client">Clients <span class="tab-count" id="jero_count_clients">0</span></button>
+                                                <button type="button" class="jero-tab-btn" data-filter="client">Internal Clients <span class="tab-count" id="jero_count_clients">0</span></button>
                                             </div>
 
                                             <!-- Scrollable Items Container (264px viewport with DOM Virtualization) -->
@@ -2822,6 +2884,7 @@
                                             <span class="form-hint">Max</span>
                                         </div>
                                     </div>
+                                    <div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>
                                 </div>
                                 <div class="form-group-cus ij-positions-group">
                                     <label class="form-label required">No. of Positions</label>
@@ -5733,8 +5796,8 @@
                 step: 1,
                 stepName: 'Basic Details',
                 label: 'Minimum Experience',
-                selector: '.ij-exp-group',
-                highlightSelector: '.ij-exp-group',
+                selector: '#min_exp',
+                highlightSelector: '#min_exp',
                 focusSelector: '#min_exp',
                 validate: function() {
                     var val = $('#min_exp').val();
@@ -5746,8 +5809,8 @@
                 step: 1,
                 stepName: 'Basic Details',
                 label: 'Maximum Experience',
-                selector: '.ij-exp-group',
-                highlightSelector: '.ij-exp-group',
+                selector: '#max_exp',
+                highlightSelector: '#max_exp',
                 focusSelector: '#max_exp',
                 validate: function() {
                     var min = $('#min_exp').val();
@@ -5782,9 +5845,9 @@
                 step: 1,
                 stepName: 'Basic Details',
                 label: 'Position Type',
-                selector: '.ij-employment-card .ij-choices',
-                highlightSelector: '.ij-employment-card',
-                focusSelector: '.ij-employment-card .ij-choices button:first',
+                selector: '.ij-position-type-card .ij-choices',
+                highlightSelector: '.ij-position-type-card',
+                focusSelector: '.ij-position-type-card .ij-choices button:first',
                 validate: function() {
                     var val = ($('#employment_type').val() || '').trim();
                     return !!val;
@@ -6030,6 +6093,13 @@
         function applyFieldValidationErrors(missingFields) {
             if (!Array.isArray(missingFields)) return;
 
+            // Ensure experience error slot exists inside .ij-exp-group and not in the grid
+            var $expSlot = $('#ijExpErrorSlot');
+            if (!$expSlot.length && $('.ij-exp-group').length) {
+                $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                $expSlot = $('#ijExpErrorSlot');
+            }
+
             missingFields.forEach(function(f) {
                 var $target = $(f.selector);
                 if (!$target.length) {
@@ -6039,7 +6109,13 @@
                     $target = $('[name="' + f.key + '"]');
                 }
 
-                $target.addClass('has-validation-error');
+                if (f.key === 'min_exp' || f.key === 'max_exp') {
+                    $('#' + f.key).addClass('has-validation-error');
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                } else {
+                    $target.addClass('has-validation-error');
+                }
+
                 if (f.key === 'title') {
                     $('#title').addClass('has-validation-error');
                     $('#jero_title_input_box').addClass('has-validation-error');
@@ -6048,8 +6124,6 @@
                     $('.jero-dept-input-box').addClass('has-validation-error');
                 } else if (f.key === 'client_id') {
                     $('#jero_client_trigger').addClass('has-validation-error');
-                } else if (f.key === 'min_exp' || f.key === 'max_exp') {
-                    $('#' + f.key).addClass('has-validation-error');
                 } else if (f.key === 'minimum_salary' || f.key === 'maximum_salary') {
                     $('#' + f.key).addClass('has-validation-error');
                 }
@@ -6063,8 +6137,10 @@
 
                 if (!$('[data-field-error="' + f.key + '"]').length) {
                     if (f.key === 'min_exp' || f.key === 'max_exp') {
-                        if (!$('[data-field-error="experience_range"]').length && !$('[data-field-error="' + f.key + '"]').length) {
-                            $('.ij-exp-group').after(errorHtml);
+                        if ($expSlot && $expSlot.length) {
+                            $expSlot.append(errorHtml);
+                        } else {
+                            $('.ij-exp-group').append(errorHtml);
                         }
                     } else if (f.key === 'location') {
                         $('.ij-location-card .ij-location-input-wrap').after(errorHtml);
@@ -6075,7 +6151,9 @@
                     } else if (f.key === 'jobDescription') {
                         $('#jobDescription').after(errorHtml);
                     } else if (f.key === 'employment_type') {
-                        $('.ij-employment-card .ij-choices').after(errorHtml);
+                        var $ptTarget = $('.ij-position-type-card .ij-choices');
+                        if (!$ptTarget.length) $ptTarget = $('.ij-employment-card .ij-choices');
+                        $ptTarget.after(errorHtml);
                     } else if (f.key === 'work_from_home') {
                         $('.ij-work-mode-card .ij-choices').after(errorHtml);
                     } else if (f.key === 'work_shifts') {
@@ -6097,6 +6175,77 @@
 
         function clearFieldValidationErrors(targetKey) {
             if (targetKey) {
+                if (targetKey === 'min_exp') {
+                    var minVal = $('#min_exp').val();
+                    if (minVal !== null && minVal !== '') {
+                        $('#min_exp').removeClass('has-validation-error');
+                        $('[data-field-error="min_exp"]').remove();
+                    }
+                    var maxVal = $('#max_exp').val();
+                    if (maxVal !== null && maxVal !== '' && minVal !== null && minVal !== '' && parseInt(minVal, 10) > parseInt(maxVal, 10)) {
+                        $('#max_exp').addClass('has-validation-error');
+                        var maxErrMsg = 'Maximum experience must be greater than or equal to minimum experience.';
+                        if ($('[data-field-error="max_exp"]').length) {
+                            $('[data-field-error="max_exp"] span').text(maxErrMsg);
+                        } else {
+                            var expErrHtml = '<div class="field-error-message" data-field-error="max_exp">' +
+                                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                                '</svg>' +
+                                '<span>' + maxErrMsg + '</span>' +
+                                '</div>';
+                            var $slot = $('#ijExpErrorSlot');
+                            if (!$slot.length) {
+                                $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                                $slot = $('#ijExpErrorSlot');
+                            }
+                            $slot.append(expErrHtml);
+                        }
+                    } else if (maxVal !== null && maxVal !== '') {
+                        $('#max_exp').removeClass('has-validation-error');
+                        $('[data-field-error="max_exp"]').remove();
+                    }
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    return;
+                } else if (targetKey === 'max_exp') {
+                    var maxVal = $('#max_exp').val();
+                    var minVal = $('#min_exp').val();
+                    if (maxVal !== null && maxVal !== '') {
+                        if (minVal !== null && minVal !== '' && parseInt(minVal, 10) > parseInt(maxVal, 10)) {
+                            $('#max_exp').addClass('has-validation-error');
+                            var maxErrMsg = 'Maximum experience must be greater than or equal to minimum experience.';
+                            if ($('[data-field-error="max_exp"]').length) {
+                                $('[data-field-error="max_exp"] span').text(maxErrMsg);
+                            } else {
+                                var expErrHtml = '<div class="field-error-message" data-field-error="max_exp">' +
+                                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                    '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                                    '</svg>' +
+                                    '<span>' + maxErrMsg + '</span>' +
+                                    '</div>';
+                                var $slot = $('#ijExpErrorSlot');
+                                if (!$slot.length) {
+                                    $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                                    $slot = $('#ijExpErrorSlot');
+                                }
+                                $slot.append(expErrHtml);
+                            }
+                        } else {
+                            $('#max_exp').removeClass('has-validation-error');
+                            $('[data-field-error="max_exp"]').remove();
+                        }
+                    }
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    return;
+                } else if (targetKey === 'experience') {
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    $('#min_exp').removeClass('has-validation-error');
+                    $('#max_exp').removeClass('has-validation-error');
+                    $('[data-field-error="min_exp"]').remove();
+                    $('[data-field-error="max_exp"]').remove();
+                    return;
+                }
+
                 $('[data-field-error="' + targetKey + '"]').remove();
                 if (targetKey === 'client_id') {
                     $('#jero_client_select_wrap').removeClass('has-validation-error');
@@ -6121,6 +6270,7 @@
                 } else if (targetKey === 'jobDescription') {
                     $('#jobDescription').removeClass('has-validation-error');
                 } else if (targetKey === 'employment_type') {
+                    $('.ij-position-type-card .ij-choices').removeClass('has-validation-error');
                     $('.ij-employment-card .ij-choices').removeClass('has-validation-error');
                     $('#employment_type').removeClass('has-validation-error');
                 } else if (targetKey === 'work_from_home') {
@@ -6139,12 +6289,6 @@
                     $('#maximum_salary').removeClass('has-validation-error');
                     $('[data-field-error="minimum_salary"]').remove();
                     $('[data-field-error="maximum_salary"]').remove();
-                } else if (targetKey === 'min_exp' || targetKey === 'max_exp' || targetKey === 'experience') {
-                    $('.ij-exp-group').removeClass('has-validation-error');
-                    $('#min_exp').removeClass('has-validation-error');
-                    $('#max_exp').removeClass('has-validation-error');
-                    $('[data-field-error="min_exp"]').remove();
-                    $('[data-field-error="max_exp"]').remove();
                 } else if (targetKey === 'hiring_namager') {
                     $('.ij-hiring-team-card .team-section:first-child .input-wrapper').removeClass('has-validation-error');
                     $('#hmSearchDisplay').removeClass('has-validation-error');
@@ -6160,6 +6304,7 @@
             } else {
                 $('.has-validation-error').removeClass('has-validation-error');
                 $('.field-error-message').remove();
+                $('#ijExpErrorSlot').empty();
             }
         }
 
@@ -10740,15 +10885,13 @@
 
         function scrollItemIntoView(container, target) {
             if (!container || !target) return;
-            var cTop = container.scrollTop;
-            var cHeight = container.clientHeight;
-            var elTop = target.offsetTop;
-            var elHeight = target.offsetHeight;
+            var cRect = container.getBoundingClientRect();
+            var tRect = target.getBoundingClientRect();
 
-            if (elTop < cTop) {
-                container.scrollTop = elTop;
-            } else if ((elTop + elHeight) > (cTop + cHeight)) {
-                container.scrollTop = (elTop + elHeight) - cHeight;
+            if (tRect.top < cRect.top) {
+                container.scrollTop -= (cRect.top - tRect.top + 6);
+            } else if (tRect.bottom > cRect.bottom) {
+                container.scrollTop += (tRect.bottom - cRect.bottom + 6);
             }
         }
 
@@ -10760,6 +10903,12 @@
 
             var rect = wrap.getBoundingClientRect();
             var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+            // If input has scrolled out of view completely, close cleanly
+            if (rect.bottom < 0 || rect.top > viewportH) {
+                closeDropdown();
+                return;
+            }
 
             // Safe margins from viewport top/bottom edges
             var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
@@ -10786,10 +10935,10 @@
                 dropdown.style.bottom = 'calc(100% + 5px)';
 
                 // Clamp max height so dropdown top never extends above viewport top margin
-                var maxAvailable = Math.max(160, Math.min(340, spaceAbove));
+                var maxAvailable = Math.max(180, Math.min(360, spaceAbove));
                 dropdown.style.maxHeight = maxAvailable + 'px';
                 if (container) {
-                    var listH = Math.max(90, maxAvailable - fixedH);
+                    var listH = Math.max(100, maxAvailable - fixedH);
                     container.style.maxHeight = listH + 'px';
                 }
             } else {
@@ -10798,10 +10947,10 @@
                 dropdown.style.top = 'calc(100% + 5px)';
 
                 // Clamp max height so dropdown bottom never extends past viewport bottom margin
-                var maxAvailable = Math.max(160, Math.min(340, spaceBelow));
+                var maxAvailable = Math.max(180, Math.min(360, spaceBelow));
                 dropdown.style.maxHeight = maxAvailable + 'px';
                 if (container) {
-                    var listH = Math.max(90, maxAvailable - fixedH);
+                    var listH = Math.max(100, maxAvailable - fixedH);
                     container.style.maxHeight = listH + 'px';
                 }
             }
@@ -10831,11 +10980,13 @@
             renderDropdownList();
             adjustDropdownPosition();
 
-            // Scroll currently selected department into view inside list
+            // Scroll currently selected department into view inside list, or reset to top
             if (container) {
                 var selectedEl = container.querySelector('.jero-dept-item.selected');
                 if (selectedEl) {
                     scrollItemIntoView(container, selectedEl);
+                } else {
+                    container.scrollTop = 0;
                 }
             }
         }
@@ -11203,7 +11354,7 @@
                     renderDropdownList();
                 });
 
-                // Real-World Defense: Prevent Enter key from submitting form prematurely
+                // Real-World Defense: Prevent Enter key from submitting form prematurely & add Page navigation
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         e.preventDefault();
@@ -11216,6 +11367,14 @@
                         e.preventDefault();
                         if (!isOpen) { openDropdown(); return; }
                         moveFocus(-1);
+                    } else if (e.key === 'PageDown') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(4);
+                    } else if (e.key === 'PageUp') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(-4);
                     } else if (e.key === 'Enter') {
                         e.preventDefault();
                         if (isOpen) {
@@ -11257,6 +11416,7 @@
                     tabsContainer.querySelectorAll('.jero-dept-tab-btn').forEach(function(b) { b.classList.remove('active'); });
                     btn.classList.add('active');
                     currentFilter = btn.getAttribute('data-filter') || 'all';
+                    if (container) container.scrollTop = 0;
                     renderDropdownList();
                 });
             }
@@ -11274,6 +11434,20 @@
             }
 
             if (container) {
+                // High-Performance Unfreeze Wheel Scroll Engine: guarantees smooth scroll on all mice/touchpads
+                container.addEventListener('wheel', function(e) {
+                    if (this.scrollHeight > this.clientHeight) {
+                        var delta = e.deltaY;
+                        if (e.deltaMode === 1) delta *= 33; // Line mode support
+                        var prev = this.scrollTop;
+                        this.scrollTop += delta;
+                        if (this.scrollTop !== prev) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }
+                }, { passive: false });
+
                 container.addEventListener('click', function(e) {
                     // Check for inline create action
                     var createAction = e.target.closest('.jero-dept-create-action');
@@ -11312,11 +11486,13 @@
                 }
             }, true);
 
-            // Auto-close on page scroll so dropdown never covers other cards or floats detached
+            // Responsive Viewport Clamping & Dynamic Repositioning
+            window.addEventListener('resize', function() {
+                if (isOpen) adjustDropdownPosition();
+            });
+
             window.addEventListener('scroll', function() {
-                if (isOpen) {
-                    closeDropdown();
-                }
+                if (isOpen) adjustDropdownPosition();
             }, { passive: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
