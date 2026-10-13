@@ -20,7 +20,21 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-## 2. Decision log (append-only; newest first)
+- *2026-10-13* — **Service Company → Job Department Dropdown Viewport Clamping & Freeze Permanent Remediation (100% IMPLEMENTED & VERIFIED)**:
+  Permanent fix for Job Department combobox dropdown on `resources/views/service_company/jobs/create.blade.php`:
+  1. **15.6" Screen Fit & Viewport Collision Clamping (1366×768 & 1920×1080)**:
+     - Eliminated rigid `.drop-up` calculation (`spaceBelow < 320 && rect.top > 280`) that previously forced the dropdown to shoot 130px above the browser window ceiling, overlapping the main navbar and clipping top tabs.
+     - Implemented dynamic available-space engine: calculates real viewport height, safe margins (12px top/bottom), and dynamically sets `dropdown.style.maxHeight` (clamped between 160px and 340px) and `container.style.maxHeight` (clamped between 90px and 220px) based on `spaceBelow` vs `spaceAbove`.
+     - The dropdown now defaults to dropping down, and only flips up if space below is < 220px AND space above is significantly larger, guaranteeing it NEVER extends off-screen or clips the navbar.
+     - Upgraded `.jero-dept-dropdown` CSS to a flex column with `max-height: min(340px, calc(100vh - 140px))` and added `overscroll-behavior: contain` to `.jero-dept-list-container` to eliminate scroll traps.
+  2. **Page Freeze & Interaction Lock-Up Permanent Elimination**:
+     - Eliminated Chrome window scroll jank caused by `target.scrollIntoView({ block: 'nearest', behavior: 'smooth' })` inside absolute containers; replaced with isolated container scrolling `scrollItemIntoView(container, target)` that scrolls strictly within the inner list without touching the document window.
+     - Fixed chevron interaction: changed `.jero-dept-chevron` from `pointer-events: none` to `pointer-events: auto; cursor: pointer;` and added toggle click handler so clicking the chevron or input opens/closes the dropdown cleanly.
+     - Added capture-phase outside click listener (`document.addEventListener('pointerdown', ..., true)`) ensuring reliable dismissal even if adjacent elements invoke `stopPropagation()`.
+     - Added global Escape key listener on `document` so pressing `Esc` dismisses the dropdown even if input focus was lost to the list or page body.
+     - Added `window.addEventListener('scroll')` auto-close to prevent detached floating overlays from covering subsequent steps when scrolling.
+     - Added dropdown dismissal in `goToStep(step)` so transitioning across wizard steps guarantees 0 lingering overlays.
+     - Made `openDropdown()` clear `currentSearch` and `select()` text when opened, showing the complete 10-division taxonomy rather than a restricted single-item view.
 - *2026-10-13* — **Service Company → Job Department 10K Concurrency & Global Taxonomy Architecture (100% IMPLEMENTED & VERIFIED)**:
   Full production-grade enterprise UI/UX redesign, global taxonomy standardization, and client-first execution for the Job Department field on Requisition Create/Edit (`resources/views/service_company/jobs/create.blade.php`) and its synchronization with Settings (`resources/views/service_company/account/index.blade.php`):
   1. **Standardized Global Taxonomy (10 Divisions, 54 Departments)**:

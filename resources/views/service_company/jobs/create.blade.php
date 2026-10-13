@@ -455,14 +455,20 @@
     }
     #jrwrap .jero-title-search-icon {
         position: absolute;
-        left: 12px;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
         color: #A1A5B7;
         pointer-events: none;
         transition: color 0.2s;
+        z-index: 2;
     }
+    #jrwrap.internal-job-create input#title.jero-title-input,
+    #jrwrap.internal-job-create .jero-title-input,
+    #jrwrap input#title.jero-title-input,
     #jrwrap .jero-title-input {
         width: 100%;
-        padding-left: 34px !important;
+        padding-left: 40px !important;
         padding-right: 56px !important;
         height: 40px;
         font-size: 13px;
@@ -877,10 +883,18 @@
         position: absolute;
         right: 12px;
         color: #94a3b8;
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 4px;
         display: flex;
         align-items: center;
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+        justify-content: center;
+        border-radius: 4px;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+    }
+    #jrwrap .jero-dept-chevron:hover {
+        color: #1e293b;
+        background: #f1f5f9;
     }
     #jrwrap .jero-dept-select-wrap.is-open .jero-dept-chevron {
         transform: rotate(180deg);
@@ -897,6 +911,9 @@
         border-radius: 10px;
         box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: min(340px, calc(100vh - 140px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
@@ -992,8 +1009,11 @@
         color: #1d4ed8;
     }
     #jrwrap .jero-dept-list-container {
-        max-height: min(300px, 45vh);
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: 220px;
         overflow-y: auto;
+        overscroll-behavior: contain;
         padding: 4px 0;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 transparent;
@@ -2226,6 +2246,7 @@
                                                    name="title" 
                                                    value="<?php echo @$job->title; ?>" 
                                                    placeholder="Search or enter job title" 
+                                                   style="padding-left: 40px !important; padding-right: 56px !important;"
                                                    autocomplete="off" 
                                                    role="combobox" 
                                                    aria-autocomplete="list" 
@@ -2338,7 +2359,7 @@
                                             <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-dept-chevron">
+                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" tabindex="-1">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
                                         </div>
@@ -4986,6 +5007,7 @@
 
         // ---- Auto-fill JD from title (safe client-first execution + AJAX fallback) ----
         function changeautofillfield() {
+            if (window._isApplyingTitleTemplate) return;
             var rawTitle = ($('#title').val() || '').trim();
             if (!rawTitle) return;
 
@@ -5198,6 +5220,12 @@
                 }
             }
             currentStep = step;
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.close === 'function') {
+                window.JeroDeptIntelligenceEngine.close();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.close === 'function') {
+                window.JeroTitleIntelligenceEngine.close();
+            }
             document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
             document.getElementById('step' + step).classList.add('active');
             updateStepper(step);
@@ -8184,6 +8212,12 @@
         var undoTimer = null;
         var pendingTemplateItem = null;
         var indexBroadcast = null;
+        var TAB_SESSION_ID = Math.random().toString(36).substring(2, 10);
+        var lastSyncTimestamp = 0;
+        var isApplyingTemplate = false;
+        var isEventListenersInitialized = false;
+        var inputDebounceTimer = null;
+        var inputRafId = null;
 
         // Synonym Intelligence Dictionary
         var TITLE_SYNONYMS = {
@@ -8306,14 +8340,18 @@
         }
 
         // =========================================================================
-        // Token Prefix Indexing & Multi-Tier Scoring Engine
+        // Token Indexing & Multi-Tier Safe Scoring Engine (Freeze-Proof Execution)
         // =========================================================================
         function buildInvertedIndex(list) {
             tokenIndex.clear();
             titlesMap.clear();
 
-            for (var i = 0; i < list.length; i++) {
+            if (!Array.isArray(list)) return;
+            var maxItems = Math.min(list.length, 5000);
+
+            for (var i = 0; i < maxItems; i++) {
                 var item = list[i];
+                if (!item || !item.id || !item.title) continue;
                 titlesMap.set(item.id, item);
 
                 var cleanText = ((item.title || '') + ' ' + (item.dept_name || '')).toLowerCase();
@@ -8321,12 +8359,11 @@
 
                 for (var w = 0; w < words.length; w++) {
                     var word = words[w];
-                    for (var len = 2; len <= word.length; len++) {
-                        var prefix = word.substring(0, len);
-                        var idSet = tokenIndex.get(prefix);
+                    if (word.length >= 2) {
+                        var idSet = tokenIndex.get(word);
                         if (!idSet) {
                             idSet = new Set();
-                            tokenIndex.set(prefix, idSet);
+                            tokenIndex.set(word, idSet);
                         }
                         idSet.add(item.id);
                     }
@@ -8354,7 +8391,8 @@
             return v0[bl];
         }
 
-        function scoreCandidate(item, query, queryTokens, recentIdSet) {
+        function scoreCandidate(item, query, queryTokens, recentIdSet, allowFuzzy) {
+            if (!item || !item.title) return 0;
             var score = 0;
             var titleLower = (item.title || '').toLowerCase();
 
@@ -8396,13 +8434,16 @@
             // 4. Recency Bonus
             if (recentIdSet.has(item.id)) score += 35;
 
-            // 5. Typo tolerance fallback if score is low
-            if (score < 40 && query.length >= 4) {
+            // 5. Typo tolerance fallback: strictly bounded and executed only when explicitly permitted
+            if (allowFuzzy && score < 40 && query.length >= 4) {
                 var words = titleLower.split(/\s+/);
                 for (var w = 0; w < words.length; w++) {
-                    if (levenshteinDistance(words[w], query, 2) <= 1) {
-                        score += 20;
-                        break;
+                    var word = words[w];
+                    if (Math.abs(word.length - query.length) <= 1) {
+                        if (levenshteinDistance(word, query, 2) <= 1) {
+                            score += 20;
+                            break;
+                        }
                     }
                 }
             }
@@ -8413,9 +8454,9 @@
         function searchTitles(query, filter) {
             var baseList = titlesList;
             if (filter === 'company') {
-                baseList = titlesList.filter(function(r) { return r.is_standard === 0; });
+                baseList = titlesList.filter(function(r) { return r && r.is_standard === 0; });
             } else if (filter === 'standard') {
-                baseList = titlesList.filter(function(r) { return r.is_standard === 1; });
+                baseList = titlesList.filter(function(r) { return r && r.is_standard === 1; });
             }
 
             var recentItems = getRecentTitles();
@@ -8431,11 +8472,34 @@
             if (queryTokens.length === 0) return baseList.slice(0, 30);
 
             var scored = [];
+            // Pass 1: Substring & token match (0ms latency, zero Levenshtein allocations)
             for (var i = 0; i < baseList.length; i++) {
                 var item = baseList[i];
-                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet);
+                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet, false);
                 if (score > 15) {
                     scored.push({ item: item, score: score });
+                }
+            }
+
+            // Pass 2: Bounded fuzzy fallback ONLY if fewer than 5 candidates matched and query length >= 4
+            if (scored.length < 5 && cleanQ.length >= 4) {
+                var fuzzyChecked = 0;
+                for (var j = 0; j < baseList.length && fuzzyChecked < 40; j++) {
+                    var candidate = baseList[j];
+                    var alreadyScored = false;
+                    for (var k = 0; k < scored.length; k++) {
+                        if (scored[k].item.id === candidate.id) {
+                            alreadyScored = true;
+                            break;
+                        }
+                    }
+                    if (alreadyScored) continue;
+
+                    fuzzyChecked++;
+                    var fScore = scoreCandidate(candidate, cleanQ, queryTokens, recentIdSet, true);
+                    if (fScore > 15) {
+                        scored.push({ item: candidate, score: fScore });
+                    }
                 }
             }
 
@@ -8569,11 +8633,12 @@
             '</div>';
         }
 
-        function adjustDropdownPosition() {
+        function adjustDropdownPosition(force) {
             var wrap = document.getElementById('jero_title_select_wrap');
             var dropdown = document.getElementById('jero_title_dropdown');
             if (!wrap || !dropdown || !isOpen) return;
 
+            if (!force && dropdown._hasEvaluatedPosition) return;
             var rect = wrap.getBoundingClientRect();
             var spaceBelow = window.innerHeight - rect.bottom;
             if (spaceBelow < 280 && rect.top > 280) {
@@ -8581,6 +8646,7 @@
             } else {
                 dropdown.classList.remove('drop-up');
             }
+            dropdown._hasEvaluatedPosition = true;
         }
 
         function openDropdown() {
@@ -8594,6 +8660,7 @@
             dropdown.style.display = 'block';
             if (input) input.setAttribute('aria-expanded', 'true');
 
+            adjustDropdownPosition(true);
             renderDropdownList();
         }
 
@@ -8606,6 +8673,7 @@
             isOpen = false;
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
+            dropdown._hasEvaluatedPosition = false;
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
         }
@@ -8670,49 +8738,60 @@
         }
 
         function applyTemplateSafely(item, forceOverwrite) {
-            var ed = document.getElementById('jobDescription');
-            var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
-            var currentSkills = (typeof skills !== 'undefined' && Array.isArray(skills)) ? [...skills] : [];
+            if (isApplyingTemplate) return;
+            isApplyingTemplate = true;
+            window._isApplyingTitleTemplate = true;
 
-            priorSnapshot = {
-                title: $('#title').val(),
-                jd: ed ? ed.innerHTML : '',
-                skills: currentSkills
-            };
+            try {
+                var ed = document.getElementById('jobDescription');
+                var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
+                var currentSkills = (typeof skills !== 'undefined' && Array.isArray(skills)) ? [...skills] : [];
 
-            // Detect if user has manually entered custom copy in JD
-            if (!forceOverwrite && currentDesc !== '' && item.jd && item.jd.trim() !== '') {
-                pendingTemplateItem = item;
-                var dialog = document.getElementById('jero_autofill_confirm_dialog');
-                if (dialog) dialog.style.display = 'block';
-                return;
-            }
+                priorSnapshot = {
+                    title: $('#title').val(),
+                    jd: ed ? ed.innerHTML : '',
+                    skills: currentSkills
+                };
 
-            // Apply Description
-            if (item.jd && (currentDesc === '' || forceOverwrite)) {
-                if (ed) {
-                    ed.innerHTML = item.jd;
-                    if (typeof syncDescription === 'function') syncDescription();
+                // Detect if user has manually entered custom copy in JD
+                if (!forceOverwrite && currentDesc !== '' && item.jd && item.jd.trim() !== '') {
+                    pendingTemplateItem = item;
+                    var dialog = document.getElementById('jero_autofill_confirm_dialog');
+                    if (dialog) dialog.style.display = 'block';
+                    return;
                 }
-            }
 
-            // Apply Skills (Merge unique)
-            if (item.skills && typeof skills !== 'undefined') {
-                var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                var existingSet = new Set(skills.map(function(s) { return s.toLowerCase(); }));
-                var added = false;
-                newSkills.forEach(function(s) {
-                    if (!existingSet.has(s.toLowerCase())) {
-                        skills.push(s);
-                        existingSet.add(s.toLowerCase());
-                        added = true;
+                // Apply Description
+                if (item.jd && (currentDesc === '' || forceOverwrite)) {
+                    if (ed) {
+                        ed.innerHTML = item.jd;
+                        if (typeof syncDescription === 'function') syncDescription();
                     }
-                });
-                if (added && typeof renderSkills === 'function') renderSkills();
-            }
+                }
 
-            showUndoToast('Template applied: Job description • Recommended skills');
-            updateStatusChip(true, false);
+                // Apply Skills (Merge unique)
+                if (item.skills && typeof skills !== 'undefined') {
+                    var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    var existingSet = new Set(skills.map(function(s) { return s.toLowerCase(); }));
+                    var added = false;
+                    newSkills.forEach(function(s) {
+                        if (!existingSet.has(s.toLowerCase())) {
+                            skills.push(s);
+                            existingSet.add(s.toLowerCase());
+                            added = true;
+                        }
+                    });
+                    if (added && typeof renderSkills === 'function') renderSkills();
+                }
+
+                showUndoToast('Template applied: Job description • Recommended skills');
+                updateStatusChip(true, false);
+            } finally {
+                setTimeout(function() {
+                    isApplyingTemplate = false;
+                    window._isApplyingTitleTemplate = false;
+                }, 150);
+            }
         }
 
         function selectItem(item) {
@@ -8810,7 +8889,7 @@
                     ingestManifest(newManifest);
                     idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
                     if (indexBroadcast) {
-                        indexBroadcast.postMessage({ type: 'TITLES_UPDATED', version: newManifest.version });
+                        indexBroadcast.postMessage({ type: 'TITLES_UPDATED', version: newManifest.version, tabId: TAB_SESSION_ID });
                     }
                 }
             }).catch(function() {});
@@ -8835,6 +8914,9 @@
         }
 
         function initEventListeners() {
+            if (isEventListenersInitialized) return;
+            isEventListenersInitialized = true;
+
             var input = document.getElementById('title');
             var clearBtn = document.getElementById('jero_title_clear_btn');
             var tabsContainer = document.querySelector('.jero-title-tabs');
@@ -8854,7 +8936,15 @@
                     currentSearch = this.value;
                     if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
                     if (!isOpen) openDropdown();
-                    renderDropdownList();
+
+                    clearTimeout(inputDebounceTimer);
+                    inputDebounceTimer = setTimeout(function() {
+                        if (inputRafId) cancelAnimationFrame(inputRafId);
+                        inputRafId = requestAnimationFrame(function() {
+                            renderDropdownList();
+                            inputRafId = null;
+                        });
+                    }, 35);
                 });
 
                 input.addEventListener('keydown', function(e) {
@@ -8964,7 +9054,10 @@
             try {
                 indexBroadcast = new BroadcastChannel('jero-titles-sync');
                 indexBroadcast.onmessage = function(ev) {
-                    if (ev && ev.data && ev.data.type === 'TITLES_UPDATED') {
+                    if (ev && ev.data && ev.data.type === 'TITLES_UPDATED' && ev.data.tabId !== TAB_SESSION_ID) {
+                        var now = Date.now();
+                        if (now - lastSyncTimestamp < 8000) return;
+                        lastSyncTimestamp = now;
                         idbGet('titles_tenant_' + CURRENT_TENANT_ID).then(function(cached) {
                             if (cached && cached.manifest) ingestManifest(cached.manifest);
                         });
@@ -9385,7 +9478,7 @@
             var exactMatchExists = false;
             if (q) {
                 for (var d = 0; d < deptList.length; d++) {
-                    if (deptList[d].name.toLowerCase() === q.toLowerCase()) {
+                    if ((deptList[d].name || '').toLowerCase() === q.toLowerCase()) {
                         exactMatchExists = true;
                         break;
                     }
@@ -9464,17 +9557,72 @@
             '</div>';
         }
 
+        function scrollItemIntoView(container, target) {
+            if (!container || !target) return;
+            var cTop = container.scrollTop;
+            var cHeight = container.clientHeight;
+            var elTop = target.offsetTop;
+            var elHeight = target.offsetHeight;
+
+            if (elTop < cTop) {
+                container.scrollTop = elTop;
+            } else if ((elTop + elHeight) > (cTop + cHeight)) {
+                container.scrollTop = (elTop + elHeight) - cHeight;
+            }
+        }
+
         function adjustDropdownPosition() {
             var wrap = document.getElementById('jero_dept_select_wrap');
             var dropdown = document.getElementById('jero_dept_dropdown');
+            var container = document.getElementById('jero_dept_list_container');
             if (!wrap || !dropdown || !isOpen) return;
 
             var rect = wrap.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 320 && rect.top > 280) {
+            var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+            // Safe margins from viewport top/bottom edges
+            var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
+            var spaceAbove = Math.max(0, rect.top - 12);
+
+            // Calculate height of fixed headers (tabs + recent bar + footer)
+            var tabsEl = dropdown.querySelector('.jero-dept-tabs');
+            var recentEl = document.getElementById('jero_dept_recent_bar');
+            var footerEl = dropdown.querySelector('.jero-dept-footer');
+
+            var fixedH = (tabsEl ? tabsEl.offsetHeight : 38) +
+                         ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
+                         (footerEl ? footerEl.offsetHeight : 34) + 16;
+
+            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
+            var dropUp = false;
+            if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+                dropUp = true;
+            }
+
+            if (dropUp) {
                 dropdown.classList.add('drop-up');
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = 'calc(100% + 5px)';
+
+                // Clamp max height so dropdown top never extends above viewport top margin
+                var maxAvailable = Math.max(160, Math.min(340, spaceAbove));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(90, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             } else {
                 dropdown.classList.remove('drop-up');
+                dropdown.style.bottom = 'auto';
+                dropdown.style.top = 'calc(100% + 5px)';
+
+                // Clamp max height so dropdown bottom never extends past viewport bottom margin
+                var maxAvailable = Math.max(160, Math.min(340, spaceBelow));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(90, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             }
         }
 
@@ -9482,17 +9630,33 @@
             var dropdown = document.getElementById('jero_dept_dropdown');
             var wrap = document.getElementById('jero_dept_select_wrap');
             var input = document.getElementById('category_id_display');
+            var container = document.getElementById('jero_dept_list_container');
             if (!dropdown || !wrap) return;
 
             isOpen = true;
             wrap.classList.add('is-open');
-            dropdown.style.display = 'block';
+            dropdown.style.display = 'flex';
             if (input) {
                 input.setAttribute('aria-expanded', 'true');
                 input.classList.remove('is-invalid');
+
+                // When opening, clear search query so user can view and choose from all 10 divisions
+                currentSearch = '';
+                try {
+                    input.select();
+                } catch (e) {}
             }
 
             renderDropdownList();
+            adjustDropdownPosition();
+
+            // Scroll currently selected department into view inside list
+            if (container) {
+                var selectedEl = container.querySelector('.jero-dept-item.selected');
+                if (selectedEl) {
+                    scrollItemIntoView(container, selectedEl);
+                }
+            }
         }
 
         function closeDropdown() {
@@ -9524,7 +9688,7 @@
 
             var target = items[focusedIndex];
             target.classList.add('focused');
-            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            scrollItemIntoView(container, target);
         }
 
         function selectFocusedItem() {
@@ -9833,14 +9997,22 @@
         function initEventListeners() {
             var input = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var chevron = document.getElementById('jero_dept_chevron');
             var tabsContainer = document.querySelector('.jero-dept-tabs');
             var container = document.getElementById('jero_dept_list_container');
             var recentBar = document.getElementById('jero_dept_recent_bar');
 
             if (input) {
                 input.addEventListener('focus', function() {
-                    currentSearch = this.value;
-                    openDropdown();
+                    if (!isOpen) {
+                        openDropdown();
+                    }
+                });
+
+                input.addEventListener('click', function(e) {
+                    if (!isOpen) {
+                        openDropdown();
+                    }
                 });
 
                 input.addEventListener('input', function() {
@@ -9853,6 +10025,7 @@
                 // Real-World Defense: Prevent Enter key from submitting form prematurely
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
+                        e.preventDefault();
                         closeDropdown();
                     } else if (e.key === 'ArrowDown') {
                         e.preventDefault();
@@ -9875,9 +10048,23 @@
                 });
             }
 
+            if (chevron) {
+                chevron.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isOpen) {
+                        closeDropdown();
+                    } else {
+                        openDropdown();
+                        if (input) input.focus();
+                    }
+                });
+            }
+
             if (clearBtn) {
                 clearBtn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     clearSelection();
                 });
             }
@@ -9926,13 +10113,30 @@
                 });
             }
 
-            // Click Outside Handler
-            document.addEventListener('click', function(e) {
+            // Global Escape key: Closes dropdown even if focus was moved to list or page
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isOpen) {
+                    e.preventDefault();
+                    closeDropdown();
+                    if (input) input.blur();
+                }
+            });
+
+            // Bullet-Proof Outside Click Handler in Capture Phase
+            // Catches clicks before any child or ancestor calls stopPropagation
+            document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_dept_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
                     if (isOpen) closeDropdown();
                 }
-            });
+            }, true);
+
+            // Auto-close on page scroll so dropdown never covers other cards or floats detached
+            window.addEventListener('scroll', function() {
+                if (isOpen) {
+                    closeDropdown();
+                }
+            }, { passive: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
             document.addEventListener('keydown', function(e) {
@@ -9947,8 +10151,12 @@
                 }
             });
 
-            // Window resize / scroll position auto-adjustment
-            window.addEventListener('resize', adjustDropdownPosition, { passive: true });
+            // Window resize auto-adjustment
+            window.addEventListener('resize', function() {
+                if (isOpen) {
+                    adjustDropdownPosition();
+                }
+            }, { passive: true });
         }
 
         function initSyncListeners() {
@@ -9993,6 +10201,9 @@
 
         // Global export for backward compatibility & testing
         window.JeroDeptIntelligenceEngine = {
+            open: openDropdown,
+            close: closeDropdown,
+            isOpen: function() { return isOpen; },
             search: function(q) {
                 currentSearch = q;
                 renderDropdownList();
@@ -10003,7 +10214,7 @@
             },
             selectByName: function(name) {
                 for (var i = 0; i < deptList.length; i++) {
-                    if (deptList[i].name.toLowerCase() === (name || '').toLowerCase()) {
+                    if ((deptList[i].name || '').toLowerCase() === (name || '').toLowerCase()) {
                         selectItem(deptList[i]);
                         return;
                     }
