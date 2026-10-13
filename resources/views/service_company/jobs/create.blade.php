@@ -10053,6 +10053,7 @@
             if (isEventListenersInitialized) return;
             isEventListenersInitialized = true;
 
+            var chevron = document.getElementById('jero_title_chevron');
             var input = document.getElementById('title');
             var clearBtn = document.getElementById('jero_title_clear_btn');
             var tabsContainer = document.querySelector('.jero-title-tabs');
@@ -10061,6 +10062,19 @@
             var undoBtn = document.getElementById('jero_autofill_undo_btn');
             var keepBtn = document.getElementById('jero_confirm_keep_btn');
             var applyBtn = document.getElementById('jero_confirm_apply_btn');
+
+            if (chevron) {
+                chevron.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isOpen) {
+                        closeDropdown();
+                    } else {
+                        if (input) input.focus();
+                        openDropdown();
+                    }
+                });
+            }
 
             if (input) {
                 input.addEventListener('focus', function() {
@@ -10180,12 +10194,26 @@
                 });
             }
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_title_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
                     closeDropdown();
                 }
+            }, true);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isOpen) {
+                    closeDropdown();
+                }
             });
+
+            window.addEventListener('resize', function() {
+                if (isOpen) adjustDropdownPosition();
+            });
+
+            window.addEventListener('scroll', function() {
+                if (isOpen) adjustDropdownPosition();
+            }, { passive: true });
 
             try {
                 indexBroadcast = new BroadcastChannel('jero-titles-sync');
@@ -10202,8 +10230,23 @@
             } catch (e) {}
         }
 
+        function scrollItemIntoView(container, el) {
+            if (!container || !el) return;
+            var cTop = container.scrollTop;
+            var cHeight = container.clientHeight;
+            var elTop = el.offsetTop;
+            var elHeight = el.offsetHeight;
+
+            if (elTop < cTop) {
+                container.scrollTop = elTop;
+            } else if ((elTop + elHeight) > (cTop + cHeight)) {
+                container.scrollTop = (elTop + elHeight) - cHeight;
+            }
+        }
+
         function moveFocus(direction) {
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+            var container = document.getElementById('jero_title_list_container');
             var customPill = document.getElementById('jero_title_custom_pill');
             var total = items.length + (customPill && customPill.offsetParent !== null ? 1 : 0);
             if (total === 0) return;
@@ -10218,10 +10261,10 @@
             if (focusedIndex < items.length) {
                 var el = items[focusedIndex];
                 el.classList.add('focused');
-                el.scrollIntoView({ block: 'nearest' });
+                scrollItemIntoView(container, el);
             } else if (customPill) {
                 customPill.classList.add('focused');
-                customPill.scrollIntoView({ block: 'nearest' });
+                scrollItemIntoView(container, customPill);
             }
         }
 
@@ -10253,6 +10296,8 @@
                 currentSearch = q;
                 renderDropdownList();
             },
+            open: openDropdown,
+            close: closeDropdown,
             selectByTitle: function(title) {
                 for (var i = 0; i < titlesList.length; i++) {
                     if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
