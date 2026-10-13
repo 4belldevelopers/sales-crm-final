@@ -1288,8 +1288,11 @@ $(document).on('click', '.client-hm-listing', function ()
 
         function formatJobPositionName(value) {
             if (!value) return '';
-            var text = String(value).toLowerCase();
-            return text.charAt(0).toUpperCase() + text.slice(1);
+            var str = String(value).trim();
+            if (str === '--------' || /^[-–—\s]+$/.test(str)) return '--------';
+            return str.replace(/\b[a-z]/g, function(letter) {
+                return letter.toUpperCase();
+            });
         }
 
         function formatSalaryMode(value) {
@@ -1442,8 +1445,8 @@ $(document).on('click', '.client-hm-listing', function ()
                     '</div>' +
 
                     '<div class="col-hm">' +
-                      '<div class="hm-name">' + (displayHiringManager ? displayHiringManager.substring(0, 10) : '') + '</div>' +
-                      '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
+                      '<div class="hm-name" title="' + (displayHiringManager !== '--------' ? displayHiringManager : '') + '">' + (displayHiringManager ? displayHiringManager.substring(0, 40) : '') + '</div>' +
+                      ((job.hiring_manager_designation && job.hiring_manager_designation !== '--------') ? '<div class="hm-title" title="' + job.hiring_manager_designation + '">' + formatJobPositionName(job.hiring_manager_designation) + '</div>' : '') +
                       '<div class="hm-company hm-client-type"><span class="it-job-type ' + job.badge + '">' + directClientLabelText + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
                     '</div>' +
 

@@ -426,34 +426,70 @@ class JobService
             }
 
             // 11. Batch Hiring Manager Assignment with Strict Tenancy & Client Scope
-            if (! empty($requestData['hiring_namager']) && ! empty($requestData['client_id'])) {
-                $rawHmArr = is_array($requestData['hiring_namager'])
-                    ? $requestData['hiring_namager']
-                    : explode(',', (string) $requestData['hiring_namager']);
+            if ((! empty($requestData['hiring_namager']) || ! empty($requestData['hiring_manager_id'])) && ! empty($requestData['client_id'])) {
+                $rawHmArr = ! empty($requestData['hiring_namager'])
+                    ? (is_array($requestData['hiring_namager']) ? $requestData['hiring_namager'] : explode(',', (string) $requestData['hiring_namager']))
+                    : [];
+                $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
 
-                $hmArr = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
+                $rawHmIds = ! empty($requestData['hiring_manager_id'])
+                    ? (is_array($requestData['hiring_manager_id']) ? $requestData['hiring_manager_id'] : explode(',', (string) $requestData['hiring_manager_id']))
+                    : [];
+                $hmIds = array_values(array_unique(array_filter(array_map('intval', $rawHmIds), fn ($id) => $id > 0)));
 
-                if (count($hmArr) > 0) {
-                    $hmRows = DB::table('client_contact_info')
+                if (count($hmNames) > 0 || count($hmIds) > 0) {
+                    $clientId = (int) $requestData['client_id'];
+                    $hmQuery = DB::table('client_contact_info')
                         ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
                         ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
-                        ->where('client_contact_info.client_id', (int) $requestData['client_id'])
-                        ->where('clients.company_id', $user->company_id)
-                        ->whereIn('client_contact_info.contact_person_name', $hmArr)
-                        ->get()
-                        ->keyBy('contact_person_name');
+                        ->where('client_contact_info.client_id', $clientId)
+                        ->where('clients.company_id', $user->company_id);
+
+                    if (! empty($hmIds) && ! empty($hmNames)) {
+                        $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
+                            $q->whereIn('client_contact_info.id', $hmIds)
+                              ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                        });
+                    } elseif (! empty($hmIds)) {
+                        $hmQuery->whereIn('client_contact_info.id', $hmIds);
+                    } else {
+                        $hmQuery->whereIn('client_contact_info.contact_person_name', $hmNames);
+                    }
+
+                    $availableHmRows = $hmQuery->get();
 
                     $batchHmInsert = [];
-                    foreach ($hmArr as $cp) {
-                        $recRow = $hmRows->get($cp);
-                        if ($recRow) {
+                    $insertedContactIds = [];
+
+                    // 1. Match by ID first
+                    foreach ($hmIds as $idVal) {
+                        $matched = $availableHmRows->firstWhere('id', $idVal);
+                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
                             $batchHmInsert[] = [
                                 'company_id' => $user->company_id,
-                                'client_contact_info_id' => $recRow->id,
+                                'client_contact_info_id' => $matched->id,
                                 'job_id' => $job->id,
                             ];
+                            $insertedContactIds[] = $matched->id;
                         }
                     }
+
+                    // 2. Match by Name (case-insensitive for resilient persistence)
+                    foreach ($hmNames as $cpName) {
+                        $lowerCp = strtolower($cpName);
+                        $matched = $availableHmRows->first(function ($r) use ($lowerCp) {
+                            return strtolower(trim($r->contact_person_name)) === $lowerCp;
+                        });
+                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
+                            $batchHmInsert[] = [
+                                'company_id' => $user->company_id,
+                                'client_contact_info_id' => $matched->id,
+                                'job_id' => $job->id,
+                            ];
+                            $insertedContactIds[] = $matched->id;
+                        }
+                    }
+
                     if (count($batchHmInsert) > 0) {
                         DB::table('client_contact_info_jobs')->insert($batchHmInsert);
                     }
@@ -525,6 +561,14 @@ class JobService
                     ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
                     ->withoutGlobalScopes()->find($job->id);
 
+                $hmTemplateVal = is_array($requestData['hiring_namager'] ?? null)
+                    ? implode(', ', array_filter($requestData['hiring_namager']))
+                    : (string) ($requestData['hiring_namager'] ?? '');
+
+                $recruiterTemplateVal = is_array($requestData['recruiter'] ?? null)
+                    ? implode(', ', array_filter($requestData['recruiter']))
+                    : (string) ($requestData['recruiter'] ?? '');
+
                 $templateDescription = str_replace(
                     [
                         '[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]',
@@ -545,8 +589,8 @@ class JobService
                         $employmentType,
                         $jobAdditional->cat_name ?? '',
                         $jobAdditional->qualification_name ?? '',
-                        $requestData['hiring_namager'] ?? '',
-                        $requestData['recruiter'] ?? '',
+                        $hmTemplateVal,
+                        $recruiterTemplateVal,
                         $user->name,
                         $job->job_description,
                         $maillink,
@@ -571,6 +615,8 @@ class JobService
             }
 
             GeneralMethod::cacheClean('alljobslist_version_user_'.$user->id);
+            GeneralMethod::cacheClean('alljobslist_version_company_'.$user->company_id);
+            cache()->increment('alljobslist_version_company_'.$user->company_id);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -837,29 +883,75 @@ class JobService
             }
 
             // Hiring Managers
-            if (! empty($requestData['hiring_namager']) && ! empty($requestData['client_id'])) {
+            if ((! empty($requestData['hiring_namager']) || ! empty($requestData['hiring_manager_id'])) && ! empty($requestData['client_id'])) {
                 DB::table('client_contact_info_jobs')->where('job_id', $job->id)->delete();
-                $hmArr = array_map('trim', explode(',', $requestData['hiring_namager']));
-                $hmRows = DB::table('client_contact_info')
-                    ->select('id', 'contact_person_name')
-                    ->where('client_id', $requestData['client_id'])
-                    ->whereIn('contact_person_name', $hmArr)
-                    ->get()
-                    ->keyBy('contact_person_name');
 
-                $batchHmInsert = [];
-                foreach ($hmArr as $cp) {
-                    $recRow = $hmRows->get($cp);
-                    if ($recRow) {
-                        $batchHmInsert[] = [
-                            'company_id' => $user->company_id,
-                            'client_contact_info_id' => $recRow->id,
-                            'job_id' => $job->id,
-                        ];
+                $rawHmArr = ! empty($requestData['hiring_namager'])
+                    ? (is_array($requestData['hiring_namager']) ? $requestData['hiring_namager'] : explode(',', (string) $requestData['hiring_namager']))
+                    : [];
+                $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
+
+                $rawHmIds = ! empty($requestData['hiring_manager_id'])
+                    ? (is_array($requestData['hiring_manager_id']) ? $requestData['hiring_manager_id'] : explode(',', (string) $requestData['hiring_manager_id']))
+                    : [];
+                $hmIds = array_values(array_unique(array_filter(array_map('intval', $rawHmIds), fn ($id) => $id > 0)));
+
+                if (count($hmNames) > 0 || count($hmIds) > 0) {
+                    $clientId = (int) $requestData['client_id'];
+                    $hmQuery = DB::table('client_contact_info')
+                        ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
+                        ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
+                        ->where('client_contact_info.client_id', $clientId)
+                        ->where('clients.company_id', $user->company_id);
+
+                    if (! empty($hmIds) && ! empty($hmNames)) {
+                        $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
+                            $q->whereIn('client_contact_info.id', $hmIds)
+                              ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                        });
+                    } elseif (! empty($hmIds)) {
+                        $hmQuery->whereIn('client_contact_info.id', $hmIds);
+                    } else {
+                        $hmQuery->whereIn('client_contact_info.contact_person_name', $hmNames);
                     }
-                }
-                if (count($batchHmInsert) > 0) {
-                    DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+
+                    $availableHmRows = $hmQuery->get();
+
+                    $batchHmInsert = [];
+                    $insertedContactIds = [];
+
+                    // 1. Match by ID first
+                    foreach ($hmIds as $idVal) {
+                        $matched = $availableHmRows->firstWhere('id', $idVal);
+                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
+                            $batchHmInsert[] = [
+                                'company_id' => $user->company_id,
+                                'client_contact_info_id' => $matched->id,
+                                'job_id' => $job->id,
+                            ];
+                            $insertedContactIds[] = $matched->id;
+                        }
+                    }
+
+                    // 2. Match by Name (case-insensitive for resilient persistence)
+                    foreach ($hmNames as $cpName) {
+                        $lowerCp = strtolower($cpName);
+                        $matched = $availableHmRows->first(function ($r) use ($lowerCp) {
+                            return strtolower(trim($r->contact_person_name)) === $lowerCp;
+                        });
+                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
+                            $batchHmInsert[] = [
+                                'company_id' => $user->company_id,
+                                'client_contact_info_id' => $matched->id,
+                                'job_id' => $job->id,
+                            ];
+                            $insertedContactIds[] = $matched->id;
+                        }
+                    }
+
+                    if (count($batchHmInsert) > 0) {
+                        DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+                    }
                 }
             }
 
@@ -981,6 +1073,8 @@ class JobService
 
             GeneralMethod::cacheClean('alljobslist_version_user_'.$user->id);
             GeneralMethod::cacheClean('jobDetails_version_user_'.$user->id);
+            GeneralMethod::cacheClean('alljobslist_version_company_'.$user->company_id);
+            cache()->increment('alljobslist_version_company_'.$user->company_id);
 
             DB::commit();
         } catch (\Throwable $e) {

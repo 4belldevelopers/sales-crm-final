@@ -131,17 +131,20 @@ class ElasticJobIndex
                     ->toArray();
 
                     $client_contact_info_jobs = DB::table('client_contact_info_jobs')
-                    ->join('client_contact_info','client_contact_info.id','=','client_contact_info_jobs.client_contact_info_id')
-                    ->select('client_contact_info.contact_person_name','client_contact_info_jobs.*')
+                    ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
+                    ->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_designation', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number', 'client_contact_info_jobs.*')
                     ->where('client_contact_info_jobs.job_id', $row->id)
                     ->get()
                     ->map(function ($s) {
                         return [
-                        'id' => (int) $s->id,
-                        'company_id' => (int) $s->company_id,
-                        'job_id' => (int) $s->job_id,
-                        'client_contact_info_id' => (int) $s->client_contact_info_id,
-                        'contact_person_name' => strtolower($s->contact_person_name),
+                            'id' => (int) $s->id,
+                            'company_id' => (int) $s->company_id,
+                            'job_id' => (int) $s->job_id,
+                            'client_contact_info_id' => (int) $s->client_contact_info_id,
+                            'contact_person_name' => $s->contact_person_name,
+                            'contact_person_designation' => $s->contact_person_designation,
+                            'contact_person_email' => $s->contact_person_email,
+                            'contact_person_number' => $s->contact_person_number,
                         ];
                     })
                     ->toArray();

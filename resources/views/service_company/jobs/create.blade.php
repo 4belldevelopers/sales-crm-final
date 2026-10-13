@@ -3533,11 +3533,14 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         $cp_inc = 0;
+        $cpersonDataId = '';
         foreach ($contactPersonList as $cpData) {
             if ($cp_inc == 0) {
                 $cpersonData = $cpData->contact_person_name;
+                $cpersonDataId = @$cpData->id;
             } else {
                 $cpersonData = $cpersonData.' , '.$cpData->contact_person_name;
+                $cpersonDataId = $cpersonDataId.' , '.@$cpData->id;
             }
             $cp_inc++;
         }
@@ -4725,6 +4728,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     </div>
                                     {{-- Real field POSTed to backend (comma-separated names); kept hidden, shown as cards below --}}
                                     <input type="hidden" name="hiring_namager" id="hiring_namager" value="<?php echo @$cpersonData; ?>">
+                                    <input type="hidden" name="hiring_manager_id" id="hiring_manager_id" value="<?php echo @$cpersonDataId; ?>">
                                     <span class="form-hint">Select the Hiring Manager or HR responsible for this position.</span>
                                     <div class="team-list" id="hmCardList"></div>
                                 </div>
@@ -6146,8 +6150,11 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
         function removeHiringCard(i) {
             var names = jrSplit($('#hiring_namager').val());
+            var ids = jrSplit($('#hiring_manager_id').val());
             names.splice(i, 1);
+            if (ids.length > i) ids.splice(i, 1);
             $('#hiring_namager').val(names.join(','));
+            $('#hiring_manager_id').val(ids.join(','));
             renderHiringCards();
             if (window.JeroHiringTeamEngine && typeof window.JeroHiringTeamEngine.syncFromInputs === 'function') {
                 window.JeroHiringTeamEngine.syncFromInputs();
@@ -13140,6 +13147,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             // Sync Hiring Managers
             var hmNames = ($('#hiring_namager').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            var hmIds = ($('#hiring_manager_id').val() || '').split(',').map(function(s) { return parseInt(s.trim(), 10); }).filter(Boolean);
             var clientId = parseInt($('#client_id').val(), 10);
             var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
                 ? window.JeroClientSelectEngine.getClient(clientId)
@@ -13148,18 +13156,25 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             assignedHiringManagers = [];
             hmNames.forEach(function(name, i) {
-                var matched = contacts.find(function(c) { return (c.n || c.contact_person_name) === name; });
-                var id = matched ? matched.id : (i + 1);
+                var preferId = hmIds[i] || 0;
+                var lowerName = name.toLowerCase();
+                var matched = contacts.find(function(c) {
+                    if (preferId && c.id === preferId) return true;
+                    var cName = (c.n || c.contact_person_name || '').toLowerCase();
+                    return cName === lowerName;
+                });
+                var id = matched ? matched.id : (preferId || (i + 1));
+                var dispName = matched ? (matched.n || matched.contact_person_name) : name;
                 var role = matched ? (matched.d || matched.contact_person_designation || 'Hiring Manager') : 'Hiring Manager';
                 var email = matched ? (matched.e || matched.contact_person_email || '') : '';
                 var phone = matched ? (matched.p || matched.contact_person_number || '') : '';
                 assignedHiringManagers.push({
                     id: id,
-                    name: name,
+                    name: dispName,
                     role: role,
                     email: email,
                     phone: phone,
-                    initial: getInitials(name)
+                    initial: getInitials(dispName)
                 });
             });
         }
@@ -13182,7 +13197,9 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         function commitHiringManagerChanges() {
             var names = assignedHiringManagers.map(function(h) { return h.name; });
+            var ids = assignedHiringManagers.map(function(h) { return h.id; }).filter(Boolean);
             $('#hiring_namager').val(names.join(','));
+            $('#hiring_manager_id').val(ids.join(','));
 
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
@@ -13842,7 +13859,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 emptyState.style.setProperty('display', 'none', 'important');
             }
 
-            var assignedNames = new Set(assignedHiringManagers.map(function(h) { return h.name; }));
+            var assignedNames = new Set(assignedHiringManagers.map(function(h) { return (h.name || '').toLowerCase(); }));
+            var assignedIds = new Set(assignedHiringManagers.map(function(h) { return h.id; }).filter(Boolean));
 
             var html = filtered.map(function(c) {
                 var name = c.n || c.contact_person_name || 'Contact';
@@ -13850,7 +13868,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 var email = c.e || c.contact_person_email || '';
                 var phone = c.p || c.contact_person_number || '';
                 var cleanPhone = phone.replace(/[^0-9]/g, '');
-                var isAssigned = assignedNames.has(name);
+                var isAssigned = (c.id && assignedIds.has(c.id)) || assignedNames.has(name.toLowerCase());
 
                 var emailAction = email ? `<a href="mailto:${escapeHtml(email)}" class="btn btn-icon btn-sm btn-light-primary ht-comm-btn" title="Send email to ${escapeHtml(email)}"><i class="la la-envelope"></i></a>` : '';
                 var callAction = phone ? `<a href="tel:${escapeHtml(phone)}" class="btn btn-icon btn-sm btn-light-success ht-comm-btn" title="Call ${escapeHtml(phone)}"><i class="la la-phone"></i></a>` : '';
@@ -13881,7 +13899,10 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         function toggleHiringManagerAssignment(contactId, contactName) {
-            var existingIndex = assignedHiringManagers.findIndex(function(h) { return h.name === contactName; });
+            var lowerName = (contactName || '').toLowerCase();
+            var existingIndex = assignedHiringManagers.findIndex(function(h) {
+                return (contactId && h.id === contactId) || (h.name && h.name.toLowerCase() === lowerName);
+            });
 
             if (existingIndex !== -1) {
                 assignedHiringManagers.splice(existingIndex, 1);
@@ -13891,15 +13912,21 @@ $currency_code = GeneralMethod::defaultCurrency();
                     ? window.JeroClientSelectEngine.getClient(clientId)
                     : null;
                 var contacts = (clientObj && clientObj.cc) ? clientObj.cc : [];
-                var matched = contacts.find(function(c) { return (c.n || c.contact_person_name) === contactName; });
+                var matched = contacts.find(function(c) {
+                    if (contactId && c.id === contactId) return true;
+                    return (c.n || c.contact_person_name || '').toLowerCase() === lowerName;
+                });
+
+                var id = contactId || (matched ? matched.id : 0);
+                var finalName = matched ? (matched.n || matched.contact_person_name) : contactName;
 
                 assignedHiringManagers.push({
-                    id: contactId,
-                    name: contactName,
+                    id: id,
+                    name: finalName,
                     role: matched ? (matched.d || matched.contact_person_designation || 'Hiring Manager') : 'Hiring Manager',
                     email: matched ? (matched.e || matched.contact_person_email || '') : '',
                     phone: matched ? (matched.p || matched.contact_person_number || '') : '',
-                    initial: getInitials(contactName)
+                    initial: getInitials(finalName)
                 });
             }
 
@@ -13980,6 +14007,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             // Atomically clear previously selected client HMs (TC-03)
             assignedHiringManagers = [];
             $('#hiring_namager').val('');
+            $('#hiring_manager_id').val('');
 
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
