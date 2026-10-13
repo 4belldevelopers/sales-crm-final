@@ -5918,6 +5918,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 $locList[] = [
                                     'id' => (int) ($l['city_id'] ?? $l['id'] ?? 0),
                                     'l' => $addr ?: 'Address',
+                                    'city' => (string) $city,
                                 ];
                             }
                         }
@@ -6004,6 +6005,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $locationsByClient[$loc->client_id][] = [
                         'id' => (int) $loc->id,
                         'l' => $label ?: 'Address #'.$loc->id,
+                        'city' => (string) ($cityName ?: ''),
                     ];
                 }
             }
@@ -6409,7 +6411,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         $selected = 'selected';
                     }
 
-                    $locArr .= '<option   value="'.$lArr->id.'" '.$selected.'>'.ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($city_name).' , '.ucwords($lArr->state_name).' , '.ucwords($lArr->country_name).'</option>';
+                    $locArr .= '<option value="'.$lArr->id.'" data-city="'.e($city_name).'" '.$selected.'>'.ucwords($lArr->address).'&nbsp;-&nbsp;'.ucwords($city_name).' , '.ucwords($lArr->state_name).' , '.ucwords($lArr->country_name).'</option>';
 
                 }
             } else {
@@ -6499,7 +6501,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         }
 
-        return Reply::dataOnly(['status' => 'success', 'ccArr' => $ccArr, 'locArr' => $locArr, 'clientcity' => '']);
+        $targetLocId = (int) ($locationId[0] ?? $location_id);
+        $locRecord = DB::table('client_location')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+            ->select('client_location.city', 'client_location.country_id', 'city_list.city as city_name')
+            ->where('client_location.id', $targetLocId)
+            ->first();
+
+        $resolvedCity = '';
+        if ($locRecord) {
+            $resolvedCity = ($locRecord->country_id == 101 && !empty($locRecord->city_name))
+                ? $locRecord->city_name
+                : ($locRecord->city ?? '');
+        }
+
+        return Reply::dataOnly(['status' => 'success', 'ccArr' => $ccArr, 'locArr' => $locArr, 'clientcity' => '', 'city_name' => $resolvedCity]);
     }
 
     public function hiring_manager($id)

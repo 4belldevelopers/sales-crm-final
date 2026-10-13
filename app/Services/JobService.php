@@ -201,34 +201,42 @@ class JobService
                     $cityPairs = [];
 
                     foreach ($workCityAll as $cVal) {
-                        $parts = explode('|', $cVal['value'] ?? '');
+                        $rawVal = (string) ($cVal['value'] ?? '');
+                        $parts = strpos($rawVal, '|') !== false ? explode('|', $rawVal) : explode(',', $rawVal);
                         if (count($parts) >= 3) {
                             $cName = trim($parts[0]);
-                            $coName = trim($parts[2]);
+                            $coName = trim(end($parts));
                             $cityNames[] = $cName;
                             $countryNames[] = $coName;
                             $cityPairs[] = ['city' => $cName, 'country' => $coName];
+                        } elseif (count($parts) >= 1 && trim($parts[0]) !== '') {
+                            $cName = trim($parts[0]);
+                            $cityNames[] = $cName;
+                            $cityPairs[] = ['city' => $cName, 'country' => null];
                         }
                     }
 
                     if (count($cityNames) > 0) {
-                        $cityRows = DB::table('city_list')
+                        $cityQuery = DB::table('city_list')
                             ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                             ->join('countries', 'countries.id', '=', 'state_list.country_id')
                             ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name')
-                            ->whereIn('city_list.city', array_unique($cityNames))
-                            ->whereIn('countries.country_name', array_unique($countryNames))
-                            ->get();
+                            ->whereIn('city_list.city', array_unique($cityNames));
+                        $nonEmptyCountries = array_values(array_filter($countryNames));
+                        if (! empty($nonEmptyCountries)) {
+                            $cityQuery->whereIn('countries.country_name', array_unique($nonEmptyCountries));
+                        }
+                        $cityRows = $cityQuery->get();
 
                         $batchCityInsert = [];
                         foreach ($cityPairs as $pair) {
-                            // $match = $cityRows->first(function ($item) use ($pair) {
-                            //     return $item->city === $pair['city'] && $item->country_name === $pair['country'];
-                            // });
                             $match = $cityRows->first(function ($item) use ($pair) {
-
                                 $itemCity = trim((string) $item->city);
                                 $pairCity = trim((string) $pair['city']);
+
+                                if (empty($pair['country'])) {
+                                    return strcasecmp($itemCity, $pairCity) === 0;
+                                }
 
                                 $itemCountry = trim((string) $item->country_name);
                                 $pairCountry = trim((string) $pair['country']);
@@ -712,36 +720,42 @@ class JobService
                     $cityPairs = [];
 
                     foreach ($workCityAll as $cVal) {
-                        $parts = explode('|', $cVal['value'] ?? '');
-
+                        $rawVal = (string) ($cVal['value'] ?? '');
+                        $parts = strpos($rawVal, '|') !== false ? explode('|', $rawVal) : explode(',', $rawVal);
                         if (count($parts) >= 3) {
                             $cName = trim($parts[0]);
-                            $coName = trim($parts[2]);
+                            $coName = trim(end($parts));
                             $cityNames[] = $cName;
                             $countryNames[] = $coName;
                             $cityPairs[] = ['city' => $cName, 'country' => $coName];
+                        } elseif (count($parts) >= 1 && trim($parts[0]) !== '') {
+                            $cName = trim($parts[0]);
+                            $cityNames[] = $cName;
+                            $cityPairs[] = ['city' => $cName, 'country' => null];
                         }
                     }
 
                     if (count($cityNames) > 0) {
-                        $cityRows = DB::table('city_list')
+                        $cityQuery = DB::table('city_list')
                             ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                             ->join('countries', 'countries.id', '=', 'state_list.country_id')
                             ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name')
-                            ->whereIn('city_list.city', array_unique($cityNames))
-                            ->whereIn('countries.country_name', array_unique($countryNames))
-                            ->get();
+                            ->whereIn('city_list.city', array_unique($cityNames));
+                        $nonEmptyCountries = array_values(array_filter($countryNames));
+                        if (! empty($nonEmptyCountries)) {
+                            $cityQuery->whereIn('countries.country_name', array_unique($nonEmptyCountries));
+                        }
+                        $cityRows = $cityQuery->get();
 
                         $batchCityInsert = [];
                         foreach ($cityPairs as $pair) {
-                            // dd($cityPairs);
-                            // $match = $cityRows->first(function ($item) use ($pair) {
-                            //     return $item->city === $pair['city'] && $item->country_name === $pair['country'];
-                            // });
                             $match = $cityRows->first(function ($item) use ($pair) {
-
                                 $itemCity = trim((string) $item->city);
                                 $pairCity = trim((string) $pair['city']);
+
+                                if (empty($pair['country'])) {
+                                    return strcasecmp($itemCity, $pairCity) === 0;
+                                }
 
                                 $itemCountry = trim((string) $item->country_name);
                                 $pairCountry = trim((string) $pair['country']);

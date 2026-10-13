@@ -3261,6 +3261,8 @@
                                         $initialGenderVal = 'No Preference';
                                     } elseif ($rawGender === 'Rather Not Say') {
                                         $initialGenderVal = 'Other / Prefer Not to Say';
+                                    } elseif (($page_event ?? '') === 'ADD' || empty($job->id)) {
+                                        $initialGenderVal = 'No Preference';
                                     }
                                 @endphp
 
@@ -3603,7 +3605,7 @@
                                     <small>Office + Remote</small>
                                 </button>
                                 <button type="button" class="ij-choice" data-value="no" aria-pressed="<?php echo (@$job->work_type == 'no' || empty(@$job->work_type)) ? 'true' : 'false'; ?>">
-                                    <strong>Work From Office</strong>
+                                    <strong>Work From Office (WFO)</strong>
                                     <small>Based at office location</small>
                                 </button>
                             </div>
@@ -3611,10 +3613,10 @@
                                 <select name="work_from_home" id="work_from_home" class="form-select" tabindex="-1">
                                     <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
                                     <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
-                                    <option value="no" <?php if (@$job->work_type == 'no') echo 'selected'; ?>>Work From Office</option>
+                                    <option value="no" <?php if (@$job->work_type == 'no' || empty(@$job->work_type)) echo 'selected'; ?>>Work From Office (WFO)</option>
                                 </select>
                             </div>
-                            <span class="form-hint" style="margin-top:10px;display:block;">Choose whether this position is Remote, Hybrid, or Work From Office.</span>
+                            <span class="form-hint" style="margin-top:10px;display:block;">Choose whether this position is Remote, Hybrid, or Work From Office (WFO).</span>
                         </div>
                     </div>
                     <div class="card ij-work-shift-card">
@@ -3652,7 +3654,7 @@
                             </div>
                             <div class="ij-source-control">
                                 <select class="form-select" name="work_shifts" id="work_shifts" tabindex="-1">
-                                    <option value="Day Shift" @if (@$job->work_shifts == 'Day Shift') selected @endif>Day Shift</option>
+                                    <option value="Day Shift" @if (@$job->work_shifts == 'Day Shift' || empty(@$job->work_shifts)) selected @endif>Day Shift</option>
                                     <option value="Night Shift" @if (@$job->work_shifts == 'Night Shift') selected @endif>Night Shift</option>
                                     <option value="Rotational shift" @if (@$job->work_shifts == 'Rotational shift') selected @endif>Rotational shift</option>
                                     <option value="UK Timezone" @if (@$job->work_shifts == 'UK Timezone') selected @endif>UK Timezone</option>
@@ -3909,7 +3911,7 @@
                                     <option value="45" <?php echo ($currDays === '45') ? 'selected' : ''; ?>>45 Days</option>
                                     <option value="60" <?php echo ($currDays === '60') ? 'selected' : ''; ?>>60 Days</option>
                                 </select>
-                                <span class="form-hint" style="margin-top:8px;">Job will be automatically marked as closed after this duration.</span>
+                                <span class="form-hint" id="autoCloseHint" style="margin-top:8px;">Job will be automatically marked as closed after <strong id="autoCloseDaysDisplay">60</strong> days (on <strong id="autoCloseDateDisplay"></strong>).</span>
                             </div>
                         </div>
                     </div>
@@ -4496,7 +4498,7 @@
                                 </div>
                                 <div class="r4-card-body">
                                     <ul class="r4-notes-list">
-                                        <li><span class="r4-dot"></span><span>Job will auto close after 60 days</span></li>
+                                        <li><span class="r4-dot"></span><span>Job will auto close after <strong id="r4AutoCloseDays">60</strong> days (on <strong id="r4AutoCloseDate"></strong>)</span></li>
                                         <li><span class="r4-dot"></span><span>Coins will be deducted daily</span></li>
                                         <li><span class="r4-dot"></span><span>You can pause the job anytime</span></li>
                                         <li><span class="r4-dot"></span><span>Applications will be saved</span></li>
@@ -5234,9 +5236,22 @@
 
             $(document).on('change', '#address_id', function() {
                 var locationId = $(this).val();
-                var url = "{{ route('service_company.jobs.getlocationCity', ':id') }}?locationId=" + locationId;
-                url = url.replace(':id', locationId);
-                $.ajax({ url: url, success: function(response) { /* location city loaded */ } });
+                if (typeof window.syncAddressToJobLocation === 'function') {
+                    window.syncAddressToJobLocation();
+                }
+                if (locationId) {
+                    var url = "{{ route('service_company.jobs.getlocationCity', ':id') }}?locationId=" + locationId;
+                    url = url.replace(':id', locationId);
+                    $.ajax({
+                        url: url,
+                        success: function(response) {
+                            if (response && response.city_name && typeof window.applyAddressCityToJobLocation === 'function') {
+                                var optionText = $('#address_id option:selected').text();
+                                window.applyAddressCityToJobLocation(response.city_name, optionText);
+                            }
+                        }
+                    });
+                }
             });
 
             // ---- Client change -> contact person + address list (original) ----
@@ -5260,6 +5275,9 @@
                         $('#address_id').html(response.locArr);
                         if (typeof window.sanitizeAddressSelectOptions === 'function') {
                             window.sanitizeAddressSelectOptions();
+                        }
+                        if ($('#address_id').val() && typeof window.syncAddressToJobLocation === 'function') {
+                            window.syncAddressToJobLocation();
                         }
                     }
                 });
@@ -5933,6 +5951,7 @@
             }
         ?>
         var __pageEvent  = "<?php echo @$page_event; ?>";
+        var isPageInitialized = false;
         var __editQuestions = {!! json_encode($__editQ) !!};
         var __editTags   = {!! json_encode(@$jobtags) !!};
         var __editQual   = {!! json_encode(@$default_qualification) !!};
@@ -5995,11 +6014,66 @@
             if (Array.isArray(__editQuestions) && __editQuestions.length) {
                 __editQuestions.forEach(function(t, i) { if (t && String(t).trim() !== '') questions.push({ id: i + 1, text: t, type: 'short', required: true }); });
             }
+
+            // ADD mode defaults initialization (Deterministic & Idempotent)
+            if (__pageEvent === 'ADD') {
+                // 1. Gender Diversity default: 'No Preference'
+                var reqColInput = document.getElementById('required_columns');
+                if (reqColInput && !reqColInput.value) {
+                    reqColInput.value = 'No Preference';
+                }
+
+                // 2. Position Type default: '0' (Full-time)
+                var empTypeSelect = document.getElementById('employment_type');
+                if (empTypeSelect && (!empTypeSelect.value || empTypeSelect.value === '')) {
+                    empTypeSelect.value = '0';
+                    $(empTypeSelect).trigger('change');
+                }
+
+                // 3. Work Mode default: 'no' (Work From Office (WFO))
+                var workModeSelect = document.getElementById('work_from_home');
+                if (workModeSelect && (!workModeSelect.value || workModeSelect.value === '')) {
+                    workModeSelect.value = 'no';
+                    $(workModeSelect).trigger('change');
+                }
+
+                // 4. Work Shift default: 'Day Shift'
+                var workShiftSelect = document.getElementById('work_shifts');
+                if (workShiftSelect && (!workShiftSelect.value || workShiftSelect.value === '')) {
+                    workShiftSelect.value = 'Day Shift';
+                    $(workShiftSelect).trigger('change');
+                }
+
+                // 5. Educational Qualification default: 'Any Qualification'
+                if (!__editQual && qualifications.length === 0) {
+                    qualifications.push('Any Qualification');
+                    renderQualifications();
+                }
+
+                // 6. Job Auto Close default: '60'
+                var endDateSelect = document.getElementById('end_date');
+                if (endDateSelect && (!endDateSelect.value || endDateSelect.value === '')) {
+                    endDateSelect.value = '60';
+                    $(endDateSelect).trigger('change');
+                }
+            }
+
+            // Update auto-close dynamic date preview (today + days)
+            if (typeof updateAutoCloseDateDisplay === 'function') {
+                updateAutoCloseDateDisplay($('#end_date').val() || 60);
+            }
+
+            // Initial address to job location synchronization on ADD load if address already selected
+            if (__pageEvent === 'ADD' && $('#address_id').val() && typeof syncAddressToJobLocation === 'function') {
+                syncAddressToJobLocation();
+            }
+
             renderQuestions();
             renderTemplates();
             setupDragAndDrop();
             updateStepper(1);
             syncDescription();
+            isPageInitialized = true;
         });
 
         // ---------- STEP NAVIGATION ----------
@@ -7271,7 +7345,10 @@
             });
         }
 
-        function selectCity(city) {
+        var lastAutoSyncedLocation = null;
+        var isLocationManuallyModified = false;
+
+        function selectCity(city, isManual) {
             if (!city) return;
             var clean = String(city).trim();
             if (isCitySelected(clean, clean.split(',')[0].trim())) {
@@ -7281,6 +7358,9 @@
             if (selectedCities.length >= 15) {
                 showToast('Maximum 15 cities allowed', 'error');
                 return;
+            }
+            if (isManual !== false) {
+                isLocationManuallyModified = true;
             }
             selectedCities.push(clean);
             renderSelectedCities();
@@ -7294,7 +7374,8 @@
 
         function addCustomCityDirect(val) {
             if (!val) return;
-            selectCity(val);
+            isLocationManuallyModified = true;
+            selectCity(val, true);
         }
 
         function addCustomCity() {
@@ -7305,17 +7386,31 @@
                 showToast('Please type a city name', 'info');
                 return;
             }
-            selectCity(val);
+            isLocationManuallyModified = true;
+            selectCity(val, true);
         }
 
-        function clearAllCities() {
+        function clearAllCities(isManual) {
+            if (isManual !== false) {
+                isLocationManuallyModified = true;
+            }
+            lastAutoSyncedLocation = null;
             selectedCities = [];
             renderSelectedCities();
         }
 
-        function removeCity(city) {
+        function removeCity(city, isManual) {
+            if (isManual !== false) {
+                isLocationManuallyModified = true;
+            }
             var cNorm = String(city || '').toLowerCase().trim();
             var lNorm = cNorm.split(/[,|]/)[0].trim();
+            if (lastAutoSyncedLocation) {
+                var lastNorm = String(lastAutoSyncedLocation).toLowerCase().trim();
+                if (lastNorm === cNorm || (lNorm && lastNorm.indexOf(lNorm) === 0)) {
+                    lastAutoSyncedLocation = null;
+                }
+            }
             selectedCities = selectedCities.filter(function(c) {
                 var it = String(c || '').toLowerCase().trim();
                 return !(it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm));
@@ -7359,6 +7454,153 @@
                 hidden.value = JSON.stringify(selectedCities.map(function(c) { return { value: c }; }));
             }
         }
+
+        function updateAutoCloseDateDisplay(days) {
+            days = parseInt(days, 10) || 60;
+            var d = new Date();
+            d.setDate(d.getDate() + days);
+            var options = { day: 'numeric', month: 'short', year: 'numeric' };
+            var formattedDate = d.toLocaleDateString('en-US', options);
+
+            var daysEl = document.getElementById('autoCloseDaysDisplay');
+            if (daysEl) daysEl.textContent = days;
+            var dateEl = document.getElementById('autoCloseDateDisplay');
+            if (dateEl) dateEl.textContent = formattedDate;
+
+            var r4DaysEl = document.getElementById('r4AutoCloseDays');
+            if (r4DaysEl) r4DaysEl.textContent = days;
+            var r4DateEl = document.getElementById('r4AutoCloseDate');
+            if (r4DateEl) r4DateEl.textContent = formattedDate;
+        }
+        window.updateAutoCloseDateDisplay = updateAutoCloseDateDisplay;
+
+        $(document).on('change', '#end_date', function() {
+            updateAutoCloseDateDisplay($(this).val());
+        });
+
+        function extractCityFromAddressLabel(label) {
+            if (!label) return '';
+            label = String(label).trim();
+            if (!label || label === 'Select Address' || label === 'No Address' || label.indexOf('Address #') === 0) {
+                return '';
+            }
+            var mainPart = label;
+            if (label.indexOf(' - ') !== -1) {
+                var segments = label.split(' - ');
+                mainPart = segments[segments.length - 1].trim();
+            }
+            var subParts = mainPart.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            if (subParts.length > 0) {
+                return subParts[0];
+            }
+            return mainPart;
+        }
+        window.extractCityFromAddressLabel = extractCityFromAddressLabel;
+
+        function resolveCanonicalCity(cityName, fullLabel) {
+            if (!cityName) return '';
+            var cNorm = cityName.toLowerCase().trim();
+
+            if (typeof curatedLocationGroups !== 'undefined' && Array.isArray(curatedLocationGroups)) {
+                for (var i = 0; i < curatedLocationGroups.length; i++) {
+                    var group = curatedLocationGroups[i];
+                    for (var j = 0; j < group.items.length; j++) {
+                        var item = group.items[j];
+                        if (item.city.toLowerCase() === cNorm) {
+                            return item.canonical;
+                        }
+                    }
+                }
+            }
+
+            if (typeof popularPillList !== 'undefined' && Array.isArray(popularPillList)) {
+                for (var k = 0; k < popularPillList.length; k++) {
+                    var pill = popularPillList[k];
+                    if (pill.label.toLowerCase() === cNorm) {
+                        return pill.canonical;
+                    }
+                }
+            }
+
+            if (fullLabel) {
+                var cleanLabel = fullLabel.replace(/^.*?-\s*/, '').trim();
+                var parts = cleanLabel.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
+                if (parts.length >= 2 && parts[0].toLowerCase() === cNorm) {
+                    return parts.join(', ');
+                }
+            }
+
+            return formatTitleCase(cityName);
+        }
+        window.resolveCanonicalCity = resolveCanonicalCity;
+
+        function applyAddressCityToJobLocation(cityName, fullLabel) {
+            if (!cityName) return;
+            cityName = String(cityName).trim();
+            if (!cityName || cityName.toLowerCase() === 'select address' || cityName.toLowerCase() === 'no address') return;
+
+            var canonical = resolveCanonicalCity(cityName, fullLabel);
+            if (!canonical) return;
+
+            if (isCitySelected(canonical, cityName)) {
+                lastAutoSyncedLocation = canonical;
+                return;
+            }
+
+            if (lastAutoSyncedLocation && lastAutoSyncedLocation !== canonical) {
+                removeCity(lastAutoSyncedLocation, false);
+            }
+
+            if (selectedCities.length >= 15) return;
+
+            selectedCities.push(canonical);
+            lastAutoSyncedLocation = canonical;
+            renderSelectedCities();
+
+            var cityInput = document.getElementById('citySearch');
+            if (cityInput) cityInput.value = '';
+            var clearBtn = document.getElementById('citySearchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+            var dd = document.getElementById('cityDropdown');
+            if (dd) dd.classList.remove('active');
+        }
+        window.applyAddressCityToJobLocation = applyAddressCityToJobLocation;
+
+        function syncAddressToJobLocation() {
+            if (__pageEvent === 'EDIT' && !isPageInitialized) return;
+            var selectedAddrId = $('#address_id').val();
+            if (!selectedAddrId) {
+                if (lastAutoSyncedLocation) {
+                    removeCity(lastAutoSyncedLocation, false);
+                    lastAutoSyncedLocation = null;
+                }
+                return;
+            }
+
+            var $selectedOption = $('#address_id option:selected');
+            var cityName = ($selectedOption.attr('data-city') || '').trim();
+            var optionText = ($selectedOption.text() || '').trim();
+
+            if (!cityName && optionText && optionText !== 'Select Address' && optionText !== 'No Address') {
+                cityName = extractCityFromAddressLabel(optionText);
+            }
+
+            if (cityName) {
+                applyAddressCityToJobLocation(cityName, optionText);
+            } else {
+                var url = "{{ route('service_company.jobs.getlocationCity', ':id') }}?locationId=" + selectedAddrId;
+                url = url.replace(':id', selectedAddrId);
+                $.ajax({
+                    url: url,
+                    success: function(response) {
+                        if (response && response.city_name) {
+                            applyAddressCityToJobLocation(response.city_name, optionText);
+                        }
+                    }
+                });
+            }
+        }
+        window.syncAddressToJobLocation = syncAddressToJobLocation;
 
         // ---------- QUALIFICATIONS (UNESCO ISCED-2011 / Enterprise Standard) ----------
         var enterpriseQualTaxonomy = [
@@ -8650,6 +8892,12 @@
                     return;
                 }
                 $(this).text(formatTitleCase(text));
+                if (!$(this).attr('data-city') && typeof extractCityFromAddressLabel === 'function') {
+                    var inferredCity = extractCityFromAddressLabel(text);
+                    if (inferredCity) {
+                        $(this).attr('data-city', inferredCity);
+                    }
+                }
             });
         }
         window.sanitizeAddressSelectOptions = sanitizeAddressSelectOptions;
@@ -8665,7 +8913,8 @@
                 locs = c.loc.map(function(l) {
                     return {
                         id: parseInt(l.id, 10),
-                        l: formatTitleCase(l.l || l.label || l.address || '')
+                        l: formatTitleCase(l.l || l.label || l.address || ''),
+                        city: l.city || l.c || ''
                     };
                 });
             }
@@ -8987,13 +9236,22 @@
                 locList.forEach(function(loc) {
                     var rawLabel = loc.l || loc.label || loc.address || 'Registered Location';
                     var label = formatTitleCase(rawLabel);
-                    html += '<option value="' + loc.id + '">' + escapeHtml(label) + '</option>';
+                    var city = loc.city || loc.c || '';
+                    if (!city && typeof extractCityFromAddressLabel === 'function') {
+                        city = extractCityFromAddressLabel(rawLabel);
+                    }
+                    html += '<option value="' + loc.id + '"' + (city ? ' data-city="' + escapeHtml(city) + '"' : '') + '>' + escapeHtml(label) + '</option>';
                 });
                 $addressSelect.html(html);
+                if (typeof window.sanitizeAddressSelectOptions === 'function') {
+                    window.sanitizeAddressSelectOptions();
+                }
                 $addressShow.hide();
 
                 if (locList.length === 1) {
                     $addressSelect.val(locList[0].id).trigger('change');
+                } else if ($addressSelect.val() && typeof window.syncAddressToJobLocation === 'function') {
+                    window.syncAddressToJobLocation();
                 }
             } else {
                 $addressSelect.html('<option value="">No Address</option>');
@@ -9730,9 +9988,12 @@
                 }
             });
 
-            // Address change auto-sanitization to maintain Title Case
+            // Address change auto-sanitization to maintain Title Case & synchronize location
             $(document).on('change', '#address_id', function() {
                 sanitizeAddressSelectOptions();
+                if (typeof window.syncAddressToJobLocation === 'function') {
+                    window.syncAddressToJobLocation();
+                }
             });
         }
 
