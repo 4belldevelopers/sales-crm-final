@@ -3464,7 +3464,6 @@
                                     <?php } ?>
                                 </div>
                             </div>
-                            <span class="form-hint" style="margin-top:10px;display:block;">Enter the expected CTC range for this position.</span>
                         </div>
                     </div>
                     <div class="card ij-qual-card">
@@ -3520,7 +3519,6 @@
                                 }
                             ?>
                             <div class="form-group-cus">
-                                <label class="form-label required mb-2" for="end_date">Job automatically closed in</label>
                                 <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
                                     <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
                                         <span class="ij-choice-icon-wrap ij-icon-blue">
@@ -3588,7 +3586,7 @@
                             </div>
                             <div class="team-grid">
                                 <div class="team-section">
-                                    <label class="form-label required">Select the Hiring Manager / HR for this job position from the {{ ($global_company_type == 3) ? 'company' : 'client' }}.</label>
+                                    <label class="form-label required">Hiring Contact</label>
                                     <div class="input-wrapper" style="position:relative;">
                                         <div class="input-with-icon">
                                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3604,11 +3602,11 @@
                                     </div>
                                     {{-- Real field POSTed to backend (comma-separated names); kept hidden, shown as cards below --}}
                                     <input type="hidden" name="hiring_namager" id="hiring_namager" value="<?php echo @$cpersonData; ?>">
-                                    <span class="form-hint">This person will be the primary point of contact.</span>
+                                    <span class="form-hint">Select the Hiring Manager or HR responsible for this position.</span>
                                     <div class="team-list" id="hmCardList"></div>
                                 </div>
                                 <div class="team-section">
-                                    <label class="form-label required">Select your team who will work on this job position.</label>
+                                    <label class="form-label required">Recruitment Team</label>
                                     <div class="input-wrapper" style="position:relative;">
                                         <div class="input-with-icon">
                                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3625,7 +3623,7 @@
                                     {{-- Real fields POSTed to backend; kept hidden, shown as cards below --}}
                                     <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>">
                                     <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>">
-                                    <span class="form-hint">Assign internal team members / recruiters.</span>
+                                    <span class="form-hint">Assign the internal recruiters or team members responsible for this position</span>
                                     <div class="team-list" id="recruiterCardList"></div>
                                 </div>
                             </div>
