@@ -63,18 +63,22 @@ class JobPublishingVisibilityTest extends TestCase
     }
 
     /**
-     * Test 2: Blade template contains all 3 Publishing Visibility options with proper mutual exclusivity handlers.
+     * Test 2: Blade template contains Educational Qualification in Card 3 and streamlined 2-toggle Publishing Visibility.
      */
-    public function test_publishing_visibility_options_and_scripts_exist_in_blade(): void
+    public function test_card3_qualification_and_streamlined_visibility_options_exist_in_blade(): void
     {
         $bladePath = resource_path('views/service_company/jobs/create.blade.php');
         $content = file_get_contents($bladePath);
 
+        // Card 3 Educational Qualification assertion
+        $this->assertStringContainsString('id="rvQualification"', $content, 'Card 3 must contain #rvQualification to balance Card 1 items');
+        $this->assertStringContainsString("setText('rvQualification'", $content, 'populateReview must set #rvQualification');
+
+        // Streamlined 2-toggle Publishing Visibility
         $this->assertStringContainsString('name="visibility_career"', $content);
         $this->assertStringContainsString('name="visibility_marketplace"', $content);
-        $this->assertStringContainsString('name="visibility_internal"', $content);
+        $this->assertStringNotContainsString('name="visibility_internal"', $content, 'Publish Internally Only checkbox is removed from UI as all jobs are internally accessible by default');
 
-        $this->assertStringContainsString('handleVisibilityChange', $content);
         $this->assertStringContainsString('syncVisibilityUI', $content);
         $this->assertStringContainsString('rv_visibility_info_text', $content);
     }
