@@ -37,7 +37,7 @@ class RelationshipManagerService
      * Intent: Serves cached team roster in < 2ms without querying MySQL on warm visits.
      * Tenancy: Scoped strictly by $companyId.
      */
-    public function getTeamRoster(int $companyId): array
+    public function getTeamRoster(int $companyId, bool $freshWorkload = true): array
     {
         if ($companyId <= 0) {
             return [];
@@ -69,7 +69,6 @@ class RelationshipManagerService
                 ->groupBy('users.id')
                 ->get();
 
-            $workload = $this->getWorkloadStats($companyId);
             $roster = [];
 
             foreach ($users as $u) {
@@ -106,15 +105,24 @@ class RelationshipManagerService
                     'initial' => strtoupper($firstChar),
                     'avatarClass' => $avatarClass,
                     'active' => ((int) ($u->working_status ?? 0) === 1),
-                    'activeJobs' => (int) ($workload['active_jobs'][$u->id] ?? 0),
-                    'captainJobs' => (int) ($workload['captain_jobs'][$u->id] ?? 0),
-                    'trmTalents' => (int) ($workload['trm_talents'][$u->id] ?? 0),
+                    'activeJobs' => 0,
+                    'captainJobs' => 0,
+                    'trmTalents' => 0,
                 ];
             }
 
-            // Cache roster for 1 hour (3600 seconds)
+            // Cache base user roster structure for 1 hour
             Cache::put($cacheKey, $roster, 3600);
         }
+
+        // Always merge real-time workload stats (0ms from ES)
+        $workload = $this->getWorkloadStats($companyId, $freshWorkload);
+        foreach ($roster as &$u) {
+            $u['activeJobs'] = (int) ($workload['active_jobs'][$u['id']] ?? 0);
+            $u['captainJobs'] = (int) ($workload['captain_jobs'][$u['id']] ?? 0);
+            $u['trmTalents'] = (int) ($workload['trm_talents'][$u['id']] ?? 0);
+        }
+        unset($u);
 
         return $roster;
     }
@@ -125,13 +133,14 @@ class RelationshipManagerService
      * Intent: Eliminates real-time, per-drawer Elasticsearch aggregations and N+1 Blade counts.
      * Tenancy: Scoped strictly by $companyId.
      */
-    public function getWorkloadStats(int $companyId): array
+    public function getWorkloadStats(int $companyId, bool $fresh = false): array
     {
         $cacheKey = "team:workload:v1:{$companyId}";
-        $cached = Cache::get($cacheKey);
-
-        if (is_array($cached) && ! empty($cached)) {
-            return $cached;
+        if (! $fresh) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached) && ! empty($cached)) {
+                return $cached;
+            }
         }
 
         $activeJobs = [];
@@ -141,7 +150,7 @@ class RelationshipManagerService
         try {
             $esClient = $this->elasticService->getClient();
 
-            // 1. Active Jobs per user via ES terms aggregation
+            // 1. Active Jobs per user via ES nested terms aggregation
             if (defined('ELASTIC_JOBS') && $this->elasticService->indexExists(ELASTIC_JOBS)) {
                 $resp = $esClient->search([
                     'index' => ELASTIC_JOBS,
@@ -151,23 +160,70 @@ class RelationshipManagerService
                             'bool' => [
                                 'must' => [
                                     ['term' => ['status' => 'active']],
-                                    ['term' => ['job_assign.company_id' => $companyId]],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['comId' => $companyId]],
+                                                [
+                                                    'nested' => [
+                                                        'path' => 'job_assign',
+                                                        'query' => [
+                                                            'term' => ['job_assign.company_id' => $companyId],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
                         'aggs' => [
-                            'by_user' => ['terms' => ['field' => 'job_assign.user_id', 'size' => 1000]],
-                            'by_captain' => ['terms' => ['field' => 'job_assign.spok_user_id', 'size' => 1000]],
+                            'assignments' => [
+                                'nested' => [
+                                    'path' => 'job_assign',
+                                ],
+                                'aggs' => [
+                                    'filtered_company' => [
+                                        'filter' => [
+                                            'term' => ['job_assign.company_id' => $companyId],
+                                        ],
+                                        'aggs' => [
+                                            'by_user' => [
+                                                'terms' => [
+                                                    'field' => 'job_assign.user_id',
+                                                    'size' => 1000,
+                                                ],
+                                            ],
+                                            'by_captain' => [
+                                                'terms' => [
+                                                    'field' => 'job_assign.spok_user_id',
+                                                    'size' => 1000,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ]);
 
-                foreach (($resp['aggregations']['by_user']['buckets'] ?? []) as $b) {
-                    $activeJobs[(int) $b['key']] = (int) $b['doc_count'];
+                $filteredAggs = $resp['aggregations']['assignments']['filtered_company'] ?? [];
+
+                foreach (($filteredAggs['by_user']['buckets'] ?? []) as $b) {
+                    $userId = (int) $b['key'];
+                    if ($userId > 0) {
+                        $activeJobs[$userId] = (int) $b['doc_count'];
+                    }
                 }
 
-                foreach (($resp['aggregations']['by_captain']['buckets'] ?? []) as $b) {
-                    $captainJobs[(int) $b['key']] = (int) $b['doc_count'];
+                foreach (($filteredAggs['by_captain']['buckets'] ?? []) as $b) {
+                    $captainId = (int) $b['key'];
+                    if ($captainId > 0) {
+                        $captainJobs[$captainId] = (int) $b['doc_count'];
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -193,8 +249,8 @@ class RelationshipManagerService
             'trm_talents' => $trmTalents,
         ];
 
-        // Cache workload stats for 5 minutes (300 seconds)
-        Cache::put($cacheKey, $stats, 300);
+        // Cache workload stats for 60 seconds (short TTL to keep fresh)
+        Cache::put($cacheKey, $stats, 60);
 
         return $stats;
     }

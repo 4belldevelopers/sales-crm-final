@@ -14640,6 +14640,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             GeneralMethod::cacheClean($key);
         }
 
+        app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $company_id);
+
         return Reply::dataOnly([
             'status' => 'success',
             'activeJobs' => $this->activeJobCounter,
