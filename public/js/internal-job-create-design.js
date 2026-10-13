@@ -153,6 +153,7 @@
             let choices = card.querySelector('.ij-choices');
             const descriptions = {
                 'Work From Office': 'Based at office location',
+                'Work From Office (WFO)': 'Based at office location',
                 'Remote': 'Work from anywhere',
                 'Hybrid': 'Office + Remote',
                 'Day Shift': 'Regular daytime working hours',
@@ -170,7 +171,7 @@
                 '60 Days': 'Maximum 2 months (Default)'
             };
             const orderPreferences = {
-                'work_from_home': ['Remote', 'Hybrid', 'Work From Office']
+                'work_from_home': ['Remote', 'Hybrid', 'Work From Office', 'Work From Office (WFO)']
             };
 
             // If Blade already rendered .ij-choices, bind events to them.
