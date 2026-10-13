@@ -42,17 +42,13 @@
             $client_type_css = 'show-detail-direct';
 
             // Match percentage computation
-            $matches = count($row->matched_skills ?? []);
-            $totalElements = count($row->search_skills ?? []);
-            $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-            $matchPercentage = min($matchPercentage, 100);
-            $percentage = round($matchPercentage, 0);
-
-            if ($percentage <= 0 && !empty($row->matched_skill_count)) {
-                $percentage = min(100, $row->matched_skill_count * 20);
-            }
-            if ($percentage <= 0) {
-                $percentage = 85; // Fallback relevance score
+            if (isset($row->skill_match_percentage)) {
+                $percentage = min(100, max(0, round((float) $row->skill_match_percentage, 0)));
+            } else {
+                $matches = count($row->matched_skills ?? []);
+                $totalElements = count($row->search_skills ?? []);
+                $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                $percentage = min(100, max(0, round($matchPercentage, 0)));
             }
 
             // Industry / Specialization
@@ -121,60 +117,64 @@
         <tr class="agency-table-row" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
             {{-- Column 1: Agency & Specialization --}}
             <td class="align-middle py-3 px-3 {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" style="min-width: 240px; max-width: 280px;">
-                <div class="d-flex align-items-center gap-3">
-                    {{-- Logo / Avatar --}}
-                    <div class="symbol flex-shrink-0" style="width: 42px; height: 42px;">
-                        @if(!empty($logo_path))
-                            <img src="{{ $logo_path }}" alt="{{ $row->company_name }}" class="rounded-circle object-fit-cover border" style="width: 42px; height: 42px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="rounded-circle fw-bold fs-6" style="display: none; width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; align-items: center; justify-content: center; letter-spacing: -0.5px;">
-                                {{ $strVal }}
-                            </div>
-                        @else
-                            <div class="rounded-circle fw-bold fs-6 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; letter-spacing: -0.5px;">
-                                {{ $strVal }}
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Name, Specialization, Match & Skills --}}
-                    <div class="d-flex flex-column min-w-0" style="flex: 1;">
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="fw-bolder text-gray-900 text-truncate fs-6" style="max-width: 175px;" title="{{ $row->company_name }}">
-                                {{ substr(ucwords($row->company_name), 0, 30) }}
-                            </span>
-                            {{-- Verified Checkmark --}}
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="flex-shrink-0" title="Verified Agency">
-                                <circle cx="12" cy="12" r="10" fill="#0066ff"/>
-                                <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="text-muted fs-8 fw-normal text-truncate" style="max-width: 185px; margin-top: 1px;">
-                            {{ substr(ucwords($ind_name), 0, 26) }}
-                        </div>
-                        {{-- Supporting Metadata: Match % + Compact Skill Tags --}}
-                        <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
-                            <span class="badge" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
-                                Match {{ $percentage }}%
-                            </span>
-                            @php
-                                $rawMatched = $row->matched_skills ?? ['Java', 'PHP', 'Microservices'];
-                                $matchedArray = is_array($rawMatched) ? $rawMatched : (is_iterable($rawMatched) ? iterator_to_array($rawMatched) : ['Java', 'PHP', 'Microservices']);
-                                $skillsToShow = array_slice($matchedArray, 0, 3);
-                                if (empty($skillsToShow)) {
-                                    $skillsToShow = ['Java', 'PHP', 'Microservices'];
-                                }
-                            @endphp
-                            @foreach($skillsToShow as $s)
-                                <span class="badge badge-light text-gray-700 fw-normal" style="background:#f1f5f9; border: 1px solid #e2e8f0; font-size: 10px; padding: 1px 5px; border-radius: 4px;">
-                                    {{ ucfirst($s) }}
-                                </span>
-                            @endforeach
-                            @if(count($matchedArray) > 3)
-                                <span class="badge badge-light text-muted fw-normal" style="font-size: 9.5px; padding: 1px 4px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                                    +{{ count($matchedArray) - 3 }}
-                                </span>
+                <div class="d-flex flex-column">
+                    {{-- Top Row: Avatar + Name & Specialization --}}
+                    <div class="d-flex align-items-center gap-3">
+                        {{-- Logo / Avatar --}}
+                        <div class="symbol flex-shrink-0" style="width: 42px; height: 42px;">
+                            @if(!empty($logo_path))
+                                <img src="{{ $logo_path }}" alt="{{ $row->company_name }}" class="rounded-circle object-fit-cover border" style="width: 42px; height: 42px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="rounded-circle fw-bold fs-6" style="display: none; width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; align-items: center; justify-content: center; letter-spacing: -0.5px;">
+                                    {{ $strVal }}
+                                </div>
+                            @else
+                                <div class="rounded-circle fw-bold fs-6 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; letter-spacing: -0.5px;">
+                                    {{ $strVal }}
+                                </div>
                             @endif
                         </div>
+
+                        {{-- Name & Specialization --}}
+                        <div class="d-flex flex-column min-w-0" style="flex: 1;">
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="fw-bolder text-gray-900 text-truncate fs-6" style="max-width: 175px;" title="{{ $row->company_name }}">
+                                    {{ substr(ucwords($row->company_name), 0, 30) }}
+                                </span>
+                                {{-- Verified Checkmark --}}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="flex-shrink-0" title="Verified Agency">
+                                    <circle cx="12" cy="12" r="10" fill="#0066ff"/>
+                                    <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="text-muted fs-8 fw-normal text-truncate" style="max-width: 185px; margin-top: 1px;">
+                                {{ substr(ucwords($ind_name), 0, 26) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Bottom Row: Match % + Compact Skill Tags starting from left edge under logo --}}
+                    <div class="d-flex align-items-center gap-1 flex-wrap mt-2">
+                        <span class="badge" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                            Match {{ $percentage }}%
+                        </span>
+                        @php
+                            $rawMatched = $row->matched_skills ?? [];
+                            $matchedArray = is_array($rawMatched) ? $rawMatched : (is_iterable($rawMatched) ? iterator_to_array($rawMatched) : []);
+                            if (empty($matchedArray) && !empty($row->job_metronics_skills)) {
+                                $matchedArray = collect($row->job_metronics_skills)->pluck('skill_name')->filter()->unique()->values()->toArray();
+                            }
+                            $skillsToShow = array_slice($matchedArray, 0, 3);
+                        @endphp
+                        @foreach($skillsToShow as $s)
+                            <span class="badge badge-light text-gray-700 fw-normal" style="background:#f1f5f9; border: 1px solid #e2e8f0; font-size: 10px; padding: 1px 5px; border-radius: 4px;">
+                                {{ ucfirst($s) }}
+                            </span>
+                        @endforeach
+                        @if(count($matchedArray) > 3)
+                            <span class="badge badge-light text-muted fw-normal" style="font-size: 9.5px; padding: 1px 4px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                                +{{ count($matchedArray) - 3 }}
+                            </span>
+                        @endif
                     </div>
                 </div>
             </td>
@@ -199,7 +199,7 @@
             <td class="align-middle py-3 px-2 text-nowrap" style="min-width: 100px;">
                 @if($isContract || ($minimumRateType && $minimumRateType->commtype == 1))
                     <div class="d-flex flex-column lh-1">
-                        <span class="fw-bolder fs-7 text-success">{{ $currSymbol }}{{ $minimumRate ?: '25' }}/{{ $modeText }}</span>
+                        <span class="fw-bolder fs-7 text-success">{!! $currSymbol !!}{{ $minimumRate ?: '25' }}/{{ $modeText }}</span>
                         <span class="badge badge-light-success px-2 py-0 my-1 align-self-start" style="font-size: 10px; font-weight: 600;">Contract</span>
                         <span class="text-muted fs-9">Recurring Fee</span>
                     </div>

@@ -5300,6 +5300,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'allclients_version_user_'.$this->user->id,
             'alldirectclient_version_user_'.$this->user->id,
             'allconsultancy_version_user_'.$this->user->id,
+            'allrecommendedagency_version_user_'.$this->user->id,
+            'allregisteredagency_version_user_'.$this->user->id,
+            'allassignedagency_version_user_'.$this->user->id,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
@@ -8611,7 +8614,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allsendinvitationtoagency_v5_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:v5:allsendinvitationtoagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        $etag = '"v5:spartner:'.md5($cacheKeySet).'"';
+        $etag = '"v7:spartner:'.md5($cacheKeySet).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
@@ -8622,7 +8625,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+                ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate');
         }
 
         $this->salaryMode = GeneralMethod::salaryMode();
@@ -9257,18 +9260,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
-     * Fetch recommended agencies for a job requisition.
-     *
-     * Intent: Ranks eligible partner agencies based on skill relevance score and current lead count (leadCount ASC).
-     * Fallback: If zero skill matches exist (or job has no skills), returns top 20 eligible agencies ordered by lowest lead count.
-     * Tenancy: Excludes current auth company ($company_id) and enforces status, coins, and location filters.
-     */
-    /**
      * Intent: Recommended agency listing and ranking.
-     * Ranks eligible partner agencies based on skill match count (skill_match_count DESC),
-     * current lead count (leadCount ASC), and agency ID (id ASC) as tie-breaker.
-     * Implements zero skill match fallback by returning eligible agencies in a randomized order
-     * when no skill matches are found among eligible agencies.
+     * Ranks eligible partner agencies strictly by:
+     * 1. skill_match_percentage DESC (highest skill-match percentage first)
+     * 2. leadCount ASC (lower leadCount first when skill match percentages are equal)
+     * 3. id ASC (stable deterministic tie-breaker)
      * Tenancy: Excludes current user's company_id and Super Admin company IDs.
      */
     public function recommendedData(Request $request)
@@ -9374,7 +9370,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allrecommendedagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         $traceId = 'ats_'.bin2hex(random_bytes(6));
-        $etag = '"v4:recom:'.md5($cacheKeySet).'"';
+        $etag = '"v7:recom:'.md5($cacheKeySet).'"';
         $ifNoneMatch = $request->header('If-None-Match') ?? request()->header('If-None-Match');
         $hasForce = $request->has('_force') || request()->has('_force');
 
@@ -9389,7 +9385,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (cache()->has($cacheKeySet) && ! $hasForce) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate')
+                ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
                 ->header('Vary', 'Accept, Cookie, X-Requested-With')
                 ->header('X-ATS-Trace-Id', $traceId)
                 ->header('X-ATS-Cache', 'HIT');
@@ -9518,9 +9514,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
             $agencySkills = array_values(array_unique(array_filter($agencySkills)));
 
-            // Compute exact token match count
+            // Compute exact token match count and skill match percentage
             $matchedSkills = array_values(array_intersect($searchSkills, $agencySkills));
             $matchedSkillCount = count($matchedSkills);
+
+            $totalElements = count($searchSkills);
+            $matchPercentage = $totalElements > 0 ? round(($matchedSkillCount / $totalElements) * 100, 2) : 0;
+            $matchPercentage = min(100, $matchPercentage);
 
             if ($matchedSkillCount > 0) {
                 $hasAnySkillMatch = true;
@@ -9529,6 +9529,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $source['matched_skills'] = $matchedSkills;
             $source['search_skills'] = $searchSkills;
             $source['matched_skill_count'] = $matchedSkillCount;
+            $source['skill_match_percentage'] = $matchPercentage;
             $source['leadCount'] = (int) ($source['leadCount'] ?? 0);
 
             $processedAgencies[] = $source;
@@ -9565,6 +9566,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $matchedSkills = array_values(array_intersect($searchSkills, $agencySkills));
                 $matchedSkillCount = count($matchedSkills);
 
+                $totalElements = count($searchSkills);
+                $matchPercentage = $totalElements > 0 ? round(($matchedSkillCount / $totalElements) * 100, 2) : 0;
+                $matchPercentage = min(100, $matchPercentage);
+
                 if ($matchedSkillCount > 0) {
                     $hasAnySkillMatch = true;
                 }
@@ -9579,37 +9584,33 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'matched_skills' => $matchedSkills,
                     'search_skills' => $searchSkills,
                     'matched_skill_count' => $matchedSkillCount,
+                    'skill_match_percentage' => $matchPercentage,
                 ];
             }
         }
 
-        // 4. RANKING & ZERO SKILL MATCH FALLBACK
+        // 4. RANKING: skill_match_percentage DESC, leadCount ASC, id ASC
         $totalEligible = count($processedAgencies);
 
         if ($totalEligible > 0) {
-            if ($hasAnySkillMatch) {
-                // RULE 1: Skill Match DESC
-                // RULE 2: Lead Count ASC
-                // Rule 3: Agency ID ASC (deterministic tie-breaker)
-                usort($processedAgencies, function ($a, $b) {
-                    if ($a['matched_skill_count'] !== $b['matched_skill_count']) {
-                        return $b['matched_skill_count'] <=> $a['matched_skill_count'];
-                    }
-                    if ($a['leadCount'] !== $b['leadCount']) {
-                        return $a['leadCount'] <=> $b['leadCount'];
-                    }
+            usort($processedAgencies, function ($a, $b) {
+                // Priority 1: Skill Match — DESC
+                $aPct = (float) ($a['skill_match_percentage'] ?? 0);
+                $bPct = (float) ($b['skill_match_percentage'] ?? 0);
+                if ($aPct != $bPct) {
+                    return $bPct <=> $aPct;
+                }
 
-                    return $a['id'] <=> $b['id'];
-                });
-            } else {
-                // ZERO SKILL MATCH FALLBACK:
-                // If NO eligible agency matches any required job skill, return eligible agencies in randomized order.
-                // Seed random by job_id so pagination stays stable across pages for the same request
-                mt_srand((int) $jobId + 2026);
-                usort($processedAgencies, function ($a, $b) {
-                    return mt_rand(-1000, 1000);
-                });
-            }
+                // Priority 2: leadCount — ASC
+                $aLead = (int) ($a['leadCount'] ?? 0);
+                $bLead = (int) ($b['leadCount'] ?? 0);
+                if ($aLead !== $bLead) {
+                    return $aLead <=> $bLead;
+                }
+
+                // Priority 3: Stable deterministic tie-breaker: agency ID — ASC
+                return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
+            });
         }
 
         // 5. SERVER-SIDE PAGINATION (Slice max 20 records per page)
@@ -10785,7 +10786,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
-        $etag = '"v3:team:'.md5($cacheKeySet).'"';
+        $etag = '"v7:team:'.md5($cacheKeySet).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
@@ -10793,7 +10794,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+                ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate');
         }
 
         $contHtml = '<div class="symbol-group symbol-hover" style="float:left">';
@@ -11151,7 +11152,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allregisteredagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
 
-        $etag = '"v3:agency:'.md5($cacheKeySet).'"';
+        $etag = '"v7:agency:'.md5($cacheKeySet).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
@@ -11159,7 +11160,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+                ->header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate');
         }
 
         // V3 Step 4: cap from 10,000 → 500. At 10k concurrent users the unrestricted scan
@@ -11201,7 +11202,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $mustConditions = [];
 
         if ($search = request('cus_search')) {
-            $terms = array_filter(array_map('trim', preg_split('/[,]+/', strtolower($search))));
+            $decoded = json_decode($search, true);
+            if (is_array($decoded)) {
+                $terms = array_filter(array_map('trim', array_map('strtolower', array_column($decoded, 'value'))));
+            } else {
+                $terms = array_filter(array_map('trim', preg_split('/[,]+/', strtolower($search))));
+            }
             $termShoulds = [];
             foreach ($terms as $t) {
                 if ($t === '') {
@@ -11242,6 +11248,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'sort' => [
                     ['_score' => ['order' => 'desc']],
                     ['leadCount' => ['order' => 'asc']],
+                    ['id' => ['order' => 'asc']],
                 ],
                 'query' => [
                     'function_score' => [
@@ -11259,7 +11266,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ],
                         ],
                         'score_mode' => 'sum',
-                        'boost_mode' => 'sum',
+                        'boost_mode' => 'replace',
                         'functions' => [
                             [
                                 'script_score' => [
@@ -11267,12 +11274,40 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                         'lang' => 'painless',
                                         'source' => '
 												int count = 0;
-												if (doc.containsKey("job_metronics_skills.skill_name.keyword")) {
-													for (s in params.skills) {
-														if (doc["job_metronics_skills.skill_name.keyword"].contains(s)) {
-															count += 1;
+												def src = params._source;
+												if (src != null) {
+													Set matched = new HashSet();
+													if (src.job_metronics_skills != null) {
+														for (item in src.job_metronics_skills) {
+															if (item.skill_name != null) {
+																String s = item.skill_name.toLowerCase();
+																for (target in params.skills) {
+																	if (s.equals(target)) {
+																		matched.add(target);
+																	}
+																}
+															}
 														}
 													}
+													if (src.boostkeywords_skills != null) {
+														for (item in src.boostkeywords_skills) {
+															String bName = null;
+															if (item instanceof Map && item.skill_name != null) {
+																bName = item.skill_name;
+															} else if (item instanceof String) {
+																bName = item;
+															}
+															if (bName != null) {
+																String s = bName.toLowerCase();
+																for (target in params.skills) {
+																	if (s.equals(target)) {
+																		matched.add(target);
+																	}
+																}
+															}
+														}
+													}
+													count = matched.size();
 												}
 												return count;
 											',
@@ -11347,23 +11382,38 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $total = $response['hits']['total']['value'] ?? 0;
 
             // Extract and attach matched skills to result
-            $data = array_map(function ($hit) use ($skillsList) {
+            $totalSkillsCount = count($skillsList);
+            $data = array_map(function ($hit) use ($skillsList, $totalSkillsCount) {
                 $source = $hit['_source'];
 
-                $jobSkills = collect(data_get($source, 'job_metronics_skills', []))
-                    ->pluck('skill_name')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
+                $jobSkills = [];
+                if (! empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+                    foreach ($source['job_metronics_skills'] as $jms) {
+                        if (! empty($jms['skill_name'])) {
+                            $jobSkills[] = strtolower(trim((string) $jms['skill_name']));
+                        }
+                    }
+                }
+                if (! empty($source['boostkeywords_skills']) && is_array($source['boostkeywords_skills'])) {
+                    foreach ($source['boostkeywords_skills'] as $bks) {
+                        $sName = is_array($bks) ? ($bks['skill_name'] ?? '') : $bks;
+                        if (! empty($sName)) {
+                            $jobSkills[] = strtolower(trim((string) $sName));
+                        }
+                    }
+                }
+                $jobSkills = array_values(array_unique(array_filter($jobSkills)));
 
                 $matchedSkills = array_values(array_intersect($jobSkills, $skillsList));
                 $matchCount = count($matchedSkills);
 
-                // dd($matchCount);
+                $matchPercentage = $totalSkillsCount > 0 ? round(($matchCount / $totalSkillsCount) * 100, 2) : 0;
+                $matchPercentage = min(100, $matchPercentage);
 
                 return array_merge($source, [
                     'matched_skill_count' => $matchCount,
                     'matched_skills' => $matchedSkills,
+                    'skill_match_percentage' => $matchPercentage,
                 ]);
             }, $response['hits']['hits']);
         }
