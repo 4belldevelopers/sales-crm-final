@@ -446,12 +446,14 @@
     .agency-search-input-wrap svg {
         position: absolute;
         left: 12px;
-        top: 11px;
+        top: 13px;
         color: #94a3b8;
+        z-index: 5;
+        pointer-events: none;
     }
     .agency-search-input {
         width: 100%;
-        height: 38px;
+        min-height: 40px;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding-left: 36px;
@@ -464,6 +466,143 @@
     }
     .agency-search-input:focus {
         border-color: #2563eb;
+    }
+
+    /* ── Tagify Skill Tags in Search Bar ── */
+    .agency-search-input-wrap .tagify {
+        min-height: 38px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        padding: 2px 10px 2px 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        box-shadow: none !important;
+        cursor: text !important;
+        font-family: 'Poppins', sans-serif !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .agency-search-input-wrap .tagify:hover {
+        border-color: #cbd5e1 !important;
+    }
+    .agency-search-input-wrap .tagify.tagify--focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+    }
+    .agency-search-input-wrap .tagify ~ #agency_unified_search {
+        display: none !important;
+    }
+    .agency-search-input-wrap .tagify__tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        background: #eef2ff !important;
+        border: 1px solid #e0e7ff !important;
+        border-radius: 9999px !important;
+        padding: 3px 7px 3px 12px !important;
+        margin: 2px 4px 2px 0 !important;
+        line-height: 1.3 !important;
+        vertical-align: middle !important;
+        box-shadow: 0 1px 2px rgba(67, 56, 202, 0.04) !important;
+        transition: background 0.15s ease, border-color 0.15s ease !important;
+    }
+    .agency-search-input-wrap .tagify__tag:hover {
+        background: #e0e7ff !important;
+        border-color: #c7d2fe !important;
+    }
+    .agency-search-input-wrap .tagify__tag > div {
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #4338ca !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        font-family: 'Poppins', sans-serif !important;
+        order: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    .agency-search-input-wrap .tagify__tag > div::before {
+        display: none !important;
+    }
+    .agency-search-input-wrap .tagify__tag-text {
+        color: #4338ca !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn::before,
+    .agency-search-input-wrap .tagify__tag__removeBtn::before,
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn::after,
+    .agency-search-input-wrap .tagify__tag__removeBtn::after,
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover::before,
+    .agency-search-input-wrap .tagify__tag__removeBtn:hover::before,
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover::after,
+    .agency-search-input-wrap .tagify__tag__removeBtn:hover::after {
+        display: none !important;
+        content: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        border: none !important;
+        transform: none !important;
+    }
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn,
+    .agency-search-input-wrap .tagify:not(.form-control-sm):not(.form-control-lg) .tagify__tag .tagify__tag__removeBtn,
+    .agency-search-input-wrap .tagify__tag__removeBtn {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        max-width: 14px !important;
+        margin: 0px 0.1rem 0px 5px !important;
+        padding: 0 !important;
+        background-color: #818cf8 !important;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-size: 7px 7px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        order: 2 !important;
+        cursor: pointer !important;
+        position: relative !important;
+        transition: background-color 0.15s ease, transform 0.15s ease !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        color: transparent !important;
+        overflow: hidden !important;
+    }
+    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover,
+    .agency-search-input-wrap .tagify:not(.form-control-sm):not(.form-control-lg) .tagify__tag .tagify__tag__removeBtn:hover,
+    .agency-search-input-wrap .tagify__tag__removeBtn:hover {
+        background-color: #ef4444 !important;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
+        transform: scale(1.12) !important;
+    }
+    .agency-search-input-wrap .tagify__input {
+        font-size: 12px !important;
+        color: #1e293b !important;
+        font-family: 'Poppins', sans-serif !important;
+        margin: 2px 0 !important;
+        padding: 0 4px !important;
+        line-height: 22px !important;
+        min-width: 90px !important;
+    }
+    .agency-search-input-wrap .tagify__input::before {
+        font-size: 12px !important;
+        color: #94a3b8 !important;
+        font-weight: 400 !important;
+        font-family: 'Poppins', sans-serif !important;
+        line-height: 22px !important;
+    }
+    .agency-search-input-wrap .tagify__input:empty::before {
+        display: inline-block !important;
+        opacity: 1 !important;
     }
     .btn-filter-trigger {
         height: 38px;
@@ -483,6 +622,328 @@
     .btn-filter-trigger:hover {
         background: #f8fafc;
         border-color: #cbd5e1;
+    }
+
+    /* ── Agency Filter Slide-Over Drawer ── */
+    .agency-filter-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        z-index: 1098;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .agency-filter-drawer-overlay.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .agency-filter-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50vw !important;
+        max-width: 50vw !important;
+        height: 100vh;
+        max-height: 100vh;
+        background: #ffffff;
+        z-index: 1099;
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.16);
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease;
+        visibility: hidden;
+        overflow: hidden;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .agency-filter-drawer.open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+    @media (max-width: 991px) {
+        .agency-filter-drawer {
+            width: 85vw !important;
+            max-width: 95vw !important;
+        }
+    }
+    @media (max-width: 576px) {
+        .agency-filter-drawer {
+            width: 96vw !important;
+            max-width: 98vw !important;
+        }
+    }
+
+    .agency-filter-drawer-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        flex-shrink: 0;
+    }
+    .afd-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .afd-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.25;
+    }
+    .afd-subtitle {
+        font-size: 11px;
+        color: #64748b;
+        margin: 2px 0 0 0;
+        line-height: 1.25;
+    }
+    .afd-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .afd-close-btn:hover {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fca5a5;
+    }
+
+    .agency-filter-drawer-body {
+        padding: 18px 20px;
+        overflow-y: auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        background: #ffffff;
+    }
+    .afd-trust-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 9px 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+    .afd-trust-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #475569;
+    }
+    .afd-form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .afd-form-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .afd-label-num {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 10px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .agency-filter-drawer-footer {
+        padding: 14px 20px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+    .afd-reset-btn {
+        height: 36px;
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        color: #64748b;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .afd-reset-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .afd-cancel-btn {
+        height: 36px;
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+    .afd-apply-btn {
+        height: 36px;
+        padding: 0 18px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+    .afd-apply-btn:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #ffffff;
+    }
+
+    /* Drawer Tagify specific overrides */
+    .agency-filter-drawer .tagify {
+        min-height: 40px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        padding: 2px 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        box-shadow: none !important;
+        cursor: text !important;
+        font-family: 'Poppins', sans-serif !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .agency-filter-drawer .tagify:hover {
+        border-color: #cbd5e1 !important;
+    }
+    .agency-filter-drawer .tagify.tagify--focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+    }
+    .agency-filter-drawer .tagify__tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        background: #eef2ff !important;
+        border: 1px solid #e0e7ff !important;
+        border-radius: 9999px !important;
+        padding: 3px 6px 3px 12px !important;
+        margin: 2px 4px 2px 0 !important;
+        line-height: 1.3 !important;
+        vertical-align: middle !important;
+    }
+    .agency-filter-drawer .tagify__tag > div {
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #4338ca !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        font-family: 'Poppins', sans-serif !important;
+        order: 1 !important;
+    }
+    .agency-filter-drawer .tagify__tag > div::before {
+        display: none !important;
+    }
+    .agency-filter-drawer .tagify__tag-text {
+        color: #4338ca !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn::before,
+    .agency-filter-drawer .tagify__tag__removeBtn::before,
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn::after,
+    .agency-filter-drawer .tagify__tag__removeBtn::after,
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover::before,
+    .agency-filter-drawer .tagify__tag__removeBtn:hover::before,
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover::after,
+    .agency-filter-drawer .tagify__tag__removeBtn:hover::after {
+        display: none !important;
+        content: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        border: none !important;
+        transform: none !important;
+    }
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn,
+    .agency-filter-drawer .tagify__tag__removeBtn {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        max-width: 14px !important;
+        margin: 0px 0.1rem 0px 5px !important;
+        padding: 0 !important;
+        background-color: #818cf8 !important;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-size: 7px 7px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        order: 2 !important;
+        cursor: pointer !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        color: transparent !important;
+        overflow: hidden !important;
+    }
+    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover,
+    .agency-filter-drawer .tagify__tag__removeBtn:hover {
+        background-color: #ef4444 !important;
+    }
+    .agency-filter-drawer .tagify__input {
+        font-size: 12px !important;
+        color: #1e293b !important;
+        font-family: 'Poppins', sans-serif !important;
     }
 
     /* Table headers */
@@ -1140,7 +1601,7 @@
             <div class="agency-search-filter-row">
                 <div class="agency-search-input-wrap">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search agencies, skills, location or specialization..." value="" />
+                    <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search by skills..." value="{{ @$default_skill }}" />
                 </div>
                 <button type="button" class="btn-filter-trigger">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -1238,102 +1699,141 @@
 </div>
 
 {{-- =========================================================================
-     FILTER MODAL (FIND TRUSTED HIRING AGENCIES)
+     FILTER DRAWER (FIND TRUSTED HIRING AGENCIES - SLIDE-OVER DRAWER)
      ========================================================================= --}}
-<div class="modal fade" id="apptrackerfilter" tabindex="-1" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-            <div class="modal-header d-flex align-items-center justify-content-between py-4 px-6 border-bottom">
-                <div>
-                    <h2 class="fs-4 fw-bolder text-gray-900 mb-1">Find Trusted Hiring Agencies</h2>
-                    <p class="fs-7 text-muted mb-0">Discover verified recruitment partners based on your hiring requirements.</p>
-                </div>
-                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal" id="apptrackerfilter_close">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+<!-- Backdrop Overlay -->
+<div id="agency_filter_drawer_overlay" class="agency-filter-drawer-overlay"></div>
+
+<!-- Slide-Over Filter Drawer -->
+<div id="apptrackerfilter" class="agency-filter-drawer" tabindex="-1">
+    <!-- Header -->
+    <div class="agency-filter-drawer-header">
+        <div class="d-flex align-items-center gap-3">
+            <div class="afd-header-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
             </div>
-            <div class="modal-body p-6">
-                <!-- Trust bar -->
-                <div class="d-flex align-items-center justify-content-between p-3 rounded mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z"/></svg>
-                        <span>All agencies are verified</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        <span>Quality & performance checked</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                        <span>Fast & reliable matching</span>
-                    </div>
-                </div>
+            <div>
+                <h3 class="afd-title">Find Trusted Hiring Agencies</h3>
+                <p class="afd-subtitle">Discover verified recruitment partners based on requirements.</p>
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-icon afd-close-btn" id="apptrackerfilter_close" title="Close Filter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
 
-                <!-- 1. Search Skills / Keywords -->
-                <div class="mb-4">
-                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">1. Search Skills / Keywords</label>
-                    <input class="form-control form-control-solid fs-7" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="Type skill and press Enter..." id="kt_tagify_users" />
-                    <span class="fs-9 text-muted mt-1 d-block">Press Enter or comma to add a skill keyword</span>
-                </div>
+    <!-- Body (Scrollable) -->
+    <div class="agency-filter-drawer-body">
+        <!-- Trust bar -->
+        <div class="afd-trust-bar">
+            <div class="afd-trust-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z"/></svg>
+                <span>Verified agencies</span>
+            </div>
+            <div class="afd-trust-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Quality checked</span>
+            </div>
+            <div class="afd-trust-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                <span>Fast matching</span>
+            </div>
+        </div>
 
-                <!-- 2. Hiring Type -->
-                <div class="mb-4">
-                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">2. Hiring Type</label>
-                    <div class="d-flex gap-3">
-                        <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box active" data-type="2" style="border-color: #2563eb !important; background: #eff6ff;">
-                            <div class="fw-bold fs-7 text-primary mb-1">Full-Time Hiring</div>
-                            <div class="fs-8 text-muted">Permanent hiring for full-time requirements.</div>
-                        </div>
-                        <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box" data-type="1" style="border-color: #e2e8f0; background: #ffffff;">
-                            <div class="fw-bold fs-7 text-gray-800 mb-1">Contract Hiring</div>
-                            <div class="fs-8 text-muted">On-demand & project-based contract hiring.</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- 1. Search Skills / Keywords -->
+        <div class="afd-form-group">
+            <label class="afd-form-label">
+                <span class="afd-label-num">1</span>
+                Search Skills / Keywords
+            </label>
+            <input class="form-control form-control-solid fs-7" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="Type skill and press Enter..." id="kt_tagify_users" />
+            <span class="fs-9 text-muted mt-1 d-block">Press Enter or comma to add a skill keyword</span>
+        </div>
 
-                <!-- 3. Additional Filters -->
-                <div class="mb-2">
-                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">3. Additional Filters</label>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <select class="form-select form-select-solid fs-7" id="industry_filter">
-                                <option value="">All Industries</option>
-                                @if(!empty($td_industries))
-                                    @foreach($td_industries as $ind)
-                                        <option value="{{ $ind->id }}">{{ $ind->name }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="form-select form-select-solid fs-7" id="experience_filter">
-                                <option value="">All Experience</option>
-                                <option value="0–2 years">0–2 years</option>
-                                <option value="3–5 years">3–5 years</option>
-                                <option value="5–10 years">5–10 years</option>
-                                <option value="10+ years">10+ years</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select class="form-select form-select-solid fs-7" id="country_filter">
-                                <option value="">All Locations</option>
-                                @if(!empty($cities))
-                                    @foreach($cities as $ct)
-                                        <option value="{{ $ct }}">{{ $ct }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
+        <!-- 2. Hiring Type -->
+        <div class="afd-form-group">
+            <label class="afd-form-label">
+                <span class="afd-label-num">2</span>
+                Hiring Type
+            </label>
+            <div class="d-flex gap-3">
+                <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box active" data-type="2" style="border-color: #2563eb !important; background: #eff6ff;">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div class="fw-bold fs-7 text-primary">Full-Time Hiring</div>
+                        <span class="badge badge-light-primary fs-9 px-2 py-0">Permanent</span>
                     </div>
+                    <div class="fs-8 text-muted">Permanent hiring for full-time requirements.</div>
+                </div>
+                <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box" data-type="1" style="border-color: #e2e8f0; background: #ffffff;">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div class="fw-bold fs-7 text-gray-800">Contract Hiring</div>
+                        <span class="badge badge-light fs-9 px-2 py-0">On-demand</span>
+                    </div>
+                    <div class="fs-8 text-muted">On-demand & project-based contract hiring.</div>
                 </div>
             </div>
-            <div class="modal-footer py-3 px-6 border-top d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-sm btn-primary changetextupdate" id="changetextupdate" onclick="newUpdateJobstatus()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    Apply Filters
-                </button>
+        </div>
+
+        <!-- 3. Additional Filters -->
+        <div class="afd-form-group">
+            <label class="afd-form-label">
+                <span class="afd-label-num">3</span>
+                Additional Filters
+            </label>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="fs-8 text-gray-700 fw-semibold mb-1 d-block">Industry</label>
+                    <select class="form-select form-select-solid fs-7" id="industry_filter">
+                        <option value="">All Industries</option>
+                        @if(!empty($td_industries))
+                            @foreach($td_industries as $ind)
+                                <option value="{{ $ind->id }}">{{ $ind->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-8 text-gray-700 fw-semibold mb-1 d-block">Experience</label>
+                    <select class="form-select form-select-solid fs-7" id="experience_filter">
+                        <option value="">All Experience</option>
+                        <option value="0–2 years">0–2 years</option>
+                        <option value="3–5 years">3–5 years</option>
+                        <option value="5–10 years">5–10 years</option>
+                        <option value="10+ years">10+ years</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-8 text-gray-700 fw-semibold mb-1 d-block">Location</label>
+                    <select class="form-select form-select-solid fs-7" id="country_filter">
+                        <option value="">All Locations</option>
+                        @if(!empty($cities))
+                            @foreach($cities as $ct)
+                                <option value="{{ $ct }}">{{ $ct }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Footer (Sticky) -->
+    <div class="agency-filter-drawer-footer">
+        <button type="button" class="btn btn-sm afd-reset-btn" id="apptrackerfilter_reset">Reset</button>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-light afd-cancel-btn" id="apptrackerfilter_cancel">Cancel</button>
+            <button type="button" class="btn btn-sm btn-primary changetextupdate afd-apply-btn" id="changetextupdate" onclick="newUpdateJobstatus()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Apply Filters
+            </button>
         </div>
     </div>
 </div>
@@ -1343,6 +1843,30 @@
      Immediate Execution Architecture (No $(document).ready wrapper)
      ========================================================================= --}}
 <script>
+    /**
+     * Unified Search Terms Extractor:
+     * Reads tags from Tagify instance if active (including active text typing in tag input),
+     * or falls back to raw input value. Returns comma-delimited skill/search string.
+     */
+    function getUnifiedSearchTerms() {
+        if (window.agencySearchTagify && window.agencySearchTagify.value && Array.isArray(window.agencySearchTagify.value)) {
+            var tags = window.agencySearchTagify.value.map(function(t) {
+                return typeof t === 'object' && t !== null ? (t.value || '') : String(t);
+            }).filter(Boolean);
+
+            var currentTyping = '';
+            if (window.agencySearchTagify.DOM && window.agencySearchTagify.DOM.input) {
+                currentTyping = (window.agencySearchTagify.DOM.input.textContent || '').trim();
+            }
+            if (currentTyping && tags.indexOf(currentTyping) === -1) {
+                tags.push(currentTyping);
+            }
+            return tags.join(',');
+        }
+        var el = document.querySelector("#agency_unified_search");
+        return el ? (el.value || '').trim() : '';
+    }
+
     /**
      * Tab Manager: Scoped per jobId to prevent memory leaks and singleton state bugs.
      */
@@ -1364,7 +1888,7 @@
             this.cancelAllRequests();
             this.initializedTabs[jobId] = this.initializedTabs[jobId] || {};
 
-            var curSearch = $('#agency_unified_search').val() || '';
+            var curSearch = getUnifiedSearchTerms();
             if (tabKey === 'registered') {
                 staffingPartnersRegister(1, curSearch);
             } else if (tabKey === 'assigned') {
@@ -1410,11 +1934,12 @@
         $('#recommended_loader').show();
 
         var currentJobId = $('#current_job_id').val();
-        var cusSearchVal = $('#agency_unified_search').val() || $('#kt_tagify_users').val();
+        var cusSearchVal = getUnifiedSearchTerms() || $('#kt_tagify_users').val() || '';
 
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
             type: 'GET',
+            cache: false,
             data: {
                 jobid: currentJobId,
                 hiringtype: $('#workhiringtype').val(),
@@ -1478,11 +2003,12 @@
     function staffingPartnersRegister(page = 1, search = null) {
         if (page === 'load' || !page) { page = 1; }
         var jobid = $('#current_job_id').val();
-        var cus_search = (search !== null && search !== undefined) ? search : ($('#agency_unified_search').val() || '');
+        var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
 
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
             type: 'GET',
+            cache: false,
             data: {
                 page: page,
                 jobid: jobid,
@@ -1515,11 +2041,12 @@
     function recommendedAssignList(page = 1, search = null) {
         if (page === 'load' || !page) { page = 1; }
         var jobid = $('#current_job_id').val();
-        var cus_search = (search !== null && search !== undefined) ? search : ($('#agency_unified_search').val() || '');
+        var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
 
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
             type: 'GET',
+            cache: false,
             data: {
                 page: page,
                 jobid: jobid,
@@ -1545,20 +2072,53 @@
     }
 
     /**
-     * Filter Modal: Apply filters callback
+     * Filter Drawer: Apply filters callback
      */
     function newUpdateJobstatus() {
         $('#industry').val($('#industry_filter').val());
         $('#experience').val($('#experience_filter').val());
         $('#country').val($('#country_filter').val());
+        $('#workhiringtype').val($('#hiring_type').val());
 
-        var filterSkill = $('#kt_tagify_users').val();
-        if (filterSkill) {
-            $('#agency_unified_search').val(filterSkill);
+        var filterSkill = '';
+        if (window.filterSkillsTagify && window.filterSkillsTagify.value && Array.isArray(window.filterSkillsTagify.value)) {
+            filterSkill = window.filterSkillsTagify.value.map(function(t) {
+                return typeof t === 'object' && t !== null ? (t.value || '') : String(t);
+            }).filter(Boolean).join(',');
+        } else {
+            filterSkill = $('#kt_tagify_users').val() || '';
         }
 
-        $('#apptrackerfilter').modal('hide');
+        if (filterSkill) {
+            if (window.agencySearchTagify) {
+                window.agencySearchTagify.removeAllTags();
+                window.agencySearchTagify.addTags(filterSkill);
+            } else {
+                $('#agency_unified_search').val(filterSkill);
+            }
+        }
+
+        closeAgencyFilterDrawer();
         tableLoad(1);
+    }
+
+    function openAgencyFilterDrawer() {
+        var terms = getUnifiedSearchTerms();
+        if (terms) {
+            if (window.filterSkillsTagify) {
+                try {
+                    window.filterSkillsTagify.removeAllTags();
+                    window.filterSkillsTagify.addTags(terms);
+                } catch(e) {}
+            } else {
+                $('#kt_tagify_users').val(terms);
+            }
+        }
+        $('#agency_filter_drawer_overlay, #apptrackerfilter').addClass('open');
+    }
+
+    function closeAgencyFilterDrawer() {
+        $('#agency_filter_drawer_overlay, #apptrackerfilter').removeClass('open');
     }
 
     /**
@@ -1585,6 +2145,50 @@
 
         // Initialize Tab Manager and Load Initial Data
         AgencyMarketplaceTabManager.init();
+
+        // Unified Search Input with Tagify & Debounce (300ms)
+        var searchTimeout = null;
+        function triggerUnifiedSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                var terms = getUnifiedSearchTerms();
+                var activeTab = $('#kt_activitiesRecruiter .agency-tab-link.active').data('tab') || 'recommended';
+                if (activeTab === 'registered') {
+                    $('#kt_tagify_4').val(terms);
+                    staffingPartnersRegister(1, terms);
+                } else if (activeTab === 'assigned') {
+                    $('#kt_tagify_5').val(terms);
+                    recommendedAssignList(1, terms);
+                } else {
+                    tableLoad(1);
+                }
+            }, 300);
+        }
+
+        // Initialize Tagify on #agency_unified_search
+        var tagifySearchEl = document.querySelector("#agency_unified_search");
+        if (tagifySearchEl && typeof Tagify !== 'undefined') {
+            if (window.agencySearchTagify) {
+                try { window.agencySearchTagify.destroy(); } catch(e) {}
+                window.agencySearchTagify = null;
+            }
+            if (tagifySearchEl.__tagify) {
+                try { tagifySearchEl.__tagify.destroy(); } catch(e) {}
+            }
+            window.agencySearchTagify = new Tagify(tagifySearchEl, {
+                delimiters: ",",
+                trim: true,
+                placeholder: "Search by skills...",
+                dropdown: { enabled: 0 }
+            });
+
+            window.agencySearchTagify.on('add', triggerUnifiedSearch);
+            window.agencySearchTagify.on('remove', triggerUnifiedSearch);
+            window.agencySearchTagify.on('change', triggerUnifiedSearch);
+            window.agencySearchTagify.on('input', triggerUnifiedSearch);
+        }
+
+        // Trigger initial data load
         tableLoad(1);
 
         // Tab Switching Click Listeners (Strictly scoped within #kt_activitiesRecruiter)
@@ -1603,24 +2207,8 @@
             AgencyMarketplaceTabManager.switchTab(tabKey);
         });
 
-        // Unified Search Input with Debounce (300ms)
-        var searchTimeout = null;
-        $(document).off('input.unifiedSearch', '#agency_unified_search').on('input.unifiedSearch', '#agency_unified_search', function() {
-            clearTimeout(searchTimeout);
-            var val = $(this).val();
-            searchTimeout = setTimeout(function() {
-                var activeTab = $('#kt_activitiesRecruiter .agency-tab-link.active').data('tab') || 'recommended';
-                if (activeTab === 'registered') {
-                    $('#kt_tagify_4').val(val);
-                    staffingPartnersRegister(1, val);
-                } else if (activeTab === 'assigned') {
-                    $('#kt_tagify_5').val(val);
-                    recommendedAssignList(1, val);
-                } else {
-                    tableLoad(1);
-                }
-            }, 300);
-        });
+        // Fallback input event for non-Tagify scenarios
+        $(document).off('input.unifiedSearch', '#agency_unified_search').on('input.unifiedSearch', '#agency_unified_search', triggerUnifiedSearch);
 
         // Drawer Close Handlers (Back button & Close icon)
         $(document).off('click.drawerCloseTrigger', '.drawer-close-trigger').on('click.drawerCloseTrigger', '.drawer-close-trigger', function(e) {
@@ -1652,17 +2240,59 @@
             $('.aa-ddmenu.open').removeClass('open');
         });
 
-        // Filter modal triggers
+        // Initialize Tagify on #kt_tagify_users in Filter Drawer
+        var filterTagifyEl = document.querySelector("#kt_tagify_users");
+        if (filterTagifyEl && typeof Tagify !== 'undefined') {
+            if (window.filterSkillsTagify) {
+                try { window.filterSkillsTagify.destroy(); } catch(e) {}
+                window.filterSkillsTagify = null;
+            }
+            if (filterTagifyEl.__tagify) {
+                try { filterTagifyEl.__tagify.destroy(); } catch(e) {}
+            }
+            window.filterSkillsTagify = new Tagify(filterTagifyEl, {
+                delimiters: ",",
+                trim: true,
+                placeholder: "Type skill and press Enter...",
+                dropdown: { enabled: 0 }
+            });
+        }
+
+        // Filter drawer open & close triggers
         $(document).off('click.filterTrigger', '.btn-filter-trigger').on('click.filterTrigger', '.btn-filter-trigger', function(e) {
             e.preventDefault();
-            $('#apptrackerfilter').modal('show');
-        });
-        $(document).off('click.filterClose', '#apptrackerfilter_close, [data-dismiss="modal"], [data-bs-dismiss="modal"]').on('click.filterClose', '#apptrackerfilter_close, [data-dismiss="modal"], [data-bs-dismiss="modal"]', function(e) {
-            e.preventDefault();
-            $('#apptrackerfilter').modal('hide');
+            e.stopPropagation();
+            openAgencyFilterDrawer();
         });
 
-        // Filter modal hiring type toggle
+        $(document).off('click.filterClose', '#apptrackerfilter_close, #apptrackerfilter_cancel, #agency_filter_drawer_overlay, [data-dismiss="modal"], [data-bs-dismiss="modal"]').on('click.filterClose', '#apptrackerfilter_close, #apptrackerfilter_cancel, #agency_filter_drawer_overlay, [data-dismiss="modal"], [data-bs-dismiss="modal"]', function(e) {
+            e.preventDefault();
+            closeAgencyFilterDrawer();
+        });
+
+        // Filter drawer reset button
+        $(document).off('click.filterReset', '#apptrackerfilter_reset').on('click.filterReset', '#apptrackerfilter_reset', function(e) {
+            e.preventDefault();
+            $('#industry_filter').val('');
+            $('#experience_filter').val('');
+            $('#country_filter').val('');
+            $('.filter-hiring-box').removeClass('active').css({ 'border-color': '#e2e8f0', 'background': '#ffffff' });
+            $('.filter-hiring-box[data-type="2"]').addClass('active').css({ 'border-color': '#2563eb', 'background': '#eff6ff' });
+            $('#hiring_type').val('2');
+            if (window.filterSkillsTagify) {
+                try { window.filterSkillsTagify.removeAllTags(); } catch(e) {}
+            }
+            $('#kt_tagify_users').val('');
+        });
+
+        // Close on ESC key
+        $(document).off('keydown.filterEsc').on('keydown.filterEsc', function(e) {
+            if (e.key === 'Escape' && $('#apptrackerfilter').hasClass('open')) {
+                closeAgencyFilterDrawer();
+            }
+        });
+
+        // Filter drawer hiring type toggle
         $(document).off('click.filterHiring', '.filter-hiring-box').on('click.filterHiring', '.filter-hiring-box', function() {
             $('.filter-hiring-box').removeClass('active').css({ 'border-color': '#e2e8f0', 'background': '#ffffff' });
             $(this).addClass('active').css({ 'border-color': '#2563eb', 'background': '#eff6ff' });
