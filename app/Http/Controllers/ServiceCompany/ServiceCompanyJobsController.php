@@ -3215,11 +3215,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $cityName = $firstCity['city_name'] ?? '';
                 $countryName = $firstCity['country_name'] ?? '';
 
-                $hiringManager = '--------';
-                $hiringManagerdesignation = '--------';
-                if (! empty($row->client_contact_info_jobs[0])) {
-                    $hiringManager = $row->client_contact_info_jobs[0]['contact_person_name'] ?? '--------';
-                    $hiringManagerdesignation = $row->client_contact_info_jobs[0]['contact_person_designation'] ?? '--------';
+                $hiringManager = '';
+                $hiringManagerdesignation = '';
+                if (! empty($row->client_contact_info_jobs)) {
+                    $firstContact = (array) ($row->client_contact_info_jobs[0] ?? []);
+                    $rawHmName = $firstContact['contact_person_name'] ?? '';
+                    $rawHmDesig = $firstContact['contact_person_designation'] ?? '';
+                    if (! empty($rawHmName) && $rawHmName !== '--------') {
+                        $hiringManager = ucwords(strtolower(trim($rawHmName)));
+                    }
+                    if (! empty($rawHmDesig) && $rawHmDesig !== '--------') {
+                        $hiringManagerdesignation = ucwords(strtolower(trim($rawHmDesig)));
+                    }
                 }
 
                 $jobAssign = collect($row->job_assign ?? []);
@@ -3229,8 +3236,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     if (count($jobAssignListCaptain) > 0 && ($row->comId ?? null) != $company_id) {
                         $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
                         $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
-                        $hiringManagerdesignation = $designationsMap[$spok_user_id] ?? '--------';
+                        $hiringManagerdesignation = $designationsMap[$spok_user_id] ?? '';
                     }
+                }
+
+                if (empty($hiringManager)) {
+                    $hiringManager = '--------';
                 }
 
                 $encryptedJobId = GeneralMethod::value_encrypt($row->id);
@@ -5928,7 +5939,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             foreach ($src['client_contact_info'] as $c) {
                                 $contactList[] = [
                                     'id' => (int) ($c['id'] ?? 0),
-                                    'n' => (string) ($c['contact_person_name'] ?? ''),
+                                    'n' => (string) ucwords(strtolower(trim($c['contact_person_name'] ?? ''))),
                                     'e' => (string) ($c['contact_person_email'] ?? ''),
                                     'p' => (string) ($c['contact_person_number'] ?? ''),
                                     'd' => (string) ($c['contact_person_designation'] ?? 'Hiring Contact'),
@@ -6939,7 +6950,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         // Validate Hiring Manager Contacts (TC-05)
-        if ($request->filled('hiring_namager')) {
+        if ($request->filled('hiring_namager') || $request->filled('hiring_manager_id')) {
             if (! $clientId) {
                 return response()->json([
                     'status' => 'error',
@@ -6947,21 +6958,37 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ], 422);
             }
 
-            $rawHm = is_array($request->hiring_namager)
-                ? $request->hiring_namager
-                : explode(',', (string) $request->hiring_namager);
-
+            $rawHm = $request->filled('hiring_namager')
+                ? (is_array($request->hiring_namager) ? $request->hiring_namager : explode(',', (string) $request->hiring_namager))
+                : [];
             $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHm))));
 
-            if (count($hmNames) > 0) {
-                $validHmCount = DB::table('client_contact_info')
+            $rawHmIds = $request->filled('hiring_manager_id')
+                ? (is_array($request->hiring_manager_id) ? $request->hiring_manager_id : explode(',', (string) $request->hiring_manager_id))
+                : [];
+            $hmIds = array_values(array_unique(array_filter(array_map('intval', $rawHmIds), fn ($id) => $id > 0)));
+
+            if (count($hmNames) > 0 || count($hmIds) > 0) {
+                $validHmQuery = DB::table('client_contact_info')
                     ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
                     ->where('client_contact_info.client_id', $clientId)
-                    ->where('clients.company_id', $companyId)
-                    ->whereIn('client_contact_info.contact_person_name', $hmNames)
-                    ->count();
+                    ->where('clients.company_id', $companyId);
 
-                if ($validHmCount !== count($hmNames)) {
+                if (! empty($hmIds) && ! empty($hmNames)) {
+                    $validHmQuery->where(function ($q) use ($hmIds, $hmNames) {
+                        $q->whereIn('client_contact_info.id', $hmIds)
+                          ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                    });
+                } elseif (! empty($hmIds)) {
+                    $validHmQuery->whereIn('client_contact_info.id', $hmIds);
+                } else {
+                    $validHmQuery->whereIn('client_contact_info.contact_person_name', $hmNames);
+                }
+
+                $validContactsCount = $validHmQuery->count();
+                $expectedCount = max(count($hmNames), count($hmIds));
+
+                if ($validContactsCount < $expectedCount) {
                     return response()->json([
                         'status' => 'error',
                         'message' => 'One or more selected contacts do not belong to the selected client organization.',
@@ -14168,7 +14195,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 7. Contact person list & recruiter list
         $this->contactPersonList = DB::table('client_contact_info_jobs')
             ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
-            ->select('client_contact_info.contact_person_name')
+            ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
             ->where('client_contact_info_jobs.job_id', $id)
             ->get();
 
