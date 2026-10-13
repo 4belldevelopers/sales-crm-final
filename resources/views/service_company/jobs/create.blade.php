@@ -506,12 +506,20 @@
     }
     #jrwrap .jero-title-chevron {
         position: absolute;
-        right: 10px;
+        right: 12px;
         color: #A1A5B7;
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 4px;
         display: flex;
         align-items: center;
-        transition: transform 0.2s ease, color 0.2s;
+        justify-content: center;
+        border-radius: 4px;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+    }
+    #jrwrap .jero-title-chevron:hover {
+        color: #181C32;
+        background: #F1F1F4;
     }
     #jrwrap .jero-title-select-wrap.is-open .jero-title-chevron {
         transform: rotate(180deg);
@@ -528,6 +536,9 @@
         border-radius: 8px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: min(360px, calc(100vh - 120px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
     }
     #jrwrap .jero-title-dropdown.drop-up {
@@ -541,6 +552,7 @@
     }
     #jrwrap .jero-title-tabs {
         display: flex;
+        flex-shrink: 0;
         gap: 4px;
         padding: 6px 10px;
         background: #FFFFFF;
@@ -581,8 +593,11 @@
         background: rgba(62, 151, 255, 0.15);
     }
     #jrwrap .jero-title-list-container {
+        flex: 1 1 auto;
+        min-height: 60px;
         max-height: min(280px, 42vh);
         overflow-y: auto;
+        overscroll-behavior: contain;
         padding: 4px 0;
         scrollbar-width: thin;
         scrollbar-color: #D1D5DB transparent;
@@ -680,6 +695,7 @@
         align-items: center;
     }
     #jrwrap .jero-title-custom-action {
+        flex-shrink: 0;
         padding: 6px 10px;
         border-top: 1px solid #F1F1F4;
         background: #FAFAFB;
@@ -737,6 +753,7 @@
         font-size: 12px;
     }
     #jrwrap .jero-title-footer {
+        flex-shrink: 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1942,6 +1959,371 @@
     #jrwrap .jero-footer-hint {
         font-size: 10px;
         color: #A1A5B7;
+    }
+
+    /* ==========================================================================
+       ENTERPRISE REQUIRED FIELDS MODAL & FIELD VALIDATION ERROR STYLES
+       ========================================================================== */
+    .rf-modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(15, 23, 42, 0.65) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        z-index: 999999 !important;
+        display: none;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
+        box-sizing: border-box !important;
+        animation: rfFadeIn 0.18s ease-out;
+    }
+
+    @keyframes rfFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes rfScaleIn {
+        from { opacity: 0; transform: scale(0.96) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .rf-modal-box {
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        width: 100% !important;
+        max-width: 480px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        padding: 32px 30px 26px !important;
+        position: relative !important;
+        font-family: 'Poppins', sans-serif !important;
+        animation: rfScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-sizing: border-box !important;
+        margin: auto !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .rf-modal-close {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        background: #f1f5f9 !important;
+        border: none !important;
+        color: #64748b !important;
+        font-size: 14px !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.15s ease !important;
+        padding: 0 !important;
+    }
+
+    .rf-modal-close:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+
+    .rf-modal-close svg {
+        stroke: currentColor !important;
+        transition: transform 0.15s ease !important;
+    }
+
+    .rf-modal-close:hover svg {
+        transform: rotate(90deg) !important;
+    }
+
+    .rf-warning-icon-wrap {
+        width: 64px !important;
+        height: 64px !important;
+        border-radius: 50% !important;
+        background: #fef9c3 !important;
+        border: 2px solid #facc15 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 auto 16px !important;
+    }
+
+    .rf-warning-icon {
+        font-size: 30px !important;
+        font-weight: 700 !important;
+        color: #ca8a04 !important;
+        line-height: 1 !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    .rf-modal-title {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        text-align: center !important;
+        margin: 0 0 8px 0 !important;
+        line-height: 1.25 !important;
+    }
+
+    .rf-modal-desc {
+        font-size: 13.5px !important;
+        color: #64748b !important;
+        text-align: center !important;
+        line-height: 1.45 !important;
+        margin: 0 auto 22px !important;
+        max-width: 360px !important;
+    }
+
+    .rf-section-header {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.6px !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        text-align: left !important;
+        margin-bottom: 10px !important;
+    }
+
+    .rf-fields-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        max-height: 240px !important;
+        overflow-y: auto !important;
+        padding-right: 4px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .rf-field-row {
+        background: #fef2f2 !important;
+        border: 1px solid #fee2e2 !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        text-decoration: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .rf-field-row:hover {
+        background: #fee2e2 !important;
+        border-color: #fca5a5 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .rf-field-row-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+    }
+
+    .rf-field-badge {
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        flex-shrink: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .rf-field-name {
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .rf-field-chevron {
+        color: #64748b !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+        margin-left: 8px !important;
+        stroke: currentColor !important;
+        transition: transform 0.15s ease, color 0.15s ease !important;
+    }
+
+    .rf-field-row:hover .rf-field-chevron {
+        color: #0f172a !important;
+        transform: translateX(2px) !important;
+    }
+
+    .rf-helper-text {
+        font-size: 12px !important;
+        color: #64748b !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 20px !important;
+        text-align: left !important;
+    }
+
+    .rf-helper-text svg {
+        font-size: 13px !important;
+        color: #64748b !important;
+        stroke: currentColor !important;
+        flex-shrink: 0 !important;
+    }
+
+    .rf-cta-btn {
+        width: 100% !important;
+        height: 44px !important;
+        background: #1b84ff !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: 'Poppins', sans-serif !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease, transform 0.1s ease !important;
+    }
+
+    .rf-cta-btn:hover {
+        background: #1570ef !important;
+    }
+
+    .rf-cta-btn:active {
+        transform: scale(0.99) !important;
+    }
+
+    /* Field Attention Pulse Highlight */
+    .field-attention-highlight {
+        outline: 2px solid #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease-in-out !important;
+        background-color: rgba(239, 246, 255, 0.5) !important;
+        animation: rfPulseHighlight 0.4s ease-in-out 2;
+    }
+
+    @keyframes rfPulseHighlight {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.008); }
+        100% { transform: scale(1); }
+    }
+
+    /* Inline Field Error Message */
+    .field-error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+        color: #ef4444 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+        animation: fieldErrorFadeIn 0.2s ease-in-out;
+    }
+
+    .field-error-message svg {
+        color: #ef4444 !important;
+        stroke: currentColor !important;
+        flex-shrink: 0 !important;
+    }
+
+    .field-error-message span {
+        color: #dc2626 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+    }
+
+    @keyframes fieldErrorFadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Field Validation Error State Highlights */
+    .has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-client-select-wrap.has-validation-error .jero-client-trigger {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-title-select-wrap.has-validation-error .jero-title-input-box,
+    .jero-title-input-box.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-dept-select-wrap.has-validation-error .jero-dept-input-box,
+    .jero-dept-input-box.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-choices.has-validation-error {
+        border: 1.5px solid #ef4444 !important;
+        border-radius: 10px !important;
+        padding: 3px !important;
+        background: #fef2f2 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+
+    .ij-salary-input-wrapper.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-location-input-wrap.has-validation-error .form-input,
+    .ij-location-input-wrap.has-validation-error .input-with-icon {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-qual-input-wrap.has-validation-error .form-input,
+    .ij-qual-input-wrap.has-validation-error .input-with-icon {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    #jobDescription.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    #skillsWrapper.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .team-section .input-wrapper.has-validation-error .form-input {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .r4-visibility-list.has-validation-error {
+        border: 1px solid #ef4444 !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        background: #fef2f2 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
     }
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
@@ -4157,6 +4539,47 @@
         </div>
     </div>
     <!--end::Add Contact Person Drawer-->
+
+    <!-- Enterprise Complete Required Fields Modal -->
+    <div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+        <div class="rf-modal-box">
+            <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <!-- Warning Icon (Yellow circle with exclamation) -->
+            <div class="rf-warning-icon-wrap" aria-hidden="true">
+                <span class="rf-warning-icon">!</span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+
+            <!-- Description -->
+            <p class="rf-modal-desc" id="rfModalDesc">
+                <span id="rfMissingCountText">3 required fields</span> need your attention before you can proceed with this job.
+            </p>
+
+            <!-- Section Heading -->
+            <div class="rf-section-header">REQUIRED FIELDS</div>
+
+            <!-- Interactive Fields List -->
+            <div class="rf-fields-list" id="rfFieldsList">
+            </div>
+
+            <!-- Helper text -->
+            <div class="rf-helper-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Click a field above to jump directly to it.</span>
+            </div>
+
+            <!-- Primary CTA -->
+            <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+                <span>Review Required Fields</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </div>
 @endsection
 @push('footer-script')
     {{-- internal-job-create-design.js is loaded at the end of this @push block (just before @endpush)
@@ -4574,6 +4997,9 @@
             var names = jrSplit(val), html = '';
             names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Hiring Manager / HR'), 'removeHiringCard(' + i + ')'); });
             $('#hmCardList').html(html);
+            if (val.trim() && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('hiring_namager');
+            }
         }
         function removeHiringCard(i) {
             var names = jrSplit($('#hiring_namager').val());
@@ -4587,6 +5013,9 @@
             var names = jrSplit(val), html = '';
             names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Recruiter'), 'removeRecruiterCard(' + i + ')'); });
             $('#recruiterCardList').html(html);
+            if (val.trim() && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('recruiter');
+            }
         }
         function removeRecruiterCard(i) {
             var names = jrSplit($('#recruiter').val());
@@ -5212,9 +5641,9 @@
         });
 
         // ---------- STEP NAVIGATION ----------
-        function goToStep(step) {
+        function goToStep(step, skipValidation) {
             if (step < 1 || step > 4) return;
-            if (step > currentStep) {
+            if (!skipValidation && step > currentStep) {
                 for (var s = currentStep; s < step; s++) {
                     if (!validateStep(s)) return;
                 }
@@ -5227,7 +5656,8 @@
                 window.JeroTitleIntelligenceEngine.close();
             }
             document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
-            document.getElementById('step' + step).classList.add('active');
+            var stepTarget = document.getElementById('step' + step);
+            if (stepTarget) stepTarget.classList.add('active');
             updateStepper(step);
             if (step === 4) { syncAll(); populateReview(); }
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5243,54 +5673,702 @@
                 else { el.classList.add('pending'); icon.textContent = s; }
             });
         }
-        function validateStep(step) {
-            var val = function(id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
-            var focusEl = function(id) {
-                var el = document.getElementById(id);
-                if (el && (el.style.display === 'none' || el.offsetParent === null)) {
-                    var disp = document.getElementById(id + '_display') || document.getElementById(id + 'Display');
-                    if (disp) el = disp;
-                }
-                if (el && typeof el.focus === 'function') {
-                    try {
-                        el.focus();
-                        el.classList.add('is-invalid');
-                        setTimeout(function() { el.classList.remove('is-invalid'); }, 2500);
-                    } catch (e) {}
-                }
-            };
-            var fail = function(id, msg) { showToast(msg, 'error'); focusEl(id); return false; };
 
-            if (step === 1) {
-                if (!val('client_id'))          return fail('client_id', 'Please select a Hiring Organization');
-                if (!val('address_id'))         return fail('address_id', 'Please select an Address');
-                if (!val('title'))              return fail('title', 'Please enter the Job Title / Designation');
-                if (!val('category_id'))        return fail('category_id', 'Please select a Job Department');
-                if (val('min_exp') === '')      return fail('min_exp', 'Please select Minimum Experience');
-                if (val('max_exp') === '')      return fail('max_exp', 'Please select Maximum Experience');
-                if (!val('total_positions'))    return fail('total_positions', 'Please select No. of Positions');
-                if (!val('employment_type'))    return fail('employment_type', 'Please select Position Type');
-                if (selectedCities.length === 0) { showToast('Please select at least one job location', 'error'); focusEl('citySearch'); return false; }
-                if (!val('work_from_home'))     return fail('work_from_home', 'Please select Work Mode');
-                if (!val('work_shifts'))        return fail('work_shifts', 'Please select Work Shift');
-                if (!val('min_salary_currency')) return fail('min_salary_currency', 'Please select Minimum Salary currency');
-                if (val('minimum_salary') === '') return fail('minimum_salary', 'Please enter Minimum Salary');
-                if (!val('max_salary_currency')) return fail('max_salary_currency', 'Please select Maximum Salary currency');
-                if (val('maximum_salary') === '') return fail('maximum_salary', 'Please enter Maximum Salary');
-                if (!val('min_sal_mode'))       return fail('min_sal_mode', 'Please select Salary Type');
-                if (qualifications.length === 0) { showToast('Please add at least one Qualification', 'error'); focusEl('qualSearch'); return false; }
-                if (!val('end_date'))           return fail('end_date', 'Please select the auto-close duration');
-                if (!val('hiring_namager'))     return fail('hmSearchDisplay', 'Please select the Hiring Manager / HR');
-                if (!val('recruiter'))          return fail('recSearchDisplay', 'Please select your team for this job');
+        // ---------- ENTERPRISE VALIDATION ENGINE ----------
+        var jobFieldConfigMap = {
+            // Step 1: Basic Details
+            client_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Hiring Organization',
+                selector: '#jero_client_select_wrap',
+                highlightSelector: '#jero_client_select_wrap',
+                focusSelector: '#jero_client_trigger',
+                validate: function() {
+                    var val = ($('#client_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select a Hiring Organization.'
+            },
+            address_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Workplace Address',
+                selector: '#address_id',
+                highlightSelector: '#address_id',
+                focusSelector: '#address_id',
+                validate: function() {
+                    var val = ($('#address_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select an Address.'
+            },
+            title: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Title / Designation',
+                selector: '#jero_title_select_wrap',
+                highlightSelector: '#jero_title_select_wrap',
+                focusSelector: '#title',
+                validate: function() {
+                    var val = ($('#title').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please enter the Job Title / Designation.'
+            },
+            category_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Department',
+                selector: '#jero_dept_select_wrap',
+                highlightSelector: '#jero_dept_select_wrap',
+                focusSelector: '#category_id_display',
+                validate: function() {
+                    var val = ($('#category_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select a Job Department.'
+            },
+            min_exp: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Minimum Experience',
+                selector: '.ij-exp-group',
+                highlightSelector: '.ij-exp-group',
+                focusSelector: '#min_exp',
+                validate: function() {
+                    var val = $('#min_exp').val();
+                    return val !== null && val !== '';
+                },
+                message: 'Please select Minimum Experience.'
+            },
+            max_exp: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Maximum Experience',
+                selector: '.ij-exp-group',
+                highlightSelector: '.ij-exp-group',
+                focusSelector: '#max_exp',
+                validate: function() {
+                    var min = $('#min_exp').val();
+                    var max = $('#max_exp').val();
+                    if (max === null || max === '') return false;
+                    if (min !== null && min !== '' && parseInt(min, 10) > parseInt(max, 10)) return false;
+                    return true;
+                },
+                message: function() {
+                    var min = $('#min_exp').val();
+                    var max = $('#max_exp').val();
+                    if (min !== null && min !== '' && max !== null && max !== '' && parseInt(min, 10) > parseInt(max, 10)) {
+                        return 'Maximum experience must be greater than or equal to minimum experience.';
+                    }
+                    return 'Please select Maximum Experience.';
+                }
+            },
+            total_positions: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'No. of Positions',
+                selector: '#total_positions',
+                highlightSelector: '#total_positions',
+                focusSelector: '#total_positions',
+                validate: function() {
+                    var val = ($('#total_positions').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select No. of Positions.'
+            },
+            employment_type: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Position Type',
+                selector: '.ij-employment-card .ij-choices',
+                highlightSelector: '.ij-employment-card',
+                focusSelector: '.ij-employment-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#employment_type').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Position Type.'
+            },
+            location: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Locations',
+                selector: '.ij-location-card .ij-location-input-wrap',
+                highlightSelector: '.ij-location-card',
+                focusSelector: '#citySearch',
+                validate: function() {
+                    return typeof selectedCities !== 'undefined' && Array.isArray(selectedCities) && selectedCities.length > 0;
+                },
+                message: 'Please select at least one job location.'
+            },
+            work_from_home: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Work Mode',
+                selector: '.ij-work-mode-card .ij-choices',
+                highlightSelector: '.ij-work-mode-card',
+                focusSelector: '.ij-work-mode-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#work_from_home').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Work Mode.'
+            },
+            work_shifts: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Work Shift',
+                selector: '.ij-work-shift-card .ij-choices',
+                highlightSelector: '.ij-work-shift-card',
+                focusSelector: '.ij-work-shift-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#work_shifts').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Work Shift.'
+            },
+            minimum_salary: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Minimum Salary',
+                selector: '#minSalaryWrap',
+                highlightSelector: '#minSalaryWrap',
+                focusSelector: '#minimum_salary',
+                validate: function() {
+                    var val = ($('#minimum_salary').val() || '').trim();
+                    return val !== '' && !isNaN(val) && parseFloat(val) >= 0;
+                },
+                message: 'Please enter Minimum Salary.'
+            },
+            maximum_salary: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Maximum Salary',
+                selector: '#maxSalaryWrap',
+                highlightSelector: '#maxSalaryWrap',
+                focusSelector: '#maximum_salary',
+                validate: function() {
+                    var min = ($('#minimum_salary').val() || '').trim();
+                    var max = ($('#maximum_salary').val() || '').trim();
+                    if (max === '' || isNaN(max) || parseFloat(max) < 0) return false;
+                    if (min !== '' && !isNaN(min) && parseFloat(max) < parseFloat(min)) return false;
+                    return true;
+                },
+                message: function() {
+                    var min = ($('#minimum_salary').val() || '').trim();
+                    var max = ($('#maximum_salary').val() || '').trim();
+                    if (min !== '' && !isNaN(min) && max !== '' && !isNaN(max) && parseFloat(max) < parseFloat(min)) {
+                        return 'Maximum salary must be greater than or equal to minimum salary.';
+                    }
+                    return 'Please enter Maximum Salary.';
+                }
+            },
+            min_sal_mode: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Salary Type',
+                selector: '#min_sal_mode',
+                highlightSelector: '#min_sal_mode',
+                focusSelector: '#min_sal_mode',
+                validate: function() {
+                    var val = ($('#min_sal_mode').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Salary Type.'
+            },
+            qualification: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Qualifications',
+                selector: '.ij-qual-card .ij-qual-input-wrap',
+                highlightSelector: '.ij-qual-card',
+                focusSelector: '#qualSearch',
+                validate: function() {
+                    return typeof qualifications !== 'undefined' && Array.isArray(qualifications) && qualifications.length > 0;
+                },
+                message: 'Please add at least one Qualification.'
+            },
+            end_date: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Auto Close Duration',
+                selector: '.ij-autoclose-card .ij-choices',
+                highlightSelector: '.ij-autoclose-card',
+                focusSelector: '.ij-autoclose-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#end_date').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select the auto-close duration.'
+            },
+            hiring_namager: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Hiring Manager / HR',
+                selector: '.ij-hiring-team-card .team-section:first-child .input-wrapper',
+                highlightSelector: '.ij-hiring-team-card .team-section:first-child',
+                focusSelector: '#hmSearchDisplay',
+                validate: function() {
+                    var val = ($('#hiring_namager').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select the Hiring Manager / HR for this job.'
+            },
+            recruiter: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Assigned Recruiter / Team',
+                selector: '.ij-hiring-team-card .team-section:last-child .input-wrapper',
+                highlightSelector: '.ij-hiring-team-card .team-section:last-child',
+                focusSelector: '#recSearchDisplay',
+                validate: function() {
+                    var val = ($('#recruiter').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select your internal team for this job.'
+            },
+
+            // Step 2: Job Description
+            jobDescription: {
+                step: 2,
+                stepName: 'Job Description',
+                label: 'Job Description',
+                selector: '#jobDescription',
+                highlightSelector: '#step2 .card:first-child',
+                focusSelector: '#jobDescription',
+                validate: function() {
+                    var descEl = document.getElementById('jobDescription');
+                    var descText = descEl ? (descEl.innerText || descEl.textContent || '').trim() : '';
+                    return !!descText;
+                },
+                message: 'Please enter the Job Description.'
+            },
+            skills: {
+                step: 2,
+                stepName: 'Job Description',
+                label: 'Key Skills',
+                selector: '#skillsWrapper',
+                highlightSelector: '#step2 .card:last-child',
+                focusSelector: '#skillsInput',
+                validate: function() {
+                    return typeof skills !== 'undefined' && Array.isArray(skills) && skills.length > 0;
+                },
+                message: 'Please add at least one Key Skill.'
+            },
+
+            // Step 3: Screening Questions
+            screeningQuestions: {
+                step: 3,
+                stepName: 'Screening Questions',
+                label: 'Screening Questions',
+                selector: '#questionsList',
+                highlightSelector: '#step3 .card',
+                focusSelector: '#step3 .add-question-area',
+                validate: function() {
+                    if (typeof questions === 'undefined' || !Array.isArray(questions) || questions.length === 0) {
+                        return true;
+                    }
+                    var hasEmpty = questions.some(function(q) {
+                        return !q || !q.text || !String(q.text).trim();
+                    });
+                    return !hasEmpty;
+                },
+                message: 'Please ensure all added screening questions have text specified.'
+            },
+
+            // Step 4: Review & Publish
+            visibility: {
+                step: 4,
+                stepName: 'Review & Publish',
+                label: 'Publishing Visibility',
+                selector: '.r4-visibility-list',
+                highlightSelector: '.r4-card-blue',
+                focusSelector: '.r4-visibility-list input[type="checkbox"]:first',
+                validate: function() {
+                    var c1 = $('input[name="visibility_career"]').is(':checked');
+                    var c2 = $('input[name="visibility_marketplace"]').is(':checked');
+                    var c3 = $('input[name="visibility_internal"]').is(':checked');
+                    return c1 || c2 || c3;
+                },
+                message: 'Please select at least one publishing visibility option.'
             }
-            if (step === 2) {
-                var descEl = document.getElementById('jobDescription');
-                var descText = descEl ? (descEl.innerText || descEl.textContent || '').trim() : '';
-                if (descText === '') { showToast('Please enter the Job Description', 'error'); focusEl('jobDescription'); return false; }
-                if (skills.length === 0) { showToast('Please add at least one Key Skill', 'error'); focusEl('skillsInput'); return false; }
+        };
+
+        function detectJobMissingFields(stepFilter) {
+            var missing = [];
+            for (var key in jobFieldConfigMap) {
+                if (!jobFieldConfigMap.hasOwnProperty(key)) continue;
+                var cfg = jobFieldConfigMap[key];
+                if (stepFilter && stepFilter !== 'all' && cfg.step !== stepFilter) {
+                    continue;
+                }
+                var isValid = false;
+                try {
+                    isValid = cfg.validate();
+                } catch (e) {
+                    isValid = false;
+                }
+                if (!isValid) {
+                    var msg = typeof cfg.message === 'function' ? cfg.message() : cfg.message;
+                    missing.push({
+                        key: key,
+                        label: cfg.label,
+                        step: cfg.step,
+                        stepName: cfg.stepName,
+                        selector: cfg.selector,
+                        highlightSelector: cfg.highlightSelector,
+                        focusSelector: cfg.focusSelector,
+                        message: msg
+                    });
+                }
+            }
+            return missing;
+        }
+
+        function applyFieldValidationErrors(missingFields) {
+            if (!Array.isArray(missingFields)) return;
+
+            missingFields.forEach(function(f) {
+                var $target = $(f.selector);
+                if (!$target.length) {
+                    $target = $('#' + f.key);
+                }
+                if (!$target.length) {
+                    $target = $('[name="' + f.key + '"]');
+                }
+
+                $target.addClass('has-validation-error');
+                if (f.key === 'title') {
+                    $('#title').addClass('has-validation-error');
+                    $('#jero_title_input_box').addClass('has-validation-error');
+                } else if (f.key === 'category_id') {
+                    $('#category_id_display').addClass('has-validation-error');
+                    $('.jero-dept-input-box').addClass('has-validation-error');
+                } else if (f.key === 'client_id') {
+                    $('#jero_client_trigger').addClass('has-validation-error');
+                } else if (f.key === 'min_exp' || f.key === 'max_exp') {
+                    $('#' + f.key).addClass('has-validation-error');
+                } else if (f.key === 'minimum_salary' || f.key === 'maximum_salary') {
+                    $('#' + f.key).addClass('has-validation-error');
+                }
+
+                var errorHtml = '<div class="field-error-message" data-field-error="' + f.key + '">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                    '</svg>' +
+                    '<span>' + f.message + '</span>' +
+                    '</div>';
+
+                if (!$('[data-field-error="' + f.key + '"]').length) {
+                    if (f.key === 'min_exp' || f.key === 'max_exp') {
+                        if (!$('[data-field-error="experience_range"]').length && !$('[data-field-error="' + f.key + '"]').length) {
+                            $('.ij-exp-group').after(errorHtml);
+                        }
+                    } else if (f.key === 'location') {
+                        $('.ij-location-card .ij-location-input-wrap').after(errorHtml);
+                    } else if (f.key === 'qualification') {
+                        $('.ij-qual-card .ij-qual-input-wrap').after(errorHtml);
+                    } else if (f.key === 'skills') {
+                        $('#skillsWrapper').after(errorHtml);
+                    } else if (f.key === 'jobDescription') {
+                        $('#jobDescription').after(errorHtml);
+                    } else if (f.key === 'employment_type') {
+                        $('.ij-employment-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'work_from_home') {
+                        $('.ij-work-mode-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'work_shifts') {
+                        $('.ij-work-shift-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'end_date') {
+                        $('.ij-autoclose-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'hiring_namager') {
+                        $('.ij-hiring-team-card .team-section:first-child .input-wrapper').after(errorHtml);
+                    } else if (f.key === 'recruiter') {
+                        $('.ij-hiring-team-card .team-section:last-child .input-wrapper').after(errorHtml);
+                    } else if (f.key === 'visibility') {
+                        $('.r4-visibility-list').after(errorHtml);
+                    } else if ($target.length) {
+                        $target.after(errorHtml);
+                    }
+                }
+            });
+        }
+
+        function clearFieldValidationErrors(targetKey) {
+            if (targetKey) {
+                $('[data-field-error="' + targetKey + '"]').remove();
+                if (targetKey === 'client_id') {
+                    $('#jero_client_select_wrap').removeClass('has-validation-error');
+                    $('#jero_client_trigger').removeClass('has-validation-error');
+                } else if (targetKey === 'title') {
+                    $('#title').removeClass('has-validation-error');
+                    $('#jero_title_input_box').removeClass('has-validation-error');
+                    $('#jero_title_select_wrap').removeClass('has-validation-error');
+                } else if (targetKey === 'category_id') {
+                    $('#category_id_display').removeClass('has-validation-error');
+                    $('.jero-dept-input-box').removeClass('has-validation-error');
+                    $('#jero_dept_select_wrap').removeClass('has-validation-error');
+                } else if (targetKey === 'location') {
+                    $('.ij-location-card .ij-location-input-wrap').removeClass('has-validation-error');
+                    $('#citySearch').removeClass('has-validation-error');
+                } else if (targetKey === 'qualification') {
+                    $('.ij-qual-card .ij-qual-input-wrap').removeClass('has-validation-error');
+                    $('#qualSearch').removeClass('has-validation-error');
+                } else if (targetKey === 'skills') {
+                    $('#skillsWrapper').removeClass('has-validation-error');
+                    $('#skillsInput').removeClass('has-validation-error');
+                } else if (targetKey === 'jobDescription') {
+                    $('#jobDescription').removeClass('has-validation-error');
+                } else if (targetKey === 'employment_type') {
+                    $('.ij-employment-card .ij-choices').removeClass('has-validation-error');
+                    $('#employment_type').removeClass('has-validation-error');
+                } else if (targetKey === 'work_from_home') {
+                    $('.ij-work-mode-card .ij-choices').removeClass('has-validation-error');
+                    $('#work_from_home').removeClass('has-validation-error');
+                } else if (targetKey === 'work_shifts') {
+                    $('.ij-work-shift-card .ij-choices').removeClass('has-validation-error');
+                    $('#work_shifts').removeClass('has-validation-error');
+                } else if (targetKey === 'end_date') {
+                    $('.ij-autoclose-card .ij-choices').removeClass('has-validation-error');
+                    $('#end_date').removeClass('has-validation-error');
+                } else if (targetKey === 'minimum_salary' || targetKey === 'maximum_salary' || targetKey === 'salary') {
+                    $('#minSalaryWrap').removeClass('has-validation-error');
+                    $('#maxSalaryWrap').removeClass('has-validation-error');
+                    $('#minimum_salary').removeClass('has-validation-error');
+                    $('#maximum_salary').removeClass('has-validation-error');
+                    $('[data-field-error="minimum_salary"]').remove();
+                    $('[data-field-error="maximum_salary"]').remove();
+                } else if (targetKey === 'min_exp' || targetKey === 'max_exp' || targetKey === 'experience') {
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    $('#min_exp').removeClass('has-validation-error');
+                    $('#max_exp').removeClass('has-validation-error');
+                    $('[data-field-error="min_exp"]').remove();
+                    $('[data-field-error="max_exp"]').remove();
+                } else if (targetKey === 'hiring_namager') {
+                    $('.ij-hiring-team-card .team-section:first-child .input-wrapper').removeClass('has-validation-error');
+                    $('#hmSearchDisplay').removeClass('has-validation-error');
+                } else if (targetKey === 'recruiter') {
+                    $('.ij-hiring-team-card .team-section:last-child .input-wrapper').removeClass('has-validation-error');
+                    $('#recSearchDisplay').removeClass('has-validation-error');
+                } else if (targetKey === 'visibility') {
+                    $('.r4-visibility-list').removeClass('has-validation-error');
+                } else {
+                    $('#' + targetKey).removeClass('has-validation-error');
+                    $('[name="' + targetKey + '"]').removeClass('has-validation-error');
+                }
+            } else {
+                $('.has-validation-error').removeClass('has-validation-error');
+                $('.field-error-message').remove();
+            }
+        }
+
+        function showRequiredFieldsModal(missingFields) {
+            if (!missingFields || !missingFields.length) return;
+            window.__currentJobMissingFields = missingFields;
+
+            var count = missingFields.length;
+            var countText = count === 1 ? '1 required field' : (count + ' required fields');
+            var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can proceed with this job.';
+
+            $('#rfMissingCountText').text(countText);
+            $('#rfModalDesc').text(descText);
+
+            var $list = $('#rfFieldsList');
+            $list.empty();
+
+            missingFields.forEach(function(f) {
+                var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">' +
+                    '<div class="rf-field-row-left">' +
+                    '<span class="rf-field-badge" aria-hidden="true">!</span>' +
+                    '<div style="display:flex; flex-direction:column; gap:2px; min-width:0; text-align:left;">' +
+                    '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>' +
+                    '<span style="font-size:11px; color:#64748b; font-weight:500;">Step ' + f.step + ': ' + f.stepName + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>' +
+                    '</div>';
+                $list.append(rowHtml);
+            });
+
+            var $modal = $('#requiredFieldsModal');
+            $modal.fadeIn(150, function() {
+                $('#rfPrimaryCta').focus();
+            });
+        }
+
+        function closeRequiredFieldsModal() {
+            $('#requiredFieldsModal').fadeOut(120);
+        }
+
+        function jumpToField(fieldKey) {
+            closeRequiredFieldsModal();
+
+            var cfg = jobFieldConfigMap[fieldKey];
+            if (!cfg) return;
+
+            var step = cfg.step;
+            if (typeof goToStep === 'function' && typeof currentStep !== 'undefined' && currentStep !== step) {
+                goToStep(step, true);
+            }
+
+            setTimeout(function() {
+                var highlightEl = null;
+                var focusTarget = null;
+
+                if (cfg.highlightSelector) {
+                    highlightEl = document.querySelector(cfg.highlightSelector);
+                }
+                if (!highlightEl && cfg.selector) {
+                    highlightEl = document.querySelector(cfg.selector);
+                }
+                if (cfg.focusSelector) {
+                    focusTarget = document.querySelector(cfg.focusSelector);
+                }
+                if (!focusTarget && highlightEl) {
+                    focusTarget = highlightEl;
+                }
+
+                if (highlightEl) {
+                    highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    $(highlightEl).addClass('field-attention-highlight');
+                    setTimeout(function() {
+                        $(highlightEl).removeClass('field-attention-highlight');
+                    }, 3000);
+                }
+
+                setTimeout(function() {
+                    if (fieldKey === 'client_id') {
+                        var trigger = document.getElementById('jero_client_trigger');
+                        if (trigger) {
+                            trigger.focus();
+                            trigger.click();
+                        }
+                    } else if (fieldKey === 'category_id') {
+                        var deptInput = document.getElementById('category_id_display');
+                        if (deptInput) deptInput.focus();
+                    } else if (fieldKey === 'hiring_namager') {
+                        var hmToggle = document.querySelector('.hr_manager_add');
+                        if (hmToggle) hmToggle.click();
+                    } else if (fieldKey === 'recruiter') {
+                        var recToggle = document.querySelector('.team_manager_add');
+                        if (recToggle) recToggle.click();
+                    } else if (focusTarget && typeof focusTarget.focus === 'function') {
+                        try { focusTarget.focus(); } catch (e) {}
+                    }
+                }, 350);
+            }, 150);
+        }
+
+        function validateStep(step) {
+            clearFieldValidationErrors();
+            var missing = detectJobMissingFields(step);
+            if (missing.length > 0) {
+                applyFieldValidationErrors(missing);
+                showRequiredFieldsModal(missing);
+                return false;
             }
             return true;
         }
+
+        function validateAllSteps() {
+            clearFieldValidationErrors();
+            var missing = detectJobMissingFields('all');
+            if (missing.length > 0) {
+                applyFieldValidationErrors(missing);
+                showRequiredFieldsModal(missing);
+                return false;
+            }
+            return true;
+        }
+
+        // Modal event listeners
+        $(document).on('click', '#rfModalClose', function(e) {
+            e.preventDefault();
+            closeRequiredFieldsModal();
+        });
+
+        $(document).on('click', '#requiredFieldsModal', function(e) {
+            if (e.target === this) {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        $(document).on('click', '.rf-field-row', function(e) {
+            e.preventDefault();
+            var key = $(this).data('field-key');
+            if (key) {
+                jumpToField(key);
+            }
+        });
+
+        $(document).on('keydown', '.rf-field-row', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                var key = $(this).data('field-key');
+                if (key) {
+                    jumpToField(key);
+                }
+            }
+        });
+
+        $(document).on('click', '#rfPrimaryCta', function(e) {
+            e.preventDefault();
+            if (window.__currentJobMissingFields && window.__currentJobMissingFields.length) {
+                jumpToField(window.__currentJobMissingFields[0].key);
+            } else {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        // Real-time error clearing listeners
+        $(document).on('input change focus', 'input, select, textarea, [contenteditable="true"]', function() {
+            var $this = $(this);
+            var key = $this.attr('name') || $this.attr('id');
+            if ($this.hasClass('has-validation-error')) {
+                $this.removeClass('has-validation-error');
+            }
+            var $wrap = $this.closest('.has-validation-error');
+            if ($wrap.length) {
+                $wrap.removeClass('has-validation-error');
+            }
+            if (key) {
+                clearFieldValidationErrors(key);
+            }
+        });
+
+        $(document).on('click', '.ij-choice', function() {
+            var $group = $(this).closest('.ij-choices');
+            if ($group.length) {
+                $group.removeClass('has-validation-error');
+            }
+            var select = $(this).closest('.card-body').find('select');
+            if (select.length && select.attr('id')) {
+                clearFieldValidationErrors(select.attr('id'));
+            }
+        });
+
+        $(document).on('input keyup', '#jobDescription', function() {
+            var text = ($('#jobDescription').text() || '').trim();
+            if (text) {
+                clearFieldValidationErrors('jobDescription');
+            }
+        });
+
+        $(document).on('change', '.r4-visibility-list input[type="checkbox"]', function() {
+            var c1 = $('input[name="visibility_career"]').is(':checked');
+            var c2 = $('input[name="visibility_marketplace"]').is(':checked');
+            var c3 = $('input[name="visibility_internal"]').is(':checked');
+            if (c1 || c2 || c3) {
+                clearFieldValidationErrors('visibility');
+            }
+        });
 
         // ---------- CREATE OPTIONS (mock) ----------
         function selectOption(el, type) {
@@ -5826,6 +6904,9 @@
             }
             syncCities();
             renderPopularPills();
+            if (selectedCities.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('location');
+            }
         }
 
         function syncCities() {
@@ -6211,6 +7292,9 @@
             }
             syncQual();
             renderQuickQualPills();
+            if (qualifications.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('qualification');
+            }
         }
 
         function syncQual() {
@@ -6240,6 +7324,9 @@
             input.insertAdjacentHTML('beforebegin', tags);
             input.value = '';
             syncSkills();
+            if (skills.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('skills');
+            }
         }
         function syncSkills() { document.getElementById('tags').value = JSON.stringify(skills.map(function(s) { return { value: s }; })); }
 
@@ -6252,6 +7339,9 @@
                 var text = editor.innerText || '';
                 document.getElementById('charCount').textContent = text.length + ' characters';
                 syncDescription();
+                if (text.trim() && typeof clearFieldValidationErrors === 'function') {
+                    clearFieldValidationErrors('jobDescription');
+                }
             });
         }
 
@@ -6549,6 +7639,8 @@
 
         // ---------- PUBLISH (real submit) ----------
         function publishJob() {
+            if (typeof validateAllSteps === 'function' && !validateAllSteps()) return;
+
             var checkboxes = document.querySelectorAll('.summary-check input');
             var allChecked = true; checkboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
             if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
@@ -7619,6 +8711,9 @@
             updateTriggerUI(id);
             closePopover();
             recordClientSelection(id);
+            if (typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('client_id');
+            }
 
             // Option A Pre-Distributed Envelope Address Resolution (Synchronous, Zero Network!)
             if (client.loc && Array.isArray(client.loc) && client.loc.length > 0) {
@@ -8633,20 +9728,59 @@
             '</div>';
         }
 
-        function adjustDropdownPosition(force) {
+        function adjustDropdownPosition() {
             var wrap = document.getElementById('jero_title_select_wrap');
             var dropdown = document.getElementById('jero_title_dropdown');
+            var container = document.getElementById('jero_title_list_container');
             if (!wrap || !dropdown || !isOpen) return;
 
-            if (!force && dropdown._hasEvaluatedPosition) return;
             var rect = wrap.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 280 && rect.top > 280) {
+            var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+            // Safe margins from viewport top/bottom edges (12px safe margin)
+            var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
+            var spaceAbove = Math.max(0, rect.top - 12);
+
+            // Calculate height of fixed sections (tabs + custom title pill + footer + padding)
+            var tabsEl = dropdown.querySelector('.jero-title-tabs');
+            var customEl = document.getElementById('jero_title_custom_action');
+            var footerEl = dropdown.querySelector('.jero-title-footer');
+
+            var fixedH = (tabsEl ? tabsEl.offsetHeight : 34) +
+                         ((customEl && customEl.style.display !== 'none') ? customEl.offsetHeight : 0) +
+                         (footerEl ? footerEl.offsetHeight : 32) + 12;
+
+            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
+            var dropUp = false;
+            if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+                dropUp = true;
+            }
+
+            if (dropUp) {
                 dropdown.classList.add('drop-up');
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = 'calc(100% + 4px)';
+
+                // Clamp max height so dropdown top NEVER extends above viewport top margin
+                var maxAvailable = Math.max(160, Math.min(360, spaceAbove));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(70, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             } else {
                 dropdown.classList.remove('drop-up');
+                dropdown.style.top = 'calc(100% + 4px)';
+                dropdown.style.bottom = 'auto';
+
+                // Clamp max height so dropdown bottom NEVER extends below viewport bottom margin
+                var maxAvailable = Math.max(160, Math.min(360, spaceBelow));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(70, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             }
-            dropdown._hasEvaluatedPosition = true;
         }
 
         function openDropdown() {
@@ -8657,23 +9791,25 @@
 
             isOpen = true;
             wrap.classList.add('is-open');
-            dropdown.style.display = 'block';
+            dropdown.style.display = 'flex';
             if (input) input.setAttribute('aria-expanded', 'true');
 
-            adjustDropdownPosition(true);
+            adjustDropdownPosition();
             renderDropdownList();
         }
 
         function closeDropdown() {
             var dropdown = document.getElementById('jero_title_dropdown');
             var wrap = document.getElementById('jero_title_select_wrap');
+            var container = document.getElementById('jero_title_list_container');
             var input = document.getElementById('title');
             if (!dropdown || !wrap) return;
 
             isOpen = false;
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
-            dropdown._hasEvaluatedPosition = false;
+            dropdown.style.maxHeight = '';
+            if (container) container.style.maxHeight = '';
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
         }
