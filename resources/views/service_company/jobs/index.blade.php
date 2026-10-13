@@ -981,7 +981,7 @@ $(document).ready(function(){
 		});
 
   // Intent: load the existing agencies drawer for dynamically-rendered Add Agency controls.
-  $(document).on('click', '.spartner-listing', function(e){
+  $(document).off('click.spartnerListing', '.spartner-listing').on('click.spartnerListing', '.spartner-listing', function(e){
         e.preventDefault();
         e.stopPropagation();
         if (e.stopImmediatePropagation) {
@@ -990,16 +990,15 @@ $(document).ready(function(){
 
         $('#kt_activitiesRecruiter_toggle').trigger('click');
         var id = $(this).data('row-id');
-        var cacheKey = 'spartner_' + id;
-        if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
-            $('#kt_activitiesRecruiter_body').html(window.jobDrawerCache[cacheKey]);
-            return;
-        }
-        var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
-        url = url.replace(':id', id);
+        var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}".replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loaderHtml = '<div style="padding:40px;text-align:center;font-family:Poppins,sans-serif;"><img src="'+baseurl+'" height="35px" style="margin-bottom:10px;"><div style="font-size:13px;color:#5e6278;font-weight:500;">Loading agencies...</div></div>';
         var errorHtml = '<div style="padding:24px;text-align:center;font-family:Poppins,sans-serif;font-size:13px;color:#f64e60;">Could not load agencies. Please try again.</div>';
+
+        // Clear any stale cached drawer in memory
+        if (window.jobDrawerCache) {
+            delete window.jobDrawerCache['spartner_' + id];
+        }
 
         $.ajax({
             type: 'GET',
@@ -1010,7 +1009,6 @@ $(document).ready(function(){
             },
             success: function (response) {
                 if (response && response.view) {
-                    window.jobDrawerCache[cacheKey] = response.view;
                     $('#kt_activitiesRecruiter_body').html(response.view);
                     return;
                 }

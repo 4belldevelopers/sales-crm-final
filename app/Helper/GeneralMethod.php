@@ -14861,6 +14861,7 @@ END:VCALENDAR";
 
         $keys = [
             'allsendinvitationtoagency_version_user_'.$userId,
+            'allsendinvitationtoagency_v5_version_user_'.$userId,
             'allrecommendedagency_version_user_'.$userId,
             'allregisteredagency_version_user_'.$userId,
             'allassignedagency_version_user_'.$userId,
