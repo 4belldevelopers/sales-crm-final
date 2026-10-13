@@ -5012,15 +5012,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </div>
                                         <div class="r4-kv-row">
                                             <div class="r4-kv-key">
-                                                <span class="r4-row-icon r4-icon-slate">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                                                </span>
-                                                <span class="r4-label">Job Type</span>
-                                            </div>
-                                            <div class="r4-kv-val" id="rvJobType">-</div>
-                                        </div>
-                                        <div class="r4-kv-row">
-                                            <div class="r4-kv-key">
                                                 <span class="r4-row-icon r4-icon-amber">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                                 </span>
@@ -5207,7 +5198,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 <div class="r4-card-body">
                                     <div class="r4-visibility-list">
                                         <label class="r4-check-item">
-                                            <input type="checkbox" class="r4-custom-check" name="visibility_career" checked>
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_career" id="rv_visibility_career" checked>
                                             <span class="r4-check-box">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                                             </span>
@@ -5217,7 +5208,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </label>
 
                                         <label class="r4-check-item">
-                                            <input type="checkbox" class="r4-custom-check" name="visibility_marketplace" checked>
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_marketplace" id="rv_visibility_marketplace" checked>
                                             <span class="r4-check-box">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                                             </span>
@@ -5231,7 +5222,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </label>
 
                                         <label class="r4-check-item">
-                                            <input type="checkbox" class="r4-custom-check" name="visibility_internal">
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_internal" id="rv_visibility_internal">
                                             <span class="r4-check-box">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                                             </span>
@@ -5241,7 +5232,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </label>
                                     </div>
 
-                                    <div class="r4-info-box">
+                                    <div class="r4-info-box" id="rv_visibility_info_box">
                                         <span class="r4-info-icon">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <circle cx="12" cy="12" r="10"/>
@@ -5249,7 +5240,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                 <line x1="12" y1="8" x2="12.01" y2="8"/>
                                             </svg>
                                         </span>
-                                        <div class="r4-info-text">
+                                        <div class="r4-info-text" id="rv_visibility_info_text">
                                             This job will be visible to approved agency partners and their recruiters.
                                             <a href="javascript:void(0)" onclick="if(typeof showCoinRulesModal==='function')showCoinRulesModal();else showToast('Learn more about marketplace','info');">Learn more about marketplace</a>
                                         </div>
@@ -7659,13 +7650,59 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
         });
 
-        $(document).on('change', '.r4-visibility-list input[type="checkbox"]', function() {
-            var c1 = $('input[name="visibility_career"]').is(':checked');
-            var c2 = $('input[name="visibility_marketplace"]').is(':checked');
-            var c3 = $('input[name="visibility_internal"]').is(':checked');
-            if (c1 || c2 || c3) {
-                clearFieldValidationErrors('visibility');
+        function handleVisibilityChange(changedName) {
+            var $career = $('input[name="visibility_career"]');
+            var $market = $('input[name="visibility_marketplace"]');
+            var $internal = $('input[name="visibility_internal"]');
+
+            if (changedName === 'visibility_internal') {
+                if ($internal.is(':checked')) {
+                    $career.prop('checked', false);
+                    $market.prop('checked', false);
+                } else {
+                    if (!$career.is(':checked') && !$market.is(':checked')) {
+                        $career.prop('checked', true);
+                        $market.prop('checked', true);
+                    }
+                }
+            } else {
+                if ($career.is(':checked') || $market.is(':checked')) {
+                    $internal.prop('checked', false);
+                } else if (!$career.is(':checked') && !$market.is(':checked')) {
+                    $internal.prop('checked', true);
+                }
             }
+
+            syncVisibilityUI();
+        }
+
+        function syncVisibilityUI() {
+            var $career = $('input[name="visibility_career"]');
+            var $market = $('input[name="visibility_marketplace"]');
+            var $internal = $('input[name="visibility_internal"]');
+            var $infoText = $('#rv_visibility_info_text');
+
+            if ($internal.is(':checked')) {
+                $infoText.html('This job will remain strictly internal and visible only to your internal team members and recruiters.');
+            } else if ($market.is(':checked')) {
+                $infoText.html('This job will be visible to approved agency partners and their recruiters. <a href="javascript:void(0)" onclick="if(typeof showCoinRulesModal===\'function\')showCoinRulesModal();else showToast(\'Learn more about marketplace\',\'info\');">Learn more about marketplace</a>');
+            } else if ($career.is(':checked')) {
+                $infoText.html('This job will be published on your company career page for public candidates to discover and apply directly.');
+            }
+
+            // Keep hidden legacy carrier_website in sync
+            var careerVal = ($career.is(':checked') && !$internal.is(':checked')) ? '1' : '0';
+            $('input[name="carrier_website"]').prop('checked', careerVal === '1').val(careerVal);
+
+            if ($career.is(':checked') || $market.is(':checked') || $internal.is(':checked')) {
+                if (typeof clearFieldValidationErrors === 'function') {
+                    clearFieldValidationErrors('visibility');
+                }
+            }
+        }
+
+        $(document).on('change', '.r4-visibility-list input[type="checkbox"]', function() {
+            handleVisibilityChange($(this).attr('name'));
         });
 
         // ---------- CREATE OPTIONS (mock) ----------
@@ -9018,9 +9055,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             setText('rvClient', clientName());
             setText('rvDepartment', getSelText('category_id'));
             setText('rvJobTitle', titleVal);
-            setText('rvJobType', getSelText('employment_type'));
             setText('rvExp', expText());
             setText('rvCompensation', salaryText());
+            syncVisibilityUI();
 
             setText('rvLocation', cities);
             setText('rvWorkMode2', getSelText('work_from_home'));
@@ -9101,7 +9138,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         };
 
         // ---------- SYNC ALL HIDDEN INPUTS ----------
-        function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); }
+        function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); }
 
         // ---------- PUBLISH (real submit) ----------
         function publishJob() {
@@ -9126,6 +9163,17 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (!data.has('operation_id') || !data.get('operation_id')) {
                 data.set('operation_id', opId);
             }
+
+            // Sync explicit visibility payload for career, marketplace, and internal
+            var isInternal = $('input[name="visibility_internal"]').is(':checked');
+            var isCareer = !isInternal && $('input[name="visibility_career"]').is(':checked');
+            var isMarket = !isInternal && $('input[name="visibility_marketplace"]').is(':checked');
+
+            data.set('carrier_website', isCareer ? '1' : '0');
+            data.set('visibility_career', isCareer ? '1' : '0');
+            data.set('visibility_marketplace', isMarket ? '1' : '0');
+            data.set('visibility_internal', isInternal ? '1' : '0');
+            data.set('public_market_status', isMarket ? '2' : '0');
 
             var $btn = $('.submit-card .btn-primary');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');

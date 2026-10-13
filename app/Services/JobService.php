@@ -84,7 +84,25 @@ class JobService
             $job->job_description = $requestData['detail_description'];
         }
 
-        $job->carrier_website = $requestData['carrier_website'] ?? null;
+        if (isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1) {
+            $job->carrier_website = 0;
+            $job->public_market_status = 0;
+        } else {
+            if (isset($requestData['carrier_website'])) {
+                $job->carrier_website = (int) $requestData['carrier_website'];
+            } elseif (isset($requestData['visibility_career'])) {
+                $job->carrier_website = (int) $requestData['visibility_career'];
+            } else {
+                $job->carrier_website = null;
+            }
+
+            if (! empty($requestData['visibility_marketplace']) || (isset($requestData['public_market_status']) && (int) $requestData['public_market_status'] > 0)) {
+                $isAutoApproved = (bool) DB::table('global_settings')->value('public_market_job_status');
+                $job->public_market_status = $isAutoApproved ? 2 : 1;
+            } else {
+                $job->public_market_status = 0;
+            }
+        }
         $job->work_type = $requestData['work_from_home'] ?? ($requestData['work_type'] ?? 'no');
         $job->show_vendor = $requestData['show_client_name'] ?? ($requestData['show_vendor'] ?? 'no');
 
@@ -622,7 +640,25 @@ class JobService
         $job->max_salary = $requestData['maximum_salary'] ?? null;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
 
-        $job->carrier_website = $requestData['carrier_website'] ?? null;
+        if (isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1) {
+            $job->carrier_website = 0;
+            $job->public_market_status = 0;
+        } else {
+            if (isset($requestData['carrier_website'])) {
+                $job->carrier_website = (int) $requestData['carrier_website'];
+            } elseif (isset($requestData['visibility_career'])) {
+                $job->carrier_website = (int) $requestData['visibility_career'];
+            }
+
+            if (isset($requestData['visibility_marketplace']) || isset($requestData['public_market_status'])) {
+                if (! empty($requestData['visibility_marketplace']) || (isset($requestData['public_market_status']) && (int) $requestData['public_market_status'] > 0)) {
+                    $isAutoApproved = (bool) DB::table('global_settings')->value('public_market_job_status');
+                    $job->public_market_status = $isAutoApproved ? 2 : 1;
+                } else {
+                    $job->public_market_status = 0;
+                }
+            }
+        }
         $job->work_type = $requestData['work_from_home'] ?? null;
         $job->show_vendor = $requestData['show_client_name'] ?? null;
 
