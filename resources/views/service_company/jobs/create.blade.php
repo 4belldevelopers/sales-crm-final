@@ -1561,6 +1561,344 @@
     #jrwrap .ij-gender-hint { font-size: 11px !important; color: #64748b !important; margin-top: 3px !important; line-height: 1.25 !important; font-family: 'Poppins', sans-serif !important; }
 
     /* ==========================================================================
+       God-Level Client-Memory Hiring Team Engine (v7.2 Diamond Standard)
+       Scope: #kt_activitiesRecruiter, #kt_activitiesClient & Hiring Team Card
+       Responsive Viewport: 560px-640px desktop, min(600px, 92vw) tablet, 100vw mobile
+       Standards: Metronic 8, Poppins font, 15.6" screen fit, WAI-ARIA WCAG listbox
+       ========================================================================== */
+    #kt_activitiesRecruiter, #kt_activitiesClient {
+        width: 600px !important;
+        max-width: 100vw !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    @media (min-width: 992px) {
+        #kt_activitiesRecruiter, #kt_activitiesClient {
+            width: 600px !important;
+            min-width: 560px !important;
+            max-width: 640px !important;
+        }
+    }
+    @media (min-width: 576px) and (max-width: 991.98px) {
+        #kt_activitiesRecruiter, #kt_activitiesClient {
+            width: min(600px, 92vw) !important;
+        }
+    }
+    @media (max-width: 575.98px) {
+        #kt_activitiesRecruiter, #kt_activitiesClient {
+            width: 100vw !important;
+        }
+    }
+
+    .jht-drawer-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: #ffffff;
+        font-family: 'Poppins', sans-serif;
+    }
+    .jht-drawer-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #eef2f6;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .jht-search-bar {
+        padding: 12px 20px;
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .jht-search-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .jht-search-icon {
+        position: absolute;
+        left: 12px;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+    .jht-search-input {
+        width: 100%;
+        height: 40px;
+        padding: 8px 36px 8px 38px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        background: #ffffff;
+        color: #1e293b;
+        outline: none;
+        transition: all .15s ease;
+    }
+    .jht-search-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .jht-search-clear {
+        position: absolute;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        display: none;
+        padding: 4px;
+    }
+    .jht-search-clear.show { display: block; }
+    .jht-assigned-section {
+        padding: 14px 20px;
+        background: #ffffff;
+        border-bottom: 1px solid #eef2f6;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+    .jht-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .jht-section-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #1e293b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .jht-captain-card {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+    .jht-captain-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f59e0b;
+        color: #ffffff;
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+        line-height: 1;
+    }
+    .jht-assigned-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .jht-assigned-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all .15s ease;
+    }
+    .jht-assigned-card:hover {
+        border-color: #cbd5e1;
+        background: #f1f5f9;
+    }
+    .jht-virtual-scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        position: relative;
+        outline: none;
+        padding: 0;
+        min-height: 300px;
+    }
+    .jht-virtual-scroll-container:focus {
+        box-shadow: inset 0 0 0 2px rgba(37,99,235,0.3);
+    }
+    .jht-spacer {
+        width: 100%;
+    }
+    .jht-emp-row {
+        height: 64px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background-color .1s ease;
+    }
+    .jht-emp-row:hover {
+        background-color: #f8fafc;
+    }
+    .jht-emp-row.active-focused {
+        background-color: #eff6ff !important;
+        outline: 2px solid #3b82f6;
+        outline-offset: -2px;
+    }
+    .jht-emp-row.is-assigned {
+        background-color: #f0fdf4;
+    }
+    .jht-emp-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 13px;
+        color: #ffffff;
+        flex-shrink: 0;
+    }
+    .jht-emp-details {
+        margin-left: 12px;
+        flex: 1;
+        min-width: 0;
+    }
+    .jht-emp-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .jht-emp-role {
+        font-size: 11px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .jht-emp-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #64748b;
+    }
+    .jht-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    .jht-status-active { background-color: #10b981; }
+    .jht-status-inactive { background-color: #94a3b8; }
+    .jht-workload-badge {
+        font-size: 10.5px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: #e0f2fe;
+        color: #0369a1;
+        font-weight: 500;
+    }
+    .jht-btn-assign {
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .15s ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .jht-btn-assign.unassigned {
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+    .jht-btn-assign.unassigned:hover {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+    .jht-btn-assign.assigned {
+        background: #ecfdf5;
+        color: #059669;
+        border-color: #a7f3d0;
+    }
+    .jht-btn-assign.assigned:hover {
+        background: #fef2f2;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+    .jht-highlight {
+        background-color: #fef08a !important;
+        color: #854d0e !important;
+        border-radius: 2px;
+        padding: 0 2px;
+    }
+    .jht-kebab-menu {
+        position: absolute;
+        right: 0;
+        top: 28px;
+        z-index: 50;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        padding: 6px;
+        min-width: 150px;
+        display: none;
+    }
+    .jht-kebab-menu.show { display: block; }
+    .jht-kebab-menu a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #334155 !important;
+        text-decoration: none;
+    }
+    .jht-kebab-menu a:hover {
+        background: #f1f5f9;
+        color: #2563eb !important;
+    }
+
+    /* Contact modal overlay */
+    .jht-cm-overlay {
+        position: fixed; inset: 0; background: rgba(16,24,40,.45);
+        z-index: 10050; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .jht-cm-overlay.show { display: flex; }
+    .jht-cm-box {
+        background: #fff; border-radius: 16px; width: 380px; max-width: 92vw; padding: 28px 26px;
+        text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.22); font-family: 'Poppins', sans-serif;
+    }
+    .jht-cm-icon {
+        width: 56px; height: 56px; border-radius: 50%; background: #eaf4ff; color: #2f9bff;
+        display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px;
+    }
+    .jht-cm-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .jht-cm-sub { font-size: 12px; color: #98a2b3; margin-bottom: 18px; }
+    .jht-cm-value {
+        background: #f5f8fb; border-radius: 10px; padding: 13px 12px; font-size: 14px;
+        font-weight: 600; color: #1a1a2e; margin-bottom: 18px; word-break: break-all;
+    }
+    .jht-cm-actions { display: flex; gap: 12px; }
+    .jht-cm-btn {
+        flex: 1; padding: 11px 14px; border-radius: 9px; font-size: 13px; font-weight: 600;
+        cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        text-decoration: none; border: 1px solid transparent;
+    }
+    .jht-cm-btn.cm-cancel { background: #fff; border-color: #e4e6ef; color: #475569; }
+    .jht-cm-btn.cm-go { background: #1f9cf0; border-color: #1f9cf0; color: #fff !important; }
+
+    /* ==========================================================================
        God-Level Enterprise Client Select Component (Client-First Execution)
        Scope: Strictly isolated to #jrwrap in resources/views/service_company/jobs/create.blade.php
        Standards: Metronic 8, Poppins font, max 14px, 15.6" screen fit (1366x768 & 1920x1080)
@@ -3464,7 +3802,6 @@
                                     <?php } ?>
                                 </div>
                             </div>
-                            <span class="form-hint" style="margin-top:10px;display:block;">Enter the expected CTC range for this position.</span>
                         </div>
                     </div>
                     <div class="card ij-qual-card">
@@ -3520,7 +3857,6 @@
                                 }
                             ?>
                             <div class="form-group-cus">
-                                <label class="form-label required mb-2" for="end_date">Job automatically closed in</label>
                                 <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
                                     <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
                                         <span class="ij-choice-icon-wrap ij-icon-blue">
@@ -3588,7 +3924,7 @@
                             </div>
                             <div class="team-grid">
                                 <div class="team-section">
-                                    <label class="form-label required">Select the Hiring Manager / HR for this job position from the {{ ($global_company_type == 3) ? 'company' : 'client' }}.</label>
+                                    <label class="form-label required">Hiring Contact</label>
                                     <div class="input-wrapper" style="position:relative;">
                                         <div class="input-with-icon">
                                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3604,11 +3940,11 @@
                                     </div>
                                     {{-- Real field POSTed to backend (comma-separated names); kept hidden, shown as cards below --}}
                                     <input type="hidden" name="hiring_namager" id="hiring_namager" value="<?php echo @$cpersonData; ?>">
-                                    <span class="form-hint">This person will be the primary point of contact.</span>
+                                    <span class="form-hint">Select the Hiring Manager or HR responsible for this position.</span>
                                     <div class="team-list" id="hmCardList"></div>
                                 </div>
                                 <div class="team-section">
-                                    <label class="form-label required">Select your team who will work on this job position.</label>
+                                    <label class="form-label required">Recruitment Team</label>
                                     <div class="input-wrapper" style="position:relative;">
                                         <div class="input-with-icon">
                                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3625,7 +3961,8 @@
                                     {{-- Real fields POSTed to backend; kept hidden, shown as cards below --}}
                                     <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>">
                                     <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>">
-                                    <span class="form-hint">Assign internal team members / recruiters.</span>
+                                    <input type="hidden" name="operation_id" id="operation_id" value="">
+                                    <span class="form-hint">Assign the internal recruiters or team members responsible for this position</span>
                                     <div class="team-list" id="recruiterCardList"></div>
                                 </div>
                             </div>
@@ -4331,7 +4668,7 @@
     </div>
     <div id="kt_activitiesClient_toggle"></div>
     <div id="kt_activitiesClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '560px', 'lg': '600px'}"
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle"
         data-kt-drawer-close="#kt_activitiesClient_close">
         <div class="card shadow-none rounded-0 w-100">
@@ -4457,7 +4794,7 @@
 
     <div id="kt_activitiesRecruiter_toggle"></div>
     <div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '560px', 'lg': '600px'}"
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle"
         data-kt-drawer-close="#kt_activitiesRecruiter_close">
         <div class="card shadow-none rounded-0 w-100">
@@ -4794,10 +5131,13 @@
                             $('#cp_email_0').focus();
                             return false;
                         }
-                        $('#Iteam_Table').prepend(response.view);
-                        var hiring_namager = $('#hiring_namager').val();
-                        if (hiring_namager == '') { $('#hiring_namager').val(response.contact_person_name); }
-                        else { $('#hiring_namager').val(hiring_namager + ',' + response.contact_person_name); }
+                        if (window.JeroHiringTeamEngine && typeof window.JeroHiringTeamEngine.onContactAdded === 'function') {
+                            window.JeroHiringTeamEngine.onContactAdded(response);
+                        } else {
+                            var hiring_namager = $('#hiring_namager').val();
+                            if (hiring_namager == '') { $('#hiring_namager').val(response.contact_person_name); }
+                            else { $('#hiring_namager').val(hiring_namager + ',' + response.contact_person_name); }
+                        }
                         $('#add_team_member_form')[0].reset();
                         _atmClearErrors();
                         $(".add_team_member_close").click();
@@ -4812,45 +5152,17 @@
                 });
             });
 
-            $('.hr_manager_add').on('click', function() { $("#hiring_namager").click(); });
+            $('.hr_manager_add').on('click', function(e) {
+                e.preventDefault();
+                if (window.JeroHiringTeamEngine) {
+                    window.JeroHiringTeamEngine.openHiringManagerDrawer();
+                }
+            });
 
-            $("#hiring_namager").on("click", function() {
-                var client_id = $('#client_id').val();
-                if (client_id > 0) {
-                    $('#kt_activitiesClient_toggle').trigger('click');
-                    var clientName = $("#client_id option:selected");
-                    var text_value = clientName.text();
-                    $('#light_client_name').html(text_value);
-                    var strVal = '', bgTextDecore = '', str = text_value;
-                    str = str.substring(0, 1); str = strVal = str.toLowerCase();
-                    var str_bg = str.charCodeAt(0);
-                    if (str_bg >= 97 && str_bg <= 101) { bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
-                    else if (str_bg >= 102 && str_bg <= 106) { bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
-                    else if (str_bg >= 107 && str_bg <= 111) { bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
-                    else if (str_bg >= 112 && str_bg <= 116) { bgTextDecore = 'fs-3 bg-light-success text-success'; }
-                    else if (str_bg >= 117 && str_bg <= 121) { bgTextDecore = 'fs-3 bg-dark text-light'; }
-                    else { bgTextDecore = 'fs-3 bg-light text-dark'; }
-                    $('#light_client_caption').html(strVal.toUpperCase());
-                    $('#light_client_caption').addClass(bgTextDecore);
-                    var hiring_namager = $('#hiring_namager').val();
-                    var token = "{{ csrf_token() }}";
-                    var id = client_id;
-                    var url = "{{ route('service_company.jobs.hiring_manager', ':id') }}";
-                    url = url.replace(':id', id);
-                    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                    $.ajax({
-                        type: 'POST', url: url, data: { '_token': token, 'hiring_namager': hiring_namager },
-                        beforeSend: function() { $('#kt_activitiesClient_body').html('<img src="' + baseurl + '" height="35px" width="100%">'); },
-                        success: function(response) {
-                            $('#kt_activitiesClient_body').html(response.view);
-                            if (response.logo) {
-                                $('#light_client_caption').removeClass('d-none');
-                                $('#light_client_caption').html('<img src="' + response.logo + '" height="35px" width="100%">');
-                            } else { $('#light_client_caption').addClass('d-none'); }
-                        }
-                    });
-                } else {
-                    alert("Please select any client after that choose our Hiring manager or Contact person");
+            $("#hiring_namager").on("click", function(e) {
+                e.preventDefault();
+                if (window.JeroHiringTeamEngine) {
+                    window.JeroHiringTeamEngine.openHiringManagerDrawer();
                 }
             });
 
@@ -4901,39 +5213,16 @@
 
             $('.remove_address').click(function() { $('.client-address-container').children().last().remove(); });
 
-            $('.team_manager_add').on('click', function() { $("#recruiter").click(); });
-            $("#recruiter").on("click", function() {
-                var client_id = $('#client_id').val();
-                if (client_id > 0) {
-                    $('#kt_activitiesRecruiter_toggle').trigger('click');
-                    var clientName = $("#client_id option:selected");
-                    var text_value = clientName.text();
-                    $('#light_recruiter_name').html(text_value);
-                    var strVal = '', bgTextDecore = '', str = text_value;
-                    str = str.substring(0, 1); str = strVal = str.toLowerCase();
-                    var str_bg = str.charCodeAt(0);
-                    if (str_bg >= 97 && str_bg <= 101) { bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
-                    else if (str_bg >= 102 && str_bg <= 106) { bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
-                    else if (str_bg >= 107 && str_bg <= 111) { bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
-                    else if (str_bg >= 112 && str_bg <= 116) { bgTextDecore = 'fs-3 bg-light-success text-success'; }
-                    else if (str_bg >= 117 && str_bg <= 121) { bgTextDecore = 'fs-3 bg-dark text-light'; }
-                    else { bgTextDecore = 'fs-3 bg-light text-dark'; }
-                    $('#light_recruiter_caption').html(strVal.toUpperCase());
-                    $('#light_recruiter_caption').addClass(bgTextDecore);
-                    var recruiter = $('#recruiter').val();
-                    var recruiter_id = $('#recruiter_id').val();
-                    var token = "{{ csrf_token() }}";
-                    var id = client_id;
-                    var url = "{{ route('service_company.jobs.recruiter', ':id') }}";
-                    url = url.replace(':id', id);
-                    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                    $.ajax({
-                        type: 'GET', url: url, data: { '_token': token, 'recruiter': recruiter, 'recruiter_id': recruiter_id },
-                        beforeSend: function() { $('#kt_activitiesRecruiter_body').html('<img src="' + baseurl + '" height="35px" width="100%">'); },
-                        success: function(response) { $('#kt_activitiesRecruiter_body').html(response.view); }
-                    });
-                } else {
-                    alert("Please select any client after that choose our Recruiters team");
+            $('.team_manager_add').on('click', function(e) {
+                e.preventDefault();
+                if (window.JeroHiringTeamEngine) {
+                    window.JeroHiringTeamEngine.openRecruiterDrawer();
+                }
+            });
+            $("#recruiter").on("click", function(e) {
+                e.preventDefault();
+                if (window.JeroHiringTeamEngine) {
+                    window.JeroHiringTeamEngine.openRecruiterDrawer();
                 }
             });
 
@@ -5044,11 +5333,12 @@
         }
         function jrEsc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
         function jrTitleCase(s) { return (s || '').replace(/\b\w/g, function(c) { return c.toUpperCase(); }); }
-        function jrPersonCard(name, role, onRemove) {
+        function jrPersonCard(name, role, onRemove, isCaptain) {
             var disp = jrTitleCase(name);
+            var captainBadge = isCaptain ? '<span class="captain-badge" style="display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#b45309;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;"><i class="fa fa-star" style="font-size:9px;color:#d97706;"></i> Captain</span>' : '';
             return '<div class="team-member">'
                 + '<div class="member-avatar" style="background:' + jrAvatarColor(name.charAt(0)) + '">' + jrEsc(jrInitials(name)) + '</div>'
-                + '<div class="member-info"><div class="member-name">' + jrEsc(disp) + '</div><div class="member-role">' + jrEsc(role) + '</div></div>'
+                + '<div class="member-info"><div class="member-name">' + jrEsc(disp) + captainBadge + '</div><div class="member-role">' + jrEsc(role) + '</div></div>'
                 + '<button type="button" class="member-remove" title="Remove" onclick="' + onRemove + '">'
                 + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
                 + '</button></div>';
@@ -5058,7 +5348,7 @@
             var val = $('#hiring_namager').val() || '';
             _jrLastHM = val;
             var names = jrSplit(val), html = '';
-            names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Hiring Manager / HR'), 'removeHiringCard(' + i + ')'); });
+            names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Hiring Manager / HR'), 'removeHiringCard(' + i + ')', false); });
             $('#hmCardList').html(html);
             if (val.trim() && typeof clearFieldValidationErrors === 'function') {
                 clearFieldValidationErrors('hiring_namager');
@@ -5069,12 +5359,18 @@
             names.splice(i, 1);
             $('#hiring_namager').val(names.join(','));
             renderHiringCards();
+            if (window.JeroHiringTeamEngine && typeof window.JeroHiringTeamEngine.syncFromInputs === 'function') {
+                window.JeroHiringTeamEngine.syncFromInputs();
+            }
         }
         function renderRecruiterCards() {
             var val = $('#recruiter').val() || '';
             _jrLastRec = val;
             var names = jrSplit(val), html = '';
-            names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Recruiter'), 'removeRecruiterCard(' + i + ')'); });
+            names.forEach(function(n, i) {
+                var isCaptain = (i === 0);
+                html += jrPersonCard(n, jrDesig(n, isCaptain ? 'Captain / Lead Recruiter' : 'Recruiter'), 'removeRecruiterCard(' + i + ')', isCaptain);
+            });
             $('#recruiterCardList').html(html);
             if (val.trim() && typeof clearFieldValidationErrors === 'function') {
                 clearFieldValidationErrors('recruiter');
@@ -5088,6 +5384,9 @@
             $('#recruiter').val(names.join(','));
             $('#recruiter_id').val(ids.join(','));
             renderRecruiterCards();
+            if (window.JeroHiringTeamEngine && typeof window.JeroHiringTeamEngine.syncFromInputs === 'function') {
+                window.JeroHiringTeamEngine.syncFromInputs();
+            }
         }
 
         // ---- Salary words helpers (Enterprise Multi-Currency Engine) ----
@@ -7792,10 +8091,19 @@
 
             syncAll();
 
+            var opId = $('#operation_id').val();
+            if (!opId) {
+                opId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                $('#operation_id').val(opId);
+            }
+
             var data = new FormData();
             var form_data = $('#kt_contact_add_form').serializeArray();
             $.each(form_data, function(key, input) { data.append(input.name, input.value); });
             data.append('detail_description', document.getElementById('jobDescription').innerHTML);
+            if (!data.has('operation_id') || !data.get('operation_id')) {
+                data.set('operation_id', opId);
+            }
 
             var $btn = $('.submit-card .btn-primary');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
@@ -7815,6 +8123,11 @@
                          $btn.prop('disabled', false).html('Publish Job');
                         showToast('Job saved successfully!', 'success');
                         setTimeout(function() { window.location = __indexUrl; }, 600);
+                    } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
+                        $btn.prop('disabled', false).html('Publish Job');
+                        var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                        $('#operation_id').val(freshOpId);
+                        showToast('Submission updated. Please click "Publish Job" again.', 'info');
                     } else {
                         $btn.prop('disabled', false).html('Publish Job');
                         if (!navigator.onLine) {
@@ -7825,6 +8138,36 @@
                 },
                 error: function(xhr) {
                     $btn.prop('disabled', false).html('Publish Job');
+                    if (xhr.status === 419) {
+                        // TC-10: Session Expiry / 419 Recovery: preserve form state in RAM; refresh CSRF token without page reload
+                        fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(function(r) { return r.text(); })
+                            .then(function(html) {
+                                var parser = new DOMParser();
+                                var doc = parser.parseFromString(html, 'text/html');
+                                var newToken = doc.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                                if (newToken) {
+                                    $('meta[name="csrf-token"]').attr('content', newToken);
+                                    $('input[name="_token"]').val(newToken);
+                                    var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                                    $('#operation_id').val(freshOpId);
+                                    showToast('Session refreshed! All your job details are preserved. Please click "Publish Job" to submit.', 'info');
+                                } else {
+                                    showToast('Session expired. Please refresh the page.', 'error');
+                                }
+                            })
+                            .catch(function() {
+                                showToast('Session expired. Please refresh the page.', 'error');
+                            });
+                        return;
+                    }
+                    if (xhr.status === 409) {
+                        // TC-09: Idempotency conflict / payload mutation
+                        var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                        $('#operation_id').val(freshOpId);
+                        showToast('Submission updated. Please click "Publish Job" again.', 'info');
+                        return;
+                    }
                     if (xhr.status === 0 || !navigator.onLine) {
                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                     } else {
@@ -9402,6 +9745,12 @@
             getSelectedName: function() {
                 var c = clientsMap.get(L0.selectedClientId);
                 return c ? c.name : '';
+            },
+            getClient: function(id) {
+                return clientsMap.get(parseInt(id, 10)) || null;
+            },
+            getAllClients: function() {
+                return Array.from(clientsMap.values());
             },
             select: selectClient,
             clear: clearSelection,
@@ -11596,6 +11945,975 @@
             initEventListeners();
             initSyncListeners();
         }
+    })();
+    </script>
+
+    <!-- =========================================================================
+         God-Level Hiring Team Engine v7.2 (Client-First Execution / 10K Concurrency)
+         Zero network requests on drawer open/filter/assign/scroll
+         ========================================================================= -->
+    <script id="jero_roster_seed_data" type="application/json">
+        {!! json_encode($teamRoster ?? []) !!}
+    </script>
+    <script>
+    (function() {
+        'use strict';
+
+        var CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        var CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+        var ROSTER_VERSION = {{ (int) ($rosterVersion ?? 1) }};
+        var WORKLOAD_VERSION = {{ (int) ($workloadVersion ?? 1) }};
+
+        // Transient Browser Heap Roster Data (Zero localStorage / IndexedDB for staff roster, TC-18)
+        var rawSeed = document.getElementById('jero_roster_seed_data');
+        var initialRoster = [];
+        try {
+            initialRoster = JSON.parse(rawSeed ? rawSeed.textContent : '[]');
+        } catch (e) {
+            initialRoster = [];
+        }
+
+        window.__JERO_ROSTER_DATA__ = initialRoster;
+        window.__JERO_ROSTER_VERSION__ = ROSTER_VERSION;
+        window.__JERO_WORKLOAD_VERSION__ = WORKLOAD_VERSION;
+
+        // Constants
+        var ROW_HEIGHT = 64; // Fixed 64px row height (Section 2.6)
+        var MAX_RENDERED = 35; // Bounded virtualization <= 35 rows (TC-13)
+        var BUFFER_SIZE = 5;
+
+        // State Machine in Transient RAM
+        var rosterList = Array.isArray(initialRoster) ? initialRoster.slice() : [];
+        var assignedRecruiters = []; // [{ id, name, fullName, role, avatarClass, initial, isCaptain }]
+        var assignedHiringManagers = []; // [{ id, name, role, email, phone, avatarClass, initial }]
+
+        var recSearchQuery = '';
+        var recFilterTab = 'all'; // 'all' | 'available' | 'busy'
+        var recFilteredList = [];
+        var recFocusedIndex = -1;
+        var recScrollTop = 0;
+        var recIsDrawerOpen = false;
+
+        var hmSearchQuery = '';
+        var hmFilteredList = [];
+        var hmIsDrawerOpen = false;
+
+        var broadcast = null;
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                broadcast = new BroadcastChannel('jero_hiring_team_tenant_' + CURRENT_TENANT_ID);
+                broadcast.onmessage = function(ev) {
+                    if (ev.data && ev.data.type === 'ROSTER_SYNC' && Array.isArray(ev.data.roster)) {
+                        rosterList = ev.data.roster;
+                        window.__JERO_ROSTER_DATA__ = rosterList;
+                        applyRecruiterFilters();
+                        if (recIsDrawerOpen) renderRecruiterVirtualList();
+                    }
+                };
+            }
+        } catch (e) {}
+
+        // Helper: Metronic Avatar Colors
+        function getAvatarColor(str) {
+            var colors = ['#3E97FF', '#7239EA', '#50CD89', '#F6C000', '#F1416C', '#009EF7'];
+            if (!str) return colors[0];
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function getInitials(name) {
+            if (!name) return 'TM';
+            var p = name.trim().split(/\s+/);
+            if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase();
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Initialize state from existing hidden inputs
+        function syncFromInputs() {
+            // Sync Recruiters
+            var recNames = ($('#recruiter').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            var recIds = ($('#recruiter_id').val() || '').split(',').map(function(s) { return parseInt(s.trim(), 10); }).filter(function(id) { return !isNaN(id) && id > 0; });
+
+            assignedRecruiters = [];
+            recNames.forEach(function(name, i) {
+                var id = recIds[i] || (i + 1);
+                var matched = rosterList.find(function(r) { return r.id === id; });
+                assignedRecruiters.push({
+                    id: id,
+                    name: name,
+                    fullName: matched ? matched.fullName : name,
+                    role: matched ? matched.role : 'Recruiter',
+                    avatarClass: matched ? matched.avatarClass : '',
+                    initial: matched ? matched.initial : getInitials(name),
+                    isCaptain: (i === 0) // Earliest assigned is Captain
+                });
+            });
+
+            // Sync Hiring Managers
+            var hmNames = ($('#hiring_namager').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            var clientId = parseInt($('#client_id').val(), 10);
+            var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                ? window.JeroClientSelectEngine.getClient(clientId)
+                : null;
+            var contacts = (clientObj && clientObj.cc) ? clientObj.cc : [];
+
+            assignedHiringManagers = [];
+            hmNames.forEach(function(name, i) {
+                var matched = contacts.find(function(c) { return (c.n || c.contact_person_name) === name; });
+                var id = matched ? matched.id : (i + 1);
+                var role = matched ? (matched.d || matched.contact_person_designation || 'Hiring Manager') : 'Hiring Manager';
+                var email = matched ? (matched.e || matched.contact_person_email || '') : '';
+                var phone = matched ? (matched.p || matched.contact_person_number || '') : '';
+                assignedHiringManagers.push({
+                    id: id,
+                    name: name,
+                    role: role,
+                    email: email,
+                    phone: phone,
+                    initial: getInitials(name)
+                });
+            });
+        }
+
+        function commitRecruiterChanges() {
+            var names = assignedRecruiters.map(function(r) { return r.name; });
+            var ids = assignedRecruiters.map(function(r) { return r.id; });
+            $('#recruiter').val(names.join(','));
+            $('#recruiter_id').val(ids.join(','));
+
+            if (typeof renderRecruiterCards === 'function') {
+                renderRecruiterCards();
+            }
+
+            if (recIsDrawerOpen) {
+                renderRecruiterDrawerAssigned();
+                renderRecruiterVirtualList();
+            }
+        }
+
+        function commitHiringManagerChanges() {
+            var names = assignedHiringManagers.map(function(h) { return h.name; });
+            $('#hiring_namager').val(names.join(','));
+
+            if (typeof renderHiringCards === 'function') {
+                renderHiringCards();
+            }
+
+            if (hmIsDrawerOpen) {
+                renderHiringManagerDrawerAssigned();
+                renderHiringManagerList();
+            }
+        }
+
+        // =========================================================================
+        // RECRUITER DRAWER (Zero Network / Virtualized / WAI-ARIA WCAG Keyboard)
+        // =========================================================================
+
+        function applyRecruiterFilters() {
+            var q = recSearchQuery.trim().toLowerCase();
+
+            var list = rosterList.filter(function(item) {
+                // Workload tab filter
+                if (recFilterTab === 'available' && (item.activeJobs || 0) > 3) return false;
+                if (recFilterTab === 'busy' && (item.activeJobs || 0) <= 3) return false;
+
+                if (!q) return true;
+
+                // Match query
+                var name = (item.fullName || item.name || '').toLowerCase();
+                var role = (item.role || '').toLowerCase();
+                var email = (item.email || '').toLowerCase();
+                return name.indexOf(q) !== -1 || role.indexOf(q) !== -1 || email.indexOf(q) !== -1;
+            });
+
+            // Lexicographical Search Ranking (TC-19)
+            // Match Tier -> Status -> Workload -> Name -> ID
+            if (q) {
+                list.sort(function(a, b) {
+                    var nameA = (a.fullName || a.name || '').toLowerCase();
+                    var nameB = (b.fullName || b.name || '').toLowerCase();
+
+                    var tierA = nameA.startsWith(q) ? 1 : (nameA.indexOf(q) !== -1 ? 2 : 3);
+                    var tierB = nameB.startsWith(q) ? 1 : (nameB.indexOf(q) !== -1 ? 2 : 3);
+
+                    if (tierA !== tierB) return tierA - tierB;
+
+                    // Status (active first)
+                    var statusA = a.active ? 1 : 0;
+                    var statusB = b.active ? 1 : 0;
+                    if (statusA !== statusB) return statusB - statusA;
+
+                    // Workload (lower activeJobs first)
+                    var loadA = a.activeJobs || 0;
+                    var loadB = b.activeJobs || 0;
+                    if (loadA !== loadB) return loadA - loadB;
+
+                    // Name alphabetical
+                    var nameCompare = nameA.localeCompare(nameB);
+                    if (nameCompare !== 0) return nameCompare;
+
+                    return a.id - b.id;
+                });
+            }
+
+            recFilteredList = list;
+            recFocusedIndex = recFilteredList.length > 0 ? 0 : -1;
+        }
+
+        function openRecruiterDrawer() {
+            syncFromInputs();
+            applyRecruiterFilters();
+            recIsDrawerOpen = true;
+
+            var drawerBody = document.getElementById('kt_activitiesRecruiter_body');
+            if (!drawerBody) return;
+
+            drawerBody.innerHTML = `
+                <div class="hiring-team-drawer-wrapper">
+                    <!-- Assigned Section -->
+                    <div class="ht-drawer-assigned-section" id="recDrawerAssignedContainer"></div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="ht-drawer-search-bar">
+                        <div class="ht-search-input-wrap">
+                            <i class="la la-search ht-search-icon"></i>
+                            <input type="text" id="recDrawerSearchInput" class="ht-search-input" placeholder="Search team members by name, role..." value="${escapeHtml(recSearchQuery)}" autocomplete="off" spellcheck="false">
+                            <button type="button" id="recDrawerSearchClear" class="ht-search-clear" style="${recSearchQuery ? 'display:flex;' : 'display:none;'}">
+                                <i class="la la-times"></i>
+                            </button>
+                        </div>
+                        <div class="ht-filter-pills" role="tablist">
+                            <button type="button" class="ht-pill ${recFilterTab === 'all' ? 'active' : ''}" data-filter="all">All (${rosterList.length})</button>
+                            <button type="button" class="ht-pill ${recFilterTab === 'available' ? 'active' : ''}" data-filter="available">Available (≤ 3 jobs)</button>
+                            <button type="button" class="ht-pill ${recFilterTab === 'busy' ? 'active' : ''}" data-filter="busy">High Load (> 3 jobs)</button>
+                        </div>
+                    </div>
+
+                    <!-- Section Header -->
+                    <div class="ht-drawer-list-header">
+                        <span class="ht-list-title" id="recDrawerAvailableCount">Available Recruiters (${recFilteredList.length})</span>
+                        <span class="ht-list-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate, <kbd>Enter</kbd> toggle</span>
+                    </div>
+
+                    <!-- Virtualized Listbox -->
+                    <div class="ht-virtual-viewport" id="recVirtualViewport" role="listbox" aria-label="Recruiter roster" tabindex="0">
+                        <div id="recVirtualCanvas" style="position:relative; width:100%;">
+                            <div id="recVirtualTopSpacer" style="height:0px;"></div>
+                            <div id="recVirtualItems" role="presentation"></div>
+                            <div id="recVirtualBottomSpacer" style="height:0px;"></div>
+                        </div>
+                        <div id="recVirtualEmpty" class="ht-empty-state" style="display:none;">
+                            <div class="ht-empty-icon"><i class="la la-user-slash"></i></div>
+                            <div class="ht-empty-title">No team members found</div>
+                            <div class="ht-empty-sub">Try searching with a different name or clear the filter.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderRecruiterDrawerAssigned();
+            renderRecruiterVirtualList();
+            bindRecruiterDrawerEvents();
+
+            // Trigger Metronic drawer slide-out with 0 network requests
+            $('#kt_activitiesRecruiter_toggle').trigger('click');
+
+            // Focus search input
+            setTimeout(function() {
+                var searchInput = document.getElementById('recDrawerSearchInput');
+                if (searchInput) searchInput.focus();
+            }, 60);
+        }
+
+        function renderRecruiterDrawerAssigned() {
+            var container = document.getElementById('recDrawerAssignedContainer');
+            if (!container) return;
+
+            if (assignedRecruiters.length === 0) {
+                container.innerHTML = `
+                    <div class="ht-assigned-header">
+                        <span class="ht-assigned-title">ASSIGNED TEAM (0)</span>
+                    </div>
+                    <div class="ht-assigned-empty">No recruiters assigned yet. Select from the roster below.</div>
+                `;
+                return;
+            }
+
+            var cardsHtml = assignedRecruiters.map(function(r, idx) {
+                var isCaptain = (idx === 0);
+                var captainBadge = isCaptain
+                    ? `<span class="ht-captain-badge"><i class="fa fa-star"></i> Captain</span>`
+                    : `<button type="button" class="ht-make-captain-btn" data-rec-index="${idx}" title="Promote to Primary Captain"><i class="fa fa-star-o"></i> Make Captain</button>`;
+
+                return `
+                    <div class="ht-assigned-card ${isCaptain ? 'is-captain' : ''}">
+                        <div class="ht-assigned-avatar" style="background:${getAvatarColor(r.fullName)}">${escapeHtml(r.initial || getInitials(r.fullName))}</div>
+                        <div class="ht-assigned-info">
+                            <div class="ht-assigned-name">${escapeHtml(r.fullName || r.name)}</div>
+                            <div class="ht-assigned-role">${escapeHtml(r.role || 'Recruiter')}</div>
+                        </div>
+                        <div class="ht-assigned-actions">
+                            ${captainBadge}
+                            <button type="button" class="ht-card-remove-btn" data-rec-index="${idx}" title="Remove Recruiter">
+                                <i class="la la-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="ht-assigned-header">
+                    <span class="ht-assigned-title">ASSIGNED TEAM (${assignedRecruiters.length})</span>
+                    <span class="ht-assigned-sub">Earliest assigned member acts as Job Captain</span>
+                </div>
+                <div class="ht-assigned-cards-grid">
+                    ${cardsHtml}
+                </div>
+            `;
+        }
+
+        function renderRecruiterVirtualList() {
+            var viewport = document.getElementById('recVirtualViewport');
+            var topSpacer = document.getElementById('recVirtualTopSpacer');
+            var bottomSpacer = document.getElementById('recVirtualBottomSpacer');
+            var itemsContainer = document.getElementById('recVirtualItems');
+            var emptyState = document.getElementById('recVirtualEmpty');
+            var countEl = document.getElementById('recDrawerAvailableCount');
+
+            if (!viewport || !topSpacer || !bottomSpacer || !itemsContainer) return;
+
+            if (countEl) countEl.textContent = `Available Recruiters (${recFilteredList.length})`;
+
+            if (recFilteredList.length === 0) {
+                topSpacer.style.height = '0px';
+                bottomSpacer.style.height = '0px';
+                itemsContainer.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'flex';
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = 'none';
+
+            var totalItems = recFilteredList.length;
+            var viewportHeight = viewport.clientHeight || 450;
+            var visibleCount = Math.min(Math.ceil(viewportHeight / ROW_HEIGHT), 25);
+            var startIndex = Math.max(0, Math.floor(recScrollTop / ROW_HEIGHT) - BUFFER_SIZE);
+            var renderedCount = Math.min(totalItems - startIndex, visibleCount + (BUFFER_SIZE * 2), MAX_RENDERED);
+            var endIndex = startIndex + renderedCount;
+
+            topSpacer.style.height = (startIndex * ROW_HEIGHT) + 'px';
+            bottomSpacer.style.height = Math.max(0, (totalItems - endIndex) * ROW_HEIGHT) + 'px';
+
+            var slice = recFilteredList.slice(startIndex, endIndex);
+            var assignedIds = new Set(assignedRecruiters.map(function(r) { return r.id; }));
+
+            var html = slice.map(function(item, idx) {
+                var actualIndex = startIndex + idx;
+                var isAssigned = assignedIds.has(item.id);
+                var isFocused = (actualIndex === recFocusedIndex);
+                var loadColor = (item.activeJobs || 0) <= 2 ? '#50cd89' : ((item.activeJobs || 0) <= 4 ? '#f6c000' : '#f1416c');
+
+                return `
+                    <div class="ht-virtual-row ${isAssigned ? 'assigned' : ''} ${isFocused ? 'focused' : ''}"
+                         role="option"
+                         id="rec_opt_${item.id}"
+                         aria-selected="${isAssigned ? 'true' : 'false'}"
+                         aria-label="${escapeHtml(item.fullName || item.name)} - ${escapeHtml(item.role)}"
+                         tabindex="${isFocused ? '0' : '-1'}"
+                         data-rec-id="${item.id}"
+                         data-actual-index="${actualIndex}"
+                         style="height:${ROW_HEIGHT}px;">
+                        <div class="ht-row-avatar" style="background:${getAvatarColor(item.fullName)}">${escapeHtml(item.initial || getInitials(item.fullName))}</div>
+                        <div class="ht-row-info">
+                            <div class="ht-row-name">${escapeHtml(item.fullName || item.name)}</div>
+                            <div class="ht-row-role">${escapeHtml(item.role || 'Recruiter')}</div>
+                        </div>
+                        <div class="ht-row-workload">
+                            <span class="ht-workload-tag" style="color:${loadColor}; background:${loadColor}15;">
+                                <i class="la la-briefcase"></i> ${item.activeJobs || 0} active
+                            </span>
+                        </div>
+                        <div class="ht-row-action">
+                            <button type="button" class="btn btn-sm ${isAssigned ? 'btn-light-danger' : 'btn-light-primary'} ht-assign-btn" data-rec-id="${item.id}">
+                                ${isAssigned ? '<i class="la la-check"></i> Assigned' : '<i class="la la-plus"></i> Assign'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            itemsContainer.innerHTML = html;
+        }
+
+        function toggleRecruiterAssignment(recId) {
+            recId = parseInt(recId, 10);
+            var existingIndex = assignedRecruiters.findIndex(function(r) { return r.id === recId; });
+
+            if (existingIndex !== -1) {
+                // Remove recruiter
+                assignedRecruiters.splice(existingIndex, 1);
+                // Captain Promotion Invariant (TC-17): Promote earliest assigned recruiter
+                if (assignedRecruiters.length > 0) {
+                    assignedRecruiters.forEach(function(r, idx) { r.isCaptain = (idx === 0); });
+                }
+            } else {
+                // Assign recruiter
+                var target = rosterList.find(function(r) { return r.id === recId; });
+                if (target) {
+                    var isFirst = (assignedRecruiters.length === 0);
+                    assignedRecruiters.push({
+                        id: target.id,
+                        name: target.fullName || target.name,
+                        fullName: target.fullName || target.name,
+                        role: target.role || 'Recruiter',
+                        avatarClass: target.avatarClass || '',
+                        initial: target.initial || getInitials(target.fullName),
+                        isCaptain: isFirst // First assigned becomes Captain
+                    });
+                }
+            }
+
+            commitRecruiterChanges();
+        }
+
+        function promoteRecruiterToCaptain(recIndex) {
+            recIndex = parseInt(recIndex, 10);
+            if (recIndex <= 0 || recIndex >= assignedRecruiters.length) return;
+
+            // Move this recruiter to index 0 (Primary Captain)
+            var promoted = assignedRecruiters.splice(recIndex, 1)[0];
+            promoted.isCaptain = true;
+            assignedRecruiters.unshift(promoted);
+
+            // Re-normalize isCaptain flags
+            assignedRecruiters.forEach(function(r, idx) { r.isCaptain = (idx === 0); });
+
+            commitRecruiterChanges();
+        }
+
+        function bindRecruiterDrawerEvents() {
+            var searchInput = document.getElementById('recDrawerSearchInput');
+            var clearBtn = document.getElementById('recDrawerSearchClear');
+            var viewport = document.getElementById('recVirtualViewport');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    recSearchQuery = this.value;
+                    if (clearBtn) clearBtn.style.display = recSearchQuery ? 'flex' : 'none';
+                    recScrollTop = 0;
+                    if (viewport) viewport.scrollTop = 0;
+                    applyRecruiterFilters();
+                    renderRecruiterVirtualList();
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    recSearchQuery = '';
+                    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+                    clearBtn.style.display = 'none';
+                    recScrollTop = 0;
+                    if (viewport) viewport.scrollTop = 0;
+                    applyRecruiterFilters();
+                    renderRecruiterVirtualList();
+                });
+            }
+
+            // Filter pills
+            document.querySelectorAll('.ht-pill').forEach(function(pill) {
+                pill.addEventListener('click', function() {
+                    document.querySelectorAll('.ht-pill').forEach(function(p) { p.classList.remove('active'); });
+                    this.classList.add('active');
+                    recFilterTab = this.getAttribute('data-filter') || 'all';
+                    recScrollTop = 0;
+                    if (viewport) viewport.scrollTop = 0;
+                    applyRecruiterFilters();
+                    renderRecruiterVirtualList();
+                });
+            });
+
+            // Virtual scroll listener
+            if (viewport) {
+                viewport.addEventListener('scroll', function() {
+                    recScrollTop = this.scrollTop;
+                    renderRecruiterVirtualList();
+                }, { passive: true });
+
+                // WCAG Listbox Keyboard Matrix (TC-15, TC-16, Section 2.7)
+                viewport.addEventListener('keydown', function(e) {
+                    if (recFilteredList.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (recFocusedIndex < recFilteredList.length - 1) {
+                            recFocusedIndex++;
+                            ensureFocusedRecruiterVisible(viewport);
+                            renderRecruiterVirtualList();
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (recFocusedIndex > 0) {
+                            recFocusedIndex--;
+                            ensureFocusedRecruiterVisible(viewport);
+                            renderRecruiterVirtualList();
+                        }
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        recFocusedIndex = 0;
+                        viewport.scrollTop = 0;
+                        renderRecruiterVirtualList();
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        recFocusedIndex = recFilteredList.length - 1;
+                        viewport.scrollTop = (recFilteredList.length * ROW_HEIGHT);
+                        renderRecruiterVirtualList();
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (recFocusedIndex >= 0 && recFocusedIndex < recFilteredList.length) {
+                            toggleRecruiterAssignment(recFilteredList[recFocusedIndex].id);
+                        }
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        $('#kt_activitiesRecruiter_close').click();
+                        var trigger = document.getElementById('recSearchDisplay');
+                        if (trigger) trigger.focus();
+                    }
+                });
+            }
+
+            // Delegate Click Events on Virtual Rows and Assigned Cards
+            var drawerBody = document.getElementById('kt_activitiesRecruiter_body');
+            if (drawerBody) {
+                drawerBody.onclick = function(e) {
+                    // Make Captain click
+                    var makeCaptainBtn = e.target.closest('.ht-make-captain-btn');
+                    if (makeCaptainBtn) {
+                        var idx = parseInt(makeCaptainBtn.getAttribute('data-rec-index'), 10);
+                        promoteRecruiterToCaptain(idx);
+                        return;
+                    }
+
+                    // Remove assigned card click
+                    var removeBtn = e.target.closest('.ht-card-remove-btn');
+                    if (removeBtn) {
+                        var cardIdx = parseInt(removeBtn.getAttribute('data-rec-index'), 10);
+                        assignedRecruiters.splice(cardIdx, 1);
+                        if (assignedRecruiters.length > 0) {
+                            assignedRecruiters.forEach(function(r, i) { r.isCaptain = (i === 0); });
+                        }
+                        commitRecruiterChanges();
+                        return;
+                    }
+
+                    // Assign button or row toggle click
+                    var row = e.target.closest('.ht-virtual-row');
+                    if (row) {
+                        var recId = parseInt(row.getAttribute('data-rec-id'), 10);
+                        toggleRecruiterAssignment(recId);
+                        return;
+                    }
+                };
+            }
+        }
+
+        function ensureFocusedRecruiterVisible(viewport) {
+            var targetTop = recFocusedIndex * ROW_HEIGHT;
+            var targetBottom = targetTop + ROW_HEIGHT;
+            if (targetTop < viewport.scrollTop) {
+                viewport.scrollTop = targetTop;
+            } else if (targetBottom > viewport.scrollTop + viewport.clientHeight) {
+                viewport.scrollTop = targetBottom - viewport.clientHeight;
+            }
+        }
+
+        // =========================================================================
+        // HIRING MANAGER / CLIENT CONTACT DRAWER (Zero Network / Client RAM)
+        // =========================================================================
+
+        function openHiringManagerDrawer() {
+            var clientId = parseInt($('#client_id').val(), 10);
+            if (!clientId || clientId <= 0) {
+                Swal.fire({
+                    title: 'Organization Required',
+                    text: 'Please select a Hiring Organization before choosing Hiring Managers or Contact Persons.',
+                    icon: 'warning',
+                    confirmButtonText: 'Select Organization',
+                    customClass: { confirmButton: 'btn btn-primary' }
+                });
+                return;
+            }
+
+            syncFromInputs();
+            hmIsDrawerOpen = true;
+
+            var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                ? window.JeroClientSelectEngine.getClient(clientId)
+                : null;
+            var clientName = clientObj ? clientObj.name : ($('#client_id option:selected').text() || 'Organization');
+            var clientLogo = clientObj ? (clientObj.logo || '') : '';
+
+            // Update drawer header logo/caption
+            $('#light_client_name').text(clientName);
+            if (clientLogo) {
+                $('#light_client_caption').removeClass('d-none').html(`<img src="${clientLogo}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:5px;">`);
+            } else {
+                $('#light_client_caption').removeClass('d-none').text(clientName.substring(0, 1).toUpperCase());
+            }
+
+            var drawerBody = document.getElementById('kt_activitiesClient_body');
+            if (!drawerBody) return;
+
+            drawerBody.innerHTML = `
+                <div class="hiring-team-drawer-wrapper">
+                    <!-- Assigned Section -->
+                    <div class="ht-drawer-assigned-section" id="hmDrawerAssignedContainer"></div>
+
+                    <!-- Search & Action Bar -->
+                    <div class="ht-drawer-search-bar">
+                        <div class="ht-search-input-wrap">
+                            <i class="la la-search ht-search-icon"></i>
+                            <input type="text" id="hmDrawerSearchInput" class="ht-search-input" placeholder="Search contacts by name, email, designation..." value="${escapeHtml(hmSearchQuery)}" autocomplete="off">
+                            <button type="button" id="hmDrawerSearchClear" class="ht-search-clear" style="${hmSearchQuery ? 'display:flex;' : 'display:none;'}">
+                                <i class="la la-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light-primary" id="btnDrawerAddContact" style="white-space:nowrap; gap:6px; font-weight:600;">
+                            <i class="la la-user-plus"></i> Add Contact Person
+                        </button>
+                    </div>
+
+                    <!-- Section Header -->
+                    <div class="ht-drawer-list-header">
+                        <span class="ht-list-title" id="hmDrawerAvailableCount">Organization Contacts</span>
+                    </div>
+
+                    <!-- Contacts List Container -->
+                    <div class="ht-virtual-viewport" id="hmContactsViewport" role="listbox" aria-label="Organization contact persons">
+                        <div id="hmContactsList" class="ht-contacts-list-flow"></div>
+                        <div id="hmContactsEmpty" class="ht-empty-state" style="display:none;">
+                            <div class="ht-empty-icon"><i class="la la-address-book"></i></div>
+                            <div class="ht-empty-title">No contact persons found</div>
+                            <div class="ht-empty-sub">Click "+ Add Contact Person" above to create one instantly.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderHiringManagerDrawerAssigned();
+            renderHiringManagerList();
+            bindHiringManagerDrawerEvents();
+
+            // Trigger Metronic drawer slide-out with 0 network requests
+            $('#kt_activitiesClient_toggle').trigger('click');
+
+            // Focus search input
+            setTimeout(function() {
+                var searchInput = document.getElementById('hmDrawerSearchInput');
+                if (searchInput) searchInput.focus();
+            }, 60);
+        }
+
+        function renderHiringManagerDrawerAssigned() {
+            var container = document.getElementById('hmDrawerAssignedContainer');
+            if (!container) return;
+
+            if (assignedHiringManagers.length === 0) {
+                container.innerHTML = `
+                    <div class="ht-assigned-header">
+                        <span class="ht-assigned-title">ASSIGNED HIRING MANAGERS (0)</span>
+                    </div>
+                    <div class="ht-assigned-empty">No hiring managers assigned yet. Select from the contacts below.</div>
+                `;
+                return;
+            }
+
+            var cardsHtml = assignedHiringManagers.map(function(h, idx) {
+                return `
+                    <div class="ht-assigned-card">
+                        <div class="ht-assigned-avatar" style="background:${getAvatarColor(h.name)}">${escapeHtml(h.initial || getInitials(h.name))}</div>
+                        <div class="ht-assigned-info">
+                            <div class="ht-assigned-name">${escapeHtml(h.name)}</div>
+                            <div class="ht-assigned-role">${escapeHtml(h.role || 'Hiring Manager')}</div>
+                        </div>
+                        <div class="ht-assigned-actions">
+                            <button type="button" class="ht-card-remove-btn" data-hm-index="${idx}" title="Remove Hiring Manager">
+                                <i class="la la-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="ht-assigned-header">
+                    <span class="ht-assigned-title">ASSIGNED HIRING MANAGERS (${assignedHiringManagers.length})</span>
+                </div>
+                <div class="ht-assigned-cards-grid">
+                    ${cardsHtml}
+                </div>
+            `;
+        }
+
+        function renderHiringManagerList() {
+            var listContainer = document.getElementById('hmContactsList');
+            var emptyState = document.getElementById('hmContactsEmpty');
+            var countEl = document.getElementById('hmDrawerAvailableCount');
+
+            if (!listContainer) return;
+
+            var clientId = parseInt($('#client_id').val(), 10);
+            var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                ? window.JeroClientSelectEngine.getClient(clientId)
+                : null;
+            var contacts = (clientObj && clientObj.cc) ? clientObj.cc : [];
+
+            var q = hmSearchQuery.trim().toLowerCase();
+            var filtered = contacts.filter(function(c) {
+                if (!q) return true;
+                var n = (c.n || c.contact_person_name || '').toLowerCase();
+                var e = (c.e || c.contact_person_email || '').toLowerCase();
+                var d = (c.d || c.contact_person_designation || '').toLowerCase();
+                return n.indexOf(q) !== -1 || e.indexOf(q) !== -1 || d.indexOf(q) !== -1;
+            });
+
+            if (countEl) countEl.textContent = `Organization Contacts (${filtered.length})`;
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'flex';
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = 'none';
+
+            var assignedNames = new Set(assignedHiringManagers.map(function(h) { return h.name; }));
+
+            var html = filtered.map(function(c) {
+                var name = c.n || c.contact_person_name || 'Contact';
+                var desig = c.d || c.contact_person_designation || 'Hiring Lead';
+                var email = c.e || c.contact_person_email || '';
+                var phone = c.p || c.contact_person_number || '';
+                var cleanPhone = phone.replace(/[^0-9]/g, '');
+                var isAssigned = assignedNames.has(name);
+
+                var emailAction = email ? `<a href="mailto:${escapeHtml(email)}" class="btn btn-icon btn-sm btn-light-primary ht-comm-btn" title="Send email to ${escapeHtml(email)}"><i class="la la-envelope"></i></a>` : '';
+                var callAction = phone ? `<a href="tel:${escapeHtml(phone)}" class="btn btn-icon btn-sm btn-light-success ht-comm-btn" title="Call ${escapeHtml(phone)}"><i class="la la-phone"></i></a>` : '';
+                var waAction = cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-sm btn-light-success ht-comm-btn" title="WhatsApp message"><i class="lab la-whatsapp"></i></a>` : '';
+
+                return `
+                    <div class="ht-contact-row ${isAssigned ? 'assigned' : ''}" data-hm-id="${c.id}" data-hm-name="${escapeHtml(name)}">
+                        <div class="ht-contact-avatar" style="background:${getAvatarColor(name)}">${escapeHtml(getInitials(name))}</div>
+                        <div class="ht-contact-details">
+                            <div class="ht-contact-name">${escapeHtml(name)}</div>
+                            <div class="ht-contact-role">${escapeHtml(desig)}</div>
+                            <div class="ht-contact-meta">
+                                ${email ? `<span><i class="la la-envelope"></i> ${escapeHtml(email)}</span>` : ''}
+                                ${phone ? `<span><i class="la la-phone"></i> ${escapeHtml(phone)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="ht-contact-actions">
+                            <div class="ht-quick-comms">${emailAction}${callAction}${waAction}</div>
+                            <button type="button" class="btn btn-sm ${isAssigned ? 'btn-light-danger' : 'btn-light-primary'} ht-hm-assign-btn" data-hm-id="${c.id}" data-hm-name="${escapeHtml(name)}">
+                                ${isAssigned ? '<i class="la la-check"></i> Assigned' : '<i class="la la-plus"></i> Assign'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listContainer.innerHTML = html;
+        }
+
+        function toggleHiringManagerAssignment(contactId, contactName) {
+            var existingIndex = assignedHiringManagers.findIndex(function(h) { return h.name === contactName; });
+
+            if (existingIndex !== -1) {
+                assignedHiringManagers.splice(existingIndex, 1);
+            } else {
+                var clientId = parseInt($('#client_id').val(), 10);
+                var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                    ? window.JeroClientSelectEngine.getClient(clientId)
+                    : null;
+                var contacts = (clientObj && clientObj.cc) ? clientObj.cc : [];
+                var matched = contacts.find(function(c) { return (c.n || c.contact_person_name) === contactName; });
+
+                assignedHiringManagers.push({
+                    id: contactId,
+                    name: contactName,
+                    role: matched ? (matched.d || matched.contact_person_designation || 'Hiring Manager') : 'Hiring Manager',
+                    email: matched ? (matched.e || matched.contact_person_email || '') : '',
+                    phone: matched ? (matched.p || matched.contact_person_number || '') : '',
+                    initial: getInitials(contactName)
+                });
+            }
+
+            commitHiringManagerChanges();
+        }
+
+        function bindHiringManagerDrawerEvents() {
+            var searchInput = document.getElementById('hmDrawerSearchInput');
+            var clearBtn = document.getElementById('hmDrawerSearchClear');
+            var addBtn = document.getElementById('btnDrawerAddContact');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    hmSearchQuery = this.value;
+                    if (clearBtn) clearBtn.style.display = hmSearchQuery ? 'flex' : 'none';
+                    renderHiringManagerList();
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    hmSearchQuery = '';
+                    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+                    clearBtn.style.display = 'none';
+                    renderHiringManagerList();
+                });
+            }
+
+            if (addBtn) {
+                addBtn.addEventListener('click', function() {
+                    $('#add_team_member').modal('show');
+                });
+            }
+
+            var drawerBody = document.getElementById('kt_activitiesClient_body');
+            if (drawerBody) {
+                drawerBody.onclick = function(e) {
+                    var removeBtn = e.target.closest('.ht-card-remove-btn');
+                    if (removeBtn) {
+                        var cardIdx = parseInt(removeBtn.getAttribute('data-hm-index'), 10);
+                        assignedHiringManagers.splice(cardIdx, 1);
+                        commitHiringManagerChanges();
+                        return;
+                    }
+
+                    var assignBtn = e.target.closest('.ht-hm-assign-btn');
+                    if (assignBtn) {
+                        var id = parseInt(assignBtn.getAttribute('data-hm-id'), 10);
+                        var name = assignBtn.getAttribute('data-hm-name');
+                        toggleHiringManagerAssignment(id, name);
+                        return;
+                    }
+                };
+            }
+        }
+
+        // =========================================================================
+        // CLIENT SWITCH ATOMICITY (TC-03)
+        // =========================================================================
+
+        function onClientSwitched(clientId) {
+            clientId = parseInt(clientId, 10);
+            var hadAssignments = assignedHiringManagers.length > 0;
+
+            // Atomically clear previously selected client HMs (TC-03)
+            assignedHiringManagers = [];
+            $('#hiring_namager').val('');
+
+            if (typeof renderHiringCards === 'function') {
+                renderHiringCards();
+            }
+
+            if (hmIsDrawerOpen) {
+                renderHiringManagerDrawerAssigned();
+                renderHiringManagerList();
+            }
+
+            // Emit single decoupled event
+            window.dispatchEvent(new CustomEvent('jero:client-switched', {
+                detail: {
+                    clientId: clientId,
+                    previousCleared: hadAssignments
+                }
+            }));
+        }
+
+        // =========================================================================
+        // CONTACT ADD CALLBACK (When contact created via #add_team_member modal)
+        // =========================================================================
+
+        function onContactAdded(response) {
+            if (!response || !response.contact_person_name) return;
+
+            var clientId = parseInt($('#client_id').val(), 10);
+            var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                ? window.JeroClientSelectEngine.getClient(clientId)
+                : null;
+
+            if (clientObj) {
+                if (!Array.isArray(clientObj.cc)) clientObj.cc = [];
+                var newContact = {
+                    id: response.id || (Date.now()),
+                    n: response.contact_person_name,
+                    d: response.contact_person_designation || 'Hiring Manager',
+                    e: response.contact_person_email || '',
+                    p: response.contact_person_number || '',
+                    c: response.calling_code || ''
+                };
+                clientObj.cc.unshift(newContact);
+            }
+
+            // Automatically assign the newly added contact
+            toggleHiringManagerAssignment(response.id || 0, response.contact_person_name);
+        }
+
+        // =========================================================================
+        // EXPORT TO GLOBAL SCOPE
+        // =========================================================================
+
+        window.JeroHiringTeamEngine = {
+            openRecruiterDrawer: openRecruiterDrawer,
+            openHiringManagerDrawer: openHiringManagerDrawer,
+            toggleRecruiterAssignment: toggleRecruiterAssignment,
+            promoteRecruiterToCaptain: promoteRecruiterToCaptain,
+            toggleHiringManagerAssignment: toggleHiringManagerAssignment,
+            onContactAdded: onContactAdded,
+            onClientSwitched: onClientSwitched,
+            syncFromInputs: syncFromInputs,
+            getRoster: function() { return rosterList; },
+            getAssignedRecruiters: function() { return assignedRecruiters; },
+            getAssignedHiringManagers: function() { return assignedHiringManagers; },
+            getCaptain: function() {
+                return assignedRecruiters.find(function(r) { return r.isCaptain; }) || assignedRecruiters[0] || null;
+            }
+        };
+
+        // Wire event listeners on ready
+        function initHiringTeamEngine() {
+            syncFromInputs();
+
+            // Client change listeners (TC-03)
+            window.addEventListener('jero:client-selected', function(ev) {
+                if (ev.detail && ev.detail.clientId) {
+                    onClientSwitched(ev.detail.clientId);
+                }
+            });
+
+            window.addEventListener('jero:client-cleared', function() {
+                onClientSwitched(0);
+            });
+
+            $('#client_id').on('change', function() {
+                var newId = parseInt($(this).val(), 10) || 0;
+                onClientSwitched(newId);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHiringTeamEngine);
+        } else {
+            initHiringTeamEngine();
+        }
+
     })();
     </script>
     {{-- Create-only enhancement script — placed LAST so all globals defined in the inline

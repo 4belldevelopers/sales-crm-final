@@ -85,8 +85,8 @@ class JobService
         }
 
         $job->carrier_website = $requestData['carrier_website'] ?? null;
-        $job->work_type = $requestData['work_from_home'] ?? null;
-        $job->show_vendor = $requestData['show_client_name'] ?? null;
+        $job->work_type = $requestData['work_from_home'] ?? ($requestData['work_type'] ?? 'no');
+        $job->show_vendor = $requestData['show_client_name'] ?? ($requestData['show_vendor'] ?? 'no');
 
         $currency = GeneralMethod::currency();
 
@@ -335,60 +335,100 @@ class JobService
                 }
             }
 
-            // 10. Batch Recruiter Assignment
+            // 10. Batch Recruiter Assignment & Captain Invariant (Section 2.3)
             $cc = [];
-            if (! empty($requestData['recruiter']) && ! empty($requestData['recruiter_id'])) {
-                $recruiterArr = array_map('trim', explode(',', $requestData['recruiter_id']));
-                $recUsers = DB::table('users')
-                    ->select('id', 'email')
-                    ->where('company_id', $user->company_id)
-                    ->whereIn('id', $recruiterArr)
-                    ->where('status', 'active')
-                    ->get()
-                    ->keyBy('id');
+            if (! empty($requestData['recruiter_id'])) {
+                $rawRecArr = is_array($requestData['recruiter_id'])
+                    ? $requestData['recruiter_id']
+                    : explode(',', (string) $requestData['recruiter_id']);
 
-                $batchRecInsert = [];
-                foreach ($recruiterArr as $key => $recId) {
-                    $recRow = $recUsers->get($recId);
-                    if ($recRow) {
-                        $cc[] = $recRow->email;
-                        $batchRecInsert[] = [
-                            'company_id' => $user->company_id,
-                            'user_id' => $recRow->id,
-                            'spok_user_id' => ($key === 0) ? $recRow->id : null,
-                            'job_id' => $job->id,
-                        ];
-                        GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
+                $recruiterArr = array_values(array_unique(array_filter(array_map('trim', $rawRecArr), function ($val) {
+                    return $val !== '' && is_numeric($val) && (int) $val > 0;
+                })));
+
+                if (count($recruiterArr) > 0) {
+                    $recUsers = DB::table('users')
+                        ->select('id', 'email')
+                        ->where('company_id', $user->company_id)
+                        ->whereIn('id', $recruiterArr)
+                        ->where('status', 'active')
+                        ->get()
+                        ->keyBy('id');
+
+                    $batchRecInsert = [];
+                    $primaryRecruiterId = null;
+
+                    foreach ($recruiterArr as $recId) {
+                        $recRow = $recUsers->get($recId);
+                        if ($recRow) {
+                            $cc[] = $recRow->email;
+                            if ($primaryRecruiterId === null) {
+                                $primaryRecruiterId = (int) $recRow->id;
+                            }
+                            $batchRecInsert[] = [
+                                'company_id' => $user->company_id,
+                                'user_id' => $recRow->id,
+                                'spok_user_id' => null, // Initialized null, atomically updated below
+                                'job_id' => $job->id,
+                            ];
+                            GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
+                        }
                     }
-                }
-                if (count($batchRecInsert) > 0) {
-                    DB::table('job_assign')->insert($batchRecInsert);
+
+                    if (count($batchRecInsert) > 0) {
+                        // 1. Persist recruiter assignment batch
+                        DB::table('job_assign')->insert($batchRecInsert);
+
+                        // 2. Clear any conflicting spokesperson records for this company & job
+                        DB::table('job_assign')
+                            ->where('job_id', $job->id)
+                            ->where('company_id', $user->company_id)
+                            ->update(['spok_user_id' => null]);
+
+                        // 3. Atomically assign Captain to primary recruiter (earliest assignment order)
+                        if ($primaryRecruiterId > 0) {
+                            DB::table('job_assign')
+                                ->where('job_id', $job->id)
+                                ->where('user_id', $primaryRecruiterId)
+                                ->where('company_id', $user->company_id)
+                                ->update(['spok_user_id' => $primaryRecruiterId]);
+                        }
+                    }
                 }
             }
 
-            // 11. Batch Hiring Manager Assignment
+            // 11. Batch Hiring Manager Assignment with Strict Tenancy & Client Scope
             if (! empty($requestData['hiring_namager']) && ! empty($requestData['client_id'])) {
-                $hmArr = array_map('trim', explode(',', $requestData['hiring_namager']));
-                $hmRows = DB::table('client_contact_info')
-                    ->select('id', 'contact_person_name')
-                    ->where('client_id', $requestData['client_id'])
-                    ->whereIn('contact_person_name', $hmArr)
-                    ->get()
-                    ->keyBy('contact_person_name');
+                $rawHmArr = is_array($requestData['hiring_namager'])
+                    ? $requestData['hiring_namager']
+                    : explode(',', (string) $requestData['hiring_namager']);
 
-                $batchHmInsert = [];
-                foreach ($hmArr as $cp) {
-                    $recRow = $hmRows->get($cp);
-                    if ($recRow) {
-                        $batchHmInsert[] = [
-                            'company_id' => $user->company_id,
-                            'client_contact_info_id' => $recRow->id,
-                            'job_id' => $job->id,
-                        ];
+                $hmArr = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
+
+                if (count($hmArr) > 0) {
+                    $hmRows = DB::table('client_contact_info')
+                        ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
+                        ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
+                        ->where('client_contact_info.client_id', (int) $requestData['client_id'])
+                        ->where('clients.company_id', $user->company_id)
+                        ->whereIn('client_contact_info.contact_person_name', $hmArr)
+                        ->get()
+                        ->keyBy('contact_person_name');
+
+                    $batchHmInsert = [];
+                    foreach ($hmArr as $cp) {
+                        $recRow = $hmRows->get($cp);
+                        if ($recRow) {
+                            $batchHmInsert[] = [
+                                'company_id' => $user->company_id,
+                                'client_contact_info_id' => $recRow->id,
+                                'job_id' => $job->id,
+                            ];
+                        }
                     }
-                }
-                if (count($batchHmInsert) > 0) {
-                    DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+                    if (count($batchHmInsert) > 0) {
+                        DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+                    }
                 }
             }
 
@@ -452,7 +492,7 @@ class JobService
                     $workType = 'Hybrid';
                 }
 
-                $jobAdditional = Job::select('jobs.id','job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+                $jobAdditional = Job::select('jobs.id', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
                     ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                     ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
                     ->withoutGlobalScopes()->find($job->id);
@@ -665,7 +705,7 @@ class JobService
             if (! empty($workCity)) {
                 DB::table('client_city_jobs')->where('job_id', $job->id)->delete();
                 $workCityAll = is_array($workCity) ? $workCity : json_decode($workCity, true);
-                
+
                 if (is_array($workCityAll) && count($workCityAll) > 0) {
                     $cityNames = [];
                     $countryNames = [];
@@ -673,7 +713,7 @@ class JobService
 
                     foreach ($workCityAll as $cVal) {
                         $parts = explode('|', $cVal['value'] ?? '');
-                        
+
                         if (count($parts) >= 3) {
                             $cName = trim($parts[0]);
                             $coName = trim($parts[2]);
@@ -709,9 +749,9 @@ class JobService
                                 return strcasecmp($itemCity, $pairCity) === 0
                                     && strcasecmp($itemCountry, $pairCountry) === 0;
                             });
-                          
+
                             if ($match) {
-                               
+
                                 $batchCityInsert[] = [
                                     'company_id' => $user->company_id,
                                     'city_id' => $match->city_id,
@@ -773,7 +813,7 @@ class JobService
 
             // Recruiters
             if (! empty($requestData['recruiter']) && ! empty($requestData['recruiter_id'])) {
-                                
+
                 $recruiterArr = array_map('trim', explode(',', $requestData['recruiter_id']));
                 // DB::table('job_assign')->where('job_id', $job->id)->where('company_id', $user->company_id)->delete();
                 DB::table('job_assign')->where('job_id', $job->id)->where('company_id', $user->company_id)->whereNotIn('user_id', $recruiterArr)->delete();
@@ -791,7 +831,7 @@ class JobService
 
                     $recRow = $recUsers->get($recId);
 
-                    if (!$recRow) {
+                    if (! $recRow) {
                         continue;
                     }
 
@@ -801,17 +841,17 @@ class JobService
                         ->where('user_id', $recRow->id)
                         ->exists();
 
-                    if (!$exists) {
+                    if (! $exists) {
 
                         $batchRecInsert[] = [
-                            'company_id'   => $user->company_id,
-                            'user_id'      => $recRow->id,
+                            'company_id' => $user->company_id,
+                            'user_id' => $recRow->id,
                             'spok_user_id' => ($key === 0) ? $recRow->id : null,
-                            'job_id'       => $job->id,
+                            'job_id' => $job->id,
                         ];
 
                         GeneralMethod::cacheClean(
-                            'alljobslist_version_user_' . $recRow->id
+                            'alljobslist_version_user_'.$recRow->id
                         );
                     }
                 }
