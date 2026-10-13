@@ -1020,6 +1020,18 @@
 #jrwrap.internal-job-create :is(.ij-location-input-wrap, .ij-qual-input-wrap) .form-input {
     padding-left: 38px !important;
 }
+#jrwrap.internal-job-create :is(.jero-title-select-wrap, .jero-title-input-box) input#title.jero-title-input,
+#jrwrap.internal-job-create input#title.jero-title-input,
+#jrwrap.internal-job-create .jero-title-input {
+    padding-left: 40px !important;
+    padding-right: 56px !important;
+}
+#jrwrap.internal-job-create :is(.jero-dept-select-wrap, .jero-dept-input-box) input#category_id_display.jero-dept-input,
+#jrwrap.internal-job-create input#category_id_display.jero-dept-input,
+#jrwrap.internal-job-create .jero-dept-input {
+    padding-left: 36px !important;
+    padding-right: 68px !important;
+}
 
 #jrwrap.internal-job-create .ij-location-input-wrap {
     position: relative !important;
