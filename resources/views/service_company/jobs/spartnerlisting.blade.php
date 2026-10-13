@@ -1,2280 +1,1392 @@
 @php
+    /**
+     * Intent: GOD-LEVEL UI/UX Redesign for "Connect With Agencies" (Agency Distribution Center).
+     * Architecture: Isolated Drawer experience for Service Company Jobs.
+     * Features:
+     * - Fixed right-side drawer (92–94vw on desktop, 15.6" screen optimized).
+     * - Sticky compact header with Job Title, Metadata & Close controls.
+     * - Two-Column independent architecture:
+     *     Column 1: Publish to Agency Marketplace (Discovery / Broadcast) with Live vs Unpublished states.
+     *     Column 2: Send Requirement Directly to Agencies (Proactive Engagement) with Recommended, My Agencies, Assigned tabs.
+     * - Strict 5-Column Agency Table:
+     *     1. Agency & Specialization (strong title, verified badge, match %, skill tags)
+     *     2. Matching Profiles (count + label)
+     *     3. Rates (Rate % / CTC, Full-Time/Contract, Onetime/Recurring)
+     *     4. Location & Team (Location pin + City, Country, Recruiter count)
+     *     5. Send Requirement (Individual CTA)
+     * - Zero row checkboxes, zero N+1 database queries, safe HTTP 304 representation caching in RAM.
+     * TENANT ISOLATION: Scoped strictly to auth()->user()->company_id.
+     */
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
 
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
     $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
-    // dd(count($data));
+
+    $current_job_id = @$job->id ?: @$job_id;
+
+    // Determine current marketplace publishing state
+    $marketStatus = @$job->public_market_status;
+    $isPublished = in_array(@$text_change, ['Published', 'Approval Pending']) || ($marketStatus == 2 || $marketStatus == 1);
+
+    // Pre-calculate salary display values
+    $min_sal_mode = $max_sal_mode = $max_salary = $min_salary = '';
+    $sal_mode = @$job->max_sal_mode;
+    $min_salary_currenc = @$job->min_salary_currency;
+    $min_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode] ?? 'M', 0, 1));
+    $max_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode] ?? 'A', 0, 1));
+    $salary_currency = $currencySymbole[@$min_salary_currenc] ?? '₹';
+
+    $currencymain = GeneralMethod::currency();
+    $currencyCode = $currencymain[$min_salary_currenc] ?? 'INR';
+    $convertedAmounEctc = GeneralMethod::conversionRates($currencyCode, @$job->max_salary ?: 0, 0);
+    $convertedAmounCtc = GeneralMethod::conversionRates($currencyCode, @$job->min_salary ?: 0, 0);
+
+    $ectc = $convertedAmounEctc[$sal_mode] ?? 0;
+    $ctc = $convertedAmounCtc[$sal_mode] ?? 0;
+
+    $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
+    $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
+
+    // Location display text
+    $clientLocationText = 'Remote';
+    if (@$job->work_type == 'no') {
+        $clientLocationText = !empty($jobLocationCountselect->city) ? $jobLocationCountselect->city : 'Multiple Locations';
+    } elseif (@$job->work_type == 'any') {
+        $clientLocationText = !empty($jobLocationCountselect->city) ? $jobLocationCountselect->city.' (Hybrid)' : 'Hybrid / Remote';
+    }
+
+    // Skills array - safely normalize collection or array
+    $rawSkills = $skillArr ?? [];
+    if ($rawSkills instanceof \Illuminate\Support\Collection) {
+        $skillArrList = $rawSkills->all();
+    } elseif (is_array($rawSkills)) {
+        $skillArrList = $rawSkills;
+    } elseif (is_iterable($rawSkills)) {
+        $skillArrList = iterator_to_array($rawSkills);
+    } else {
+        $skillArrList = [];
+    }
 @endphp
 
-<link href="{{ asset('demo/css/css-circular-prog-bar.css') }}" rel="stylesheet">
+{{-- =========================================================================
+     SCOPED STYLES: AGENCY DISTRIBUTION CENTER DRAWER
+     ========================================================================= --}}
 <style>
-    #recommendedlist td {
-        position: relative !important;
+    /* ── Drawer Dimensions & Overrides ────────────────────────────────────── */
+    #kt_activitiesRecruiter {
+        width: 92vw !important;
+        max-width: 94vw !important;
+        border-top-left-radius: 16px !important;
+        border-bottom-left-radius: 16px !important;
+        overflow: hidden !important;
+        box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12) !important;
+        background: #f8fafc !important;
     }
-
-    #boostlisting td {
-        position: relative !important;
+    #kt_activitiesRecruiter > .card {
+        border-top-left-radius: 16px !important;
+        border-bottom-left-radius: 16px !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: #f8fafc !important;
+        border: none !important;
     }
-
-    #staffingPartnersRegister td {
-        position: relative !important;
-    }
-
-    #boostlisting tbody tr {
-        height: 80px !important;
-    }
-
-    #recommendedlist tbody tr {
-        height: 80px !important;
-    }
-
-    #staffingPartnersRegister tbody tr {
-        height: 80px !important;
-    }
-
-    .modal-backdrop {
-        position: unset !important;
-    }
-
-    /* ── Skill-tag remove button: white × on the purple circle ── */
-    .tagify__tag__removeBtn {
-        -webkit-mask-image: none !important;
-        mask-image: none !important;
-        background-image: none !important;
-        color: #fff !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        line-height: 1 !important;
-    }
-    .tagify__tag__removeBtn::before,
-    .tagify__tag__removeBtn::after {
+    #kt_activitiesRecruiter > .card > .card-header {
         display: none !important;
-        content: none !important;
+    }
+    #kt_activitiesRecruiter_body {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0 !important;
+        background: #f8fafc !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    #kt_activitiesStaffing_close svg{
-        color: red;
+    /* ── Sticky Header Card ──────────────────────────────────────────────── */
+    .agency-drawer-header {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 20px;
+        margin: 14px 18px 12px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 62px;
+        flex-shrink: 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .adh-job-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #ffedd5;
+        border: 1px solid #fed7aa;
+        color: #ea580c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .adh-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+    }
+    .adh-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .adh-skill-badge {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
     }
 
-    #apptrackerfilter_close svg {
-            color: red;
+    /* ── Drawer Scrollable Body ───────────────────────────────────────────── */
+    .agency-drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 18px 18px 18px;
+        background: #f8fafc;
     }
 
-    /* ============================================================
-       Assigned Agency Tab — Modern Card Rows
-       ============================================================ */
+    /* ── Two Column Architecture ─────────────────────────────────────────── */
+    .agency-distribution-grid {
+        display: grid;
+        grid-template-columns: 35% 65%;
+        gap: 16px;
+        align-items: start;
+    }
+    @media (max-width: 1200px) {
+        .agency-distribution-grid {
+            grid-template-columns: 1fr;
+        }
+        #kt_activitiesRecruiter {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            border-radius: 0 !important;
+        }
+    }
+
+    /* ── Column Cards ─────────────────────────────────────────────────────── */
+    .agency-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .agency-section-banner-blue {
+        background: #f0f7ff;
+        border: 1px solid #dbeafe;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .agency-section-banner-green {
+        background: #f0fdf9;
+        border: 1px solid #ccfbf1;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .agency-col-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .agency-col-badge.blue { background: #0066ff; }
+    .agency-col-badge.green { background: #10b981; }
+
+    .agency-section-heading {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        margin: 0;
+    }
+    .agency-section-subtitle {
+        font-size: 11.5px;
+        color: #64748b;
+        margin: 3px 0 0 0;
+        line-height: 1.4;
+    }
+
+    /* ── Column 1 Panels ──────────────────────────────────────────────────── */
+    .info-panel-blue {
+        background: #f0f7ff;
+        border: 1px solid #dbeafe;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .live-panel-green {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .panel-icon-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .panel-icon-circle.blue {
+        background: #ffffff;
+        border: 1px solid #dbeafe;
+        color: #0066ff;
+    }
+    .panel-icon-circle.green {
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    /* Input select styling */
+    .agency-input-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+    }
+    .input-icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        background: #f0f7ff;
+        border: 1px solid #dbeafe;
+        color: #0066ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .agency-select {
+        flex: 1;
+        height: 42px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        padding: 0 14px;
+        background-color: #ffffff;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+    }
+    .agency-select:focus {
+        border-color: #0066ff;
+    }
+    .agency-helper-text {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    /* Benefits card */
+    .benefits-panel {
+        background: #f0fdf9;
+        border: 1px solid #ccfbf1;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+    .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #334155;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    .benefit-item:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Action buttons: display flex with NO !important so .d-none wins */
+    .btn-publish-primary {
+        background: #0066ff;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 18px;
+        width: 100%;
+        font-size: 13.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0, 102, 255, 0.25);
+        transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .btn-publish-primary:hover {
+        background: #0052cc;
+    }
+    .btn-unpublish-destructive {
+        background: #ffffff;
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+        border-radius: 8px;
+        padding: 12px 18px;
+        width: 100%;
+        font-size: 13.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .btn-unpublish-destructive:hover {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #f87171;
+    }
+
+    /* Enforce strict hidden rules for marketplace toggle */
+    #sp_list_one.d-none,
+    #sp_list_two.d-none,
+    #marketplace_unpublished_box.d-none,
+    #marketplace_live_box.d-none,
+    .agency-hidden {
+        display: none !important;
+    }
+
+    /* ── Column 2 Tabs & Table ────────────────────────────────────────────── */
+    .agency-tabs-nav {
+        display: flex;
+        gap: 22px;
+        border-bottom: 1.5px solid #e2e8f0;
+        margin-top: 14px;
+        padding-bottom: 0;
+    }
+    .agency-tab-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+        padding: 8px 4px 11px;
+        text-decoration: none;
+        border-bottom: 2.5px solid transparent;
+        margin-bottom: -1.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .agency-tab-link:hover {
+        color: #0066ff;
+    }
+    .agency-tab-link.active {
+        color: #0066ff;
+        border-bottom-color: #0066ff;
+    }
+
+    /* Agency Search and Filter row */
+    .agency-search-filter-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        margin-bottom: 12px;
+    }
+    .agency-search-input-wrap {
+        flex: 1;
+        position: relative;
+    }
+    .agency-search-input-wrap svg {
+        position: absolute;
+        left: 12px;
+        top: 11px;
+        color: #94a3b8;
+    }
+    .agency-search-input {
+        width: 100%;
+        height: 38px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding-left: 36px;
+        padding-right: 12px;
+        font-size: 12px;
+        background: #ffffff;
+        color: #1e293b;
+        outline: none;
+        transition: border-color 0.15s ease;
+    }
+    .agency-search-input:focus {
+        border-color: #2563eb;
+    }
+    .btn-filter-trigger {
+        height: 38px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-filter-trigger:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    /* Table headers */
+    .agency-data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .agency-data-table th {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 9px 12px;
+        border-bottom: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .agency-data-table td {
+        vertical-align: middle;
+    }
+
+    /* Multiple Agencies Bottom Banner */
+    .bottom-multi-agency-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 14px;
+    }
+
+    /* Loader styling */
+    .table-loader-wrap {
+        display: none;
+        padding: 30px;
+        text-align: center;
+    }
+    .loader_search {
+        display: none;
+    }
+
+    /* ── Assigned Agencies Tab Styles ────────────────────────────────── */
     .aa-header-row {
-        display: flex; align-items: center;
-        padding: 5px 16px 8px;
-        font-size: 10.5px; font-weight: 600; color: #94a3b8;
-        text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex !important;
+        align-items: center !important;
+        background: #f8fafc !important;
+        border-bottom: 1.5px solid #e2e8f0 !important;
+        padding: 9px 14px !important;
+        margin-bottom: 6px !important;
+        border-radius: 8px !important;
+        font-family: 'Poppins', sans-serif !important;
     }
-    .aa-hcol-agency     { flex: 0 0 18%; }
-    .aa-hcol-contact    { flex: 0 0 12%; }
-    .aa-hcol-perf       { flex: 0 0 35%; text-align: center; }
-    .aa-hcol-shared     { flex: 0 0 11%; padding-left: 8px; }
-    .aa-hcol-status     { flex: 0 0 9%; text-align: center; }
-    .aa-hcol-actions    { flex: 1 1 auto; text-align: right; }
+    .aa-hcol-agency     { flex: 0 0 22% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
+    .aa-hcol-contact    { flex: 0 0 15% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
+    .aa-hcol-perf       { flex: 0 0 29% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: center !important; }
+    .aa-hcol-shared     { flex: 0 0 11% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
+    .aa-hcol-status     { flex: 0 0 9% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: center !important; }
+    .aa-hcol-actions    { flex: 1 1 auto !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: right !important; }
 
     .aa-row {
-        display: flex; align-items: center;
-        background: #fff; border: 1px solid #e8ecf1;
-        border-radius: 10px; padding: 10px 14px;
-        margin-bottom: 6px;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
-        gap: 0; min-height: 54px;
+        display: flex !important;
+        align-items: center !important;
+        background: #ffffff !important;
+        border: 1px solid #e8ecf1 !important;
+        border-radius: 10px !important;
+        padding: 10px 14px !important;
+        margin-bottom: 6px !important;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
+        gap: 0 !important;
+        min-height: 56px !important;
+        font-family: 'Poppins', sans-serif !important;
+        width: 100% !important;
     }
-    .aa-row:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); border-color: #c7d2de; }
+    .aa-row:hover {
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05) !important;
+        border-color: #cbd5e1 !important;
+    }
 
-    .aa-col-agency     { flex: 0 0 18%; display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 8px; }
-    .aa-col-contact    { flex: 0 0 12%; min-width: 0; padding-right: 8px; }
-    /* Fixed width; KPIs size from content so spacing feels natural */
-    .aa-col-perf       { flex: 0 0 35%; display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: nowrap; overflow: hidden; padding-right: 20px; }
-    .aa-col-shared     { flex: 0 0 11%; min-width: 0; padding-left: 8px; padding-right: 6px; }
-    .aa-col-status     { flex: 0 0 9%; text-align: center; }
-    .aa-col-actions    { flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 6px; position: relative; min-width: 130px; }
+    .aa-col-agency {
+        flex: 0 0 22% !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+        padding-right: 8px !important;
+    }
+    .aa-col-contact {
+        flex: 0 0 15% !important;
+        min-width: 0 !important;
+        padding-right: 8px !important;
+    }
+    .aa-col-perf {
+        flex: 0 0 29% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        flex-wrap: nowrap !important;
+    }
+    .aa-col-shared {
+        flex: 0 0 11% !important;
+        min-width: 0 !important;
+        padding-right: 6px !important;
+    }
+    .aa-col-status {
+        flex: 0 0 9% !important;
+        text-align: center !important;
+    }
+    .aa-col-actions {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        position: relative !important;
+        min-width: 120px !important;
+    }
 
     /* Agency logo */
     .aa-logo {
-        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 15px; color: #fff;
-        overflow: hidden; border: 2px solid #f0f4f8;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        max-width: 38px !important;
+        max-height: 38px !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        color: #ffffff !important;
+        overflow: hidden !important;
+        border: 1.5px solid #f1f5f9 !important;
     }
-    .aa-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .aa-name    { font-weight: 600; font-size: 12px; color: #0f172a; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .aa-cat     { font-size: 10.5px; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aa-logo img {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 38px !important;
+        max-height: 38px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        display: block !important;
+    }
+    .aa-name {
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        color: #0f172a !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .aa-cat {
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        margin-top: 1px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
 
-    /* Contact */
-    .aa-cnt-name { font-size: 12px; font-weight: 500; color: #0f172a; line-height: 1.3; }
-    .aa-cnt-desg { font-size: 10.5px; color: #64748b; line-height: 1.3; }
-    .aa-cnt-dash { font-size: 12px; color: #94a3b8; }
-    .aa-cnt-btns { display: flex; gap: 4px; margin-top: 5px; }
+    /* Contact details */
+    .aa-cnt-name {
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.25 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .aa-cnt-btns {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 3px !important;
+    }
     .aa-cnt-btn {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 24px; height: 24px; border-radius: 6px;
-        background: #f1f5f9; border: none; cursor: pointer;
-        color: #64748b; font-size: 11px;
-        transition: background 0.12s, color 0.12s;
+        width: 24px !important;
+        height: 24px !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f8fafc !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        color: #64748b !important;
+        cursor: pointer !important;
+        transition: background 0.12s, color 0.12s, border-color 0.12s !important;
     }
-    .aa-cnt-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .aa-cnt-btn:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    .aa-cnt-dash {
+        color: #94a3b8 !important;
+        font-size: 13px !important;
+    }
 
-    /* KPI badges — natural-width per item so padding is consistent */
+    /* Performance KPIs */
     .aa-kpi {
-        display: flex; flex-direction: column; align-items: center; gap: 3px;
-        flex: 0 1 auto; padding: 0 10px;
-        border-right: 1px solid #e2e8f0;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1px !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding: 0 2px !important;
+        border-right: 1px solid #f1f5f9 !important;
     }
-    .aa-kpi:last-child { border-right: none; }
-    .aa-kpi-num   { font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1; }
-    .aa-kpi-label { font-size: 9px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; }
-    .aa-kpi-sep   { display: none; }
+    .aa-kpi:last-child {
+        border-right: none !important;
+    }
+    .aa-kpi-num {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.1 !important;
+    }
+    .aa-kpi-label {
+        font-size: 8.5px !important;
+        color: #64748b !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.2px !important;
+        white-space: nowrap !important;
+    }
 
     /* Shared date */
-    .aa-shared-rel { font-size: 12px; font-weight: 500; color: #1e293b; }
-    .aa-shared-abs { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
+    .aa-shared-rel {
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.2 !important;
+    }
+    .aa-shared-abs {
+        font-size: 10px !important;
+        color: #64748b !important;
+        margin-top: 1px !important;
+    }
 
     /* Status badges */
     .aa-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 4px 10px; border-radius: 20px;
-        font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 3px 8px !important;
+        border-radius: 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
     }
-    .aa-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .aa-badge-open    { background: #dcfce7; color: #16a34a; }
-    .aa-badge-closed  { background: #f1f5f9; color: #64748b; }
-    .aa-badge-paused  { background: #fef3c7; color: #d97706; }
-    .aa-badge-expired { background: #fee2e2; color: #dc2626; }
+    .aa-badge-dot {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        background: currentColor !important;
+    }
+    .aa-badge-open    { background: #dcfce7 !important; color: #16a34a !important; }
+    .aa-badge-closed  { background: #f1f5f9 !important; color: #64748b !important; }
+    .aa-badge-paused  { background: #fef3c7 !important; color: #d97706 !important; }
+    .aa-badge-expired { background: #fee2e2 !important; color: #dc2626 !important; }
 
     /* Actions */
     .aa-terms-btn {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 5px 11px; border-radius: 7px;
-        border: 1.5px solid #e2e8f0; background: #fff;
-        font-size: 11.5px; font-weight: 500; color: #475569;
-        cursor: pointer; white-space: nowrap;
-        transition: border-color 0.12s, color 0.12s, background 0.12s;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 5px 10px !important;
+        border-radius: 7px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        transition: border-color 0.12s, color 0.12s, background 0.12s !important;
     }
-    .aa-terms-btn:hover { border-color: #6366f1; color: #6366f1; background: #f8f7ff; }
-
+    .aa-terms-btn:hover {
+        border-color: #0066ff !important;
+        color: #0066ff !important;
+        background: #eff6ff !important;
+    }
     .aa-dots-btn {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 30px; height: 30px; border-radius: 7px;
-        border: 1.5px solid #e2e8f0; background: #fff;
-        cursor: pointer; color: #64748b; font-size: 13px;
-        transition: background 0.12s, border-color 0.12s;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 7px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        cursor: pointer !important;
+        color: #64748b !important;
+        font-size: 13px !important;
+        transition: background 0.12s, border-color 0.12s !important;
     }
-    .aa-dots-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
-
+    .aa-dots-btn:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #1e293b !important;
+    }
     .aa-ddmenu {
-        position: absolute; right: 0; top: calc(100% + 5px);
-        background: #fff; border: 1px solid #e2e8f0;
-        border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-        z-index: 200; min-width: 165px; padding: 5px 0; display: none;
+        position: absolute !important;
+        right: 0 !important;
+        top: calc(100% + 4px) !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+        z-index: 100 !important;
+        min-width: 155px !important;
+        padding: 4px 0 !important;
+        display: none !important;
     }
-    .aa-ddmenu.open { display: block; }
+    .aa-ddmenu.open {
+        display: block !important;
+    }
     .aa-ddi {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 14px; font-size: 12px; color: #374151;
-        cursor: pointer; border: none; background: none;
-        width: 100%; text-align: left; white-space: nowrap;
-        transition: background 0.1s;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 7px 12px !important;
+        font-size: 11.5px !important;
+        color: #ef4444 !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: none !important;
+        width: 100% !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+        transition: background 0.1s !important;
     }
-    .aa-ddi:hover { background: #f8fafc; }
-    .aa-ddi.danger { color: #ef4444; }
-    .aa-ddi.danger:hover { background: #fff5f5; }
+    .aa-ddi:hover {
+        background: #fef2f2 !important;
+    }
 
     /* Empty state */
     .aa-empty {
-        display: flex; flex-direction: column; align-items: center;
-        justify-content: center; padding: 56px 24px; text-align: center;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 48px 20px !important;
+        text-align: center !important;
     }
     .aa-empty-icon {
-        width: 68px; height: 68px; border-radius: 50%; background: #f1f5f9;
-        display: flex; align-items: center; justify-content: center;
-        margin-bottom: 16px; font-size: 26px; color: #94a3b8;
+        width: 56px !important;
+        height: 56px !important;
+        border-radius: 50% !important;
+        background: #f1f5f9 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-bottom: 12px !important;
+        font-size: 22px !important;
+        color: #94a3b8 !important;
     }
-    .aa-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
-    .aa-empty-sub   { font-size: 12.5px; color: #94a3b8; max-width: 280px; line-height: 1.6; }
-
-    /* Responsive — tablet / mobile */
-    @media (max-width: 991px) {
-        .aa-header-row { display: none !important; }
-        .aa-row        { flex-wrap: wrap; gap: 10px; padding: 12px; }
-        .aa-col-agency  { flex: 1 1 100%; }
-        .aa-col-contact { flex: 1 1 100%; }
-        .aa-col-perf    { flex: 1 1 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
-        .aa-kpi         { flex: 0 0 auto; border-right: none; padding: 3px 8px;
-                          background: #f8fafc; border-radius: 5px; min-width: 52px; }
-        .aa-col-shared  { flex: 1 1 45%; }
-        .aa-col-status  { flex: 1 1 45%; text-align: left; }
-        .aa-col-actions { flex: 1 1 100%; justify-content: flex-start; min-width: unset; }
+    .aa-empty-title {
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        margin-bottom: 4px !important;
     }
-
+    .aa-empty-sub {
+        font-size: 12px !important;
+        color: #94a3b8 !important;
+        max-width: 280px !important;
+        line-height: 1.5 !important;
+    }
 </style>
 
-<link href="{{ asset('demo/css/find-agency.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    
+{{-- Hidden Context Inputs --}}
+<input type="hidden" name="current_job_id" id="current_job_id" value="{{ $current_job_id }}" />
+<input type="hidden" name="workhiringtype" id="workhiringtype" value="{{ @$job->employment_type }}" />
+<input type="hidden" name="country" id="country" value="" />
+<input type="hidden" name="min_exp" id="min_exp" value="{{ @$job->min_exp }}" />
+<input type="hidden" name="max_exp" id="max_exp" value="{{ @$job->max_exp }}" />
+<input type="hidden" name="min_sal" id="min_sal" value="{{ @$job->min_salary }}" />
+<input type="hidden" name="max_sal" id="max_sal" value="{{ @$job->max_salary }}" />
+<input type="hidden" name="min_salary_currency" id="min_salary_currency" value="{{ @$job->min_salary_currency }}" />
+<input type="hidden" name="sal_mode" id="sal_mode" value="{{ @$job->max_sal_mode }}" />
+<input type="hidden" name="hiring_type" id="hiring_type" value="2" />
+<input type="hidden" name="experience" id="experience" value="" />
+<input type="hidden" name="industry" id="industry" value="" />
+<input type="hidden" name="country4" id="country4" value="Show All" />
+<input type="hidden" name="hiringtype4" id="hiringtype4" value="0" />
+<input type="hidden" name="kt_tagify_4" id="kt_tagify_4" value="" />
+<input type="hidden" name="kt_tagify_5" id="kt_tagify_5" value="" />
+<input type="hidden" name="kt_tagify_location" id="kt_tagify_location" value="" />
 
-
-<link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
-</script>
-<?php
-
-$current_job_id = '';
-$current_job_id = @$job_id;
-
-?>
-<input type="hidden" name="current_job_id" id="current_job_id" value="<?php echo @$current_job_id; ?>" />
-<div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true"
-    data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
-    data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px"
-    style="">
-
-    <div class="card card-custom mx-2 mb-2 d-none">
-        <div class="card-body py-0">
-
-            <table id="job_request" class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
-                <!--begin::Table head-->
-                <tbody>
-                    <tr style="height: 102px; position: relative;">
-                        <td class="d-flex align-items-center">
-                            @php
-
-                                    $bgTextDecore = $strVal = '';
-                                    $str = trim(@$job->title);
-                                    $str = $strVal = strtolower($str[0]);
-                                    $str = ord($str);
-                                    if ($str >= 97 && $str <= 101) {
-                                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                    } elseif ($str >= 102 && $str <= 106) {
-                                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                    } elseif ($str >= 107 && $str <= 111) {
-                                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                    } elseif ($str >= 112 && $str <= 116) {
-                                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                    } elseif ($str >= 117 && $str <= 121) {
-                                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                    } else {
-                                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                    }
-                                    $clients_name = ucwords(mb_substr($job->client_name, 0, 30));
-                                    $recommendation_id = '';
-                                    $recommendation_id = $job->recommendation_id;
-
-                                    $logo_path = '';
-                                        //$logo_path				=	url('img/client-default.png');
-                                        if (!empty($job->logo_logical_path)) {
-                                            $logo_path = @$job->logo_logical_path;
-                                           
-                                            if (
-                                                $job->thirdparty_counter > 0 &&
-                                                $recommendation_id > 0 &&
-                                                @$job->to_company_id == auth()->user()->company_id
-                                            ) {
-                                                $logo_path = @$job->logo;
-                                            }
-                                        }elseif($job->self_company==1){
-                                            $logo_path = @$job->logo;
-                                        }
-
-
-                                    if ($recommendation_id > 0 && @$job->to_company_id == auth()->user()->company_id) {
-                                        $clients_name = ucwords(mb_substr(@$job->company_name, 0, 30));
-
-                                        if (!empty(@$job->logo) && strlen(@$job->logo) > 10) {
-                                            $logo_path = @$job->logo;
-                                        }
-                                    }
-                                                           $icon =
-                                        '<div data-row-id="' .
-                                        $job->id .
-                                        '" class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 " style="float:left">
-                                    <a href="javascript:void(0);" data-row-id="' .
-                                        $job->id .
-                                        '" class="show-detail">
-                                    <div class="symbol-label ' .
-                                        $bgTextDecore .
-                                        ' border-radius-5">' .
-                                        ucwords($strVal) .
-                                        '</div>
-                                    </a>
-                                </div>';
-
-                                $logo_path = GeneralMethod::companyDetails($job->id);
-
-                                if (!empty($logo_path)) {
-                                    $icon =
-                                        '<div data-row-id="' .
-                                        $job->id .
-                                        '" class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5">
-                                                    <a href="javascript:void(0);">
-                                                        <div class="symbol-label border-radius-5">
-                                                        <img src="' .
-                                        $logo_path .
-                                        '" alt="Company Logo" class="border-radius-5 w-100">
-                                                        </div>
-                                                    </a>
-                                                </div>';
-                                }
-                                $skilltag = '';
-                                $skilltagclass = '';
-                                if (empty($limit)) {
-                                    $skillArrList = $skillArr ?? [];
-                                    if (!empty($skillArrList)) {
-                                        foreach ($skillArrList as $sval) {
-                                            $skilltag .=
-                                                '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
-                                        }
-                                    }
-                                } else {
-                                    $skilltagclass = 'd-none';
-                                }
-
-                                    echo ' <div class=" d-flex align-items-center border-0" >
-                                            
-                                            ' .
-                                        $icon .
-                                        '
-                                        
-                                        <div class="d-flex flex-column"> 
-                                                <a href="javascript:void(0);" data-row-id="' .
-                                        $job->id .
-                                        '" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip1" title="" data-bs-original-title="2">
-                                                    ' .
-                                        ucwords(mb_substr(@$job->title, 0, 30)) .
-                                        '
-                                                </a> 
-                                                <a href="javascript:void(0);" data-row-id="' .
-                                        $job->id .
-                                        '" class="fw-bold text-muted d-block fs-7 text-hover-primary">
-                                                   '.$clients_name.'
-                                                </a> 
-                                            </div> 
-                                        </div> 
-                                        <div class="' .@$skilltagclass .'" style="position: absolute; bottom: 0; white-space: nowrap;width: 100%;overflow: hidden;">
-                                                    <span class="badge badge-light-success my-1">Skills:</span>
-                                                
-                                                ' .
-                                        $skilltag .
-                                        '';
-                            @endphp
-                        </td>
-                        <td>
-                            @php
-                                echo '<div class="d-flex flex-column"> 
-                                            <span class="text-dark fw-bolder fs-6">' .
-                                    @$job->max_exp .
-                                    ' Y</span> 
-                                            <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                                    @$job->min_exp .
-                                    ' Y</span> 
-                                        </div>';
-
-                            @endphp
-                        </td>
-                        <td>
-                            @php
-                                $min_sal_mode = $max_sal_mode = $max_salary_currency = $max_salary = $min_salary = '';
-                                $sal_mode =  $job->max_sal_mode;
-                                $min_salary_currenc =  $job->min_salary_currency;
-                                $min_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode], 0, 1));
-                                $max_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode], 0, 1));
-                                $salary_currency = $currencySymbole[@$min_salary_currency];
-
-                                $cur = $min_salary_currency;
-                                $mod = $sal_mode;
-                                $currencymain = GeneralMethod::currency(); // Currency code
-                                $currency = $currencymain[$cur];
-                                $convertedAmounEctc = GeneralMethod::conversionRates($currency, $job->max_salary, 0);
-                                $convertedAmounCtc = GeneralMethod::conversionRates($currency, $job->min_salary, 0);
-
-                                $ectc = $convertedAmounEctc[$mod];
-                                $ctc = $convertedAmounCtc[$mod];
-
-                                $max_salary = '';
-                                $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
-                                $min_salary = '';
-                                $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
-
-                                echo '<div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">' .
-                                    $salary_currency .
-                                    $max_salary .
-                                    '/' .
-                                    $min_sal_mode .
-                                    '</span>                    
-                                        <span class="fw-bold text-muted d-block fs-7">' .
-                                    $salary_currency .
-                                    $min_salary .
-                                    '/' .
-                                    $max_sal_mode .
-                                    '</span>
-                                    </div>';
-                            @endphp         
-                         </td>
-                        <td>
-                            @php
-                            $country_id = $country_name = '';
-                            $jobid = $job->id;
-                            $client_loc = DB::table('client_location_jobs')
-                                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                ->select(
-                                    'client_location.address',
-                                    'client_location.city',
-                                    'client_location.postcode',
-                                    'client_location.country_id',
-                                    'city_list.city as city_name',
-                                )
-                                ->where('client_location_jobs.job_id', $jobid)
-                                ->first();
-
-                                // dd($client_loc);
-        
-                            $country_id = @$client_loc->country_id;
-                            if (@$country_id > 0) {
-                                $country_name = GeneralMethod::getCountryName($country_id);
-                                foreach ($country_name as $cval) {
-                                    $country_name = ucwords($cval['sortname']);
-                                }
-                            }
-        
-                            $city = mb_substr(@$client_loc->city, 0, 6);
-                            // if (@$client_loc->country_id == 101) {
-                            $city = mb_substr(@$client_loc->city_name, 0, 6);
-                            // }
-        
-                            $jobLocation = DB::table('client_location_jobs')
-                                ->where('client_location_jobs.job_id', $jobid)
-                                ->count();
-        
-                            $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
-        
-                            $employment_type = 'Full-time';
-                            if ($job->employment_type == 1) {
-                                $employment_type = 'Contract';
-                            }
-        
-                            if ($job->work_type == 'yes') {
-                                echo ' <div class="d-flex flex-column">
-                                <span class="text-dark fw-bolder fs-6">Remote</span>
-                                <div class="d-flex align-items-center">
-                                  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                    ucwords(@$employment_type) .
-                                    '" >' .
-                                    ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                    '</span>
-                                  </div>
-                                </div>
-                              </div>';
-                            } elseif ($job->work_type == 'no') {
-                                if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                    $client_loc = DB::table('client_city_jobs')
-                                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                        ->select('city_list.city as city_name', 'countries.country_name')
-                                        ->where('client_city_jobs.job_id', $jobid)
-                                        ->first();
-                                    $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                    $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-        
-                                    echo ' <div class="d-flex flex-column">
-                                    <div class="d-flex align-items-center">
-                                          <span class="text-dark fw-bolder fs-6">' .
-                                        ucwords(mb_substr(@$city, 0, 10)) .
-                                        '</span>
-                                        </div>
-                                        
-                                      <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                        ucwords(@$employment_type) .
-                                        '" >' .
-                                        ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                        '</span>
-                                      </div>
-                                    </div>
-                                  </div>';
-                                } else {
-                                    echo ' <div class="d-flex flex-column">
-                                    <div class="d-flex align-items-center">
-                                          <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                        </div>
-                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                        ucwords(@$employment_type) .
-                                        '" >' .
-                                        ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                        '</span>
-                                  </div>
-                                </div>
-                              </div>';
-                                }
-                            } elseif ($job->work_type == 'any') {
-                                if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                    $client_loc = DB::table('client_city_jobs')
-                                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                        ->select('city_list.city as city_name', 'countries.country_name')
-                                        ->where('client_city_jobs.job_id', $jobid)
-                                        ->first();
-                                    $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                    $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-        
-                                    echo ' <div class="d-flex flex-column">
-                                    <div class="d-flex align-items-center">
-                                          <span class="text-dark fw-bolder fs-6">' .
-                                        ucwords(mb_substr(@$city, 0, 10)) .
-                                        '</span>
-                                        </div>
-                                        
-                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                        ucwords(@$employment_type) .
-                                        '" >' .
-                                        ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                        '</span>
-                                      </div>
-                                    </div>
-                                  </div>';
-                                } else {
-                                    echo ' <div class="d-flex flex-column">
-                                <div class="d-flex align-items-center">
-                                  <span class="text-dark fw-bolder fs-6">Remote</span>
-                                  &nbsp;|&nbsp;
-                                          <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                        </div>
-                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                        ucwords(@$employment_type) .
-                                        '" >' .
-                                        ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                        '</span>
-        
-                                  </div>
-                                </div>
-                              </div>';
-                                }
-                            }
-        
-                        @endphp
-                        </td>
-                        <td>
-                            @php
-                                    $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                                    $status = ucwords($job->status);
-                                    $class = $job_status[$job->status];
-                                    $recommendation_id = $job->recommendation_relation_id;
-
-                                    if ($status == 'Active') {
-                                        $status = 'Hiring';
-                                    }
-
-                                    if ($status == 'Inactive') {
-                                        $status = 'Closed';
-                                    }
-
-                                    $final_status = '';
-                                    if (
-                                        ($job->final_status == 2 || $job->final_status == 3) &&
-                                        @$job->to_company_id == auth()->user()->company_id
-                                    ) {
-                                        $status = 'Removed';
-                                        $class = 'closed-bg';
-                                    }
-
-                                    $ulink =
-                                        '<a href="javascript.void(0);" data-row-id="' .
-                                        @$job->id .
-                                        '" class="d-flex flex-column ' .
-                                        @$class .
-                                        ' status_stage text-hover-success">' .
-                                        $status .
-                                        '</a>';
-
-                                    $recommendation_text = 'Custom';
-                                   
-
-                                    echo '<div class="d-flex flex-column">
-                                    ' .
-                                        $ulink .
-                                        '
-                                    <span class="fw-bold text-muted d-block fs-7">' .
-                                        @$job->id .
-                                        ' -' .
-                                        $recommendation_text .
-                                        '</span>
-                                    </div>';
-                            @endphp           
-                        </td>
-                        <td>
-                            @php
-
-                                $total_positions = '';
-                                $total_positions = number_format($job->total_positions);
-            
-                                $created_at = '';
-                                $created_at = $job->created_at;
-                                $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                                echo '<div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">' .
-                                    $newDate .
-                                    '</span>
-                                    <span class="text-muted fw-bold d-block fs-7">' .
-                                    $total_positions .
-                                    ' Opening</span>
-                                </div>';
-            
-                            @endphp           
-                        </td>
-                        <th>
-                        </th>
-                    </tr>
-                </tbody>
-                <!--end::Table head-->
-                
-            </table>
-
+{{-- =========================================================================
+     STICKY DRAWER HEADER: JERO AGENCY DISTRIBUTION CENTER
+     ========================================================================= --}}
+<div class="agency-drawer-header">
+    <div class="d-flex align-items-center gap-3">
+        {{-- Job Icon Badge --}}
+        <div class="adh-job-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
         </div>
-    </div>
-    <div class="card card-custom mx-2 mb-2 d-none">
-        <div class="card-body py-0 pt-6">
-             <table id="" class="table align-middle table-row-dashed fs-6 d-none">
-                <!--begin::Table head-->
-                <tbody>
-                    <tr style="position: relative;">
-                        <td class="d-flex align-items-center">
-                           <h3 class="text-muted fw-bold text-muted">Publish On Agency Marketplace</h3>
-                        </td>
-                    </tr>
-                </tbody>
-                <!--end::Table head-->
-            </table>
-            
-            <table id="" class="table align-middle table-row-dashed fs-6 d-none">
-                <!--begin::Table head-->
-                <tbody>
-                    <tr style="position: relative;">
-                        <td>
-                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5" style=" float:left;margin-left: 10px !important;"> 
-								<a href="javascript:void(0);">
-									<div class="symbol-label border-radius-5"> 
-                                        <img alt="Logo" src="{{ asset('img/megaphone.png')}}" class="border-radius-5 w-100">
-                                    </div>
-								</a> 
-							</div>
-                            <div class="d-flex flex-column" style=" float:left;"> 
-								<span class="text-dark fw-bolder fs-4">Publish this job to the Agency Marketplace</span>   
-								<span class="fw-bold text-muted d-block fs-7">Verified agencies can accept the T&C and submit candidate profiles for this job</span>
-							</div>
-                        </td>
-                        <td>           
-                        </td>
-                        
-                        <td>           
-                        </td>
 
-                        <td style="">
-                           
-                            
-
-                                {{-- <span class="text-muted fw-bold d-block fs-7">For Agencies</span> --}}
-                            </div>        
-                        </td>
-                    </tr>
-                </tbody>
-                <!--end::Table head-->
-            </table>
-        </div>
-    </div>
-
-    <!--begin::Tabs-->
-    <div class="mx-2 mb-2">
-
-        <div class="row gy-5 g-xl-10">
-                    <!--begin::Col-->
-                    <div class="col-xl-4 mb-xl-10">
-                        
-                        <style>
-                            .sidebar-section {
-                                border-bottom: 1px solid #e5e7eb;
-                                padding-bottom: 2px;
-                                margin-bottom: 10px;
-                            }
-                            .sidebar-section.no-border { border-bottom: none; }
-
-                            .section-header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 16px;
-                            }
-                            .section-title { display: flex; align-items: center; gap: 8px; }
-
-                            .step-num {
-                                background: #2563eb;
-                                color: white;
-                                width: 20px; height: 20px;
-                                border-radius: 4px;
-                                display: flex; align-items: center; justify-content: center;
-                                font-size: 10px; font-weight: 600;
-                            }
-
-                            .section-title h3 { font-size: 14px; font-weight: 600; }
-
-                            .score-green {
-                                color: #22c55e;
-                                font-weight: 700;
-                                font-size: 16px;
-                            }
-
-                            /* Job Summary */
-                            .job-title-sidebar { font-size: 13px; margin-bottom: 4px; }
-
-                            .company-name {
-                                font-size: 11px;
-                                color: #6b7280;
-                                display: block;
-                                margin-bottom: 12px;
-                            }
-
-                            .job-meta {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 8px;
-                                margin-bottom: 16px;
-                                font-size: 12px;
-                                color: #4b5563;
-                            }
-
-                            .meta-row { display: flex; gap: 16px; }
-
-                            .meta-item {
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                            }
-
-                            .meta-item i {
-                                color: #9ca3af;
-                                font-size: 14px;
-                            }
-
-                            .skills-tags {
-                                display: flex;
-                                gap: 6px;
-                                margin-bottom: 16px;
-                                flex-wrap: wrap;
-                            }
-
-                            .tag {
-                                background: #f3f4f6;
-                                color: #374151;
-                                padding: 4px 10px;
-                                border-radius: 100px;
-                                font-size: 10px;
-                                font-weight: 500;
-                            }
-
-                            .tag.more {
-                                background: none;
-                                border: 1px solid #e5e7eb;
-                            }
-
-                            .action-buttons-group {
-                                display: flex;
-                                gap: 10px;
-                            }
-
-                            .action-buttons-group .btn {
-                                flex: 1;
-                                padding: 6px 0;
-                                font-size: 10px;
-                            }
-
-                            /* Job Readiness */
-                            .progress-bar-container {
-                                height: 6px;
-                                background: #e5e7eb;
-                                border-radius: 4px;
-                                margin-bottom: 16px;
-                            }
-
-                            .progress-bar {
-                                height: 100%;
-                                background: #22c55e;
-                                border-radius: 4px;
-                            }
-
-                            .readiness-list {
-                                list-style: none;
-                                display: flex;
-                                flex-direction: column;
-                                gap: 10px;
-                                margin-bottom: 12px;
-                            }
-
-                            .readiness-list li {
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                font-size: 11px;
-                                color: #374151;
-                            }
-
-                            .readiness-list li.warning {
-                                color: #f59e0b;
-                            }
-
-                            .icon-green { color: #22c55e; font-size: 14px; }
-                            .icon-yellow { color: #f59e0b; font-size: 14px; }
-
-                            .link-text {
-                                color: #2563eb;
-                                font-size: 11px;
-                                font-weight: 500;
-                                display: flex;
-                                align-items: center;
-                                gap: 4px;
-                            }
-
-                            /* Marketplace Insights */
-                            .insight-row {
-                                display: flex;
-                                align-items: center;
-                                gap: 12px;
-                                margin-bottom: 12px;
-                            }
-
-                            .insight-value {
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                font-weight: 600;
-                                width: 80px;
-                            }
-
-                            .insight-label {
-                                color: #4b5563;
-                                font-size: 11px;
-                            }
-
-                            .icon-blue { color: #3b82f6; }
-                            .icon-orange { color: #F97316; }
-
-                            /* Publish Settings */
-                            .radio-group {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 12px;
-                                margin-bottom: 20px;
-                            }
-
-                            .radio-label {
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                font-size: 11px;
-                                cursor: pointer;
-                            }
-
-                            .radio-label input[type="radio"] {
-                                accent-color: #2563eb;
-                                width: 16px;
-                                height: 16px;
-                                cursor: pointer;
-                            }
-
-                            .input-controls {
-                                display: flex;
-                                gap: 12px;
-                                margin-bottom: 20px;
-                            }
-
-                            .input-group {
-                                flex: 1;
-                                display: flex;
-                                flex-direction: column;
-                                gap: 6px;
-                            }
-
-                            .input-group label {
-                                font-size: 12px;
-                                color: #4b5563;
-                                font-weight: 500;
-                            }
-
-                            .input-group select {
-                                padding: 8px 12px;
-                                border: 1px solid #e5e7eb;
-                                border-radius: 6px;
-                                font-family: inherit;
-                                font-size: 11px;
-                                outline: none;
-                            }
-
-                            /* Boost Card */
-                            .boost-card {
-                                background: #FFFBEB;
-                                border: 1px solid #FEF3C7;
-                                border-radius: 8px;
-                                padding: 12px;
-                                margin-bottom: 20px;
-                            }
-
-                            .boost-header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 6px;
-                            }
-
-                            .boost-title {
-                                font-weight: 600;
-                                color: #B45309;
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                                font-size: 13px;
-                            }
-
-                            .tag-recommended {
-                                background: #FEF3C7;
-                                color: #D97706;
-                                font-size: 10px;
-                                font-weight: 600;
-                                padding: 2px 6px;
-                                border-radius: 4px;
-                                text-transform: uppercase;
-                            }
-
-                            .boost-footer {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                font-size: 10px;
-                            }
-
-                            .boost-desc { color: #92400E; }
-
-                            .boost-link {
-                                color: #2563eb;
-                                font-weight: 600;
-                                text-decoration: underline;
-                            }
-
-                            /* Notify Box */
-                            .notify-box {
-                                background: #eff6ff;
-                                border-radius: 8px;
-                                padding: 12px 16px;
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 20px;
-                            }
-
-                            .notify-text {
-                                font-size: 10px;
-                                color: #1d4ed8;
-                                line-height: 1.5;
-                            }
-
-                            .highlight-number {
-                                font-size: 14px;
-                                font-weight: 700;
-                                color: #2563eb;
-                            }
-
-                            .notify-icon {
-                                color: #2563eb;
-                                font-size: 18px;
-                            }
-
-                            /* Footer */
-                            .footer-actions {
-                                display: flex;
-                                justify-content: space-between;
-                                margin-top: 16px;
-                                padding: 0 10px;
-                            }
-
-                            input[type="radio"]:checked {
-                                border-color: transparent;
-                                background-color: currentColor;
-                            }
-
-                            /* ===== JOB SUMMARY ===== */
-                            .job-summary {
-                                margin-bottom: 20px;
-                            }
-
-                            .job-summary__header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                margin-bottom: 16px;
-                            }
-
-                            .job-summary__title {
-                                font-size: 14.5px;
-                                font-weight: 700;
-                                color: #0f172a;
-                            }
-
-                            .btn-edit {
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 5px;
-                                background: none;
-                                border: none;
-                                font-family: inherit;
-                                font-size: 12.5px;
-                                font-weight: 500;
-                                color: #64748b;
-                                cursor: pointer;
-                                padding: 4px 8px;
-                                border-radius: 6px;
-                                transition: all 0.2s;
-                            }
-
-                            .btn-edit:hover {
-                                color: #2563eb;
-                                background: #f1f5f9;
-                            }
-
-                            /* ===== JOB DETAILS ===== */
-                            .job-details {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 12px;
-                            }
-
-                            .job-detail-row {
-                                display: flex;
-                                align-items: flex-start;
-                                gap: 12px;
-                            }
-
-                            .job-detail-label {
-                                width: 120px;
-                                flex-shrink: 0;
-                                font-size: 12.5px;
-                                color: #94a3b8;
-                                font-weight: 500;
-                            }
-
-                            .job-detail-value {
-                                font-size: 12.5px;
-                                color: #1e293b;
-                                font-weight: 500;
-                            }
-
-                            .job-detail-tags {
-                                display: flex;
-                                flex-wrap: wrap;
-                                gap: 6px;
-                            }
-
-                            /* ===== VISIBILITY ===== */
-                            .visibility-section {
-                                border-top: 1px solid #e2e8f0;
-                                padding-top: 20px;
-                                margin-bottom: 24px;
-                            }
-
-                            .visibility-header {
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                                margin-bottom: 16px;
-                            }
-
-                            .visibility-title {
-                                font-size: 14.5px;
-                                font-weight: 700;
-                                color: #0f172a;
-                            }
-
-                            .visibility-options {
-                                display: flex;
-                                flex-direction: column;
-                                gap: 14px;
-                            }
-
-                        </style>
-
-                        <div class="card card-flush h-xl-100">
-                                <!--begin::Heading-->
-                                <div class="mb-2 mt-5 m-2 sidebar-section">
-                                    <!--begin::Title-->
-                                    
-                                        <div class="section-header">
-                                                <div class="section-title" style="position: relative;">
-                                                    <span class="step-num">1</span>
-                                                    <h3>Publish this job to the Agency Marketplace </h3>
-                                                    <span style="position: absolute; top: 15px; left: 28px;">Make your job visible to relevant agencies</span>
-                                                </div>
-                                                <i class="ri-arrow-up-s-line"></i>
-                                        </div>
-
-                                         <div class="notify-box">                                            
-                                            <div class="notify-icon"><i class="fa fa-location-arrow"></i></div>
-                                            <div class="notify-text">
-                                                 <span class="highlight-number">Your job will be visible to 20 verified agencies</span> <br>
-                                               Increase your chances of faster hiring
-                                            </div>
-                                        </div>
-
-
-                                    <div class="mt-5" style="margin: 5px;">  
-
-                                        @php
-
-                                            $min_sal_mode = $max_sal_mode = $max_salary_currency = $max_salary = $min_salary = '';
-                                            $sal_mode =  $job->max_sal_mode;
-                                            $min_salary_currenc =  $job->min_salary_currency;
-                                            $min_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode], 0, 1));
-                                            $max_sal_mode = strtoupper(mb_substr($salaryMode[$sal_mode], 0, 1));
-                                            $salary_currency = $currencySymbole[@$min_salary_currency];
-
-                                            $cur = $min_salary_currency;
-                                            $mod = $sal_mode;
-                                            $currencymain = GeneralMethod::currency(); // Currency code
-                                            $currency = $currencymain[$cur];
-                                            $convertedAmounEctc = GeneralMethod::conversionRates($currency, $job->max_salary, 0);
-                                            $convertedAmounCtc = GeneralMethod::conversionRates($currency, $job->min_salary, 0);
-
-                                            $ectc = $convertedAmounEctc[$mod];
-                                            $ctc = $convertedAmounCtc[$mod];
-
-                                            $max_salary = '';
-                                            $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
-                                            $min_salary = '';
-                                            $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
-
-                                        @endphp
-
-                                        <!-- Section 1: Job Summary -->
-                                        <div class="sidebar-section">
-                                            <div class="section-header">
-                                                <div class="section-title">
-                                                    {{-- <span class="step-num">1</span> --}}
-                                                    <h3>Job Summary</h3>
-                                                </div>
-                                                <i class="ri-arrow-up-s-line"></i>
-                                            </div>
-                                            <div class="section-content">
-                                                
-
-
-
-                                                <div class="job-details">
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Job Title</span>
-                                                        <span class="job-detail-value">{{ ucwords(mb_substr(@$job->title, 0, 30)) }} ({{ @$job->max_exp }}Y)</span>
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Experience</span>
-                                                        <span class="job-detail-value">{{ @$job->min_exp }} - {{ @$job->max_exp }} Years</span>
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Location</span>
-
-                                                         @php
-                             $client_loc = $jobLocation ?? null;
-                             if (empty($client_loc)) {
-                                 $client_loc = DB::table('client_location_jobs')
-                                     ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                     ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                     ->select(
-                                         'client_location.address',
-                                         'client_location.city',
-                                         'client_location.postcode',
-                                         'client_location.country_id',
-                                         'city_list.city as city_name',
-                                     )
-                                     ->where('client_location_jobs.job_id', $job->id)
-                                     ->first();
-                             }
-        
-                                                                $country_id = @$client_loc->country_id;
-                                                                if (@$country_id > 0) {
-                                                                    $country_name = GeneralMethod::getCountryName($country_id);
-                                                                    foreach ($country_name as $cval) {
-                                                                        $country_name = ucwords($cval['sortname']);
-                                                                    }
-                                                                }
-        
-                                                                $city = mb_substr(@$client_loc->city, 0, 6);
-                                                                $city = mb_substr(@$client_loc->city_name, 0, 6);
-                                            
-                                                                $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $job->id)->count();
-                                            
-                                                                $employment_type = 'Full-time';
-                                                                if ($job->employment_type == 1) {
-                                                                    $employment_type = 'Contract';
-                                                                }
-        
-                                                                if ($job->work_type == 'yes') {
-                                                                    echo '<span class="job-detail-value">Remote</span>';
-                                                                } elseif ($job->work_type == 'no') {
-                                                                if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                                    $client_loc = DB::table('client_city_jobs')
-                                                                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                                        ->select('city_list.city as city_name', 'countries.country_name')
-                                                                        ->where('client_city_jobs.job_id', $job->id)
-                                                                        ->first();
-                                                                    $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                                                    $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-                                        
-                                                                    echo ' <span class="job-detail-value">'.ucwords(mb_substr(@$city, 0, 10)).' </span>';
-                                                                } else {
-                                                                        echo '<span class="job-detail-value">Multiple Locations </span>';
-                                                                    }
-                                                            } elseif ($job->work_type == 'any') {
-                                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                                $client_loc = DB::table('client_city_jobs')
-                                                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                                    ->select('city_list.city as city_name', 'countries.country_name')
-                                                                    ->where('client_city_jobs.job_id', $job->id)
-                                                                    ->first();
-                                                                $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                                                $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-                                    
-                                                                echo ' <span class="job-detail-value">'.ucwords(mb_substr(@$city, 0, 10)) .'</span>';
-
-                                                            } else {
-                                                                echo '<span class=job-detail-value">Multiple Locations </span>';
-                                                            }
-                                                        }
-                                                        @endphp
-
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Employment Type</span>
-                                                        <span class="job-detail-value">{{ ucwords(mb_substr(@$employment_type, 0, 10)) }}</span>
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Salary Range</span>
-                                                        <span class="job-detail-value">{!!$salary_currency !!} {{ $min_salary }} - {{ $max_salary }} / {{ $max_sal_mode }}</span>
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Openings</span>
-                                                        <span class="job-detail-value">{{ number_format($job->total_positions) }}</span>
-                                                    </div>
-                                                    <div class="job-detail-row">
-                                                        <span class="job-detail-label">Skills</span>
-                                                        <div class="job-detail-tags">
-                                                            @php
-                                                    $skilltag = '';
-                                                    $skilltagclass = '';
-                                                    $totalSkill = 0;
-                                                    if (empty($limit)) {
-                                                        $skillArrList = $skillArr ?? [];
-                                                        if (!empty($skillArrList)) {
-                                                            foreach ($skillArrList as $key => $sval) {
-                                                                if($key<=2){
-                                                                    $skilltag .=
-                                                                    '<span class="tag">' . ucfirst($sval->skill_name) . '</span>  ';
-                                                                }
-                                                                $totalSkill++;
-                                                            }
-                                                        }
-                                                    } else {
-                                                        $skilltagclass = 'd-none';
-                                                    }
-                                                    @endphp
-                                                   {!! $skilltag !!}
-                                                   @if($totalSkill >3)
-                                                     <span class="tag more">+{{ $totalSkill-3 }}</span>
-                                                    @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-
-
-                                                {{-- <h4 class="job-title-sidebar">{{ ucwords(mb_substr(@$job->title, 0, 30)) }} ({{ @$job->max_exp }}Y)</h4>
-                                                <span class="company-name">{{ $clients_name }}</span> --}}
-                                               
-                                            </div>
-                                        </div>
-
-                                        <!-- Section 4: Visibility Settings -->
-                                        <div class="sidebar-section no-border">
-                                            <div class="section-header">
-                                                <div class="section-title">
-                                                    {{-- <span class="step-num">3</span> --}}
-                                                    <h3>Visibility</h3>
-                                                </div>
-                                            </div>
-                                            <div class="section-content">
-                                                <div class="radio-group">
-                                                    <label class="radio-label">
-                                                        <input type="radio" name="publishTo" checked>
-                                                        <span class="radio-custom"></span> Recommended Agencies <span class="dim-text">(Best Match)</span>
-                                                    </label>
-                                                    <label class="radio-label">
-                                                        <input type="radio" name="publishTo">
-                                                        <span class="radio-custom"></span> All Agencies <span class="dim-text">(Max Reach)</span>
-                                                    </label>
-                                                </div>
-                                                
-                                                <div class="input-controls">
-                                                    <div class="input-group">
-                                                        <label>Max Applications</label>
-                                                        <select><option>20</option></select>
-                                                    </div>
-                                                    <div class="input-group">
-                                                        <label>Auto-expire in</label>
-                                                        <select><option>7 Days</option></select>
-                                                    </div>
-                                                </div>
-                                                
-
-                                                 <button id="sp_list_two" class="btn btn-danger btn-block {{ in_array($text_change, ['Published', 'Approval Pending']) ? '' : 'd-none' }} post_to_public" data-c="1" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}" style="width:100%"><i class="fa fa-location-arrow"></i> Unpublish Job</button>
-
-                                                <button id="sp_list_one" class="btn btn-primary btn-block {{ $class_send }} {{ in_array($text_change, ['Published', 'Approval Pending']) ? 'd-none' : '' }}" data-c="0" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}" style="width:100%"><i class="fa fa-location-arrow"></i> {{ $text_change_action }}</button>
-
-                                                <div class="footer-actions">
-                                                    <a href="javascript:void(0);" data-row-id="{{ $job->id }}" data-row-recommendation_relation_id="" class="link-muted client-terms-listing">View {{__('messages.Agency')}} T&C</a>
-                                                    <a href="javascript:void(0);" class="link-muted text_change_text {{ $color_change_action }}">{{ $text_change }}</a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    {{-- <div class="text-center" style="margin: 5px;">                              
-                                        <button id="sp_list_two" data-c="1" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}" class="btn btn-sm btn-light-danger w-150 {{ in_array($text_change, ['Published', 'Approval Pending']) ? '' : 'd-none' }} post_to_public" style="width: 100%;">
-                                            <i class="fa fa-location-arrow"></i><span class="text-danger text-hover-white fw-bolder fs-6">Unpublish Job</span>
-                                        </button>
-                                            
-                                        <button id="sp_list_one" data-c="0" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}" class="btn btn-sm {{ $color_change }} w-150 {{ $class_send }} {{ in_array($text_change, ['Published', 'Approval Pending']) ? 'd-none' : '' }}" style="width: 100%;">
-                                            <i class="fa fa-location-arrow"></i><span class="btn-light-primary fw-bolder fs-6"> {{ $text_change_action }}</span>
-                                        </button>    
-                                        
-                                
-
-                                        <div data-row-id="{{ $job->id }}" data-row-recommendation_relation_id="" class="text-center mt-5">
-                                            <a href="javascript:void(0);" class="fw-bolder text_change_text {{ $color_change_action }} w-150 fs-5">{{ $text_change }} </a>
-                                            <span class="fw-bold text-muted d-block fs-7">Status</span>
-                                        </div> 
-
-                                    </div>
-
-                                    
-                                    <div data-row-id="{{ $job->id }}" data-row-recommendation_relation_id="" class="client-terms-listing text-center mt-5 mb-5">
-                                        <a href="javascript:void(0);" class="btn btn-sm btn-light-info w-150">View {{__('messages.Agency')}} T&C</a>
-                                        <span class="fw-bold text-muted d-block fs-7">Upto 10 Agencies Applications</span>
-                                    </div>  --}}
-
-                                    <!--end::Title-->
-                                </div>
-                                <!--end::Heading-->
-                                <!--begin::Links-->
-                                
-                        </div>
-                    </div>    
-                    <!--end::Col-->
-
-                    <!--begin::Col-->
-                    <div class="col-xl-8 mb-5 mb-xl-10 p-0">
-                                
-                        <!--begin::Table Widget 4-->
-                        <div class="card card-flush h-xl-100">
-                            
-                            <div class="section-header mt-5 m-2">
-                                    <div class="section-title">
-                                        <span class="step-num">2</span>
-                                        <h3>Manually Select the Agency</h3>
-                                        <span style="position: absolute; top: 29px; left: 33px;">Agencies that match your job requirements</span>
-                                    </div>
-
-                                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_activitiesStaffing_close" style="margin-right: 10px !important;">
-                                    <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
-                                    <span class="svg-icon svg-icon-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                    <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
-                                        <rect x="0" y="7" width="16" height="2" rx="1"></rect>
-                                        <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1"></rect>
-                                    </g>
-                                    </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                </button> 
-
-                            </div>
-
-                            {{-- <h5 class="fw-semibold text-gray-800 ml-3 lh-lg">Manually Select the Agency</h5> --}}
-                             <!--Begin::Tabs Header-->
-                            <div class="card-header card-header-tabs-line">
-                                <div class="card-toolbar">
-                                    
-                                    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x recommended_tab" role="tablist">
-                                        <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#recommended">
-                                                <span class="nav-text font-weight-bold">Recommended {{__('messages.Agency')}}</span> <span id="recommendedTotal"></span> </a> </li>
-                                        <li class="nav-item me-3 register_tab"> <a class="nav-link" data-toggle="tab" href="#registered"> <span
-                                                    class="nav-text font-weight-bold">My {{__('messages.Agency')}}</span> <span id="registeredTotal">({{ @$registeredTotalCount ?? 0 }})</span> </a> </li>
-                                        <li class="nav-item me-3 assigned_tab"> <a class="nav-link" data-toggle="tab" href="#assigned"> <span
-                                                    class="nav-text font-weight-bold">Assigned {{__('messages.Agency')}}</span> <span id="assignedTotal">({{ @$assignedTotalCount ?? 0 }})</span> </a> </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <!--end::Tabs Header-->
-
-
-                            <!--begin::Card body-->
-                            <div class="card-body p-0 pt-2">
-                                <!--begin::Table-->
-                                <div id="kt_table_widget_4_table_wrapper" class="dt-container dt-bootstrap5 dt-empty-footer">
-                                    <!--Begin::Tabs Body-->
-                                     <div class="card-body py-0">
-                                        <div class="tab-content pt-5">
-                                            
-                                             <!--begin::Recommended Content-->
-                                            <div class="tab-pane active show" id="recommended" role="tabpanel">
-                                                <div class="card-body px-0 py-2">
-                                                    <div class="d-flex align-items-center flex-wrap">
-                                                        
-                                                        <div class="col-lg-6 d-flex align-items-center px-2" style="width:85%; position: relative;">
-                                                            <div class="search-input-wrap">
-                                                                <input class="search-input" name="inputJobSearch" id="kt_tagify_3" value="{{ @$default_skill }}" type="text" placeholder="Search by skills..."/>
-                                                            </div>
-                                                            <div data-toggle="modal" data-target="#apptrackerfilter" style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"></div>
-                                                            {{-- <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="{{ @$default_skill }}" placeholder="Search..." id="kt_tagify_3">
-                                                            <div data-toggle="modal" data-target="#apptrackerfilter" style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> --}}
-                                                        </div>
-
-                                                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                                                            <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end" data-toggle="modal" data-target="#apptrackerfilter">
-                                                                <span class="svg-icon svg-icon-2">
-                                                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                                        <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black">
-                                                                        </path>
-                                                                    </svg>
-                                                                </span> Filter
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <!--Start Popup-->
-                                                    <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-                                                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header flex-stack">
-                                                                    <div>
-                                                                        <h1>Find Trusted Hiring Agencies</h1>
-                                                                        <p>Discover verified recruitment partners based on your hiring requirements.</p>
-                                                                    </div>
-                                                                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="apptrackerfilter_close">
-                                                                        <span class="svg-icon svg-icon-1">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                                                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"></rect>
-                                                                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"></rect>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="apptrackerfilter_body_content" id="">
-                                                                    <div class="modal-body" style="padding: 2em;">
-
-                                                                        <!-- Trust bar -->
-                                                                        <div class="trust-bar">
-                                                                        <div class="trust-item">
-                                                                            <i class="ti ti-shield-check" aria-hidden="true"></i>
-                                                                            <span>All agencies are verified</span>
-                                                                        </div>
-                                                                        <div class="trust-item">
-                                                                            <i class="ti ti-medal" aria-hidden="true"></i>
-                                                                            <span>Quality &amp; performance checked</span>
-                                                                        </div>
-                                                                        <div class="trust-item">
-                                                                            <i class="ti ti-users" aria-hidden="true"></i>
-                                                                            <span>Secure &amp; confidential</span>
-                                                                        </div>
-                                                                        </div>
-
-                                                                        <!-- Search with tag input -->
-                                                                        <div class="section">
-                                                                        <p class="section-label">1. Search Skills / Keywords <span class="required">*</span></p>
-
-                                                                        <div class="suggestions-wrap search-input-wrap">
-                                                                        <input class="search-input"
-                                                                                    name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="Search by skills..."
-                                                                                    id="kt_tagify_users" />
-                                                                        </div>
-
-                                                                        <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;·&nbsp; Press <span>Backspace</span> to remove last</p>
-                                                                        </div>
-
-                                                                        <!-- Hiring type -->
-                                                                        <div class="section">
-                                                                            <p class="section-label">2. Hiring Type <span class="required">*</span></p>
-                                                                            <div class="hiring-grid">
-                                                                                <input type="hidden" id="hiring_type" name="hiring_type" value="2">
-                                                                                <div class="hiring-card active-blue" id="card-full" onclick="selectHiringType('full')" role="button" tabindex="0" aria-pressed="true">
-                                                                                <div class="hiring-icon blue"><i class="ti ti-briefcase" aria-hidden="true"></i></div>
-                                                                                <div class="hiring-text">
-                                                                                    <h3>Full-Time Hiring</h3>
-                                                                                    <p>Permanent hiring solutions for long-term requirements.</p>
-                                                                                </div>
-                                                                                <div class="radio-dot checked-blue" id="radio-full"><div class="dot-inner"></div></div>
-                                                                                </div>
-                                                                                <div class="hiring-card" id="card-contract" onclick="selectHiringType('contract')" role="button" tabindex="0" aria-pressed="false">
-                                                                                <div class="hiring-icon teal"><i class="ti ti-clock" aria-hidden="true"></i></div>
-                                                                                <div class="hiring-text">
-                                                                                    <h3>Contract Hiring</h3>
-                                                                                    <p>On-demand talent, immediate joiners &amp; project-based hiring.</p>
-                                                                                </div>
-                                                                                <div class="radio-dot" id="radio-contract"></div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Additional filters -->
-                                                                        <div class="section">
-                                                                        <p class="section-label">3. Additional Filters <span class="optional">(Optional)</span></p>
-                                                                        <div class="filters-grid">
-                                                                            <select aria-label="Industry" class="" id="industry">
-                                                                            <option value="" >Industry</option>
-                                                                            @if ($td_industries)
-                                                                                @foreach ($td_industries as $row)
-                                                                                    <option value="{{ $row->id }}">{{ $row->name }}</option>
-                                                                                @endforeach
-                                                                            @endif
-                                                                            </select>
-                                                                            <select aria-label="Experience" id="experience">
-                                                                            <option value="">Experience</option>
-                                                                            <option>0–2 years</option>
-                                                                            <option>3–5 years</option>
-                                                                            <option>5–10 years</option>
-                                                                            <option>10+ years</option>
-                                                                            </select>
-                                                                            <select aria-label="Location" id="country">
-                                                                            <option value="">Location</option>
-                                                                            @if ($cities)
-                                                                                @foreach ($cities as $country)
-                                                                                    <option value="{{ $country }}">{{ $country }}</option>
-                                                                                @endforeach
-                                                                            @endif
-                                                                            </select>
-                                                                        </div>
-                                                                        </div>
-
-                                                                        <!-- Bottom bar -->
-                                                                        <div class="bottom-bar">
-                                                                        <div class="match-note">
-                                                                            <i class="ti ti-stars" aria-hidden="true"></i>
-                                                                            <span>We'll show agencies best matched to your requirements.</span>
-                                                                        </div>
-                                                                        <div class="agencies-info">
-                                                                            <div class="avatars">
-                                                                            <img src="https://i.pravatar.cc/28?img=3" alt="" />
-                                                                            <img src="https://i.pravatar.cc/28?img=5" alt="" />
-                                                                            <img src="https://i.pravatar.cc/28?img=8" alt="" />
-                                                                            </div>
-                                                                            <div class="agencies-count">
-                                                                            <h4>{{ $activeCompanies }} verified agencies available</h4>
-                                                                            <p><span class="green-dot"></span> Last updated just now</p>
-                                                                            </div>
-                                                                        </div>
-                                                                        </div>
-
-                                                                        <!-- Actions -->
-                                                                        </div>
-                                                                        <div class="modal-footer flex-center">
-                                                                        <div class="div1">
-                                                                            <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
-                                                                            <button class="btn btn-primary changetextupdate" id="changetextupdate" onclick="newUpdateJobstatus()"><i class="ti ti-search" aria-hidden="true"></i>Find Agencies</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!--End Popup-->                                                 
-                                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="recommendedlist">
-                                                        <thead>
-                                                            <tr class="fw-bolder text-muted" role="row">
-                                                                <th class="sorting_disabled d-flex align-items-center" rowspan="1" colspan="1" style="width: 155px;">Agency & Specialization</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 41px;">Rates</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 93px;">Overview</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 109px;">Location & Team</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 102px;">Last Active</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 128px;">Action</th>
-                                                            </tr>
-                                                            <span id="boostkeywords"></span>
-                                                        </thead>
-                                                        <tbody id="recommendedlistBody"></tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <!--end::Recommended Content-->
-                                            <!--begin::Registered Content-->
-                                            <div class="tab-pane" id="registered" role="tabpanel">
-                                                <div class="card-body px-0 py-2">
-                                                    <div class="d-flex align-items-center flex-wrap">
-                                                        <div class="col-lg-6 d-flex align-items-center px-2" style="width:60%;position: relative;">
-                                                            <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_4" onchange="filtersdatatwo()" />
-                                                            <div style="position: absolute; top: 0px; right: 36px;">
-                                                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                                                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="hiringtype4" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdatatwo()">
-                                                                <option value="0" {{ @$job->employment_type == 0 ? 'selected' : '' }}> Full-time</option>
-                                                                <option value="1" {{ @$job->employment_type == 1 ? 'selected' : '' }}>Contract</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                                                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country4" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdatatwo()">
-                                                                <option value="Show All" selected>Location</option>
-                                                                    @if (@$countries)
-                                                                        @foreach (@$countries as $item)
-                                                                        <option value="{{ $item->id }}" {{ @$jobLocationCountselect->id == $item->id ? 'selected' : '' }}>{{ $item->country_name }}</option>
-                                                                        @endforeach
-                                                                    @endif
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="staffingPartnersRegister">
-                                                        <thead>
-                                                            <tr class="fw-bolder text-muted" role="row">
-                                                                <th class="sorting_disabled d-flex align-items-center" rowspan="1" colspan="1" style="width: 155px;">Agency Name</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 41px;">Similar Jobs</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 93px;">Rates</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 109px;">Size</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 109px;">Location</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 109px;">Last Active</th>
-                                                                <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 128px;">Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody class="text-gray-600 fw-bold" id="allregisteragency"></tbody>
-                                                    </table>
-                                                    <div id="paginationregisteragency"></div>
-                                                </div>
-                                            </div>
-                                            <!--end::Requisitions Content-->
-                                            <!--begin::Assigned Content-->
-                                            <div class="tab-pane" id="assigned" role="tabpanel">
-                                                <div class="px-1 pt-3 pb-1">
-                                                    <!-- Search -->
-                                                    <div class="mb-3 px-1">
-                                                        <input type="text" class="form-control form-control-solid form-control-sm ps-3"
-                                                               name="inputJobSearch" value="" placeholder="Search agencies..."
-                                                               id="kt_tagify_5" onchange="filtersdatathree()" />
-                                                    </div>
-                                                    <!-- Column headers (desktop) -->
-                                                    <div class="aa-header-row d-none d-lg-flex">
-                                                        <div class="aa-hcol-agency">Agency</div>
-                                                        <div class="aa-hcol-contact">Contact</div>
-                                                        <div class="aa-hcol-perf">Performance <i class="fa-regular fa-circle-question ms-1" style="font-size:11px;color:#cbd5e1;" title="Metrics for this job"></i></div>
-                                                        <div class="aa-hcol-shared">Job Shared</div>
-                                                        <div class="aa-hcol-status">Status</div>
-                                                        <div class="aa-hcol-actions">Actions</div>
-                                                    </div>
-                                                    <!-- Rows injected by AJAX -->
-                                                    <div id="allAssignListagency"></div>
-                                                    <div id="paginationAssignListagency" class="mt-3 px-1"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--end::Assigned Content-->
-                                    </div>
-                                    <!--end::Tabs Body-->
-                                </div>
-                                <!--end::Table-->
-                            </div>
-                            <!--end::Card body-->
-                        </div>
-                        <!--end::Table Widget 4-->
+        {{-- Job Title & Metadata --}}
+        <div class="d-flex flex-column">
+            <div class="d-flex align-items-center gap-2">
+                <span class="adh-title text-truncate" style="max-width: 320px;" title="{{ @$job->title }}">
+                    {{ ucwords(@$job->title ?: 'Requirement') }}
+                </span>
+                <span class="badge" style="background:#dcfce7; color:#15803d; border: 1px solid #bbf7d0; border-radius: 12px; font-size: 11px; font-weight: 600; padding: 2px 9px;">
+                    {{ @$job->employment_type == 1 ? 'Contract' : 'Full-time' }}
+                </span>
+            </div>
+
+            {{-- Compact Metadata Row --}}
+            <div class="d-flex align-items-center gap-3 flex-wrap mt-1">
+                <span class="adh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    {{ @$job->min_exp }}–{{ @$job->max_exp }} Years
+                </span>
+                <span class="text-gray-300">•</span>
+                <span class="adh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ $clientLocationText }}
+                </span>
+                <span class="text-gray-300">•</span>
+                <span class="adh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    {!! $salary_currency !!} {{ $min_salary }}–{{ $max_salary }} / {{ $max_sal_mode }}
+                </span>
+                <span class="text-gray-300">•</span>
+                <span class="adh-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    {{ number_format(@$job->total_positions ?: 1) }} Opening{{ (@$job->total_positions > 1) ? 's' : '' }}
+                </span>
+
+                {{-- Skill Pills --}}
+                @if(!empty($skillArrList))
+                    <span class="text-gray-300">•</span>
+                    <div class="d-flex align-items-center gap-1">
+                        @foreach(array_slice($skillArrList, 0, 3) as $sk)
+                            <span class="adh-skill-badge">{{ ucfirst($sk->skill_name) }}</span>
+                        @endforeach
+                        @if(count($skillArrList) > 3)
+                            <span class="adh-skill-badge text-muted">+{{ count($skillArrList) - 3 }}</span>
+                        @endif
                     </div>
-                    <!--end::Col-->
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Right: Close Button --}}
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm d-flex align-items-center gap-2 drawer-close-trigger" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: #1e293b; cursor: pointer; transition: background-color 0.15s ease;">
+            <span>Close</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+</div>
+
+{{-- =========================================================================
+     DRAWER CONTENT: TWO-COLUMN INDEPENDENT ARCHITECTURE
+     ========================================================================= --}}
+<div class="agency-drawer-content">
+    <div class="agency-distribution-grid">
+
+        {{-- =================================================================
+             COLUMN 1: PUBLISH TO AGENCY MARKETPLACE (~35% Width)
+             ================================================================= --}}
+        <div class="agency-card">
+            {{-- Header inside subtle tinted banner --}}
+            <div class="agency-section-banner-blue">
+                <span class="agency-col-badge blue">1</span>
+                <div>
+                    <h2 class="agency-section-heading">Publish to Agency Marketplace</h2>
+                    <p class="agency-section-subtitle">Make this job visible to verified recruitment agencies on Jero Agency Marketplace.</p>
                 </div>
             </div>
-            <!--end::Tabs-->
+
+            {{-- ── UNPUBLISHED STATE CONTAINER ── --}}
+            <div id="marketplace_unpublished_box" class="{{ $isPublished ? 'd-none' : '' }}" style="{{ $isPublished ? 'display: none !important;' : 'display: block;' }}">
+                <div class="info-panel-blue">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="panel-icon-circle blue">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0066ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <div style="flex: 1; padding-right: 30px;">
+                            <div style="font-size: 13.5px; font-weight: 700; color: #0066ff;">Open to Agency Applications</div>
+                            <div style="font-size: 11.5px; color: #475569; margin-top: 2px; line-height: 1.4;">Any verified agency can discover this job and submit suitable candidates.</div>
+                        </div>
+                    </div>
+                    <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); opacity: 0.18; pointer-events: none;">
+                        <svg width="55" height="55" viewBox="0 0 24 24" fill="#93c5fd"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── LIVE STATE CONTAINER ── --}}
+            <div id="marketplace_live_box" class="{{ $isPublished ? '' : 'd-none' }}" style="{{ $isPublished ? 'display: block;' : 'display: none !important;' }}">
+                <div class="live-panel-green">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="panel-icon-circle green">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="font-size: 13px; font-weight: 800; color: #15803d; letter-spacing: 0.3px;">LIVE ON AGENCY MARKETPLACE</span>
+                                <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 12px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#16a34a;"></span>Live
+                                </span>
+                            </div>
+                            <div style="font-size: 11.5px; color: #166534; margin-top: 3px; line-height: 1.4;">This job is now visible to verified agencies on Jero. They can discover and submit suitable candidates.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Agency Acceptance Limit (Maximum agencies that can accept/work on this job) --}}
+            <div class="mt-4">
+                <div class="d-flex align-items-center gap-1">
+                    <label class="fw-bold fs-7 text-gray-900 mb-0">Agency Acceptance Limit</label>
+                    <i class="fa-regular fa-circle-question ms-1" style="font-size:12px;color:#94a3b8;cursor:help;" title="Maximum agencies that can accept and work on this job requirement."></i>
+                </div>
+                <div class="agency-input-control">
+                    <div class="input-icon-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <select class="agency-select" id="marketplace_vendor_limit">
+                        <option value="5">5 agencies</option>
+                        <option value="10">10 agencies</option>
+                        <option value="20" selected>20 agencies</option>
+                        <option value="50">50 agencies</option>
+                    </select>
+                </div>
+                <div class="agency-helper-text">Maximum agencies that can accept this job.</div>
+            </div>
+
+            {{-- Auto-expire --}}
+            <div class="mt-4">
+                <div class="d-flex align-items-center gap-1">
+                    <label class="fw-bold fs-7 text-gray-900 mb-0">Auto-expire</label>
+                    <i class="fa-regular fa-circle-question ms-1" style="font-size:12px;color:#94a3b8;cursor:help;" title="The marketplace listing will automatically close on this date."></i>
+                </div>
+                <div class="agency-input-control">
+                    <div class="input-icon-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <select class="agency-select" id="marketplace_auto_expire">
+                        <option value="7" selected>7 Days ({{ now()->addDays(7)->format('d M Y') }})</option>
+                        <option value="14">14 Days ({{ now()->addDays(14)->format('d M Y') }})</option>
+                        <option value="30">30 Days ({{ now()->addDays(30)->format('d M Y') }})</option>
+                    </select>
+                </div>
+                <div class="agency-helper-text">The marketplace listing will automatically close on this date.</div>
+            </div>
+
+            {{-- Benefit Checklist Panel --}}
+            <div class="benefits-panel">
+                <div class="benefit-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>Any verified agency can apply for this job.</span>
+                </div>
+                <div class="benefit-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>You will review and accept candidate submissions.</span>
+                </div>
+                <div class="benefit-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>You can unpublish the requirement anytime.</span>
+                </div>
+            </div>
+
+            {{-- Action CTAs: Mutually exclusive display guaranteed --}}
+            <button type="button" id="sp_list_one" class="btn-publish-primary post_to_public {{ $isPublished ? 'd-none' : '' }}" style="{{ $isPublished ? 'display: none !important;' : 'display: flex;' }}" data-c="0" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <span>Publish to Agency Marketplace</span>
+            </button>
+
+            <button type="button" id="sp_list_two" class="btn-unpublish-destructive post_to_public {{ $isPublished ? '' : 'd-none' }}" style="{{ $isPublished ? 'display: flex;' : 'display: none !important;' }}" data-c="1" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <span>Unpublish from Marketplace</span>
+            </button>
+
+            {{-- Terms Secondary Link --}}
+            <div class="text-center mt-3">
+                <a href="javascript:void(0);" data-row-id="{{ @$job->id }}" data-row-recommendation_relation_id="" class="client-terms-listing d-inline-flex align-items-center gap-2" style="font-size: 12px; color: #0066ff; font-weight: 500; text-decoration: none;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0066ff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>View Agency Marketplace Terms</span>
+                </a>
+            </div>
         </div>
 
-
-
-<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script>
-
-        function initTagifySection() {
-
-            // =========================
-            // ELEMENT CHECK
-            // =========================
-
-            const inputElm = document.querySelector('#kt_tagify_users');
-            const inputJobSearch = document.querySelector('#kt_tagify_3');
-
-            if (!inputElm || !inputJobSearch) {
-                return;
-            }
-
-            // =========================
-            // DESTROY OLD TAGIFY
-            // =========================
-
-            if (inputElm._tagify) {
-                inputElm._tagify.destroy();
-            }
-
-            if (inputJobSearch._tagify) {
-                inputJobSearch._tagify.destroy();
-            }
-
-            // =========================
-            // TAGIFY 1
-            // =========================
-
-            const tagify = new Tagify(inputElm, {
-
-                templates: {
-
-                    tag: function(tagData) {
-
-                        tagData = tagData || {};
-
-                        const value = tagData.value || '';
-
-                        return `
-                            <tag title="${value}"
-                                contenteditable='false'
-                                spellcheck="false"
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                                ${this.getAttributes(tagData)}
-                                >
-
-                                <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
-
-                                    <span class="tagify__tag-text">${value}</span>
-
-                                    <span style="
-                                            width:16px;
-                                            height:16px;
-                                            border-radius:50%;
-                                            background:#A5B4FC;
-                                            display:flex;
-                                            align-items:center;
-                                            justify-content:center;
-                                            cursor:pointer;
-                                        "><x class="tagify__tag__removeBtn">×</x></span>
-
-                                </div>
-                            </tag>
-                        `;
-                    }
-                },
-
-                transformTag: function(tagData) {
-
-                    tagData.checked = tagData.checked || false;
-
-                    return tagData;
-                }
-            });
-
-            // =========================
-            // TAGIFY 2
-            // =========================
-
-            const tagify2 = new Tagify(inputJobSearch, {
-
-                maxTags: 5,
-
-                templates: {
-
-                    tag: function(tagData) {
-
-                        tagData = tagData || {};
-
-                        const value = tagData.value || '';
-
-                        return `
-                            <tag title="${value}"
-                                contenteditable='false'
-                                spellcheck="false"
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                                ${this.getAttributes(tagData)}
-                                >
-
-                                <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
-
-                                    <span class="tagify__tag-text">${value}</span>
-
-                                    <span style="
-                                            width:16px;
-                                            height:16px;
-                                            border-radius:50%;
-                                            background:#A5B4FC;
-                                            display:flex;
-                                            align-items:center;
-                                            justify-content:center;
-                                            cursor:pointer;
-                                        "><x class="tagify__tag__removeBtn">×</x></span>
-
-                                </div>
-                            </tag>
-                        `;
-                    }
-                },
-
-                transformTag: function(tagData) {
-
-                    tagData.checked = tagData.checked || false;
-
-                    return tagData;
-                }
-            });
-
-            // =========================
-            // PREVENT LOOP
-            // =========================
-
-            let isSyncing = false;
-
-            // =========================
-            // SYNC TO TAGIFY2
-            // =========================
-
-            function syncToTagify2() {
-
-                if (isSyncing) return;
-
-                isSyncing = true;
-
-                const tags = tagify.value.map(tag => ({
-                    value: tag.value
-                }));
-
-                tagify2.removeAllTags();
-                tagify2.addTags(tags);
-
-                isSyncing = false;
-            }
-
-            // =========================
-            // SYNC TO TAGIFY1
-            // =========================
-
-            function syncToTagify1() {
-
-                if (isSyncing) return;
-
-                isSyncing = true;
-
-                const tags = tagify2.value.map(tag => ({
-                    value: tag.value
-                }));
-
-                tagify.removeAllTags();
-                tagify.addTags(tags);
-
-                isSyncing = false;
-            }
-
-            // =========================
-            // UPDATE INPUT
-            // =========================
-
-            function updateInputJobSearch() {
-
-                const tags = tagify.value.map(tag => tag.value).join(',');
-
-                inputJobSearch.value = tags;
-
-                syncToTagify2();
-            }
-
-            // =========================
-            // UPDATE TAGIFY USERS
-            // =========================
-
-            function updateTagifyUsers() {
-
-                syncToTagify1();
-            }
-
-            // =========================
-            // EVENTS
-            // =========================
-
-            tagify.on('add', updateInputJobSearch);
-
-            tagify.on('remove', updateInputJobSearch);
-
-            tagify2.on('add', syncToTagify1);
-
-            tagify2.on('remove', syncToTagify1);
-
-            // =========================
-            // AJAX SAFE CLICK EVENT
-            // =========================
-
-            $(document)
-                .off('click.tagifyStar')
-                .on('click.tagifyStar', '.star', function () {
-
-                    const tagElm = $(this).closest('.tagify__tag');
-
-                    $(this).toggleClass('checked');
-
-                });
-
-            // =========================
-            // DEBOUNCE
-            // =========================
-
-            function debounceskill(func, delay) {
-
-                let timeoutskill;
-
-                return function (...args) {
-
-                    clearTimeout(timeoutskill);
-
-                    timeoutskill = setTimeout(() => {
-                        func.apply(this, args);
-                    }, delay);
-                };
-            }
-
-            // =========================
-            // FETCH SKILLS
-            // =========================
-
-            const fetchSuggestionsSkills = debounceskill(function(query) {
-
-                $.ajax({
-
-                    url: "{{ url('/') }}/skill-suggestions?q=" + query,
-
-                    method: 'GET',
-
-                    success: function(data) {
-
-                        if (Array.isArray(data)) {
-
-                            tagify.settings.whitelist = data;
-
-                            tagify.dropdown.show.call(tagify);
-
-                        } else {
-
-                            console.error("Invalid API response");
-
-                        }
-                    },
-
-                    error: function(err) {
-
-                        console.error("Skill fetch error:", err);
-                    }
-
-                });
-
-            }, 200);
-
-            // =========================
-            // INPUT EVENT
-            // =========================
-
-            tagify.on('input', function(e) {
-
-                const query = e.detail.value.trim();
-
-                if (query.length < 1) return;
-
-                fetchSuggestionsSkills(query);
-            });
-
-            // =========================
-            // INITIAL SYNC
-            // =========================
-
-            updateInputJobSearch();
-
-            document.addEventListener('click', function (e) {
-
-                if (e.target.classList.contains('tagify__tag__removeBtn')) {
-
-                    // tag element
-                    const tagElm = e.target.closest('.tagify__tag');
-
-                    // remove from tagify 1
-                    if (tagify.DOM.scope.contains(tagElm)) {
-
-                        tagify.removeTags(tagElm);
-
-                    }
-
-                    // remove from tagify 2
-                    if (tagify2.DOM.scope.contains(tagElm)) {
-
-                        tagify2.removeTags(tagElm);
-
-                    }
-
-                }
-
-            });
-
-
-        }
-
-
-        // ===================================
-        // INITIAL LOAD
-        // ===================================
-
-        initTagifySection();
-
-
-        // ===================================
-        // AFTER AJAX LOAD
-        // ===================================
-
-        // Example
-
-        /*
-        $.ajax({
-
-            success: function(response) {
-
-                $('#yourDiv').html(response);
-
-                setTimeout(() => {
-
-                    initTagifySection();
-
-                }, 100);
-            }
-        });
-        */
-
-</script>
-
-<script>
-   
-   
-    
-
-     /* ── Hiring type toggle ── */
-    function selectHiringType(type) {
-        var cardFull     = document.getElementById('card-full');
-        var cardContract = document.getElementById('card-contract');
-        var radioFull    = document.getElementById('radio-full');
-        var radioContract = document.getElementById('radio-contract');
-
-        if (type === 'full') {
-        document.getElementById('hiring_type').value = 2;
-        cardFull.className     = 'hiring-card active-blue';
-        cardFull.setAttribute('aria-pressed', 'true');
-        cardContract.className = 'hiring-card';
-        cardContract.setAttribute('aria-pressed', 'false');
-        radioFull.className    = 'radio-dot checked-blue';
-        radioFull.innerHTML    = '<div class="dot-inner"></div>';
-        radioContract.className = 'radio-dot';
-        radioContract.innerHTML = '';
-        } else {
-        document.getElementById('hiring_type').value = 1;
-        cardContract.className  = 'hiring-card active-teal';
-        cardContract.setAttribute('aria-pressed', 'true');
-        cardFull.className      = 'hiring-card';
-        cardFull.setAttribute('aria-pressed', 'false');
-        radioContract.className = 'radio-dot checked-teal';
-        radioContract.innerHTML = '<div class="dot-inner"></div>';
-        radioFull.className     = 'radio-dot';
-        radioFull.innerHTML     = '';
-        }
-    }
-    
-
-
-
-
-    function boostlisting(type) {
-        if ($('#boostlisting').length === 0) return;
-        var jobid = $('#current_job_id').val();
-        var boostTable = $('#boostlisting').dataTable({
-            pageLength: 3,
-            iDisplayLength: 3,
-            responsive: true,
-            processing: true,
-            serverSide: false,
-            ordering: false,
-            destroy: true,
-            stateSave: true,
-            "bLengthChange": false,
-            sDom: 'lrtip',
-            "bInfo": false,
-            bPaginate: false,
-
-            ajax: '{!! route('service_company.jobs.boostkeywords') !!}?jobid=' + jobid,
-            "fnDrawCallback": function(oSettings) {},
-            "initComplete": function(settings, json) {},
-            columns: [{
-                    data: 'chkbox',
-                    name: 'chkbox',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'Name',
-                    name: 'Name',
-                    orderable: false,
-                    searchable: false,
-                    width: '15%'
-                },
-                // {data: 'Match', name: 'Match', searchable : false, orderable : false, width: '15%'},
-                {
-                    data: 'SimilarReq',
-                    name: 'SimilarReq',
-                    searchable: false,
-                    orderable: false,
-                    width: '5%'
-                },
-                {
-                    data: 'Profiles',
-                    name: 'Profiles',
-                    searchable: false,
-                    orderable: false,
-                    width: '10%'
-                },
-                {
-                    data: 'HiringType',
-                    name: 'HiringType',
-                    searchable: false,
-                    orderable: false
-                },
-                {
-                    data: 'Location',
-                    name: 'Location',
-                    searchable: false,
-                    orderable: false
-                },
-                {
-                    data: 'Status',
-                    name: 'Status',
-                    searchable: false,
-                    orderable: false
-                },
-                {
-                    data: 'Action',
-                    name: 'Action',
-                    orderable: false
-                }
-            ]
-
-        });
-        if ($.fn.dataTable && $.fn.dataTable.FixedHeader) {
-            new $.fn.dataTable.FixedHeader(boostTable);
-        }
-
-        var tbodyrecommendedlist = document.getElementById("recommendedlist");
-        var tbodyboostlisting = document.getElementById("boostlisting");
-        if (tbodyrecommendedlist && tbodyboostlisting) {
-            if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
-                setTimeout(() => {
-                    $(".dataTables_empty").attr("style", "display: none !important;");
-                    $(".dataTables_empty").hide();
-                }, 1500);
-            }
-        }
-    }
-    if ($('#boostlisting').length > 0) {
-        boostlisting('load');
-    }
-</script>
+        {{-- =================================================================
+             COLUMN 2: SEND REQUIREMENT DIRECTLY TO AGENCIES (~64% Width)
+             ================================================================= --}}
+        <div class="agency-card">
+            {{-- Header inside subtle light-mint banner --}}
+            <div class="agency-section-banner-green">
+                <div class="d-flex align-items-start gap-3">
+                    <span class="agency-col-badge green">2</span>
+                    <div>
+                        <h2 class="agency-section-heading">Send Requirement Directly to Agencies</h2>
+                        <p class="agency-section-subtitle">Select agencies you want to notify and ask them to work on this requirement.</p>
+                    </div>
+                </div>
+
+                {{-- Direct Outreach Badge --}}
+                <div class="direct-outreach-badge" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 10px; padding: 7px 14px; display: flex !important; align-items: center; gap: 10px; flex-shrink: 0;">
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                            <path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="#0284c7"/>
+                            <path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M16 4C19 3.5 22 5.5 22.5 7" stroke="#0284c7" stroke-width="1.6" stroke-linecap="round"/>
+                            <line x1="2" y1="16" x2="3.5" y2="17.5" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="1" y1="13.5" x2="2.5" y2="13.5" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="4.5" y1="18.5" x2="4.5" y2="20" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div style="line-height: 1.2;">
+                        <div style="font-size: 11.5px; font-weight: 700; color: #0369a1;">Direct Outreach</div>
+                        <div style="font-size: 10px; color: #64748b; margin-top: 1px;">Get faster responses</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tabs --}}
+            <div class="agency-tabs-nav" role="tablist">
+                <a class="agency-tab-link active" data-tab="recommended" href="#tab_recommended">
+                    <span>Recommended</span>
+                    <span id="recommendedTotal"></span>
+                </a>
+                <a class="agency-tab-link" data-tab="registered" href="#tab_registered">
+                    <span>My Agencies</span>
+                    <span id="registeredTotal">({{ @$registeredTotalCount ?: 0 }})</span>
+                </a>
+                <a class="agency-tab-link" data-tab="assigned" href="#tab_assigned">
+                    <span>Assigned</span>
+                    <span id="assignedTotal">({{ @$assignedTotalCount ?: 0 }})</span>
+                </a>
+            </div>
+
+            {{-- Search & Filter Bar --}}
+            <div class="agency-search-filter-row">
+                <div class="agency-search-input-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search agencies, skills, location or specialization..." value="" />
+                </div>
+                <button type="button" class="btn-filter-trigger">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span>Filter</span>
+                </button>
+            </div>
+
+            {{-- Tab Contents --}}
+            <div class="tab-content mt-2">
+
+                {{-- ── TAB 1: RECOMMENDED AGENCIES ── --}}
+                <div class="tab-pane active show" id="tab_recommended" role="tabpanel" style="display: block;">
+                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                        <table class="agency-data-table" id="recommendedlist">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%;">Agency & Specialization</th>
+                                    <th style="width: 17%;">Matching Profiles</th>
+                                    <th style="width: 15%;">Rates</th>
+                                    <th style="width: 18%;">Location & Team</th>
+                                    <th style="width: 18%; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recommendedlistBody">
+                                {{-- Loaded dynamically via tableLoad(1) --}}
+                            </tbody>
+                        </table>
+                        <div id="recommended_loader" class="table-loader-wrap">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="ms-2 fs-7 text-muted">Loading recommended agencies...</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── TAB 2: MY AGENCIES ── --}}
+                <div class="tab-pane" id="tab_registered" role="tabpanel" style="display: none;">
+                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                        <table class="agency-data-table" id="staffingPartnersRegister">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%;">Agency & Specialization</th>
+                                    <th style="width: 17%;">Matching Profiles</th>
+                                    <th style="width: 15%;">Rates</th>
+                                    <th style="width: 18%;">Location & Team</th>
+                                    <th style="width: 18%; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allregisteragency">
+                                {{-- Loaded dynamically via staffingPartnersRegister(1) --}}
+                            </tbody>
+                        </table>
+                        <div id="paginationregisteragency" class="mt-2"></div>
+                    </div>
+                </div>
+
+                {{-- ── TAB 3: ASSIGNED AGENCIES ── --}}
+                <div class="tab-pane" id="tab_assigned" role="tabpanel" style="display: none;">
+                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                        <div class="aa-header-row d-none d-lg-flex" style="background:#f8fafc; border-bottom:1.5px solid #e2e8f0; padding:8px 12px; margin-bottom:8px;">
+                            <div class="aa-hcol-agency" style="flex:0 0 20%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Agency</div>
+                            <div class="aa-hcol-contact" style="flex:0 0 15%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Contact</div>
+                            <div class="aa-hcol-perf" style="flex:0 0 32%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:center;">Performance</div>
+                            <div class="aa-hcol-shared" style="flex:0 0 12%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Shared</div>
+                            <div class="aa-hcol-status" style="flex:0 0 10%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:center;">Status</div>
+                            <div class="aa-hcol-actions" style="flex:1; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:right;">Actions</div>
+                        </div>
+                        <div id="allAssignListagency">
+                            {{-- Loaded dynamically via recommendedAssignList(1) --}}
+                        </div>
+                        <div id="paginationAssignListagency" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bottom Banner: Send to Multiple Agencies --}}
+            <div class="bottom-multi-agency-banner" style="background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 18px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #ffffff; border: 1px solid #bfdbfe; color: #0066ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 12.5px; color: #0f172a;">Send to multiple agencies</div>
+                        <div style="font-size: 11px; color: #64748b;">You can select and send this requirement to multiple agencies at once.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm" disabled style="background: #dbeafe; color: #2563eb; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 7px 16px; border: none; cursor: default; display: flex; align-items: center; gap: 6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    Send to 0 Agencies
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{{-- =========================================================================
+     FILTER MODAL (FIND TRUSTED HIRING AGENCIES)
+     ========================================================================= --}}
+<div class="modal fade" id="apptrackerfilter" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header d-flex align-items-center justify-content-between py-4 px-6 border-bottom">
+                <div>
+                    <h2 class="fs-4 fw-bolder text-gray-900 mb-1">Find Trusted Hiring Agencies</h2>
+                    <p class="fs-7 text-muted mb-0">Discover verified recruitment partners based on your hiring requirements.</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal" id="apptrackerfilter_close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body p-6">
+                <!-- Trust bar -->
+                <div class="d-flex align-items-center justify-content-between p-3 rounded mb-4" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3z"/></svg>
+                        <span>All agencies are verified</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>Quality & performance checked</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 fs-8 text-gray-700 fw-medium">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        <span>Fast & reliable matching</span>
+                    </div>
+                </div>
+
+                <!-- 1. Search Skills / Keywords -->
+                <div class="mb-4">
+                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">1. Search Skills / Keywords</label>
+                    <input class="form-control form-control-solid fs-7" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="Type skill and press Enter..." id="kt_tagify_users" />
+                    <span class="fs-9 text-muted mt-1 d-block">Press Enter or comma to add a skill keyword</span>
+                </div>
+
+                <!-- 2. Hiring Type -->
+                <div class="mb-4">
+                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">2. Hiring Type</label>
+                    <div class="d-flex gap-3">
+                        <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box active" data-type="2" style="border-color: #2563eb !important; background: #eff6ff;">
+                            <div class="fw-bold fs-7 text-primary mb-1">Full-Time Hiring</div>
+                            <div class="fs-8 text-muted">Permanent hiring for full-time requirements.</div>
+                        </div>
+                        <div class="p-3 border rounded flex-fill cursor-pointer filter-hiring-box" data-type="1" style="border-color: #e2e8f0; background: #ffffff;">
+                            <div class="fw-bold fs-7 text-gray-800 mb-1">Contract Hiring</div>
+                            <div class="fs-8 text-muted">On-demand & project-based contract hiring.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Additional Filters -->
+                <div class="mb-2">
+                    <label class="fw-bold fs-7 text-gray-900 mb-2 d-block">3. Additional Filters</label>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <select class="form-select form-select-solid fs-7" id="industry_filter">
+                                <option value="">All Industries</option>
+                                @if(!empty($td_industries))
+                                    @foreach($td_industries as $ind)
+                                        <option value="{{ $ind->id }}">{{ $ind->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select form-select-solid fs-7" id="experience_filter">
+                                <option value="">All Experience</option>
+                                <option value="0–2 years">0–2 years</option>
+                                <option value="3–5 years">3–5 years</option>
+                                <option value="5–10 years">5–10 years</option>
+                                <option value="10+ years">10+ years</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select form-select-solid fs-7" id="country_filter">
+                                <option value="">All Locations</option>
+                                @if(!empty($cities))
+                                    @foreach($cities as $ct)
+                                        <option value="{{ $ct }}">{{ $ct }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-3 px-6 border-top d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary changetextupdate" id="changetextupdate" onclick="newUpdateJobstatus()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- =========================================================================
+     JAVASCRIPT LIFECYCLE & STATE MANAGEMENT
+     Immediate Execution Architecture (No $(document).ready wrapper)
+     ========================================================================= --}}
 <script>
     /**
-     * AgencyMarketplaceTabManager
-     * True Tab-Level Lazy Loading, Request Deduplication, Debouncing & XHR Cancellation.
-     * Matches Profile Tabs V2 architecture (ProfileTabManager).
+     * Tab Manager: Scoped per jobId to prevent memory leaks and singleton state bugs.
      */
-    window.AgencyMarketplaceTabManager = {
+    var AgencyMarketplaceTabManager = {
         initializedTabs: {},
         activeRequests: {},
         searchTimers: {},
-        isInitialized: false,
 
         init: function() {
-            if (this.isInitialized) return;
-            this.isInitialized = true;
-            var self = this;
-
-            // Listen for Metronic / Bootstrap shown.bs.tab event
-            $(document).off('shown.bs.tab', 'a[data-toggle="tab"]').on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-                var targetTab = $(e.target).attr('href');
-                if (!targetTab) return;
-                var tabKey = targetTab.replace('#', '');
-                self.onTabActivated(tabKey);
-            });
-
-            // Direct click handler fallback
-            $(document).off('click', '.nav-tabs a[data-toggle="tab"]').on('click', '.nav-tabs a[data-toggle="tab"]', function (e) {
-                var targetTab = $(this).attr('href');
-                if (!targetTab) return;
-                var tabKey = targetTab.replace('#', '');
-                self.onTabActivated(tabKey);
-            });
-
-            // 300ms Search Debounce for My Agency search input
-            $(document).off('keyup input', '#kt_tagify_4').on('keyup input', '#kt_tagify_4', function() {
-                self.debounceSearch('registered', function() {
-                    staffingPartnersRegister(1, '');
-                });
-            });
-
-            // 300ms Search Debounce for Assigned Agency search input
-            $(document).off('keyup input', '#kt_tagify_5').on('keyup input', '#kt_tagify_5', function() {
-                self.debounceSearch('assigned', function() {
-                    recommendedAssignList(1, '');
-                });
-            });
+            var jobId = $('#current_job_id').val();
+            if (!jobId) return;
+            this.initializedTabs[jobId] = this.initializedTabs[jobId] || {};
         },
 
-        onTabActivated: function(tabKey) {
-            if (this.initializedTabs[tabKey]) {
-                return;
-            }
-            this.initializedTabs[tabKey] = true;
+        switchTab: function(tabKey) {
+            var jobId = $('#current_job_id').val();
+            if (!jobId) return;
 
+            this.cancelAllRequests();
+            this.initializedTabs[jobId] = this.initializedTabs[jobId] || {};
+
+            var curSearch = $('#agency_unified_search').val() || '';
             if (tabKey === 'registered') {
-                staffingPartnersRegister(1, '');
+                staffingPartnersRegister(1, curSearch);
             } else if (tabKey === 'assigned') {
-                recommendedAssignList(1, '');
+                recommendedAssignList(1, curSearch);
             } else if (tabKey === 'recommended') {
                 tableLoad(1);
             }
-        },
-
-        debounceSearch: function(tabKey, callback) {
-            if (this.searchTimers[tabKey]) {
-                clearTimeout(this.searchTimers[tabKey]);
-            }
-            this.searchTimers[tabKey] = setTimeout(function() {
-                callback();
-            }, 300);
+            this.initializedTabs[jobId][tabKey] = true;
         },
 
         cancelRequest: function(tabKey) {
             if (this.activeRequests[tabKey] && typeof this.activeRequests[tabKey].abort === 'function') {
                 try { this.activeRequests[tabKey].abort(); } catch(e) {}
                 delete this.activeRequests[tabKey];
+            }
+        },
+
+        cancelAllRequests: function() {
+            for (var key in this.activeRequests) {
+                if (this.activeRequests.hasOwnProperty(key)) {
+                    this.cancelRequest(key);
+                }
             }
         },
 
@@ -2285,62 +1397,72 @@ $current_job_id = @$job_id;
 
         clearRequest: function(tabKey) {
             delete this.activeRequests[tabKey];
-        },
-
-        invalidateTab: function(tabKey) {
-            delete this.initializedTabs[tabKey];
         }
     };
 
-    function initAgencyMarketplaceView() {
-        AgencyMarketplaceTabManager.init();
-        if (!AgencyMarketplaceTabManager.initializedTabs['recommended']) {
-            AgencyMarketplaceTabManager.initializedTabs['recommended'] = true;
-            tableLoad(1);
-        }
-    }
-
-    // Execute immediately so AJAX drawer injection loads the active Recommended tab
-    initAgencyMarketplaceView();
-
-    $(document).ready(function() {
-        initAgencyMarketplaceView();
-    });
-
-    function filtersdata() {
-        tableLoad(1);
-    }
-
+    /**
+     * Recommended Agencies Table Loader:
+     * Two-Tier Safe Representation: Client RAM cache + _force=1 HTTP 304 Recovery
+     */
     function tableLoad(page) {
         if (page === 'load' || !page) { page = 1; }
 
-        $('.loader_search').css({ display: 'block' });
+        $('#recommended_loader').show();
+
+        var currentJobId = $('#current_job_id').val();
+        var cusSearchVal = $('#agency_unified_search').val() || $('#kt_tagify_users').val();
 
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
             type: 'GET',
             data: {
-                jobid: $('#current_job_id').val(),
-                hiringtype : $('#workhiringtype').val(),
-                country : $('#country').val(),
-                cus_search : $('#kt_tagify_users').val(),
-                min_exp : $('#min_exp').val(),
-                max_exp : $('#max_exp').val(),
-                kt_tagify_location : $('#country').val(),
-                app_int_outsource : $('#hiring_type').val(),
-                experience : $('#experience').val(),
-                industry : $('#industry').val(),
-                min_sal : $('#min_sal').val(),
-                max_sal : $('#max_sal').val(),
-                min_salary_currency : $('#min_salary_currency').val(),
-                sal_mode : $('#sal_mode').val()
+                jobid: currentJobId,
+                hiringtype: $('#workhiringtype').val(),
+                country: $('#country').val(),
+                cus_search: cusSearchVal,
+                min_exp: $('#min_exp').val(),
+                max_exp: $('#max_exp').val(),
+                app_int_outsource: $('#hiring_type').val(),
+                experience: $('#experience').val(),
+                industry: $('#industry').val(),
+                min_sal: $('#min_sal').val(),
+                max_sal: $('#max_sal').val(),
+                min_salary_currency: $('#min_salary_currency').val(),
+                sal_mode: $('#sal_mode').val()
             },
             success: function(response) {
-                $('.loadingMessage').css({ display: 'none' });
-                $('.loader_search').css({ display: 'none' });
-                $('.page-loader').css('display', 'none');
-                $('#recommendedlistBody').html(response.html);
-                $('#recommendedTotal').html('('+response.total+')');
+                $('#recommended_loader').hide();
+
+                var ramCacheKey = 'recom_table_' + currentJobId + '_' + page;
+                window.agencyTableCache = window.agencyTableCache || {};
+
+                if (response && response.html) {
+                    window.agencyTableCache[ramCacheKey] = response;
+                    $('#recommendedlistBody').html(response.html);
+                    if (response.total !== undefined) {
+                        $('#recommendedTotal').html('(' + response.total + ')');
+                    }
+                } else if (window.agencyTableCache[ramCacheKey]) {
+                    var cached = window.agencyTableCache[ramCacheKey];
+                    $('#recommendedlistBody').html(cached.html);
+                    if (cached.total !== undefined) {
+                        $('#recommendedTotal').html('(' + cached.total + ')');
+                    }
+                } else {
+                    // Safe representation recovery: _force=1 guarantees fresh HTML from Redis
+                    $.getJSON(`{!! route('service_company.jobs.recommendedData') !!}?page=${page}&_force=1`, { jobid: currentJobId }, function(fresh) {
+                        if (fresh && fresh.html) {
+                            window.agencyTableCache[ramCacheKey] = fresh;
+                            $('#recommendedlistBody').html(fresh.html);
+                            if (fresh.total !== undefined) {
+                                $('#recommendedTotal').html('(' + fresh.total + ')');
+                            }
+                        }
+                    });
+                }
+            },
+            error: function() {
+                $('#recommended_loader').hide();
             },
             complete: function() {
                 AgencyMarketplaceTabManager.clearRequest('recommended');
@@ -2350,58 +1472,69 @@ $current_job_id = @$job_id;
         return jqXHR;
     }
 
-    function newUpdateJobstatus() {
-        $('.changetextupdate').text('Searching....!');
-        tableLoad(1);
-        var $this = $('#apptrackerfilter');
-        $this.modal('hide');
-        setTimeout(() => {
-            $('#apptrackerfilter_close').click();
-            $('.changetextupdate').text('Submit');
-        }, 1500);
-    }
-
-    function filtersdatathree() {
-        recommendedAssignList(1, '');
-    }
-
-    $(document).on('click', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow', function(e) {
-        e.preventDefault();
-        const page = $(this).attr('data-page') || $(this).data('page');
-        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
-
-        $(this).addClass('disabled');
-        recommendedAssignList(page).then(() => {
-            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
-        }).catch(() => {
-            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
-        });
-    });
-
-    function recommendedAssignList(page = 1, search = '') {
+    /**
+     * My Agencies (Registered) Loader
+     */
+    function staffingPartnersRegister(page = 1, search = null) {
         if (page === 'load' || !page) { page = 1; }
-
         var jobid = $('#current_job_id').val();
-        var hiringtype = '';
-        var country = '';
-        var cus_search = $('#kt_tagify_5').val();
+        var cus_search = (search !== null && search !== undefined) ? search : ($('#agency_unified_search').val() || '');
+
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                page: page,
+                jobid: jobid,
+                hiringtype: $('#hiringtype4').val(),
+                country: $('#country4').val(),
+                cus_search: cus_search
+            },
+            success: function(response) {
+                if (response && response.html) {
+                    $('#allregisteragency').html(response.html);
+                    if (response.total !== undefined) {
+                        $('#registeredTotal').html('(' + response.total + ')');
+                    }
+                    if (response.pagination) {
+                        $('#paginationregisteragency').html(response.pagination);
+                    }
+                }
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('registered');
+            }
+        });
+        AgencyMarketplaceTabManager.registerRequest('registered', jqXHR);
+        return jqXHR;
+    }
+
+    /**
+     * Assigned Agencies Loader
+     */
+    function recommendedAssignList(page = 1, search = null) {
+        if (page === 'load' || !page) { page = 1; }
+        var jobid = $('#current_job_id').val();
+        var cus_search = (search !== null && search !== undefined) ? search : ($('#agency_unified_search').val() || '');
 
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
             type: 'GET',
             data: {
-                page : page,
-                jobid : jobid,
-                hiringtype : hiringtype,
-                country : country,
-                cus_search : cus_search
+                page: page,
+                jobid: jobid,
+                cus_search: cus_search
             },
             success: function(response) {
-                $('.loader_search').css({ display: 'none' });
-                $('.page-loader').css('display', 'none');
-                $('#allAssignListagency').html(response.html);
-                $('#assignedTotal').html('('+response.total+')');
-                $('#paginationAssignListagency').html(response.pagination);
+                if (response && response.html) {
+                    $('#allAssignListagency').html(response.html);
+                    if (response.total !== undefined) {
+                        $('#assignedTotal').html('(' + response.total + ')');
+                    }
+                    if (response.pagination) {
+                        $('#paginationAssignListagency').html(response.pagination);
+                    }
+                }
             },
             complete: function() {
                 AgencyMarketplaceTabManager.clearRequest('assigned');
@@ -2411,390 +1544,323 @@ $current_job_id = @$job_id;
         return jqXHR;
     }
 
-    function filtersdatatwo() {
-        staffingPartnersRegister(1, '');
+    /**
+     * Filter Modal: Apply filters callback
+     */
+    function newUpdateJobstatus() {
+        $('#industry').val($('#industry_filter').val());
+        $('#experience').val($('#experience_filter').val());
+        $('#country').val($('#country_filter').val());
+
+        var filterSkill = $('#kt_tagify_users').val();
+        if (filterSkill) {
+            $('#agency_unified_search').val(filterSkill);
+        }
+
+        $('#apptrackerfilter').modal('hide');
+        tableLoad(1);
     }
 
-    $(document).on('click', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow', function(e) {
-        e.preventDefault();
-        const page = $(this).attr('data-page') || $(this).data('page');
-        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
-
-        $(this).addClass('disabled');
-        staffingPartnersRegister(page).then(() => {
-            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
-        }).catch(() => {
-            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
-        });
-    });
-
-    function staffingPartnersRegister(page = 1, search = '') {
-        if (page === 'load' || !page) { page = 1; }
-
-        if ($('#kt_tagify_4').val() !== '') {
-            $('.loader_search').css({ display: 'block' });
-        } else {
-            $('.loader_search').css({ display: 'block' });
+    /**
+     * IMMEDIATE EXECUTION: Binds all events and initializes state immediately upon drawer injection.
+     */
+    (function() {
+        // Enforce mutually exclusive marketplace state immediately on injection
+        function setMarketplaceUiState(isLive) {
+            if (isLive) {
+                $('#marketplace_unpublished_box').addClass('d-none').attr('style', 'display: none !important;');
+                $('#marketplace_live_box').removeClass('d-none').attr('style', 'display: block !important;');
+                $('#sp_list_one').addClass('d-none').attr('style', 'display: none !important;');
+                $('#sp_list_two').removeClass('d-none').attr('style', 'display: flex !important;');
+            } else {
+                $('#marketplace_live_box').addClass('d-none').attr('style', 'display: none !important;');
+                $('#marketplace_unpublished_box').removeClass('d-none').attr('style', 'display: block !important;');
+                $('#sp_list_two').addClass('d-none').attr('style', 'display: none !important;');
+                $('#sp_list_one').removeClass('d-none').attr('style', 'display: flex !important;');
+            }
         }
 
-        var jobid = $('#current_job_id').val();
-        var hiringtype = $('#hiringtype4').val();
-        var country = $('#country4').val();
-        var cus_search = $('#kt_tagify_4').val();
+        var initialIsLive = {{ $isPublished ? 'true' : 'false' }};
+        setMarketplaceUiState(initialIsLive);
 
-        var jqXHR = $.ajax({
-            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
-            type: 'GET',
-            data: {
-                page : page,
-                jobid : jobid,
-                hiringtype : hiringtype,
-                country : country,
-                cus_search : cus_search
-            },
-            success: function(response) {
-                $('.loader_search').css({ display: 'none' });
-                $('.page-loader').css('display', 'none');
-                $('#allregisteragency').html(response.html);
-                $('#registeredTotal').html('('+response.total+')');
-                $('#paginationregisteragency').html(response.pagination);
-            },
-            complete: function() {
-                AgencyMarketplaceTabManager.clearRequest('registered');
-            }
-        });
-        AgencyMarketplaceTabManager.registerRequest('registered', jqXHR);
-        return jqXHR;
-    }
-           
+        // Initialize Tab Manager and Load Initial Data
+        AgencyMarketplaceTabManager.init();
+        tableLoad(1);
 
-    $('body').off('click', '.send_only_job_invitation').on('click', '.send_only_job_invitation', function(event) {
-    // $('body').on('click', '.send_only_job_invitation', function(event) {
+        // Tab Switching Click Listeners (Strictly scoped within #kt_activitiesRecruiter)
+        $(document).off('click.agencyTabs', '#kt_activitiesRecruiter .agency-tab-link').on('click.agencyTabs', '#kt_activitiesRecruiter .agency-tab-link', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#kt_activitiesRecruiter .agency-tab-link').removeClass('active');
+            $(this).addClass('active');
 
-        event.preventDefault();
-        // alert("fhf");
-         var ele = $(this);
-        var id = $(this).data('row-jobid');
-        var fromcompany = $(this).data('row-fromcompany');
-        var tocompany = $(this).data('row-tocompany');
-        var kt_tagify_location = $('#country4').val();
+            var tabKey = $(this).data('tab');
+            var targetPane = $(this).attr('href');
 
-        var boostercom = $(this).data('boostercom');
-        var boostids = '';
-        if(boostercom==1){
-            var boostids =  $(this).data('boost-ids');
-        }
-       
-        var url = "{{ route('service_company.jobs.send_only_job_invitation', ':id') }}";
-        url = url.replace(':id', id);
-        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        $.ajax({
-            type: 'GET',
-            url: url,
-            data: {
-                'jobid': id,
-                'fromcompany': fromcompany,
-                'tocompany': tocompany,
-                'boostercom': boostercom,
-                'boostids': boostids,
-                'kt_tagify_location': kt_tagify_location
-            },
-            success: function(response) {
-                // alert("dl");
-                if (response.status == "success") {
-                    ele.removeClass('btn-light-primary');
-                    ele.removeClass('send_job_recommanded_request');
-                    ele.removeClass('send_only_job_invitation');
-                    ele.addClass('btn-light-success');
-                    ele.text('Request Sent');
-                    // ele.text('Request Sent');
-                    Swal.fire("Success", response.message, "success");
-                }else if (response.status == "warning") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "info") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "closeJob") {
-                    Swal.fire("Warning", response.message, "warning");
-                }
+            $('#kt_activitiesRecruiter .tab-pane').removeClass('active show').hide();
+            $('#kt_activitiesRecruiter ' + targetPane).addClass('active show').show();
 
-
-            }
+            AgencyMarketplaceTabManager.switchTab(tabKey);
         });
 
-
-    });
-    $('body').on('click', '.send_request_from_rsp', function() {
-
-        var id = $(this).data('row-id');
-        var jobid = $(this).data('row-jobid');
-
-        var url = "{{ route('service_company.jobs.rsp_job_request_send', ':id') }}";
-        url = url.replace(':id', id);
-        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-
-        $.ajax({
-            type: 'GET',
-            url: url,
-            data: {
-                'jobid': jobid
-            },
-            success: function(response) {
-
-                if (response.status == "success") {
-                    tableLoad('load');
-                    Swal.fire("Success", response.message, "success");
+        // Unified Search Input with Debounce (300ms)
+        var searchTimeout = null;
+        $(document).off('input.unifiedSearch', '#agency_unified_search').on('input.unifiedSearch', '#agency_unified_search', function() {
+            clearTimeout(searchTimeout);
+            var val = $(this).val();
+            searchTimeout = setTimeout(function() {
+                var activeTab = $('#kt_activitiesRecruiter .agency-tab-link.active').data('tab') || 'recommended';
+                if (activeTab === 'registered') {
+                    $('#kt_tagify_4').val(val);
+                    staffingPartnersRegister(1, val);
+                } else if (activeTab === 'assigned') {
+                    $('#kt_tagify_5').val(val);
+                    recommendedAssignList(1, val);
+                } else {
+                    tableLoad(1);
                 }
-                if (response.status == "warning") {
-                    tableLoad('load');
-                    Swal.fire("Warning", response.message, "warning");
-                }
-
-            }
-        });
-    });
-	
-    
-	$('body').off('click', '.send_job_recommanded_request').on('click', '.send_job_recommanded_request', function(event) {
-        event.preventDefault();
-
-        var $this = $(this);
-        // Disable the button to prevent multiple clicks   
-        $this.prop('disabled', true);
-
-        var from_company_id = $this.data('row-id');
-        var current_jobid = $this.data('row-jobid');
-        var matchcount = $this.data('matchcount');
-        var id = from_company_id;
-        var kt_tagify_location = $('#kt_tagify_location').val();
-
-        var boostercom = $(this).data('boostercom');
-        var boostids = '';
-        if(boostercom==1){
-            var boostids =  $(this).data('boost-ids');
-        }
-
-
-        var url = "{{ route('service_company.jobs.send_job_recommanded_request', ':id') }}";
-        url = url.replace(':id', id);
-
-        $.ajax({
-            type: 'GET',
-            url: url,
-            data: {
-                'from_company_id': from_company_id,
-                'current_jobid': current_jobid,
-                'boostercom': boostercom,
-                'boostids': boostids,
-                'matchcount': matchcount,
-                'kt_tagify_location': kt_tagify_location
-            },
-            success: function(response) {
-                if (response.status === "success") {
-                    $('#sp_list_' + id).removeClass('btn-light-primary send_job_recommanded_request send_only_job_invitation')
-                                      .addClass('btn-light-success')
-                                      .text('Request Sent');
-                    Swal.fire("Success", response.message, "success");
-                }else if (response.status === "warning") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "info") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "closeJob") {
-                    Swal.fire("Warning", response.message, "warning");
-                }
-                // Re-enable the button after processing
-                $this.prop('disabled', false);
-            },
-            error: function() {
-                // Re-enable the button if there's an error
-                $this.prop('disabled', false);
-            }
-        });
-    });
-
-   $('body').off('click','.post_to_public').on('click','.post_to_public', function(e){
-        e.preventDefault();
-        var $this = $(this);
-        // Disable the button to prevent multiple clicks
-        
-        var current_jobid = $this.data('row-jobid');
-        var job_cancel = $this.data('c');
-        var id = 0;
-        var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}";
-        url = url.replace(':id', id);
-        Swal.fire({
-            title: job_cancel == 1 
-                ? 'Unpublish this job?.'
-                : 'Publish job to agencies?',
-            text: job_cancel == 1 
-                ? 'This job will no longer be visible to agencies.'
-                : 'This job will be visible to verified agencies, and they can start submitting candidates immediately.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, proceed',
-            cancelButtonText: 'No, cancel',
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33'
-        }).then((result) => {
-
-        if (!result.isConfirmed) return;
-
-        // Disable button AFTER confirmation
-        $this.prop('disabled', true);
-
-        $.ajax({
-            type: 'GET',
-            url: url,
-            data: {
-                'current_jobid': current_jobid,
-                'job_cancel':job_cancel
-            },
-            success: function(response) {
-                
-                    if(job_cancel==1){
-                        
-                          $('.text_change_text').removeClass('text-success btn-light-success');
-                          $('.text_change_text').addClass('text-black btn-light-black');
-                          $('.text_change_text').text('Unpublish Job');
-                         
-                          $('#sp_list_one').text(response.text_change);
-                          $('#sp_list_two').addClass('d-none');
-                          $('#sp_list_one').removeClass('d-none');
-                         
-                    }else{
-                        $('#sp_list_two').text(response.text_change);
-
-                        if(response.text_change=='Approval Pending'){
-                           $('#sp_list_two').removeClass('d-none');
-                           $('#sp_list_one').data('c', 2).attr('data-c', 2);
-                           $('#sp_list_one').addClass('d-none'); 
-                           $('.text_change_text').text(response.text_change);
-                        }else{
-                          $('.text_change_text').removeClass('text-black btn-light-black');
-                          $('.text_change_text').addClass('text-success btn-light-success');
-                          $('.text_change_text').text('Published');
-                          $('#sp_list_two').removeClass('d-none');
-                          $('#sp_list_one').addClass('d-none');  
-                        }
-                    }
-
-                if (response.status === "success") {
-
-                    // $('#sp_list_two').removeClass('btn-light-primary post_to_public')
-                    //                   .addClass(response.color_change)
-                    //                   .text(response.text_change);
-
-                    Swal.fire("Success", response.message, "success");
-                    
-                }else if (response.status === "warning") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "closeJob") {
-                    Swal.fire("Warning", response.message, "warning");
-                    // $('#kt_activitiesStaffing_close').click();
-                }
-                // Re-enable the button after processing
-                $this.prop('disabled', false);
-            },
-            error: function() {
-                // Re-enable the button if there's an error
-                Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
-                $this.prop('disabled', false);
-            },
-            complete: function () {
-                // Always re-enable button
-                $this.prop('disabled', false);
-            }
-            });
+            }, 300);
         });
 
-   });
+        // Drawer Close Handlers (Back button & Close icon)
+        $(document).off('click.drawerCloseTrigger', '.drawer-close-trigger').on('click.drawerCloseTrigger', '.drawer-close-trigger', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-    $('body').on('click', '.remove_assign_job', function() {
+            var drawerEl = document.getElementById('kt_activitiesRecruiter');
+            if (drawerEl && typeof KTDrawer !== 'undefined') {
+                var drawerInstance = KTDrawer.getInstance(drawerEl);
+                if (drawerInstance) {
+                    drawerInstance.hide();
+                }
+            }
+            $('#kt_activitiesRecruiter_close').trigger('click');
+            $('body').removeClass('drawer-on');
+            $('#kt_activitiesRecruiter').removeClass('drawer-on');
+            $('.drawer-overlay').remove();
+        });
 
-        var id = $(this).data('row-id');
-        var jobid = $(this).data('row-jobid');
+        // ── Assigned Agency: three-dot menu dropdown ─────────────────────
+        $(document).off('click.aaDots', '.aa-dots-btn').on('click.aaDots', '.aa-dots-btn', function(e) {
+            e.stopPropagation();
+            var $menu = $(this).next('.aa-ddmenu');
+            var wasOpen = $menu.hasClass('open');
+            $('.aa-ddmenu.open').removeClass('open');
+            if (!wasOpen) { $menu.addClass('open'); }
+        });
+        $(document).off('click.aaDotsClose').on('click.aaDotsClose', function() {
+            $('.aa-ddmenu.open').removeClass('open');
+        });
 
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        })
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Ignore it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: true
-        }).then((result) => {
+        // Filter modal triggers
+        $(document).off('click.filterTrigger', '.btn-filter-trigger').on('click.filterTrigger', '.btn-filter-trigger', function(e) {
+            e.preventDefault();
+            $('#apptrackerfilter').modal('show');
+        });
+        $(document).off('click.filterClose', '#apptrackerfilter_close, [data-dismiss="modal"], [data-bs-dismiss="modal"]').on('click.filterClose', '#apptrackerfilter_close, [data-dismiss="modal"], [data-bs-dismiss="modal"]', function(e) {
+            e.preventDefault();
+            $('#apptrackerfilter').modal('hide');
+        });
 
-            if (result.isConfirmed) {
+        // Filter modal hiring type toggle
+        $(document).off('click.filterHiring', '.filter-hiring-box').on('click.filterHiring', '.filter-hiring-box', function() {
+            $('.filter-hiring-box').removeClass('active').css({ 'border-color': '#e2e8f0', 'background': '#ffffff' });
+            $(this).addClass('active').css({ 'border-color': '#2563eb', 'background': '#eff6ff' });
+            $('#hiring_type').val($(this).data('type'));
+        });
 
+        // ── PUBLISH / UNPUBLISH TOGGLE HANDLER ───────────────────────────────
+        $('body').off('click.postToPublic', '.post_to_public').on('click.postToPublic', '.post_to_public', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.data('in-flight')) return false;
 
+            var current_jobid = $this.data('row-jobid') || $('#current_job_id').val();
+            var job_cancel = $this.data('c');
+            var id = 0;
+            var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', id);
 
-                var url = "{{ route('service_company.jobs.assignRejected') }}";
+            Swal.fire({
+                title: job_cancel == 1 ? 'Unpublish from Marketplace?' : 'Publish to Agency Marketplace?',
+                text: job_cancel == 1 
+                    ? 'This job will no longer be visible to agencies on Jero Agency Marketplace.'
+                    : 'This job will become LIVE on Jero Agency Marketplace. Verified agencies can discover and submit candidates.',
+                icon: job_cancel == 1 ? 'warning' : 'info',
+                showCancelButton: true,
+                confirmButtonText: job_cancel == 1 ? 'Yes, unpublish' : 'Yes, publish now',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: job_cancel == 1 ? '#ef4444' : '#2563eb',
+                cancelButtonColor: '#64748b'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $this.data('in-flight', true).prop('disabled', true);
+
                 $.ajax({
                     type: 'GET',
                     url: url,
                     data: {
-                        'id': id,
-                        'jobid': jobid
+                        'current_jobid': current_jobid,
+                        'job_cancel': job_cancel
                     },
                     success: function(response) {
-
-                        if (response.status == 'success') {
-
-                            recommendedAssignList('load');
-                            swalWithBootstrapButtons.fire(
-                                'Ignore!',
-                                'Selected request has been removed successfully.',
-                                'success'
-                            )
+                        if (response && response.status === 'closeJob' && job_cancel != 1) {
+                            Swal.fire("Notice", response.message || "Please update the job status from 'Closed/Hold' to 'Hiring' to enable posting.", "warning");
+                            return;
                         }
+
+                        if (job_cancel == 1) {
+                            // Swapped to UNPUBLISHED state
+                            setMarketplaceUiState(false);
+                            Swal.fire("Unpublished", "This job requirement is no longer live on the marketplace.", "success");
+                        } else {
+                            // Swapped to LIVE state
+                            setMarketplaceUiState(true);
+                            Swal.fire("Published Live!", "This job is now live on Jero Agency Marketplace.", "success");
+                        }
+
+                        // Invalidate RAM cache so fresh states persist
+                        window.agencyTableCache = {};
+                        if (window.jobDrawerCache) {
+                            delete window.jobDrawerCache['spartner_' + current_jobid];
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                    },
+                    complete: function() {
+                        $this.data('in-flight', false).prop('disabled', false);
                     }
                 });
+            });
+        });
 
+        // ── SEND REQUIREMENT (INVITATION) ACTIONS ────────────────────────────
+        $('body').off('click.sendOnlyInvite', '.send_only_job_invitation').on('click.sendOnlyInvite', '.send_only_job_invitation', function(e) {
+            e.preventDefault();
+            var ele = $(this);
+            if (ele.data('in-flight')) return false;
+            ele.data('in-flight', true).prop('disabled', true).addClass('disabled');
 
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                swalWithBootstrapButtons.fire(
-                    'Cancelled',
-                    'Selected request is safe :)',
-                    'error'
-                )
-            }
+            var id = ele.data('row-jobid') || $('#current_job_id').val();
+            var fromcompany = ele.data('row-fromcompany');
+            var tocompany = ele.data('row-tocompany');
+            var url = "{{ route('service_company.jobs.send_only_job_invitation', ':id') }}".replace(':id', id);
 
-        })
-    });
-    $('body').on('click', '.remove_job', function() {
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    'jobid': id,
+                    'fromcompany': fromcompany,
+                    'tocompany': tocompany
+                },
+                success: function(response) {
+                    if (response.status == "success") {
+                        ele.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
+                        Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
+                    } else {
+                        Swal.fire("Notice", response.message || "Could not send requirement.", "warning");
+                    }
+                },
+                error: function() {
+                    Swal.fire("Error", "Could not send requirement. Please try again.", "error");
+                },
+                complete: function() {
+                    ele.data('in-flight', false).prop('disabled', false).removeClass('disabled');
+                }
+            });
+        });
 
+        $('body').off('click.sendJobRecom', '.send_job_recommanded_request').on('click.sendJobRecom', '.send_job_recommanded_request', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.data('in-flight')) return false;
+            $this.data('in-flight', true).prop('disabled', true).addClass('disabled');
 
-        var jobid = $(this).data('row-jobid');
-        var fromcompany = $(this).data('row-fromcompany');
-        var tocompany = $(this).data('row-tocompany');
-        var tabname = $(this).data('row-tabname');
+            var from_company_id = $this.data('row-id');
+            var current_jobid = $this.data('row-jobid') || $('#current_job_id').val();
+            var url = "{{ route('service_company.jobs.send_job_recommanded_request', ':id') }}".replace(':id', from_company_id);
 
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        })
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to remove this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Ignore it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: true
-        }).then((result) => {
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    'from_company_id': from_company_id,
+                    'current_jobid': current_jobid
+                },
+                success: function(response) {
+                    if (response.status === "success") {
+                        $this.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
+                        Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
+                    } else {
+                        Swal.fire("Notice", response.message || "Could not send requirement.", "warning");
+                    }
+                },
+                error: function() {
+                    Swal.fire("Error", "Could not send requirement. Please try again.", "error");
+                },
+                complete: function() {
+                    $this.data('in-flight', false).prop('disabled', false).removeClass('disabled');
+                }
+            });
+        });
 
-            if (result.isConfirmed) {
+        $('body').off('click.resendReq', '.resend_job_recommanded_request').on('click.resendReq', '.resend_job_recommanded_request', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.data('in-flight')) return false;
+            $this.data('in-flight', true).prop('disabled', true).addClass('disabled');
 
+            var to_company_id = $this.data('row-id');
+            var current_jobid = $this.data('row-jobid') || $('#current_job_id').val();
+            var ename = $this.data('row-ename');
+            var url = "{{ route('service_company.jobs.resend_job_recommanded_request', ':id') }}".replace(':id', to_company_id);
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    'to_company_id': to_company_id,
+                    'current_jobid': current_jobid,
+                    'ename': ename
+                },
+                success: function(response) {
+                    tableLoad('load');
+                    if (response.status === "success") {
+                        Swal.fire("Success", response.message || "Requirement resent successfully.", "success");
+                    }
+                },
+                complete: function() {
+                    $this.data('in-flight', false).prop('disabled', false).removeClass('disabled');
+                }
+            });
+        });
+
+        // ── REMOVE / IGNORE ACTIONS ──────────────────────────────────────────
+        $('body').off('click.removeJob', '.remove_job').on('click.removeJob', '.remove_job', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.data('in-flight')) return false;
+
+            var jobid = $this.data('row-jobid') || $('#current_job_id').val();
+            var fromcompany = $this.data('row-fromcompany');
+            var tocompany = $this.data('row-tocompany');
+
+            Swal.fire({
+                title: 'Remove Agency?',
+                text: "This agency will be removed from this requirement.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#ef4444'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $this.data('in-flight', true).prop('disabled', true);
                 var url = "{{ route('service_company.jobs.removeJob') }}";
+
                 $.ajax({
                     type: 'GET',
                     url: url,
@@ -2804,125 +1870,75 @@ $current_job_id = @$job_id;
                         'tocompany': tocompany
                     },
                     success: function(response) {
-
                         if (response.status == 'success') {
-
                             tableLoad('load');
-                            recommendedAssignList('load');
                             staffingPartnersRegister('load');
-
-                            swalWithBootstrapButtons.fire(
-                                'Removed!',
-                                'Selected request has been removed successfully.',
-                                'success'
-                            );
-                        } else {
-
-                            swalWithBootstrapButtons.fire(
-                                'Cancelled',
-                                'Selected request is safe :)',
-                                'error'
-                            );
-
-
+                            recommendedAssignList('load');
+                            Swal.fire('Removed', 'Agency removed successfully.', 'success');
                         }
+                    },
+                    complete: function() {
+                        $this.data('in-flight', false).prop('disabled', false);
                     }
                 });
-
-
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                swalWithBootstrapButtons.fire(
-                    'Cancelled',
-                    'Selected request is safe :)',
-                    'error'
-                )
-            }
-        })
-    });
-    $('body').off('click', '.resend_job_recommanded_request').on('click', '.resend_job_recommanded_request', function(event) {
-        event.preventDefault();
-        // $('body').on('click', '.resend_job_recommanded_request', function() {
-
-        var ename = $(this).data('row-ename');
-        var to_company_id = $(this).data('row-id');
-        var current_jobid = $(this).data('row-jobid');
-        var matchcount = $(this).data('matchcount');
-        var kt_tagify_location = $('#kt_tagify_location').val();
-        var id = to_company_id;
-
-        var url = "{{ route('service_company.jobs.resend_job_recommanded_request', ':id') }}";
-        url = url.replace(':id', id);
-        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        $.ajax({
-            type: 'GET',
-            url: url,
-            data: {
-                'to_company_id': to_company_id,
-                'current_jobid': current_jobid, 
-                'matchcount': matchcount,
-                'kt_tagify_location': kt_tagify_location,
-                'ename': ename
-            },
-            success: function(response) {
-                tableLoad('load');
-                recommendedAssignList('load');
-                staffingPartnersRegister('load');
-                if (response.status == "success") {
-                    Swal.fire("Success", response.message, "success");
-                }else if (response.status == "warning") {
-                    Swal.fire("Warning", response.message, "warning");
-                }else if (response.status === "closeJob") {
-                    Swal.fire("Warning", response.message, "warning");
-                }
-            }
+            });
         });
-    });
-</script>
 
-<script>
-    // The DOM elements you wish to replace with Tagify
-    var inputloc = document.querySelector("#kt_tagify_location");
-    if (inputloc) {
-        var cities = @json(@$cities);
-        // Initialize Tagify script on the above inputs
-        var tagifylocation = new Tagify(inputloc, {
-            whitelist: cities,
-            maxTags: 1,
-            dropdown: {
-                maxItems: 200, // <- mixumum allowed rendered suggestions
-                classname: "", // <- custom classname for this dropdown, so it could be targeted
-                enabled: 0, // <- show suggestions on focus
-                closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
-            }
-        });
-        // Prevent creating tags on blur or enter key
-        tagifylocation.on('input', function(e) {
-            tagifylocation.dropdown.show(); // show the dropdown immediately
-        });
-        // Create tags only on select
-        tagifylocation.on('dropdown:select', function(e) {
-            tagifylocation.addTags([e.detail.data.value]);
-        });
-        tagifylocation.on('add', function(e) {
-            // Remove the tag if it wasn't selected from the dropdown
-            if (!cities.includes(e.detail.data.value)) {
-                setTimeout(() => {
-                    tagifylocation.removeTag(e.detail.data.value);
-                }, 500);
-            }
-        });
-    }
+        $('body').off('click.removeAssignJob', '.remove_assign_job').on('click.removeAssignJob', '.remove_assign_job', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.data('in-flight')) return false;
 
-    /* ── Assigned Agency tab: three-dot dropdown ─────────────────── */
-    $(document).on('click', '.aa-dots-btn', function(e) {
-        e.stopPropagation();
-        var $menu = $(this).next('.aa-ddmenu');
-        var wasOpen = $menu.hasClass('open');
-        // Close all open menus first
-        $('.aa-ddmenu.open').removeClass('open');
-        if (!wasOpen) { $menu.addClass('open'); }
-    });
-    // Close dropdown on outside click
-    $(document).on('click', function() { $('.aa-ddmenu.open').removeClass('open'); });
+            var id = $this.data('row-id');
+            var jobid = $this.data('row-jobid') || $('#current_job_id').val();
 
+            Swal.fire({
+                title: 'Ignore Agency Request?',
+                text: "Selected agency request will be ignored.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, ignore',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#ef4444'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $this.data('in-flight', true).prop('disabled', true);
+                var url = "{{ route('service_company.jobs.assignRejected') }}";
+
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    data: { 'id': id, 'jobid': jobid },
+                    success: function(response) {
+                        if (response.status == 'success') {
+                            recommendedAssignList('load');
+                            Swal.fire('Ignored', 'Agency request ignored.', 'success');
+                        }
+                    },
+                    complete: function() {
+                        $this.data('in-flight', false).prop('disabled', false);
+                    }
+                });
+            });
+        });
+
+        // Pagination handlers for Assigned tab
+        $(document).off('click.pagiAssign', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow')
+                   .on('click.pagiAssign', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow', function(e) {
+            e.preventDefault();
+            var page = $(this).attr('data-page') || $(this).data('page');
+            if (!page || $(this).hasClass('disabled')) return;
+            recommendedAssignList(page);
+        });
+
+        // Pagination handlers for Registered tab
+        $(document).off('click.pagiRegister', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow')
+                   .on('click.pagiRegister', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow', function(e) {
+            e.preventDefault();
+            var page = $(this).attr('data-page') || $(this).data('page');
+            if (!page || $(this).hasClass('disabled')) return;
+            staffingPartnersRegister(page);
+        });
+    })();
 </script>

@@ -9281,38 +9281,53 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $jobId = $request->jobid;
 
-        // Retrieve Job Details
-        $currentRowJob = Job::select(
-            'id',
-            'title',
-            'min_exp',
-            'max_exp',
-            'min_salary',
-            'max_salary',
-            'min_salary_currency',
-            'max_salary_currency',
-            'min_sal_mode',
-            'work_type',
-            'employment_type',
-            'company_id'
-        )
-            ->where('id', $jobId)
-            ->first();
+        // Retrieve Job Details and Skills (Cached to ensure 0% DB reads on 304 Not Modified & Redis hits)
+        $jobMetaCacheKey = 'ats:job_summary_meta:'.$jobId;
+        $jobMeta = cache()->remember($jobMetaCacheKey, 3600, function () use ($jobId) {
+            $row = Job::select(
+                'id',
+                'title',
+                'min_exp',
+                'max_exp',
+                'min_salary',
+                'max_salary',
+                'min_salary_currency',
+                'max_salary_currency',
+                'min_sal_mode',
+                'work_type',
+                'employment_type',
+                'company_id'
+            )
+                ->where('id', $jobId)
+                ->first();
 
-        if (! $currentRowJob) {
+            if (! $row) {
+                return null;
+            }
+
+            $skills = DB::table('job_metronics_skills')
+                ->where('job_id', $jobId)
+                ->pluck('skill_name')
+                ->toArray();
+
+            return [
+                'job' => $row->toArray(),
+                'skills' => $skills,
+            ];
+        });
+
+        if (! $jobMeta || empty($jobMeta['job'])) {
             return response()->json([
                 'html' => '<tr class="odd"><td colspan="6" class="text-center text-muted p-4">Job requisition not found or access denied.</td></tr>',
                 'total' => 0,
             ]);
         }
 
+        $currentRowJob = (object) $jobMeta['job'];
         $parent_employment_type = request('app_int_outsource', $currentRowJob->employment_type);
 
         // 1. EXTRACT AND NORMALIZE JOB SKILLS
-        $jobSkillsFromDb = DB::table('job_metronics_skills')
-            ->where('job_id', $jobId)
-            ->pluck('skill_name')
-            ->toArray();
+        $jobSkillsFromDb = $jobMeta['skills'] ?? [];
 
         $searchSkills = [];
 
@@ -9358,15 +9373,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allrecommendedagency_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allrecommendedagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $traceId = 'ats_'.bin2hex(random_bytes(6));
         $etag = '"v4:recom:'.md5($cacheKeySet).'"';
-        if (request()->header('If-None-Match') === $etag) {
-            return response(null, 304)->header('ETag', $etag);
+        $ifNoneMatch = $request->header('If-None-Match') ?? request()->header('If-None-Match');
+        $hasForce = $request->has('_force') || request()->has('_force');
+
+        if ($ifNoneMatch === $etag && ! $hasForce) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Vary', 'Accept, Cookie, X-Requested-With')
+                ->header('X-ATS-Trace-Id', $traceId)
+                ->header('X-ATS-Cache', 'VALIDATED-304');
         }
 
-        if (cache()->has($cacheKeySet)) {
+        if (cache()->has($cacheKeySet) && ! $hasForce) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate')
+                ->header('Vary', 'Accept, Cookie, X-Requested-With')
+                ->header('X-ATS-Trace-Id', $traceId)
+                ->header('X-ATS-Cache', 'HIT');
         }
 
         // 3. BUILD ELIGIBILITY QUERY FOR ELASTICSEARCH / MYSQL
@@ -9615,6 +9641,42 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $commtypeParam = (request('app_int_outsource', $currentRowJob->employment_type ?? 0) == 1) ? 1 : 2;
                 $commercialsMap = GeneralMethod::batchGetCommercialsData($agencyIds, $commtypeParam);
 
+                /**
+                 * Intent: Single batch query to fetch primary client location details for all returned agencies.
+                 * Tenancy: Scoped to self_company=1 and company_id in $agencyIds.
+                 */
+                $locationsMap = DB::table('clients')
+                    ->join('client_location', 'client_location.client_id', '=', 'clients.id')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->select(
+                        'clients.company_id',
+                        'client_location.city as direct_city',
+                        'city_list.city as city_name',
+                        'state_list.state as state_name',
+                        'countries.country_name',
+                        'countries.country_code as country_code'
+                    )
+                    ->whereIn('clients.company_id', $agencyIds)
+                    ->where('clients.self_company', '=', 1)
+                    ->get()
+                    ->keyBy('company_id')
+                    ->toArray();
+
+                /**
+                 * Intent: Single batch query to fetch recommendation status between employer and agencies for current job.
+                 * Tenancy: Scoped to from_company_id = $company_id and job_id = $jobId.
+                 */
+                $jobRecommendationsMap = DB::table('recommendation_relation')
+                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status')
+                    ->where('from_company_id', $company_id)
+                    ->whereIn('to_company_id', $agencyIds)
+                    ->where('job_id', $jobId)
+                    ->get()
+                    ->keyBy('to_company_id')
+                    ->toArray();
+
                 foreach ($data as &$source) {
                     $cId = $source['id'] ?? null;
                     $source['_client_info'] = $clientsMap[$cId] ?? null;
@@ -9626,6 +9688,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $commData = $commercialsMap[$cId] ?? null;
                     $source['_minimum_rate'] = $commData->minimum_rate ?? null;
                     $source['_minimum_rate_type'] = $commData->minimum_rate_type ?? null;
+                    $source['_loc_info'] = $locationsMap[$cId] ?? null;
+                    $source['_job_recom_relation'] = $jobRecommendationsMap[$cId] ?? null;
                 }
                 unset($source);
             }
@@ -9655,7 +9719,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         return response()->json($responseData)
             ->header('ETag', $etag)
-            ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate')
+            ->header('Vary', 'Accept, Cookie, X-Requested-With')
+            ->header('X-ATS-Trace-Id', $traceId)
+            ->header('X-ATS-Cache', 'MISS');
 
         // 3. Precompute: Bench profiles count
         $benchProfilesSub = DB::table('job_applications')
@@ -11134,16 +11201,36 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $mustConditions = [];
 
         if ($search = request('cus_search')) {
-
-            $mustConditions[] = [
-                'bool' => [
-                    'should' => [
-                        ['match_phrase_prefix' => ['company_name' => strtolower($search)]],
-                        ['wildcard' => ['company_name.keyword' => '*'.strtolower($search).'*']],
+            $terms = array_filter(array_map('trim', preg_split('/[,]+/', strtolower($search))));
+            $termShoulds = [];
+            foreach ($terms as $t) {
+                if ($t === '') {
+                    continue;
+                }
+                $termShoulds[] = ['match_phrase_prefix' => ['company_name' => $t]];
+                $termShoulds[] = ['wildcard' => ['company_name.keyword' => '*'.$t.'*']];
+                $termShoulds[] = [
+                    'nested' => [
+                        'path' => 'job_metronics_skills',
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['match_phrase_prefix' => ['job_metronics_skills.skill_name' => $t]],
+                                    ['term' => ['job_metronics_skills.skill_name.keyword' => $t]],
+                                ],
+                            ],
+                        ],
                     ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
+                ];
+            }
+            if (! empty($termShoulds)) {
+                $mustConditions[] = [
+                    'bool' => [
+                        'should' => $termShoulds,
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
         }
 
         $params = [
@@ -11312,6 +11399,36 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $commtypeParam = (request('hiringtype', $parent_employment_type ?? 0) == 1) ? 1 : 2;
                 $commercialsMap = GeneralMethod::batchGetCommercialsData($agencyIds, $commtypeParam);
 
+                // Batch 8: Client primary location details per agency
+                $locationsMap = DB::table('clients')
+                    ->join('client_location', 'client_location.client_id', '=', 'clients.id')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->select(
+                        'clients.company_id',
+                        'client_location.city as direct_city',
+                        'city_list.city as city_name',
+                        'state_list.state as state_name',
+                        'countries.country_name',
+                        'countries.country_code as country_code'
+                    )
+                    ->whereIn('clients.company_id', $agencyIds)
+                    ->where('clients.self_company', '=', 1)
+                    ->get()
+                    ->keyBy('company_id')
+                    ->toArray();
+
+                // Batch 9: Recommendation relation per agency for this job
+                $jobRecommendationsMap = DB::table('recommendation_relation')
+                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status')
+                    ->where('from_company_id', $company_id)
+                    ->whereIn('to_company_id', $agencyIds)
+                    ->where('job_id', $jobId)
+                    ->get()
+                    ->keyBy('to_company_id')
+                    ->toArray();
+
                 // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
                 foreach ($data as &$source) {
                     $cId = $source['id'] ?? null;
@@ -11324,6 +11441,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $commData = $commercialsMap[$cId] ?? null;
                     $source['_minimum_rate'] = $commData->minimum_rate ?? null;
                     $source['_minimum_rate_type'] = $commData->minimum_rate_type ?? null;
+                    $source['_loc_info'] = $locationsMap[$cId] ?? null;
+                    $source['_job_recom_relation'] = $jobRecommendationsMap[$cId] ?? null;
                 }
                 unset($source);
             }
@@ -11872,7 +11991,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             GeneralMethod::jobRequestIndexElastic($updatedId);
         }
 
-        // DB::table('recommendation_relation')->where('job_id', $request->current_jobid)->where('to_company_id', $request->to_company_id)->update($insertArr);
+        $this->invalidateAgencyDrawerCaches($request->current_jobid);
 
         return Reply::dataOnly(['status' => 'success']);
 
@@ -11902,781 +12021,392 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is hold. Please change the job status to active."]);
         }
 
-        $jobid = $jobidGet;
-        $clientRow = DB::table('clients')->select('clients.id')->where('clients.company_id', '=', $from_company_id)->first();
-        $jobRow = DB::table('jobs')->leftJoin('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+        $lockKey = 'ats:lock:agency_recom:'.$from_company_id.':'.$to_company_id.':'.$jobidGet;
+        $lock = Cache::lock($lockKey, 10);
 
-        $country_id_job = null;
-        $searchTermsLocation = request('kt_tagify_location');
-        if (! empty($searchTermsLocation)) {
-            $custom_search_location = json_decode($searchTermsLocation, true);
-            if (is_array($custom_search_location)) {
-                $currentJobLocation = array_column($custom_search_location, 'value');
-                if (! empty($currentJobLocation[0])) {
-                    $job_country_id = DB::table('countries')
-                        ->select('countries.id')
-                        ->where('countries.country_name', '=', $currentJobLocation[0])
-                        ->first();
-                    if ($job_country_id) {
-                        $country_id_job = $job_country_id->id;
+        try {
+            if (! $lock->block(3)) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'A request is currently being processed for this agency. Please wait a moment.']);
+            }
+
+            // Concurrency guard: Ensure idempotent invocation if request was already sent
+            $alreadySent = DB::table('recommendation_relation')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $to_company_id)
+                ->where('job_id', $jobidGet)
+                ->where('final_status', '!=', -1)
+                ->exists();
+            if ($alreadySent) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already sent !']);
+            }
+
+            $jobid = $jobidGet;
+            $clientRow = DB::table('clients')->select('clients.id')->where('clients.company_id', '=', $from_company_id)->first();
+            $jobRow = DB::table('jobs')->leftJoin('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+
+            $country_id_job = null;
+            $searchTermsLocation = request('kt_tagify_location');
+            if (! empty($searchTermsLocation)) {
+                $custom_search_location = json_decode($searchTermsLocation, true);
+                if (is_array($custom_search_location)) {
+                    $currentJobLocation = array_column($custom_search_location, 'value');
+                    if (! empty($currentJobLocation[0])) {
+                        $job_country_id = DB::table('countries')
+                            ->select('countries.id')
+                            ->where('countries.country_name', '=', $currentJobLocation[0])
+                            ->first();
+                        if ($job_country_id) {
+                            $country_id_job = $job_country_id->id;
+                        }
                     }
                 }
             }
-        }
 
-        if (! $country_id_job) {
-            $country_id_job = $jobRow->country_id ?? 101;
-        }
-
-        $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
-
-        // $boostKeyWork_Auth = DB::table('package_active')
-        // 	->select('package_active.id')
-        // 	->where('package_active.boostkeywords_status', '=', 1)
-        // 	->where('package_active.boostkeywords_balance', '>', 0)
-        // 	->where('package_active.company_id', '=', $to_company_id)
-        // 	->count();
-
-        // if ($boostKeyWork_Auth > 0) {
-        // 	$packageStatus = '';
-        // 	$packageStatus = GeneralMethod::validateClientPackage('BOOSTKEYWORDS', $to_company_id);
-
-        // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0))
-        // 	{
-
-        // 		if (@$jobid > 0) {
-        // 			$source_from_company_id = $to_company_id;
-        // 			$event_name = 'BOOSTKEYWORDS';
-        // 			$event_table_name = 'jobs';
-        // 			$event_table_id = @$jobid;
-        // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-        // 		}
-
-        // 	} else {
-        // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-        // 	}
-
-        // }
-        //   if($_REQUEST['matchcount']){
-        // 	if ($clientMainLocation == $country_id_job) {
-
-        // 		$boostKeyWork_Auth = DB::table('package_active')
-        // 			->select('package_active.id')
-        // 			->where('package_active.BoostKeywordsIndia_status', '=', 1)
-        // 			->where('package_active.BoostKeywordsIndia_balance', '>', 0)
-        // 			->where('package_active.company_id', '=', $to_company_id)
-        // 			->count();
-
-        // 		if ($boostKeyWork_Auth > 0) {
-        // 			$packageStatus = '';
-        // 			$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsIndia', $to_company_id);
-
-        // 			if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
-        // 			{
-
-        // 				//DEDUCTION BOOST PROFILE
-        // 				if (@$jobid > 0) {
-        // 					$source_from_company_id = $to_company_id;
-        // 					$event_name = 'BoostKeywordsIndia';
-        // 					$event_table_name = 'jobs';
-        // 					$event_table_id = @$jobid;
-        // 					$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-        // 				}
-
-        // 			} else {
-        // 				return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-        // 			}
-
-        // 		}
-
-        // 	} else {
-
-        // 		$boostKeyWork_Auth = DB::table('package_active')
-        // 			->select('package_active.id')
-        // 			->where('package_active.BoostKeywordsInternational_status', '=', 1)
-        // 			->where('package_active.BoostKeywordsInternational_balance', '>', 0)
-        // 			->where('package_active.company_id', '=', $to_company_id)
-        // 			->count();
-
-        // 		if ($boostKeyWork_Auth > 0) {
-        // 			$packageStatus = '';
-        // 			$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsInternational', $to_company_id);
-
-        // 			if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
-        // 			{
-
-        // 				//DEDUCTION BOOST PROFILE
-        // 				if (@$jobid > 0) {
-        // 					$source_from_company_id = $to_company_id;
-        // 					$event_name = 'BoostKeywordsInternational';
-        // 					$event_table_name = 'jobs';
-        // 					$event_table_id = @$jobid;
-        // 					$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-        // 				}
-
-        // 			} else {
-        // 				return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-        // 			}
-
-        // 		}
-
-        // 	}
-
-        //  }else{
-
-        if ($jobRow->employment_type == 1) {
-            //	CONTRACT_RECRUITMENT_LEAD   employment_type = 1
-            if ($clientMainLocation == $country_id_job) {
-
-                $eventId = 21;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
-
-                // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadIndia', $to_company_id);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $to_company_id;
-                // 		$event_name = 'ContractRecruitmentLeadIndia';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
-
-            } else {
-
-                $eventId = 22;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
-
-                // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadInternational', $to_company_id);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $to_company_id;
-                // 		$event_name = 'ContractRecruitmentLeadInternational';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
-
+            if (! $country_id_job) {
+                $country_id_job = $jobRow->country_id ?? 101;
             }
 
-        } elseif ($jobRow->employment_type == 0) {	//	FULLTIME_RECRUITMENT_LEAD   employment_type = 0
-            if ($clientMainLocation == $country_id_job) {
+            $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
 
-                $eventId = 19;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
+            // $boostKeyWork_Auth = DB::table('package_active')
+            // 	->select('package_active.id')
+            // 	->where('package_active.boostkeywords_status', '=', 1)
+            // 	->where('package_active.boostkeywords_balance', '>', 0)
+            // 	->where('package_active.company_id', '=', $to_company_id)
+            // 	->count();
 
-                // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadIndia', $to_company_id);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $to_company_id;
-                // 		$event_name = 'PermamentRecruitmentLeadIndia';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
+            // if ($boostKeyWork_Auth > 0) {
+            // 	$packageStatus = '';
+            // 	$packageStatus = GeneralMethod::validateClientPackage('BOOSTKEYWORDS', $to_company_id);
 
-            } else {
+            // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0))
+            // 	{
 
-                $eventId = 20;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
+            // 		if (@$jobid > 0) {
+            // 			$source_from_company_id = $to_company_id;
+            // 			$event_name = 'BOOSTKEYWORDS';
+            // 			$event_table_name = 'jobs';
+            // 			$event_table_id = @$jobid;
+            // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+            // 		}
 
-                // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadInternational', $to_company_id);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $to_company_id;
-                // 		$event_name = 'PermamentRecruitmentLeadInternational';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
+            // 	} else {
+            // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+            // 	}
 
-            }
+            // }
+            //   if($_REQUEST['matchcount']){
+            // 	if ($clientMainLocation == $country_id_job) {
 
-        }
+            // 		$boostKeyWork_Auth = DB::table('package_active')
+            // 			->select('package_active.id')
+            // 			->where('package_active.BoostKeywordsIndia_status', '=', 1)
+            // 			->where('package_active.BoostKeywordsIndia_balance', '>', 0)
+            // 			->where('package_active.company_id', '=', $to_company_id)
+            // 			->count();
 
-        //  }
+            // 		if ($boostKeyWork_Auth > 0) {
+            // 			$packageStatus = '';
+            // 			$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsIndia', $to_company_id);
 
-        // ###################################################         START CLIENT INVITATION
+            // 			if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
+            // 			{
 
-        // CHECK CLIENT INVITATION SENT OR NOT
-        $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
-            ->where('from_company_id', $from_company_id)
-            ->where('to_company_id', $to_company_id)
-            ->where('to_invitation_status', '!=', -1)
-            ->count();
-        if ($clientInvitationCounter == 0) {		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
-            // GET COMPANY DETAILS
-            $company_row = DB::table('companies')->select('companies.company_email')->where('companies.id', '=', $to_company_id)->first();
-            // dd($company_row);
-            // INVITATION
-            // staffing_company_invitation
-            $insertArr = [
-                'from_company_id' => $from_company_id,
-                'from_client_id' => $clientRow->id,
-                'from_user_id' => $from_user_id,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
+            // 				//DEDUCTION BOOST PROFILE
+            // 				if (@$jobid > 0) {
+            // 					$source_from_company_id = $to_company_id;
+            // 					$event_name = 'BoostKeywordsIndia';
+            // 					$event_table_name = 'jobs';
+            // 					$event_table_id = @$jobid;
+            // 					$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+            // 				}
 
-                'to_company_id' => $to_company_id,
-                'to_email' => $company_row->company_email,
-                'to_status' => 0,
-                'job_id' => $jobid,
-                'to_invitation_status' => 0,
-            ];
-            // dd($insertArr);
+            // 			} else {
+            // 				return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+            // 			}
 
-            DB::table('staffing_company_invitation')->insert($insertArr);
-            $invitationId = DB::getPdo()->lastInsertId();
-            GeneralMethod::clientRequestIndexElastic($invitationId);
+            // 		}
 
-            $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
-            $companyClientAddress = GeneralMethod::companyClientAddress($from_company_id);
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
+            // 	} else {
 
-            $cc = [];
-            $checkMailPermision = GeneralMethod::mailPermission(19);
-            if ($checkMailPermision) {
+            // 		$boostKeyWork_Auth = DB::table('package_active')
+            // 			->select('package_active.id')
+            // 			->where('package_active.BoostKeywordsInternational_status', '=', 1)
+            // 			->where('package_active.BoostKeywordsInternational_balance', '>', 0)
+            // 			->where('package_active.company_id', '=', $to_company_id)
+            // 			->count();
 
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(19, 2);
+            // 		if ($boostKeyWork_Auth > 0) {
+            // 			$packageStatus = '';
+            // 			$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsInternational', $to_company_id);
 
-                $subject = str_replace(['[{CLIENT_COMPANY_NAME}]'], [$detailsVendorSide->client_company], $mailTypeSubject->subject);
+            // 			if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
+            // 			{
 
-                $template_description = $mailTypeSubject->body_description;
+            // 				//DEDUCTION BOOST PROFILE
+            // 				if (@$jobid > 0) {
+            // 					$source_from_company_id = $to_company_id;
+            // 					$event_name = 'BoostKeywordsInternational';
+            // 					$event_table_name = 'jobs';
+            // 					$event_table_id = @$jobid;
+            // 					$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+            // 				}
 
-                $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{HR_NAME}]', '[{HR_EMAILl}]', '[{HR_PHONE}]', '[{CITY_NAME}]'], [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, $companyClientAddress], $template_description);
+            // 			} else {
+            // 				return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+            // 			}
 
-                $message = $template_description;
+            // 		}
 
-                $notificationemail = GeneralMethod::notification($to_company_id, 'Sales'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                //    dd($to_Mail_Id);
-                $data = [
-                    'message' => $message,
-                ];
-                QueueNotificationMailService::dispatch(
-                    $to_Mail_Id,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $to_company_id
-                )->onConnection('emails');
+            // 	}
 
-                // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-            }
+            //  }else{
 
-        }
-
-        // ################################################             END CLIENT INVITATION
-
-        // ###############################################				CHECK ACCOUNT REGISTER WITH US OR NOT
-
-        $fromCounter = DB::table('staffing_company_relation')->select('*')
-            ->where('from_company_id', $from_company_id)
-            ->where('to_company_id', $to_company_id)
-            ->where('final_status', '!=', -1)
-            ->count();
-        if ($fromCounter == 0) {
-            // NOW REGISTER REQUEST SEND
-            $insertArr = [
-                'from_company_id' => $from_company_id,
-                'from_client_id' => $clientRow->id,
-                'from_user_id' => $from_user_id,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
-
-                'to_company_id' => $to_company_id,
-                'to_client_id' => 0,
-                'to_user_id' => 0,
-                'to_status' => 0,
-                'to_created_at' => date('Y-m-d'),
-
-                'final_status' => 0,
-                'created_at' => date('Y-m-d'),
-                'updated_at' => date('Y-m-d'),
-
-            ];
-            // DB:: table('staffing_company_relation')->insert($insertArr);
-        }
-
-        // ###############################################				END CHECK ACCOUNT REGISTER WITH US OR NOT
-
-        // ###############################################				SEND JOB INVITATION
-
-        $jobCounter = DB::table('recommendation_relation')->select('*')
-            ->where('from_company_id', $from_company_id)
-            ->where('to_company_id', $to_company_id)
-            ->where('job_id', $jobid)
-            ->where('final_status', '!=', -1)
-            ->count();
-        if ($jobCounter == 0) {
-            // INSERT
-            $insertArr = [
-                'from_company_id' => $from_company_id,
-                'from_user_id' => $from_user_id,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
-
-                'to_company_id' => $to_company_id,
-                'to_status' => 0,
-                'final_status' => 0,
-                'job_id' => $jobid,
-
-            ];
-            DB::table('recommendation_relation')->insert($insertArr);
-            $relationId = DB::getPdo()->lastInsertId();
-            GeneralMethod::jobRequestIndexElastic($relationId);
-        }
-
-        $basecompany = GeneralMethod::baseCompany();
-        $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-        $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-        $attachments = [];
-
-        $cc = [];
-        $checkMailPermision = GeneralMethod::mailPermission(17);
-        if ($checkMailPermision) {
-
-            $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
-
-            $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
-            $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-            $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
-            $employment_type = '';
             if ($jobRow->employment_type == 1) {
-                $employment_type = 'CONTRACT';
-            } else {
-                $employment_type = 'FULLTIME';
-            }
+                //	CONTRACT_RECRUITMENT_LEAD   employment_type = 1
+                if ($clientMainLocation == $country_id_job) {
 
-            $salaryMode = GeneralMethod::salaryMode();
-            $currencySymbole = GeneralMethod::currency();
-            $sal_mode = $min_salary = $salary_currency = $max_salary = '';
-            $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode], 0, 1));
-            $salary_currency = $currencySymbole[@$jobRow->max_salary_currency];
-            $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary);
-            $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary);
-            $salaryRange = $salary_currency.' '.$min_salary.'/'.$sal_mode.'<br> '.$salary_currency.' '.$max_salary.'/'.$sal_mode;
-            $jonTerms = Company::withoutGlobalScope('company')->findOrFail($jobRow->company_id);
+                    $eventId = 21;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
 
-            $status = ucwords($jobRow->status);
+                    // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadIndia', $to_company_id);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $to_company_id;
+                    // 		$event_name = 'ContractRecruitmentLeadIndia';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
 
-            if ($jobRow->status == 'active') {
-                $status = 'Hiring';
-            } elseif ($jobRow->status == 'inactive') {
-                $status = 'Closed';
-            } else {
-                $status = 'Hold';
-            }
-
-            // dd($status);
-            $recommendation_text = __('messages.internal_tag');
-            $ulink =
-            '<a href="javascript:void(0);" class="fs-6 '.
-            @$class.
-            ' text-hover-success">'.
-            $status.
-            '</a>';
-            $statusAndId = '<div class="d-flex flex-column">
-										'.
-                        $ulink.
-                        '
-										<br><span class="fw-bold text-muted d-block fs-7">R'.
-                        @$jobRow->id.
-                        ' -'.
-                        $recommendation_text.
-                        '</span>
-										</div>';
-
-            $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description);
-
-            $TERMS_FIXED = '';
-
-            $total_positions = '';
-            $total_positions = number_format($jobRow->total_positions);
-
-            $created_at = '';
-            $created_at = $jobRow->created_at;
-            $newDate = GeneralMethod::ymdTodmyNotTime($created_at); // date("d M, Y", strtotime($created_at));
-            $dateAdd = '<div class="d-flex flex-column">
-								<span class="text-dark fw-bolder fs-6">'.
-                $newDate.
-                '</span><br>
-								<span class="text-muted fw-bold d-block fs-7">'.
-                $total_positions.
-                ' Opening</span>
-							</div>';
-
-            $exp = $jobRow->min_exp.' Y <br>'.$jobRow->max_exp.' Y';
-            $oprnlink = url('service_company/jobs/job_request/0');
-
-            $jonTermsterms = "<h3><strong>Steps to Accept and Process the Job Request:</strong></h3>
-								<ol>
-									<li><strong>Log in</strong> to Jero.works using your email and password.</li>
-									<li><strong>View the job request</strong> from the link <a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>(Click Here)</a> or navigate to the <strong>&quot;Job Requests&quot;</strong> tab after logging in.</li>
-									<li>Click <strong>&quot;Accept Job&quot;</strong> to confirm the request.</li>
-									<li>Go to the <strong>&quot;All Jobs&quot;</strong> tab, locate the accepted job, and click on it.</li>
-									<li>Click the <strong>&quot;Add Candidate&quot;</strong> button, upload resumes, and fill in the required details.</li>
-									<li>Change the <strong>candidate status from &quot;In Review&quot; to &quot;Sourcing.&quot;</strong></li>
-									<li>Click on the below link to directly open the job request page<br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a></li>
-								</ol>
-
-								<h3><strong>Important Note:</strong></h3>
-
-								<ul>
-									<li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
-									<li>If a candidate remains in <strong>&quot;In Review&quot; status, the profile will only be visible to you and your team</strong>, not the client.</li>
-									<li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
-								</ul>
-								';
-
-            $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
-
-            // $jonTermssssss = @$jonTerms->terms;
-
-            // $pdf = app('dompdf.wrapper');
-            // $pdf->loadView('term_gen_pdf', compact('jonTermssssss'));
-
-            // // Save PDF to a temporary file or generate the raw content signature-pad.blade.php
-            // $pdfContent = $pdf->output();
-            // $filename = "terms-and-conditions-".$jobRow->id.".pdf";
-            // // Option 1: Save PDF to storage and attach file path
-            // $pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
-            // file_put_contents($pdfPath, $pdfContent);
-            // $hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
-
-            // $attachments[] = [
-            // 	'path' => $hashname,
-            // 	'options' => []
-            // ];
-
-            $message = $template_description;
-
-            $notificationemail = GeneralMethod::notification($to_company_id, 'Sales'); // Recuitment Sales
-            $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email;
-            $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-            //    dd($to_Mail_Id);
-            $data = [
-                'message' => $message,
-            ];
-
-            QueueNotificationMailService::dispatch(
-                $to_Mail_Id,
-                $subject,
-                'email.common.index',
-                (object) $data,
-                $attachments,
-                $fromAddress,
-                $senderName,
-                $cc,
-                $to_company_id
-            )->onConnection('emails');
-
-            // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-
-        }
-
-        // ###############################################				END  SEND JOB INVITATION
-
-        return Reply::dataOnly(['status' => 'success']);
-
-    }
-
-    public function send_only_job_invitation(Request $request)
-    {
-        $jobid = $fromcompany = $tocompany = '';
-        $boostId = '';
-        if (@$request->boostercom == 1) {
-            $boostIdArr = explode(',', $request->boostids);
-            $boostId = $boostIdArr[0];
-            $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->first();
-            $clickCount = $boostkeywords->clickCount + 1;
-            $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->update(['clickCount' => $clickCount]);
-        }
-
-        $from_company_id = auth()->user()->company_id;
-        $from_user_id = $this->user->id;
-
-        $jobid = $request->jobid;
-        $fromcompany = $request->fromcompany;
-        $tocompany = $request->tocompany;
-
-        if (Job::where('id', '=', $jobid)->where('status', '=', 'inactive')->exists()) {
-            return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is closed. Please change the job status to active."]);
-        } elseif (Job::where('id', '=', $jobid)->where('status', '=', 'hold')->exists()) {
-            return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is hold. Please change the job status to active."]);
-        }
-
-        $searchTermsLocation = request('kt_tagify_location');
-        //    $custom_search_location = json_decode($searchTermsLocation, true);
-        //    $currentJobLocation = array_column($custom_search_location, 'value');
-        //    $job_country_id = DB::table('countries')
-        // 						->select('countries.id')
-        // 						->where('countries.id','=', $currentJobLocation[0])
-        // 						->first();
-        $country_id_job = (int) $searchTermsLocation;
-        $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
-        // dd($clientMainLocation==$country_id_job);
-
-        // 	if($clientMainLocation==$country_id_job){
-
-        // 		$boostKeyWork_Auth = DB::table('package_active')
-        // 	->select('package_active.id')
-        // 	->where('package_active.BoostKeywordsIndia_status', '=', 1)
-        // 	->where('package_active.BoostKeywordsIndia_balance', '>', 0)
-        // 	->where('package_active.company_id', '=', $tocompany)
-        // 	->count();
-
-        // if ($boostKeyWork_Auth > 0) {
-        // 	$packageStatus = '';
-        // 	$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsIndia', $tocompany);
-
-        // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
-        // 	{
-
-        // 		//DEDUCTION BOOST PROFILE
-        // 		if (@$jobid > 0) {
-        // 			$source_from_company_id = $tocompany;
-        // 			$event_name = 'BoostKeywordsIndia';
-        // 			$event_table_name = 'jobs';
-        // 			$event_table_id = @$jobid;
-        // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-        // 		}
-
-        // 	} else {
-        // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-        // 	}
-
-        // }
-
-        // 	}else{
-
-        // 		$boostKeyWork_Auth = DB::table('package_active')
-        // 	->select('package_active.id')
-        // 	->where('package_active.BoostKeywordsInternational_status', '=', 1)
-        // 	->where('package_active.BoostKeywordsInternational_balance', '>', 0)
-        // 	->where('package_active.company_id', '=', $tocompany)
-        // 	->count();
-
-        // if ($boostKeyWork_Auth > 0) {
-        // 	$packageStatus = '';
-        // 	$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsInternational', $tocompany);
-
-        // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
-        // 	{
-
-        // 		//DEDUCTION BOOST PROFILE
-        // 		if (@$jobid > 0) {
-        // 			$source_from_company_id = $tocompany;
-        // 			$event_name = 'BoostKeywordsInternational';
-        // 			$event_table_name = 'jobs';
-        // 			$event_table_id = @$jobid;
-        // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-        // 		}
-
-        // 	} else {
-        // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-        // 	}
-
-        // }
-
-        // 	}
-
-        $jobRow = DB::table('jobs')->join('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
-
-        // dd($jobRow);
-        if ($jobRow->employment_type == 1) {		//	CONTRACT_RECRUITMENT_LEAD   employment_type = 1
-
-            if ($clientMainLocation == $country_id_job) {
-
-                $eventId = 21;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 } else {
-                    GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+
+                    $eventId = 22;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadInternational', $to_company_id);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $to_company_id;
+                    // 		$event_name = 'ContractRecruitmentLeadInternational';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+
                 }
 
-                // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadIndia', $tocompany);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $tocompany;
-                // 		$event_name = 'ContractRecruitmentLeadIndia';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
-            } else {
-                $eventId = 22;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+            } elseif ($jobRow->employment_type == 0) {	//	FULLTIME_RECRUITMENT_LEAD   employment_type = 0
+                if ($clientMainLocation == $country_id_job) {
+
+                    $eventId = 19;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadIndia', $to_company_id);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $to_company_id;
+                    // 		$event_name = 'PermamentRecruitmentLeadIndia';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+
                 } else {
-                    GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+
+                    $eventId = 20;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadInternational', $to_company_id);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $to_company_id;
+                    // 		$event_name = 'PermamentRecruitmentLeadInternational';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+
                 }
-                // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadInternational', $tocompany);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $tocompany;
-                // 		$event_name = 'ContractRecruitmentLeadInternational';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
-            }
-
-            // $packageStatus = GeneralMethod::validateClientPackage('CONTRACT_RECRUITMENT_LEAD', $tocompany);
-            // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-
-            // 	if (@$jobid > 0) {
-            // 		$source_from_company_id = $tocompany;
-            // 		$event_name = 'CONTRACT_RECRUITMENT_LEAD';
-            // 		$event_table_name = 'jobs';
-            // 		$event_table_id = @$jobid;
-            // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-            // 	}
-            // } else {
-            // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-            // }
-
-        } elseif ($jobRow->employment_type == 0) {	//	FULLTIME_RECRUITMENT_LEAD   employment_type = 0
-
-            if ($clientMainLocation == $country_id_job) {
-
-                $eventId = 19;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
-
-                // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadIndia', $tocompany);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $tocompany;
-                // 		$event_name = 'PermamentRecruitmentLeadIndia';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
-
-            } else {
-
-                $eventId = 20;
-                $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                if ($coinsDeductions->status) {
-                    return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                } else {
-                    GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
-                }
-
-                // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadInternational', $tocompany);
-                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
-                // 	if (@$jobid > 0) {
-                // 		$source_from_company_id = $tocompany;
-                // 		$event_name = 'PermamentRecruitmentLeadInternational';
-                // 		$event_table_name = 'jobs';
-                // 		$event_table_id = @$jobid;
-                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-                // 	}
-                // } else {
-                // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-                // }
 
             }
 
-            // $packageStatus = GeneralMethod::validateClientPackage('FULLTIME_RECRUITMENT_LEAD', $tocompany);
-            // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+            //  }
 
-            // 	if (@$jobid > 0) {
-            // 		$source_from_company_id = $tocompany;
-            // 		$event_name = 'FULLTIME_RECRUITMENT_LEAD';
-            // 		$event_table_name = 'jobs';
-            // 		$event_table_id = @$jobid;
-            // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-            // 	}
-            // } else {
-            // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
-            // }
-        }
+            // ###################################################         START CLIENT INVITATION
 
-        // dd("kdk");
-        $fromCounter = DB::table('recommendation_relation')->select('*')
-            ->where('from_company_id', $fromcompany)
-            ->where('to_company_id', $tocompany)
-            ->where('job_id', $jobid)
-            ->count();
+            // CHECK CLIENT INVITATION SENT OR NOT
+            $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $to_company_id)
+                ->where('to_invitation_status', '!=', -1)
+                ->count();
+            if ($clientInvitationCounter == 0) {		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
+                // GET COMPANY DETAILS
+                $company_row = DB::table('companies')->select('companies.company_email')->where('companies.id', '=', $to_company_id)->first();
+                // dd($company_row);
+                // INVITATION
+                // staffing_company_invitation
+                $insertArr = [
+                    'from_company_id' => $from_company_id,
+                    'from_client_id' => $clientRow->id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
 
-        if (($fromCounter == 0)) {
-            // INSERT
-            $insertArr = [
-                'from_company_id' => $fromcompany,
-                'from_user_id' => $from_user_id,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
+                    'to_company_id' => $to_company_id,
+                    'to_email' => $company_row->company_email,
+                    'to_status' => 0,
+                    'job_id' => $jobid,
+                    'to_invitation_status' => 0,
+                ];
+                // dd($insertArr);
 
-                'to_company_id' => $tocompany,
-                'to_status' => 0,
-                'final_status' => 0,
-                'job_id' => $jobid,
+                DB::table('staffing_company_invitation')->insert($insertArr);
+                $invitationId = DB::getPdo()->lastInsertId();
+                GeneralMethod::clientRequestIndexElastic($invitationId);
 
-            ];
+                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
+                $companyClientAddress = GeneralMethod::companyClientAddress($from_company_id);
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                $attachments = [];
+
+                $cc = [];
+                $checkMailPermision = GeneralMethod::mailPermission(19);
+                if ($checkMailPermision) {
+
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(19, 2);
+
+                    $subject = str_replace(['[{CLIENT_COMPANY_NAME}]'], [$detailsVendorSide->client_company], $mailTypeSubject->subject);
+
+                    $template_description = $mailTypeSubject->body_description;
+
+                    $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{HR_NAME}]', '[{HR_EMAILl}]', '[{HR_PHONE}]', '[{CITY_NAME}]'], [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, $companyClientAddress], $template_description);
+
+                    $message = $template_description;
+
+                    $notificationemail = GeneralMethod::notification($to_company_id, 'Sales'); // Recuitment Sales
+                    $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email;
+                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+                    //    dd($to_Mail_Id);
+                    $data = [
+                        'message' => $message,
+                    ];
+                    QueueNotificationMailService::dispatch(
+                        $to_Mail_Id,
+                        $subject,
+                        'email.common.index',
+                        (object) $data,
+                        $attachments,
+                        $fromAddress,
+                        $senderName,
+                        $cc,
+                        $to_company_id
+                    )->onConnection('emails');
+
+                    // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                }
+
+            }
+
+            // ################################################             END CLIENT INVITATION
+
+            // ###############################################				CHECK ACCOUNT REGISTER WITH US OR NOT
+
+            $fromCounter = DB::table('staffing_company_relation')->select('*')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $to_company_id)
+                ->where('final_status', '!=', -1)
+                ->count();
+            if ($fromCounter == 0) {
+                // NOW REGISTER REQUEST SEND
+                $insertArr = [
+                    'from_company_id' => $from_company_id,
+                    'from_client_id' => $clientRow->id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+
+                    'to_company_id' => $to_company_id,
+                    'to_client_id' => 0,
+                    'to_user_id' => 0,
+                    'to_status' => 0,
+                    'to_created_at' => date('Y-m-d'),
+
+                    'final_status' => 0,
+                    'created_at' => date('Y-m-d'),
+                    'updated_at' => date('Y-m-d'),
+
+                ];
+                // DB:: table('staffing_company_relation')->insert($insertArr);
+            }
+
+            // ###############################################				END CHECK ACCOUNT REGISTER WITH US OR NOT
+
+            // ###############################################				SEND JOB INVITATION
+
+            $jobCounter = DB::table('recommendation_relation')->select('*')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $to_company_id)
+                ->where('job_id', $jobid)
+                ->where('final_status', '!=', -1)
+                ->count();
+            if ($jobCounter == 0) {
+                // INSERT
+                $insertArr = [
+                    'from_company_id' => $from_company_id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+
+                    'to_company_id' => $to_company_id,
+                    'to_status' => 0,
+                    'final_status' => 0,
+                    'job_id' => $jobid,
+
+                ];
+                DB::table('recommendation_relation')->insert($insertArr);
+                $relationId = DB::getPdo()->lastInsertId();
+                GeneralMethod::jobRequestIndexElastic($relationId);
+            }
 
             $basecompany = GeneralMethod::baseCompany();
             $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
@@ -12689,7 +12419,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
 
-                $detailsVendorSide = GeneralMethod::companyAsVendor($fromcompany, $tocompany);
+                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
                 $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
                 $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
                 $employment_type = '';
@@ -12782,10 +12512,28 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
 
+                // $jonTermssssss = @$jonTerms->terms;
+
+                // $pdf = app('dompdf.wrapper');
+                // $pdf->loadView('term_gen_pdf', compact('jonTermssssss'));
+
+                // // Save PDF to a temporary file or generate the raw content signature-pad.blade.php
+                // $pdfContent = $pdf->output();
+                // $filename = "terms-and-conditions-".$jobRow->id.".pdf";
+                // // Option 1: Save PDF to storage and attach file path
+                // $pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
+                // file_put_contents($pdfPath, $pdfContent);
+                // $hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
+
+                // $attachments[] = [
+                // 	'path' => $hashname,
+                // 	'options' => []
+                // ];
+
                 $message = $template_description;
 
-                $notificationemail = GeneralMethod::notification($tocompany, 'Sales'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $tocompany)->first()->company_email;
+                $notificationemail = GeneralMethod::notification($to_company_id, 'Sales'); // Recuitment Sales
+                $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email;
                 $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
                 //    dd($to_Mail_Id);
                 $data = [
@@ -12801,23 +12549,444 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $fromAddress,
                     $senderName,
                     $cc,
-                    $tocompany
+                    $to_company_id
                 )->onConnection('emails');
 
                 // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+
             }
 
-            DB::table('recommendation_relation')->insert($insertArr);
-            $relationId = DB::getPdo()->lastInsertId();
-            GeneralMethod::jobRequestIndexElastic($relationId);
-            $msg = 'Recommended request sent successfully !';
+            // ###############################################				END  SEND JOB INVITATION
 
-            return Reply::dataOnly(['status' => 'success', 'message' => $msg]);
+            $this->invalidateAgencyDrawerCaches($jobidGet ?? null);
 
-        } else {
-            $msg = 'Recommended request already sent !';
+            return Reply::dataOnly(['status' => 'success']);
 
-            return Reply::dataOnly(['status' => 'warning', 'message' => $msg]);
+        } finally {
+            optional($lock)->release();
+        }
+
+    }
+
+    public function send_only_job_invitation(Request $request)
+    {
+        $jobid = $fromcompany = $tocompany = '';
+        $boostId = '';
+        if (@$request->boostercom == 1) {
+            $boostIdArr = explode(',', $request->boostids);
+            $boostId = $boostIdArr[0];
+            $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->first();
+            $clickCount = $boostkeywords->clickCount + 1;
+            $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->update(['clickCount' => $clickCount]);
+        }
+
+        $from_company_id = auth()->user()->company_id;
+        $from_user_id = $this->user->id;
+
+        $jobid = $request->jobid;
+        $fromcompany = $request->fromcompany;
+        $tocompany = $request->tocompany;
+
+        if (Job::where('id', '=', $jobid)->where('status', '=', 'inactive')->exists()) {
+            return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is closed. Please change the job status to active."]);
+        } elseif (Job::where('id', '=', $jobid)->where('status', '=', 'hold')->exists()) {
+            return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is hold. Please change the job status to active."]);
+        }
+
+        $lockKey = 'ats:lock:agency_recom:'.$fromcompany.':'.$tocompany.':'.$jobid;
+        $lock = Cache::lock($lockKey, 10);
+
+        try {
+            if (! $lock->block(3)) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'A request is currently being processed for this agency. Please wait a moment.']);
+            }
+
+            // Concurrency guard: Ensure idempotent invocation if request was already sent
+            $alreadySent = DB::table('recommendation_relation')
+                ->where('from_company_id', $fromcompany)
+                ->where('to_company_id', $tocompany)
+                ->where('job_id', $jobid)
+                ->where('final_status', '!=', -1)
+                ->exists();
+            if ($alreadySent) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already sent !']);
+            }
+
+            $searchTermsLocation = request('kt_tagify_location');
+            //    $custom_search_location = json_decode($searchTermsLocation, true);
+            //    $currentJobLocation = array_column($custom_search_location, 'value');
+            //    $job_country_id = DB::table('countries')
+            // 						->select('countries.id')
+            // 						->where('countries.id','=', $currentJobLocation[0])
+            // 						->first();
+            $country_id_job = (int) $searchTermsLocation;
+            $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
+            // dd($clientMainLocation==$country_id_job);
+
+            // 	if($clientMainLocation==$country_id_job){
+
+            // 		$boostKeyWork_Auth = DB::table('package_active')
+            // 	->select('package_active.id')
+            // 	->where('package_active.BoostKeywordsIndia_status', '=', 1)
+            // 	->where('package_active.BoostKeywordsIndia_balance', '>', 0)
+            // 	->where('package_active.company_id', '=', $tocompany)
+            // 	->count();
+
+            // if ($boostKeyWork_Auth > 0) {
+            // 	$packageStatus = '';
+            // 	$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsIndia', $tocompany);
+
+            // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
+            // 	{
+
+            // 		//DEDUCTION BOOST PROFILE
+            // 		if (@$jobid > 0) {
+            // 			$source_from_company_id = $tocompany;
+            // 			$event_name = 'BoostKeywordsIndia';
+            // 			$event_table_name = 'jobs';
+            // 			$event_table_id = @$jobid;
+            // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+            // 		}
+
+            // 	} else {
+            // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+            // 	}
+
+            // }
+
+            // 	}else{
+
+            // 		$boostKeyWork_Auth = DB::table('package_active')
+            // 	->select('package_active.id')
+            // 	->where('package_active.BoostKeywordsInternational_status', '=', 1)
+            // 	->where('package_active.BoostKeywordsInternational_balance', '>', 0)
+            // 	->where('package_active.company_id', '=', $tocompany)
+            // 	->count();
+
+            // if ($boostKeyWork_Auth > 0) {
+            // 	$packageStatus = '';
+            // 	$packageStatus = GeneralMethod::validateClientPackage('BoostKeywordsInternational', $tocompany);
+
+            // 	if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) 		// BOOST STAFFING PARTNER
+            // 	{
+
+            // 		//DEDUCTION BOOST PROFILE
+            // 		if (@$jobid > 0) {
+            // 			$source_from_company_id = $tocompany;
+            // 			$event_name = 'BoostKeywordsInternational';
+            // 			$event_table_name = 'jobs';
+            // 			$event_table_id = @$jobid;
+            // 			$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+            // 		}
+
+            // 	} else {
+            // 		return Reply::dataOnly(["status" => "warning", "message" => "Boost keywords can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+            // 	}
+
+            // }
+
+            // 	}
+
+            $jobRow = DB::table('jobs')->join('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+
+            // dd($jobRow);
+            if ($jobRow->employment_type == 1) {		//	CONTRACT_RECRUITMENT_LEAD   employment_type = 1
+
+                if ($clientMainLocation == $country_id_job) {
+
+                    $eventId = 21;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadIndia', $tocompany);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $tocompany;
+                    // 		$event_name = 'ContractRecruitmentLeadIndia';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+                } else {
+                    $eventId = 22;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+                    // $packageStatus = GeneralMethod::validateClientPackage('ContractRecruitmentLeadInternational', $tocompany);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION CONTRACT_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $tocompany;
+                    // 		$event_name = 'ContractRecruitmentLeadInternational';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+                }
+
+                // $packageStatus = GeneralMethod::validateClientPackage('CONTRACT_RECRUITMENT_LEAD', $tocompany);
+                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+
+                // 	if (@$jobid > 0) {
+                // 		$source_from_company_id = $tocompany;
+                // 		$event_name = 'CONTRACT_RECRUITMENT_LEAD';
+                // 		$event_table_name = 'jobs';
+                // 		$event_table_id = @$jobid;
+                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                // 	}
+                // } else {
+                // 	return Reply::dataOnly(["status" => "warning", "message" => "Contract Recruitment Lead can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                // }
+
+            } elseif ($jobRow->employment_type == 0) {	//	FULLTIME_RECRUITMENT_LEAD   employment_type = 0
+
+                if ($clientMainLocation == $country_id_job) {
+
+                    $eventId = 19;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadIndia', $tocompany);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $tocompany;
+                    // 		$event_name = 'PermamentRecruitmentLeadIndia';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+
+                } else {
+
+                    $eventId = 20;
+                    $coinsDeductions = GeneralMethod::coinsValidations((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    if ($coinsDeductions->status) {
+                        return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    } else {
+                        GeneralMethod::coinsDeductions((int) $tocompany, $eventId, auth()->user()->id, $from_company_id, '', '');
+                    }
+
+                    // $packageStatus = GeneralMethod::validateClientPackage('PermamentRecruitmentLeadInternational', $tocompany);
+                    // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+                    // 	//DEDUCTION FULLTIME_RECRUITMENT_LEAD
+                    // 	if (@$jobid > 0) {
+                    // 		$source_from_company_id = $tocompany;
+                    // 		$event_name = 'PermamentRecruitmentLeadInternational';
+                    // 		$event_table_name = 'jobs';
+                    // 		$event_table_id = @$jobid;
+                    // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                    // 	}
+                    // } else {
+                    // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                    // }
+
+                }
+
+                // $packageStatus = GeneralMethod::validateClientPackage('FULLTIME_RECRUITMENT_LEAD', $tocompany);
+                // if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
+
+                // 	if (@$jobid > 0) {
+                // 		$source_from_company_id = $tocompany;
+                // 		$event_name = 'FULLTIME_RECRUITMENT_LEAD';
+                // 		$event_table_name = 'jobs';
+                // 		$event_table_id = @$jobid;
+                // 		$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                // 	}
+                // } else {
+                // 	return Reply::dataOnly(["status" => "warning", "message" => "Fulltime Recruitment Leads can't access because Staffing partne PACKAGE EXPIRED , please contact to Administrator."]);
+                // }
+            }
+
+            // dd("kdk");
+            $fromCounter = DB::table('recommendation_relation')->select('*')
+                ->where('from_company_id', $fromcompany)
+                ->where('to_company_id', $tocompany)
+                ->where('job_id', $jobid)
+                ->count();
+
+            if (($fromCounter == 0)) {
+                // INSERT
+                $insertArr = [
+                    'from_company_id' => $fromcompany,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+
+                    'to_company_id' => $tocompany,
+                    'to_status' => 0,
+                    'final_status' => 0,
+                    'job_id' => $jobid,
+
+                ];
+
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                $attachments = [];
+
+                $cc = [];
+                $checkMailPermision = GeneralMethod::mailPermission(17);
+                if ($checkMailPermision) {
+
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
+
+                    $detailsVendorSide = GeneralMethod::companyAsVendor($fromcompany, $tocompany);
+                    $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
+                    $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
+                    $employment_type = '';
+                    if ($jobRow->employment_type == 1) {
+                        $employment_type = 'CONTRACT';
+                    } else {
+                        $employment_type = 'FULLTIME';
+                    }
+
+                    $salaryMode = GeneralMethod::salaryMode();
+                    $currencySymbole = GeneralMethod::currency();
+                    $sal_mode = $min_salary = $salary_currency = $max_salary = '';
+                    $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode], 0, 1));
+                    $salary_currency = $currencySymbole[@$jobRow->max_salary_currency];
+                    $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary);
+                    $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary);
+                    $salaryRange = $salary_currency.' '.$min_salary.'/'.$sal_mode.'<br> '.$salary_currency.' '.$max_salary.'/'.$sal_mode;
+                    $jonTerms = Company::withoutGlobalScope('company')->findOrFail($jobRow->company_id);
+
+                    $status = ucwords($jobRow->status);
+
+                    if ($jobRow->status == 'active') {
+                        $status = 'Hiring';
+                    } elseif ($jobRow->status == 'inactive') {
+                        $status = 'Closed';
+                    } else {
+                        $status = 'Hold';
+                    }
+
+                    // dd($status);
+                    $recommendation_text = __('messages.internal_tag');
+                    $ulink =
+                    '<a href="javascript:void(0);" class="fs-6 '.
+                    @$class.
+                    ' text-hover-success">'.
+                    $status.
+                    '</a>';
+                    $statusAndId = '<div class="d-flex flex-column">
+										'.
+                                $ulink.
+                                '
+										<br><span class="fw-bold text-muted d-block fs-7">R'.
+                                @$jobRow->id.
+                                ' -'.
+                                $recommendation_text.
+                                '</span>
+										</div>';
+
+                    $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description);
+
+                    $TERMS_FIXED = '';
+
+                    $total_positions = '';
+                    $total_positions = number_format($jobRow->total_positions);
+
+                    $created_at = '';
+                    $created_at = $jobRow->created_at;
+                    $newDate = GeneralMethod::ymdTodmyNotTime($created_at); // date("d M, Y", strtotime($created_at));
+                    $dateAdd = '<div class="d-flex flex-column">
+								<span class="text-dark fw-bolder fs-6">'.
+                        $newDate.
+                        '</span><br>
+								<span class="text-muted fw-bold d-block fs-7">'.
+                        $total_positions.
+                        ' Opening</span>
+							</div>';
+
+                    $exp = $jobRow->min_exp.' Y <br>'.$jobRow->max_exp.' Y';
+                    $oprnlink = url('service_company/jobs/job_request/0');
+
+                    $jonTermsterms = "<h3><strong>Steps to Accept and Process the Job Request:</strong></h3>
+								<ol>
+									<li><strong>Log in</strong> to Jero.works using your email and password.</li>
+									<li><strong>View the job request</strong> from the link <a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>(Click Here)</a> or navigate to the <strong>&quot;Job Requests&quot;</strong> tab after logging in.</li>
+									<li>Click <strong>&quot;Accept Job&quot;</strong> to confirm the request.</li>
+									<li>Go to the <strong>&quot;All Jobs&quot;</strong> tab, locate the accepted job, and click on it.</li>
+									<li>Click the <strong>&quot;Add Candidate&quot;</strong> button, upload resumes, and fill in the required details.</li>
+									<li>Change the <strong>candidate status from &quot;In Review&quot; to &quot;Sourcing.&quot;</strong></li>
+									<li>Click on the below link to directly open the job request page<br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a></li>
+								</ol>
+
+								<h3><strong>Important Note:</strong></h3>
+
+								<ul>
+									<li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
+									<li>If a candidate remains in <strong>&quot;In Review&quot; status, the profile will only be visible to you and your team</strong>, not the client.</li>
+									<li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
+								</ul>
+								';
+
+                    $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
+
+                    $message = $template_description;
+
+                    $notificationemail = GeneralMethod::notification($tocompany, 'Sales'); // Recuitment Sales
+                    $defailsEmail = DB::table('companies')->where('id', $tocompany)->first()->company_email;
+                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+                    //    dd($to_Mail_Id);
+                    $data = [
+                        'message' => $message,
+                    ];
+
+                    QueueNotificationMailService::dispatch(
+                        $to_Mail_Id,
+                        $subject,
+                        'email.common.index',
+                        (object) $data,
+                        $attachments,
+                        $fromAddress,
+                        $senderName,
+                        $cc,
+                        $tocompany
+                    )->onConnection('emails');
+
+                    // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                }
+
+                DB::table('recommendation_relation')->insert($insertArr);
+                $relationId = DB::getPdo()->lastInsertId();
+                GeneralMethod::jobRequestIndexElastic($relationId);
+                $msg = 'Recommended request sent successfully !';
+
+                $this->invalidateAgencyDrawerCaches($jobid);
+
+                return Reply::dataOnly(['status' => 'success', 'message' => $msg]);
+
+            } else {
+                $msg = 'Recommended request already sent !';
+
+                return Reply::dataOnly(['status' => 'warning', 'message' => $msg]);
+            }
+
+        } finally {
+            optional($lock)->release();
         }
 
     }
@@ -13587,12 +13756,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $terms = '';
         // dd(count($companiesDetails));
 
-        $cachekeys = [
-            'allsendinvitationtoagency_version_user_'.$this->user->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
+        GeneralMethod::invalidateSpartnerlistingCache($this->user->id);
 
         $terms .= '<p>&nbsp;</p>';
         $terms .= ($companyTerms->terms) ? $companyTerms->terms : $global_settings->terms;
@@ -14550,7 +14714,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $recommendation_relation = DB::table('recommendation_relation')->where('from_company_id', @$fromcompany)->where('to_company_id', @$tocompany)->where('job_id', @$jobid)->where('final_status', 2)->first();
 
-            GeneralMethod::jobRequestIndexElastic($recommendation_relation->id);
+            if ($recommendation_relation) {
+                GeneralMethod::jobRequestIndexElastic($recommendation_relation->id);
+            }
             GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
 
             $cachekeys = [
@@ -14562,10 +14728,78 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 GeneralMethod::cacheClean($key);
             }
 
+            $this->invalidateAgencyDrawerCaches($jobid);
         }
 
         return Reply::dataOnly(['status' => 'success']);
 
+    }
+
+    /**
+     * Reject or ignore an assigned agency recommendation for a job.
+     * Tenancy: Scoped to logged-in company and matching recommendation relation.
+     *
+     * @return array
+     */
+    public function assignRejected(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $tocompany_id = $request->id;
+        $jobid = $request->jobid;
+
+        if (! empty($company_id) && ! empty($tocompany_id) && ! empty($jobid)) {
+            $data = [
+                'final_status' => -1,
+            ];
+
+            DB::table('recommendation_relation')
+                ->where('from_company_id', $company_id)
+                ->where('to_company_id', $tocompany_id)
+                ->where('job_id', $jobid)
+                ->where('final_status', 1)
+                ->limit(1)
+                ->update($data);
+
+            $recommendation_relation = DB::table('recommendation_relation')
+                ->where('from_company_id', $company_id)
+                ->where('to_company_id', $tocompany_id)
+                ->where('job_id', $jobid)
+                ->where('final_status', -1)
+                ->first();
+
+            if ($recommendation_relation) {
+                GeneralMethod::jobRequestIndexElastic($recommendation_relation->id);
+            }
+            GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
+
+            $this->invalidateAgencyDrawerCaches($jobid);
+        }
+
+        return Reply::dataOnly(['status' => 'success']);
+    }
+
+    /**
+     * Invalidate tenant and job caches related to the Add Agency drawer.
+     * Tenancy: Scoped to logged-in user and company.
+     *
+     * @param  int|string|null  $jobId
+     * @return void
+     */
+    protected function invalidateAgencyDrawerCaches($jobId = null)
+    {
+        $userId = $this->user->id ?? auth()->id();
+
+        if ($userId) {
+            // Atomic cache version bumps
+            GeneralMethod::cacheClean('allrecommendedagency_version_user_'.$userId);
+            GeneralMethod::cacheClean('allassignedagency_version_user_'.$userId);
+            GeneralMethod::cacheClean('allregisteredagency_version_user_'.$userId);
+            GeneralMethod::cacheClean('allsendinvitationtoagency_v5_version_user_'.$userId);
+        }
+
+        if ($jobId) {
+            cache()->forget('ats:job_summary_meta:'.$jobId);
+        }
     }
 
     public function add_to_list(Request $request)
