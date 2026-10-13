@@ -27,6 +27,7 @@ use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\ElasticService;
+use App\Services\JobIdempotencyService;
 use App\Services\JobService;
 use App\Services\MailService;
 use App\Services\MassMailService;
@@ -5784,6 +5785,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 11. Pre-seed departments manifest for 0ms client-first browser execution (10K concurrency)
         $this->departmentsManifest = \App\Services\DepartmentTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':dept_version', 1));
 
+        // 12. Pre-seed team roster manifest for 0ms client-first browser execution (10K concurrency, TC-01)
+        $rmService = app(\App\Services\RelationshipManagerService::class);
+        $this->teamRoster = $rmService->getTeamRoster($companyId);
+        $this->rosterVersion = (int) Cache::get('tenant:'.$companyId.':roster_version', 1);
+        $this->workloadVersion = (int) Cache::get('tenant:'.$companyId.':workload_version', 1);
+
         return view('service_company.jobs.create', $this->data);
     }
 
@@ -5914,10 +5921,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                         $contactList = [];
                         if (! empty($src['client_contact_info']) && is_array($src['client_contact_info'])) {
-                            foreach (array_slice($src['client_contact_info'], 0, 2) as $c) {
+                            foreach ($src['client_contact_info'] as $c) {
                                 $contactList[] = [
                                     'id' => (int) ($c['id'] ?? 0),
                                     'n' => (string) ($c['contact_person_name'] ?? ''),
+                                    'e' => (string) ($c['contact_person_email'] ?? ''),
+                                    'p' => (string) ($c['contact_person_number'] ?? ''),
+                                    'd' => (string) ($c['contact_person_designation'] ?? 'Hiring Contact'),
+                                    'c' => (string) ($c['calling_code'] ?? 'in'),
                                 ];
                             }
                         }
@@ -5998,20 +6009,23 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $contactsByClient = [];
         if (! empty($clientIds)) {
             $rawContacts = DB::table('client_contact_info')
-                ->select('id', 'client_id', 'contact_person_name')
+                ->select('id', 'client_id', 'contact_person_name', 'contact_person_email', 'contact_person_number', 'calling_code', 'contact_person_designation')
                 ->whereIn('client_id', $clientIds)
+                ->orderBy('contact_person_name', 'ASC')
                 ->get();
 
             foreach ($rawContacts as $c) {
                 if (! isset($contactsByClient[$c->client_id])) {
                     $contactsByClient[$c->client_id] = [];
                 }
-                if (count($contactsByClient[$c->client_id]) < 2) {
-                    $contactsByClient[$c->client_id][] = [
-                        'id' => (int) $c->id,
-                        'n' => (string) ucwords($c->contact_person_name),
-                    ];
-                }
+                $contactsByClient[$c->client_id][] = [
+                    'id' => (int) $c->id,
+                    'n' => (string) ucwords(trim($c->contact_person_name ?? '')),
+                    'e' => (string) ($c->contact_person_email ?? ''),
+                    'p' => (string) ($c->contact_person_number ?? ''),
+                    'd' => (string) ($c->contact_person_designation ?: 'Hiring Contact'),
+                    'c' => (string) ($c->calling_code ?: 'in'),
+                ];
             }
         }
 
@@ -6836,33 +6850,188 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('add_jobs'), 403);
 
-        // Authoritative Server-Side Client Validation (Rule #4 & Selection Validity Lifecycle)
-        if ($request->filled('client_id')) {
-            $clientId = (int) $request->client_id;
-            $companyId = (int) auth()->user()->company_id;
+        $startTime = microtime(true);
+        $user = auth()->user();
+        $companyId = (int) $user->company_id;
+        $userId = (int) $user->id;
 
+        // --- TIER 1: SHAPE VALIDATION (Laravel Validator) ---
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'client_id' => 'nullable|integer',
+            'operation_id' => 'nullable|string|max:64',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // --- TIER 2: AUTHORIZATION & TENANCY BOUNDARY DEFENSE ---
+        $clientId = $request->filled('client_id') ? (int) $request->client_id : null;
+        if ($clientId) {
             $client = DB::table('clients')
                 ->where('id', $clientId)
                 ->where('company_id', $companyId)
                 ->first(['id', 'name']);
 
             if (! $client) {
-                return Reply::dataOnly([
+                return response()->json([
                     'status' => 'error',
-                    'msgType' => 'danger',
                     'message' => 'The selected client could not be found or has been removed. Please select an active client to proceed.',
-                ]);
+                ], 422);
             }
         }
 
+        // Validate Recruiter Assignments (TC-04, TC-06)
+        if ($request->filled('recruiter_id')) {
+            $rawRec = is_array($request->recruiter_id)
+                ? $request->recruiter_id
+                : explode(',', (string) $request->recruiter_id);
+
+            $recruiterIds = array_values(array_unique(array_filter(array_map('trim', $rawRec), function ($v) {
+                return $v !== '' && is_numeric($v) && (int) $v > 0;
+            })));
+
+            if (count($recruiterIds) > 50) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Maximum of 50 team members can be assigned to a position.',
+                ], 422);
+            }
+
+            if (count($recruiterIds) > 0) {
+                $validRecCount = DB::table('users')
+                    ->where('company_id', $companyId)
+                    ->whereIn('id', $recruiterIds)
+                    ->where('status', 'active')
+                    ->count();
+
+                if ($validRecCount !== count($recruiterIds)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'One or more assigned team members do not belong to your organization or are inactive.',
+                    ], 422);
+                }
+            }
+        }
+
+        // Validate Hiring Manager Contacts (TC-05)
+        if ($request->filled('hiring_namager')) {
+            if (! $clientId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Client organization must be selected before assigning hiring contacts.',
+                ], 422);
+            }
+
+            $rawHm = is_array($request->hiring_namager)
+                ? $request->hiring_namager
+                : explode(',', (string) $request->hiring_namager);
+
+            $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHm))));
+
+            if (count($hmNames) > 0) {
+                $validHmCount = DB::table('client_contact_info')
+                    ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
+                    ->where('client_contact_info.client_id', $clientId)
+                    ->where('clients.company_id', $companyId)
+                    ->whereIn('client_contact_info.contact_person_name', $hmNames)
+                    ->count();
+
+                if ($validHmCount !== count($hmNames)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'One or more selected contacts do not belong to the selected client organization.',
+                    ], 422);
+                }
+            }
+        }
+
+        // --- TIER 3: TWO-TIER IDEMPOTENCY DEFENSE (TC-08, TC-09, TC-20, TC-26, TC-31, TC-32) ---
+        $operationId = $request->input('operation_id');
+        $idempotencyService = app(JobIdempotencyService::class);
+        $claim = null;
+
+        if ($operationId) {
+            $claim = $idempotencyService->claimKey($companyId, $userId, $operationId, $request->all());
+
+            if ($claim['status'] === 'conflict') {
+                return response()->json([
+                    'status' => 'error',
+                    'error_code' => $claim['error_code'] ?? 'IDEMPOTENCY_CONFLICT',
+                    'message' => $claim['message'],
+                ], $claim['code'] ?? 409);
+            }
+
+            if ($claim['status'] === 'cached') {
+                return response()->json($claim['data'], $claim['code'] ?? 200);
+            }
+        }
+
+        // --- EXECUTION: ATOMIC TRANSACTION IN JOB SERVICE ---
         try {
-            $job = $jobService->createJob($request->all(), auth()->user());
+            $dbStartTime = microtime(true);
+            $job = $jobService->createJob($request->all(), $user);
+            $dbDurationMs = (microtime(true) - $dbStartTime) * 1000;
+            $totalDurationMs = (microtime(true) - $startTime) * 1000;
+
+            $responsePayload = [
+                'status' => 'success',
+                'job_id' => $job->id,
+                'redirect_url' => route('service_company.jobs.index'),
+                'message' => __('menu.jobs').' '.__('messages.createdSuccessfully'),
+            ];
+
+            if ($operationId && ! empty($claim['idempotency_key'])) {
+                $idempotencyService->markCompleted(
+                    $companyId,
+                    $claim['idempotency_key'],
+                    200,
+                    $responsePayload,
+                    $claim['lock'] ?? null
+                );
+
+                $idempotencyService->logOperationTrace([
+                    'operation_id' => $operationId,
+                    'tenant_id' => $companyId,
+                    'actor_user_id' => $userId,
+                    'job_id' => $job->id,
+                    'request_hash' => $claim['request_hash'] ?? null,
+                    'idempotency_status' => 'COMPLETED',
+                    'execution_duration_ms' => $totalDurationMs,
+                    'db_transaction_ms' => $dbDurationMs,
+                    'redis_acceleration_ms' => 0.0,
+                    'es_projection_status' => 'QUEUED',
+                ]);
+            }
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json($responsePayload);
+            }
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.createdSuccessfully'));
         } catch (\Throwable $e) {
+            if ($operationId && ! empty($claim['idempotency_key'])) {
+                $idempotencyService->markFailed(
+                    $companyId,
+                    $claim['idempotency_key'],
+                    $e->getMessage(),
+                    true,
+                    $claim['lock'] ?? null
+                );
+            }
+
             \Log::error('jobs store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
-            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+            return response()->json([
+                'status' => 'error',
+                'msgType' => 'danger',
+                'message' => 'Submission failed. Please try again.',
+            ], 500);
         }
     }
 
@@ -8463,13 +8632,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             DB::table('job_assign')->where('job_id', $currentJobId)->where('user_id', $currentUserId)->where('company_id', $company_id)->delete();
 
-            $assign_c_id = DB::table('job_assign')->where('job_id', $currentJobId)->where('company_id', $company_id)->max('id');
+            // Captain Promotion Invariant (TC-17): Promote earliest assigned recruiter
+            $assign_c_id = DB::table('job_assign')->where('job_id', $currentJobId)->where('company_id', $company_id)->min('id');
 
             if ($job_assign_c && $assign_c_id > 0) {
 
                 $userdata = DB::table('job_assign')->where('id', $assign_c_id)->first();
 
-                DB::table('job_assign')->where('job_id', $currentJobId)->where('company_id', $company_id)->update(['spok_user_id' => $userdata->user_id]);
+                // Clear any lingering spokespersons and atomically set on earliest
+                DB::table('job_assign')->where('job_id', $currentJobId)->where('company_id', $company_id)->update(['spok_user_id' => null]);
+                DB::table('job_assign')->where('id', $assign_c_id)->update(['spok_user_id' => $userdata->user_id]);
             }
 
             GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
