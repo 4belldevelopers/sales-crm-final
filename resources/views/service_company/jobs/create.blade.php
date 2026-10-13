@@ -2725,6 +2725,739 @@
         border-color: #dc2626 !important;
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
     }
+
+    /* ==========================================================================
+       GOD-LEVEL HIRING TEAM DRAWERS CSS (Metronic Enterprise v7.2 Standard)
+       Zero-Network, Responsive, WCAG Accessible, Poppins Typography
+       ========================================================================== */
+    #kt_activitiesRecruiter,
+    #kt_activitiesClient {
+        box-shadow: -4px 0 28px rgba(0, 0, 0, 0.16) !important;
+        background: #ffffff !important;
+        font-family: 'Poppins', sans-serif !important;
+        width: 600px !important;
+        max-width: 100vw !important;
+        z-index: 10050 !important;
+    }
+    @media (max-width: 991.98px) {
+        #kt_activitiesRecruiter,
+        #kt_activitiesClient {
+            width: min(600px, 92vw) !important;
+        }
+    }
+    @media (max-width: 575.98px) {
+        #kt_activitiesRecruiter,
+        #kt_activitiesClient {
+            width: 100vw !important;
+        }
+    }
+
+    #kt_activitiesRecruiter .card,
+    #kt_activitiesClient .card {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+    }
+
+    #kt_activitiesRecruiter #kt_activities_header,
+    #kt_activitiesClient #kt_activities_header {
+        border-bottom: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        padding: 0 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-shrink: 0 !important;
+    }
+
+    #kt_activitiesRecruiter_close,
+    #kt_activitiesClient_close {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #64748b !important;
+        transition: all 0.15s ease !important;
+    }
+    #kt_activitiesRecruiter_close:hover,
+    #kt_activitiesClient_close:hover {
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+    }
+
+    #kt_activitiesRecruiter_body,
+    #kt_activitiesClient_body {
+        flex: 1 1 auto !important;
+        height: calc(100vh - 60px) !important;
+        max-height: calc(100vh - 60px) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    .hiring-team-drawer-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        background: #ffffff !important;
+        font-family: 'Poppins', sans-serif !important;
+        color: #0f172a !important;
+    }
+
+    /* --- Top Assigned Section --- */
+    .ht-drawer-assigned-section {
+        background: #f8fafc !important;
+        padding: 14px 20px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        flex-shrink: 0 !important;
+        max-height: 30vh !important;
+        overflow-y: auto !important;
+    }
+    .ht-assigned-header {
+        display: flex !important;
+        align-items: baseline !important;
+        justify-content: space-between !important;
+        margin-bottom: 8px !important;
+    }
+    .ht-assigned-title {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        color: #475569 !important;
+    }
+    .ht-assigned-sub {
+        font-size: 11px !important;
+        color: #94a3b8 !important;
+        font-weight: 400 !important;
+    }
+    .ht-assigned-empty {
+        font-size: 12px !important;
+        color: #94a3b8 !important;
+        font-style: italic !important;
+        padding: 4px 0 !important;
+    }
+    .ht-assigned-cards-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+        gap: 8px !important;
+    }
+    .ht-assigned-card {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 7px 10px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.2s ease !important;
+    }
+    .ht-assigned-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    }
+    .ht-assigned-card.is-captain {
+        border-color: #fde68a !important;
+        background: #fffdf5 !important;
+    }
+    .ht-assigned-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 600 !important;
+        font-size: 11px !important;
+        color: #ffffff !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+    }
+    .ht-assigned-info {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+    .ht-assigned-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+    }
+    .ht-assigned-role {
+        font-size: 10px !important;
+        color: #64748b !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+    }
+    .ht-assigned-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-shrink: 0 !important;
+    }
+    .ht-captain-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        background: #fef3c7 !important;
+        color: #b45309 !important;
+        border: 1px solid #fde68a !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        padding: 2px 7px !important;
+        border-radius: 12px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+    .ht-captain-badge i {
+        color: #f59e0b !important;
+        font-size: 10px !important;
+    }
+    .ht-make-captain-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        background: #ffffff !important;
+        color: #64748b !important;
+        border: 1px solid #cbd5e1 !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        padding: 2px 7px !important;
+        border-radius: 12px !important;
+        line-height: 1 !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        transition: all 0.15s ease !important;
+    }
+    .ht-make-captain-btn:hover {
+        background: #fffbeb !important;
+        color: #b45309 !important;
+        border-color: #fde68a !important;
+    }
+    .ht-make-captain-btn i {
+        color: #94a3b8 !important;
+        font-size: 10px !important;
+    }
+    .ht-make-captain-btn:hover i {
+        color: #f59e0b !important;
+    }
+    .ht-card-remove-btn {
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: transparent !important;
+        color: #94a3b8 !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 12px !important;
+        transition: all 0.15s ease !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+    .ht-card-remove-btn:hover {
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+    }
+
+    /* --- Search & Filter Bar --- */
+    .ht-drawer-search-bar {
+        padding: 12px 20px !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        flex-shrink: 0 !important;
+    }
+    .ht-search-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+    .ht-search-input-wrap {
+        position: relative !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .ht-search-icon {
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #94a3b8 !important;
+        font-size: 16px !important;
+        pointer-events: none !important;
+        line-height: 1 !important;
+    }
+    .ht-search-input {
+        width: 100% !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f8fafc !important;
+        padding: 0 36px 0 38px !important;
+        font-size: 13px !important;
+        font-family: 'Poppins', sans-serif !important;
+        color: #0f172a !important;
+        outline: none !important;
+        transition: all 0.2s ease !important;
+        box-sizing: border-box !important;
+    }
+    .ht-search-input:focus {
+        background: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+    .ht-search-input::placeholder {
+        color: #94a3b8 !important;
+    }
+    .ht-search-clear {
+        position: absolute !important;
+        right: 10px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: #cbd5e1 !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 10px !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        transition: background 0.15s ease !important;
+    }
+    .ht-search-clear:hover {
+        background: #94a3b8 !important;
+    }
+    .ht-filter-pills {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+    .ht-pill {
+        padding: 5px 12px !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        font-family: 'Poppins', sans-serif !important;
+        border-radius: 20px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #64748b !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        line-height: 1.3 !important;
+    }
+    .ht-pill:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+    .ht-pill.active {
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+        color: #2563eb !important;
+        font-weight: 600 !important;
+    }
+    #btnDrawerAddContact {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        height: 38px !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px dashed #2563eb !important;
+        padding: 0 14px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        white-space: nowrap !important;
+    }
+    #btnDrawerAddContact:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        border-style: solid !important;
+    }
+
+    /* --- List Header & Hints --- */
+    .ht-drawer-list-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 8px 20px !important;
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        flex-shrink: 0 !important;
+    }
+    .ht-list-title {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+        color: #475569 !important;
+    }
+    .ht-list-hint {
+        font-size: 10px !important;
+        color: #94a3b8 !important;
+    }
+    .ht-list-hint kbd {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 3px !important;
+        padding: 1px 4px !important;
+        font-size: 9px !important;
+        margin: 0 2px !important;
+        color: #475569 !important;
+    }
+
+    /* --- Virtual Viewport & Rows --- */
+    .ht-virtual-viewport {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #ffffff !important;
+        position: relative !important;
+        outline: none !important;
+    }
+    .ht-virtual-viewport::-webkit-scrollbar,
+    .ht-drawer-assigned-section::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    .ht-virtual-viewport::-webkit-scrollbar-track,
+    .ht-drawer-assigned-section::-webkit-scrollbar-track {
+        background: #f8fafc !important;
+    }
+    .ht-virtual-viewport::-webkit-scrollbar-thumb,
+    .ht-drawer-assigned-section::-webkit-scrollbar-thumb {
+        background: #cbd5e1 !important;
+        border-radius: 3px !important;
+    }
+    .ht-virtual-viewport::-webkit-scrollbar-thumb:hover,
+    .ht-drawer-assigned-section::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8 !important;
+    }
+
+    .ht-virtual-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        padding: 0 20px !important;
+        box-sizing: border-box !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease !important;
+        background: #ffffff !important;
+    }
+    .ht-virtual-row:hover {
+        background: #f8fafc !important;
+    }
+    .ht-virtual-row.focused {
+        background: #eff6ff !important;
+        outline: none !important;
+    }
+    .ht-virtual-row.assigned {
+        background: #f0fdf4 !important;
+    }
+    .ht-virtual-row.assigned:hover {
+        background: #dcfce7 !important;
+    }
+    .ht-virtual-row.focused.assigned {
+        background: #dcfce7 !important;
+    }
+
+    .ht-row-avatar,
+    .ht-contact-avatar {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+    }
+    .ht-row-info {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        margin-left: 14px !important;
+    }
+    .ht-row-name {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+    }
+    .ht-row-role {
+        font-size: 11px !important;
+        color: #64748b !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+        margin-top: 1px !important;
+    }
+    .ht-row-workload {
+        flex-shrink: 0 !important;
+        margin: 0 14px !important;
+    }
+    .ht-workload-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        padding: 3px 9px !important;
+        border-radius: 12px !important;
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+    }
+    .ht-workload-tag i {
+        font-size: 12px !important;
+    }
+    .ht-row-action {
+        flex-shrink: 0 !important;
+    }
+    .ht-assign-btn,
+    .ht-hm-assign-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-weight: 600 !important;
+        font-size: 11px !important;
+        height: 30px !important;
+        padding: 0 12px !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        transition: all 0.15s ease !important;
+        line-height: 1 !important;
+    }
+
+    /* Assign Button States */
+    .ht-virtual-row:not(.assigned) .ht-assign-btn,
+    .ht-contact-row:not(.assigned) .ht-hm-assign-btn {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+    }
+    .ht-virtual-row:not(.assigned) .ht-assign-btn:hover,
+    .ht-contact-row:not(.assigned) .ht-hm-assign-btn:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+    }
+    .ht-virtual-row.assigned .ht-assign-btn,
+    .ht-contact-row.assigned .ht-hm-assign-btn {
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border: 1px solid #bbf7d0 !important;
+    }
+    .ht-virtual-row.assigned .ht-assign-btn:hover,
+    .ht-contact-row.assigned .ht-hm-assign-btn:hover {
+        background: #fef2f2 !important;
+        color: #ef4444 !important;
+        border-color: #fecaca !important;
+    }
+
+    /* --- Contact Rows (Hiring Managers) --- */
+    .ht-contacts-list-flow {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .ht-contact-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 64px !important;
+        padding: 10px 20px !important;
+        box-sizing: border-box !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease !important;
+        background: #ffffff !important;
+    }
+    .ht-contact-row:hover {
+        background: #f8fafc !important;
+    }
+    .ht-contact-row.assigned {
+        background: #f0fdf4 !important;
+    }
+    .ht-contact-row.assigned:hover {
+        background: #dcfce7 !important;
+    }
+    .ht-contact-details {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        margin-left: 14px !important;
+    }
+    .ht-contact-name {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+    }
+    .ht-contact-role {
+        font-size: 11px !important;
+        color: #64748b !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+        margin-top: 1px !important;
+    }
+    .ht-contact-meta {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-top: 3px !important;
+        font-size: 11px !important;
+        color: #64748b !important;
+    }
+    .ht-contact-meta span {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+    }
+    .ht-contact-meta span i {
+        font-size: 12px !important;
+        color: #94a3b8 !important;
+    }
+    .ht-contact-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+    }
+    .ht-quick-comms {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .ht-comm-btn {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 13px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f8fafc !important;
+        color: #475569 !important;
+        text-decoration: none !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+    }
+    .ht-comm-btn:hover {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border-color: #bfdbfe !important;
+    }
+    .ht-comm-btn.btn-light-success:hover {
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border-color: #bbf7d0 !important;
+    }
+
+    /* --- Empty States --- */
+    .ht-empty-state {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 48px 24px !important;
+        text-align: center !important;
+    }
+    .ht-empty-icon {
+        width: 52px !important;
+        height: 52px !important;
+        border-radius: 50% !important;
+        background: #f1f5f9 !important;
+        color: #94a3b8 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 22px !important;
+        margin-bottom: 12px !important;
+    }
+    .ht-empty-title {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        margin-bottom: 4px !important;
+    }
+    .ht-empty-sub {
+        font-size: 12px !important;
+        color: #64748b !important;
+        max-width: 280px !important;
+    }
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
@@ -2739,7 +3472,8 @@
 @section('content')
     <?php
     use App\Helper\GeneralMethod;
-    $currency_code = GeneralMethod::defaultCurrency();
+
+$currency_code = GeneralMethod::defaultCurrency();
     $country_code = GeneralMethod::countryCodeFun();
 
     $pagetitle = $end_date = $jobtags = $recruiterData = $recruiterDataId = $cpersonData = $carriew_website_chk = '';
@@ -2753,8 +3487,8 @@
                 $recruiterData = $recData->name;
                 $recruiterDataId = $recData->id;
             } else {
-                $recruiterData = $recruiterData . ' , ' . $recData->name;
-                $recruiterDataId = $recruiterDataId . ' , ' . $recData->id;
+                $recruiterData = $recruiterData.' , '.$recData->name;
+                $recruiterDataId = $recruiterDataId.' , '.$recData->id;
             }
             $rec_inc++;
         }
@@ -2775,7 +3509,7 @@
             if ($cnt == 0) {
                 $jobtags = $jobSkills->skill_name;
             } else {
-                $jobtags = $jobtags . ' , ' . $jobSkills->skill_name;
+                $jobtags = $jobtags.' , '.$jobSkills->skill_name;
             }
             $cnt++;
         }
@@ -2787,8 +3521,8 @@
                 $recruiterData = $recData->name;
                 $recruiterDataId = $recData->id;
             } else {
-                $recruiterData = $recruiterData . ' , ' . $recData->name;
-                $recruiterDataId = $recruiterDataId . ' , ' . $recData->id;
+                $recruiterData = $recruiterData.' , '.$recData->name;
+                $recruiterDataId = $recruiterDataId.' , '.$recData->id;
             }
             $rec_inc++;
         }
@@ -2798,7 +3532,7 @@
             if ($cp_inc == 0) {
                 $cpersonData = $cpData->contact_person_name;
             } else {
-                $cpersonData = $cpersonData . ' , ' . $cpData->contact_person_name;
+                $cpersonData = $cpersonData.' , '.$cpData->contact_person_name;
             }
             $cp_inc++;
         }
@@ -2889,9 +3623,13 @@
                                     <label class="form-label required">Hiring Organization</label>
                                     <?php
                                     $selected_client_id = 0;
-                                    if (isset($job->client_id) && $job->client_id > 0) { $selected_client_id = (int) $job->client_id; }
-                                    if (isset($currentClient) && $currentClient > 0) { $selected_client_id = (int) $currentClient; }
-                                    if ($global_company_type == 3) { ?>
+    if (isset($job->client_id) && $job->client_id > 0) {
+        $selected_client_id = (int) $job->client_id;
+    }
+    if (isset($currentClient) && $currentClient > 0) {
+        $selected_client_id = (int) $currentClient;
+    }
+    if ($global_company_type == 3) { ?>
                                         <input type="text" class="form-input" value="<?php echo @$client[0]->name; ?>" readonly>
                                         <input type="hidden" id="client_id" name="client_id" value="<?php echo @$client[0]->id; ?>">
                                     <?php } else { ?>
@@ -2901,29 +3639,37 @@
                                     @endif
                                         <optgroup label="My Organization">
                                             <?php
-                                            foreach ($client as $clientarr) {
-                                                if ($clientarr->self_company) {
-                                                    $client_id = $sel = '';
-                                                    $client_id = @$job->client_id;
-                                                    if (@$currentClient > 0) { $client_id = $currentClient; }
-                                                    if ($client_id == $clientarr->id) { $sel = 'selected="selected"'; }
-                                                    echo '<option value="' . @$clientarr->id . '" ' . $sel . '>' . ucfirst($clientarr->name) . '</option>';
-                                                }
-                                            }
-                                            ?>
+            foreach ($client as $clientarr) {
+                if ($clientarr->self_company) {
+                    $client_id = $sel = '';
+                    $client_id = @$job->client_id;
+                    if (@$currentClient > 0) {
+                        $client_id = $currentClient;
+                    }
+                    if ($client_id == $clientarr->id) {
+                        $sel = 'selected="selected"';
+                    }
+                    echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.ucfirst($clientarr->name).'</option>';
+                }
+            }
+                                        ?>
                                         </optgroup>
                                         <optgroup label="Clients">
                                             <?php
-                                            foreach ($client as $clientarr) {
-                                                if (!$clientarr->self_company) {
-                                                    $client_id = $sel = '';
-                                                    $client_id = @$job->client_id;
-                                                    if (@$currentClient > 0) { $client_id = $currentClient; }
-                                                    if ($client_id == $clientarr->id) { $sel = 'selected="selected"'; }
-                                                    echo '<option value="' . @$clientarr->id . '" ' . $sel . '>' . ucfirst($clientarr->name) . '</option>';
+                                        foreach ($client as $clientarr) {
+                                            if (! $clientarr->self_company) {
+                                                $client_id = $sel = '';
+                                                $client_id = @$job->client_id;
+                                                if (@$currentClient > 0) {
+                                                    $client_id = $currentClient;
                                                 }
+                                                if ($client_id == $clientarr->id) {
+                                                    $sel = 'selected="selected"';
+                                                }
+                                                echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.ucfirst($clientarr->name).'</option>';
                                             }
-                                            ?>
+                                        }
+                                        ?>
                                         </optgroup>
                                     </select>
 
@@ -3109,15 +3855,15 @@
                                         <option value="">Select Department</option>
                                         <?php
                                         $selectedDeptName = '';
-                                        foreach ($categories as $category) {
-                                            $sel = '';
-                                            if (@$job->category_id == @$category->id) {
-                                                $sel = 'selected="selected"';
-                                                $selectedDeptName = $category->name;
-                                            }
-                                            echo '<option value="' . @$category->id . '" ' . $sel . '>' . ucfirst($category->name) . '</option>';
-                                        }
-                                        ?>
+    foreach ($categories as $category) {
+        $sel = '';
+        if (@$job->category_id == @$category->id) {
+            $sel = 'selected="selected"';
+            $selectedDeptName = $category->name;
+        }
+        echo '<option value="'.@$category->id.'" '.$sel.'>'.ucfirst($category->name).'</option>';
+    }
+    ?>
                                     </select>
 
                                     <!-- God-Level Enterprise Combobox Component (Client-First / 10K Concurrency) -->
@@ -3193,15 +3939,19 @@
                                         <div class="range-field">
                                             <select class="form-select ij-exp-select" name="min_exp" id="min_exp">
                                                 <option value="" disabled <?php echo (@$job->min_exp === null) ? 'selected' : ''; ?>>Select</option>
-                                                <option value="0" <?php if (@$job->min_exp === 0 || @$job->min_exp === '0') echo 'selected'; ?>>Freshers</option>
+                                                <option value="0" <?php if (@$job->min_exp === 0 || @$job->min_exp === '0') {
+                                                    echo 'selected';
+                                                } ?>>Freshers</option>
                                                 <?php
                                                     $yearText = 'Year';
-                                                    for ($i = 1; $i <= 30; $i++) {
-                                                        if ($i > 9) { $yearText = 'Years'; }
-                                                        $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
-                                                        echo '<option value="' . $i . '" ' . $sel . '>' . $i . ' ' . $yearText . '</option>';
-                                                    }
-                                                ?>
+    for ($i = 1; $i <= 30; $i++) {
+        if ($i > 9) {
+            $yearText = 'Years';
+        }
+        $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
+        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+    }
+    ?>
                                             </select>
                                             <span class="form-hint">Min</span>
                                         </div>
@@ -3209,15 +3959,19 @@
                                         <div class="range-field">
                                             <select class="form-select ij-exp-select" name="max_exp" id="max_exp">
                                                 <option value="" disabled <?php echo (@$job->max_exp === null) ? 'selected' : ''; ?>>Select</option>
-                                                <option value="0" <?php if (@$job->max_exp === 0 || @$job->max_exp === '0') echo 'selected'; ?>>Freshers</option>
+                                                <option value="0" <?php if (@$job->max_exp === 0 || @$job->max_exp === '0') {
+                                                    echo 'selected';
+                                                } ?>>Freshers</option>
                                                 <?php
                                                     $yearText = 'Year';
-                                                    for ($i = 1; $i <= 30; $i++) {
-                                                        if ($i > 9) { $yearText = 'Years'; }
-                                                        $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
-                                                        echo '<option value="' . $i . '" ' . $sel . '>' . $i . ' ' . $yearText . '</option>';
-                                                    }
-                                                ?>
+    for ($i = 1; $i <= 30; $i++) {
+        if ($i > 9) {
+            $yearText = 'Years';
+        }
+        $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
+        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+    }
+    ?>
                                             </select>
                                             <span class="form-hint">Max</span>
                                         </div>
@@ -3229,10 +3983,10 @@
                                     <select class="form-select" id="total_positions" name="total_positions">
                                         <?php
                                         $selPos = (int) (@$job->total_positions ?: 1);
-                                        for ($p = 1; $p <= 500; $p++) {
-                                            echo '<option value="' . $p . '"' . ($selPos == $p ? ' selected="selected"' : '') . '>' . $p . '</option>';
-                                        }
-                                        ?>
+    for ($p = 1; $p <= 500; $p++) {
+        echo '<option value="'.$p.'"'.($selPos == $p ? ' selected="selected"' : '').'>'.$p.'</option>';
+    }
+    ?>
                                     </select>
                                     <span class="form-hint">Select openings to fill (1–500).</span>
                                 </div>
@@ -3518,10 +4272,10 @@
                                 </svg>Position Type <span class="text-danger">*</span>
                             </div>
                             <?php
-                                $currEmp = isset($job->employment_type) && $job->employment_type !== '' ? (string)$job->employment_type : '0';
-                            ?>
+                                $currEmp = isset($job->employment_type) && $job->employment_type !== '' ? (string) $job->employment_type : '0';
+    ?>
                             <div class="ij-choices ij-choices-4" role="group" aria-label="Position Type">
-                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="0" aria-pressed="<?php echo ((string)$currEmp === '0') ? 'true' : 'false'; ?>">
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="0" aria-pressed="<?php echo ((string) $currEmp === '0') ? 'true' : 'false'; ?>">
                                     <span class="ij-choice-icon-wrap ij-icon-yellow">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -3533,7 +4287,7 @@
                                         <small>Permanent employment</small>
                                     </span>
                                 </button>
-                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="1" aria-pressed="<?php echo ((string)$currEmp === '1') ? 'true' : 'false'; ?>">
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="1" aria-pressed="<?php echo ((string) $currEmp === '1') ? 'true' : 'false'; ?>">
                                     <span class="ij-choice-icon-wrap ij-icon-blue">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -3547,7 +4301,7 @@
                                         <small>Project-based hiring</small>
                                     </span>
                                 </button>
-                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="2" aria-pressed="<?php echo ((string)$currEmp === '2') ? 'true' : 'false'; ?>">
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="2" aria-pressed="<?php echo ((string) $currEmp === '2') ? 'true' : 'false'; ?>">
                                     <span class="ij-choice-icon-wrap ij-icon-slate">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -3559,7 +4313,7 @@
                                         <small>Independent contractor</small>
                                     </span>
                                 </button>
-                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="3" aria-pressed="<?php echo ((string)$currEmp === '3') ? 'true' : 'false'; ?>">
+                                <button type="button" class="ij-choice ij-choice-with-icon" data-value="3" aria-pressed="<?php echo ((string) $currEmp === '3') ? 'true' : 'false'; ?>">
                                     <span class="ij-choice-icon-wrap ij-icon-purple">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="12" cy="12" r="10"/>
@@ -3576,11 +4330,11 @@
                                 <select class="form-select" name="employment_type" id="employment_type" tabindex="-1">
                                     <option value="">Select Position Type</option>
                                     <?php
-                                    foreach ($employmentType as $key => $data_value) {
-                                        $sel = ((string)$currEmp === (string)$key) ? 'selected="selected"' : '';
-                                        echo '<option value="' . $key . '" ' . $sel . '>' . $data_value . '</option>';
-                                    }
-                                    ?>
+            foreach ($employmentType as $key => $data_value) {
+                $sel = ((string) $currEmp === (string) $key) ? 'selected="selected"' : '';
+                echo '<option value="'.$key.'" '.$sel.'>'.$data_value.'</option>';
+            }
+    ?>
                                 </select>
                             </div>
                             <span class="form-hint" style="margin-top:10px;display:block;">Select the type of employment for this opening.</span>
@@ -3611,9 +4365,15 @@
                             </div>
                             <div class="ij-source-control">
                                 <select name="work_from_home" id="work_from_home" class="form-select" tabindex="-1">
-                                    <option value="yes" <?php if (@$job->work_type == 'yes') echo 'selected'; ?>>Remote</option>
-                                    <option value="other" <?php if (@$job->work_type == 'other') echo 'selected'; ?>>Hybrid</option>
-                                    <option value="no" <?php if (@$job->work_type == 'no' || empty(@$job->work_type)) echo 'selected'; ?>>Work From Office (WFO)</option>
+                                    <option value="yes" <?php if (@$job->work_type == 'yes') {
+                                        echo 'selected';
+                                    } ?>>Remote</option>
+                                    <option value="other" <?php if (@$job->work_type == 'other') {
+                                        echo 'selected';
+                                    } ?>>Hybrid</option>
+                                    <option value="no" <?php if (@$job->work_type == 'no' || empty(@$job->work_type)) {
+                                        echo 'selected';
+                                    } ?>>Work From Office (WFO)</option>
                                 </select>
                             </div>
                             <span class="form-hint" style="margin-top:10px;display:block;">Choose whether this position is Remote, Hybrid, or Work From Office (WFO).</span>
@@ -3668,22 +4428,26 @@
                         <div class="card-body">
                             <?php
                             $initialCurrCode = $currency_code;
-                            $initialCurrSymbol = '₹';
-                            foreach ($currency as $key => $val) {
-                                $isSel = false;
-                                if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
-                                    if ($currency_code == $val) { $isSel = true; }
-                                } else {
-                                    if (@$job->min_salary_currency == $key) { $isSel = true; }
-                                }
-                                if ($isSel) {
-                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                    $initialCurrCode = $val;
-                                    $initialCurrSymbol = $cMeta['symbol'] ?? $val;
-                                    break;
-                                }
-                            }
-                            ?>
+    $initialCurrSymbol = '₹';
+    foreach ($currency as $key => $val) {
+        $isSel = false;
+        if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
+            if ($currency_code == $val) {
+                $isSel = true;
+            }
+        } else {
+            if (@$job->min_salary_currency == $key) {
+                $isSel = true;
+            }
+        }
+        if ($isSel) {
+            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+            $initialCurrCode = $val;
+            $initialCurrSymbol = $cMeta['symbol'] ?? $val;
+            break;
+        }
+    }
+    ?>
                             <div class="ij-comp-header">
                                 <div class="section-title">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3703,29 +4467,43 @@
                             {{-- Preserved backend select elements for full backward compatibility --}}
                             <select name="min_salary_currency" id="min_salary_currency" class="d-none">
                                 <?php
-                                foreach ($currency as $key => $val) {
-                                    $sel = '';
-                                    if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
-                                    else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                    $symbol = $cMeta['symbol'] ?? '';
-                                    $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
-                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
-                                }
-                                ?>
+        foreach ($currency as $key => $val) {
+            $sel = '';
+            if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
+                if ($currency_code == $val) {
+                    $sel = 'selected="selected"';
+                }
+            } else {
+                if (@$job->min_salary_currency == $key) {
+                    $sel = 'selected="selected"';
+                }
+            }
+            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+            $symbol = $cMeta['symbol'] ?? '';
+            $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
+            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
+        }
+    ?>
                             </select>
                             <select name="max_salary_currency" id="max_salary_currency" class="d-none">
                                 <?php
-                                foreach ($currency as $key => $val) {
-                                    $sel = '';
-                                    if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
-                                    else { if (@$job->max_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                    $symbol = $cMeta['symbol'] ?? '';
-                                    $shortText = !empty($symbol) ? $cMeta['code'] . ' (' . $symbol . ')' : $cMeta['code'];
-                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" data-symbol="' . e($symbol) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
-                                }
-                                ?>
+    foreach ($currency as $key => $val) {
+        $sel = '';
+        if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') {
+            if ($currency_code == $val) {
+                $sel = 'selected="selected"';
+            }
+        } else {
+            if (@$job->max_salary_currency == $key) {
+                $sel = 'selected="selected"';
+            }
+        }
+        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+        $symbol = $cMeta['symbol'] ?? '';
+        $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
+        echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
+    }
+    ?>
                             </select>
 
                             <div class="form-grid form-grid-3">
@@ -3757,11 +4535,11 @@
                                     <label class="form-label required">Salary Type</label>
                                     <select class="form-select" name="min_sal_mode" id="min_sal_mode">
                                         <?php
-                                        foreach ($salaryMode as $key => $val) {
-                                            $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
-                                            echo '<option value="' . $key . '" ' . $sel . '>' . $val . '</option>';
-                                        }
-                                        ?>
+            foreach ($salaryMode as $key => $val) {
+                $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
+                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+            }
+    ?>
                                     </select>
                                 </div>
                             </div>
@@ -3791,9 +4569,9 @@
                                         $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
                                         $symbol = $cMeta['symbol'] ?? '';
                                         $name = $cMeta['name'] ?? $val;
-                                        $search = strtolower($cMeta['keywords'] . ' ' . $val . ' ' . $name . ' ' . $symbol);
+                                        $search = strtolower($cMeta['keywords'].' '.$val.' '.$name.' '.$symbol);
                                         $isSel = ($val === $initialCurrCode);
-                                    ?>
+                                        ?>
                                         <div class="ij-curr-pop-item <?php echo $isSel ? 'is-selected' : ''; ?>" data-val="<?php echo e($key); ?>" data-code="<?php echo e($val); ?>" data-symbol="<?php echo e($symbol); ?>" data-name="<?php echo e($name); ?>" data-search="<?php echo e($search); ?>">
                                             <div class="ij-curr-item-left">
                                                 <span class="ij-curr-badge"><strong class="ij-curr-badge-code"><?php echo e($val); ?></strong> <span class="ij-curr-badge-symbol"><?php echo e($symbol); ?></span></span>
@@ -3853,11 +4631,11 @@
                                 </svg>Job Auto Close
                             </div>
                             <?php
-                                $currDays = isset($numberDays) && $numberDays != '' ? (string)$numberDays : '60';
-                                if (!in_array($currDays, ['15', '30', '45', '60'])) {
-                                    $currDays = '60';
-                                }
-                            ?>
+                                $currDays = isset($numberDays) && $numberDays != '' ? (string) $numberDays : '60';
+    if (! in_array($currDays, ['15', '30', '45', '60'])) {
+        $currDays = '60';
+    }
+    ?>
                             <div class="form-group-cus">
                                 <div class="ij-choices ij-choices-4 ij-autoclose-choices" role="group" aria-label="Job Auto Close">
                                     <button type="button" class="ij-choice ij-choice-with-icon" data-value="15" aria-pressed="<?php echo ($currDays === '15') ? 'true' : 'false'; ?>">
@@ -4538,54 +5316,54 @@
                     <div class="d-none">
                         <select arial-label="Select Currency" name="salary_currency" id="salary_currency">
                             <?php
-                                foreach ($currency as $key => $val) {
-                                    $sel = '';
-                                    $cur_sc = @$job->min_salary_currency;
-                                    if ($cur_sc === null || $cur_sc === '') {
-                                        if ($currency_code == $val) {
-                                            $sel = 'selected="selected"';
-                                        }
-                                    } elseif ($cur_sc == @$key) {
-                                        $sel = 'selected="selected"';
-                                    }
-                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
-                                }
-                            ?>
+        foreach ($currency as $key => $val) {
+            $sel = '';
+            $cur_sc = @$job->min_salary_currency;
+            if ($cur_sc === null || $cur_sc === '') {
+                if ($currency_code == $val) {
+                    $sel = 'selected="selected"';
+                }
+            } elseif ($cur_sc == @$key) {
+                $sel = 'selected="selected"';
+            }
+            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+            echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.e($cMeta['label']).'</option>';
+        }
+    ?>
                         </select>
                         <input type="number" name="min_salary" id="min_salary" placeholder="From" value="<?php echo @$job->min_salary; ?>">
                         <input type="number" name="exp_ctc" id="exp_ctc" placeholder="To" value="">
                         <select arial-label="Select Annual Salary" name="salary_time_mode" id="salary_time_mode">
                             <?php
-                            foreach ($salaryMode as $key => $val) {
-                                echo '<option value="' . $key . '">' . $val . '</option>';
-                            }
-                            ?>
+    foreach ($salaryMode as $key => $val) {
+        echo '<option value="'.$key.'">'.$val.'</option>';
+    }
+    ?>
                         </select>
                     </div>
                     {{-- Hidden max salary mode (synced from #min_sal_mode by JS) --}}
                     <select name="max_sal_mode" id="max_sal_mode" class="d-none">
                         <?php
                         foreach ($salaryMode as $key => $val) {
-                            echo '<option value="' . $key . '">' . $val . '</option>';
+                            echo '<option value="'.$key.'">'.$val.'</option>';
                         }
-                        ?>
+    ?>
                     </select>
                     {{-- Country allow (kept hidden) --}}
                     <div class="d-none">
                         <select class="form-control select2" id="kt_select2_4" name="kt_select2_4[]" multiple="multiple">
                             <optgroup label="Select Country for Vendor">
                                 <?php
-                                foreach ($countries as $val) {
-                                    $sel = '';
-                                    if (in_array($val->id, $valSelected)) {
-                                        $sel = 'selected';
-                                    } elseif ($val->id == $country) {
-                                        $sel = 'selected';
-                                    }
-                                    echo '<option value="' . $val->id . '" ' . $sel . '>' . ucfirst($val->country_name) . '</option>';
-                                }
-                                ?>
+            foreach ($countries as $val) {
+                $sel = '';
+                if (in_array($val->id, $valSelected)) {
+                    $sel = 'selected';
+                } elseif ($val->id == $country) {
+                    $sel = 'selected';
+                }
+                echo '<option value="'.$val->id.'" '.$sel.'>'.ucfirst($val->country_name).'</option>';
+            }
+    ?>
                             </optgroup>
                         </select>
                     </div>
@@ -5946,10 +6724,12 @@
         // EDIT prefill payloads
         <?php
             $__editQ = [];
-            if (($page_event ?? '') == 'EDIT' && !empty($additionalDetail)) {
-                foreach ($additionalDetail as $aDetailArr) { $__editQ[] = $aDetailArr->detail_value; }
-            }
-        ?>
+    if (($page_event ?? '') == 'EDIT' && ! empty($additionalDetail)) {
+        foreach ($additionalDetail as $aDetailArr) {
+            $__editQ[] = $aDetailArr->detail_value;
+        }
+    }
+    ?>
         var __pageEvent  = "<?php echo @$page_event; ?>";
         var isPageInitialized = false;
         var __editQuestions = {!! json_encode($__editQ) !!};
@@ -12838,16 +13618,18 @@
 
                     <!-- Search & Action Bar -->
                     <div class="ht-drawer-search-bar">
-                        <div class="ht-search-input-wrap">
-                            <i class="la la-search ht-search-icon"></i>
-                            <input type="text" id="hmDrawerSearchInput" class="ht-search-input" placeholder="Search contacts by name, email, designation..." value="${escapeHtml(hmSearchQuery)}" autocomplete="off">
-                            <button type="button" id="hmDrawerSearchClear" class="ht-search-clear" style="${hmSearchQuery ? 'display:flex;' : 'display:none;'}">
-                                <i class="la la-times"></i>
+                        <div class="ht-search-row">
+                            <div class="ht-search-input-wrap">
+                                <i class="la la-search ht-search-icon"></i>
+                                <input type="text" id="hmDrawerSearchInput" class="ht-search-input" placeholder="Search contacts by name, email, designation..." value="${escapeHtml(hmSearchQuery)}" autocomplete="off">
+                                <button type="button" id="hmDrawerSearchClear" class="ht-search-clear" style="${hmSearchQuery ? 'display:flex;' : 'display:none;'}">
+                                    <i class="la la-times"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-light-primary" id="btnDrawerAddContact" style="white-space:nowrap; gap:6px; font-weight:600;">
+                                <i class="la la-user-plus"></i> Add Contact Person
                             </button>
                         </div>
-                        <button type="button" class="btn btn-sm btn-light-primary" id="btnDrawerAddContact" style="white-space:nowrap; gap:6px; font-weight:600;">
-                            <i class="la la-user-plus"></i> Add Contact Person
-                        </button>
                     </div>
 
                     <!-- Section Header -->
@@ -13057,10 +13839,23 @@
                         return;
                     }
 
+                    // Ignore comm button clicks so user can click mailto/tel/whatsapp without toggling assignment
+                    if (e.target.closest('.ht-comm-btn')) {
+                        return;
+                    }
+
                     var assignBtn = e.target.closest('.ht-hm-assign-btn');
                     if (assignBtn) {
                         var id = parseInt(assignBtn.getAttribute('data-hm-id'), 10);
                         var name = assignBtn.getAttribute('data-hm-name');
+                        toggleHiringManagerAssignment(id, name);
+                        return;
+                    }
+
+                    var row = e.target.closest('.ht-contact-row');
+                    if (row) {
+                        var id = parseInt(row.getAttribute('data-hm-id'), 10);
+                        var name = row.getAttribute('data-hm-name');
                         toggleHiringManagerAssignment(id, name);
                         return;
                     }
