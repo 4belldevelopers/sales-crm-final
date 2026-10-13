@@ -206,9 +206,9 @@ class ElasticJobIndex
                                     'client_company_id' => $row->client_company_id,
                                     'company_name' => strtolower($row->company_name),
                                     'logo' => $row->logo
-                                ]
-                            ],
-                            'doc_as_upsert' => true
+                                ],
+                                'doc_as_upsert' => true
+                            ]
                     ]);
                 }
 

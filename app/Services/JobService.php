@@ -419,6 +419,8 @@ class JobService
                                 ->where('company_id', $user->company_id)
                                 ->update(['spok_user_id' => $primaryRecruiterId]);
                         }
+
+                        app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
                     }
                 }
             }
@@ -908,6 +910,8 @@ class JobService
                 if (count($batchRecInsert) > 0) {
                     DB::table('job_assign')->insert($batchRecInsert);
                 }
+
+                app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
             }
 
             // Skills

@@ -3428,12 +3428,17 @@
 
     /* --- Empty States --- */
     .ht-empty-state {
-        display: flex !important;
+        display: flex;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
         padding: 48px 24px !important;
         text-align: center !important;
+    }
+    .ht-empty-state.d-none,
+    .ht-empty-state[style*="display: none"],
+    .ht-empty-state[style*="display:none"] {
+        display: none !important;
     }
     .ht-empty-icon {
         width: 52px !important;
@@ -13032,6 +13037,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             initialRoster = [];
         }
 
+        if (Array.isArray(initialRoster)) {
+            initialRoster.forEach(function(r) {
+                r.baseActiveJobs = (typeof r.activeJobs === 'number') ? r.activeJobs : (parseInt(r.activeJobs, 10) || 0);
+            });
+        }
+
         window.__JERO_ROSTER_DATA__ = initialRoster;
         window.__JERO_ROSTER_VERSION__ = ROSTER_VERSION;
         window.__JERO_WORKLOAD_VERSION__ = WORKLOAD_VERSION;
@@ -13057,12 +13068,25 @@ $currency_code = GeneralMethod::defaultCurrency();
         var hmFilteredList = [];
         var hmIsDrawerOpen = false;
 
+        function getRecruiterCurrentActiveJobs(item, assignedIds) {
+            var base = (typeof item.baseActiveJobs === 'number')
+                ? item.baseActiveJobs
+                : ((typeof item.activeJobs === 'number') ? item.activeJobs : (parseInt(item.activeJobs, 10) || 0));
+            var isAssigned = assignedIds
+                ? assignedIds.has(item.id)
+                : assignedRecruiters.some(function(r) { return r.id === item.id; });
+            return base + (isAssigned ? 1 : 0);
+        }
+
         var broadcast = null;
         try {
             if (typeof BroadcastChannel !== 'undefined') {
                 broadcast = new BroadcastChannel('jero_hiring_team_tenant_' + CURRENT_TENANT_ID);
                 broadcast.onmessage = function(ev) {
                     if (ev.data && ev.data.type === 'ROSTER_SYNC' && Array.isArray(ev.data.roster)) {
+                        ev.data.roster.forEach(function(r) {
+                            r.baseActiveJobs = (typeof r.activeJobs === 'number') ? r.activeJobs : (parseInt(r.activeJobs, 10) || 0);
+                        });
                         rosterList = ev.data.roster;
                         window.__JERO_ROSTER_DATA__ = rosterList;
                         applyRecruiterFilters();
@@ -13176,11 +13200,13 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         function applyRecruiterFilters() {
             var q = recSearchQuery.trim().toLowerCase();
+            var assignedIds = new Set(assignedRecruiters.map(function(r) { return r.id; }));
 
             var list = rosterList.filter(function(item) {
+                var currentActive = getRecruiterCurrentActiveJobs(item, assignedIds);
                 // Workload tab filter
-                if (recFilterTab === 'available' && (item.activeJobs || 0) > 3) return false;
-                if (recFilterTab === 'busy' && (item.activeJobs || 0) <= 3) return false;
+                if (recFilterTab === 'available' && currentActive > 3) return false;
+                if (recFilterTab === 'busy' && currentActive <= 3) return false;
 
                 if (!q) return true;
 
@@ -13209,8 +13235,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (statusA !== statusB) return statusB - statusA;
 
                     // Workload (lower activeJobs first)
-                    var loadA = a.activeJobs || 0;
-                    var loadB = b.activeJobs || 0;
+                    var loadA = getRecruiterCurrentActiveJobs(a, assignedIds);
+                    var loadB = getRecruiterCurrentActiveJobs(b, assignedIds);
                     if (loadA !== loadB) return loadA - loadB;
 
                     // Name alphabetical
@@ -13218,6 +13244,20 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (nameCompare !== 0) return nameCompare;
 
                     return a.id - b.id;
+                });
+            } else {
+                list.sort(function(a, b) {
+                    var statusA = a.active ? 1 : 0;
+                    var statusB = b.active ? 1 : 0;
+                    if (statusA !== statusB) return statusB - statusA;
+
+                    var loadA = getRecruiterCurrentActiveJobs(a, assignedIds);
+                    var loadB = getRecruiterCurrentActiveJobs(b, assignedIds);
+                    if (loadA !== loadB) return loadA - loadB;
+
+                    var nameA = (a.fullName || a.name || '').toLowerCase();
+                    var nameB = (b.fullName || b.name || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
                 });
             }
 
@@ -13243,7 +13283,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         <div class="ht-search-input-wrap">
                             <i class="la la-search ht-search-icon"></i>
                             <input type="text" id="recDrawerSearchInput" class="ht-search-input" placeholder="Search team members by name, role..." value="${escapeHtml(recSearchQuery)}" autocomplete="off" spellcheck="false">
-                            <button type="button" id="recDrawerSearchClear" class="ht-search-clear" style="${recSearchQuery ? 'display:flex;' : 'display:none;'}">
+                            <button type="button" id="recDrawerSearchClear" class="ht-search-clear" style="${recSearchQuery ? 'display:flex !important;' : 'display:none !important;'}">
                                 <i class="la la-times"></i>
                             </button>
                         </div>
@@ -13267,10 +13307,10 @@ $currency_code = GeneralMethod::defaultCurrency();
                             <div id="recVirtualItems" role="presentation"></div>
                             <div id="recVirtualBottomSpacer" style="height:0px;"></div>
                         </div>
-                        <div id="recVirtualEmpty" class="ht-empty-state" style="display:none;">
+                        <div id="recVirtualEmpty" class="ht-empty-state d-none" style="display:none !important;">
                             <div class="ht-empty-icon"><i class="la la-user-slash"></i></div>
                             <div class="ht-empty-title">No team members found</div>
-                            <div class="ht-empty-sub">Try searching with a different name or clear the filter.</div>
+                            <div class="ht-empty-sub" id="recVirtualEmptySub">Try searching with a different name or clear the filter.</div>
                         </div>
                     </div>
                 </div>
@@ -13279,6 +13319,28 @@ $currency_code = GeneralMethod::defaultCurrency();
             renderRecruiterDrawerAssigned();
             renderRecruiterVirtualList();
             bindRecruiterDrawerEvents();
+
+            // Background real-time workload sync (Zero Stale Data, Rule 5)
+            if (typeof fetch === 'function') {
+                fetch("{{ route('service_company.bench-candidates.rm-roster') }}", {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(res) { return res.ok ? res.json() : null; })
+                .then(function(data) {
+                    if (data && data.status === 'success' && Array.isArray(data.team)) {
+                        data.team.forEach(function(r) {
+                            r.baseActiveJobs = (typeof r.activeJobs === 'number') ? r.activeJobs : (parseInt(r.activeJobs, 10) || 0);
+                        });
+                        rosterList = data.team;
+                        window.__JERO_ROSTER_DATA__ = rosterList;
+                        applyRecruiterFilters();
+                        if (recIsDrawerOpen) {
+                            renderRecruiterVirtualList();
+                        }
+                    }
+                })
+                .catch(function() {});
+            }
 
             // Trigger Metronic drawer slide-out with 0 network requests
             $('#kt_activitiesRecruiter_toggle').trigger('click');
@@ -13344,6 +13406,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             var bottomSpacer = document.getElementById('recVirtualBottomSpacer');
             var itemsContainer = document.getElementById('recVirtualItems');
             var emptyState = document.getElementById('recVirtualEmpty');
+            var emptySub = document.getElementById('recVirtualEmptySub');
             var countEl = document.getElementById('recDrawerAvailableCount');
 
             if (!viewport || !topSpacer || !bottomSpacer || !itemsContainer) return;
@@ -13354,11 +13417,27 @@ $currency_code = GeneralMethod::defaultCurrency();
                 topSpacer.style.height = '0px';
                 bottomSpacer.style.height = '0px';
                 itemsContainer.innerHTML = '';
-                if (emptyState) emptyState.style.display = 'flex';
+                if (emptyState) {
+                    emptyState.classList.remove('d-none');
+                    emptyState.style.setProperty('display', 'flex', 'important');
+                }
+                if (emptySub) {
+                    if (rosterList.length === 0) {
+                        emptySub.textContent = 'No recruiters are configured for this organization.';
+                    } else if (recSearchQuery.trim() !== '') {
+                        emptySub.textContent = 'No team members match your search criteria. Try a different name.';
+                    } else {
+                        emptySub.textContent = 'No team members match the selected filter. Try switching tabs.';
+                    }
+                }
                 return;
             }
 
-            if (emptyState) emptyState.style.display = 'none';
+            // CRITICAL: When members exist in the list, empty state must be completely hidden
+            if (emptyState) {
+                emptyState.classList.add('d-none');
+                emptyState.style.setProperty('display', 'none', 'important');
+            }
 
             var totalItems = recFilteredList.length;
             var viewportHeight = viewport.clientHeight || 450;
@@ -13377,7 +13456,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 var actualIndex = startIndex + idx;
                 var isAssigned = assignedIds.has(item.id);
                 var isFocused = (actualIndex === recFocusedIndex);
-                var loadColor = (item.activeJobs || 0) <= 2 ? '#50cd89' : ((item.activeJobs || 0) <= 4 ? '#f6c000' : '#f1416c');
+                var currentActive = getRecruiterCurrentActiveJobs(item, assignedIds);
+                var loadColor = currentActive <= 2 ? '#50cd89' : (currentActive <= 4 ? '#f6c000' : '#f1416c');
 
                 return `
                     <div class="ht-virtual-row ${isAssigned ? 'assigned' : ''} ${isFocused ? 'focused' : ''}"
@@ -13396,7 +13476,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         </div>
                         <div class="ht-row-workload">
                             <span class="ht-workload-tag" style="color:${loadColor}; background:${loadColor}15;">
-                                <i class="la la-briefcase"></i> ${item.activeJobs || 0} active
+                                <i class="la la-briefcase"></i> ${currentActive} active
                             </span>
                         </div>
                         <div class="ht-row-action">
@@ -13439,6 +13519,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             }
 
+            applyRecruiterFilters();
             commitRecruiterChanges();
         }
 
@@ -13465,7 +13546,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     recSearchQuery = this.value;
-                    if (clearBtn) clearBtn.style.display = recSearchQuery ? 'flex' : 'none';
+                    if (clearBtn) clearBtn.style.setProperty('display', recSearchQuery ? 'flex' : 'none', 'important');
                     recScrollTop = 0;
                     if (viewport) viewport.scrollTop = 0;
                     applyRecruiterFilters();
@@ -13477,7 +13558,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 clearBtn.addEventListener('click', function() {
                     recSearchQuery = '';
                     if (searchInput) { searchInput.value = ''; searchInput.focus(); }
-                    clearBtn.style.display = 'none';
+                    clearBtn.style.setProperty('display', 'none', 'important');
                     recScrollTop = 0;
                     if (viewport) viewport.scrollTop = 0;
                     applyRecruiterFilters();
@@ -13567,6 +13648,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         if (assignedRecruiters.length > 0) {
                             assignedRecruiters.forEach(function(r, i) { r.isCaptain = (i === 0); });
                         }
+                        applyRecruiterFilters();
                         commitRecruiterChanges();
                         return;
                     }
@@ -13748,11 +13830,17 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (filtered.length === 0) {
                 listContainer.innerHTML = '';
-                if (emptyState) emptyState.style.display = 'flex';
+                if (emptyState) {
+                    emptyState.classList.remove('d-none');
+                    emptyState.style.setProperty('display', 'flex', 'important');
+                }
                 return;
             }
 
-            if (emptyState) emptyState.style.display = 'none';
+            if (emptyState) {
+                emptyState.classList.add('d-none');
+                emptyState.style.setProperty('display', 'none', 'important');
+            }
 
             var assignedNames = new Set(assignedHiringManagers.map(function(h) { return h.name; }));
 
