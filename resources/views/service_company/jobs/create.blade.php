@@ -455,14 +455,20 @@
     }
     #jrwrap .jero-title-search-icon {
         position: absolute;
-        left: 12px;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
         color: #A1A5B7;
         pointer-events: none;
         transition: color 0.2s;
+        z-index: 2;
     }
+    #jrwrap.internal-job-create input#title.jero-title-input,
+    #jrwrap.internal-job-create .jero-title-input,
+    #jrwrap input#title.jero-title-input,
     #jrwrap .jero-title-input {
         width: 100%;
-        padding-left: 34px !important;
+        padding-left: 40px !important;
         padding-right: 56px !important;
         height: 40px;
         font-size: 13px;
@@ -500,12 +506,20 @@
     }
     #jrwrap .jero-title-chevron {
         position: absolute;
-        right: 10px;
+        right: 12px;
         color: #A1A5B7;
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 4px;
         display: flex;
         align-items: center;
-        transition: transform 0.2s ease, color 0.2s;
+        justify-content: center;
+        border-radius: 4px;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+    }
+    #jrwrap .jero-title-chevron:hover {
+        color: #181C32;
+        background: #F1F1F4;
     }
     #jrwrap .jero-title-select-wrap.is-open .jero-title-chevron {
         transform: rotate(180deg);
@@ -522,6 +536,9 @@
         border-radius: 8px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: min(360px, calc(100vh - 120px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
     }
     #jrwrap .jero-title-dropdown.drop-up {
@@ -535,6 +552,7 @@
     }
     #jrwrap .jero-title-tabs {
         display: flex;
+        flex-shrink: 0;
         gap: 4px;
         padding: 6px 10px;
         background: #FFFFFF;
@@ -575,8 +593,11 @@
         background: rgba(62, 151, 255, 0.15);
     }
     #jrwrap .jero-title-list-container {
+        flex: 1 1 auto;
+        min-height: 60px;
         max-height: min(280px, 42vh);
         overflow-y: auto;
+        overscroll-behavior: contain;
         padding: 4px 0;
         scrollbar-width: thin;
         scrollbar-color: #D1D5DB transparent;
@@ -674,6 +695,7 @@
         align-items: center;
     }
     #jrwrap .jero-title-custom-action {
+        flex-shrink: 0;
         padding: 6px 10px;
         border-top: 1px solid #F1F1F4;
         background: #FAFAFB;
@@ -731,6 +753,7 @@
         font-size: 12px;
     }
     #jrwrap .jero-title-footer {
+        flex-shrink: 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -877,10 +900,18 @@
         position: absolute;
         right: 12px;
         color: #94a3b8;
-        pointer-events: none;
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 4px;
         display: flex;
         align-items: center;
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+        justify-content: center;
+        border-radius: 4px;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+    }
+    #jrwrap .jero-dept-chevron:hover {
+        color: #1e293b;
+        background: #f1f5f9;
     }
     #jrwrap .jero-dept-select-wrap.is-open .jero-dept-chevron {
         transform: rotate(180deg);
@@ -897,7 +928,11 @@
         border-radius: 10px;
         box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: min(340px, calc(100vh - 140px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
+        user-select: none;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
         top: auto;
@@ -910,6 +945,7 @@
     }
     #jrwrap .jero-dept-tabs {
         display: flex;
+        flex-shrink: 0;
         gap: 4px;
         padding: 6px 10px;
         background: #f8fafc;
@@ -954,6 +990,7 @@
     }
     #jrwrap .jero-dept-recent-bar {
         display: flex;
+        flex-shrink: 0;
         align-items: center;
         gap: 6px;
         padding: 6px 12px;
@@ -992,18 +1029,31 @@
         color: #1d4ed8;
     }
     #jrwrap .jero-dept-list-container {
-        max-height: min(300px, 45vh);
+        flex: 1 1 auto;
+        min-height: 80px;
+        max-height: 240px;
         overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
         padding: 4px 0;
         scrollbar-width: thin;
-        scrollbar-color: #cbd5e1 transparent;
+        scrollbar-color: #94a3b8 #f1f5f9;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
-        width: 5px;
+        width: 8px;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: #94a3b8;
         border-radius: 4px;
+        border: 2px solid #f1f5f9;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
     }
     #jrwrap .jero-dept-section-header {
         display: flex;
@@ -1014,13 +1064,14 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: #475569;
-        background: rgba(248, 250, 252, 0.96);
-        backdrop-filter: blur(4px);
+        background: #f8fafc;
         border-top: 1px solid #f1f5f9;
         border-bottom: 1px solid #f1f5f9;
         position: sticky;
         top: 0;
         z-index: 2;
+        pointer-events: none;
+        user-select: none;
     }
     #jrwrap .jero-dept-div-icon {
         display: inline-flex;
@@ -1189,6 +1240,7 @@
     }
     #jrwrap .jero-dept-footer {
         display: flex;
+        flex-shrink: 0;
         justify-content: space-between;
         align-items: center;
         padding: 6px 12px;
@@ -1923,6 +1975,418 @@
         font-size: 10px;
         color: #A1A5B7;
     }
+
+    /* ==========================================================================
+       ENTERPRISE REQUIRED FIELDS MODAL & FIELD VALIDATION ERROR STYLES
+       ========================================================================== */
+    .rf-modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(15, 23, 42, 0.65) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        z-index: 999999 !important;
+        display: none;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
+        box-sizing: border-box !important;
+        animation: rfFadeIn 0.18s ease-out;
+    }
+
+    @keyframes rfFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes rfScaleIn {
+        from { opacity: 0; transform: scale(0.96) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .rf-modal-box {
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        width: 100% !important;
+        max-width: 480px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        padding: 32px 30px 26px !important;
+        position: relative !important;
+        font-family: 'Poppins', sans-serif !important;
+        animation: rfScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-sizing: border-box !important;
+        margin: auto !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .rf-modal-close {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        background: #f1f5f9 !important;
+        border: none !important;
+        color: #64748b !important;
+        font-size: 14px !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.15s ease !important;
+        padding: 0 !important;
+    }
+
+    .rf-modal-close:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+
+    .rf-modal-close svg {
+        stroke: currentColor !important;
+        transition: transform 0.15s ease !important;
+    }
+
+    .rf-modal-close:hover svg {
+        transform: rotate(90deg) !important;
+    }
+
+    .rf-warning-icon-wrap {
+        width: 64px !important;
+        height: 64px !important;
+        border-radius: 50% !important;
+        background: #fef9c3 !important;
+        border: 2px solid #facc15 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 auto 16px !important;
+    }
+
+    .rf-warning-icon {
+        font-size: 30px !important;
+        font-weight: 700 !important;
+        color: #ca8a04 !important;
+        line-height: 1 !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    .rf-modal-title {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        text-align: center !important;
+        margin: 0 0 8px 0 !important;
+        line-height: 1.25 !important;
+    }
+
+    .rf-modal-desc {
+        font-size: 13.5px !important;
+        color: #64748b !important;
+        text-align: center !important;
+        line-height: 1.45 !important;
+        margin: 0 auto 22px !important;
+        max-width: 360px !important;
+    }
+
+    .rf-section-header {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.6px !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        text-align: left !important;
+        margin-bottom: 10px !important;
+    }
+
+    .rf-fields-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        max-height: 240px !important;
+        overflow-y: auto !important;
+        padding-right: 4px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .rf-field-row {
+        background: #fef2f2 !important;
+        border: 1px solid #fee2e2 !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        text-decoration: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .rf-field-row:hover {
+        background: #fee2e2 !important;
+        border-color: #fca5a5 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .rf-field-row-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+    }
+
+    .rf-field-badge {
+        width: 20px !important;
+        height: 20px !important;
+        border-radius: 50% !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        flex-shrink: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .rf-field-name {
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .rf-field-chevron {
+        color: #64748b !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+        margin-left: 8px !important;
+        stroke: currentColor !important;
+        transition: transform 0.15s ease, color 0.15s ease !important;
+    }
+
+    .rf-field-row:hover .rf-field-chevron {
+        color: #0f172a !important;
+        transform: translateX(2px) !important;
+    }
+
+    .rf-helper-text {
+        font-size: 12px !important;
+        color: #64748b !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 20px !important;
+        text-align: left !important;
+    }
+
+    .rf-helper-text svg {
+        font-size: 13px !important;
+        color: #64748b !important;
+        stroke: currentColor !important;
+        flex-shrink: 0 !important;
+    }
+
+    .rf-cta-btn {
+        width: 100% !important;
+        height: 44px !important;
+        background: #1b84ff !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: 'Poppins', sans-serif !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease, transform 0.1s ease !important;
+    }
+
+    .rf-cta-btn:hover {
+        background: #1570ef !important;
+    }
+
+    .rf-cta-btn:active {
+        transform: scale(0.99) !important;
+    }
+
+    /* Field Attention Pulse Highlight */
+    .field-attention-highlight {
+        outline: 2px solid #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease-in-out !important;
+        background-color: rgba(239, 246, 255, 0.5) !important;
+        animation: rfPulseHighlight 0.4s ease-in-out 2;
+    }
+
+    @keyframes rfPulseHighlight {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.008); }
+        100% { transform: scale(1); }
+    }
+
+    /* Inline Field Error Message */
+    .field-error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+        color: #ef4444 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+        animation: fieldErrorFadeIn 0.2s ease-in-out;
+    }
+
+    .field-error-message svg {
+        color: #ef4444 !important;
+        stroke: currentColor !important;
+        flex-shrink: 0 !important;
+    }
+
+    .field-error-message span {
+        color: #dc2626 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+    }
+
+    @keyframes fieldErrorFadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Field Validation Error State Highlights */
+    .has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-client-select-wrap.has-validation-error .jero-client-trigger {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-title-select-wrap.has-validation-error .jero-title-input-box,
+    .jero-title-input-box.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .jero-dept-select-wrap.has-validation-error .jero-dept-input-box,
+    .jero-dept-input-box.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-choices.has-validation-error {
+        border: 1.5px solid #ef4444 !important;
+        border-radius: 10px !important;
+        padding: 3px !important;
+        background: #fef2f2 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+
+    .ij-salary-input-wrapper.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-location-input-wrap.has-validation-error .form-input,
+    .ij-location-input-wrap.has-validation-error .input-with-icon {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .ij-qual-input-wrap.has-validation-error .form-input,
+    .ij-qual-input-wrap.has-validation-error .input-with-icon {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    #jobDescription.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    #skillsWrapper.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .team-section .input-wrapper.has-validation-error .form-input {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+    }
+
+    .r4-visibility-list.has-validation-error {
+        border: 1px solid #ef4444 !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        background: #fef2f2 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+
+    /* Employment Details Experience Range Error Isolation & Visual Excellence */
+    #jrwrap .ij-exp-group.has-validation-error,
+    .ij-exp-group.has-validation-error {
+        border-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+    }
+
+    #jrwrap .ij-exp-error-slot,
+    .ij-exp-error-slot {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        margin-top: 5px !important;
+        width: 100% !important;
+    }
+
+    #jrwrap .ij-exp-error-slot:empty,
+    .ij-exp-error-slot:empty {
+        display: none !important;
+    }
+
+    #jrwrap .ij-exp-error-slot .field-error-message,
+    .ij-exp-error-slot .field-error-message {
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+    }
+
+    #jrwrap .ij-exp-select.has-validation-error,
+    .ij-exp-select.has-validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+        background-color: #fff !important;
+    }
+
+    #jrwrap .ij-exp-select.has-validation-error:focus,
+    .ij-exp-select.has-validation-error:focus {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
+    }
     </style>
     {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
@@ -1931,7 +2395,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261012d">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261013a">
     @endif
 @endpush
 @section('content')
@@ -2163,7 +2627,7 @@
                                             <div class="jero-client-tabs">
                                                 <button type="button" class="jero-tab-btn active" data-filter="all">All Companies <span class="tab-count" id="jero_count_all">0</span></button>
                                                 <button type="button" class="jero-tab-btn" data-filter="internal">My Organization <span class="tab-count" id="jero_count_internal">0</span></button>
-                                                <button type="button" class="jero-tab-btn" data-filter="client">Clients <span class="tab-count" id="jero_count_clients">0</span></button>
+                                                <button type="button" class="jero-tab-btn" data-filter="client">Internal Clients <span class="tab-count" id="jero_count_clients">0</span></button>
                                             </div>
 
                                             <!-- Scrollable Items Container (264px viewport with DOM Virtualization) -->
@@ -2226,6 +2690,7 @@
                                                    name="title" 
                                                    value="<?php echo @$job->title; ?>" 
                                                    placeholder="Search or enter job title" 
+                                                   style="padding-left: 40px !important; padding-right: 56px !important;"
                                                    autocomplete="off" 
                                                    role="combobox" 
                                                    aria-autocomplete="list" 
@@ -2338,7 +2803,7 @@
                                             <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-dept-chevron">
+                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" tabindex="-1">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
                                         </div>
@@ -2419,6 +2884,7 @@
                                             <span class="form-hint">Max</span>
                                         </div>
                                     </div>
+                                    <div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>
                                 </div>
                                 <div class="form-group-cus ij-positions-group">
                                     <label class="form-label required">No. of Positions</label>
@@ -4136,6 +4602,47 @@
         </div>
     </div>
     <!--end::Add Contact Person Drawer-->
+
+    <!-- Enterprise Complete Required Fields Modal -->
+    <div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+        <div class="rf-modal-box">
+            <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <!-- Warning Icon (Yellow circle with exclamation) -->
+            <div class="rf-warning-icon-wrap" aria-hidden="true">
+                <span class="rf-warning-icon">!</span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+
+            <!-- Description -->
+            <p class="rf-modal-desc" id="rfModalDesc">
+                <span id="rfMissingCountText">3 required fields</span> need your attention before you can proceed with this job.
+            </p>
+
+            <!-- Section Heading -->
+            <div class="rf-section-header">REQUIRED FIELDS</div>
+
+            <!-- Interactive Fields List -->
+            <div class="rf-fields-list" id="rfFieldsList">
+            </div>
+
+            <!-- Helper text -->
+            <div class="rf-helper-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Click a field above to jump directly to it.</span>
+            </div>
+
+            <!-- Primary CTA -->
+            <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+                <span>Review Required Fields</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+        </div>
+    </div>
 @endsection
 @push('footer-script')
     {{-- internal-job-create-design.js is loaded at the end of this @push block (just before @endpush)
@@ -4553,6 +5060,9 @@
             var names = jrSplit(val), html = '';
             names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Hiring Manager / HR'), 'removeHiringCard(' + i + ')'); });
             $('#hmCardList').html(html);
+            if (val.trim() && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('hiring_namager');
+            }
         }
         function removeHiringCard(i) {
             var names = jrSplit($('#hiring_namager').val());
@@ -4566,6 +5076,9 @@
             var names = jrSplit(val), html = '';
             names.forEach(function(n, i) { html += jrPersonCard(n, jrDesig(n, 'Recruiter'), 'removeRecruiterCard(' + i + ')'); });
             $('#recruiterCardList').html(html);
+            if (val.trim() && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('recruiter');
+            }
         }
         function removeRecruiterCard(i) {
             var names = jrSplit($('#recruiter').val());
@@ -4986,6 +5499,7 @@
 
         // ---- Auto-fill JD from title (safe client-first execution + AJAX fallback) ----
         function changeautofillfield() {
+            if (window._isApplyingTitleTemplate) return;
             var rawTitle = ($('#title').val() || '').trim();
             if (!rawTitle) return;
 
@@ -5190,16 +5704,23 @@
         });
 
         // ---------- STEP NAVIGATION ----------
-        function goToStep(step) {
+        function goToStep(step, skipValidation) {
             if (step < 1 || step > 4) return;
-            if (step > currentStep) {
+            if (!skipValidation && step > currentStep) {
                 for (var s = currentStep; s < step; s++) {
                     if (!validateStep(s)) return;
                 }
             }
             currentStep = step;
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.close === 'function') {
+                window.JeroDeptIntelligenceEngine.close();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.close === 'function') {
+                window.JeroTitleIntelligenceEngine.close();
+            }
             document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
-            document.getElementById('step' + step).classList.add('active');
+            var stepTarget = document.getElementById('step' + step);
+            if (stepTarget) stepTarget.classList.add('active');
             updateStepper(step);
             if (step === 4) { syncAll(); populateReview(); }
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5215,54 +5736,784 @@
                 else { el.classList.add('pending'); icon.textContent = s; }
             });
         }
-        function validateStep(step) {
-            var val = function(id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
-            var focusEl = function(id) {
-                var el = document.getElementById(id);
-                if (el && (el.style.display === 'none' || el.offsetParent === null)) {
-                    var disp = document.getElementById(id + '_display') || document.getElementById(id + 'Display');
-                    if (disp) el = disp;
-                }
-                if (el && typeof el.focus === 'function') {
-                    try {
-                        el.focus();
-                        el.classList.add('is-invalid');
-                        setTimeout(function() { el.classList.remove('is-invalid'); }, 2500);
-                    } catch (e) {}
-                }
-            };
-            var fail = function(id, msg) { showToast(msg, 'error'); focusEl(id); return false; };
 
-            if (step === 1) {
-                if (!val('client_id'))          return fail('client_id', 'Please select a Hiring Organization');
-                if (!val('address_id'))         return fail('address_id', 'Please select an Address');
-                if (!val('title'))              return fail('title', 'Please enter the Job Title / Designation');
-                if (!val('category_id'))        return fail('category_id', 'Please select a Job Department');
-                if (val('min_exp') === '')      return fail('min_exp', 'Please select Minimum Experience');
-                if (val('max_exp') === '')      return fail('max_exp', 'Please select Maximum Experience');
-                if (!val('total_positions'))    return fail('total_positions', 'Please select No. of Positions');
-                if (!val('employment_type'))    return fail('employment_type', 'Please select Position Type');
-                if (selectedCities.length === 0) { showToast('Please select at least one job location', 'error'); focusEl('citySearch'); return false; }
-                if (!val('work_from_home'))     return fail('work_from_home', 'Please select Work Mode');
-                if (!val('work_shifts'))        return fail('work_shifts', 'Please select Work Shift');
-                if (!val('min_salary_currency')) return fail('min_salary_currency', 'Please select Minimum Salary currency');
-                if (val('minimum_salary') === '') return fail('minimum_salary', 'Please enter Minimum Salary');
-                if (!val('max_salary_currency')) return fail('max_salary_currency', 'Please select Maximum Salary currency');
-                if (val('maximum_salary') === '') return fail('maximum_salary', 'Please enter Maximum Salary');
-                if (!val('min_sal_mode'))       return fail('min_sal_mode', 'Please select Salary Type');
-                if (qualifications.length === 0) { showToast('Please add at least one Qualification', 'error'); focusEl('qualSearch'); return false; }
-                if (!val('end_date'))           return fail('end_date', 'Please select the auto-close duration');
-                if (!val('hiring_namager'))     return fail('hmSearchDisplay', 'Please select the Hiring Manager / HR');
-                if (!val('recruiter'))          return fail('recSearchDisplay', 'Please select your team for this job');
+        // ---------- ENTERPRISE VALIDATION ENGINE ----------
+        var jobFieldConfigMap = {
+            // Step 1: Basic Details
+            client_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Hiring Organization',
+                selector: '#jero_client_select_wrap',
+                highlightSelector: '#jero_client_select_wrap',
+                focusSelector: '#jero_client_trigger',
+                validate: function() {
+                    var val = ($('#client_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select a Hiring Organization.'
+            },
+            address_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Workplace Address',
+                selector: '#address_id',
+                highlightSelector: '#address_id',
+                focusSelector: '#address_id',
+                validate: function() {
+                    var val = ($('#address_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select an Address.'
+            },
+            title: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Title / Designation',
+                selector: '#jero_title_select_wrap',
+                highlightSelector: '#jero_title_select_wrap',
+                focusSelector: '#title',
+                validate: function() {
+                    var val = ($('#title').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please enter the Job Title / Designation.'
+            },
+            category_id: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Department',
+                selector: '#jero_dept_select_wrap',
+                highlightSelector: '#jero_dept_select_wrap',
+                focusSelector: '#category_id_display',
+                validate: function() {
+                    var val = ($('#category_id').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select a Job Department.'
+            },
+            min_exp: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Minimum Experience',
+                selector: '#min_exp',
+                highlightSelector: '#min_exp',
+                focusSelector: '#min_exp',
+                validate: function() {
+                    var val = $('#min_exp').val();
+                    return val !== null && val !== '';
+                },
+                message: 'Please select Minimum Experience.'
+            },
+            max_exp: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Maximum Experience',
+                selector: '#max_exp',
+                highlightSelector: '#max_exp',
+                focusSelector: '#max_exp',
+                validate: function() {
+                    var min = $('#min_exp').val();
+                    var max = $('#max_exp').val();
+                    if (max === null || max === '') return false;
+                    if (min !== null && min !== '' && parseInt(min, 10) > parseInt(max, 10)) return false;
+                    return true;
+                },
+                message: function() {
+                    var min = $('#min_exp').val();
+                    var max = $('#max_exp').val();
+                    if (min !== null && min !== '' && max !== null && max !== '' && parseInt(min, 10) > parseInt(max, 10)) {
+                        return 'Maximum experience must be greater than or equal to minimum experience.';
+                    }
+                    return 'Please select Maximum Experience.';
+                }
+            },
+            total_positions: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'No. of Positions',
+                selector: '#total_positions',
+                highlightSelector: '#total_positions',
+                focusSelector: '#total_positions',
+                validate: function() {
+                    var val = ($('#total_positions').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select No. of Positions.'
+            },
+            employment_type: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Position Type',
+                selector: '.ij-position-type-card .ij-choices',
+                highlightSelector: '.ij-position-type-card',
+                focusSelector: '.ij-position-type-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#employment_type').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Position Type.'
+            },
+            location: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Job Locations',
+                selector: '.ij-location-card .ij-location-input-wrap',
+                highlightSelector: '.ij-location-card',
+                focusSelector: '#citySearch',
+                validate: function() {
+                    return typeof selectedCities !== 'undefined' && Array.isArray(selectedCities) && selectedCities.length > 0;
+                },
+                message: 'Please select at least one job location.'
+            },
+            work_from_home: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Work Mode',
+                selector: '.ij-work-mode-card .ij-choices',
+                highlightSelector: '.ij-work-mode-card',
+                focusSelector: '.ij-work-mode-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#work_from_home').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Work Mode.'
+            },
+            work_shifts: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Work Shift',
+                selector: '.ij-work-shift-card .ij-choices',
+                highlightSelector: '.ij-work-shift-card',
+                focusSelector: '.ij-work-shift-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#work_shifts').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Work Shift.'
+            },
+            minimum_salary: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Minimum Salary',
+                selector: '#minSalaryWrap',
+                highlightSelector: '#minSalaryWrap',
+                focusSelector: '#minimum_salary',
+                validate: function() {
+                    var val = ($('#minimum_salary').val() || '').trim();
+                    return val !== '' && !isNaN(val) && parseFloat(val) >= 0;
+                },
+                message: 'Please enter Minimum Salary.'
+            },
+            maximum_salary: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Maximum Salary',
+                selector: '#maxSalaryWrap',
+                highlightSelector: '#maxSalaryWrap',
+                focusSelector: '#maximum_salary',
+                validate: function() {
+                    var min = ($('#minimum_salary').val() || '').trim();
+                    var max = ($('#maximum_salary').val() || '').trim();
+                    if (max === '' || isNaN(max) || parseFloat(max) < 0) return false;
+                    if (min !== '' && !isNaN(min) && parseFloat(max) < parseFloat(min)) return false;
+                    return true;
+                },
+                message: function() {
+                    var min = ($('#minimum_salary').val() || '').trim();
+                    var max = ($('#maximum_salary').val() || '').trim();
+                    if (min !== '' && !isNaN(min) && max !== '' && !isNaN(max) && parseFloat(max) < parseFloat(min)) {
+                        return 'Maximum salary must be greater than or equal to minimum salary.';
+                    }
+                    return 'Please enter Maximum Salary.';
+                }
+            },
+            min_sal_mode: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Salary Type',
+                selector: '#min_sal_mode',
+                highlightSelector: '#min_sal_mode',
+                focusSelector: '#min_sal_mode',
+                validate: function() {
+                    var val = ($('#min_sal_mode').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select Salary Type.'
+            },
+            qualification: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Qualifications',
+                selector: '.ij-qual-card .ij-qual-input-wrap',
+                highlightSelector: '.ij-qual-card',
+                focusSelector: '#qualSearch',
+                validate: function() {
+                    return typeof qualifications !== 'undefined' && Array.isArray(qualifications) && qualifications.length > 0;
+                },
+                message: 'Please add at least one Qualification.'
+            },
+            end_date: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Auto Close Duration',
+                selector: '.ij-autoclose-card .ij-choices',
+                highlightSelector: '.ij-autoclose-card',
+                focusSelector: '.ij-autoclose-card .ij-choices button:first',
+                validate: function() {
+                    var val = ($('#end_date').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select the auto-close duration.'
+            },
+            hiring_namager: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Hiring Manager / HR',
+                selector: '.ij-hiring-team-card .team-section:first-child .input-wrapper',
+                highlightSelector: '.ij-hiring-team-card .team-section:first-child',
+                focusSelector: '#hmSearchDisplay',
+                validate: function() {
+                    var val = ($('#hiring_namager').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select the Hiring Manager / HR for this job.'
+            },
+            recruiter: {
+                step: 1,
+                stepName: 'Basic Details',
+                label: 'Assigned Recruiter / Team',
+                selector: '.ij-hiring-team-card .team-section:last-child .input-wrapper',
+                highlightSelector: '.ij-hiring-team-card .team-section:last-child',
+                focusSelector: '#recSearchDisplay',
+                validate: function() {
+                    var val = ($('#recruiter').val() || '').trim();
+                    return !!val;
+                },
+                message: 'Please select your internal team for this job.'
+            },
+
+            // Step 2: Job Description
+            jobDescription: {
+                step: 2,
+                stepName: 'Job Description',
+                label: 'Job Description',
+                selector: '#jobDescription',
+                highlightSelector: '#step2 .card:first-child',
+                focusSelector: '#jobDescription',
+                validate: function() {
+                    var descEl = document.getElementById('jobDescription');
+                    var descText = descEl ? (descEl.innerText || descEl.textContent || '').trim() : '';
+                    return !!descText;
+                },
+                message: 'Please enter the Job Description.'
+            },
+            skills: {
+                step: 2,
+                stepName: 'Job Description',
+                label: 'Key Skills',
+                selector: '#skillsWrapper',
+                highlightSelector: '#step2 .card:last-child',
+                focusSelector: '#skillsInput',
+                validate: function() {
+                    return typeof skills !== 'undefined' && Array.isArray(skills) && skills.length > 0;
+                },
+                message: 'Please add at least one Key Skill.'
+            },
+
+            // Step 3: Screening Questions
+            screeningQuestions: {
+                step: 3,
+                stepName: 'Screening Questions',
+                label: 'Screening Questions',
+                selector: '#questionsList',
+                highlightSelector: '#step3 .card',
+                focusSelector: '#step3 .add-question-area',
+                validate: function() {
+                    if (typeof questions === 'undefined' || !Array.isArray(questions) || questions.length === 0) {
+                        return true;
+                    }
+                    var hasEmpty = questions.some(function(q) {
+                        return !q || !q.text || !String(q.text).trim();
+                    });
+                    return !hasEmpty;
+                },
+                message: 'Please ensure all added screening questions have text specified.'
+            },
+
+            // Step 4: Review & Publish
+            visibility: {
+                step: 4,
+                stepName: 'Review & Publish',
+                label: 'Publishing Visibility',
+                selector: '.r4-visibility-list',
+                highlightSelector: '.r4-card-blue',
+                focusSelector: '.r4-visibility-list input[type="checkbox"]:first',
+                validate: function() {
+                    var c1 = $('input[name="visibility_career"]').is(':checked');
+                    var c2 = $('input[name="visibility_marketplace"]').is(':checked');
+                    var c3 = $('input[name="visibility_internal"]').is(':checked');
+                    return c1 || c2 || c3;
+                },
+                message: 'Please select at least one publishing visibility option.'
             }
-            if (step === 2) {
-                var descEl = document.getElementById('jobDescription');
-                var descText = descEl ? (descEl.innerText || descEl.textContent || '').trim() : '';
-                if (descText === '') { showToast('Please enter the Job Description', 'error'); focusEl('jobDescription'); return false; }
-                if (skills.length === 0) { showToast('Please add at least one Key Skill', 'error'); focusEl('skillsInput'); return false; }
+        };
+
+        function detectJobMissingFields(stepFilter) {
+            var missing = [];
+            for (var key in jobFieldConfigMap) {
+                if (!jobFieldConfigMap.hasOwnProperty(key)) continue;
+                var cfg = jobFieldConfigMap[key];
+                if (stepFilter && stepFilter !== 'all' && cfg.step !== stepFilter) {
+                    continue;
+                }
+                var isValid = false;
+                try {
+                    isValid = cfg.validate();
+                } catch (e) {
+                    isValid = false;
+                }
+                if (!isValid) {
+                    var msg = typeof cfg.message === 'function' ? cfg.message() : cfg.message;
+                    missing.push({
+                        key: key,
+                        label: cfg.label,
+                        step: cfg.step,
+                        stepName: cfg.stepName,
+                        selector: cfg.selector,
+                        highlightSelector: cfg.highlightSelector,
+                        focusSelector: cfg.focusSelector,
+                        message: msg
+                    });
+                }
+            }
+            return missing;
+        }
+
+        function applyFieldValidationErrors(missingFields) {
+            if (!Array.isArray(missingFields)) return;
+
+            // Ensure experience error slot exists inside .ij-exp-group and not in the grid
+            var $expSlot = $('#ijExpErrorSlot');
+            if (!$expSlot.length && $('.ij-exp-group').length) {
+                $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                $expSlot = $('#ijExpErrorSlot');
+            }
+
+            missingFields.forEach(function(f) {
+                var $target = $(f.selector);
+                if (!$target.length) {
+                    $target = $('#' + f.key);
+                }
+                if (!$target.length) {
+                    $target = $('[name="' + f.key + '"]');
+                }
+
+                if (f.key === 'min_exp' || f.key === 'max_exp') {
+                    $('#' + f.key).addClass('has-validation-error');
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                } else {
+                    $target.addClass('has-validation-error');
+                }
+
+                if (f.key === 'title') {
+                    $('#title').addClass('has-validation-error');
+                    $('#jero_title_input_box').addClass('has-validation-error');
+                } else if (f.key === 'category_id') {
+                    $('#category_id_display').addClass('has-validation-error');
+                    $('.jero-dept-input-box').addClass('has-validation-error');
+                } else if (f.key === 'client_id') {
+                    $('#jero_client_trigger').addClass('has-validation-error');
+                } else if (f.key === 'minimum_salary' || f.key === 'maximum_salary') {
+                    $('#' + f.key).addClass('has-validation-error');
+                }
+
+                var errorHtml = '<div class="field-error-message" data-field-error="' + f.key + '">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                    '</svg>' +
+                    '<span>' + f.message + '</span>' +
+                    '</div>';
+
+                if (!$('[data-field-error="' + f.key + '"]').length) {
+                    if (f.key === 'min_exp' || f.key === 'max_exp') {
+                        if ($expSlot && $expSlot.length) {
+                            $expSlot.append(errorHtml);
+                        } else {
+                            $('.ij-exp-group').append(errorHtml);
+                        }
+                    } else if (f.key === 'location') {
+                        $('.ij-location-card .ij-location-input-wrap').after(errorHtml);
+                    } else if (f.key === 'qualification') {
+                        $('.ij-qual-card .ij-qual-input-wrap').after(errorHtml);
+                    } else if (f.key === 'skills') {
+                        $('#skillsWrapper').after(errorHtml);
+                    } else if (f.key === 'jobDescription') {
+                        $('#jobDescription').after(errorHtml);
+                    } else if (f.key === 'employment_type') {
+                        var $ptTarget = $('.ij-position-type-card .ij-choices');
+                        if (!$ptTarget.length) $ptTarget = $('.ij-employment-card .ij-choices');
+                        $ptTarget.after(errorHtml);
+                    } else if (f.key === 'work_from_home') {
+                        $('.ij-work-mode-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'work_shifts') {
+                        $('.ij-work-shift-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'end_date') {
+                        $('.ij-autoclose-card .ij-choices').after(errorHtml);
+                    } else if (f.key === 'hiring_namager') {
+                        $('.ij-hiring-team-card .team-section:first-child .input-wrapper').after(errorHtml);
+                    } else if (f.key === 'recruiter') {
+                        $('.ij-hiring-team-card .team-section:last-child .input-wrapper').after(errorHtml);
+                    } else if (f.key === 'visibility') {
+                        $('.r4-visibility-list').after(errorHtml);
+                    } else if ($target.length) {
+                        $target.after(errorHtml);
+                    }
+                }
+            });
+        }
+
+        function clearFieldValidationErrors(targetKey) {
+            if (targetKey) {
+                if (targetKey === 'min_exp') {
+                    var minVal = $('#min_exp').val();
+                    if (minVal !== null && minVal !== '') {
+                        $('#min_exp').removeClass('has-validation-error');
+                        $('[data-field-error="min_exp"]').remove();
+                    }
+                    var maxVal = $('#max_exp').val();
+                    if (maxVal !== null && maxVal !== '' && minVal !== null && minVal !== '' && parseInt(minVal, 10) > parseInt(maxVal, 10)) {
+                        $('#max_exp').addClass('has-validation-error');
+                        var maxErrMsg = 'Maximum experience must be greater than or equal to minimum experience.';
+                        if ($('[data-field-error="max_exp"]').length) {
+                            $('[data-field-error="max_exp"] span').text(maxErrMsg);
+                        } else {
+                            var expErrHtml = '<div class="field-error-message" data-field-error="max_exp">' +
+                                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                                '</svg>' +
+                                '<span>' + maxErrMsg + '</span>' +
+                                '</div>';
+                            var $slot = $('#ijExpErrorSlot');
+                            if (!$slot.length) {
+                                $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                                $slot = $('#ijExpErrorSlot');
+                            }
+                            $slot.append(expErrHtml);
+                        }
+                    } else if (maxVal !== null && maxVal !== '') {
+                        $('#max_exp').removeClass('has-validation-error');
+                        $('[data-field-error="max_exp"]').remove();
+                    }
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    return;
+                } else if (targetKey === 'max_exp') {
+                    var maxVal = $('#max_exp').val();
+                    var minVal = $('#min_exp').val();
+                    if (maxVal !== null && maxVal !== '') {
+                        if (minVal !== null && minVal !== '' && parseInt(minVal, 10) > parseInt(maxVal, 10)) {
+                            $('#max_exp').addClass('has-validation-error');
+                            var maxErrMsg = 'Maximum experience must be greater than or equal to minimum experience.';
+                            if ($('[data-field-error="max_exp"]').length) {
+                                $('[data-field-error="max_exp"] span').text(maxErrMsg);
+                            } else {
+                                var expErrHtml = '<div class="field-error-message" data-field-error="max_exp">' +
+                                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                    '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+                                    '</svg>' +
+                                    '<span>' + maxErrMsg + '</span>' +
+                                    '</div>';
+                                var $slot = $('#ijExpErrorSlot');
+                                if (!$slot.length) {
+                                    $('.ij-exp-group').append('<div class="ij-exp-error-slot" id="ijExpErrorSlot"></div>');
+                                    $slot = $('#ijExpErrorSlot');
+                                }
+                                $slot.append(expErrHtml);
+                            }
+                        } else {
+                            $('#max_exp').removeClass('has-validation-error');
+                            $('[data-field-error="max_exp"]').remove();
+                        }
+                    }
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    return;
+                } else if (targetKey === 'experience') {
+                    $('.ij-exp-group').removeClass('has-validation-error');
+                    $('#min_exp').removeClass('has-validation-error');
+                    $('#max_exp').removeClass('has-validation-error');
+                    $('[data-field-error="min_exp"]').remove();
+                    $('[data-field-error="max_exp"]').remove();
+                    return;
+                }
+
+                $('[data-field-error="' + targetKey + '"]').remove();
+                if (targetKey === 'client_id') {
+                    $('#jero_client_select_wrap').removeClass('has-validation-error');
+                    $('#jero_client_trigger').removeClass('has-validation-error');
+                } else if (targetKey === 'title') {
+                    $('#title').removeClass('has-validation-error');
+                    $('#jero_title_input_box').removeClass('has-validation-error');
+                    $('#jero_title_select_wrap').removeClass('has-validation-error');
+                } else if (targetKey === 'category_id') {
+                    $('#category_id_display').removeClass('has-validation-error');
+                    $('.jero-dept-input-box').removeClass('has-validation-error');
+                    $('#jero_dept_select_wrap').removeClass('has-validation-error');
+                } else if (targetKey === 'location') {
+                    $('.ij-location-card .ij-location-input-wrap').removeClass('has-validation-error');
+                    $('#citySearch').removeClass('has-validation-error');
+                } else if (targetKey === 'qualification') {
+                    $('.ij-qual-card .ij-qual-input-wrap').removeClass('has-validation-error');
+                    $('#qualSearch').removeClass('has-validation-error');
+                } else if (targetKey === 'skills') {
+                    $('#skillsWrapper').removeClass('has-validation-error');
+                    $('#skillsInput').removeClass('has-validation-error');
+                } else if (targetKey === 'jobDescription') {
+                    $('#jobDescription').removeClass('has-validation-error');
+                } else if (targetKey === 'employment_type') {
+                    $('.ij-position-type-card .ij-choices').removeClass('has-validation-error');
+                    $('.ij-employment-card .ij-choices').removeClass('has-validation-error');
+                    $('#employment_type').removeClass('has-validation-error');
+                } else if (targetKey === 'work_from_home') {
+                    $('.ij-work-mode-card .ij-choices').removeClass('has-validation-error');
+                    $('#work_from_home').removeClass('has-validation-error');
+                } else if (targetKey === 'work_shifts') {
+                    $('.ij-work-shift-card .ij-choices').removeClass('has-validation-error');
+                    $('#work_shifts').removeClass('has-validation-error');
+                } else if (targetKey === 'end_date') {
+                    $('.ij-autoclose-card .ij-choices').removeClass('has-validation-error');
+                    $('#end_date').removeClass('has-validation-error');
+                } else if (targetKey === 'minimum_salary' || targetKey === 'maximum_salary' || targetKey === 'salary') {
+                    $('#minSalaryWrap').removeClass('has-validation-error');
+                    $('#maxSalaryWrap').removeClass('has-validation-error');
+                    $('#minimum_salary').removeClass('has-validation-error');
+                    $('#maximum_salary').removeClass('has-validation-error');
+                    $('[data-field-error="minimum_salary"]').remove();
+                    $('[data-field-error="maximum_salary"]').remove();
+                } else if (targetKey === 'hiring_namager') {
+                    $('.ij-hiring-team-card .team-section:first-child .input-wrapper').removeClass('has-validation-error');
+                    $('#hmSearchDisplay').removeClass('has-validation-error');
+                } else if (targetKey === 'recruiter') {
+                    $('.ij-hiring-team-card .team-section:last-child .input-wrapper').removeClass('has-validation-error');
+                    $('#recSearchDisplay').removeClass('has-validation-error');
+                } else if (targetKey === 'visibility') {
+                    $('.r4-visibility-list').removeClass('has-validation-error');
+                } else {
+                    $('#' + targetKey).removeClass('has-validation-error');
+                    $('[name="' + targetKey + '"]').removeClass('has-validation-error');
+                }
+            } else {
+                $('.has-validation-error').removeClass('has-validation-error');
+                $('.field-error-message').remove();
+                $('#ijExpErrorSlot').empty();
+            }
+        }
+
+        function showRequiredFieldsModal(missingFields) {
+            if (!missingFields || !missingFields.length) return;
+            window.__currentJobMissingFields = missingFields;
+
+            var count = missingFields.length;
+            var countText = count === 1 ? '1 required field' : (count + ' required fields');
+            var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can proceed with this job.';
+
+            $('#rfMissingCountText').text(countText);
+            $('#rfModalDesc').text(descText);
+
+            var $list = $('#rfFieldsList');
+            $list.empty();
+
+            missingFields.forEach(function(f) {
+                var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">' +
+                    '<div class="rf-field-row-left">' +
+                    '<span class="rf-field-badge" aria-hidden="true">!</span>' +
+                    '<div style="display:flex; flex-direction:column; gap:2px; min-width:0; text-align:left;">' +
+                    '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>' +
+                    '<span style="font-size:11px; color:#64748b; font-weight:500;">Step ' + f.step + ': ' + f.stepName + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>' +
+                    '</div>';
+                $list.append(rowHtml);
+            });
+
+            var $modal = $('#requiredFieldsModal');
+            $modal.fadeIn(150, function() {
+                $('#rfPrimaryCta').focus();
+            });
+        }
+
+        function closeRequiredFieldsModal() {
+            $('#requiredFieldsModal').fadeOut(120);
+        }
+
+        function jumpToField(fieldKey) {
+            closeRequiredFieldsModal();
+
+            var cfg = jobFieldConfigMap[fieldKey];
+            if (!cfg) return;
+
+            var step = cfg.step;
+            if (typeof goToStep === 'function' && typeof currentStep !== 'undefined' && currentStep !== step) {
+                goToStep(step, true);
+            }
+
+            setTimeout(function() {
+                var highlightEl = null;
+                var focusTarget = null;
+
+                if (cfg.highlightSelector) {
+                    highlightEl = document.querySelector(cfg.highlightSelector);
+                }
+                if (!highlightEl && cfg.selector) {
+                    highlightEl = document.querySelector(cfg.selector);
+                }
+                if (cfg.focusSelector) {
+                    focusTarget = document.querySelector(cfg.focusSelector);
+                }
+                if (!focusTarget && highlightEl) {
+                    focusTarget = highlightEl;
+                }
+
+                if (highlightEl) {
+                    highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    $(highlightEl).addClass('field-attention-highlight');
+                    setTimeout(function() {
+                        $(highlightEl).removeClass('field-attention-highlight');
+                    }, 3000);
+                }
+
+                setTimeout(function() {
+                    if (fieldKey === 'client_id') {
+                        var trigger = document.getElementById('jero_client_trigger');
+                        if (trigger) {
+                            trigger.focus();
+                            trigger.click();
+                        }
+                    } else if (fieldKey === 'category_id') {
+                        var deptInput = document.getElementById('category_id_display');
+                        if (deptInput) deptInput.focus();
+                    } else if (fieldKey === 'hiring_namager') {
+                        var hmToggle = document.querySelector('.hr_manager_add');
+                        if (hmToggle) hmToggle.click();
+                    } else if (fieldKey === 'recruiter') {
+                        var recToggle = document.querySelector('.team_manager_add');
+                        if (recToggle) recToggle.click();
+                    } else if (focusTarget && typeof focusTarget.focus === 'function') {
+                        try { focusTarget.focus(); } catch (e) {}
+                    }
+                }, 350);
+            }, 150);
+        }
+
+        function validateStep(step) {
+            clearFieldValidationErrors();
+            var missing = detectJobMissingFields(step);
+            if (missing.length > 0) {
+                applyFieldValidationErrors(missing);
+                showRequiredFieldsModal(missing);
+                return false;
             }
             return true;
         }
+
+        function validateAllSteps() {
+            clearFieldValidationErrors();
+            var missing = detectJobMissingFields('all');
+            if (missing.length > 0) {
+                applyFieldValidationErrors(missing);
+                showRequiredFieldsModal(missing);
+                return false;
+            }
+            return true;
+        }
+
+        // Modal event listeners
+        $(document).on('click', '#rfModalClose', function(e) {
+            e.preventDefault();
+            closeRequiredFieldsModal();
+        });
+
+        $(document).on('click', '#requiredFieldsModal', function(e) {
+            if (e.target === this) {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        $(document).on('click', '.rf-field-row', function(e) {
+            e.preventDefault();
+            var key = $(this).data('field-key');
+            if (key) {
+                jumpToField(key);
+            }
+        });
+
+        $(document).on('keydown', '.rf-field-row', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                var key = $(this).data('field-key');
+                if (key) {
+                    jumpToField(key);
+                }
+            }
+        });
+
+        $(document).on('click', '#rfPrimaryCta', function(e) {
+            e.preventDefault();
+            if (window.__currentJobMissingFields && window.__currentJobMissingFields.length) {
+                jumpToField(window.__currentJobMissingFields[0].key);
+            } else {
+                closeRequiredFieldsModal();
+            }
+        });
+
+        // Real-time error clearing listeners
+        $(document).on('input change focus', 'input, select, textarea, [contenteditable="true"]', function() {
+            var $this = $(this);
+            var key = $this.attr('name') || $this.attr('id');
+            if ($this.hasClass('has-validation-error')) {
+                $this.removeClass('has-validation-error');
+            }
+            var $wrap = $this.closest('.has-validation-error');
+            if ($wrap.length) {
+                $wrap.removeClass('has-validation-error');
+            }
+            if (key) {
+                clearFieldValidationErrors(key);
+            }
+        });
+
+        $(document).on('click', '.ij-choice', function() {
+            var $group = $(this).closest('.ij-choices');
+            if ($group.length) {
+                $group.removeClass('has-validation-error');
+            }
+            var select = $(this).closest('.card-body').find('select');
+            if (select.length && select.attr('id')) {
+                clearFieldValidationErrors(select.attr('id'));
+            }
+        });
+
+        $(document).on('input keyup', '#jobDescription', function() {
+            var text = ($('#jobDescription').text() || '').trim();
+            if (text) {
+                clearFieldValidationErrors('jobDescription');
+            }
+        });
+
+        $(document).on('change', '.r4-visibility-list input[type="checkbox"]', function() {
+            var c1 = $('input[name="visibility_career"]').is(':checked');
+            var c2 = $('input[name="visibility_marketplace"]').is(':checked');
+            var c3 = $('input[name="visibility_internal"]').is(':checked');
+            if (c1 || c2 || c3) {
+                clearFieldValidationErrors('visibility');
+            }
+        });
 
         // ---------- CREATE OPTIONS (mock) ----------
         function selectOption(el, type) {
@@ -5798,6 +7049,9 @@
             }
             syncCities();
             renderPopularPills();
+            if (selectedCities.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('location');
+            }
         }
 
         function syncCities() {
@@ -6183,6 +7437,9 @@
             }
             syncQual();
             renderQuickQualPills();
+            if (qualifications.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('qualification');
+            }
         }
 
         function syncQual() {
@@ -6212,6 +7469,9 @@
             input.insertAdjacentHTML('beforebegin', tags);
             input.value = '';
             syncSkills();
+            if (skills.length > 0 && typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('skills');
+            }
         }
         function syncSkills() { document.getElementById('tags').value = JSON.stringify(skills.map(function(s) { return { value: s }; })); }
 
@@ -6224,6 +7484,9 @@
                 var text = editor.innerText || '';
                 document.getElementById('charCount').textContent = text.length + ' characters';
                 syncDescription();
+                if (text.trim() && typeof clearFieldValidationErrors === 'function') {
+                    clearFieldValidationErrors('jobDescription');
+                }
             });
         }
 
@@ -6521,6 +7784,8 @@
 
         // ---------- PUBLISH (real submit) ----------
         function publishJob() {
+            if (typeof validateAllSteps === 'function' && !validateAllSteps()) return;
+
             var checkboxes = document.querySelectorAll('.summary-check input');
             var allChecked = true; checkboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
             if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
@@ -7591,6 +8856,9 @@
             updateTriggerUI(id);
             closePopover();
             recordClientSelection(id);
+            if (typeof clearFieldValidationErrors === 'function') {
+                clearFieldValidationErrors('client_id');
+            }
 
             // Option A Pre-Distributed Envelope Address Resolution (Synchronous, Zero Network!)
             if (client.loc && Array.isArray(client.loc) && client.loc.length > 0) {
@@ -8184,6 +9452,12 @@
         var undoTimer = null;
         var pendingTemplateItem = null;
         var indexBroadcast = null;
+        var TAB_SESSION_ID = Math.random().toString(36).substring(2, 10);
+        var lastSyncTimestamp = 0;
+        var isApplyingTemplate = false;
+        var isEventListenersInitialized = false;
+        var inputDebounceTimer = null;
+        var inputRafId = null;
 
         // Synonym Intelligence Dictionary
         var TITLE_SYNONYMS = {
@@ -8306,14 +9580,18 @@
         }
 
         // =========================================================================
-        // Token Prefix Indexing & Multi-Tier Scoring Engine
+        // Token Indexing & Multi-Tier Safe Scoring Engine (Freeze-Proof Execution)
         // =========================================================================
         function buildInvertedIndex(list) {
             tokenIndex.clear();
             titlesMap.clear();
 
-            for (var i = 0; i < list.length; i++) {
+            if (!Array.isArray(list)) return;
+            var maxItems = Math.min(list.length, 5000);
+
+            for (var i = 0; i < maxItems; i++) {
                 var item = list[i];
+                if (!item || !item.id || !item.title) continue;
                 titlesMap.set(item.id, item);
 
                 var cleanText = ((item.title || '') + ' ' + (item.dept_name || '')).toLowerCase();
@@ -8321,12 +9599,11 @@
 
                 for (var w = 0; w < words.length; w++) {
                     var word = words[w];
-                    for (var len = 2; len <= word.length; len++) {
-                        var prefix = word.substring(0, len);
-                        var idSet = tokenIndex.get(prefix);
+                    if (word.length >= 2) {
+                        var idSet = tokenIndex.get(word);
                         if (!idSet) {
                             idSet = new Set();
-                            tokenIndex.set(prefix, idSet);
+                            tokenIndex.set(word, idSet);
                         }
                         idSet.add(item.id);
                     }
@@ -8354,7 +9631,8 @@
             return v0[bl];
         }
 
-        function scoreCandidate(item, query, queryTokens, recentIdSet) {
+        function scoreCandidate(item, query, queryTokens, recentIdSet, allowFuzzy) {
+            if (!item || !item.title) return 0;
             var score = 0;
             var titleLower = (item.title || '').toLowerCase();
 
@@ -8396,13 +9674,16 @@
             // 4. Recency Bonus
             if (recentIdSet.has(item.id)) score += 35;
 
-            // 5. Typo tolerance fallback if score is low
-            if (score < 40 && query.length >= 4) {
+            // 5. Typo tolerance fallback: strictly bounded and executed only when explicitly permitted
+            if (allowFuzzy && score < 40 && query.length >= 4) {
                 var words = titleLower.split(/\s+/);
                 for (var w = 0; w < words.length; w++) {
-                    if (levenshteinDistance(words[w], query, 2) <= 1) {
-                        score += 20;
-                        break;
+                    var word = words[w];
+                    if (Math.abs(word.length - query.length) <= 1) {
+                        if (levenshteinDistance(word, query, 2) <= 1) {
+                            score += 20;
+                            break;
+                        }
                     }
                 }
             }
@@ -8413,9 +9694,9 @@
         function searchTitles(query, filter) {
             var baseList = titlesList;
             if (filter === 'company') {
-                baseList = titlesList.filter(function(r) { return r.is_standard === 0; });
+                baseList = titlesList.filter(function(r) { return r && r.is_standard === 0; });
             } else if (filter === 'standard') {
-                baseList = titlesList.filter(function(r) { return r.is_standard === 1; });
+                baseList = titlesList.filter(function(r) { return r && r.is_standard === 1; });
             }
 
             var recentItems = getRecentTitles();
@@ -8431,11 +9712,34 @@
             if (queryTokens.length === 0) return baseList.slice(0, 30);
 
             var scored = [];
+            // Pass 1: Substring & token match (0ms latency, zero Levenshtein allocations)
             for (var i = 0; i < baseList.length; i++) {
                 var item = baseList[i];
-                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet);
+                var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet, false);
                 if (score > 15) {
                     scored.push({ item: item, score: score });
+                }
+            }
+
+            // Pass 2: Bounded fuzzy fallback ONLY if fewer than 5 candidates matched and query length >= 4
+            if (scored.length < 5 && cleanQ.length >= 4) {
+                var fuzzyChecked = 0;
+                for (var j = 0; j < baseList.length && fuzzyChecked < 40; j++) {
+                    var candidate = baseList[j];
+                    var alreadyScored = false;
+                    for (var k = 0; k < scored.length; k++) {
+                        if (scored[k].item.id === candidate.id) {
+                            alreadyScored = true;
+                            break;
+                        }
+                    }
+                    if (alreadyScored) continue;
+
+                    fuzzyChecked++;
+                    var fScore = scoreCandidate(candidate, cleanQ, queryTokens, recentIdSet, true);
+                    if (fScore > 15) {
+                        scored.push({ item: candidate, score: fScore });
+                    }
                 }
             }
 
@@ -8572,14 +9876,55 @@
         function adjustDropdownPosition() {
             var wrap = document.getElementById('jero_title_select_wrap');
             var dropdown = document.getElementById('jero_title_dropdown');
+            var container = document.getElementById('jero_title_list_container');
             if (!wrap || !dropdown || !isOpen) return;
 
             var rect = wrap.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 280 && rect.top > 280) {
+            var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+            // Safe margins from viewport top/bottom edges (12px safe margin)
+            var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
+            var spaceAbove = Math.max(0, rect.top - 12);
+
+            // Calculate height of fixed sections (tabs + custom title pill + footer + padding)
+            var tabsEl = dropdown.querySelector('.jero-title-tabs');
+            var customEl = document.getElementById('jero_title_custom_action');
+            var footerEl = dropdown.querySelector('.jero-title-footer');
+
+            var fixedH = (tabsEl ? tabsEl.offsetHeight : 34) +
+                         ((customEl && customEl.style.display !== 'none') ? customEl.offsetHeight : 0) +
+                         (footerEl ? footerEl.offsetHeight : 32) + 12;
+
+            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
+            var dropUp = false;
+            if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+                dropUp = true;
+            }
+
+            if (dropUp) {
                 dropdown.classList.add('drop-up');
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = 'calc(100% + 4px)';
+
+                // Clamp max height so dropdown top NEVER extends above viewport top margin
+                var maxAvailable = Math.max(160, Math.min(360, spaceAbove));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(70, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             } else {
                 dropdown.classList.remove('drop-up');
+                dropdown.style.top = 'calc(100% + 4px)';
+                dropdown.style.bottom = 'auto';
+
+                // Clamp max height so dropdown bottom NEVER extends below viewport bottom margin
+                var maxAvailable = Math.max(160, Math.min(360, spaceBelow));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(70, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             }
         }
 
@@ -8591,21 +9936,25 @@
 
             isOpen = true;
             wrap.classList.add('is-open');
-            dropdown.style.display = 'block';
+            dropdown.style.display = 'flex';
             if (input) input.setAttribute('aria-expanded', 'true');
 
+            adjustDropdownPosition();
             renderDropdownList();
         }
 
         function closeDropdown() {
             var dropdown = document.getElementById('jero_title_dropdown');
             var wrap = document.getElementById('jero_title_select_wrap');
+            var container = document.getElementById('jero_title_list_container');
             var input = document.getElementById('title');
             if (!dropdown || !wrap) return;
 
             isOpen = false;
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
+            dropdown.style.maxHeight = '';
+            if (container) container.style.maxHeight = '';
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
         }
@@ -8670,49 +10019,60 @@
         }
 
         function applyTemplateSafely(item, forceOverwrite) {
-            var ed = document.getElementById('jobDescription');
-            var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
-            var currentSkills = (typeof skills !== 'undefined' && Array.isArray(skills)) ? [...skills] : [];
+            if (isApplyingTemplate) return;
+            isApplyingTemplate = true;
+            window._isApplyingTitleTemplate = true;
 
-            priorSnapshot = {
-                title: $('#title').val(),
-                jd: ed ? ed.innerHTML : '',
-                skills: currentSkills
-            };
+            try {
+                var ed = document.getElementById('jobDescription');
+                var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
+                var currentSkills = (typeof skills !== 'undefined' && Array.isArray(skills)) ? [...skills] : [];
 
-            // Detect if user has manually entered custom copy in JD
-            if (!forceOverwrite && currentDesc !== '' && item.jd && item.jd.trim() !== '') {
-                pendingTemplateItem = item;
-                var dialog = document.getElementById('jero_autofill_confirm_dialog');
-                if (dialog) dialog.style.display = 'block';
-                return;
-            }
+                priorSnapshot = {
+                    title: $('#title').val(),
+                    jd: ed ? ed.innerHTML : '',
+                    skills: currentSkills
+                };
 
-            // Apply Description
-            if (item.jd && (currentDesc === '' || forceOverwrite)) {
-                if (ed) {
-                    ed.innerHTML = item.jd;
-                    if (typeof syncDescription === 'function') syncDescription();
+                // Detect if user has manually entered custom copy in JD
+                if (!forceOverwrite && currentDesc !== '' && item.jd && item.jd.trim() !== '') {
+                    pendingTemplateItem = item;
+                    var dialog = document.getElementById('jero_autofill_confirm_dialog');
+                    if (dialog) dialog.style.display = 'block';
+                    return;
                 }
-            }
 
-            // Apply Skills (Merge unique)
-            if (item.skills && typeof skills !== 'undefined') {
-                var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                var existingSet = new Set(skills.map(function(s) { return s.toLowerCase(); }));
-                var added = false;
-                newSkills.forEach(function(s) {
-                    if (!existingSet.has(s.toLowerCase())) {
-                        skills.push(s);
-                        existingSet.add(s.toLowerCase());
-                        added = true;
+                // Apply Description
+                if (item.jd && (currentDesc === '' || forceOverwrite)) {
+                    if (ed) {
+                        ed.innerHTML = item.jd;
+                        if (typeof syncDescription === 'function') syncDescription();
                     }
-                });
-                if (added && typeof renderSkills === 'function') renderSkills();
-            }
+                }
 
-            showUndoToast('Template applied: Job description • Recommended skills');
-            updateStatusChip(true, false);
+                // Apply Skills (Merge unique)
+                if (item.skills && typeof skills !== 'undefined') {
+                    var newSkills = item.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    var existingSet = new Set(skills.map(function(s) { return s.toLowerCase(); }));
+                    var added = false;
+                    newSkills.forEach(function(s) {
+                        if (!existingSet.has(s.toLowerCase())) {
+                            skills.push(s);
+                            existingSet.add(s.toLowerCase());
+                            added = true;
+                        }
+                    });
+                    if (added && typeof renderSkills === 'function') renderSkills();
+                }
+
+                showUndoToast('Template applied: Job description • Recommended skills');
+                updateStatusChip(true, false);
+            } finally {
+                setTimeout(function() {
+                    isApplyingTemplate = false;
+                    window._isApplyingTitleTemplate = false;
+                }, 150);
+            }
         }
 
         function selectItem(item) {
@@ -8810,7 +10170,7 @@
                     ingestManifest(newManifest);
                     idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
                     if (indexBroadcast) {
-                        indexBroadcast.postMessage({ type: 'TITLES_UPDATED', version: newManifest.version });
+                        indexBroadcast.postMessage({ type: 'TITLES_UPDATED', version: newManifest.version, tabId: TAB_SESSION_ID });
                     }
                 }
             }).catch(function() {});
@@ -8835,6 +10195,10 @@
         }
 
         function initEventListeners() {
+            if (isEventListenersInitialized) return;
+            isEventListenersInitialized = true;
+
+            var chevron = document.getElementById('jero_title_chevron');
             var input = document.getElementById('title');
             var clearBtn = document.getElementById('jero_title_clear_btn');
             var tabsContainer = document.querySelector('.jero-title-tabs');
@@ -8843,6 +10207,19 @@
             var undoBtn = document.getElementById('jero_autofill_undo_btn');
             var keepBtn = document.getElementById('jero_confirm_keep_btn');
             var applyBtn = document.getElementById('jero_confirm_apply_btn');
+
+            if (chevron) {
+                chevron.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isOpen) {
+                        closeDropdown();
+                    } else {
+                        if (input) input.focus();
+                        openDropdown();
+                    }
+                });
+            }
 
             if (input) {
                 input.addEventListener('focus', function() {
@@ -8854,7 +10231,15 @@
                     currentSearch = this.value;
                     if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
                     if (!isOpen) openDropdown();
-                    renderDropdownList();
+
+                    clearTimeout(inputDebounceTimer);
+                    inputDebounceTimer = setTimeout(function() {
+                        if (inputRafId) cancelAnimationFrame(inputRafId);
+                        inputRafId = requestAnimationFrame(function() {
+                            renderDropdownList();
+                            inputRafId = null;
+                        });
+                    }, 35);
                 });
 
                 input.addEventListener('keydown', function(e) {
@@ -8954,17 +10339,34 @@
                 });
             }
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_title_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
                     closeDropdown();
                 }
+            }, true);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isOpen) {
+                    closeDropdown();
+                }
             });
+
+            window.addEventListener('resize', function() {
+                if (isOpen) adjustDropdownPosition();
+            });
+
+            window.addEventListener('scroll', function() {
+                if (isOpen) adjustDropdownPosition();
+            }, { passive: true });
 
             try {
                 indexBroadcast = new BroadcastChannel('jero-titles-sync');
                 indexBroadcast.onmessage = function(ev) {
-                    if (ev && ev.data && ev.data.type === 'TITLES_UPDATED') {
+                    if (ev && ev.data && ev.data.type === 'TITLES_UPDATED' && ev.data.tabId !== TAB_SESSION_ID) {
+                        var now = Date.now();
+                        if (now - lastSyncTimestamp < 8000) return;
+                        lastSyncTimestamp = now;
                         idbGet('titles_tenant_' + CURRENT_TENANT_ID).then(function(cached) {
                             if (cached && cached.manifest) ingestManifest(cached.manifest);
                         });
@@ -8973,8 +10375,23 @@
             } catch (e) {}
         }
 
+        function scrollItemIntoView(container, el) {
+            if (!container || !el) return;
+            var cTop = container.scrollTop;
+            var cHeight = container.clientHeight;
+            var elTop = el.offsetTop;
+            var elHeight = el.offsetHeight;
+
+            if (elTop < cTop) {
+                container.scrollTop = elTop;
+            } else if ((elTop + elHeight) > (cTop + cHeight)) {
+                container.scrollTop = (elTop + elHeight) - cHeight;
+            }
+        }
+
         function moveFocus(direction) {
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+            var container = document.getElementById('jero_title_list_container');
             var customPill = document.getElementById('jero_title_custom_pill');
             var total = items.length + (customPill && customPill.offsetParent !== null ? 1 : 0);
             if (total === 0) return;
@@ -8989,10 +10406,10 @@
             if (focusedIndex < items.length) {
                 var el = items[focusedIndex];
                 el.classList.add('focused');
-                el.scrollIntoView({ block: 'nearest' });
+                scrollItemIntoView(container, el);
             } else if (customPill) {
                 customPill.classList.add('focused');
-                customPill.scrollIntoView({ block: 'nearest' });
+                scrollItemIntoView(container, customPill);
             }
         }
 
@@ -9024,6 +10441,8 @@
                 currentSearch = q;
                 renderDropdownList();
             },
+            open: openDropdown,
+            close: closeDropdown,
             selectByTitle: function(title) {
                 for (var i = 0; i < titlesList.length; i++) {
                     if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
@@ -9385,7 +10804,7 @@
             var exactMatchExists = false;
             if (q) {
                 for (var d = 0; d < deptList.length; d++) {
-                    if (deptList[d].name.toLowerCase() === q.toLowerCase()) {
+                    if ((deptList[d].name || '').toLowerCase() === q.toLowerCase()) {
                         exactMatchExists = true;
                         break;
                     }
@@ -9464,17 +10883,76 @@
             '</div>';
         }
 
+        function scrollItemIntoView(container, target) {
+            if (!container || !target) return;
+            var cRect = container.getBoundingClientRect();
+            var tRect = target.getBoundingClientRect();
+
+            if (tRect.top < cRect.top) {
+                container.scrollTop -= (cRect.top - tRect.top + 6);
+            } else if (tRect.bottom > cRect.bottom) {
+                container.scrollTop += (tRect.bottom - cRect.bottom + 6);
+            }
+        }
+
         function adjustDropdownPosition() {
             var wrap = document.getElementById('jero_dept_select_wrap');
             var dropdown = document.getElementById('jero_dept_dropdown');
+            var container = document.getElementById('jero_dept_list_container');
             if (!wrap || !dropdown || !isOpen) return;
 
             var rect = wrap.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 320 && rect.top > 280) {
+            var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+            // If input has scrolled out of view completely, close cleanly
+            if (rect.bottom < 0 || rect.top > viewportH) {
+                closeDropdown();
+                return;
+            }
+
+            // Safe margins from viewport top/bottom edges
+            var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
+            var spaceAbove = Math.max(0, rect.top - 12);
+
+            // Calculate height of fixed headers (tabs + recent bar + footer)
+            var tabsEl = dropdown.querySelector('.jero-dept-tabs');
+            var recentEl = document.getElementById('jero_dept_recent_bar');
+            var footerEl = dropdown.querySelector('.jero-dept-footer');
+
+            var fixedH = (tabsEl ? tabsEl.offsetHeight : 38) +
+                         ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
+                         (footerEl ? footerEl.offsetHeight : 34) + 16;
+
+            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
+            var dropUp = false;
+            if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+                dropUp = true;
+            }
+
+            if (dropUp) {
                 dropdown.classList.add('drop-up');
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = 'calc(100% + 5px)';
+
+                // Clamp max height so dropdown top never extends above viewport top margin
+                var maxAvailable = Math.max(180, Math.min(360, spaceAbove));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(100, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             } else {
                 dropdown.classList.remove('drop-up');
+                dropdown.style.bottom = 'auto';
+                dropdown.style.top = 'calc(100% + 5px)';
+
+                // Clamp max height so dropdown bottom never extends past viewport bottom margin
+                var maxAvailable = Math.max(180, Math.min(360, spaceBelow));
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (container) {
+                    var listH = Math.max(100, maxAvailable - fixedH);
+                    container.style.maxHeight = listH + 'px';
+                }
             }
         }
 
@@ -9482,17 +10960,35 @@
             var dropdown = document.getElementById('jero_dept_dropdown');
             var wrap = document.getElementById('jero_dept_select_wrap');
             var input = document.getElementById('category_id_display');
+            var container = document.getElementById('jero_dept_list_container');
             if (!dropdown || !wrap) return;
 
             isOpen = true;
             wrap.classList.add('is-open');
-            dropdown.style.display = 'block';
+            dropdown.style.display = 'flex';
             if (input) {
                 input.setAttribute('aria-expanded', 'true');
                 input.classList.remove('is-invalid');
+
+                // When opening, clear search query so user can view and choose from all 10 divisions
+                currentSearch = '';
+                try {
+                    input.select();
+                } catch (e) {}
             }
 
             renderDropdownList();
+            adjustDropdownPosition();
+
+            // Scroll currently selected department into view inside list, or reset to top
+            if (container) {
+                var selectedEl = container.querySelector('.jero-dept-item.selected');
+                if (selectedEl) {
+                    scrollItemIntoView(container, selectedEl);
+                } else {
+                    container.scrollTop = 0;
+                }
+            }
         }
 
         function closeDropdown() {
@@ -9524,7 +11020,7 @@
 
             var target = items[focusedIndex];
             target.classList.add('focused');
-            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            scrollItemIntoView(container, target);
         }
 
         function selectFocusedItem() {
@@ -9833,14 +11329,22 @@
         function initEventListeners() {
             var input = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var chevron = document.getElementById('jero_dept_chevron');
             var tabsContainer = document.querySelector('.jero-dept-tabs');
             var container = document.getElementById('jero_dept_list_container');
             var recentBar = document.getElementById('jero_dept_recent_bar');
 
             if (input) {
                 input.addEventListener('focus', function() {
-                    currentSearch = this.value;
-                    openDropdown();
+                    if (!isOpen) {
+                        openDropdown();
+                    }
+                });
+
+                input.addEventListener('click', function(e) {
+                    if (!isOpen) {
+                        openDropdown();
+                    }
                 });
 
                 input.addEventListener('input', function() {
@@ -9850,9 +11354,10 @@
                     renderDropdownList();
                 });
 
-                // Real-World Defense: Prevent Enter key from submitting form prematurely
+                // Real-World Defense: Prevent Enter key from submitting form prematurely & add Page navigation
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
+                        e.preventDefault();
                         closeDropdown();
                     } else if (e.key === 'ArrowDown') {
                         e.preventDefault();
@@ -9862,6 +11367,14 @@
                         e.preventDefault();
                         if (!isOpen) { openDropdown(); return; }
                         moveFocus(-1);
+                    } else if (e.key === 'PageDown') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(4);
+                    } else if (e.key === 'PageUp') {
+                        e.preventDefault();
+                        if (!isOpen) { openDropdown(); return; }
+                        moveFocus(-4);
                     } else if (e.key === 'Enter') {
                         e.preventDefault();
                         if (isOpen) {
@@ -9875,9 +11388,23 @@
                 });
             }
 
+            if (chevron) {
+                chevron.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isOpen) {
+                        closeDropdown();
+                    } else {
+                        openDropdown();
+                        if (input) input.focus();
+                    }
+                });
+            }
+
             if (clearBtn) {
                 clearBtn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     clearSelection();
                 });
             }
@@ -9889,6 +11416,7 @@
                     tabsContainer.querySelectorAll('.jero-dept-tab-btn').forEach(function(b) { b.classList.remove('active'); });
                     btn.classList.add('active');
                     currentFilter = btn.getAttribute('data-filter') || 'all';
+                    if (container) container.scrollTop = 0;
                     renderDropdownList();
                 });
             }
@@ -9906,6 +11434,20 @@
             }
 
             if (container) {
+                // High-Performance Unfreeze Wheel Scroll Engine: guarantees smooth scroll on all mice/touchpads
+                container.addEventListener('wheel', function(e) {
+                    if (this.scrollHeight > this.clientHeight) {
+                        var delta = e.deltaY;
+                        if (e.deltaMode === 1) delta *= 33; // Line mode support
+                        var prev = this.scrollTop;
+                        this.scrollTop += delta;
+                        if (this.scrollTop !== prev) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }
+                }, { passive: false });
+
                 container.addEventListener('click', function(e) {
                     // Check for inline create action
                     var createAction = e.target.closest('.jero-dept-create-action');
@@ -9926,13 +11468,32 @@
                 });
             }
 
-            // Click Outside Handler
-            document.addEventListener('click', function(e) {
+            // Global Escape key: Closes dropdown even if focus was moved to list or page
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isOpen) {
+                    e.preventDefault();
+                    closeDropdown();
+                    if (input) input.blur();
+                }
+            });
+
+            // Bullet-Proof Outside Click Handler in Capture Phase
+            // Catches clicks before any child or ancestor calls stopPropagation
+            document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_dept_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
                     if (isOpen) closeDropdown();
                 }
+            }, true);
+
+            // Responsive Viewport Clamping & Dynamic Repositioning
+            window.addEventListener('resize', function() {
+                if (isOpen) adjustDropdownPosition();
             });
+
+            window.addEventListener('scroll', function() {
+                if (isOpen) adjustDropdownPosition();
+            }, { passive: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
             document.addEventListener('keydown', function(e) {
@@ -9947,8 +11508,12 @@
                 }
             });
 
-            // Window resize / scroll position auto-adjustment
-            window.addEventListener('resize', adjustDropdownPosition, { passive: true });
+            // Window resize auto-adjustment
+            window.addEventListener('resize', function() {
+                if (isOpen) {
+                    adjustDropdownPosition();
+                }
+            }, { passive: true });
         }
 
         function initSyncListeners() {
@@ -9993,6 +11558,9 @@
 
         // Global export for backward compatibility & testing
         window.JeroDeptIntelligenceEngine = {
+            open: openDropdown,
+            close: closeDropdown,
+            isOpen: function() { return isOpen; },
             search: function(q) {
                 currentSearch = q;
                 renderDropdownList();
@@ -10003,7 +11571,7 @@
             },
             selectByName: function(name) {
                 for (var i = 0; i < deptList.length; i++) {
-                    if (deptList[i].name.toLowerCase() === (name || '').toLowerCase()) {
+                    if ((deptList[i].name || '').toLowerCase() === (name || '').toLowerCase()) {
                         selectItem(deptList[i]);
                         return;
                     }
