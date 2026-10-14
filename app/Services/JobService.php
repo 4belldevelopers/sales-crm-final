@@ -41,6 +41,9 @@ class JobService
 
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
+        $job->raw_designation = $requestData['raw_designation'] ?? ($requestData['title'] ?? null);
+        $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
+        $job->taxonomy_version = $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0');
         $job->work_shifts = $requestData['work_shifts'] ?? null;
         $job->category_id = $requestData['category_id'] ?? null;
         $job->required_columns = $requestData['required_columns'] ?? null;
@@ -650,6 +653,15 @@ class JobService
     {
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
+        if (array_key_exists('raw_designation', $requestData)) {
+            $job->raw_designation = $requestData['raw_designation'];
+        }
+        if (array_key_exists('canonical_designation_id', $requestData)) {
+            $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
+        }
+        if (array_key_exists('taxonomy_version', $requestData)) {
+            $job->taxonomy_version = $requestData['taxonomy_version'];
+        }
         $job->work_shifts = $requestData['work_shifts'] ?? null;
         $job->category_id = $requestData['category_id'] ?? null;
         $job->required_columns = $requestData['required_columns'] ?? null;

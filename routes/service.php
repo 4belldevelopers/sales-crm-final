@@ -191,7 +191,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('jobs/assignRejected', [ServiceCompanyJobsController::class, 'assignRejected'])->name('jobs.assignRejected');
                 Route::get('jobs/removeJob', [ServiceCompanyJobsController::class, 'removeJob'])->name('jobs.removeJob');
                 Route::get('jobs/resend_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class, 'resend_job_recommanded_request'])->name('jobs.resend_job_recommanded_request');
-                Route::middleware('recruiter.throttle:60,1')->group(function () {
+                Route::middleware(['recruiter.throttle:60,1', 'resolve.taxonomy'])->group(function () {
                     Route::resource('jobs', ServiceCompanyJobsController::class);
                 });
                 Route::post('jobs/updatestatus', [ServiceCompanyJobsController::class, 'updatestatus'])->name('jobs.updatestatus');
@@ -483,7 +483,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('bench-candidates/{id}/tab/ads', [ServiceCompanyBenchCandidatesController::class, 'getAdsTab'])->name('bench-candidates.tab.ads');
                 Route::get('bench-candidates/{id}/tab/resume', [ServiceCompanyBenchCandidatesController::class, 'getResumeTab'])->name('bench-candidates.tab.resume');
 
-                Route::resource('bench-candidates', ServiceCompanyBenchCandidatesController::class);
+                Route::middleware('resolve.taxonomy')->group(function () {
+                    Route::resource('bench-candidates', ServiceCompanyBenchCandidatesController::class);
+                });
                 Route::post('bench-candidates/update_placed_end_date', [ServiceCompanyBenchCandidatesController::class, 'update_placed_end_date'])->name('bench-candidates.update_placed_end_date');
                 Route::post('bench-candidates/status_submit', [ServiceCompanyBenchCandidatesController::class, 'status_submit'])->name('bench-candidates.status_submit');
                 Route::match(['get', 'post'], 'jobs/recommandedrequestcondidate/{jobId}', [ServiceCompanyBenchCandidatesController::class, 'recommandedrequestcondidate'])->name('jobs.recommandedrequestcondidate');

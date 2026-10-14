@@ -60,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'recruiter.sliding' => \App\Http\Middleware\RecruiterSlidingWindowThrottle::class,
             'consultancy.etag' => \App\Http\Middleware\ConsultancyETag::class,
             'idempotency' => \App\Http\Middleware\EnsureIdempotency::class,
+            'resolve.taxonomy' => \App\Http\Middleware\ResolveTaxonomyLineageMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
