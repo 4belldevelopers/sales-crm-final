@@ -20,6 +20,27 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-14* — **Job Title / Designation Intelligence Engine Remediation & Enterprise UX Upgrade (100% FIXED & VERIFIED)**:
+  - **Issue**: 
+    1. In Job Title combobox, typing a custom title and pressing `Enter`, clicking another field, or navigating steps auto-selected the first matched suggestion from the catalog and silently overwrote the user's title.
+    2. Typing a title matching a catalog entry triggered background AJAX (`changeautofillfield`) or local template auto-fill, populating JD and skills without user consent.
+    3. Transitioning from a selected suggestion to entering a custom title preserved previously loaded JD/skills, violating custom title data isolation.
+  - **Root Cause**:
+    1. In `create.blade.php`, `selectFocusedOrCustom()` had a fallback `if (currentMatches.length > 0) { selectItem(currentMatches[0]); }`, auto-selecting suggestion 0 when `focusedIndex === -1`.
+    2. `changeautofillfield()` made asynchronous requests to `service_company.jobs.jdDetails` with `rawTitle` whenever invoked, auto-populating JD & skills on string matches.
+    3. State tracking lacked session-level separation between suggestion selection vs. custom input, preventing clean eviction of template-populated data when switching to custom titles.
+    4. Dropdown rendered items as `.selected` based purely on input string match rather than explicit user selection.
+  - **Fix**:
+    1. **Strict Selection Behavior**: Replaced `selectFocusedOrCustom()` fallback with `commitCustomTitle(inputVal)`. When `focusedIndex === -1` (user did not navigate with arrow keys), pressing `Enter`, `Tab`, clicking outside (`pointerdown`), or navigating wizard steps (`goToStep`) preserves the user's typed title as a custom title. Suggestions are only selected via explicit click or arrow-key highlight (`focusedIndex >= 0`).
+    2. **Custom Title Data Isolation**: Neutralized `changeautofillfield()` so typed titles never query or populate JD/skills via background AJAX. Added `clearTemplateData()`: if a user previously selected a suggestion during the session and edits the title, the template-populated JD and skills are immediately cleared to blank, `#canonical_designation_id` is set to `""`, and status updates to Custom Title.
+    3. **Enterprise UX Differentiation**: Upgraded Status Chip to dynamically display:
+       - `Standard Library · Auto-filled` / `My Organization · Auto-filled` (emerald/blue theme with checkmark/building SVG) when an explicit suggestion is chosen.
+       - `Custom Title · Manual entry` (slate theme with edit SVG) when custom text is entered.
+       - Dropdown items only show `.selected` class and checkmark if matching `selectedSuggestion.id`.
+       - Custom action pill is always visible when text is typed (`Use "<title>" as custom title · Manual entry · JD & skills will remain blank`).
+    4. **Accessibility & Navigation**: Clean keyboard cycling via `ArrowDown` and `ArrowUp` between input, suggestions, and custom action pill.
+  - **Verification**: Verified PHP syntax (`php -l`), confirmed page isolation in `create.blade.php`, and regression-tested workflows.
+
 - *2026-10-14* — **Edit Job Hiring Contact Details Resolution (100% FIXED & VERIFIED)**:
   - **Issue**: On Edit Job, the Hiring Contact field was blank and triggered a blocking validation error ("Please select the Hiring Manager / HR for this job") when attempting to proceed.
   - **Root Cause**:
