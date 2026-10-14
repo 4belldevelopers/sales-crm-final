@@ -1473,6 +1473,30 @@
                 </div>
             </div>
 
+            @php
+                $jobMeta = is_array(@$job->meta_details) ? $job->meta_details : (json_decode(@$job->meta_details ?? '{}', true) ?: []);
+                $currentVendorLimit = (int) (@$jobMeta['vendor_limit'] ?? (@$job->vendor_limit ?? (@$vendor_limit ?: 20)));
+                if (!in_array($currentVendorLimit, [5, 10, 20, 50], true)) {
+                    $currentVendorLimit = 20;
+                }
+
+                $currentAutoExpire = (int) (@$jobMeta['auto_expire'] ?? (@$job->auto_expire ?? 0));
+                if (!in_array($currentAutoExpire, [7, 14, 30], true)) {
+                    if (!empty($job->end_date)) {
+                        $daysLeft = (int) ceil(now()->diffInDays(\Carbon\Carbon::parse($job->end_date), false));
+                        if ($daysLeft > 14) {
+                            $currentAutoExpire = 30;
+                        } elseif ($daysLeft > 7) {
+                            $currentAutoExpire = 14;
+                        } else {
+                            $currentAutoExpire = 7;
+                        }
+                    } else {
+                        $currentAutoExpire = 7;
+                    }
+                }
+            @endphp
+
             {{-- Agency Acceptance Limit (Maximum agencies that can accept/work on this job) --}}
             <div class="mt-4">
                 <div class="d-flex align-items-center gap-1">
@@ -1483,11 +1507,11 @@
                     <div class="input-icon-box">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
-                    <select class="agency-select" id="marketplace_vendor_limit">
-                        <option value="5">5 agencies</option>
-                        <option value="10">10 agencies</option>
-                        <option value="20" selected>20 agencies</option>
-                        <option value="50">50 agencies</option>
+                    <select class="agency-select" id="marketplace_vendor_limit" data-current="{{ $currentVendorLimit }}">
+                        <option value="5" {{ $currentVendorLimit === 5 ? 'selected' : '' }}>5 agencies</option>
+                        <option value="10" {{ $currentVendorLimit === 10 ? 'selected' : '' }}>10 agencies</option>
+                        <option value="20" {{ $currentVendorLimit === 20 ? 'selected' : '' }}>20 agencies</option>
+                        <option value="50" {{ $currentVendorLimit === 50 ? 'selected' : '' }}>50 agencies</option>
                     </select>
                 </div>
                 <div class="agency-helper-text">Maximum agencies that can accept this job.</div>
@@ -1503,10 +1527,10 @@
                     <div class="input-icon-box">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </div>
-                    <select class="agency-select" id="marketplace_auto_expire">
-                        <option value="7" selected>7 Days ({{ now()->addDays(7)->format('d M Y') }})</option>
-                        <option value="14">14 Days ({{ now()->addDays(14)->format('d M Y') }})</option>
-                        <option value="30">30 Days ({{ now()->addDays(30)->format('d M Y') }})</option>
+                    <select class="agency-select" id="marketplace_auto_expire" data-current="{{ $currentAutoExpire }}">
+                        <option value="7" {{ $currentAutoExpire === 7 ? 'selected' : '' }}>7 Days ({{ now()->addDays(7)->format('d M Y') }})</option>
+                        <option value="14" {{ $currentAutoExpire === 14 ? 'selected' : '' }}>14 Days ({{ now()->addDays(14)->format('d M Y') }})</option>
+                        <option value="30" {{ $currentAutoExpire === 30 ? 'selected' : '' }}>30 Days ({{ now()->addDays(30)->format('d M Y') }})</option>
                     </select>
                 </div>
                 <div class="agency-helper-text">The marketplace listing will automatically close on this date.</div>
@@ -2678,6 +2702,103 @@
                     }
                 });
             });
+        });
+
+        // ── AGENCY ACCEPTANCE LIMIT & AUTO-EXPIRE DROPDOWN CHANGE HANDLERS ──
+        var marketplaceSettingXhr = null;
+        var marketplaceSettingToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+        });
+
+        function updateMarketplaceSetting($select, settingType, settingVal) {
+            var previousVal = $select.data('current') !== undefined ? $select.data('current') : ($select.data('previous-val') || $select.val());
+            var current_jobid = $('#current_job_id').val() || '{{ @$job->id ?: @$job_id }}';
+            var id = 0;
+            var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', id);
+
+            // Cancel any in-flight settings update request to prevent out-of-order race conditions
+            if (marketplaceSettingXhr && typeof marketplaceSettingXhr.abort === 'function') {
+                try { marketplaceSettingXhr.abort(); } catch(e) {}
+            }
+
+            $select.prop('disabled', true);
+
+            var postData = {
+                'current_jobid': current_jobid,
+                'action': 'update_settings',
+                'setting_type': settingType,
+                '_token': '{{ csrf_token() }}'
+            };
+            postData[settingType] = settingVal;
+
+            marketplaceSettingXhr = $.ajax({
+                type: 'POST',
+                url: url,
+                data: postData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                timeout: 10000,
+                success: function(response) {
+                    if (response && response.status === 'success') {
+                        $select.data('current', settingVal);
+                        $select.data('previous-val', settingVal);
+
+                        // Invalidate Client RAM Cache so reopening drawer fetches fresh authoritative representation
+                        if (window.jobDrawerCache) {
+                            delete window.jobDrawerCache['spartner_' + current_jobid];
+                        }
+
+                        marketplaceSettingToast.fire({
+                            icon: 'success',
+                            title: response.message || 'Setting saved successfully.'
+                        });
+                    } else if (response && response.status === 'closeJob') {
+                        $select.val(previousVal);
+                        Swal.fire("Notice", response.message || "Please update the job status from 'Closed/Hold' to 'Hiring' to enable setting changes.", "warning");
+                    } else {
+                        $select.val(previousVal);
+                        var errMsg = (response && response.message) ? response.message : 'Could not save setting. Reverted to previous value.';
+                        Swal.fire('Notice', errMsg, 'warning');
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    $select.val(previousVal);
+                    var errMsg = 'Failed to update setting. Please try again.';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        errMsg = xhr.responseJSON.message;
+                    } else if (xhr && xhr.status === 403) {
+                        errMsg = 'Unauthorized access to job requisition.';
+                    } else if (xhr && xhr.status === 419) {
+                        errMsg = 'Session expired. Please refresh the page.';
+                    }
+                    Swal.fire('Error', errMsg, 'error');
+                },
+                complete: function() {
+                    $select.prop('disabled', false);
+                    marketplaceSettingXhr = null;
+                }
+            });
+        }
+
+        $('body').off('change.vendorLimit', '#marketplace_vendor_limit').on('change.vendorLimit', '#marketplace_vendor_limit', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            var newVal = parseInt($this.val(), 10);
+            updateMarketplaceSetting($this, 'vendor_limit', newVal);
+        });
+
+        $('body').off('change.autoExpire', '#marketplace_auto_expire').on('change.autoExpire', '#marketplace_auto_expire', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            var newVal = parseInt($this.val(), 10);
+            updateMarketplaceSetting($this, 'auto_expire', newVal);
         });
 
         // ── SEND REQUIREMENT (INVITATION) ACTIONS ────────────────────────────

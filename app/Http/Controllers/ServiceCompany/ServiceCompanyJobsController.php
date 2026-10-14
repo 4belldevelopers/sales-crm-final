@@ -4385,9 +4385,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $resultCount = DB::table('market_job_added_count')->where('job_id', '=', $jobidGet)->where('status', '=', 0)->count();
-        $exceeded = 20;
+        $jobForLimit = Job::withoutGlobalScopes()->find($jobidGet);
+        $jobMeta = is_array($jobForLimit?->meta_details) ? $jobForLimit->meta_details : (json_decode($jobForLimit?->meta_details ?? '{}', true) ?: []);
+        $exceeded = (int) ($jobMeta['vendor_limit'] ?? 20);
         if ($resultCount > $exceeded) {
-            $jobsave = Job::withoutGlobalScopes()->find($jobidGet);
+            $jobsave = $jobForLimit ?: Job::withoutGlobalScopes()->find($jobidGet);
             $jobsave->public_market_status = 4;
             $jobsave->save();
 
@@ -4939,9 +4941,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $result = DB::table('market_job_added_count')->insert(['job_id' => $jobid, 'company_id' => $to_company_id, 'status' => 0, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
 
         $resultCount = DB::table('market_job_added_count')->where('job_id', '=', $jobidGet)->where('status', '=', 0)->count();
-        $exceeded = 20;
-        if ($resultCount == $exceeded) {
-            $jobsavefinal = Job::withoutGlobalScopes()->find($jobidGet);
+        $jobForLimitFinal = Job::withoutGlobalScopes()->find($jobidGet);
+        $jobMetaFinal = is_array($jobForLimitFinal?->meta_details) ? $jobForLimitFinal->meta_details : (json_decode($jobForLimitFinal?->meta_details ?? '{}', true) ?: []);
+        $exceeded = (int) ($jobMetaFinal['vendor_limit'] ?? 20);
+        if ($resultCount >= $exceeded) {
+            $jobsavefinal = $jobForLimitFinal ?: Job::withoutGlobalScopes()->find($jobidGet);
             $jobsavefinal->public_market_status = 4;
             $jobsavefinal->save();
         }
@@ -8965,8 +8969,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
             ->withoutGlobalScopes()->findOrFail($id);
 
-        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
-        if (! $chkAdminRole && (int) $this->job->company_id !== (int) $company_id) {
+        $isSuperAdmin = ($company_id === 1 || ($this->user && ! empty($this->user->is_superadmin)));
+        if (! $isSuperAdmin && (int) $this->job->company_id !== (int) $company_id) {
             abort(403, 'Unauthorized access to job requisition.');
         }
 
@@ -9009,7 +9013,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->orderBy('client_location_jobs.id', 'DESC')
             ->first();
 
-        $this->vendor_limit = 20;
+        $jobMeta = is_array($this->job->meta_details) ? $this->job->meta_details : (json_decode($this->job->meta_details ?? '{}', true) ?: []);
+        $currentVendorLimit = (int) ($jobMeta['vendor_limit'] ?? ($this->job->vendor_limit ?? 20));
+        if (! in_array($currentVendorLimit, [5, 10, 20, 50], true)) {
+            $currentVendorLimit = 20;
+        }
+        $this->vendor_limit = $currentVendorLimit;
+
+        $currentAutoExpire = (int) ($jobMeta['auto_expire'] ?? ($this->job->auto_expire ?? 7));
+        if (! in_array($currentAutoExpire, [7, 14, 30], true)) {
+            $currentAutoExpire = 7;
+        }
+        $this->auto_expire = $currentAutoExpire;
 
         if ($this->job->public_market_status == 1) {
             $this->class_send = '';
@@ -9062,9 +9077,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('final_status', 1)
             ->count();
 
+        $view = view('service_company.jobs.spartnerlisting', $this->data)->render();
+
         if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
             $responseData = Reply::dataOnly([
                 'status' => 'success',
+                'view' => $view,
                 'job' => $this->job,
                 'skillArr' => $this->skillArr,
                 'company_name' => $this->company_name,
@@ -9079,13 +9097,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'max_salary' => $this->max_salary,
                 'default_loc' => $this->default_loc,
                 'vendor_limit' => $this->vendor_limit,
+                'auto_expire' => $this->auto_expire,
                 'allCompanies' => $this->allCompanies,
                 'activeCompanies' => $this->activeCompanies,
                 'registeredTotalCount' => $this->registeredTotalCount,
                 'assignedTotalCount' => $this->assignedTotalCount,
             ]);
         } else {
-            $view = view('service_company.jobs.spartnerlisting', $this->data)->render();
             $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
         }
 
@@ -13865,8 +13883,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'error', 'message' => 'Job requisition not found.']);
         }
 
-        $chkAdminRole = $this->user ? $this->user->hasRole('admin') : false;
-        if (! $chkAdminRole && (int) $job->company_id !== $company_id) {
+        $isSuperAdmin = ($company_id === 1 || ($this->user && ! empty($this->user->is_superadmin)));
+        if (! $isSuperAdmin && (int) $job->company_id !== $company_id) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized access to job requisition.']);
         }
 
@@ -13877,6 +13895,82 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $isCancel = (int) $request->input('job_cancel', 0) === 1;
+
+        // ── VALIDATION: Agency Acceptance Limit & Auto-expire ───────────────
+        $hasVendorLimit = $request->has('vendor_limit');
+        $hasAutoExpire = $request->has('auto_expire');
+
+        if ($hasVendorLimit) {
+            $limitVal = (int) $request->input('vendor_limit');
+            if (! in_array($limitVal, [5, 10, 20, 50], true)) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'message' => 'Invalid agency acceptance limit option. Allowed values: 5, 10, 20, 50 agencies.',
+                ]);
+            }
+        }
+
+        if ($hasAutoExpire) {
+            $expireVal = (int) $request->input('auto_expire');
+            if (! in_array($expireVal, [7, 14, 30], true)) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'message' => 'Invalid auto-expire option. Allowed durations: 7, 14, 30 days.',
+                ]);
+            }
+        }
+
+        // ── 0. SETTINGS UPDATE ACTION (Direct dropdown change in drawer) ─────
+        $isSettingOnly = $request->input('action') === 'update_settings'
+            || $request->has('setting_type')
+            || ($request->input('job_cancel') === null && ($hasVendorLimit || $hasAutoExpire));
+
+        if ($isSettingOnly) {
+            $jobMeta = is_array($job->meta_details) ? $job->meta_details : (json_decode($job->meta_details ?? '{}', true) ?: []);
+            $changes = [];
+
+            if ($hasVendorLimit) {
+                $limitVal = (int) $request->input('vendor_limit');
+                $jobMeta['vendor_limit'] = $limitVal;
+                $changes[] = "Agency Acceptance Limit set to {$limitVal} agencies";
+            }
+
+            if ($hasAutoExpire) {
+                $expireVal = (int) $request->input('auto_expire');
+                $jobMeta['auto_expire'] = $expireVal;
+                $job->end_date = Carbon::now()->addDays($expireVal)->format('Y-m-d 23:59:59');
+                $job->closeType = 1; // 1 = auto close
+                $changes[] = "Auto-expire set to {$expireVal} days (".Carbon::parse($job->end_date)->format('d M Y').")";
+            }
+
+            $job->meta_details = $jobMeta;
+            $job->save();
+
+            // Multi-tenant Atomic Cache Invalidation
+            \App\Services\MarketJobV2Service::invalidateGlobalCache();
+            \App\Services\MarketJobV2Service::invalidateCacheForCompany($company_id);
+            GeneralMethod::invalidateSpartnerlistingCache($this->user->id, $company_id);
+
+            // Synchronous Elasticsearch ATS index sync (guarantees ZERO STALE DATA in marketplace)
+            try {
+                GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
+            } catch (\Throwable $esEx) {
+                \Illuminate\Support\Facades\Log::warning('[MarketJob] ES sync failed on settings update: '.$esEx->getMessage());
+            }
+
+            $currentVendorLimit = (int) ($jobMeta['vendor_limit'] ?? 20);
+            $currentAutoExpire = (int) ($jobMeta['auto_expire'] ?? 7);
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'message' => ! empty($changes) ? implode(', ', $changes).'.' : 'Marketplace settings saved successfully.',
+                'vendor_limit' => $currentVendorLimit,
+                'auto_expire' => $currentAutoExpire,
+                'end_date' => $job->end_date,
+                'is_published' => in_array((int) $job->public_market_status, [1, 2], true),
+                'public_market_status' => (int) $job->public_market_status,
+            ]);
+        }
 
         // ── 1. UNPUBLISH ACTION ──────────────────────────────────────────────
         if ($isCancel) {
@@ -13958,11 +14052,44 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // Idempotency: already published or pending approval
         if ((int) $job->public_market_status === 2 || (int) $job->public_market_status === 1) {
             $isLive = ((int) $job->public_market_status === 2);
+            $jobMeta = is_array($job->meta_details) ? $job->meta_details : (json_decode($job->meta_details ?? '{}', true) ?: []);
+            $settingsUpdated = false;
+
+            if ($hasVendorLimit) {
+                $limitVal = (int) $request->input('vendor_limit');
+                $jobMeta['vendor_limit'] = $limitVal;
+                $settingsUpdated = true;
+            }
+            if ($hasAutoExpire) {
+                $expireVal = (int) $request->input('auto_expire');
+                $jobMeta['auto_expire'] = $expireVal;
+                $job->end_date = Carbon::now()->addDays($expireVal)->format('Y-m-d 23:59:59');
+                $job->closeType = 1;
+                $settingsUpdated = true;
+            }
+
+            if ($settingsUpdated) {
+                $job->meta_details = $jobMeta;
+                $job->save();
+
+                \App\Services\MarketJobV2Service::invalidateGlobalCache();
+                \App\Services\MarketJobV2Service::invalidateCacheForCompany($company_id);
+                GeneralMethod::invalidateSpartnerlistingCache($this->user->id, $company_id);
+
+                try {
+                    GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
+                } catch (\Throwable $esEx) {
+                    \Illuminate\Support\Facades\Log::warning('[MarketJob] ES sync failed on published settings update: '.$esEx->getMessage());
+                }
+            }
 
             return Reply::dataOnly([
                 'status' => 'success',
                 'is_published' => true,
                 'public_market_status' => (int) $job->public_market_status,
+                'vendor_limit' => (int) ($jobMeta['vendor_limit'] ?? 20),
+                'auto_expire' => (int) ($jobMeta['auto_expire'] ?? 7),
+                'end_date' => $job->end_date,
                 'message' => $isLive ? 'Your job public for partners' : 'Request sent for approval to an administrator',
                 'text_change' => $isLive ? 'Unpublish Job' : 'Approval Pending',
                 'color_change' => $isLive ? 'btn-light-danger' : 'btn-light-warning',
@@ -13996,9 +14123,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $outboxId = null;
-        DB::transaction(function () use ($job, $targetStatus, $terms, $company_id, &$outboxId) {
+        DB::transaction(function () use ($job, $targetStatus, $terms, $company_id, $request, $hasVendorLimit, $hasAutoExpire, &$outboxId) {
             $job->public_market_status = $targetStatus;
             $job->job_requirement = $terms;
+
+            $jobMeta = is_array($job->meta_details) ? $job->meta_details : (json_decode($job->meta_details ?? '{}', true) ?: []);
+            if ($hasVendorLimit) {
+                $limitVal = (int) $request->input('vendor_limit');
+                if (in_array($limitVal, [5, 10, 20, 50], true)) {
+                    $jobMeta['vendor_limit'] = $limitVal;
+                }
+            }
+            if ($hasAutoExpire) {
+                $expireVal = (int) $request->input('auto_expire');
+                if (in_array($expireVal, [7, 14, 30], true)) {
+                    $jobMeta['auto_expire'] = $expireVal;
+                    $job->end_date = Carbon::now()->addDays($expireVal)->format('Y-m-d 23:59:59');
+                    $job->closeType = 1;
+                }
+            }
+            $job->meta_details = $jobMeta;
             $job->save();
 
             DB::table('market_job_added_count')
@@ -14076,10 +14220,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        $jobMeta = is_array($job->meta_details) ? $job->meta_details : (json_decode($job->meta_details ?? '{}', true) ?: []);
+
         return Reply::dataOnly([
             'status' => 'success',
             'is_published' => true,
             'public_market_status' => $targetStatus,
+            'vendor_limit' => (int) ($jobMeta['vendor_limit'] ?? 20),
+            'auto_expire' => (int) ($jobMeta['auto_expire'] ?? 7),
+            'end_date' => $job->end_date,
             'message' => $msg,
             'text_change' => $text_change,
             'color_change' => $color_change,
