@@ -41,9 +41,38 @@ class JobService
 
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
+        $job->raw_designation = $requestData['raw_designation'] ?? ($requestData['title'] ?? null);
+        $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
+        $job->taxonomy_version = $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0');
         $job->work_shifts = $requestData['work_shifts'] ?? null;
-        $job->category_id = $requestData['category_id'] ?? null;
-        $job->required_columns = $requestData['required_columns'] ?? null;
+        $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
+        if (empty($job->category_id) && (! empty($requestData['custom_department']) || ! empty($requestData['category_id_display']))) {
+            $customDept = trim($requestData['custom_department'] ?? $requestData['category_id_display']);
+            if ($customDept !== '') {
+                $targetCompanyId = $user->company_id ?? (auth()->check() ? auth()->user()->company_id : null);
+                $cat = null;
+                if ($targetCompanyId) {
+                    $cat = \App\Models\JobCategory::where('company_id', $targetCompanyId)
+                        ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($customDept)])
+                        ->first();
+                }
+                if (! $cat) {
+                    $cat = \App\Models\JobCategory::whereNull('company_id')
+                        ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($customDept)])
+                        ->first();
+                }
+                if (! $cat && $targetCompanyId) {
+                    $cat = \App\Models\JobCategory::create([
+                        'company_id' => $targetCompanyId,
+                        'name' => $customDept,
+                    ]);
+                }
+                if ($cat) {
+                    $job->category_id = $cat->id;
+                }
+            }
+        }
+        $job->required_columns = ! empty($requestData['required_columns']) ? $requestData['required_columns'] : 'No Preference';
 
         if (! empty($requestData['employment_type'])) {
             $job->employment_type = $requestData['employment_type'];
@@ -328,21 +357,10 @@ class JobService
                 }
             }
 
-            // 8. JD Details Processing
-            $existingEntry = DB::table('jd_details')
-                ->where('title', $requestData['title'] ?? '')
-                ->exists();
-
-            if (! $existingEntry && ! empty($requestData['title'])) {
-                DB::table('jd_details')->insert([
-                    'title' => $requestData['title'],
-                    'jd' => $requestData['detail_description'] ?? null,
-                    'minimum_exp' => $requestData['min_exp'] ?? null,
-                    'maxmum_exp' => $requestData['max_exp'] ?? null,
-                    'status' => 0,
-                    'skills' => (count($tagsArr) > 0) ? implode(',', $tagsArr) : '',
-                ]);
-            }
+            // 8. Legacy jd_details Write Freeze:
+            // Under Talent Taxonomy V2 architecture, legacy jd_details is frozen for mutations
+            // (enforced by MySQL trigger trg_freeze_jd_details_insert). Recruiter designations
+            // are canonically resolved and preserved in jobs.raw_designation & canonical_designation_id.
 
             // 9. Job Additional Details
             if (! empty($requestData['custom_title']) && is_array($requestData['custom_title'])) {
@@ -448,7 +466,7 @@ class JobService
                     if (! empty($hmIds) && ! empty($hmNames)) {
                         $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
                             $q->whereIn('client_contact_info.id', $hmIds)
-                              ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                                ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
                         });
                     } elseif (! empty($hmIds)) {
                         $hmQuery->whereIn('client_contact_info.id', $hmIds);
@@ -650,8 +668,45 @@ class JobService
     {
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
+        if (array_key_exists('raw_designation', $requestData)) {
+            $job->raw_designation = $requestData['raw_designation'];
+        }
+        if (array_key_exists('canonical_designation_id', $requestData)) {
+            $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
+        }
+        if (array_key_exists('taxonomy_version', $requestData)) {
+            $job->taxonomy_version = $requestData['taxonomy_version'];
+        }
         $job->work_shifts = $requestData['work_shifts'] ?? null;
-        $job->category_id = $requestData['category_id'] ?? null;
+        if (array_key_exists('category_id', $requestData)) {
+            $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
+        }
+        if (empty($job->category_id) && (! empty($requestData['custom_department']) || ! empty($requestData['category_id_display']))) {
+            $customDept = trim($requestData['custom_department'] ?? $requestData['category_id_display']);
+            if ($customDept !== '') {
+                $targetCompanyId = $user->company_id ?? (auth()->check() ? auth()->user()->company_id : null);
+                $cat = null;
+                if ($targetCompanyId) {
+                    $cat = \App\Models\JobCategory::where('company_id', $targetCompanyId)
+                        ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($customDept)])
+                        ->first();
+                }
+                if (! $cat) {
+                    $cat = \App\Models\JobCategory::whereNull('company_id')
+                        ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($customDept)])
+                        ->first();
+                }
+                if (! $cat && $targetCompanyId) {
+                    $cat = \App\Models\JobCategory::create([
+                        'company_id' => $targetCompanyId,
+                        'name' => $customDept,
+                    ]);
+                }
+                if ($cat) {
+                    $job->category_id = $cat->id;
+                }
+            }
+        }
         $job->required_columns = $requestData['required_columns'] ?? null;
 
         if (! empty($requestData['employment_type'])) {
@@ -907,7 +962,7 @@ class JobService
                     if (! empty($hmIds) && ! empty($hmNames)) {
                         $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
                             $q->whereIn('client_contact_info.id', $hmIds)
-                              ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                                ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
                         });
                     } elseif (! empty($hmIds)) {
                         $hmQuery->whereIn('client_contact_info.id', $hmIds);

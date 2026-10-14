@@ -1514,6 +1514,7 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
      to keep pages that push inline $(function(){...}) into the head from throwing
      "$ is not defined". See the head-side comment for context. --}}
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
 {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script> --}}
@@ -3131,15 +3132,16 @@ $( document ).ready(function() {
             $("body").removeClass("control-sidebar-slide-open");
          })
          $(function (){         
-            $('.selectpicker').selectpicker({         	
-				style	: 'btn-info',
-                size	: 4
-            });         
+            if (window.jQuery && typeof jQuery.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker({         	
+				    style	: 'btn-info',
+                    size	: 4
+                });
+            }         
          });
          function languageOptions()
 		 {         
-             return
-			 {         
+             return {         
                  processing		:   "@lang('modules.datatables.processing')",         
                  search			:   "@lang('modules.datatables.search')",         
                  lengthMenu		:   "@lang('modules.datatables.lengthMenu')",         

@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "JeroTaxonomyReleaseManifest",
+    "taxonomy_version": "2.0.0",
+    "schema_version": 2,
+    "build_id": "build_20261014_113633",
+    "generated_at": "2026-10-14T11:36:33+05:30",
+    "content_hash": "sha256:1ffa9da5dc6d13a6c18af17b109e0e58bc898a11b9dc195d3c365f133b8cbc17",
+    "bundle_hash": "sha256:95308548a9f56c94255de3208386b3d3d790787d83530ebf0cb27ac2662ceadb",
+    "minimum_client_schema": 2,
+    "minimum_supported_version": "2.0.0",
+    "breaking_change": false,
+    "manifest_metrics": {
+        "canonical_designations": 1401,
+        "commercial_aliases": 13,
+        "departments": 12,
+        "role_families": 48,
+        "raw_size_bytes": 1582455,
+        "brotli_size_bytes": 180652,
+        "gzip_size_bytes": 251796
+    }
+}

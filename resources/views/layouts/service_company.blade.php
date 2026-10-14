@@ -2677,17 +2677,18 @@
          
          $(function ()
 		 {         
-            $('.selectpicker').selectpicker(
-			{         	
-				style: 'btn-info',
-                size: 4
-            });         
+            if (window.jQuery && typeof jQuery.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker(
+			    {         	
+				    style: 'btn-info',
+                    size: 4
+                });
+            }         
          });
          
          function languageOptions()
 		 {         
-             return
-			 {         
+             return {         
                  processing:     "@lang('modules.datatables.processing')",         
                  search:         "@lang('modules.datatables.search')",         
                  lengthMenu:    "@lang('modules.datatables.lengthMenu')",         
