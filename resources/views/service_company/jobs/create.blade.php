@@ -824,6 +824,11 @@
         background: #ecfdf5;
         border: 1px solid #a7f3d0;
     }
+    #jrwrap .jero-dept-status-chip.chip-custom {
+        color: #7c3aed;
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+    }
     #jrwrap .jero-dept-select-wrap {
         position: relative;
         width: 100%;
@@ -843,6 +848,7 @@
         transition: color 0.2s ease;
         display: flex;
         align-items: center;
+        z-index: 2;
     }
     #jrwrap .jero-dept-input {
         width: 100%;
@@ -858,6 +864,7 @@
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
         font-family: inherit;
+        text-overflow: ellipsis;
     }
     #jrwrap .jero-dept-input:hover {
         border-color: #94a3b8;
@@ -883,7 +890,7 @@
     }
     #jrwrap .jero-dept-kbd {
         position: absolute;
-        right: 32px;
+        right: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -899,40 +906,48 @@
         pointer-events: none;
         box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
         font-family: inherit;
+        z-index: 2;
     }
-    #jrwrap .jero-dept-input-box:focus-within .jero-dept-kbd {
-        display: none;
+    #jrwrap .jero-dept-input-box:focus-within .jero-dept-kbd,
+    #jrwrap .jero-dept-input-box.has-value .jero-dept-kbd {
+        display: none !important;
     }
     #jrwrap .jero-dept-clear-btn {
         position: absolute;
-        right: 30px;
-        background: none;
+        right: 36px;
+        width: 24px;
+        height: 24px;
+        background: transparent;
         border: none;
-        padding: 4px;
-        color: #94a3b8;
+        padding: 0;
+        color: #64748b;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
+        border-radius: 50%;
         transition: all 0.15s ease;
+        z-index: 5;
     }
     #jrwrap .jero-dept-clear-btn:hover {
         color: #ef4444;
-        background: #fef2f2;
+        background: #fee2e2;
     }
     #jrwrap .jero-dept-chevron {
         position: absolute;
-        right: 12px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
         color: #94a3b8;
         pointer-events: auto;
         cursor: pointer;
-        padding: 4px;
+        padding: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 4px;
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+        z-index: 4;
     }
     #jrwrap .jero-dept-chevron:hover {
         color: #1e293b;
@@ -957,8 +972,6 @@
         flex-direction: column;
         max-height: min(360px, calc(100vh - 120px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
-        user-select: none;
-        contain: layout style;
         box-sizing: border-box;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
@@ -1057,32 +1070,27 @@
     }
     #jrwrap .jero-dept-list-container {
         flex: 1 1 auto;
-        min-height: 0;
+        min-height: 60px;
         max-height: min(280px, 45vh);
         overflow-y: auto;
         overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
-        overscroll-behavior-y: contain;
-        touch-action: pan-y;
         position: relative;
         padding: 4px 0;
         scrollbar-width: thin;
-        scrollbar-color: #94a3b8 #f1f5f9;
+        scrollbar-color: #cbd5e1 #f8fafc;
         box-sizing: border-box;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
-        width: 9px;
+        width: 7px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-track {
         background: #f8fafc;
-        border-radius: 6px;
+        border-radius: 4px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
         background: #cbd5e1;
-        border-radius: 6px;
-        border: 2px solid #f8fafc;
-        min-height: 28px;
+        border-radius: 4px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
@@ -3935,25 +3943,26 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </div>
                                     </div>
 
-                                    <!-- Hidden Synchronized Native Select (Preserves 100% Backward Compatibility with Validation & Submit) -->
+                                    <!-- Hidden Synchronized Native Select & Custom Department Input -->
                                     <select id="category_id" name="category_id" style="display:none;" tabindex="-1" aria-hidden="true">
                                         <option value="">Select Department</option>
                                         <?php
                                         $selectedDeptName = '';
-    foreach ($categories as $category) {
-        $sel = '';
-        if (@$job->category_id == @$category->id) {
-            $sel = 'selected="selected"';
-            $selectedDeptName = $category->name;
-        }
-        echo '<option value="'.@$category->id.'" '.$sel.'>'.ucfirst($category->name).'</option>';
-    }
-    ?>
+                                        foreach ($categories as $category) {
+                                            $sel = '';
+                                            if (@$job->category_id == @$category->id) {
+                                                $sel = 'selected="selected"';
+                                                $selectedDeptName = $category->name;
+                                            }
+                                            echo '<option value="'.@$category->id.'" '.$sel.'>'.ucfirst($category->name).'</option>';
+                                        }
+                                        ?>
                                     </select>
+                                    <input type="hidden" id="custom_department" name="custom_department" value="">
 
                                     <!-- God-Level Enterprise Combobox Component (Client-First / 10K Concurrency) -->
                                     <div class="jero-dept-select-wrap" id="jero_dept_select_wrap">
-                                        <div class="jero-dept-input-box">
+                                        <div class="jero-dept-input-box <?php echo $selectedDeptName ? 'has-value' : ''; ?>" id="jero_dept_input_box">
                                             <span class="jero-dept-search-icon">
                                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                             </span>
@@ -3968,11 +3977,11 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                    aria-haspopup="listbox"
                                                    aria-autocomplete="list"
                                                    value="<?php echo htmlspecialchars($selectedDeptName); ?>">
-                                            <kbd class="jero-dept-kbd" id="jero_dept_kbd" title="Press / to search">/</kbd>
-                                            <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            <kbd class="jero-dept-kbd" id="jero_dept_kbd" title="Press / to search" style="<?php echo $selectedDeptName ? 'display:none;' : ''; ?>">/</kbd>
+                                            <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" aria-label="Clear job department" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" tabindex="-1">
+                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" aria-label="Toggle department list" tabindex="-1">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
                                         </div>
@@ -6915,6 +6924,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             }
             currentStep = step;
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroDeptIntelligenceEngine.commitIfCustom();
+            }
             if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.close === 'function') {
                 window.JeroDeptIntelligenceEngine.close();
             }
@@ -6994,9 +7006,10 @@ $currency_code = GeneralMethod::defaultCurrency();
                 focusSelector: '#category_id_display',
                 validate: function() {
                     var val = ($('#category_id').val() || '').trim();
-                    return !!val;
+                    var displayVal = ($('#category_id_display').val() || '').trim();
+                    return !!(val || displayVal);
                 },
-                message: 'Please select a Job Department.'
+                message: 'Please select or enter a Job Department.'
             },
             min_exp: {
                 step: 1,
@@ -9103,7 +9116,8 @@ $currency_code = GeneralMethod::defaultCurrency();
             var cities = selectedCities.map(function(c) { return String(c).split(' | ')[0]; }).join(', ');
             var titleVal = (document.getElementById('title') ? document.getElementById('title').value : '') || '-';
             setText('rvClient', clientName());
-            setText('rvDepartment', getSelText('category_id'));
+            var deptDisplayVal = ($('#category_id_display').val() || '').trim() || getSelText('category_id') || '-';
+            setText('rvDepartment', deptDisplayVal);
             setText('rvJobTitle', titleVal);
             setText('rvExp', expText());
             setText('rvCompensation', salaryText());
@@ -9192,7 +9206,15 @@ $currency_code = GeneralMethod::defaultCurrency();
         };
 
         // ---------- SYNC ALL HIDDEN INPUTS ----------
-        function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); }
+        function syncAll() { 
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroDeptIntelligenceEngine.commitIfCustom();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroTitleIntelligenceEngine.commitIfCustom();
+            }
+            syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); 
+        }
 
         // ---------- PUBLISH (real submit) ----------
         var isEditPage = (typeof __pageEvent !== 'undefined' && __pageEvent === 'EDIT');
@@ -9229,6 +9251,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             data.append('detail_description', document.getElementById('jobDescription').innerHTML);
             if (!data.has('operation_id') || !data.get('operation_id')) {
                 data.set('operation_id', opId);
+            }
+
+            var deptDisplayVal = ($('#category_id_display').val() || '').trim();
+            if (deptDisplayVal) {
+                data.set('category_id_display', deptDisplayVal);
+                data.set('custom_department', deptDisplayVal);
             }
 
             // Sync explicit visibility payload for career and marketplace (unchecking both = internal only)
@@ -12256,9 +12284,13 @@ $currency_code = GeneralMethod::defaultCurrency();
         var focusedIndex = -1;
         var currentMatches = [];
         var isOpen = false;
+        var selectedDepartment = null; // Explicitly selected department object or null
         var deptBroadcast = null;
         var localManifestVersion = 1;
         var lastFocusCheck = 0;
+        var isInteractingWithDropdown = false;
+        var lastCachedMaxHeight = null;
+        var lastCachedListHeight = null;
 
         // Recency storage key
         var RECENT_KEY = 'jero_recent_depts_' + CURRENT_USER_ID;
@@ -12600,7 +12632,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         '<span>' + escapeHtml(item.division_name || 'General') + '</span>' +
                     '</div>';
                 }
-                var isSelected = (String(item.id) === currentVal);
+                var isSelected = (selectedDepartment && selectedDepartment.id === item.id) || (String(item.id) === currentVal);
                 html += buildItemHtml(item, q, i, isSelected);
             }
 
@@ -12669,7 +12701,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                          ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
                          (footerEl ? footerEl.offsetHeight : 34) + 16;
 
-            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
             var dropUp = false;
             if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
                 dropUp = true;
@@ -12680,24 +12711,34 @@ $currency_code = GeneralMethod::defaultCurrency();
                 dropdown.style.top = 'auto';
                 dropdown.style.bottom = 'calc(100% + 5px)';
 
-                // Clamp max height so dropdown top never extends above viewport top margin
                 var maxAvailable = Math.max(180, Math.min(360, spaceAbove));
-                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (lastCachedMaxHeight !== maxAvailable) {
+                    dropdown.style.maxHeight = maxAvailable + 'px';
+                    lastCachedMaxHeight = maxAvailable;
+                }
                 if (container) {
-                    var listH = Math.max(100, maxAvailable - fixedH);
-                    container.style.maxHeight = listH + 'px';
+                    var listH = Math.max(80, maxAvailable - fixedH);
+                    if (lastCachedListHeight !== listH) {
+                        container.style.maxHeight = listH + 'px';
+                        lastCachedListHeight = listH;
+                    }
                 }
             } else {
                 dropdown.classList.remove('drop-up');
                 dropdown.style.bottom = 'auto';
                 dropdown.style.top = 'calc(100% + 5px)';
 
-                // Clamp max height so dropdown bottom never extends past viewport bottom margin
                 var maxAvailable = Math.max(180, Math.min(360, spaceBelow));
-                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (lastCachedMaxHeight !== maxAvailable) {
+                    dropdown.style.maxHeight = maxAvailable + 'px';
+                    lastCachedMaxHeight = maxAvailable;
+                }
                 if (container) {
-                    var listH = Math.max(100, maxAvailable - fixedH);
-                    container.style.maxHeight = listH + 'px';
+                    var listH = Math.max(80, maxAvailable - fixedH);
+                    if (lastCachedListHeight !== listH) {
+                        container.style.maxHeight = listH + 'px';
+                        lastCachedListHeight = listH;
+                    }
                 }
             }
         }
@@ -12715,8 +12756,6 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (input) {
                 input.setAttribute('aria-expanded', 'true');
                 input.classList.remove('is-invalid');
-
-                // When opening, clear search query so user can view and choose from all 10 divisions
                 currentSearch = '';
                 try {
                     input.select();
@@ -12726,7 +12765,6 @@ $currency_code = GeneralMethod::defaultCurrency();
             renderDropdownList();
             adjustDropdownPosition();
 
-            // Scroll currently selected department into view inside list, or reset to top
             if (container) {
                 var selectedEl = container.querySelector('.jero-dept-item.selected');
                 if (selectedEl) {
@@ -12748,6 +12786,8 @@ $currency_code = GeneralMethod::defaultCurrency();
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
             dropdown.style.maxHeight = '';
+            lastCachedMaxHeight = null;
+            lastCachedListHeight = null;
             if (container) container.style.maxHeight = '';
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
@@ -12772,10 +12812,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             scrollItemIntoView(container, target);
         }
 
-        function selectFocusedItem() {
+        function selectFocusedOrCustom() {
             var container = document.getElementById('jero_dept_list_container');
-            if (!container) return;
-            var items = container.querySelectorAll('.jero-dept-item, .jero-dept-create-action');
+            var items = container ? container.querySelectorAll('.jero-dept-item, .jero-dept-create-action') : [];
+
+            // 1. If user explicitly used arrow keys to focus an option
             if (focusedIndex >= 0 && focusedIndex < items.length) {
                 var el = items[focusedIndex];
                 if (el.classList.contains('jero-dept-create-action')) {
@@ -12786,25 +12827,41 @@ $currency_code = GeneralMethod::defaultCurrency();
                 var id = el.getAttribute('data-id');
                 if (id) {
                     var item = deptMap.get(parseInt(id, 10));
-                    if (item) selectItem(item);
+                    if (item) {
+                        selectItem(item);
+                        return;
+                    }
                 }
-            } else if (currentMatches.length > 0) {
-                selectItem(currentMatches[0]);
-            } else if (currentSearch.trim()) {
-                inlineCreateDepartment(currentSearch.trim());
+            }
+
+            // 2. User pressed Enter without focusing any suggestion (focusedIndex === -1):
+            // CRITICAL ENTERPRISE INVARIANT:
+            // PRESERVE user's manually entered custom value!
+            // NEVER auto-select currentMatches[0]!
+            var input = document.getElementById('category_id_display');
+            var inputVal = input ? (input.value || '').trim() : '';
+            if (inputVal) {
+                commitCustomDepartment(inputVal);
+            } else {
+                closeDropdown();
             }
         }
 
-        function updateStatusChip(item) {
+        function updateStatusChip(type, item) {
             var wrap = document.getElementById('jero_dept_status_wrap');
             var chip = document.getElementById('jero_dept_status_chip');
             if (!wrap || !chip) return;
-            if (!item) {
+
+            if (!type || type === 'none') {
                 wrap.style.display = 'none';
                 return;
             }
+
             wrap.style.display = 'block';
-            if (item.is_standard === 1) {
+            if (type === 'custom') {
+                chip.className = 'jero-dept-status-chip chip-custom';
+                chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Custom Department';
+            } else if (item && item.is_standard === 1) {
                 chip.className = 'jero-dept-status-chip chip-std';
                 chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Standard Taxonomy';
             } else {
@@ -12816,9 +12873,13 @@ $currency_code = GeneralMethod::defaultCurrency();
         function selectItem(item) {
             if (!item) return;
 
+            selectedDepartment = item;
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var customDeptEl = document.getElementById('custom_department');
 
             // 1. Update native select (add option if not present)
             if (select) {
@@ -12840,27 +12901,165 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $(select).val(item.id).trigger('change');
             }
 
+            if (customDeptEl) {
+                customDeptEl.value = '';
+            }
+
             // 2. Update display input
             if (displayInput) {
                 displayInput.value = item.name;
                 displayInput.classList.remove('is-invalid');
             }
+            if (inputBox) {
+                inputBox.classList.add('has-value');
+            }
 
             // 3. Update status chip
-            updateStatusChip(item);
+            updateStatusChip(item.is_standard === 1 ? 'standard' : 'org', item);
 
-            // 4. Update clear button
-            if (clearBtn) {
-                clearBtn.style.display = 'flex';
-            }
+            // 4. Update clear button & hide KBD badge
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
 
             // 5. Update review text
             if (typeof setText === 'function') {
                 setText('rvDepartment', item.name);
             }
 
-            // 6. Recency
+            // 6. Clear validation error state
+            $('#jero_dept_select_wrap').removeClass('has-validation-error');
+            $('.jero-dept-input-box').removeClass('has-validation-error');
+
+            // 7. Recency
             saveRecentDept(item);
+            closeDropdown();
+        }
+
+        function commitCustomDepartment(customName) {
+            var clean = (customName !== undefined && customName !== null) ? String(customName).trim() : '';
+            var input = document.getElementById('category_id_display');
+            var select = document.getElementById('category_id');
+            var customDeptEl = document.getElementById('custom_department');
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+
+            if (!clean) {
+                clearSelection();
+                return;
+            }
+
+            if (input && input.value !== clean) {
+                input.value = clean;
+            }
+            if (inputBox) {
+                inputBox.classList.add('has-value');
+            }
+
+            // Department Data Isolation: Decouple from any previously selected suggestion
+            selectedDepartment = null;
+
+            if (customDeptEl) {
+                customDeptEl.value = clean;
+            }
+
+            // Check if exact case-insensitive match exists in known dictionary
+            var exactMatchedItem = null;
+            for (var d = 0; d < deptList.length; d++) {
+                if ((deptList[d].name || '').toLowerCase() === clean.toLowerCase()) {
+                    exactMatchedItem = deptList[d];
+                    break;
+                }
+            }
+
+            if (exactMatchedItem && select) {
+                // Link ID behind the scenes while strictly preserving user's typed name
+                var exists = false;
+                for (var o = 0; o < select.options.length; o++) {
+                    if (select.options[o].value == exactMatchedItem.id) {
+                        select.selectedIndex = o;
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = exactMatchedItem.id;
+                    opt.text = exactMatchedItem.name;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                }
+                $(select).val(exactMatchedItem.id).trigger('change');
+                updateStatusChip(exactMatchedItem.is_standard === 1 ? 'standard' : 'org', exactMatchedItem);
+            } else {
+                // Custom department: keep isolated from stale department IDs
+                if (select) {
+                    select.selectedIndex = 0;
+                    $(select).val('').trigger('change');
+                }
+                updateStatusChip('custom');
+
+                // Transparent background creation to prime database before form submit
+                var csrfToken = document.querySelector('meta[name="csrf-token"]')
+                    ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    : '{{ csrf_token() }}';
+
+                $.ajax({
+                    url: "{{ route('service_company.account.storeDept') }}",
+                    type: 'POST',
+                    data: {
+                        _token: csrfToken,
+                        dept_name: clean
+                    },
+                    success: function(res) {
+                        if (res && res.status === 'success' && res.category_id) {
+                            var newId = parseInt(res.category_id, 10);
+                            if (select) {
+                                var hasOpt = false;
+                                for (var o = 0; o < select.options.length; o++) {
+                                    if (select.options[o].value == newId) {
+                                        select.selectedIndex = o;
+                                        hasOpt = true;
+                                        break;
+                                    }
+                                }
+                                if (!hasOpt) {
+                                    var newOpt = document.createElement('option');
+                                    newOpt.value = newId;
+                                    newOpt.text = clean;
+                                    newOpt.selected = true;
+                                    select.appendChild(newOpt);
+                                }
+                                $(select).val(newId);
+                            }
+                            var newDept = {
+                                id: newId,
+                                name: res.category_name || clean,
+                                division_id: 1,
+                                division_name: 'General',
+                                is_standard: res.is_standard ? 1 : 0,
+                                keywords: clean
+                            };
+                            if (!deptMap.has(newId)) {
+                                deptList.unshift(newDept);
+                                deptMap.set(newId, newDept);
+                                updateTabCounts();
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+
+            if (typeof setText === 'function') {
+                setText('rvDepartment', clean);
+            }
+
+            $('#jero_dept_select_wrap').removeClass('has-validation-error');
+            $('.jero-dept-input-box').removeClass('has-validation-error');
+
             closeDropdown();
         }
 
@@ -12868,19 +13067,33 @@ $currency_code = GeneralMethod::defaultCurrency();
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var customDeptEl = document.getElementById('custom_department');
+
+            selectedDepartment = null;
 
             if (select) {
                 select.selectedIndex = 0;
                 $(select).val('').trigger('change');
             }
+            if (customDeptEl) {
+                customDeptEl.value = '';
+            }
             if (displayInput) {
                 displayInput.value = '';
                 displayInput.focus();
             }
+            if (inputBox) {
+                inputBox.classList.remove('has-value');
+            }
             if (clearBtn) {
                 clearBtn.style.display = 'none';
             }
-            updateStatusChip(null);
+            if (kbdEl) {
+                kbdEl.style.display = '';
+            }
+            updateStatusChip('none');
 
             if (typeof setText === 'function') {
                 setText('rvDepartment', '-');
@@ -12891,7 +13104,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         // =========================================================================
-        // God-Level Inline Quick-Create Department Handler
+        // Inline Quick-Create Department Handler
         // =========================================================================
         function inlineCreateDepartment(name) {
             if (!name || !name.trim()) return;
@@ -12983,19 +13196,51 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             updateTabCounts();
 
-            // Check if initial selection needs name resolution & status chip
+            // Sync initial state on initial page paint
+            syncInitialState();
+        }
+
+        function syncInitialState() {
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
-            if (select && select.value) {
-                var curr = deptMap.get(parseInt(select.value, 10));
-                if (curr) {
-                    if (displayInput && !displayInput.value) {
-                        displayInput.value = curr.name;
-                    }
-                    var clearBtn = document.getElementById('jero_dept_clear_btn');
-                    if (clearBtn) clearBtn.style.display = 'flex';
-                    updateStatusChip(curr);
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+
+            if (!displayInput) return;
+
+            var currentVal = select ? (select.value || '').trim() : '';
+            var currentText = (displayInput.value || '').trim();
+
+            if (currentVal && deptMap.has(parseInt(currentVal, 10))) {
+                var curr = deptMap.get(parseInt(currentVal, 10));
+                selectedDepartment = curr;
+                if (!currentText) {
+                    displayInput.value = curr.name;
                 }
+                if (inputBox) inputBox.classList.add('has-value');
+                if (clearBtn) clearBtn.style.display = 'flex';
+                if (kbdEl) kbdEl.style.display = 'none';
+                updateStatusChip(curr.is_standard === 1 ? 'standard' : 'org', curr);
+                if (typeof setText === 'function') {
+                    setText('rvDepartment', curr.name);
+                }
+            } else if (currentText) {
+                // Custom department loaded or preserved
+                selectedDepartment = null;
+                if (inputBox) inputBox.classList.add('has-value');
+                if (clearBtn) clearBtn.style.display = 'flex';
+                if (kbdEl) kbdEl.style.display = 'none';
+                updateStatusChip('custom');
+                if (typeof setText === 'function') {
+                    setText('rvDepartment', currentText);
+                }
+            } else {
+                selectedDepartment = null;
+                if (inputBox) inputBox.classList.remove('has-value');
+                if (clearBtn) clearBtn.style.display = 'none';
+                if (kbdEl) kbdEl.style.display = '';
+                updateStatusChip('none');
             }
         }
 
@@ -13082,6 +13327,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             var tabsContainer = document.querySelector('.jero-dept-tabs');
             var container = document.getElementById('jero_dept_list_container');
             var recentBar = document.getElementById('jero_dept_recent_bar');
+            var wrapEl = document.getElementById('jero_dept_select_wrap');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var kbdEl = document.getElementById('jero_dept_kbd');
 
             if (input) {
                 input.addEventListener('focus', function() {
@@ -13099,9 +13347,38 @@ $currency_code = GeneralMethod::defaultCurrency();
                 var searchDebounceTimer = null;
                 var searchRafId = null;
                 input.addEventListener('input', function() {
-                    currentSearch = this.value;
-                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
+                    var val = this.value;
+                    currentSearch = val;
+                    var clean = val.trim();
+
+                    // Department Data Isolation:
+                    // If user previously selected a suggested department and types something different,
+                    // immediately decouple from the suggestion!
+                    if (selectedDepartment && clean.toLowerCase() !== (selectedDepartment.name || '').toLowerCase()) {
+                        selectedDepartment = null;
+                        var select = document.getElementById('category_id');
+                        if (select) {
+                            select.selectedIndex = 0;
+                            $(select).val('').trigger('change');
+                        }
+                    }
+
+                    if (clean) {
+                        if (inputBox) inputBox.classList.add('has-value');
+                        if (clearBtn) clearBtn.style.display = 'flex';
+                        if (kbdEl) kbdEl.style.display = 'none';
+                        updateStatusChip(selectedDepartment ? (selectedDepartment.is_standard === 1 ? 'standard' : 'org') : 'custom', selectedDepartment);
+                    } else {
+                        if (inputBox) inputBox.classList.remove('has-value');
+                        if (clearBtn) clearBtn.style.display = 'none';
+                        if (kbdEl) kbdEl.style.display = '';
+                        updateStatusChip('none');
+                    }
+
                     if (!isOpen) openDropdown();
+
+                    // CRITICAL: Reset keyboard focus index on every keystroke so NO suggestion is highlighted or auto-selected!
+                    focusedIndex = -1;
 
                     clearTimeout(searchDebounceTimer);
                     searchDebounceTimer = setTimeout(function() {
@@ -13113,7 +13390,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }, 35);
                 });
 
-                // Real-World Defense: Prevent Enter key from submitting form prematurely & add Page navigation
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         e.preventDefault();
@@ -13137,13 +13413,33 @@ $currency_code = GeneralMethod::defaultCurrency();
                     } else if (e.key === 'Enter') {
                         e.preventDefault();
                         if (isOpen) {
-                            selectFocusedItem();
+                            selectFocusedOrCustom();
                         } else {
                             openDropdown();
                         }
                     } else if (e.key === 'Tab') {
-                        if (isOpen) closeDropdown();
+                        if (isOpen) {
+                            var val = (input.value || '').trim();
+                            if (val && !selectedDepartment) {
+                                commitCustomDepartment(val);
+                            } else {
+                                closeDropdown();
+                            }
+                        }
                     }
+                });
+
+                input.addEventListener('blur', function() {
+                    // Slight delay so item click in dropdown can register before blur commits
+                    setTimeout(function() {
+                        var activeEl = document.activeElement;
+                        var wrap = document.getElementById('jero_dept_select_wrap');
+                        if (wrap && wrap.contains(activeEl)) return;
+                        var val = (input.value || '').trim();
+                        if (val && !selectedDepartment) {
+                            commitCustomDepartment(val);
+                        }
+                    }, 200);
                 });
             }
 
@@ -13193,6 +13489,26 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (container) {
+                // High-Performance Hardware Mouse Wheel Scroll Engine
+                // Guaranteed smooth scrolling on physical hardware mice (Logitech, Microsoft line mode)
+                container.addEventListener('wheel', function(e) {
+                    var maxScroll = this.scrollHeight - this.clientHeight;
+                    if (maxScroll <= 0) return;
+
+                    var delta = e.deltaY;
+                    if (e.deltaMode === 1) delta *= 33; // Line mode support for physical hardware mice
+                    else if (e.deltaMode === 2) delta *= this.clientHeight; // Page mode
+
+                    var prev = this.scrollTop;
+                    var next = Math.max(0, Math.min(maxScroll, prev + delta));
+
+                    if (next !== prev) {
+                        this.scrollTop = next;
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }, { passive: false });
+
                 container.addEventListener('click', function(e) {
                     // Check for inline create action
                     var createAction = e.target.closest('.jero-dept-create-action');
@@ -13223,27 +13539,38 @@ $currency_code = GeneralMethod::defaultCurrency();
             });
 
             // Prevent scrollbar thumb drag outside bounds from triggering accidental outside-click closing
-            var isPointerInteractingInsideWrap = false;
-            var wrapEl = document.getElementById('jero_dept_select_wrap');
             if (wrapEl) {
                 wrapEl.addEventListener('pointerdown', function() {
-                    isPointerInteractingInsideWrap = true;
+                    isInteractingWithDropdown = true;
+                });
+                wrapEl.addEventListener('mousedown', function() {
+                    isInteractingWithDropdown = true;
                 });
             }
             window.addEventListener('pointerup', function() {
-                isPointerInteractingInsideWrap = false;
+                setTimeout(function() { isInteractingWithDropdown = false; }, 60);
+            });
+            window.addEventListener('mouseup', function() {
+                setTimeout(function() { isInteractingWithDropdown = false; }, 60);
             });
             window.addEventListener('pointercancel', function() {
-                isPointerInteractingInsideWrap = false;
+                isInteractingWithDropdown = false;
             });
 
             // Bullet-Proof Outside Click Handler in Capture Phase
-            // Catches clicks before any child or ancestor calls stopPropagation
             document.addEventListener('pointerdown', function(e) {
-                if (isPointerInteractingInsideWrap) return;
+                if (isInteractingWithDropdown) return;
                 var wrap = document.getElementById('jero_dept_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
-                    if (isOpen) closeDropdown();
+                    if (isOpen) {
+                        var inputEl = document.getElementById('category_id_display');
+                        var val = inputEl ? (inputEl.value || '').trim() : '';
+                        if (val && !selectedDepartment) {
+                            commitCustomDepartment(val);
+                        } else {
+                            closeDropdown();
+                        }
+                    }
                 }
             }, true);
 
@@ -13259,7 +13586,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             window.addEventListener('resize', scheduleAdjustPosition, { passive: true });
-            window.addEventListener('scroll', scheduleAdjustPosition, { passive: true });
+
+            // Ignore inner scroll events from the dropdown list itself
+            window.addEventListener('scroll', function(e) {
+                if (e.target && wrapEl && wrapEl.contains(e.target)) return;
+                scheduleAdjustPosition();
+            }, { passive: true, capture: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
             document.addEventListener('keydown', function(e) {
@@ -13324,6 +13656,17 @@ $currency_code = GeneralMethod::defaultCurrency();
                 currentSearch = q;
                 renderDropdownList();
             },
+            commitIfCustom: function() {
+                var input = document.getElementById('category_id_display');
+                if (!input) return;
+                var val = (input.value || '').trim();
+                if (val && !selectedDepartment) {
+                    commitCustomDepartment(val);
+                }
+            },
+            getSelected: function() {
+                return selectedDepartment;
+            },
             selectById: function(id) {
                 var item = deptMap.get(parseInt(id, 10));
                 if (item) selectItem(item);
@@ -13335,7 +13678,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                         return;
                     }
                 }
+                commitCustomDepartment(name);
             },
+            clear: clearSelection,
             inlineCreate: function(name) {
                 inlineCreateDepartment(name);
             },
