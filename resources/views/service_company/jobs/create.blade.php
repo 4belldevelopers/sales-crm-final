@@ -5843,7 +5843,6 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         $(document).ready(function() {
             $('.address_show').hide();
-            $.noConflict();
 
             // ---- Add Hiring Contact Person ----
             function _atmClearErrors() {
@@ -8582,7 +8581,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         var focusedQualIndex = -1;
 
-        function highlightMatch(text, query) {
+        function highlightQualMatch(text, query) {
             if (!query) return escapeHtml(text);
             var idx = text.toLowerCase().indexOf(query.toLowerCase());
             if (idx === -1) return escapeHtml(text);
@@ -8625,7 +8624,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         html += '<div class="' + itemCls + '" data-qual-val="' + escapeHtml(item.name) + '" onclick="addQualification(\'' + String(item.name).replace(/'/g, "\\'") + '\')">' +
                             '<div class="ij-qual-item-left">' +
                                 '<span class="ij-qual-item-icon">' + icon + '</span>' +
-                                '<span class="ij-qual-item-name">' + highlightMatch(item.label, q) + '</span>' +
+                                '<span class="ij-qual-item-name">' + highlightQualMatch(item.label, q) + '</span>' +
                             '</div>' +
                             '<span class="' + badgeCls + '">' + escapeHtml(item.badge) + '</span>' +
                         '</div>';

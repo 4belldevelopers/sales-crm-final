@@ -1,0 +1,123 @@
+{
+    "Java": [
+        "Spring Boot",
+        "Hibernate",
+        "JSP",
+        "Java EE",
+        "Maven",
+        "Gradle"
+    ],
+    "Spring Boot": [
+        "Java",
+        "Hibernate",
+        "JSP",
+        "Java EE",
+        "Maven",
+        "Gradle"
+    ],
+    "Hibernate": [
+        "Java",
+        "Spring Boot",
+        "JSP",
+        "Java EE"
+    ],
+    "Java EE": [
+        "Java",
+        "Spring Boot",
+        "Hibernate",
+        "JSP"
+    ],
+    "Python": [
+        "Django",
+        "Flask",
+        "FastAPI",
+        "NumPy",
+        "Pandas",
+        "Scikit-learn"
+    ],
+    "Django": [
+        "Python",
+        "Flask",
+        "FastAPI",
+        "NumPy",
+        "Pandas"
+    ],
+    "Flask": [
+        "Python",
+        "Django",
+        "FastAPI",
+        "NumPy",
+        "Pandas"
+    ],
+    "JavaScript": [
+        "React",
+        "Node.js",
+        "Angular",
+        "Vue.js",
+        "Express.js",
+        "jQuery"
+    ],
+    "React": [
+        "JavaScript",
+        "Node.js",
+        "Angular",
+        "Vue.js",
+        "Redux"
+    ],
+    "Node.js": [
+        "JavaScript",
+        "React",
+        "Angular",
+        "Vue.js",
+        "Express.js"
+    ],
+    "PHP": [
+        "Laravel",
+        "Symfony",
+        "CodeIgniter",
+        "WordPress",
+        "Composer"
+    ],
+    "Laravel": [
+        "PHP",
+        "Symfony",
+        "CodeIgniter",
+        "WordPress"
+    ],
+    "Symfony": [
+        "PHP",
+        "Laravel",
+        "CodeIgniter",
+        "WordPress"
+    ],
+    "C#": [
+        ".NET",
+        "ASP.NET",
+        "Entity Framework",
+        "Blazor"
+    ],
+    ".NET": [
+        "C#",
+        "ASP.NET",
+        "Entity Framework",
+        "Blazor"
+    ],
+    "ASP.NET": [
+        "C#",
+        ".NET",
+        "Entity Framework",
+        "Blazor"
+    ],
+    "C++": [
+        "Qt",
+        "Boost",
+        "OpenGL",
+        "STL"
+    ],
+    "Qt": [
+        "C++",
+        "Boost",
+        "OpenGL",
+        "STL"
+    ]
+}
