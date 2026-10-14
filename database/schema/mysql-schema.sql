@@ -4871,3 +4871,71 @@ ALTER TABLE `job_metronics_skills` ADD INDEX `idx_jms_job_id` (`job_id`, `skill_
 ALTER TABLE `bench_additional_detail` ADD INDEX `idx_bench_id` (`bench_id`);
 ALTER TABLE `bench_assign` ADD INDEX `idx_bench_app_company` (`bench_applications_id`, `company_id`);
 
+-- ============================================================================
+-- AGENCY JOB MARKETPLACE ARCHITECTURE V2.2: MULTI-DIMENSIONAL STATE & MODERATION
+-- ============================================================================
+
+ALTER TABLE `jobs` 
+  ADD COLUMN `market_pub_state` ENUM('private', 'pending_review', 'published', 'unpublished', 'withdrawn') NOT NULL DEFAULT 'private',
+  ADD COLUMN `market_mod_state` ENUM('not_required', 'pending', 'auto_approved', 'approved', 'rejected', 'suspended') NOT NULL DEFAULT 'not_required',
+  ADD COLUMN `claim_capacity` ENUM('open', 'limit_reached') NOT NULL DEFAULT 'open',
+  ADD COLUMN `bench_submission` ENUM('disabled', 'enabled', 'paused') NOT NULL DEFAULT 'disabled',
+  ADD COLUMN `commercial_state` ENUM('configured', 'incomplete', 'locked', 'disputed') NOT NULL DEFAULT 'configured',
+  ADD COLUMN `state_version` BIGINT UNSIGNED NOT NULL DEFAULT 1;
+
+ALTER TABLE `jobs` ADD INDEX `idx_jobs_txn_market_lookup` (`company_id`, `market_pub_state`, `market_mod_state`, `updated_at`);
+
+DROP TABLE IF EXISTS `job_marketplace_moderation_logs`;
+CREATE TABLE `job_marketplace_moderation_logs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `job_id` INT UNSIGNED NOT NULL,
+  `company_id` INT UNSIGNED NOT NULL,
+  `actor_id` INT UNSIGNED NOT NULL,
+  `actor_role` ENUM('recruiter', 'superadmin', 'system') NOT NULL,
+  `action` ENUM('submit', 'auto_approve', 'manual_approve', 'reject', 'suspend', 'resubmit', 'withdraw') NOT NULL,
+  `from_mod_state` VARCHAR(32) NOT NULL,
+  `to_mod_state` VARCHAR(32) NOT NULL,
+  `reason_code` VARCHAR(64) NULL,
+  `rejection_notes` TEXT NULL,
+  `risk_score` DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_job_mod_history` (`job_id`, `created_at`),
+  KEY `idx_company_mod_history` (`company_id`, `created_at`),
+  KEY `idx_actor_mod_actions` (`actor_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `coin_ledger`;
+CREATE TABLE `coin_ledger` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transaction_id` VARCHAR(64) NOT NULL,
+  `company_id` INT UNSIGNED NOT NULL,
+  `account_type` ENUM('operational', 'sales', 'escrow') NOT NULL,
+  `coin_type` ENUM('standard', 'promotional', 'enterprise') NOT NULL,
+  `entry_type` ENUM('DEBIT', 'CREDIT') NOT NULL,
+  `amount` DECIMAL(15, 2) NOT NULL,
+  `balance_after` DECIMAL(15, 2) NOT NULL,
+  `reference_type` VARCHAR(64) NOT NULL,
+  `reference_id` VARCHAR(64) NOT NULL,
+  `idempotency_key` VARCHAR(64) NOT NULL,
+  `metadata` JSON NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_coin_ledger_txn` (`transaction_id`),
+  UNIQUE KEY `uniq_coin_ledger_idempotency` (`idempotency_key`),
+  KEY `idx_company_ledger` (`company_id`, `account_type`, `coin_type`, `created_at`),
+  KEY `idx_reference` (`reference_type`, `reference_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `sys_processed_events`;
+CREATE TABLE `sys_processed_events` (
+  `event_id` VARCHAR(64) NOT NULL,
+  `consumer_group` VARCHAR(64) NOT NULL,
+  `processed_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`event_id`),
+  KEY `idx_cleanup` (`processed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `recommendation_relation` ADD INDEX `idx_rec_rel_marketplace_claim` (`job_id`, `to_company_id`, `final_status`);
+
+

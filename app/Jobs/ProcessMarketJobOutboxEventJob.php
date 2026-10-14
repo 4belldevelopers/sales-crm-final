@@ -81,6 +81,20 @@ class ProcessMarketJobOutboxEventJob implements ShouldQueue
         }
 
         try {
+            // Idempotent consumer protection
+            $alreadyProcessed = DB::table('sys_processed_events')
+                ->where('event_id', (string) $eventId)
+                ->where('consumer_group', 'market_job_worker')
+                ->exists();
+
+            if ($alreadyProcessed) {
+                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                    'status' => 'COMPLETED',
+                    'processed_at' => now(),
+                ]);
+                return;
+            }
+
             $payload = json_decode($event->payload, true) ?? [];
             $jobId = (int) ($event->aggregate_id ?? $payload['job_id'] ?? 0);
             $tenantId = (int) ($event->tenant_id ?? 0);
@@ -151,6 +165,15 @@ class ProcessMarketJobOutboxEventJob implements ShouldQueue
                     'processed_at' => now(),
                     'last_error' => null,
                 ]);
+
+            // 4. Mark event ID as processed in sys_processed_events
+            try {
+                DB::table('sys_processed_events')->insertOrIgnore([
+                    'event_id' => (string) $eventId,
+                    'consumer_group' => 'market_job_worker',
+                    'processed_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
 
         } catch (\Throwable $e) {
             Log::error('[ProcessMarketJobOutboxEventJob] Event processing failed for #'.$eventId.': '.$e->getMessage(), [

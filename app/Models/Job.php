@@ -27,10 +27,12 @@ class Job extends Model
         'required_columns' => 'array',
         'meta_details' => 'array',
         'section_visibility' => 'array',
+        'state_version' => 'integer',
     ];
 
     protected $appends = [
         'active',
+        'public_market_status',
     ];
 
     public function applications()
@@ -152,4 +154,68 @@ class Job extends Model
     {
         return $this->belongsToMany(Question::class, 'job_questions');
     }
+
+    /**
+     * Intent: Dynamic projection for backward compatibility with legacy views.
+     * Computes single legacy integer from orthogonal state dimensions.
+     */
+    public function getPublicMarketStatusAttribute($value): int
+    {
+        return \App\Enums\MarketplaceState::computeLegacyStatus(
+            $this->market_pub_state ?? null,
+            $this->market_mod_state ?? null,
+            $this->claim_capacity ?? null,
+            $this->status ?? 'active',
+            $this->commercial_state ?? 'configured'
+        );
+    }
+
+    /**
+     * Intent: Mutator guard preventing direct writes to legacy public_market_status.
+     * Automatically maps legacy integer updates into orthogonal states to prevent drift.
+     */
+    public function setPublicMarketStatusAttribute($value): void
+    {
+        $intVal = (int) $value;
+        switch ($intVal) {
+            case 0: // Private
+                $this->attributes['market_pub_state'] = \App\Enums\MarketPubState::PRIVATE->value;
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::NOT_REQUIRED->value;
+                break;
+            case 1: // Pending
+                $this->attributes['market_pub_state'] = \App\Enums\MarketPubState::PENDING_REVIEW->value;
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::PENDING->value;
+                break;
+            case 2: // Approved
+                $this->attributes['market_pub_state'] = \App\Enums\MarketPubState::PUBLISHED->value;
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::APPROVED->value;
+                $this->attributes['claim_capacity'] = \App\Enums\ClaimCapacity::OPEN->value;
+                break;
+            case 3: // Rejected
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::REJECTED->value;
+                break;
+            case 4: // Vendor Limit
+                $this->attributes['market_pub_state'] = \App\Enums\MarketPubState::PUBLISHED->value;
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::APPROVED->value;
+                $this->attributes['claim_capacity'] = \App\Enums\ClaimCapacity::LIMIT_REACHED->value;
+                break;
+            case 5: // Suspended
+                $this->attributes['market_mod_state'] = \App\Enums\MarketModState::SUSPENDED->value;
+                break;
+            case 6: // Unpublished
+                $this->attributes['market_pub_state'] = \App\Enums\MarketPubState::UNPUBLISHED->value;
+                break;
+        }
+
+        $this->attributes['public_market_status'] = $intVal;
+    }
+
+    /**
+     * Intent: Relationship to immutable dimensional moderation history logs.
+     */
+    public function moderationLogs()
+    {
+        return $this->hasMany(JobMarketplaceModerationLog::class, 'job_id');
+    }
 }
+
