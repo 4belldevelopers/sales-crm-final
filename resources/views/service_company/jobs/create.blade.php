@@ -5312,21 +5312,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </label>
 
                                         <label class="r4-check-item">
-                                            <input type="checkbox" class="r4-custom-check" name="visibility_marketplace" id="rv_visibility_marketplace" {{ (isset($job) && in_array(@$job->market_pub_state, ['published', 'pending_review']) && @$job->market_mod_state !== 'rejected') ? 'checked' : ((isset($job) && @$job->public_market_status == 2) ? 'checked' : '') }}>
-                                            <span class="r4-check-box">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                                            </span>
-                                            <span class="r4-check-content">
-                                                <span class="r4-check-title-row">
-                                                    <span class="r4-check-text">Publish on Agency Marketplace</span>
-                                                    <span class="r4-badge-recommended">Recommended</span>
-                                                </span>
-                                                <span class="r4-check-sublabel">Visible to 250+ partner agencies for full outsource claims</span>
-                                            </span>
-                                        </label>
-
-                                        <label class="r4-check-item">
-                                            <input type="checkbox" class="r4-custom-check" name="visibility_bench_talent" id="rv_visibility_bench_talent" value="1" {{ (isset($job) && @$job->bench_submission === 'enabled') ? 'checked' : '' }}>
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_bench_talent" id="rv_visibility_bench_talent" value="1" {{ (!isset($job) || @$job->bench_submission === 'enabled') ? 'checked' : '' }}>
                                             <span class="r4-check-box">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                                             </span>
@@ -5336,6 +5322,20 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                     <span class="r4-badge-recommended" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;">Bench Sharing</span>
                                                 </span>
                                                 <span class="r4-check-sublabel">Allow partner agencies to share & propose bench talent profiles directly on this job</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="r4-check-item">
+                                            <input type="checkbox" class="r4-custom-check" name="visibility_marketplace" id="rv_visibility_marketplace" {{ (isset($job) && in_array(@$job->market_pub_state, ['published', 'pending_review']) && @$job->claim_capacity === 'open' && @$job->market_mod_state !== 'rejected') ? 'checked' : ((isset($job) && !isset($job->market_pub_state) && @$job->public_market_status == 2 && @$job->bench_submission !== 'enabled') ? 'checked' : '') }}>
+                                            <span class="r4-check-box">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                            <span class="r4-check-content">
+                                                <span class="r4-check-title-row">
+                                                    <span class="r4-check-text">Publish on Agency Marketplace</span>
+                                                    <span class="r4-badge-recommended">Recommended</span>
+                                                </span>
+                                                <span class="r4-check-sublabel">Visible to 250+ partner agencies for full outsource claims</span>
                                             </span>
                                         </label>
                                     </div>
@@ -5349,7 +5349,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </svg>
                                         </span>
                                         <div class="r4-info-text" id="rv_visibility_info_text">
-                                            This job will be published on your company career page for public candidates to discover and apply directly.
+                                            This job will be published on your <strong>company career page</strong> for direct applicants and open to partner agencies to <strong>propose pre-vetted bench talent profiles</strong>.
                                         </div>
                                     </div>
                                 </div>
@@ -7746,8 +7746,14 @@ $currency_code = GeneralMethod::defaultCurrency();
             var isMarket = $market.is(':checked');
             var isBench = $bench.is(':checked');
 
-            if (isMarket && isBench) {
+            if (isCareer && isMarket && isBench) {
+                $infoText.html('This job will be published on your <strong>company career page</strong>, and on the Agency Marketplace for <strong>both full outsource claims</strong> and <strong>bench talent proposals</strong> from 250+ verified agency partners.');
+            } else if (isMarket && isBench) {
                 $infoText.html('This job will be published on the Agency Marketplace for <strong>both full outsource claims</strong> and <strong>bench talent proposals</strong> from 250+ verified agency partners.');
+            } else if (isCareer && isBench) {
+                $infoText.html('This job will be published on your <strong>company career page</strong> for direct applicants and open to partner agencies to <strong>propose pre-vetted bench talent profiles</strong>.');
+            } else if (isCareer && isMarket) {
+                $infoText.html('This job will be published on your <strong>company career page</strong> and on the Agency Marketplace for partner agencies to claim and submit candidates.');
             } else if (isMarket) {
                 $infoText.html('This job will be published on the Agency Marketplace for partner agencies to claim and submit candidates. <a href="javascript:void(0)" onclick="if(typeof showCoinRulesModal===\'function\')showCoinRulesModal();else showToast(\'Learn more about marketplace\',\'info\');">Learn more</a>');
             } else if (isBench) {
