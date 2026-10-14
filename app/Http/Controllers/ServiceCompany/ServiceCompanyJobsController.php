@@ -14223,7 +14223,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $this->uArr = DB::table('client_contact_info')
                 ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
                 ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
-                ->where('clients.company_id', $this->job->client_id)
+                ->where('client_contact_info.client_id', $this->job->client_id)
                 ->get();
         }
 
@@ -14262,6 +14262,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('client_contact_info_jobs.job_id', $id)
             ->get();
 
+        // Fallback: If pivot has no contacts, fallback to the hiring organization's contacts
+        if ($this->contactPersonList->isEmpty()) {
+            $fallbackClientId = ! empty($this->job->client_id)
+                ? (int) $this->job->client_id
+                : (int) DB::table('clients')->where('company_id', $company_id)->where('self_company', 1)->value('id');
+
+            if ($fallbackClientId > 0) {
+                $this->contactPersonList = DB::table('client_contact_info')
+                    ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
+                    ->where('client_contact_info.client_id', $fallbackClientId)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+            }
+        }
+
         $this->recruiterlist = DB::table('job_assign')
             ->join('users', 'users.id', '=', 'job_assign.user_id')
             ->select('users.name', 'users.id')
@@ -14269,6 +14284,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('job_assign.job_id', $id)
             ->where('users.type', '=', 0)
             ->get();
+
+        // Fallback: If job has no assigned recruiters, fallback to the authenticated recruiter
+        if ($this->recruiterlist->isEmpty()) {
+            $this->recruiterlist = DB::table('users')
+                ->select('users.name', 'users.id')
+                ->where('users.id', $userId)
+                ->where('users.company_id', $company_id)
+                ->get();
+        }
 
         $this->job_metronics_skills = DB::table('job_metronics_skills')
             ->select('skill_name')

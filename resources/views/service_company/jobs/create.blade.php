@@ -433,15 +433,40 @@
     #jrwrap .jero-title-status-chip {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
         font-size: 11px;
         font-weight: 500;
-        color: #10B981;
+        padding: 2px 9px;
+        border-radius: 12px;
+        line-height: 1.25;
+        letter-spacing: 0.1px;
+        transition: all 0.2s ease;
+    }
+    #jrwrap .jero-title-status-chip.chip-std {
+        color: #059669;
         background: #ECFDF5;
         border: 1px solid #A7F3D0;
-        padding: 2px 8px;
-        border-radius: 12px;
-        line-height: 1.2;
+    }
+    #jrwrap .jero-title-status-chip.chip-org {
+        color: #1D4ED8;
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+    }
+    #jrwrap .jero-title-status-chip.chip-custom {
+        color: #475569;
+        background: #F1F5F9;
+        border: 1px solid #CBD5E1;
+    }
+    #jrwrap .jero-title-select-wrap.has-selected-suggestion .jero-title-input {
+        border-color: #A7F3D0;
+        background: #FAFCFA;
+    }
+    #jrwrap .jero-title-select-wrap.has-selected-suggestion .jero-title-search-icon {
+        color: #10B981;
+    }
+    #jrwrap .jero-title-select-wrap.has-custom-title .jero-title-input {
+        border-color: #E4E6EF;
+        background: #FFFFFF;
     }
     #jrwrap .jero-title-select-wrap {
         position: relative;
@@ -3558,10 +3583,35 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $cpersonData = $cpData->contact_person_name;
                 $cpersonDataId = @$cpData->id;
             } else {
-                $cpersonData = $cpersonData.' , '.$cpData->contact_person_name;
-                $cpersonDataId = $cpersonDataId.' , '.@$cpData->id;
+                $cpersonData = $cpersonData.','.$cpData->contact_person_name;
+                $cpersonDataId = $cpersonDataId.','.(@$cpData->id ?? '');
             }
             $cp_inc++;
+        }
+
+        // Robust Fallback: If contact person is empty, populate from the hiring organization
+        if (empty($cpersonData)) {
+            $effectiveClientId = ! empty($job->client_id)
+                ? (int) $job->client_id
+                : (int) DB::table('clients')->where('company_id', auth()->user()->company_id ?? 2)->where('self_company', 1)->value('id');
+
+            if ($effectiveClientId > 0) {
+                $clientContacts = DB::table('client_contact_info')
+                    ->select('id', 'contact_person_name')
+                    ->where('client_id', $effectiveClientId)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                if ($clientContacts->isNotEmpty()) {
+                    $cpersonData = $clientContacts->pluck('contact_person_name')->implode(',');
+                    $cpersonDataId = $clientContacts->pluck('id')->implode(',');
+                }
+            }
+        }
+
+        if (empty($recruiterData)) {
+            $recruiterData = auth()->user()->name ?? '';
+            $recruiterDataId = auth()->user()->id ?? '';
         }
 
         if (@$job->carrier_website == 1) {
@@ -3789,7 +3839,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                         <label class="form-label required mb-0">Job Title / Designation</label>
                                         <span class="jero-title-status-chip" id="jero_title_status_chip" style="display:none;">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span id="jero_title_status_icon"></span>
                                             <span id="jero_title_status_text">Template active</span>
                                         </span>
                                     </div>
@@ -3816,7 +3866,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             <button type="button" class="jero-title-clear-btn" id="jero_title_clear_btn" style="display:none;" aria-label="Clear job title" title="Clear">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-title-chevron" id="jero_title_chevron">
+                                            <div class="jero-title-chevron" id="jero_title_chevron" role="button" aria-label="Toggle suggestions">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
                                             <input type="hidden" name="canonical_designation_id" id="canonical_designation_id" value="<?php echo @$job->canonical_designation_id; ?>">
@@ -3840,11 +3890,11 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                                             <!-- Custom Title Action Pill -->
                                             <div class="jero-title-custom-action" id="jero_title_custom_action" style="display:none;">
-                                                <div class="jero-title-custom-pill" id="jero_title_custom_pill">
-                                                    <span class="custom-icon">+</span>
+                                                <div class="jero-title-custom-pill" id="jero_title_custom_pill" role="option">
+                                                    <span class="custom-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
                                                     <div class="custom-text-wrap">
                                                         <div class="custom-title-label">Use "<span id="jero_custom_title_text"></span>" as custom title</div>
-                                                        <div class="custom-title-sub">Enter job description and skills manually</div>
+                                                        <div class="custom-title-sub">Manual entry · JD & skills will remain blank</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -3856,7 +3906,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="form-hint">*Select from the library for automated JD & skills, or enter a custom designation.</span>
+                                    <span class="form-hint" id="jero_title_hint">*Select from library for auto-fill JD & skills, or type a custom title (manual JD & skills).</span>
 
                                     <!-- Safe Auto-Fill Transactional Undo Snackbar -->
                                     <div class="jero-autofill-undo-toast" id="jero_autofill_undo_toast" style="display:none;">
@@ -5858,7 +5908,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                 window.JeroTitleIntelligenceEngine.selectByTitle(suggestion);
             } else {
                 $('#title').val(suggestion);
-                changeautofillfield();
             }
         }
 
@@ -6620,38 +6669,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
 
-        // ---- Auto-fill JD from title (safe client-first execution + AJAX fallback) ----
+        // ---- Auto-fill JD from title (Neutralized for strict custom title isolation) ----
         function changeautofillfield() {
-            if (window._isApplyingTitleTemplate) return;
-            var rawTitle = ($('#title').val() || '').trim();
-            if (!rawTitle) return;
-
-            if (window.JeroTitleIntelligenceEngine && window.JeroTitleIntelligenceEngine.hasLocalTemplate(rawTitle)) {
-                window.JeroTitleIntelligenceEngine.applyLocalTemplate(rawTitle);
-                return;
-            }
-
-            var data = new FormData();
-            data.append("title", rawTitle);
-            $.ajax({
-                url: '{{ route('service_company.jobs.jdDetails') }}',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                method: "POST", processData: false, contentType: false, data: data, redirect: true,
-                success: function(data) {
-                    if (data.status == 'success') {
-                        var ed = document.getElementById('jobDescription');
-                        var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
-                        if (ed && currentDesc === '') {
-                            ed.innerHTML = data.jd || '';
-                            syncDescription();
-                        }
-                        if (data.skills && skills.length === 0) {
-                            (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
-                            renderSkills();
-                        }
-                    }
-                }
-            });
+            // Intentionally no-op: Data isolation contract guarantees that typed custom titles
+            // never auto-populate JD or skills via background AJAX.
+            // Templates are only applied upon explicit user selection in JeroTitleIntelligenceEngine.
         }
 
         $('#jobDescription').on('input', function() {
@@ -6895,6 +6917,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             currentStep = step;
             if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.close === 'function') {
                 window.JeroDeptIntelligenceEngine.close();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroTitleIntelligenceEngine.commitIfCustom();
             }
             if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.close === 'function') {
                 window.JeroTitleIntelligenceEngine.close();
@@ -9684,17 +9709,40 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
         }
 
+        <?php
+        $__clientIds = collect($client ?? [])->pluck('id')->filter()->toArray();
+        $__contactsByClient = !empty($__clientIds) 
+            ? DB::table('client_contact_info')
+                ->select('id', 'client_id', 'contact_person_name', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
+                ->whereIn('client_id', $__clientIds)
+                ->get()
+                ->groupBy('client_id')
+            : collect();
+        ?>
         // Seed initial client headers passed from server Blade for 0.0ms initial paint
         window.__INITIAL_CLIENTS__ = [
             <?php if (isset($client) && (is_array($client) || is_object($client))) { ?>
-                <?php foreach ($client as $c) { ?>
+                <?php foreach ($client as $c) { 
+                    $__cContacts = $__contactsByClient->get($c->id, collect());
+                ?>
                 {
                     id: <?php echo (int) $c->id; ?>,
                     n: <?php echo json_encode(ucfirst($c->name)); ?>,
                     t: <?php echo (int) $c->self_company; ?>,
                     s: 1,
                     l: <?php echo json_encode($c->logo ?: ''); ?>,
-                    i: <?php echo json_encode($c->industry ?: ''); ?>
+                    i: <?php echo json_encode($c->industry ?: ''); ?>,
+                    cc: [
+                        <?php foreach ($__cContacts as $__cc) { ?>
+                        {
+                            id: <?php echo (int) $__cc->id; ?>,
+                            n: <?php echo json_encode(ucwords(trim($__cc->contact_person_name))); ?>,
+                            d: <?php echo json_encode($__cc->contact_person_designation ?: 'Hiring Manager'); ?>,
+                            e: <?php echo json_encode($__cc->contact_person_email ?: ''); ?>,
+                            p: <?php echo json_encode($__cc->contact_person_number ?: ''); ?>
+                        },
+                        <?php } ?>
+                    ]
                 },
                 <?php } ?>
             <?php } ?>
@@ -10945,6 +10993,10 @@ $currency_code = GeneralMethod::defaultCurrency();
         var inputDebounceTimer = null;
         var inputRafId = null;
 
+        // Enterprise State Tracking: Explicit Suggestion vs Custom Title
+        var selectedSuggestion = null;        // Holds item object when explicitly selected by user, null when custom
+        var templateAppliedInSession = false;  // True only if template was applied during the active session
+
         // Synonym Intelligence Dictionary
         var TITLE_SYNONYMS = {
             'sde': ['software development engineer', 'software engineer'],
@@ -11279,18 +11331,10 @@ $currency_code = GeneralMethod::defaultCurrency();
             focusedIndex = -1;
 
             var q = currentSearch.trim();
-            var exactMatchExists = false;
 
-            for (var m = 0; m < currentMatches.length; m++) {
-                if (currentMatches[m].title.toLowerCase() === q.toLowerCase()) {
-                    exactMatchExists = true;
-                    break;
-                }
-            }
-
-            // Render Custom Title Action Pill if user has typed something non-empty and non-exact
+            // Render Custom Title Action Pill whenever user has typed something non-empty
             if (customWrap && customText) {
-                if (q && !exactMatchExists) {
+                if (q) {
                     customText.textContent = q;
                     customWrap.style.display = 'block';
                 } else {
@@ -11308,15 +11352,13 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             var html = '';
             var recentItems = getRecentTitles();
-            var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
-            var currentVal = ($('#title').val() || '').trim().toLowerCase();
 
             // When search is empty and viewing 'all', show RECENTLY USED header if available
             if (!q && currentFilter === 'all' && recentItems.length > 0) {
                 html += '<div class="jero-title-section-header">Recently Used</div>';
                 for (var r = 0; r < recentItems.length; r++) {
                     var rec = recentItems[r];
-                    var isSel = (rec.title.toLowerCase() === currentVal);
+                    var isSel = !!(selectedSuggestion && selectedSuggestion.id === rec.id);
                     html += buildItemHtml(rec, '', r, isSel, true);
                 }
                 html += '<div class="jero-title-section-header">Standard & Organization Library</div>';
@@ -11324,7 +11366,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             for (var i = 0; i < currentMatches.length; i++) {
                 var item = currentMatches[i];
-                var isSelected = (item.title.toLowerCase() === currentVal);
+                var isSelected = !!(selectedSuggestion && selectedSuggestion.id === item.id);
                 html += buildItemHtml(item, q, i, isSelected, false);
             }
 
@@ -11471,6 +11513,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (!priorSnapshot) return;
 
             $('#title').val(priorSnapshot.title);
+            $('#raw_designation').val(priorSnapshot.title);
+            $('#canonical_designation_id').val(priorSnapshot.canonical_id || '');
+
             var ed = document.getElementById('jobDescription');
             if (ed) {
                 ed.innerHTML = priorSnapshot.jd;
@@ -11483,22 +11528,62 @@ $currency_code = GeneralMethod::defaultCurrency();
                 if (typeof renderSkills === 'function') renderSkills();
             }
 
+            selectedSuggestion = priorSnapshot.selectedSuggestion;
+            templateAppliedInSession = priorSnapshot.templateAppliedInSession;
+
             hideUndoToast();
-            updateStatusChip(false);
+            if (selectedSuggestion) {
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else if (priorSnapshot.title && priorSnapshot.title.trim()) {
+                updateStatusChip('custom');
+            } else {
+                updateStatusChip('none');
+            }
             priorSnapshot = null;
         }
 
-        function updateStatusChip(isActive, isCustom) {
+        function clearTemplateData() {
+            var ed = document.getElementById('jobDescription');
+            if (ed) {
+                ed.innerHTML = '';
+                if (typeof syncDescription === 'function') syncDescription();
+            }
+            if (typeof skills !== 'undefined' && Array.isArray(skills)) {
+                skills.length = 0;
+                if (typeof renderSkills === 'function') renderSkills();
+            }
+            hideUndoToast();
+            templateAppliedInSession = false;
+        }
+
+        function updateStatusChip(state, item) {
             var chip = document.getElementById('jero_title_status_chip');
+            var icon = document.getElementById('jero_title_status_icon');
             var text = document.getElementById('jero_title_status_text');
+            var wrap = document.getElementById('jero_title_select_wrap');
             if (!chip || !text) return;
 
-            if (isActive) {
+            chip.classList.remove('chip-std', 'chip-org', 'chip-custom');
+            if (wrap) wrap.classList.remove('has-selected-suggestion', 'has-custom-title');
+
+            if (state === 'suggestion' && item) {
                 chip.style.display = 'inline-flex';
-                chip.style.background = isCustom ? '#F1F5F9' : '#ECFDF5';
-                chip.style.borderColor = isCustom ? '#CBD5E1' : '#A7F3D0';
-                chip.style.color = isCustom ? '#475569' : '#10B981';
-                text.textContent = isCustom ? 'Custom designation' : 'Template active';
+                if (wrap) wrap.classList.add('has-selected-suggestion');
+                if (item.is_standard === 1) {
+                    chip.classList.add('chip-std');
+                    if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+                    text.textContent = (item.has_template === 1) ? 'Standard Library · Auto-filled' : 'Standard Library';
+                } else {
+                    chip.classList.add('chip-org');
+                    if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>';
+                    text.textContent = (item.has_template === 1) ? 'My Organization · Auto-filled' : 'My Organization';
+                }
+            } else if (state === 'custom') {
+                chip.style.display = 'inline-flex';
+                chip.classList.add('chip-custom');
+                if (wrap) wrap.classList.add('has-custom-title');
+                if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+                text.textContent = 'Custom Title · Manual entry';
             } else {
                 chip.style.display = 'none';
             }
@@ -11516,6 +11601,9 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                 priorSnapshot = {
                     title: $('#title').val(),
+                    canonical_id: $('#canonical_designation_id').val(),
+                    selectedSuggestion: selectedSuggestion,
+                    templateAppliedInSession: templateAppliedInSession,
                     jd: ed ? ed.innerHTML : '',
                     skills: currentSkills
                 };
@@ -11551,8 +11639,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (added && typeof renderSkills === 'function') renderSkills();
                 }
 
+                templateAppliedInSession = true;
                 showUndoToast('Template applied: Job description • Recommended skills');
-                updateStatusChip(true, false);
+                updateStatusChip('suggestion', item);
             } finally {
                 setTimeout(function() {
                     isApplyingTemplate = false;
@@ -11564,12 +11653,13 @@ $currency_code = GeneralMethod::defaultCurrency();
         function selectItem(item) {
             if (!item) return;
 
+            selectedSuggestion = item;
             $('#title').val(item.title);
             $('#raw_designation').val(item.title);
             if (item.canonical_id || (item.is_standard && item.id < 1000000)) {
                 $('#canonical_designation_id').val(item.canonical_id || item.id);
             } else {
-                $('#canonical_designation_id').val('');
+                $('#canonical_designation_id').val(item.id || '');
             }
             $('#taxonomy_version').val(item.taxonomy_version || '2.0.0');
 
@@ -11581,29 +11671,85 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (item.has_template === 1) {
                 applyTemplateSafely(item, false);
+                templateAppliedInSession = true;
             } else {
-                updateStatusChip(true, true);
+                templateAppliedInSession = false;
+                updateStatusChip('suggestion', item);
             }
 
             trackTelemetry('title_selected', { id: item.id, title: item.title, is_standard: item.is_standard });
         }
 
-        function selectCustomTitle(customTitle) {
-            var clean = (customTitle || '').trim();
-            if (!clean) return;
+        function commitCustomTitle(customTitle) {
+            var clean = (customTitle !== undefined && customTitle !== null) ? String(customTitle).trim() : '';
+            var input = document.getElementById('title');
+            if (input && input.value !== clean) {
+                input.value = clean;
+            }
 
-            $('#title').val(clean);
             $('#raw_designation').val(clean);
             $('#canonical_designation_id').val('');
             $('#taxonomy_version').val('2.0.0');
 
+            // Data Isolation: If user transitions from a suggestion template to custom title,
+            // clear the template-populated JD and skills so custom title stays isolated
+            if (selectedSuggestion !== null && templateAppliedInSession) {
+                clearTemplateData();
+            }
+            selectedSuggestion = null;
+
             closeDropdown();
 
             var clearBtn = document.getElementById('jero_title_clear_btn');
-            if (clearBtn) clearBtn.style.display = 'flex';
+            if (clearBtn) clearBtn.style.display = clean ? 'flex' : 'none';
 
-            updateStatusChip(true, true);
-            trackTelemetry('custom_title_created', { title: clean });
+            if (clean) {
+                updateStatusChip('custom');
+            } else {
+                updateStatusChip('none');
+            }
+            trackTelemetry('custom_title_committed', { title: clean });
+        }
+
+        function syncInitialState() {
+            var input = document.getElementById('title');
+            var canonicalEl = document.getElementById('canonical_designation_id');
+            if (!input) return;
+
+            var titleVal = (input.value || '').trim();
+            var canonId = canonicalEl ? (canonicalEl.value || '').trim() : '';
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = titleVal ? 'flex' : 'none';
+
+            if (!titleVal) {
+                updateStatusChip('none');
+                return;
+            }
+
+            if (canonId && titlesMap.has(parseInt(canonId, 10))) {
+                selectedSuggestion = titlesMap.get(parseInt(canonId, 10));
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else {
+                var matched = null;
+                if (canonId) {
+                    for (var i = 0; i < titlesList.length; i++) {
+                        if (String(titlesList[i].id) === String(canonId)) {
+                            matched = titlesList[i];
+                            break;
+                        }
+                    }
+                }
+                if (matched) {
+                    selectedSuggestion = matched;
+                    updateStatusChip('suggestion', selectedSuggestion);
+                } else if (canonId) {
+                    updateStatusChip('suggestion', { is_standard: 1, has_template: 0 });
+                } else {
+                    selectedSuggestion = null;
+                    updateStatusChip('custom');
+                }
+            }
         }
 
         function trackTelemetry(event, payload) {
@@ -11620,6 +11766,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             titlesList = manifest.titles;
             buildInvertedIndex(titlesList);
             updateTabCounts();
+            syncInitialState();
         }
 
         async function initCacheAndSync() {
@@ -11692,6 +11839,53 @@ $currency_code = GeneralMethod::defaultCurrency();
                 });
         }
 
+        function handleInputChange() {
+            var input = document.getElementById('title');
+            if (!input) return;
+            var val = input.value;
+            currentSearch = val;
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+
+            // Data Isolation: If user previously selected a suggestion and modifies the title,
+            // immediately clear template-populated JD and skills so the custom title stays isolated
+            if (selectedSuggestion && val.trim().toLowerCase() !== selectedSuggestion.title.toLowerCase()) {
+                if (templateAppliedInSession) {
+                    clearTemplateData();
+                }
+                selectedSuggestion = null;
+                $('#canonical_designation_id').val('');
+            }
+
+            $('#raw_designation').val(val);
+
+            // Enterprise UX visual differentiation
+            if (selectedSuggestion) {
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else if (val.trim()) {
+                $('#canonical_designation_id').val('');
+                updateStatusChip('custom');
+            } else {
+                $('#canonical_designation_id').val('');
+                updateStatusChip('none');
+            }
+
+            if (!isOpen) openDropdown();
+
+            // CRITICAL: Reset keyboard focus index on every keystroke so NO suggestion is highlighted or auto-selected!
+            focusedIndex = -1;
+
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = setTimeout(function() {
+                if (inputRafId) cancelAnimationFrame(inputRafId);
+                inputRafId = requestAnimationFrame(function() {
+                    renderDropdownList();
+                    inputRafId = null;
+                });
+            }, 35);
+        }
+
         function initEventListeners() {
             if (isEventListenersInitialized) return;
             isEventListenersInitialized = true;
@@ -11726,18 +11920,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 });
 
                 input.addEventListener('input', function() {
-                    currentSearch = this.value;
-                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
-                    if (!isOpen) openDropdown();
-
-                    clearTimeout(inputDebounceTimer);
-                    inputDebounceTimer = setTimeout(function() {
-                        if (inputRafId) cancelAnimationFrame(inputRafId);
-                        inputRafId = requestAnimationFrame(function() {
-                            renderDropdownList();
-                            inputRafId = null;
-                        });
-                    }, 35);
+                    handleInputChange();
                 });
 
                 input.addEventListener('keydown', function(e) {
@@ -11757,8 +11940,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                             selectFocusedOrCustom();
                         }
                     } else if (e.key === 'Tab') {
-                        if (isOpen) closeDropdown();
+                        if (isOpen) {
+                            // On Tab: preserve user's typed title as custom title, close dropdown, do NOT auto-select
+                            var val = (input.value || '').trim();
+                            if (val && !selectedSuggestion) {
+                                commitCustomTitle(val);
+                            } else {
+                                closeDropdown();
+                            }
+                        }
                     }
+                });
+
+                input.addEventListener('blur', function() {
+                    // Small delay so item click in dropdown can register before blur commits
+                    setTimeout(function() {
+                        var activeEl = document.activeElement;
+                        var wrap = document.getElementById('jero_title_select_wrap');
+                        if (wrap && wrap.contains(activeEl)) return;
+                        var val = (input.value || '').trim();
+                        if (val && !selectedSuggestion) {
+                            commitCustomTitle(val);
+                        }
+                    }, 200);
                 });
             }
 
@@ -11771,9 +11975,13 @@ $currency_code = GeneralMethod::defaultCurrency();
                         $('#raw_designation').val('');
                         input.focus();
                     }
+                    if (templateAppliedInSession) {
+                        clearTemplateData();
+                    }
+                    selectedSuggestion = null;
                     currentSearch = '';
                     this.style.display = 'none';
-                    updateStatusChip(false);
+                    updateStatusChip('none');
                     renderDropdownList();
                 });
             }
@@ -11806,7 +12014,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (customWrap) {
                 customWrap.addEventListener('click', function() {
                     var q = currentSearch.trim();
-                    if (q) selectCustomTitle(q);
+                    if (q) commitCustomTitle(q);
                 });
             }
 
@@ -11842,7 +12050,15 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_title_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
-                    closeDropdown();
+                    if (isOpen) {
+                        var inputEl = document.getElementById('title');
+                        var val = inputEl ? (inputEl.value || '').trim() : '';
+                        if (val && !selectedSuggestion) {
+                            commitCustomTitle(val);
+                        } else {
+                            closeDropdown();
+                        }
+                    }
                 }
             }, true);
 
@@ -11893,15 +12109,31 @@ $currency_code = GeneralMethod::defaultCurrency();
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
             var container = document.getElementById('jero_title_list_container');
             var customPill = document.getElementById('jero_title_custom_pill');
-            var total = items.length + (customPill && customPill.offsetParent !== null ? 1 : 0);
+            var hasCustom = (customPill && customPill.offsetParent !== null && customPill.style.display !== 'none');
+            var total = items.length + (hasCustom ? 1 : 0);
             if (total === 0) return;
 
-            focusedIndex = focusedIndex + direction;
-            if (focusedIndex >= total) focusedIndex = 0;
-            if (focusedIndex < 0) focusedIndex = total - 1;
+            if (direction > 0) {
+                // Moving down
+                focusedIndex++;
+                if (focusedIndex >= total) {
+                    focusedIndex = -1; // Cycle back to input (unfocused)
+                }
+            } else {
+                // Moving up
+                focusedIndex--;
+                if (focusedIndex < -1) {
+                    focusedIndex = total - 1; // Wrap to bottom
+                }
+            }
 
             items.forEach(function(el) { el.classList.remove('focused'); });
             if (customPill) customPill.classList.remove('focused');
+
+            if (focusedIndex === -1) {
+                // Cursor back in input, no item highlighted
+                return;
+            }
 
             if (focusedIndex < items.length) {
                 var el = items[focusedIndex];
@@ -11915,23 +12147,37 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         function selectFocusedOrCustom() {
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+
+            // 1. If user explicitly used arrow keys to focus a suggestion item:
             if (focusedIndex >= 0 && focusedIndex < items.length) {
                 var itemEl = items[focusedIndex];
                 var id = parseInt(itemEl.getAttribute('data-id'), 10);
                 var item = titlesMap.get(id);
-                if (item) { selectItem(item); return; }
+                if (!item && itemEl.hasAttribute('data-recent-idx')) {
+                    var recentIdx = parseInt(itemEl.getAttribute('data-recent-idx'), 10);
+                    item = getRecentTitles()[recentIdx];
+                }
+                if (item) {
+                    selectItem(item);
+                    return;
+                }
             }
 
+            // 2. If user explicitly navigated to the custom action pill:
             var customPill = document.getElementById('jero_title_custom_pill');
             if (customPill && customPill.classList.contains('focused')) {
-                selectCustomTitle(currentSearch);
+                commitCustomTitle(currentSearch);
                 return;
             }
 
-            if (currentMatches.length > 0) {
-                selectItem(currentMatches[0]);
-            } else if (currentSearch.trim()) {
-                selectCustomTitle(currentSearch.trim());
+            // 3. User pressed Enter without focusing any suggestion (focusedIndex === -1):
+            // PRESERVE user's typed title as custom title!
+            // NEVER auto-select currentMatches[0]!
+            var inputVal = ($('#title').val() || '').trim();
+            if (inputVal) {
+                commitCustomTitle(inputVal);
+            } else {
+                closeDropdown();
             }
         }
 
@@ -11943,30 +12189,30 @@ $currency_code = GeneralMethod::defaultCurrency();
             },
             open: openDropdown,
             close: closeDropdown,
+            commitIfCustom: function() {
+                var input = document.getElementById('title');
+                if (!input) return;
+                var val = (input.value || '').trim();
+                if (val && !selectedSuggestion) {
+                    commitCustomTitle(val);
+                }
+            },
             selectByTitle: function(title) {
+                var clean = (title || '').trim().toLowerCase();
                 for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
+                    if (titlesList[i].title.toLowerCase() === clean) {
                         selectItem(titlesList[i]);
                         return;
                     }
                 }
-                selectCustomTitle(title);
+                commitCustomTitle(title);
             },
             hasLocalTemplate: function(title) {
-                for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
-                        return titlesList[i].has_template === 1;
-                    }
-                }
+                // Deprecated forwarder - returns false to protect data isolation
                 return false;
             },
             applyLocalTemplate: function(title) {
-                for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
-                        applyTemplateSafely(titlesList[i], false);
-                        return;
-                    }
-                }
+                // Deprecated forwarder - no-op to protect data isolation
             },
             refresh: function() {
                 fetchBundleFromServer(1);
@@ -14101,6 +14347,31 @@ $currency_code = GeneralMethod::defaultCurrency();
             assignedHiringManagers = [];
             $('#hiring_namager').val('');
             $('#hiring_manager_id').val('');
+
+            // Automatically pre-populate first available contact for the selected client
+            if (clientId > 0) {
+                var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                    ? window.JeroClientSelectEngine.getClient(clientId)
+                    : null;
+                var contacts = (clientObj && clientObj.cc && clientObj.cc.length > 0) ? clientObj.cc : [];
+                if (contacts.length > 0) {
+                    var first = contacts[0];
+                    var firstName = first.n || first.contact_person_name || '';
+                    var firstId = first.id || '';
+                    if (firstName) {
+                        $('#hiring_namager').val(firstName);
+                        $('#hiring_manager_id').val(firstId);
+                        assignedHiringManagers.push({
+                            id: firstId,
+                            name: firstName,
+                            role: first.d || first.contact_person_designation || 'Hiring Manager',
+                            email: first.e || first.contact_person_email || '',
+                            phone: first.p || first.contact_person_number || '',
+                            initial: getInitials(firstName)
+                        });
+                    }
+                }
+            }
 
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
