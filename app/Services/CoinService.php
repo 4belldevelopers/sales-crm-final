@@ -104,8 +104,8 @@ class CoinService
                         $newBalance = $companyCoins->coins - $deductionRate;
 
                         DB::table('company_coins')
+                            ->where('id', $companyCoins->id)
                             ->where('company_id', $companyId)
-                            ->where('event_type', $coinEvent->event_type)
                             ->update(['coins' => $newBalance, 'updated_at' => now()]);
 
                         $logData = [
