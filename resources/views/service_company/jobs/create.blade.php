@@ -2765,7 +2765,10 @@
     }
 
     #kt_activitiesRecruiter #kt_activities_header,
-    #kt_activitiesClient #kt_activities_header {
+    #kt_activitiesRecruiter #kt_activitiesRecruiter_header,
+    #kt_activitiesClient #kt_activities_header,
+    #kt_activitiesClient #kt_activitiesClient_header,
+    #kt_add_address #kt_add_address_header {
         border-bottom: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
         min-height: 60px !important;
@@ -3951,15 +3954,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                     echo 'selected';
                                                 } ?>>Freshers</option>
                                                 <?php
-                                                    $yearText = 'Year';
-    for ($i = 1; $i <= 30; $i++) {
-        if ($i > 9) {
-            $yearText = 'Years';
-        }
-        $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
-        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
-    }
-    ?>
+                                                for ($i = 1; $i <= 30; $i++) {
+                                                    $yearText = ($i === 1) ? 'Year' : 'Years';
+                                                    $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
+                                                    echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+                                                }
+                                                ?>
                                             </select>
                                             <span class="form-hint">Min</span>
                                         </div>
@@ -3971,15 +3971,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                     echo 'selected';
                                                 } ?>>Freshers</option>
                                                 <?php
-                                                    $yearText = 'Year';
-    for ($i = 1; $i <= 30; $i++) {
-        if ($i > 9) {
-            $yearText = 'Years';
-        }
-        $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
-        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
-    }
-    ?>
+                                                for ($i = 1; $i <= 30; $i++) {
+                                                    $yearText = ($i === 1) ? 'Year' : 'Years';
+                                                    $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
+                                                    echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+                                                }
+                                                ?>
                                             </select>
                                             <span class="form-hint">Max</span>
                                         </div>
@@ -4032,8 +4029,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     <label class="form-label ij-gender-label" for="genderDiversityTrigger">
                                         <span>Gender Diversity</span>
                                         <span class="ij-gender-info-icon" 
-                                              data-bs-toggle="tooltip" 
-                                              data-bs-placement="top" 
+                                              data-toggle="tooltip" 
+                                              data-placement="top" 
                                               title="Specify gender diversity preferences to encourage inclusive hiring.">
                                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -4906,7 +4903,13 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             Screening Questions
                                         </div>
                                         <button type="button" class="btn-ai" id="aiGenerateBtn" onclick="generateAIQuestions()">
-                                            <i class="fas fa-sparkles"></i>
+                                            <svg class="me-1" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px;">
+                                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                                                <path d="M5 3v4"/>
+                                                <path d="M19 17v4"/>
+                                                <path d="M3 5h4"/>
+                                                <path d="M17 19h4"/>
+                                            </svg>
                                             Generate Questions with AI
                                         </button>
                                     </div>
@@ -5450,7 +5453,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle"
         data-kt-drawer-close="#kt_activitiesClient_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_activitiesClient_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
@@ -5485,11 +5488,11 @@ $currency_code = GeneralMethod::defaultCurrency();
 
     <div id="kt_add_address_toggle"></div>
     <div id="kt_add_address" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '560px', 'lg': '600px'}"
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_add_address_toggle"
         data-kt-drawer-close="#kt_add_address_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_add_address_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
@@ -5576,7 +5579,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle"
         data-kt-drawer-close="#kt_activitiesRecruiter_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_activitiesRecruiter_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         @php
@@ -5584,8 +5587,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                             // dd($logo_path );
                         @endphp
                         @if (!empty($companylogo))
-                            <div data-row-id="' . $row->id . '"
-                                class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' . $profile_detail_class . ' border-radius-5">
+                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
                                 <a href="javascript:void(0);">
                                     <div class="symbol-label border-radius-5">
                                         <img src="{{ @$logo_path }}" alt="Company Logo" class="border-radius-5 w-100">
@@ -6069,11 +6071,13 @@ $currency_code = GeneralMethod::defaultCurrency();
             // ---- Hiring Team: render selected people as cards (synced to hidden inputs) ----
             renderHiringCards();
             renderRecruiterCards();
-            // The drawers set the input values programmatically (no change event); poll keeps cards in sync.
-            setInterval(function() {
+            // Event-driven state pipeline replaces 400ms polling loop (Client-First / Zero CPU waste)
+            $(document).on('change input', '#hiring_namager', function() {
                 if (($('#hiring_namager').val() || '') !== _jrLastHM) { renderHiringCards(); }
+            });
+            $(document).on('change input', '#recruiter, #recruiter_id', function() {
                 if (($('#recruiter').val() || '') !== _jrLastRec) { renderRecruiterCards(); }
-            }, 400);
+            });
 
             // Capture each person's real designation from the drawer rows whenever a drawer loads/changes,
             // then re-render the cards so they show the actual designation (not a generic label).
@@ -8232,7 +8236,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         '<span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>' +
                         '<span class="ij-chip-label">' + escapeHtml(primaryName) + '</span>' +
                         metaHtml +
-                        '<button type="button" class="ij-chip-del" onclick="removeCity(\'' + escapeJsStr(str) + '\')" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
+                        '<button type="button" class="ij-chip-del js-remove-city" data-city="' + escapeHtml(str) + '" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
                         '</span>';
                 }).join('');
             }
@@ -8766,7 +8770,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         return '<span class="ij-location-chip ij-qual-chip' + extraClass + '">' +
                             '<span class="ij-chip-pin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>' +
                             '<span class="ij-chip-label">' + escapeHtml(q) + '</span>' +
-                            '<button type="button" class="ij-chip-del" onclick="removeQualification(\'' + String(q).replace(/'/g, "\\'") + '\')" title="Remove">&times;</button>' +
+                            '<button type="button" class="ij-chip-del js-remove-qual" data-qual="' + escapeHtml(q) + '" title="Remove">&times;</button>' +
                         '</span>';
                     }).join('');
                 }
@@ -8800,7 +8804,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         function renderSkills() {
             var wrapper = document.getElementById('skillsWrapper');
             var input = document.getElementById('skillsInput');
-            var tags = skills.map(function(s) { return '<span class="tag">' + escapeHtml(s) + ' <button type="button" class="tag-remove" onclick="removeSkill(\'' + String(s).replace(/'/g, "\\'") + '\')">&times;</button></span>'; }).join('');
+            var tags = skills.map(function(s) { return '<span class="tag">' + escapeHtml(s) + ' <button type="button" class="tag-remove js-remove-skill" data-skill="' + escapeHtml(s) + '">&times;</button></span>'; }).join('');
             wrapper.querySelectorAll('.tag').forEach(function(t) { t.remove(); });
             input.insertAdjacentHTML('beforebegin', tags);
             input.value = '';
@@ -8809,9 +8813,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                 clearFieldValidationErrors('skills');
             }
         }
+
+        // Delegated chip removal event handlers (Robust against quotes and injection)
+        $(document).on('click', '.js-remove-city', function(e) {
+            e.preventDefault();
+            var c = $(this).attr('data-city');
+            if (c && typeof removeCity === 'function') removeCity(c);
+        });
+        $(document).on('click', '.js-remove-qual', function(e) {
+            e.preventDefault();
+            var q = $(this).attr('data-qual');
+            if (q && typeof removeQualification === 'function') removeQualification(q);
+        });
+        $(document).on('click', '.js-remove-skill', function(e) {
+            e.preventDefault();
+            var s = $(this).attr('data-skill');
+            if (s && typeof removeSkill === 'function') removeSkill(s);
+        });
         function syncSkills() { document.getElementById('tags').value = JSON.stringify(skills.map(function(s) { return { value: s }; })); }
 
         // ---------- RICH TEXT EDITOR ----------
+        $(document).on('mousedown', '.toolbar-btn', function(e) {
+            e.preventDefault(); // Prevents editor blur and selection loss
+        });
         function formatText(command) { document.execCommand(command, false, null); document.getElementById('jobDescription').focus(); syncDescription(); }
         function syncDescription() { var ed = document.getElementById('jobDescription'); var hid = document.getElementById('kt_docs_tinymce_hidden'); if (ed && hid) hid.value = ed.innerHTML; }
         function initCharCount() {
@@ -8982,7 +9006,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 aiQuestions.forEach(function(q) { maxId++; questions.push(Object.assign({}, q, { id: maxId })); });
                 renderQuestions();
                 btn.classList.remove('loading');
-                btn.innerHTML = '<i class="fas fa-sparkles"></i> Generate Questions with AI';
+                btn.innerHTML = '<svg class="me-1" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px;"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Generate Questions with AI';
                 showToast('3 AI-generated questions added!', 'success');
             }, 1500);
         }
@@ -9123,12 +9147,23 @@ $currency_code = GeneralMethod::defaultCurrency();
         function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); }
 
         // ---------- PUBLISH (real submit) ----------
+        var publishBtnContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;"><path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/></svg><span>Publish Job</span>';
+        function resetPublishBtn($btn) {
+            if (!$btn || !$btn.length) $btn = $('.submit-card .btn-primary');
+            $btn.prop('disabled', false).html(publishBtnContent);
+        }
+
         function publishJob() {
             if (typeof validateAllSteps === 'function' && !validateAllSteps()) return;
 
-            var checkboxes = document.querySelectorAll('.summary-check input');
-            var allChecked = true; checkboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
-            if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
+            // Only enforce compliance checks if they are visibly rendered to the user
+            var visibleCheckboxes = Array.from(document.querySelectorAll('.summary-check input')).filter(function(cb) {
+                return cb.offsetParent !== null && !cb.closest('.d-none');
+            });
+            if (visibleCheckboxes.length > 0) {
+                var allChecked = visibleCheckboxes.every(function(cb) { return cb.checked; });
+                if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
+            }
 
             syncAll();
 
@@ -9162,26 +9197,29 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (!navigator.onLine) {
                 Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                $btn.prop('disabled', false).html('Publish Job');
+                resetPublishBtn($btn);
                 return;
             }
 
             $.ajax({
                 url: __submitUrl,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                headers: { 
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': opId
+                },
                 method: "POST", processData: false, contentType: false, data: data, redirect: true,
                 success: function(data) {
                     if (data.status == 'success') {
-                         $btn.prop('disabled', false).html('Publish Job');
+                        resetPublishBtn($btn);
                         showToast('Job saved successfully!', 'success');
                         setTimeout(function() { window.location = __indexUrl; }, 600);
                     } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
-                        $btn.prop('disabled', false).html('Publish Job');
+                        resetPublishBtn($btn);
                         var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
                         $('#operation_id').val(freshOpId);
                         showToast('Submission updated. Please click "Publish Job" again.', 'info');
                     } else {
-                        $btn.prop('disabled', false).html('Publish Job');
+                        resetPublishBtn($btn);
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                         }
@@ -9189,7 +9227,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 },
                 error: function(xhr) {
-                    $btn.prop('disabled', false).html('Publish Job');
+                    resetPublishBtn($btn);
                     if (xhr.status === 419) {
                         // TC-10: Session Expiry / 419 Recovery: preserve form state in RAM; refresh CSRF token without page reload
                         fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -9201,8 +9239,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 if (newToken) {
                                     $('meta[name="csrf-token"]').attr('content', newToken);
                                     $('input[name="_token"]').val(newToken);
-                                    var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
-                                    $('#operation_id').val(freshOpId);
+                                    // Retain the same idempotency key for safe replay
                                     showToast('Session refreshed! All your job details are preserved. Please click "Publish Job" to submit.', 'info');
                                 } else {
                                     showToast('Session expired. Please refresh the page.', 'error');
@@ -9482,9 +9519,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 });
 
-                // Tooltip initialization if Bootstrap tooltips are active
-                if (window.bootstrap && window.bootstrap.Tooltip) {
-                    var tipEl = wrapper.querySelector('[data-bs-toggle="tooltip"]');
+                // Tooltip initialization (Bootstrap 4 jQuery standard with Bootstrap 5 fallback)
+                var $tipEl = $(wrapper).find('[data-toggle="tooltip"], [data-bs-toggle="tooltip"]');
+                if ($tipEl.length && typeof $tipEl.tooltip === 'function') {
+                    try { $tipEl.tooltip({ boundary: 'window' }); } catch (err) {}
+                } else if (window.bootstrap && window.bootstrap.Tooltip) {
+                    var tipEl = wrapper.querySelector('[data-toggle="tooltip"], [data-bs-toggle="tooltip"]');
                     if (tipEl) {
                         try { new window.bootstrap.Tooltip(tipEl); } catch (err) {}
                     }
@@ -13182,8 +13222,8 @@ $currency_code = GeneralMethod::defaultCurrency();
         function commitRecruiterChanges() {
             var names = assignedRecruiters.map(function(r) { return r.name; });
             var ids = assignedRecruiters.map(function(r) { return r.id; });
-            $('#recruiter').val(names.join(','));
-            $('#recruiter_id').val(ids.join(','));
+            $('#recruiter').val(names.join(',')).trigger('change');
+            $('#recruiter_id').val(ids.join(',')).trigger('change');
 
             if (typeof renderRecruiterCards === 'function') {
                 renderRecruiterCards();
@@ -13198,8 +13238,8 @@ $currency_code = GeneralMethod::defaultCurrency();
         function commitHiringManagerChanges() {
             var names = assignedHiringManagers.map(function(h) { return h.name; });
             var ids = assignedHiringManagers.map(function(h) { return h.id; }).filter(Boolean);
-            $('#hiring_namager').val(names.join(','));
-            $('#hiring_manager_id').val(ids.join(','));
+            $('#hiring_namager').val(names.join(',')).trigger('change');
+            $('#hiring_manager_id').val(ids.join(',')).trigger('change');
 
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
