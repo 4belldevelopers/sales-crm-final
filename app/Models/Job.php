@@ -95,7 +95,57 @@ class Job extends Model
 
     public function getActiveAttribute()
     {
-        return $this->status === 'active' && $this->start_date->lessThanOrEqualTo(Carbon::now()) && $this->end_date->greaterThanOrEqualTo(Carbon::now());
+        if ($this->status !== 'active' || empty($this->start_date) || empty($this->end_date)) {
+            return false;
+        }
+
+        $now = Carbon::now();
+        $start = $this->start_date instanceof Carbon ? $this->start_date : Carbon::parse($this->start_date);
+        $end = $this->end_date instanceof Carbon ? $this->end_date : Carbon::parse($this->end_date);
+
+        return $start->lessThanOrEqualTo($now) && $end->greaterThanOrEqualTo($now);
+    }
+
+    /**
+     * Intent: Authoritative accessor for Agency Acceptance Limit.
+     * Retains value in meta_details JSON, defaulting to 20 if unset.
+     */
+    public function getVendorLimitAttribute(): int
+    {
+        $meta = $this->meta_details;
+        if (is_string($meta)) {
+            $meta = json_decode($meta, true);
+        }
+        $val = (int) ($meta['vendor_limit'] ?? 20);
+
+        return in_array($val, [5, 10, 20, 50], true) ? $val : 20;
+    }
+
+    /**
+     * Intent: Authoritative accessor for Auto-expire duration in days.
+     * Retains value in meta_details JSON, defaulting to 7 if unset.
+     */
+    public function getAutoExpireAttribute(): int
+    {
+        $meta = $this->meta_details;
+        if (is_string($meta)) {
+            $meta = json_decode($meta, true);
+        }
+        $val = (int) ($meta['auto_expire'] ?? 0);
+        if (in_array($val, [7, 14, 30], true)) {
+            return $val;
+        }
+
+        if (! empty($this->end_date)) {
+            $daysLeft = (int) ceil(now()->diffInDays(Carbon::parse($this->end_date), false));
+            if ($daysLeft > 14) {
+                return 30;
+            } elseif ($daysLeft > 7) {
+                return 14;
+            }
+        }
+
+        return 7;
     }
 
     public function questions()

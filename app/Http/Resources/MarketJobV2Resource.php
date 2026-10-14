@@ -96,7 +96,9 @@ class MarketJobV2Resource extends JsonResource
 
         // Action type calculation
         $vendorCount = (int) ($row->vendor_added_count ?? 0);
-        $exceededLimit = 20;
+        $rawMeta = $row->meta_details ?? [];
+        $metaDetails = is_array($rawMeta) ? $rawMeta : (json_decode($rawMeta ?? '{}', true) ?: []);
+        $exceededLimit = (int) ($metaDetails['vendor_limit'] ?? 20);
         $publicMarketStatus = (int) ($row->public_market_status ?? 0);
 
         $actionType = 'send_bench_request';
