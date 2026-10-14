@@ -164,7 +164,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('market-jobs-list-v2-ajax', [ServiceCompanyJobsController::class, 'marketJobListV2_ajax'])->name('jobs.marketJobListV2_ajax');
                 Route::match(['get', 'post'], 'market/requestaadded', [ServiceCompanyJobsController::class, 'marketrequestaadded'])->name('jobs.marketrequestaadded');
                 Route::post('jobs/market/claim', [ServiceCompanyJobsController::class, 'marketrequestaadded'])->name('jobs.market_claim');
-                Route::get('auction/send_job_request/{id?}', [ServiceCompanyJobsController::class, 'auction_send_job_request'])->name('jobs.auction_send_job_request');
+                Route::match(['get', 'post'], 'auction/send_job_request/{id?}', [ServiceCompanyJobsController::class, 'auction_send_job_request'])->name('jobs.auction_send_job_request');
                 Route::get('jobs/job_request/{id?}', [ServiceCompanyJobsController::class, 'job_request'])->name('jobs.job_request');
                 Route::get('jobs/recommandedrequest', [ServiceCompanyJobsController::class, 'recommandedrequest'])->name('jobs.recommandedrequest');
                 Route::get('request_jobs_ajax/recommandedrequest', [ServiceCompanyJobsController::class, 'recommandedrequest_ajax'])->name('jobs.recommandedrequest_ajax');
@@ -191,6 +191,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('jobs/assignRejected', [ServiceCompanyJobsController::class, 'assignRejected'])->name('jobs.assignRejected');
                 Route::get('jobs/removeJob', [ServiceCompanyJobsController::class, 'removeJob'])->name('jobs.removeJob');
                 Route::get('jobs/resend_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class, 'resend_job_recommanded_request'])->name('jobs.resend_job_recommanded_request');
+                Route::match(['get', 'post'], 'jobs/send_multiple_job_invitations', [ServiceCompanyJobsController::class, 'send_multiple_job_invitations'])->name('jobs.send_multiple_job_invitations');
                 Route::middleware(['recruiter.throttle:60,1', 'resolve.taxonomy'])->group(function () {
                     Route::resource('jobs', ServiceCompanyJobsController::class);
                 });

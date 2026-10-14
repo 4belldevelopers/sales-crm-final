@@ -14858,12 +14858,13 @@ END:VCALENDAR";
      * Bumps version keys for all agency drawers (send invitation, recommended, registered, assigned).
      *
      * Intent: Clean agency marketplace cache on write actions.
-     * Tenancy: Scoped to user_id.
+     * Tenancy: Scoped to user_id and company_id.
      *
      * @param  int  $userId  User ID whose agency marketplace cache should be cleaned
+     * @param  int|null  $companyId  Optional Tenant Company ID to invalidate organization-wide cache
      * @return bool
      */
-    public static function invalidateSpartnerlistingCache($userId)
+    public static function invalidateSpartnerlistingCache($userId, $companyId = null)
     {
         if (! $userId) {
             return false;
@@ -14876,6 +14877,10 @@ END:VCALENDAR";
             'allregisteredagency_version_user_'.$userId,
             'allassignedagency_version_user_'.$userId,
         ];
+
+        if ($companyId) {
+            $keys[] = 'allsendinvitationtoagency_v5_version_company_'.$companyId;
+        }
 
         foreach ($keys as $k) {
             self::cacheClean($k);
