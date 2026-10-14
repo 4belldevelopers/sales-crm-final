@@ -3138,8 +3138,7 @@ $( document ).ready(function() {
          });
          function languageOptions()
 		 {         
-             return
-			 {         
+             return {         
                  processing		:   "@lang('modules.datatables.processing')",         
                  search			:   "@lang('modules.datatables.search')",         
                  lengthMenu		:   "@lang('modules.datatables.lengthMenu')",         
