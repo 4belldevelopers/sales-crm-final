@@ -4792,7 +4792,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                             </div>
                             <div class="team-grid">
                                 <div class="team-section">
-                                    <label class="form-label required">Hiring Contact</label>
+                                    <label class="form-label required">Hiring Manager | Job Representative</label>
                                     <div class="input-wrapper" style="position:relative;">
                                         <div class="input-with-icon">
                                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
