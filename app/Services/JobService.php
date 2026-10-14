@@ -2,10 +2,16 @@
 
 namespace App\Services;
 
+use App\Enums\BenchSubmissionState;
+use App\Enums\ClaimCapacity;
+use App\Enums\MarketModState;
+use App\Enums\MarketPubState;
 use App\Helper\GeneralMethod;
 use App\Jobs\ElasticJobsIndexJob;
+use App\Jobs\ProcessMarketJobOutboxEventJob;
 use App\Jobs\QueueNotificationMailService;
 use App\Models\Job;
+use App\Models\JobMarketplaceModerationLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -113,23 +119,46 @@ class JobService
             $job->job_description = $requestData['detail_description'];
         }
 
-        if (isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1) {
+        $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
+        $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));
+        $hasMarketplace = ! empty($requestData['visibility_marketplace']);
+        $hasBench = ! empty($requestData['visibility_bench_talent']) || (($requestData['bench_submission'] ?? '') === 'enabled');
+
+        if ($isInternalOnly) {
             $job->carrier_website = 0;
+            $job->market_pub_state = MarketPubState::PRIVATE->value;
+            $job->market_mod_state = MarketModState::NOT_REQUIRED->value;
+            $job->bench_submission = BenchSubmissionState::DISABLED->value;
             $job->public_market_status = 0;
         } else {
-            if (isset($requestData['carrier_website'])) {
-                $job->carrier_website = (int) $requestData['carrier_website'];
-            } elseif (isset($requestData['visibility_career'])) {
-                $job->carrier_website = (int) $requestData['visibility_career'];
-            } else {
-                $job->carrier_website = null;
-            }
+            $job->carrier_website = $hasCareer ? 1 : 0;
+            $job->bench_submission = $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value;
 
-            if (! empty($requestData['visibility_marketplace']) || (isset($requestData['public_market_status']) && (int) $requestData['public_market_status'] > 0)) {
-                $isAutoApproved = (bool) DB::table('global_settings')->value('public_market_job_status');
-                $job->public_market_status = $isAutoApproved ? 2 : 1;
+            // Recruiter wants job on marketplace if either Option B (Outsource) or Option C (Bench) is chosen
+            if ($hasMarketplace || $hasBench) {
+                $moderationService = app(\App\Services\MarketplaceModerationService::class);
+                $eval = $moderationService->evaluateRisk([
+                    'title' => $job->title,
+                    'job_description' => $job->job_description ?? ($requestData['detail_description'] ?? ''),
+                    'job_requirement' => $job->job_requirement ?? '',
+                    'min_salary' => $requestData['minimum_salary'] ?? 0,
+                    'max_salary' => $requestData['maximum_salary'] ?? 0,
+                    'company_id' => $job->company_id,
+                ]);
+
+                $autoApproveSetting = (bool) DB::table('global_settings')->value('public_market_job_status');
+                if (! $eval['hard_blocked'] && $eval['risk_score'] < 0.20 && $autoApproveSetting) {
+                    $job->market_pub_state = MarketPubState::PUBLISHED->value;
+                    $job->market_mod_state = MarketModState::AUTO_APPROVED->value;
+                } else {
+                    $job->market_pub_state = MarketPubState::PENDING_REVIEW->value;
+                    $job->market_mod_state = MarketModState::PENDING->value;
+                }
+                $job->claim_capacity = $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value;
             } else {
-                $job->public_market_status = 0;
+                $job->market_pub_state = MarketPubState::PRIVATE->value;
+                $job->market_mod_state = MarketModState::NOT_REQUIRED->value;
+                $job->claim_capacity = ClaimCapacity::OPEN->value;
             }
         }
         $job->work_type = $requestData['work_from_home'] ?? ($requestData['work_type'] ?? 'no');
@@ -766,22 +795,49 @@ class JobService
         $job->max_salary = $requestData['maximum_salary'] ?? null;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
 
-        if (isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1) {
+        $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
+        $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));
+        $hasMarketplace = ! empty($requestData['visibility_marketplace']);
+        $hasBench = ! empty($requestData['visibility_bench_talent']) || (($requestData['bench_submission'] ?? '') === 'enabled');
+
+        if ($isInternalOnly) {
             $job->carrier_website = 0;
+            $job->market_pub_state = MarketPubState::UNPUBLISHED->value;
+            $job->bench_submission = BenchSubmissionState::DISABLED->value;
             $job->public_market_status = 0;
         } else {
-            if (isset($requestData['carrier_website'])) {
-                $job->carrier_website = (int) $requestData['carrier_website'];
-            } elseif (isset($requestData['visibility_career'])) {
-                $job->carrier_website = (int) $requestData['visibility_career'];
-            }
+            $job->carrier_website = $hasCareer ? 1 : 0;
+            $job->bench_submission = $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value;
 
-            if (isset($requestData['visibility_marketplace']) || isset($requestData['public_market_status'])) {
-                if (! empty($requestData['visibility_marketplace']) || (isset($requestData['public_market_status']) && (int) $requestData['public_market_status'] > 0)) {
-                    $isAutoApproved = (bool) DB::table('global_settings')->value('public_market_job_status');
-                    $job->public_market_status = $isAutoApproved ? 2 : 1;
+            if (isset($requestData['visibility_marketplace']) || isset($requestData['visibility_bench_talent']) || isset($requestData['public_market_status'])) {
+                if ($hasMarketplace || $hasBench) {
+                    // Check if already approved
+                    if (! in_array($job->market_mod_state, [MarketModState::APPROVED->value, MarketModState::AUTO_APPROVED->value])) {
+                        $moderationService = app(\App\Services\MarketplaceModerationService::class);
+                        $eval = $moderationService->evaluateRisk([
+                            'title' => $job->title,
+                            'job_description' => $job->job_description ?? ($requestData['detail_description'] ?? ''),
+                            'job_requirement' => $job->job_requirement ?? '',
+                            'min_salary' => $requestData['minimum_salary'] ?? 0,
+                            'max_salary' => $requestData['maximum_salary'] ?? 0,
+                            'company_id' => $job->company_id,
+                            'id' => $job->id,
+                        ]);
+
+                        $autoApproveSetting = (bool) DB::table('global_settings')->value('public_market_job_status');
+                        if (! $eval['hard_blocked'] && $eval['risk_score'] < 0.20 && $autoApproveSetting) {
+                            $job->market_pub_state = MarketPubState::PUBLISHED->value;
+                            $job->market_mod_state = MarketModState::AUTO_APPROVED->value;
+                        } else {
+                            $job->market_pub_state = MarketPubState::PENDING_REVIEW->value;
+                            $job->market_mod_state = MarketModState::PENDING->value;
+                        }
+                    } else {
+                        $job->market_pub_state = MarketPubState::PUBLISHED->value;
+                    }
+                    $job->claim_capacity = $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value;
                 } else {
-                    $job->public_market_status = 0;
+                    $job->market_pub_state = MarketPubState::UNPUBLISHED->value;
                 }
             }
         }

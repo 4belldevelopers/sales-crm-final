@@ -14068,7 +14068,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $outboxId = null;
             DB::transaction(function () use ($job, $company_id, &$outboxId) {
                 $job->public_market_status = 6;
+                $job->state_version = ($job->state_version ?? 0) + 1;
                 $job->save();
+
+                try {
+                    DB::table('job_marketplace_moderation_logs')->insert([
+                        'job_id' => $job->id,
+                        'company_id' => $company_id,
+                        'actor_id' => (int) (auth()->id() ?? 0),
+                        'actor_role' => 'recruiter',
+                        'action' => 'withdraw',
+                        'from_mod_state' => $job->market_mod_state ?? 'not_required',
+                        'to_mod_state' => $job->market_mod_state ?? 'not_required',
+                        'reason_code' => 'DRAWER_UNPUBLISH',
+                        'rejection_notes' => 'Unpublished from partner drawer by recruiter',
+                        'risk_score' => 0.00,
+                        'created_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {}
 
                 try {
                     $idempotencyKey = 'mkt_unpub_'.$job->id.'_'.time().'_'.bin2hex(random_bytes(4));
@@ -14222,7 +14239,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 }
             }
             $job->meta_details = $jobMeta;
+            $job->state_version = ($job->state_version ?? 0) + 1;
             $job->save();
+
+            try {
+                DB::table('job_marketplace_moderation_logs')->insert([
+                    'job_id' => $job->id,
+                    'company_id' => $company_id,
+                    'actor_id' => (int) (auth()->id() ?? 0),
+                    'actor_role' => 'recruiter',
+                    'action' => ($targetStatus === 2) ? 'auto_approve' : 'submit',
+                    'from_mod_state' => 'not_required',
+                    'to_mod_state' => ($targetStatus === 2) ? 'auto_approved' : 'pending',
+                    'reason_code' => 'DRAWER_PUBLISH',
+                    'rejection_notes' => 'Published from partner drawer by recruiter',
+                    'risk_score' => 0.00,
+                    'created_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
 
             DB::table('market_job_added_count')
                 ->where('job_id', '=', $job->id)
