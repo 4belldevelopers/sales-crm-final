@@ -3798,6 +3798,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             <div class="jero-title-chevron" id="jero_title_chevron">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
+                                            <input type="hidden" name="canonical_designation_id" id="canonical_designation_id" value="<?php echo @$job->canonical_designation_id; ?>">
+                                            <input type="hidden" name="raw_designation" id="raw_designation" value="<?php echo @$job->raw_designation ?? @$job->title; ?>">
+                                            <input type="hidden" name="taxonomy_version" id="taxonomy_version" value="<?php echo @$job->taxonomy_version ?? '2.0.0'; ?>">
                                         </div>
 
                                         <!-- Decision-Centric Dropdown Menu -->
@@ -11539,6 +11542,14 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (!item) return;
 
             $('#title').val(item.title);
+            $('#raw_designation').val(item.title);
+            if (item.canonical_id || (item.is_standard && item.id < 1000000)) {
+                $('#canonical_designation_id').val(item.canonical_id || item.id);
+            } else {
+                $('#canonical_designation_id').val('');
+            }
+            $('#taxonomy_version').val(item.taxonomy_version || '2.0.0');
+
             saveRecentTitle(item);
             closeDropdown();
 
@@ -11559,6 +11570,10 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (!clean) return;
 
             $('#title').val(clean);
+            $('#raw_designation').val(clean);
+            $('#canonical_designation_id').val('');
+            $('#taxonomy_version').val('2.0.0');
+
             closeDropdown();
 
             var clearBtn = document.getElementById('jero_title_clear_btn');
@@ -11729,6 +11744,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                     e.preventDefault();
                     if (input) {
                         input.value = '';
+                        $('#canonical_designation_id').val('');
+                        $('#raw_designation').val('');
                         input.focus();
                     }
                     currentSearch = '';
@@ -14151,6 +14168,7 @@ $currency_code = GeneralMethod::defaultCurrency();
          when this file runs. No defer needed here because the script is already at the
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
+    <script src="{{ asset('js/jero-taxonomy-client.js') }}?v=2.0.0"></script>
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
         <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012d"></script>
     @endif

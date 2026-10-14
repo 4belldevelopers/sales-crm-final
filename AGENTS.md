@@ -10,7 +10,7 @@
 - **Hardware Profile:** Dedicated **32 GB RAM each** for Web/App Server, MySQL database, and Elasticsearch cluster.
 - **Scale Target:** **10,000 concurrent users per page** with **0% server/DB read strain** achieved via Client-First / Browser-Execution (User RAM + WASM) with server fallback.
 - **Work folder:** `testing.jero.works` (this one). Never `hire.jero.works`.
-- **Read order:** [CLAUDE.md](CLAUDE.md) → [docs/AI_BOOTSTRAP.md](docs/AI_BOOTSTRAP.md) → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) → [docs/AI_RULES.md](docs/AI_RULES.md) → [docs/GLOSSARY.md](docs/GLOSSARY.md).
+- **Read order:** [CLAUDE.md](CLAUDE.md) → [docs/AI_BOOTSTRAP.md](docs/AI_BOOTSTRAP.md) → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) → [docs/AI_RULES.md](docs/AI_RULES.md) → [docs/GLOSSARY.md](docs/GLOSSARY.md) → [docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md](docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md).
 
 ## Non-negotiable Rules (Full list: [docs/AI_RULES.md](docs/AI_RULES.md))
 1. **MySQL is ONLY for Add / Edit / Delete:** 0% MySQL reads on web/API request paths. No `SELECT` or joins on user page loads.
@@ -31,6 +31,7 @@
 16. **Document the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries. See [docs/CODE_DOCUMENTATION_STANDARD.md](docs/CODE_DOCUMENTATION_STANDARD.md).
 17. **Complete Page/Blade Isolation:** Every page/blade designed, developed, or updated must be completely isolated to that page. Do NOT reuse or share stateful JS/drawers/scripts across pages; changes to one page must never touch or affect another page.
 18. **Product Company & Staffing Company Code Freeze:** Files under `resources/views/product_company/` and `resources/views/staffing_company/` (and their respective controllers/modules) are strictly frozen. Do NOT edit or modify them unless explicitly requested. Currency and UI enhancements are strictly scoped to **Service Company** and **Admin**.
+19. **Adopt Latest Technologies & Consult Tech Standard:** When implementing or upgrading any new feature, always reference [docs/Latest_Technology_JERO.WORKS](docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md). Leverage **Bun** for high-speed offline/static compilation & testing, **Mojo / ONNX CPU** for local vector operations (zero cloud AI APIs/LangChain), and **Dragonfly** for 4M QPS multi-tenant caching.
 
 ## Build/run/verify
 See [docs/VERIFY.md](docs/VERIFY.md). Key: `php -l`, `./vendor/bin/pint`,

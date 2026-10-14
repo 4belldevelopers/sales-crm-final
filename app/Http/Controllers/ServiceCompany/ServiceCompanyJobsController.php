@@ -6297,13 +6297,74 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      */
     protected function buildTitlesManifest(int $companyId, int $version): array
     {
-        $standardTitles = Cache::remember('global:standard_job_titles_list', 86400, function () {
-            return DB::table('jd_details')
-                ->where('status', 1)
-                ->select('id', 'title', 'jd', 'minimum_exp', 'maxmum_exp', 'skills')
-                ->orderBy('title', 'ASC')
-                ->get();
-        });
+        if (config('taxonomy.feature_new_taxonomy', true)) {
+            $standardTitles = Cache::remember('global:canonical_job_titles_list:v2', 86400, function () {
+                $designations = DB::table('taxonomy_designations as d')
+                    ->join('taxonomy_departments as dept', 'd.department_id', '=', 'dept.id')
+                    ->leftJoin('taxonomy_jd_templates as jdt', 'd.jd_template_id', '=', 'jdt.id')
+                    ->where('d.status', 1)
+                    ->select([
+                        'd.id',
+                        'd.canonical_title as title',
+                        'dept.name as dept_name',
+                        'd.jd_template_id',
+                        'jdt.role_summary',
+                        'jdt.key_responsibilities',
+                        'jdt.must_have_skills',
+                        'jdt.tools_and_platforms',
+                    ])
+                    ->orderBy('d.canonical_title', 'ASC')
+                    ->get();
+
+                return $designations->map(function ($d) {
+                    $skillsArr = json_decode($d->must_have_skills ?? '[]', true) ?: [];
+                    $respArr = json_decode($d->key_responsibilities ?? '[]', true) ?: [];
+                    $toolsArr = json_decode($d->tools_and_platforms ?? '[]', true) ?: [];
+
+                    $jdHtml = '';
+                    if (! empty($d->role_summary)) {
+                        $jdHtml .= '<p><strong>Role Summary:</strong><br>' . htmlspecialchars($d->role_summary) . '</p>';
+                    }
+                    if (! empty($respArr)) {
+                        $jdHtml .= '<p><strong>Key Responsibilities:</strong></p><ul>';
+                        foreach ($respArr as $r) {
+                            $jdHtml .= '<li>' . htmlspecialchars($r) . '</li>';
+                        }
+                        $jdHtml .= '</ul>';
+                    }
+                    if (! empty($skillsArr)) {
+                        $jdHtml .= '<p><strong>Core Technical Competencies:</strong></p><ul>';
+                        foreach ($skillsArr as $s) {
+                            $jdHtml .= '<li>' . htmlspecialchars($s) . '</li>';
+                        }
+                        $jdHtml .= '</ul>';
+                    }
+                    if (! empty($toolsArr)) {
+                        $jdHtml .= '<p><strong>Tools & Platforms:</strong> ' . htmlspecialchars(implode(', ', $toolsArr)) . '</p>';
+                    }
+
+                    return (object) [
+                        'id' => (int) $d->id,
+                        'canonical_id' => (int) $d->id,
+                        'title' => trim($d->title),
+                        'dept_name' => $d->dept_name,
+                        'min_exp' => null,
+                        'max_exp' => null,
+                        'skills' => implode(', ', $skillsArr),
+                        'jd' => $jdHtml,
+                        'taxonomy_version' => '2.0.0',
+                    ];
+                });
+            });
+        } else {
+            $standardTitles = Cache::remember('global:standard_job_titles_list', 86400, function () {
+                return DB::table('jd_details')
+                    ->where('status', 1)
+                    ->select('id', 'title', 'jd', 'minimum_exp', 'maxmum_exp', 'skills')
+                    ->orderBy('title', 'ASC')
+                    ->get();
+            });
+        }
 
         $companyDesignations = Cache::remember('tenant:'.$companyId.':custom_designations', 3600, function () use ($companyId) {
             if ($companyId <= 0) {
@@ -6328,14 +6389,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $seenTitles[$norm] = true;
             $titles[] = [
                 'id' => (int) $st->id,
+                'canonical_id' => (int) ($st->canonical_id ?? $st->id),
                 'title' => trim($st->title),
                 'is_standard' => 1,
                 'has_template' => 1,
-                'dept_name' => 'Standard Library',
+                'dept_name' => $st->dept_name ?? 'Standard Library',
                 'min_exp' => null,
                 'max_exp' => null,
                 'skills' => (string) ($st->skills ?? ''),
                 'jd' => (string) ($st->jd ?? ''),
+                'taxonomy_version' => '2.0.0',
             ];
         }
 

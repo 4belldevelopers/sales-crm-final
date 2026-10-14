@@ -45,6 +45,7 @@ be made inside this folder.
 10. **Complete Page/Blade Isolation (Strict Anti-Entanglement Mandate):** Every page/blade designed, developed, or updated must be completely isolated to that page. Never reuse or share stateful JS/drawers/scripts across pages (e.g. CV Tracker vs App Tracker vs Client App); changes to one page must NEVER touch, affect, or break another page or module.
 11. **15.6-Inch Screen Sizing & Small-Screen Responsiveness:** All UI/UX designs, tables, modals, cards, and drawers must perfectly fit a standard 15.6-inch laptop screen (1366×768 & 1920×1080) and smaller screens with zero horizontal page scroll, internal drawer scroll, and max 14px Poppins font.
 12. **Product Company & Staffing Company Code Freeze Mandate:** Files under `resources/views/product_company/` and `resources/views/staffing_company/` (and their respective controllers/modules) are strictly frozen. Do NOT edit, refactor, or apply UI/feature changes to Product Company or Staffing Company files unless explicitly instructed otherwise. Active development, currency enhancements, and ATS feature work are strictly scoped to **Service Company** (`resources/views/service_company/`) and **Admin** (`resources/views/admin/`).
+13. **Latest Technology Adoption & Standard (October 2026):** For modern features, background workers, and performance optimizations, always follow [docs/Latest_Technology_JERO.WORKS](docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md). Mandate **Bun** for high-speed offline/static compilation & test runs, **Mojo & local ONNX CPU** for zero-cloud bare-metal vector math ($0 ongoing API fees; zero LangChain), and **Dragonfly** for 4M QPS multi-tenant caching.
 
 ---
 
@@ -54,7 +55,8 @@ be made inside this folder.
 3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system map & stack
 4. [docs/AI_RULES.md](docs/AI_RULES.md) — hard rules (full God-level mandate)
 5. [docs/GLOSSARY.md](docs/GLOSSARY.md) — domain vocabulary (what "bench", "requisition", "coins"… mean)
-6. The relevant [`.ai/tasks/*.md`](.ai/tasks/) playbook + [`.ai/summaries/*`](.ai/summaries/)
+6. [docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md](docs/Latest_Technology_JERO.WORKS/LATEST_TECHNOLOGY_FOR_JERO_WORKS.md) — modern systems engineering standard (Bun, Mojo, Dragonfly, DuckDB-WASM)
+7. The relevant [`.ai/tasks/*.md`](.ai/tasks/) playbook + [`.ai/summaries/*`](.ai/summaries/)
 
 ---
 
