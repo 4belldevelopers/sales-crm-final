@@ -2677,11 +2677,13 @@
          
          $(function ()
 		 {         
-            $('.selectpicker').selectpicker(
-			{         	
-				style: 'btn-info',
-                size: 4
-            });         
+            if (window.jQuery && typeof jQuery.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker(
+			    {         	
+				    style: 'btn-info',
+                    size: 4
+                });
+            }         
          });
          
          function languageOptions()
