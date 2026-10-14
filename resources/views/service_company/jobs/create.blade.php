@@ -3477,14 +3477,20 @@
         max-width: 280px !important;
     }
     </style>
-    {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
-    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
+    {{-- Unified Job Form presentation assets (applies to both Create and Edit) placed AFTER the base styles so all override tokens take precedence. --}}
+    @php
+        $isJobUnifiedForm = request()->routeIs('service_company.jobs.create', 'service_company.jobs.edit') 
+            || request()->is('service_company/jobs/create*') 
+            || request()->is('service_company/jobs/*/edit*') 
+            || in_array(($page_event ?? ''), ['ADD', 'EDIT']);
+    @endphp
+    @if($isJobUnifiedForm)
         <style>
             #kt_toolbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261013a">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261014a">
     @endif
 @endpush
 @section('content')
@@ -3562,9 +3568,14 @@ $currency_code = GeneralMethod::defaultCurrency();
             $carriew_website_chk = 'checked="checked"';
         }
     }
+
+    $isJobUnifiedForm = request()->routeIs('service_company.jobs.create', 'service_company.jobs.edit') 
+        || request()->is('service_company/jobs/create*') 
+        || request()->is('service_company/jobs/*/edit*') 
+        || in_array(($page_event ?? ''), ['ADD', 'EDIT']);
     ?>
 
-    @if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))
+    @if(!$isJobUnifiedForm)
       <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
         <!--begin::Container-->
@@ -3592,8 +3603,8 @@ $currency_code = GeneralMethod::defaultCurrency();
     @endif
 
 
-    <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*')) class="internal-job-create" @endif>
-        <div class="content">@if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))<br>@endif
+    <div id="jrwrap" @if($isJobUnifiedForm) class="internal-job-create" data-page-event="{{ $page_event ?? 'ADD' }}" @endif>
+        <div class="content">@if(!$isJobUnifiedForm)<br>@endif
        
             <!-- Stepper -->
             <div class="stepper-v2" id="stepper">
@@ -3621,7 +3632,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 <div class="step-v2 pending" data-step="4" onclick="goToStep(4)">
                     <div class="step-v2-icon">4</div>
                     <div class="step-v2-info">
-                        <div class="step-v2-label">Review &amp; Publish</div>
+                        <div class="step-v2-label"><?php echo (($page_event ?? '') == 'EDIT') ? 'Review &amp; Update' : 'Review &amp; Publish'; ?></div>
                         <div class="step-v2-desc">Pending</div>
                     </div>
                 </div>
@@ -5309,7 +5320,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         <label class="summary-check"><input type="checkbox" checked></label>
                         <div class="submit-card">
                             <button type="button" class="btn btn-primary" onclick="publishJob()">
-                                <?php echo @$buttontext ? $buttontext : 'Publish Job'; ?>
+                                <?php echo @$buttontext ? $buttontext : ((($page_event ?? '') == 'EDIT') ? 'Update Job' : 'Publish Job'); ?>
                             </button>
                         </div>
                         <span id="badgeEmployment"></span>
@@ -9159,7 +9170,9 @@ $currency_code = GeneralMethod::defaultCurrency();
         function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); }
 
         // ---------- PUBLISH (real submit) ----------
-        var publishBtnContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;"><path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/></svg><span>Publish Job</span>';
+        var isEditPage = (typeof __pageEvent !== 'undefined' && __pageEvent === 'EDIT');
+        var publishBtnText = isEditPage ? 'Update Job' : 'Publish Job';
+        var publishBtnContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;"><path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/></svg><span>' + publishBtnText + '</span>';
         function resetPublishBtn($btn) {
             if (!$btn || !$btn.length) $btn = $('.submit-card .btn-primary');
             $btn.prop('disabled', false).html(publishBtnContent);
@@ -9223,13 +9236,13 @@ $currency_code = GeneralMethod::defaultCurrency();
                 success: function(data) {
                     if (data.status == 'success') {
                         resetPublishBtn($btn);
-                        showToast('Job saved successfully!', 'success');
+                        showToast(isEditPage ? 'Job updated successfully!' : 'Job saved successfully!', 'success');
                         setTimeout(function() { window.location = __indexUrl; }, 600);
                     } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
                         resetPublishBtn($btn);
                         var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
                         $('#operation_id').val(freshOpId);
-                        showToast('Submission updated. Please click "Publish Job" again.', 'info');
+                        showToast('Submission updated. Please click "' + publishBtnText + '" again.', 'info');
                     } else {
                         resetPublishBtn($btn);
                         if (!navigator.onLine) {
@@ -14186,13 +14199,13 @@ $currency_code = GeneralMethod::defaultCurrency();
 
     })();
     </script>
-    {{-- Create-only enhancement script — placed LAST so all globals defined in the inline
+    {{-- Unified Job Form enhancement script — placed LAST so all globals defined in the inline
          scripts above (currentStep, goToStep, __indexUrl, validateStep, etc.) are available
          when this file runs. No defer needed here because the script is already at the
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     <script src="{{ asset('js/jero-taxonomy-client.js') }}?v=2.0.0"></script>
-    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012d"></script>
+    @if($isJobUnifiedForm)
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261014a"></script>
     @endif
 @endpush
