@@ -988,8 +988,11 @@ $(document).ready(function(){
             e.stopImmediatePropagation();
         }
 
+        var $btn = $(this);
+        if ($btn.data('in-flight')) return false;
+
         $('#kt_activitiesRecruiter_toggle').trigger('click');
-        var id = $(this).data('row-id');
+        var id = $btn.data('row-id');
         var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}".replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loaderHtml = '<div style="padding:40px;text-align:center;font-family:Poppins,sans-serif;"><img src="'+baseurl+'" height="35px" style="margin-bottom:10px;"><div style="font-size:13px;color:#5e6278;font-weight:500;">Loading agencies...</div></div>';
@@ -1006,7 +1009,14 @@ $(document).ready(function(){
             $('#kt_activitiesRecruiter_body').html(loaderHtml);
         }
 
-        $.ajax({
+        $btn.data('in-flight', true);
+
+        // Cancel previous pending drawer AJAX if active
+        if (window.pendingSpartnerXhr && typeof window.pendingSpartnerXhr.abort === 'function') {
+            try { window.pendingSpartnerXhr.abort(); } catch(err) {}
+        }
+
+        window.pendingSpartnerXhr = $.ajax({
             type: 'GET',
             url: url,
             cache: false,
@@ -1033,10 +1043,14 @@ $(document).ready(function(){
                     });
                 }
             },
-            error: function () {
-                if (!hasCachedDrawer) {
+            error: function (xhr, status) {
+                if (status !== 'abort' && !hasCachedDrawer) {
                     $('#kt_activitiesRecruiter_body').html(errorHtml);
                 }
+            },
+            complete: function() {
+                $btn.data('in-flight', false);
+                window.pendingSpartnerXhr = null;
             }
         });
   });

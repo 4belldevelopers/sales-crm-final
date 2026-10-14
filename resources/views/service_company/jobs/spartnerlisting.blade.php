@@ -1618,7 +1618,14 @@
                         <table class="agency-data-table" id="recommendedlist">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%;">Agency & Specialization</th>
+                                    <th style="width: 32%;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="form-check form-check-custom form-check-solid form-check-sm flex-shrink-0">
+                                                <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_recom" title="Select All Agencies" style="cursor: pointer;" />
+                                            </div>
+                                            <span>Agency & Specialization</span>
+                                        </div>
+                                    </th>
                                     <th style="width: 17%;">Matching Profiles</th>
                                     <th style="width: 15%;">Rates</th>
                                     <th style="width: 18%;">Location & Team</th>
@@ -1642,7 +1649,14 @@
                         <table class="agency-data-table" id="staffingPartnersRegister">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%;">Agency & Specialization</th>
+                                    <th style="width: 32%;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="form-check form-check-custom form-check-solid form-check-sm flex-shrink-0">
+                                                <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_reg" title="Select All Agencies" style="cursor: pointer;" />
+                                            </div>
+                                            <span>Agency & Specialization</span>
+                                        </div>
+                                    </th>
                                     <th style="width: 17%;">Matching Profiles</th>
                                     <th style="width: 15%;">Rates</th>
                                     <th style="width: 18%;">Location & Team</th>
@@ -1687,9 +1701,9 @@
                         <div style="font-size: 11px; color: #64748b;">You can select and send this requirement to multiple agencies at once.</div>
                     </div>
                 </div>
-                <button type="button" class="btn btn-sm" disabled style="background: #dbeafe; color: #2563eb; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 7px 16px; border: none; cursor: default; display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn btn-sm btn-send-multi-agencies" id="btn_send_multi_agencies" disabled style="background: #dbeafe; color: #2563eb; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 7px 16px; border: none; cursor: default; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                    Send to 0 Agencies
+                    <span id="btn_send_multi_text">Send to 0 Agencies</span>
                 </button>
             </div>
 
@@ -1949,6 +1963,54 @@
     }
 
     /**
+     * Bulk Agency Selection State Manager
+     */
+    window.selectedAgencyIds = window.selectedAgencyIds || new Set();
+
+    function updateMultiSendButtonState() {
+        if (!window.selectedAgencyIds) {
+            window.selectedAgencyIds = new Set();
+        }
+        var count = window.selectedAgencyIds.size;
+        var $btn = $('#btn_send_multi_agencies');
+        var $txt = $('#btn_send_multi_text');
+
+        if (count > 0) {
+            $txt.text('Send Requirement to ' + count + ' Agenc' + (count > 1 ? 'ies' : 'y'));
+            $btn.prop('disabled', false).removeClass('disabled').css({ 'opacity': '1', 'cursor': 'pointer' });
+        } else {
+            $txt.text('Send to Multiple Agencies');
+            $btn.prop('disabled', true).addClass('disabled').css({ 'opacity': '0.65', 'cursor': 'not-allowed' });
+        }
+
+        // Update Select-All checkbox state in the visible tab
+        var $activePane = $('#kt_activitiesRecruiter .tab-pane.active');
+        var $visibleCheckboxes = $activePane.find('.agency-row-checkbox');
+        var totalVisible = $visibleCheckboxes.length;
+        var checkedVisible = $visibleCheckboxes.filter(':checked').length;
+        var $selectAll = $activePane.find('.select-all-agencies-checkbox');
+
+        if (totalVisible > 0 && checkedVisible === totalVisible) {
+            $selectAll.prop('checked', true).prop('indeterminate', false);
+        } else if (checkedVisible > 0) {
+            $selectAll.prop('checked', false).prop('indeterminate', true);
+        } else {
+            $selectAll.prop('checked', false).prop('indeterminate', false);
+        }
+    }
+
+    function syncCheckboxSelectionState() {
+        if (!window.selectedAgencyIds) {
+            window.selectedAgencyIds = new Set();
+        }
+        $('.agency-row-checkbox').each(function() {
+            var id = String($(this).val());
+            $(this).prop('checked', window.selectedAgencyIds.has(id));
+        });
+        updateMultiSendButtonState();
+    }
+
+    /**
      * Recommended Agencies Table Loader:
      * Two-Tier Safe Representation: Client RAM cache + X-Has-Representation + _force=1 Recovery
      */
@@ -1996,12 +2058,14 @@
                     if (response.total !== undefined) {
                         $('#recommendedTotal').html('(' + response.total + ')');
                     }
+                    syncCheckboxSelectionState();
                 } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
                     var cached = window.agencyTableCache[ramCacheKey];
                     $('#recommendedlistBody').html(cached.html);
                     if (cached.total !== undefined) {
                         $('#recommendedTotal').html('(' + cached.total + ')');
                     }
+                    syncCheckboxSelectionState();
                 } else {
                     // Safe representation recovery: _force=1 guarantees fresh HTML from Redis
                     var fallbackParams = $.extend({}, params, { _force: 1 });
@@ -2012,6 +2076,7 @@
                             if (fresh.total !== undefined) {
                                 $('#recommendedTotal').html('(' + fresh.total + ')');
                             }
+                            syncCheckboxSelectionState();
                         }
                     });
                 }
@@ -2024,6 +2089,7 @@
                     if (cached.total !== undefined) {
                         $('#recommendedTotal').html('(' + cached.total + ')');
                     }
+                    syncCheckboxSelectionState();
                 }
             },
             complete: function() {
@@ -2070,6 +2136,7 @@
                     if (response.pagination) {
                         $('#paginationregisteragency').html(response.pagination);
                     }
+                    syncCheckboxSelectionState();
                 } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
                     var cached = window.agencyTableCache[ramCacheKey];
                     $('#allregisteragency').html(cached.html);
@@ -2079,6 +2146,7 @@
                     if (cached.pagination) {
                         $('#paginationregisteragency').html(cached.pagination);
                     }
+                    syncCheckboxSelectionState();
                 } else {
                     var fallbackParams = $.extend({}, params, { _force: 1 });
                     $.getJSON(`{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`, fallbackParams, function(fresh) {
@@ -2091,6 +2159,7 @@
                             if (fresh.pagination) {
                                 $('#paginationregisteragency').html(fresh.pagination);
                             }
+                            syncCheckboxSelectionState();
                         }
                     });
                 }
@@ -2304,6 +2373,119 @@
             $('#kt_activitiesRecruiter ' + targetPane).addClass('active show').show();
 
             AgencyMarketplaceTabManager.switchTab(tabKey);
+            setTimeout(updateMultiSendButtonState, 50);
+        });
+
+        // ── AGENCY ROW SELECTION & MULTI-SEND MANAGEMENT ────────────────────
+        $(document).off('change.agencyRowCheck', '.agency-row-checkbox').on('change.agencyRowCheck', '.agency-row-checkbox', function(e) {
+            var val = String($(this).val());
+            if ($(this).is(':checked')) {
+                window.selectedAgencyIds.add(val);
+            } else {
+                window.selectedAgencyIds.delete(val);
+            }
+            updateMultiSendButtonState();
+        });
+
+        $(document).off('change.selectAllAgencies', '.select-all-agencies-checkbox').on('change.selectAllAgencies', '.select-all-agencies-checkbox', function(e) {
+            var isChecked = $(this).is(':checked');
+            var $activePane = $(this).closest('.tab-pane');
+            if (!$activePane.length) {
+                $activePane = $('#kt_activitiesRecruiter .tab-pane.active');
+            }
+
+            $activePane.find('.agency-row-checkbox').each(function() {
+                var val = String($(this).val());
+                $(this).prop('checked', isChecked);
+                if (isChecked) {
+                    window.selectedAgencyIds.add(val);
+                } else {
+                    window.selectedAgencyIds.delete(val);
+                }
+            });
+            updateMultiSendButtonState();
+        });
+
+        $(document).off('click.sendMultiAgencies', '#btn_send_multi_agencies').on('click.sendMultiAgencies', '#btn_send_multi_agencies', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            if ($btn.data('in-flight') || !window.selectedAgencyIds || window.selectedAgencyIds.size === 0) {
+                return false;
+            }
+
+            var agencyIds = Array.from(window.selectedAgencyIds);
+            var currentJobId = $('#current_job_id').val();
+            var agencyCount = agencyIds.length;
+
+            Swal.fire({
+                title: 'Send Requirement to ' + agencyCount + ' Agenc' + (agencyCount > 1 ? 'ies' : 'y') + '?',
+                text: 'This requirement invitation will be sent to the ' + agencyCount + ' selected agencies at once.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Send to All (' + agencyCount + ')',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                $btn.data('in-flight', true).prop('disabled', true).addClass('disabled');
+                var originalHtml = $btn.html();
+                $btn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Sending...');
+
+                $.ajax({
+                    url: "{{ route('service_company.jobs.send_multiple_job_invitations') }}",
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Idempotency-Key': 'bulk-send-' + currentJobId + '-' + Date.now()
+                    },
+                    data: {
+                        job_id: currentJobId,
+                        agency_ids: agencyIds
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            var successfulIds = response.invited_agencies || agencyIds;
+                            successfulIds.forEach(function(agId) {
+                                $('#agency_action_' + agId).html(
+                                    '<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>'
+                                );
+                                $('#agency_row_' + agId + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                            });
+
+                            window.selectedAgencyIds.clear();
+                            $('.select-all-agencies-checkbox').prop('checked', false).prop('indeterminate', false);
+
+                            window.agencyTableCache = {};
+                            if (window.jobDrawerCache) {
+                                delete window.jobDrawerCache['spartner_' + currentJobId];
+                            }
+
+                            Swal.fire({
+                                title: "Success!",
+                                text: response.message || ("Requirement successfully sent to " + successfulIds.length + " agencies."),
+                                icon: "success",
+                                confirmButtonColor: "#10b981"
+                            });
+                        } else {
+                            Swal.fire("Notice", response.message || "Failed to send requirement to selected agencies.", "warning");
+                        }
+                    },
+                    error: function(xhr) {
+                        var errMsg = "Failed to send requirements. Please try again.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire("Error", errMsg, "error");
+                    },
+                    complete: function() {
+                        $btn.data('in-flight', false).html(originalHtml);
+                        updateMultiSendButtonState();
+                    }
+                });
+            });
         });
 
         // Fallback input event for non-Tagify scenarios
@@ -2401,11 +2583,12 @@
         // ── PUBLISH / UNPUBLISH TOGGLE HANDLER ───────────────────────────────
         $('body').off('click.postToPublic', '.post_to_public').on('click.postToPublic', '.post_to_public', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             var $this = $(this);
-            if ($this.data('in-flight')) return false;
+            if ($this.data('in-flight') || $('#kt_activitiesRecruiter').data('market-action-running')) return false;
 
             var current_jobid = $this.data('row-jobid') || $('#current_job_id').val();
-            var job_cancel = $this.data('c');
+            var job_cancel = parseInt($this.data('c') || 0, 10);
             var id = 0;
             var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', id);
 
@@ -2423,42 +2606,75 @@
             }).then((result) => {
                 if (!result.isConfirmed) return;
 
-                $this.data('in-flight', true).prop('disabled', true);
+                // Immediate loading feedback & lock both buttons
+                $('#kt_activitiesRecruiter').data('market-action-running', true);
+                var $btnOne = $('#sp_list_one');
+                var $btnTwo = $('#sp_list_two');
+                $btnOne.prop('disabled', true).addClass('disabled');
+                $btnTwo.prop('disabled', true).addClass('disabled');
+
+                var originalHtml = $this.html();
+                var loadingLabel = (job_cancel == 1) ? 'Unpublishing...' : 'Publishing...';
+                $this.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="width: 14px; height: 14px; border-width: 2px;"></span><span>' + loadingLabel + '</span>');
+
+                var idempotencyKey = 'pub_' + current_jobid + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+                var postData = {
+                    'current_jobid': current_jobid,
+                    'job_cancel': job_cancel,
+                    'vendor_limit': $('#marketplace_vendor_limit').val() || 20,
+                    'auto_expire': $('#marketplace_auto_expire').val() || 7,
+                    'idempotency_key': idempotencyKey,
+                    '_token': '{{ csrf_token() }}'
+                };
 
                 $.ajax({
-                    type: 'GET',
+                    type: 'POST',
                     url: url,
-                    data: {
-                        'current_jobid': current_jobid,
-                        'job_cancel': job_cancel
+                    data: postData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-Idempotency-Key': idempotencyKey
                     },
+                    timeout: 10000,
                     success: function(response) {
                         if (response && response.status === 'closeJob' && job_cancel != 1) {
                             Swal.fire("Notice", response.message || "Please update the job status from 'Closed/Hold' to 'Hiring' to enable posting.", "warning");
                             return;
                         }
 
-                        if (job_cancel == 1) {
-                            // Swapped to UNPUBLISHED state
+                        var isLive = (job_cancel != 1 && (response.is_published !== false));
+
+                        if (job_cancel == 1 || response.is_published === false) {
                             setMarketplaceUiState(false);
-                            Swal.fire("Unpublished", "This job requirement is no longer live on the marketplace.", "success");
+                            Swal.fire("Unpublished", response.message || "This job requirement is no longer live on the marketplace.", "success");
                         } else {
-                            // Swapped to LIVE state
                             setMarketplaceUiState(true);
-                            Swal.fire("Published Live!", "This job is now live on Jero Agency Marketplace.", "success");
+                            Swal.fire("Published Live!", response.message || "This job is now live on Jero Agency Marketplace.", "success");
                         }
 
-                        // Invalidate RAM cache so fresh states persist
+                        // Atomic RAM and Client Cache Invalidation
                         window.agencyTableCache = {};
                         if (window.jobDrawerCache) {
                             delete window.jobDrawerCache['spartner_' + current_jobid];
                         }
                     },
-                    error: function() {
-                        Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                    error: function(xhr) {
+                        var errMessage = 'Something went wrong. Please try again.';
+                        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                            errMessage = xhr.responseJSON.message;
+                        } else if (xhr && xhr.status === 403) {
+                            errMessage = 'Unauthorized access to job requisition.';
+                        } else if (xhr && xhr.status === 419) {
+                            errMessage = 'Session expired. Please refresh the page.';
+                        }
+                        Swal.fire('Error', errMessage, 'error');
                     },
                     complete: function() {
-                        $this.data('in-flight', false).prop('disabled', false);
+                        $('#kt_activitiesRecruiter').data('market-action-running', false);
+                        $this.html(originalHtml);
+                        $btnOne.prop('disabled', false).removeClass('disabled');
+                        $btnTwo.prop('disabled', false).removeClass('disabled');
                     }
                 });
             });
@@ -2489,6 +2705,11 @@
                         window.agencyTableCache = {};
                         if (window.jobDrawerCache) {
                             delete window.jobDrawerCache['spartner_' + id];
+                        }
+                        if (window.selectedAgencyIds && tocompany) {
+                            window.selectedAgencyIds.delete(String(tocompany));
+                            $('#agency_row_' + tocompany + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                            updateMultiSendButtonState();
                         }
                         ele.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
@@ -2528,6 +2749,11 @@
                         if (window.jobDrawerCache) {
                             delete window.jobDrawerCache['spartner_' + current_jobid];
                         }
+                        if (window.selectedAgencyIds && from_company_id) {
+                            window.selectedAgencyIds.delete(String(from_company_id));
+                            $('#agency_row_' + from_company_id + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                            updateMultiSendButtonState();
+                        }
                         $this.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
                     } else {
@@ -2566,6 +2792,10 @@
                     window.agencyTableCache = {};
                     if (window.jobDrawerCache) {
                         delete window.jobDrawerCache['spartner_' + current_jobid];
+                    }
+                    if (window.selectedAgencyIds && to_company_id) {
+                        window.selectedAgencyIds.delete(String(to_company_id));
+                        updateMultiSendButtonState();
                     }
                     tableLoad('load');
                     if (response.status === "success") {

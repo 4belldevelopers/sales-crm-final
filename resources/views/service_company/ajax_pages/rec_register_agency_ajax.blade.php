@@ -104,14 +104,24 @@
             // Recommendation relation / Action
             $recommendateRow = $row->_job_recom_relation ?? null;
             $id = $row->id;
+            $jobRecomStatus = $recommendateRow ? ($recommendateRow->final_status ?? null) : null;
+            $canSelect = (!$recommendateRow || ($jobRecomStatus == -1 || $jobRecomStatus == 2));
         @endphp
 
-        <tr class="agency-table-row" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+        <tr class="agency-table-row" id="agency_row_{{ $id }}" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
             {{-- Column 1: Agency & Specialization --}}
             <td class="align-middle py-3 px-3 show-detail-direct" data-row-id="{{ $row->client_id }}" style="min-width: 240px; max-width: 280px;">
                 <div class="d-flex flex-column">
                     {{-- Top Row: Avatar + Name & Specialization --}}
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        @if($canSelect)
+                            <div class="form-check form-check-sm form-check-custom form-check-solid flex-shrink-0" onclick="event.stopPropagation();">
+                                <input class="form-check-input agency-row-checkbox" type="checkbox" value="{{ $id }}" data-agency-id="{{ $id }}" data-agency-name="{{ e($row->company_name) }}" style="width: 16px; height: 16px; cursor: pointer;">
+                            </div>
+                        @else
+                            <div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>
+                        @endif
+
                         {{-- Logo / Avatar --}}
                         <div class="symbol flex-shrink-0" style="width: 42px; height: 42px;">
                             @if(!empty($logo_path))
@@ -223,7 +233,7 @@
             </td>
 
             {{-- Column 5: Action (Send Requirement) --}}
-            <td class="align-middle py-3 px-3 text-end" style="min-width: 150px;">
+            <td class="align-middle py-3 px-3 text-end" id="agency_action_{{ $id }}" style="min-width: 150px;">
                 @if ($recommendateRow)
                     @php $final_status = $recommendateRow->final_status ?? null; @endphp
                     @if ($final_status == 0 || $final_status === '' || $final_status === null)
