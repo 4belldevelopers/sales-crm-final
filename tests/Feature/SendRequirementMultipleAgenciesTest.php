@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Middleware\EnsureOneDeviceLogin;
+use App\Jobs\ProcessAgencyOutboxEventJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -201,5 +202,191 @@ class SendRequirementMultipleAgenciesTest extends TestCase
         if ($outbox) {
             DB::table('sys_outbox_events')->where('id', $outbox->id)->delete();
         }
+    }
+
+    /**
+     * Test idempotency replay prevents double deduction and duplicate inserts.
+     */
+    public function test_idempotency_replay_prevents_duplicate_deduction_and_inserts(): void
+    {
+        if (!$this->testUser) {
+            $this->markTestSkipped('No test user available');
+        }
+
+        DB::table('jobs')->where('id', $this->jobId)->update(['status' => 'active']);
+
+        $agencies = DB::table('companies')
+            ->where('id', '!=', $this->companyId)
+            ->where('status', 1)
+            ->limit(1)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($agencies)) {
+            $this->markTestSkipped('No valid agency found for test.');
+        }
+
+        $agencyId = $agencies[0];
+
+        // Clean up pre-existing state
+        DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', $agencyId)
+            ->delete();
+
+        DB::table('staffing_company_invitation')
+            ->where('job_id', $this->jobId)
+            ->where('from_company_id', $this->companyId)
+            ->where('to_company_id', $agencyId)
+            ->delete();
+
+        $idempotencyKey = 'replay-test-' . $this->jobId . '-' . time() . '-' . rand(1000, 9999);
+
+        // First attempt
+        $res1 = $this->actingAs($this->testUser)
+            ->withHeaders(['X-Idempotency-Key' => $idempotencyKey])
+            ->postJson(route('service_company.jobs.send_multiple_job_invitations'), [
+                'job_id' => $this->jobId,
+                'agency_ids' => [$agencyId],
+            ]);
+
+        $res1->assertStatus(200);
+        $res1->assertJson(['status' => 'success']);
+
+        $relCount1 = DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', $agencyId)
+            ->count();
+
+        $invCount1 = DB::table('staffing_company_invitation')
+            ->where('job_id', $this->jobId)
+            ->where('from_company_id', $this->companyId)
+            ->where('to_company_id', $agencyId)
+            ->count();
+
+        $this->assertEquals(1, $relCount1);
+        $this->assertEquals(1, $invCount1);
+
+        // Second attempt with EXACT SAME idempotency key (replay)
+        $res2 = $this->actingAs($this->testUser)
+            ->withHeaders(['X-Idempotency-Key' => $idempotencyKey])
+            ->postJson(route('service_company.jobs.send_multiple_job_invitations'), [
+                'job_id' => $this->jobId,
+                'agency_ids' => [$agencyId],
+            ]);
+
+        $res2->assertStatus(200);
+        $res2->assertJson(['status' => 'success']);
+
+        $relCount2 = DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', $agencyId)
+            ->count();
+
+        $invCount2 = DB::table('staffing_company_invitation')
+            ->where('job_id', $this->jobId)
+            ->where('from_company_id', $this->companyId)
+            ->where('to_company_id', $agencyId)
+            ->count();
+
+        // Exactly identical row counts: zero duplicated inserts!
+        $this->assertEquals($relCount1, $relCount2);
+        $this->assertEquals($invCount1, $invCount2);
+
+        // Clean up
+        DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', $agencyId)
+            ->delete();
+
+        DB::table('staffing_company_invitation')
+            ->where('job_id', $this->jobId)
+            ->where('from_company_id', $this->companyId)
+            ->where('to_company_id', $agencyId)
+            ->delete();
+
+        DB::table('sys_idempotency_keys')
+            ->where('tenant_id', $this->companyId)
+            ->where('idempotency_key', $idempotencyKey)
+            ->delete();
+    }
+
+    /**
+     * Test stranded outbox worker crash reclamation.
+     */
+    public function test_stranded_outbox_processing_reclamation(): void
+    {
+        // Insert a simulated stranded PROCESSING event with locked_at 10 minutes in the past
+        $strandedEventId = DB::table('sys_outbox_events')->insertGetId([
+            'aggregate_type' => 'AgencyRequest',
+            'aggregate_id' => 999999,
+            'event_type' => 'BULK_AGENCY_REQUIREMENT_SENT',
+            'tenant_id' => $this->companyId,
+            'status' => 'PROCESSING',
+            'locked_at' => now()->subMinutes(10),
+            'available_at' => now()->subMinutes(10),
+            'attempts' => 1,
+            'payload' => json_encode([
+                'job_id' => $this->jobId,
+                'from_company_id' => $this->companyId,
+                'to_company_id' => 999998,
+                'relation_id' => 0,
+                'invitation_id' => 0,
+            ]),
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $this->assertGreaterThan(0, $strandedEventId);
+
+        // Execute outbox job
+        $job = new ProcessAgencyOutboxEventJob();
+        $job->handle();
+
+        $refreshed = DB::table('sys_outbox_events')->where('id', $strandedEventId)->first();
+        $this->assertNotNull($refreshed);
+        $this->assertEquals('COMPLETED', $refreshed->status);
+        $this->assertNotNull($refreshed->processed_at);
+
+        // Clean up
+        DB::table('sys_outbox_events')->where('id', $strandedEventId)->delete();
+    }
+
+    /**
+     * Test agency eligibility filtering prevents self-invitation and forged company IDs.
+     */
+    public function test_agency_eligibility_and_self_invitation_prevention(): void
+    {
+        if (!$this->testUser) {
+            $this->markTestSkipped('No test user available');
+        }
+
+        DB::table('jobs')->where('id', $this->jobId)->update(['status' => 'active']);
+
+        // Submit self companyId and non-existent company 999999999
+        $forgedAgencies = [$this->companyId, 999999999];
+
+        $response = $this->actingAs($this->testUser)->postJson(route('service_company.jobs.send_multiple_job_invitations'), [
+            'job_id' => $this->jobId,
+            'agency_ids' => $forgedAgencies,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'warning',
+        ]);
+
+        // Verify zero relations or invitations created for self or forged IDs
+        $selfRel = DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', $this->companyId)
+            ->count();
+
+        $forgedRel = DB::table('recommendation_relation')
+            ->where('job_id', $this->jobId)
+            ->where('to_company_id', 999999999)
+            ->count();
+
+        $this->assertEquals(0, $selfRel);
+        $this->assertEquals(0, $forgedRel);
     }
 }

@@ -8969,7 +8969,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
             ->withoutGlobalScopes()->findOrFail($id);
 
-        $isSuperAdmin = ($company_id === 1 || ($this->user && ! empty($this->user->is_superadmin)));
+        $isSuperAdmin = ($this->user && ((int) $this->user->is_superadmin === 1 || in_array((int) $this->user->id, GeneralMethod::superAdminUserIds())));
         if (! $isSuperAdmin && (int) $this->job->company_id !== (int) $company_id) {
             abort(403, 'Unauthorized access to job requisition.');
         }
@@ -12919,7 +12919,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('jobs.id', $jobId)
             ->first();
 
-        $isSuperAdmin = ($from_company_id === 1 || ($this->user && !empty($this->user->is_superadmin)));
+        $isSuperAdmin = ($this->user && ((int) $this->user->is_superadmin === 1 || in_array((int) $this->user->id, GeneralMethod::superAdminUserIds())));
         if (! $jobRow || (! $isSuperAdmin && (int) $jobRow->company_id !== $from_company_id)) {
             return response()->json(['status' => 'error', 'message' => 'Job not found or access denied.'], 404);
         }
@@ -12930,171 +12930,206 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is hold. Please change the job status to active."]);
         }
 
-        $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
-        $country_id_job = $jobRow->country_id ?? 101;
+        // Top-Level Idempotency Protection
+        $idempotencyKey = $request->header('X-Idempotency-Key')
+            ?: $request->input('idempotency_key')
+            ?: "bulk_inv_{$from_company_id}_{$jobId}_" . md5(implode(',', $agencyIds));
 
-        $eventId = null;
-        if ($jobRow->employment_type == 1) {
-            $eventId = ($clientMainLocation == $country_id_job) ? 21 : 22;
-        } elseif ($jobRow->employment_type == 0) {
-            $eventId = ($clientMainLocation == $country_id_job) ? 19 : 20;
+        $idempotentCheck = $this->claimIdempotency($from_company_id, $idempotencyKey, [
+            'from_company_id' => $from_company_id,
+            'job_id' => $jobId,
+            'agency_ids' => $agencyIds,
+            'action' => 'send_multiple_job_invitations',
+        ]);
+
+        if ($idempotentCheck !== null) {
+            return response()->json($idempotentCheck, ($idempotentCheck['status'] ?? '') === 'error' ? 422 : 200);
         }
 
-        $clientRow = DB::table('clients')->select('id')->where('company_id', $from_company_id)->first();
-        $fromClientId = $clientRow ? $clientRow->id : 0;
+        $lockKey = "ats:lock:bulk_agency_recom:{$from_company_id}:{$jobId}";
+        $lock = Cache::lock($lockKey, 15);
 
-        // Check which agencies already have an active recommendation relation for this job
-        $existingRelations = DB::table('recommendation_relation')
-            ->where('from_company_id', $from_company_id)
-            ->whereIn('to_company_id', $agencyIds)
-            ->where('job_id', $jobId)
-            ->where('final_status', '!=', -1)
-            ->pluck('to_company_id')
-            ->toArray();
+        try {
+            if (! $lock->block(3)) {
+                return response()->json(['status' => 'warning', 'message' => 'A request is currently being processed for this job. Please wait a moment.']);
+            }
 
-        $targetAgencyIds = array_diff($agencyIds, $existingRelations);
+            $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
+            $country_id_job = $jobRow->country_id ?? 101;
 
-        if (empty($targetAgencyIds)) {
-            return Reply::dataOnly(['status' => 'warning', 'message' => 'Requirement has already been sent to all selected agencies.']);
-        }
+            $eventId = null;
+            if ($jobRow->employment_type == 1) {
+                $eventId = ($clientMainLocation == $country_id_job) ? 21 : 22;
+            } elseif ($jobRow->employment_type == 0) {
+                $eventId = ($clientMainLocation == $country_id_job) ? 19 : 20;
+            }
 
-        $successAgencyIds = [];
-        $createdRelations = [];
-        $createdInvitations = [];
-        $outboxIds = [];
+            $clientRow = DB::table('clients')->select('id')->where('company_id', $from_company_id)->first();
+            $fromClientId = $clientRow ? $clientRow->id : 0;
 
-        // Check which agencies already have staffing_company_invitation
-        $existingInvitations = DB::table('staffing_company_invitation')
-            ->where('from_company_id', $from_company_id)
-            ->whereIn('to_company_id', $targetAgencyIds)
-            ->where('to_invitation_status', '!=', -1)
-            ->pluck('to_company_id')
-            ->toArray();
+            // Check which agencies already have an active recommendation relation for this job
+            $existingRelations = DB::table('recommendation_relation')
+                ->where('from_company_id', $from_company_id)
+                ->whereIn('to_company_id', $agencyIds)
+                ->where('job_id', $jobId)
+                ->where('final_status', '!=', -1)
+                ->pluck('to_company_id')
+                ->toArray();
 
-        // Batch fetch company emails
-        $companiesMap = DB::table('companies')
-            ->whereIn('id', $targetAgencyIds)
-            ->pluck('company_email', 'id')
-            ->toArray();
+            $targetAgencyIds = array_diff($agencyIds, $existingRelations);
 
-        $clientKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $baseIdempotencyKey = $clientKey ?: "bulk_inv_{$from_company_id}_{$jobId}_" . time();
+            if (empty($targetAgencyIds)) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Requirement has already been sent to all selected agencies.']);
+            }
 
-        DB::transaction(function () use (
-            $targetAgencyIds, $from_company_id, $from_user_id, $fromClientId, $jobId,
-            $eventId, $existingInvitations, $companiesMap, $baseIdempotencyKey,
-            &$successAgencyIds, &$createdRelations, &$createdInvitations, &$outboxIds
-        ) {
-            $now = now();
-            $today = date('Y-m-d');
+            // Phase D: Validate agency eligibility (must exist, be active, and not be caller's own company)
+            $companiesMap = DB::table('companies')
+                ->whereIn('id', $targetAgencyIds)
+                ->where('id', '!=', $from_company_id)
+                ->where('status', 1)
+                ->pluck('company_email', 'id')
+                ->toArray();
 
-            foreach ($targetAgencyIds as $toCompanyId) {
-                // Coin deduction if required
-                if ($eventId) {
-                    try {
-                        GeneralMethod::coinsDeductions((int) $toCompanyId, $eventId, $from_user_id, $from_company_id, '', '');
-                    } catch (\Throwable $e) {
-                        // Continue if non-fatal
+            $targetAgencyIds = array_map('intval', array_keys($companiesMap));
+
+            if (empty($targetAgencyIds)) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'No eligible or active agencies found for this requirement.']);
+            }
+
+            $successAgencyIds = [];
+            $createdRelations = [];
+            $createdInvitations = [];
+            $outboxIds = [];
+
+            // Check which agencies already have staffing_company_invitation
+            $existingInvitations = DB::table('staffing_company_invitation')
+                ->where('from_company_id', $from_company_id)
+                ->whereIn('to_company_id', $targetAgencyIds)
+                ->where('to_invitation_status', '!=', -1)
+                ->pluck('to_company_id')
+                ->toArray();
+
+            $baseIdempotencyKey = $idempotencyKey;
+
+            DB::transaction(function () use (
+                $targetAgencyIds, $from_company_id, $from_user_id, $fromClientId, $jobId,
+                $eventId, $existingInvitations, $companiesMap, $baseIdempotencyKey,
+                &$successAgencyIds, &$createdRelations, &$createdInvitations, &$outboxIds
+            ) {
+                $now = now();
+                $today = date('Y-m-d');
+
+                foreach ($targetAgencyIds as $toCompanyId) {
+                    // Coin deduction if required
+                    if ($eventId) {
+                        try {
+                            GeneralMethod::coinsDeductions((int) $toCompanyId, $eventId, $from_user_id, $from_company_id, '', '');
+                        } catch (\Throwable $e) {
+                            // Non-fatal if coin ledger already processed or free tier
+                        }
                     }
-                }
 
-                // Insert invitation if not existing
-                if (! in_array($toCompanyId, $existingInvitations)) {
-                    $toEmail = $companiesMap[$toCompanyId] ?? '';
-                    $invId = DB::table('staffing_company_invitation')->insertGetId([
+                    // Insert invitation if not existing
+                    if (! in_array($toCompanyId, $existingInvitations)) {
+                        $toEmail = $companiesMap[$toCompanyId] ?? '';
+                        $invId = DB::table('staffing_company_invitation')->insertGetId([
+                            'from_company_id' => $from_company_id,
+                            'from_client_id' => $fromClientId,
+                            'from_user_id' => $from_user_id,
+                            'from_status' => 1,
+                            'from_created_at' => $today,
+                            'to_company_id' => $toCompanyId,
+                            'to_email' => $toEmail,
+                            'to_status' => 0,
+                            'job_id' => $jobId,
+                            'to_invitation_status' => 0,
+                        ]);
+                        $createdInvitations[$toCompanyId] = $invId;
+                    }
+
+                    // Insert recommendation_relation
+                    $relId = DB::table('recommendation_relation')->insertGetId([
                         'from_company_id' => $from_company_id,
-                        'from_client_id' => $fromClientId,
                         'from_user_id' => $from_user_id,
                         'from_status' => 1,
                         'from_created_at' => $today,
                         'to_company_id' => $toCompanyId,
-                        'to_email' => $toEmail,
                         'to_status' => 0,
+                        'final_status' => 0,
                         'job_id' => $jobId,
-                        'to_invitation_status' => 0,
-                    ]);
-                    $createdInvitations[$toCompanyId] = $invId;
-                }
-
-                // Insert recommendation_relation
-                $relId = DB::table('recommendation_relation')->insertGetId([
-                    'from_company_id' => $from_company_id,
-                    'from_user_id' => $from_user_id,
-                    'from_status' => 1,
-                    'from_created_at' => $today,
-                    'to_company_id' => $toCompanyId,
-                    'to_status' => 0,
-                    'final_status' => 0,
-                    'job_id' => $jobId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-                $createdRelations[$toCompanyId] = $relId;
-
-                // Idempotent Outbox Event
-                $idempotencyKey = "{$baseIdempotencyKey}_{$toCompanyId}";
-                $existingOutbox = DB::table('sys_outbox_events')
-                    ->where('tenant_id', $from_company_id)
-                    ->where('idempotency_key', $idempotencyKey)
-                    ->first(['id']);
-
-                if ($existingOutbox) {
-                    $outboxId = $existingOutbox->id;
-                } else {
-                    $outboxId = DB::table('sys_outbox_events')->insertGetId([
-                        'tenant_id' => $from_company_id,
-                        'idempotency_key' => $idempotencyKey,
-                        'aggregate_type' => 'AgencyRequest',
-                        'aggregate_id' => $toCompanyId,
-                        'aggregate_version' => 1,
-                        'event_type' => 'BULK_AGENCY_REQUIREMENT_SENT',
-                        'payload' => json_encode([
-                            'from_company_id' => $from_company_id,
-                            'to_company_id' => $toCompanyId,
-                            'job_id' => $jobId,
-                            'relation_id' => $relId,
-                            'invitation_id' => $createdInvitations[$toCompanyId] ?? null,
-                        ]),
-                        'status' => 'PENDING',
-                        'attempts' => 0,
-                        'available_at' => $now,
                         'created_at' => $now,
+                        'updated_at' => $now,
                     ]);
+                    $createdRelations[$toCompanyId] = $relId;
+
+                    // Idempotent Outbox Event
+                    $eventKey = "{$baseIdempotencyKey}_{$toCompanyId}";
+                    $existingOutbox = DB::table('sys_outbox_events')
+                        ->where('tenant_id', $from_company_id)
+                        ->where('idempotency_key', $eventKey)
+                        ->first(['id']);
+
+                    if ($existingOutbox) {
+                        $outboxId = $existingOutbox->id;
+                    } else {
+                        $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                            'tenant_id' => $from_company_id,
+                            'idempotency_key' => $eventKey,
+                            'aggregate_type' => 'AgencyRequest',
+                            'aggregate_id' => $toCompanyId,
+                            'aggregate_version' => 1,
+                            'event_type' => 'BULK_AGENCY_REQUIREMENT_SENT',
+                            'payload' => json_encode([
+                                'from_company_id' => $from_company_id,
+                                'to_company_id' => $toCompanyId,
+                                'job_id' => $jobId,
+                                'relation_id' => $relId,
+                                'invitation_id' => $createdInvitations[$toCompanyId] ?? null,
+                            ]),
+                            'status' => 'PENDING',
+                            'attempts' => 0,
+                            'available_at' => $now,
+                            'created_at' => $now,
+                        ]);
+                    }
+                    $outboxIds[] = $outboxId;
+
+                    $successAgencyIds[] = $toCompanyId;
                 }
-                $outboxIds[] = $outboxId;
+            });
 
-                $successAgencyIds[] = $toCompanyId;
+            // Asynchronous Transactional Outbox Job Dispatch (No blocking ES indexing on web request path)
+            foreach ($outboxIds as $oid) {
+                try {
+                    \App\Jobs\ProcessAgencyOutboxEventJob::dispatch($oid)->afterCommit();
+                } catch (\Throwable $e) {
+                    // Log failure without blocking response
+                }
             }
-        });
 
-        // Post-commit ES indexing and notifications (asynchronous)
-        foreach ($createdRelations as $toCompanyId => $relId) {
-            GeneralMethod::jobRequestIndexElastic($relId);
-            if (isset($createdInvitations[$toCompanyId])) {
-                GeneralMethod::clientRequestIndexElastic($createdInvitations[$toCompanyId]);
-            }
+            $this->invalidateAgencyDrawerCaches($jobId);
+
+            $count = count($successAgencyIds);
+            $responsePayload = [
+                'status' => 'success',
+                'sent_count' => $count,
+                'agency_ids' => $successAgencyIds,
+                'invited_agencies' => $successAgencyIds,
+                'skipped_agencies' => array_values($existingRelations),
+                'total_invited' => $count,
+                'message' => "Requirement successfully sent to {$count} " . ($count === 1 ? 'agency' : 'agencies') . '.'
+            ];
+
+            $this->completeIdempotency($from_company_id, $idempotencyKey, $responsePayload);
+
+            return Reply::dataOnly($responsePayload);
+
+        } catch (\Throwable $e) {
+            $this->failIdempotency($from_company_id, $idempotencyKey, $e->getMessage());
+            throw $e;
+        } finally {
+            optional($lock)->release();
         }
-
-        foreach ($outboxIds as $oid) {
-            try {
-                \App\Jobs\ProcessAgencyOutboxEventJob::dispatch($oid)->afterCommit();
-            } catch (\Throwable $e) {
-                // Log failure without blocking response
-            }
-        }
-
-        $this->invalidateAgencyDrawerCaches($jobId);
-
-        $count = count($successAgencyIds);
-        return Reply::dataOnly([
-            'status' => 'success',
-            'sent_count' => $count,
-            'agency_ids' => $successAgencyIds,
-            'invited_agencies' => $successAgencyIds,
-            'skipped_agencies' => array_values($existingRelations),
-            'total_invited' => $count,
-            'message' => "Requirement successfully sent to {$count} " . ($count === 1 ? 'agency' : 'agencies') . '.'
-        ]);
     }
 
     /**

@@ -993,6 +993,14 @@ $(document).ready(function(){
 
         $('#kt_activitiesRecruiter_toggle').trigger('click');
         var id = $btn.data('row-id');
+
+        if (window.currentActiveDrawerJobId !== id) {
+            window.currentActiveDrawerJobId = id;
+            if (window.selectedAgencyIds) {
+                window.selectedAgencyIds.clear();
+            }
+        }
+
         var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}".replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         var loaderHtml = '<div style="padding:40px;text-align:center;font-family:Poppins,sans-serif;"><img src="'+baseurl+'" height="35px" style="margin-bottom:10px;"><div style="font-size:13px;color:#5e6278;font-weight:500;">Loading agencies...</div></div>';
