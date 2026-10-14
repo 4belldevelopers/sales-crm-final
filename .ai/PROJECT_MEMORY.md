@@ -129,6 +129,27 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
   3. **Verified Zero Errors & Strict Isolation**:
      - Verified with `php -l` (0 errors), confirmed 1,423 templates in `jd_details` (25 active status = 1), zero experience defaults, and complete page isolation to `create.blade.php`.
 
+- *2026-10-14* — **Service Company → Job Department Enterprise Remediation (Custom vs Suggestion Isolation, Hardware Mouse Scrolling, Remove Button UX, Backend Persistence) (100% IMPLEMENTED & VERIFIED)**:
+  Full root-cause audit and permanent enterprise-level remediation of the Job Department combobox on Service Company Requisition Create (`resources/views/service_company/jobs/create.blade.php`), styles (`public/css/internal-job-create-design.css`), and backend persistence (`app/Services/JobService.php`):
+  1. **Custom Department vs Suggestion Selection Isolation (Rule #1 & #2)**:
+     - Root-Cause: Previously `selectFocusedItem()` executed `else if (currentMatches.length > 0) { selectItem(currentMatches[0]); }`, which forcefully hijacked manually typed custom department names upon pressing Enter or moving fields if any fuzzy match existed.
+     - Fix: Replaced with `selectFocusedOrCustom()`: when `focusedIndex === -1`, pressing Enter or Tab commits the typed custom department via `commitCustomDepartment()` with zero auto-selection.
+     - Decoupled `input` event: typing custom text immediately nulls `selectedDepartment = null`, clears `#category_id`, and marks state as purely custom.
+     - Outside clicks, blur events, and wizard step transitions (`goToStep()`, `syncAll()`, `publishJob()`) preserve the custom department value without data inheritance or stale state pollution.
+  2. **Hardware Mouse Scrolling & Wheel Freeze Elimination (Rule #3)**:
+     - Root-Cause: 1) `.jero-dept-dropdown` CSS had `contain: layout style;` and `user-select: none;` which disrupted Chromium compositor mouse wheel hit-testing and scrollbar thumb drag capture; 2) Windows hardware mice emit `wheel` events with `deltaMode = 1` (lines, not pixels), causing dropped or microscopic deltas; 3) `window.onscroll` in capture mode was firing on inner dropdown scrolling, repeatedly triggering `adjustDropdownPosition()` and re-writing `maxHeight` during scroll which interrupted browser scroll momentum; 4) Document capture pointerdown listener was closing the dropdown during scrollbar dragging.
+     - Fix: Removed `contain: layout style;` and `user-select: none;` from dropdown CSS. Normalized `deltaMode === 1` line mode with a 33px multiplier on `wheel`. Filtered `window.onscroll` to ignore events where `e.target` is the inner dropdown. Added `isInteractingWithDropdown` drag guard on scrollbar pointerdown so dragging the scrollbar thumb never triggers outside dismissal. Cached height calculations to avoid layout thrashing.
+  3. **Selected Department UI & Remove (×) Button Fixes (Rule #4 & #5)**:
+     - Root-Cause: `.jero-dept-kbd` keyboard badge was positioned at `right: 32px` while the `.jero-dept-clear-btn` was at `right: 30px`. Because the badge was only hidden via `:focus-within`, once focus moved away after selecting a department, the KBD badge rendered directly on top of the clear button, making it unclickable and visually clipped.
+     - Fix: Set `.jero-dept-input` padding to `padding-right: 68px !important;` with `text-overflow: ellipsis !important;`. Positioned `.jero-dept-clear-btn` at `right: 36px !important; z-index: 5 !important;` with 24×24px touch target, circular background, and red hover states (`#fee2e2`, `#ef4444`). Shifted chevron to `right: 10px !important;`. Forced `.jero-dept-kbd` to `display: none !important;` whenever `.has-value` is present or input has content.
+     - Added distinct status chips: purple theme for "Custom Department", emerald for "Organization Dept", and blue for "Standard Taxonomy".
+  4. **Backend CQRS Persistence & Wizard Step Review Integration**:
+     - Updated `JobService::createJob()` and `JobService::updateJob()` to safely resolve custom departments from `$requestData['custom_department']` or `$requestData['category_id_display']` when `category_id` is empty or non-numeric, creating or associating tenant `JobCategory` without breaking existing taxonomy.
+     - Synchronized wizard Step 4 review card `#rvDepartment` to display the custom department name.
+  5. **Verification & Blast Radius Containment**:
+     - Verified with `php -l` (0 errors), `./vendor/bin/pint --test` (Passed).
+     - Product Company and Staffing Company paths remain 100% frozen. Zero business logic mutations.
+
 - *2026-10-13* — **Service Company → Job Department Dropdown Viewport Clamping & Freeze Permanent Remediation (100% IMPLEMENTED & VERIFIED)**:
   Permanent fix for Job Department combobox dropdown on `resources/views/service_company/jobs/create.blade.php`:
   1. **15.6" Screen Fit & Viewport Collision Clamping (1366×768 & 1920×1080)**:
