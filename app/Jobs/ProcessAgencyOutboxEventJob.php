@@ -101,27 +101,31 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
 
             // 2. Real-Time WebSocket broadcast to both tenant and agency sessions
             if ($fromCompanyId > 0 && $toCompanyId > 0) {
-                $broadcastAction = ($eventType === 'AGENCY_REQUEST_CANCELLED') ? 'cancelled' : 'sent';
+                try {
+                    $broadcastAction = ($eventType === 'AGENCY_REQUEST_CANCELLED') ? 'cancelled' : 'sent';
 
-                // Broadcast to employer company sessions
-                event(new AgencyRequestDeltaUpdated(
-                    companyId: $fromCompanyId,
-                    agencyId: $toCompanyId,
-                    eventType: $broadcastAction,
-                    entityVersion: (int) ($event->aggregate_version ?? 1),
-                    invitationId: $invitationId,
-                    extra: ['from_company_id' => $fromCompanyId]
-                ));
+                    // Broadcast to employer company sessions
+                    event(new AgencyRequestDeltaUpdated(
+                        companyId: $fromCompanyId,
+                        agencyId: $toCompanyId,
+                        eventType: $broadcastAction,
+                        entityVersion: (int) ($event->aggregate_version ?? 1),
+                        invitationId: $invitationId,
+                        extra: ['from_company_id' => $fromCompanyId]
+                    ));
 
-                // Broadcast to partner agency company sessions
-                event(new AgencyRequestDeltaUpdated(
-                    companyId: $toCompanyId,
-                    agencyId: $fromCompanyId,
-                    eventType: $broadcastAction,
-                    entityVersion: (int) ($event->aggregate_version ?? 1),
-                    invitationId: $invitationId,
-                    extra: ['from_company_id' => $fromCompanyId]
-                ));
+                    // Broadcast to partner agency company sessions
+                    event(new AgencyRequestDeltaUpdated(
+                        companyId: $toCompanyId,
+                        agencyId: $fromCompanyId,
+                        eventType: $broadcastAction,
+                        entityVersion: (int) ($event->aggregate_version ?? 1),
+                        invitationId: $invitationId,
+                        extra: ['from_company_id' => $fromCompanyId]
+                    ));
+                } catch (\Throwable $e) {
+                    Log::warning("[ProcessAgencyOutboxEventJob] WebSocket broadcast warning for invitation #{$invitationId}: ".$e->getMessage());
+                }
             }
 
             // 3. Mark outbox event as COMPLETED

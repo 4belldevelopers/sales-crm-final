@@ -51,10 +51,12 @@ echo "  ETag: " . $etag . "\n";
 echo "  X-ATS-Trace-Id: " . $traceId . "\n";
 echo "  X-ATS-Cache: " . $cacheStatus . "\n";
 
-// 3. Verify conditional 304 response
-echo "\n[TEST 3] Conditional 304 Validation with ETag:\n";
+// 3. Verify conditional 304 response with representation check
+echo "\n[TEST 3A] Conditional 304 Validation (Client Has Representation: X-Has-Representation: 1):\n";
 $req304 = Request::create('/service_company/jobs/recommendedData', 'GET', ['page' => 1, 'jobid' => 1]);
 $req304->headers->set('If-None-Match', $etag);
+$req304->headers->set('X-Has-Representation', '1');
+DB::flushQueryLog();
 DB::enableQueryLog();
 $start = microtime(true);
 $resp304 = $controller->recommendedData($req304);
@@ -65,6 +67,22 @@ echo "  Status Code: " . $resp304->getStatusCode() . " (Expected: 304)\n";
 echo "  Duration: " . round($time304, 2) . " ms\n";
 echo "  MySQL Queries: " . count($queries304) . " (Expected: 0)\n";
 echo "  X-ATS-Cache: " . $resp304->headers->get('X-ATS-Cache') . " (Expected: VALIDATED-304)\n";
+
+echo "\n[TEST 3B] Representation Recovery without Representation (X-Has-Representation: 0):\n";
+$reqNoRep = Request::create('/service_company/jobs/recommendedData', 'GET', ['page' => 1, 'jobid' => 1]);
+$reqNoRep->headers->set('If-None-Match', $etag);
+$reqNoRep->headers->set('X-Has-Representation', '0');
+DB::flushQueryLog();
+DB::enableQueryLog();
+$start = microtime(true);
+$respNoRep = $controller->recommendedData($reqNoRep);
+$queriesNoRep = DB::getQueryLog();
+DB::disableQueryLog();
+$timeNoRep = (microtime(true) - $start) * 1000;
+echo "  Status Code: " . $respNoRep->getStatusCode() . " (Expected: 200 - Safe Representation)\n";
+echo "  Duration: " . round($timeNoRep, 2) . " ms\n";
+echo "  MySQL Queries: " . count($queriesNoRep) . " (Expected: 0 from Redis)\n";
+echo "  X-ATS-Cache: " . $respNoRep->headers->get('X-ATS-Cache') . " (Expected: HIT)\n";
 
 // 4. Verify _force=1 bypasses 304 when representation is strictly required
 echo "\n[TEST 4] Safe Representation Recovery with _force=1 (Bypasses 304):\n";

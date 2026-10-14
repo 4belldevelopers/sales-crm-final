@@ -1924,9 +1924,33 @@
         }
     };
 
+    window.agencyTableCache = window.agencyTableCache || {};
+    window.agencyCacheOrder = window.agencyCacheOrder || [];
+
+    function setAgencyTableCache(key, data) {
+        window.agencyTableCache = window.agencyTableCache || {};
+        window.agencyCacheOrder = window.agencyCacheOrder || [];
+        window.agencyTableCache[key] = data;
+        var idx = window.agencyCacheOrder.indexOf(key);
+        if (idx !== -1) {
+            window.agencyCacheOrder.splice(idx, 1);
+        }
+        window.agencyCacheOrder.push(key);
+        if (window.agencyCacheOrder.length > 30) {
+            var oldest = window.agencyCacheOrder.shift();
+            delete window.agencyTableCache[oldest];
+        }
+    }
+
+    function getAgencyParamsKey(params) {
+        return Object.keys(params).sort().map(function(k) {
+            return k + '=' + (params[k] !== undefined && params[k] !== null ? params[k] : '');
+        }).join('&');
+    }
+
     /**
      * Recommended Agencies Table Loader:
-     * Two-Tier Safe Representation: Client RAM cache + _force=1 HTTP 304 Recovery
+     * Two-Tier Safe Representation: Client RAM cache + X-Has-Representation + _force=1 Recovery
      */
     function tableLoad(page) {
         if (page === 'load' || !page) { page = 1; }
@@ -1936,38 +1960,43 @@
         var currentJobId = $('#current_job_id').val();
         var cusSearchVal = getUnifiedSearchTerms() || $('#kt_tagify_users').val() || '';
 
+        var params = {
+            jobid: currentJobId,
+            hiringtype: $('#workhiringtype').val() || '',
+            country: $('#country').val() || '',
+            cus_search: cusSearchVal,
+            min_exp: $('#min_exp').val() || '',
+            max_exp: $('#max_exp').val() || '',
+            app_int_outsource: $('#hiring_type').val() || '',
+            experience: $('#experience').val() || '',
+            industry: $('#industry').val() || '',
+            min_sal: $('#min_sal').val() || '',
+            max_sal: $('#max_sal').val() || '',
+            min_salary_currency: $('#min_salary_currency').val() || '',
+            sal_mode: $('#sal_mode').val() || ''
+        };
+
+        var ramCacheKey = 'recom_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
+        var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
+
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
             type: 'GET',
             cache: false,
-            data: {
-                jobid: currentJobId,
-                hiringtype: $('#workhiringtype').val(),
-                country: $('#country').val(),
-                cus_search: cusSearchVal,
-                min_exp: $('#min_exp').val(),
-                max_exp: $('#max_exp').val(),
-                app_int_outsource: $('#hiring_type').val(),
-                experience: $('#experience').val(),
-                industry: $('#industry').val(),
-                min_sal: $('#min_sal').val(),
-                max_sal: $('#max_sal').val(),
-                min_salary_currency: $('#min_salary_currency').val(),
-                sal_mode: $('#sal_mode').val()
+            headers: {
+                'X-Has-Representation': hasRep ? '1' : '0'
             },
+            data: params,
             success: function(response) {
                 $('#recommended_loader').hide();
 
-                var ramCacheKey = 'recom_table_' + currentJobId + '_' + page;
-                window.agencyTableCache = window.agencyTableCache || {};
-
                 if (response && response.html) {
-                    window.agencyTableCache[ramCacheKey] = response;
+                    setAgencyTableCache(ramCacheKey, response);
                     $('#recommendedlistBody').html(response.html);
                     if (response.total !== undefined) {
                         $('#recommendedTotal').html('(' + response.total + ')');
                     }
-                } else if (window.agencyTableCache[ramCacheKey]) {
+                } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
                     var cached = window.agencyTableCache[ramCacheKey];
                     $('#recommendedlistBody').html(cached.html);
                     if (cached.total !== undefined) {
@@ -1975,9 +2004,10 @@
                     }
                 } else {
                     // Safe representation recovery: _force=1 guarantees fresh HTML from Redis
-                    $.getJSON(`{!! route('service_company.jobs.recommendedData') !!}?page=${page}&_force=1`, { jobid: currentJobId }, function(fresh) {
+                    var fallbackParams = $.extend({}, params, { _force: 1 });
+                    $.getJSON(`{!! route('service_company.jobs.recommendedData') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
-                            window.agencyTableCache[ramCacheKey] = fresh;
+                            setAgencyTableCache(ramCacheKey, fresh);
                             $('#recommendedlistBody').html(fresh.html);
                             if (fresh.total !== undefined) {
                                 $('#recommendedTotal').html('(' + fresh.total + ')');
@@ -1988,6 +2018,13 @@
             },
             error: function() {
                 $('#recommended_loader').hide();
+                if (hasRep && window.agencyTableCache[ramCacheKey]) {
+                    var cached = window.agencyTableCache[ramCacheKey];
+                    $('#recommendedlistBody').html(cached.html);
+                    if (cached.total !== undefined) {
+                        $('#recommendedTotal').html('(' + cached.total + ')');
+                    }
+                }
             },
             complete: function() {
                 AgencyMarketplaceTabManager.clearRequest('recommended');
@@ -2005,19 +2042,27 @@
         var jobid = $('#current_job_id').val();
         var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
 
+        var params = {
+            page: page,
+            jobid: jobid,
+            hiringtype: $('#hiringtype4').val() || '',
+            country: $('#country4').val() || '',
+            cus_search: cus_search
+        };
+        var ramCacheKey = 'registered_' + jobid + '_p' + page + '_' + getAgencyParamsKey(params);
+        var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
+
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
             type: 'GET',
             cache: false,
-            data: {
-                page: page,
-                jobid: jobid,
-                hiringtype: $('#hiringtype4').val(),
-                country: $('#country4').val(),
-                cus_search: cus_search
+            headers: {
+                'X-Has-Representation': hasRep ? '1' : '0'
             },
+            data: params,
             success: function(response) {
                 if (response && response.html) {
+                    setAgencyTableCache(ramCacheKey, response);
                     $('#allregisteragency').html(response.html);
                     if (response.total !== undefined) {
                         $('#registeredTotal').html('(' + response.total + ')');
@@ -2025,6 +2070,29 @@
                     if (response.pagination) {
                         $('#paginationregisteragency').html(response.pagination);
                     }
+                } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
+                    var cached = window.agencyTableCache[ramCacheKey];
+                    $('#allregisteragency').html(cached.html);
+                    if (cached.total !== undefined) {
+                        $('#registeredTotal').html('(' + cached.total + ')');
+                    }
+                    if (cached.pagination) {
+                        $('#paginationregisteragency').html(cached.pagination);
+                    }
+                } else {
+                    var fallbackParams = $.extend({}, params, { _force: 1 });
+                    $.getJSON(`{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`, fallbackParams, function(fresh) {
+                        if (fresh && fresh.html) {
+                            setAgencyTableCache(ramCacheKey, fresh);
+                            $('#allregisteragency').html(fresh.html);
+                            if (fresh.total !== undefined) {
+                                $('#registeredTotal').html('(' + fresh.total + ')');
+                            }
+                            if (fresh.pagination) {
+                                $('#paginationregisteragency').html(fresh.pagination);
+                            }
+                        }
+                    });
                 }
             },
             complete: function() {
@@ -2043,17 +2111,25 @@
         var jobid = $('#current_job_id').val();
         var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
 
+        var params = {
+            page: page,
+            jobid: jobid,
+            cus_search: cus_search
+        };
+        var ramCacheKey = 'assigned_' + jobid + '_p' + page + '_' + getAgencyParamsKey(params);
+        var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
+
         var jqXHR = $.ajax({
             url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
             type: 'GET',
             cache: false,
-            data: {
-                page: page,
-                jobid: jobid,
-                cus_search: cus_search
+            headers: {
+                'X-Has-Representation': hasRep ? '1' : '0'
             },
+            data: params,
             success: function(response) {
                 if (response && response.html) {
+                    setAgencyTableCache(ramCacheKey, response);
                     $('#allAssignListagency').html(response.html);
                     if (response.total !== undefined) {
                         $('#assignedTotal').html('(' + response.total + ')');
@@ -2061,6 +2137,29 @@
                     if (response.pagination) {
                         $('#paginationAssignListagency').html(response.pagination);
                     }
+                } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
+                    var cached = window.agencyTableCache[ramCacheKey];
+                    $('#allAssignListagency').html(cached.html);
+                    if (cached.total !== undefined) {
+                        $('#assignedTotal').html('(' + cached.total + ')');
+                    }
+                    if (cached.pagination) {
+                        $('#paginationAssignListagency').html(cached.pagination);
+                    }
+                } else {
+                    var fallbackParams = $.extend({}, params, { _force: 1 });
+                    $.getJSON(`{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`, fallbackParams, function(fresh) {
+                        if (fresh && fresh.html) {
+                            setAgencyTableCache(ramCacheKey, fresh);
+                            $('#allAssignListagency').html(fresh.html);
+                            if (fresh.total !== undefined) {
+                                $('#assignedTotal').html('(' + fresh.total + ')');
+                            }
+                            if (fresh.pagination) {
+                                $('#paginationAssignListagency').html(fresh.pagination);
+                            }
+                        }
+                    });
                 }
             },
             complete: function() {
@@ -2387,6 +2486,10 @@
                 },
                 success: function(response) {
                     if (response.status == "success") {
+                        window.agencyTableCache = {};
+                        if (window.jobDrawerCache) {
+                            delete window.jobDrawerCache['spartner_' + id];
+                        }
                         ele.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
                     } else {
@@ -2421,6 +2524,10 @@
                 },
                 success: function(response) {
                     if (response.status === "success") {
+                        window.agencyTableCache = {};
+                        if (window.jobDrawerCache) {
+                            delete window.jobDrawerCache['spartner_' + current_jobid];
+                        }
                         $this.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
                     } else {
@@ -2456,6 +2563,10 @@
                     'ename': ename
                 },
                 success: function(response) {
+                    window.agencyTableCache = {};
+                    if (window.jobDrawerCache) {
+                        delete window.jobDrawerCache['spartner_' + current_jobid];
+                    }
                     tableLoad('load');
                     if (response.status === "success") {
                         Swal.fire("Success", response.message || "Requirement resent successfully.", "success");
@@ -2501,6 +2612,10 @@
                     },
                     success: function(response) {
                         if (response.status == 'success') {
+                            window.agencyTableCache = {};
+                            if (window.jobDrawerCache) {
+                                delete window.jobDrawerCache['spartner_' + jobid];
+                            }
                             tableLoad('load');
                             staffingPartnersRegister('load');
                             recommendedAssignList('load');
@@ -2542,6 +2657,10 @@
                     data: { 'id': id, 'jobid': jobid },
                     success: function(response) {
                         if (response.status == 'success') {
+                            window.agencyTableCache = {};
+                            if (window.jobDrawerCache) {
+                                delete window.jobDrawerCache['spartner_' + jobid];
+                            }
                             recommendedAssignList('load');
                             Swal.fire('Ignored', 'Agency request ignored.', 'success');
                         }
