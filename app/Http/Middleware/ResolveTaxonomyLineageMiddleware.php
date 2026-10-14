@@ -4,9 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\DB;
 
 /**
  * ResolveTaxonomyLineageMiddleware
@@ -23,7 +22,7 @@ class ResolveTaxonomyLineageMiddleware
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next)
     {
         // Only process mutations (POST, PUT, PATCH)
         if (! in_array($request->method(), ['POST', 'PUT', 'PATCH'])) {
@@ -31,8 +30,8 @@ class ResolveTaxonomyLineageMiddleware
         }
 
         // Determine input title/designation
-        $rawTitle = $request->input('raw_designation') 
-            ?? $request->input('title') 
+        $rawTitle = $request->input('raw_designation')
+            ?? $request->input('title')
             ?? $request->input('current_designation');
 
         if (! $rawTitle || ! is_string($rawTitle)) {
@@ -59,7 +58,7 @@ class ResolveTaxonomyLineageMiddleware
         // 1. Verify directly supplied canonical_designation_id
         if (! empty($canonicalId) && is_numeric($canonicalId)) {
             $canonicalId = (int) $canonicalId;
-            $exists = Cache::remember('canonical_desig_exists_' . $canonicalId, 3600, function () use ($canonicalId) {
+            $exists = Cache::remember('canonical_desig_exists_'.$canonicalId, 3600, function () use ($canonicalId) {
                 return DB::table('taxonomy_designations')
                     ->where('id', $canonicalId)
                     ->where('status', 1)
@@ -83,7 +82,13 @@ class ResolveTaxonomyLineageMiddleware
             'taxonomy_version' => $clientVersion ?: $currentVersion,
         ]);
 
-        return $next($request);
+        $response = $next($request);
+
+        if (is_array($response)) {
+            return response()->json($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -127,7 +132,7 @@ class ResolveTaxonomyLineageMiddleware
             foreach ($tokens as $tok) {
                 $cleanTok = preg_replace('/[^a-z0-9]/', '', $tok);
                 if (strlen($cleanTok) >= 3) {
-                    $query->where('search_normalized_key', 'LIKE', '%' . $cleanTok . '%');
+                    $query->where('search_normalized_key', 'LIKE', '%'.$cleanTok.'%');
                 }
             }
 
