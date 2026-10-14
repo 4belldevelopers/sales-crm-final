@@ -930,9 +930,11 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        max-height: min(340px, calc(100vh - 140px));
+        max-height: min(360px, calc(100vh - 120px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
         user-select: none;
+        contain: layout style;
+        box-sizing: border-box;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
         top: auto;
@@ -1030,29 +1032,37 @@
     }
     #jrwrap .jero-dept-list-container {
         flex: 1 1 auto;
-        min-height: 80px;
-        max-height: 240px;
+        min-height: 0;
+        max-height: min(280px, 45vh);
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
         position: relative;
         padding: 4px 0;
         scrollbar-width: thin;
         scrollbar-color: #94a3b8 #f1f5f9;
+        box-sizing: border-box;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
-        width: 8px;
+        width: 9px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 4px;
+        background: #f8fafc;
+        border-radius: 6px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
-        background: #94a3b8;
-        border-radius: 4px;
-        border: 2px solid #f1f5f9;
+        background: #cbd5e1;
+        border-radius: 6px;
+        border: 2px solid #f8fafc;
+        min-height: 28px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:active {
         background: #64748b;
     }
     #jrwrap .jero-dept-section-header {
@@ -12470,12 +12480,15 @@ $currency_code = GeneralMethod::defaultCurrency();
         function closeDropdown() {
             var dropdown = document.getElementById('jero_dept_dropdown');
             var wrap = document.getElementById('jero_dept_select_wrap');
+            var container = document.getElementById('jero_dept_list_container');
             var input = document.getElementById('category_id_display');
             if (!dropdown || !wrap) return;
 
             isOpen = false;
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
+            dropdown.style.maxHeight = '';
+            if (container) container.style.maxHeight = '';
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
         }
@@ -12823,11 +12836,21 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 });
 
+                var searchDebounceTimer = null;
+                var searchRafId = null;
                 input.addEventListener('input', function() {
                     currentSearch = this.value;
                     if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
                     if (!isOpen) openDropdown();
-                    renderDropdownList();
+
+                    clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(function() {
+                        if (searchRafId) cancelAnimationFrame(searchRafId);
+                        searchRafId = requestAnimationFrame(function() {
+                            renderDropdownList();
+                            searchRafId = null;
+                        });
+                    }, 35);
                 });
 
                 // Real-World Defense: Prevent Enter key from submitting form prematurely & add Page navigation
@@ -12910,20 +12933,6 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (container) {
-                // High-Performance Unfreeze Wheel Scroll Engine: guarantees smooth scroll on all mice/touchpads
-                container.addEventListener('wheel', function(e) {
-                    if (this.scrollHeight > this.clientHeight) {
-                        var delta = e.deltaY;
-                        if (e.deltaMode === 1) delta *= 33; // Line mode support
-                        var prev = this.scrollTop;
-                        this.scrollTop += delta;
-                        if (this.scrollTop !== prev) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
-                    }
-                }, { passive: false });
-
                 container.addEventListener('click', function(e) {
                     // Check for inline create action
                     var createAction = e.target.closest('.jero-dept-create-action');
@@ -12953,23 +12962,44 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             });
 
+            // Prevent scrollbar thumb drag outside bounds from triggering accidental outside-click closing
+            var isPointerInteractingInsideWrap = false;
+            var wrapEl = document.getElementById('jero_dept_select_wrap');
+            if (wrapEl) {
+                wrapEl.addEventListener('pointerdown', function() {
+                    isPointerInteractingInsideWrap = true;
+                });
+            }
+            window.addEventListener('pointerup', function() {
+                isPointerInteractingInsideWrap = false;
+            });
+            window.addEventListener('pointercancel', function() {
+                isPointerInteractingInsideWrap = false;
+            });
+
             // Bullet-Proof Outside Click Handler in Capture Phase
             // Catches clicks before any child or ancestor calls stopPropagation
             document.addEventListener('pointerdown', function(e) {
+                if (isPointerInteractingInsideWrap) return;
                 var wrap = document.getElementById('jero_dept_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
                     if (isOpen) closeDropdown();
                 }
             }, true);
 
-            // Responsive Viewport Clamping & Dynamic Repositioning
-            window.addEventListener('resize', function() {
-                if (isOpen) adjustDropdownPosition();
-            });
+            // Responsive Viewport Clamping & Dynamic Repositioning (RAF Throttled)
+            var posRafId = null;
+            function scheduleAdjustPosition() {
+                if (!isOpen) return;
+                if (posRafId) return;
+                posRafId = requestAnimationFrame(function() {
+                    adjustDropdownPosition();
+                    posRafId = null;
+                });
+            }
 
-            window.addEventListener('scroll', function() {
-                if (isOpen) adjustDropdownPosition();
-            }, { passive: true });
+            window.addEventListener('resize', scheduleAdjustPosition, { passive: true });
+            window.addEventListener('scroll', scheduleAdjustPosition, { passive: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
             document.addEventListener('keydown', function(e) {
@@ -12983,13 +13013,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 }
             });
-
-            // Window resize auto-adjustment
-            window.addEventListener('resize', function() {
-                if (isOpen) {
-                    adjustDropdownPosition();
-                }
-            }, { passive: true });
         }
 
         function initSyncListeners() {
