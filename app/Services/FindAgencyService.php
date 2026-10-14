@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Notifications\QueueNotificationMailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -41,19 +42,17 @@ class FindAgencyService
     public static function invalidateTenantCache(int $companyId): void
     {
         $versionKey = "ats:v2:findagency:version:{$companyId}";
-        try {
-            Cache::increment($versionKey);
-        } catch (\Throwable $e) {
-            Cache::put($versionKey, (int) Cache::get($versionKey, 1) + 1, 86400 * 30);
-        }
+        $current = (int) Cache::get($versionKey, 1);
+        Cache::put($versionKey, $current + 1, 86400 * 30);
         GeneralMethod::cacheClean('allfindagencyversion_global');
     }
+
 
     /**
      * Retrieve paginated agency discovery list with batch enrichment and L3 cache.
      * Tenancy: Scoped to current authenticated user's company_id.
      */
-    public function getAgencyData(Request $request, $user): JsonResponse
+    public function getAgencyData(Request $request, $user): JsonResponse|Response
     {
         $company_id = (int) $user->company_id;
         $searchTerms = $request->input('cus_search');
@@ -111,6 +110,7 @@ class FindAgencyService
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
+            'search' => $globalSearch,
             'company' => $company_id,
             'kt_tagify_location' => $searchTermsLocation,
             'app_int_outsource' => $parent_employment_type,
@@ -120,14 +120,27 @@ class FindAgencyService
             'country_id_job' => $country_id_job,
         ];
 
-        $cacheKey = "ats:v2:findagency:{$company_id}:{$version}:".md5(json_encode($cachePayload));
+        $cacheKey = "ats:v2:findagency:{$company_id}:{$version}:".GeneralMethod::canonicalHash($cachePayload);
         $forceRefresh = $request->boolean('force_refresh', false);
+
+        $etag = '"v2:fa:'.GeneralMethod::canonicalHash($cacheKey).'"';
+        $ifNoneMatch = $request->header('If-None-Match');
+        $hasRepresentation = $request->header('X-Has-Representation') == '1';
+
+        $matchesEtag = GeneralMethod::matchesIfNoneMatch($ifNoneMatch, $etag);
+
+        // Fast conditional revalidation when client holds authoritative representation
+        if (! $forceRefresh && $matchesEtag && $hasRepresentation) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, no-cache');
+        }
+
 
         if (! $forceRefresh && Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey))
-                ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, no-cache');
         }
 
         // 3. Step 1: Find companies with matching skills in Elasticsearch
@@ -137,12 +150,17 @@ class FindAgencyService
         if (! empty($skillsList)) {
             $skillQueries = [];
             foreach ($skillsList as $skill) {
-                if (! empty($skill)) {
+                $trimmedSkill = trim($skill);
+                if (! empty($trimmedSkill)) {
+                    $lowerSkill = strtolower($trimmedSkill);
                     $skillQueries[] = [
-                        'wildcard' => [
-                            'skill_name' => [
-                                'value' => '*'.$skill.'*',
+                        'bool' => [
+                            'should' => [
+                                ['match_phrase' => ['skill_name' => $lowerSkill]],
+                                ['prefix' => ['skill_name' => $lowerSkill]],
+                                ['wildcard' => ['skill_name' => '*'.$lowerSkill.'*']],
                             ],
+                            'minimum_should_match' => 1,
                         ],
                     ];
                 }
@@ -206,6 +224,9 @@ class FindAgencyService
         }
 
         // 4. Step 2: Build dynamic function score boosts
+        // Note: Preserving all matching companies without artificial truncation to guarantee 100% ranking equivalence
+
+
         $functions = [];
         foreach ($companySkillMatchCount as $matchedCompanyId => $matchedSkillCount) {
             $functions[] = [
@@ -401,9 +422,8 @@ class FindAgencyService
         Cache::put($cacheKey, $responseData, now()->addMinutes(30));
 
         return response()->json($responseData)
-            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, no-cache');
     }
 
     /**

@@ -24,8 +24,7 @@
             if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
                 $logo_path = @$row->logo;
             }
-          
-            $from_company = $company_id = auth()->user()->company_id;
+            $from_company = $company_id = auth()->check() ? auth()->user()->company_id : ($company_id ?? 0);
            $client_data = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->id);
            $row->client_id =  $client_data->client_id ?? null;
 

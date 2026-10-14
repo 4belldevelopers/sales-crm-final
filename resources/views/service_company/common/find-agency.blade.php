@@ -1,7 +1,5 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
-    </script>
     <style>
          @media only screen and (min-width: 1024px) and (max-width: 1440px) {
             #kt_activitiesCopy {
@@ -567,8 +565,6 @@
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 
-    <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
     <script>
         const inputElm = document.querySelector('#kt_tagify_users');
         const inputJobSearch = document.querySelector('#kt_tagifyskill');
@@ -596,22 +592,22 @@
             }
         });
 
-        // Add event listener for star click
+        // Add event listener for star click - instant state update with zero timer cascade
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('star')) {
                 const tagElm = e.target.closest('.tagify__tag');
-                const value = tagElm.querySelector('.tagify__tag-text').textContent;
+                if (!tagElm) return;
+                const valueElm = tagElm.querySelector('.tagify__tag-text');
+                const value = valueElm ? valueElm.textContent : '';
 
                 e.target.classList.toggle('checked');
 
-                // Update the tag data
-                const tagData = tagify.value.find(tag => tag.value === value);
-                if (tagData) {
-                    setTimeout(() => {
+                // Update the tag data directly without artificial timer delays
+                if (typeof tagify !== 'undefined' && Array.isArray(tagify.value)) {
+                    const tagData = tagify.value.find(tag => tag.value === value);
+                    if (tagData) {
                         tagData.checked = e.target.classList.contains('checked');
-                        tagify.updateValueByDOMTags();
-                    }, 500);
-
+                    }
                 }
             }
         });
@@ -645,83 +641,53 @@
 
         // Sync tagify -> tagify2
         function syncToTagify2() {
-
             if (isSyncing) return;
-
             isSyncing = true;
-
-            const tags = tagify.value.map(tag => ({
+            const tags = (tagify.value || []).map(tag => ({
                 value: tag.value
             }));
-
             tagify2.removeAllTags();
             tagify2.addTags(tags);
-
             isSyncing = false;
         }
 
         function syncToTagify1() {
-
             if (isSyncing) return;
-
             isSyncing = true;
-
-            const tags = tagify2.value.map(tag => ({
+            const tags = (tagify2.value || []).map(tag => ({
                 value: tag.value
             }));
-
             tagify.removeAllTags();
             tagify.addTags(tags);
             isSyncing = false;
         }
 
-
-
         // Function to update inputJobSearch based on tagify's value
         function updateInputJobSearch() {
-            const tags = tagify.value.map(tag => tag.value).join(',');
+            const tags = (tagify.value || []).map(tag => tag.value).join(',');
             inputJobSearch.value = tags;
-            autoclickstar();
             syncToTagify2();
-            
         }
 
         function updateTagifyUsers() {
-            const newTags = inputJobSearch.value.split(',').map(tag => ({
-                value: tag.trim()
-            }));
             syncToTagify1();
-            // tagify.removeAllTags();
-            // tagify.addTags(newTags);
-            
-
         }
+
         // Listen for tag removal
         tagify.on('add', updateInputJobSearch);
         tagify.on('remove', updateInputJobSearch);
-        inputJobSearch.addEventListener('change', updateTagifyUsers);
 
         // Initial sync
         updateInputJobSearch();
 
-        // Sync tagify_users with inputJobSearch
+        // Sync tagify_users with inputJobSearch on change
         inputJobSearch.addEventListener('change', function() {
             const newTags = inputJobSearch.value.split(',').map(tag => ({
                 value: tag.trim()
-            }));
+            })).filter(t => t.value);
             tagify.loadOriginalValues(newTags);
+            syncToTagify1();
         });
-
-
-        function autoclickstar() {
-            setTimeout(() => {
-                var starElement = document.querySelector('.star');
-                starElement.click();
-                setTimeout(() => {
-                    starElement.click();
-                }, 200);
-            }, 500);
-        }
 
         function debounceskill(func, delay) {
             let timeoutskill;
@@ -731,53 +697,33 @@
             };
         }
 
+        var activeSkillXHR = null;
         const fetchSuggestionsSkills = debounceskill(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+            if (activeSkillXHR && activeSkillXHR.readyState !== 4) {
+                activeSkillXHR.abort();
+            }
+            activeSkillXHR = $.ajax({
+                url: "{{ url('/') }}" + "/skill-suggestions?q=" + encodeURIComponent(query),
                 method: 'GET',
                 success: function(data) {
-                    console.warn("Fetched Skill: ", data);
-
                     if (Array.isArray(data)) {
-                        tagify.settings.whitelist = data; // Update whitelist
-                        // tagify.dropdown.show(query); // Show suggestions
+                        tagify.settings.whitelist = data;
                         tagify.dropdown.show.call(tagify);
-                    } else {
-                        console.error("Invalid API response format: Expected array.");
                     }
                 },
                 error: function(err) {
-                    console.error("Error fetching Skill:", err);
+                    if (err.statusText !== 'abort') {
+                        console.error("Error fetching Skill:", err);
+                    }
                 }
             });
         }, 200); 
 
         // Listen for user input to trigger API call
         tagify.on('input', function(e) {
-            var query = e.detail.value.trim();
+            var query = (e.detail.value || '').trim();
             if (query.length < 1) return;
             fetchSuggestionsSkills(query);
-        });
-
-        // new Tagify(inputElm);   
-    </script>
-
-    <script>
-
-        document.addEventListener('click', function (e) {
-
-            // remove button clicked
-            if (e.target.classList.contains('tagify__tag__removeBtn')) {
-
-                // get tag element
-                const tagElm = e.target.closest('.tagify__tag');
-
-                // remove tag from tagify
-                tagify.removeTags(tagElm);
-                tagify2.removeTags(tagElm);
-
-            }
-
         });
 
         /* â”€â”€ Add from popular row â”€â”€ */
@@ -944,147 +890,50 @@ function updateSelectedFilters() {
     // document.getElementById('hiringTypehtmlTop').innerHTML = htmlTop;
 }
 
- $('body').on('change', '#sortingfilter', function(e) {
-          e.preventDefault();
+ $('body').off('change', '#sortingfilter').on('change', '#sortingfilter', function(e) {
+        e.preventDefault();
         var sortingfilter = $(this).val();
         if(sortingfilter == 2){
             selectHiringType('full');
         }else{
             selectHiringType('contract');
         }   
-        fetchClientConpanyAgency();         
+        fetchClientConpanyAgency(1, $('#search').val() || '', false);         
     });
-    
 
 function removeFilter(el, type, value = '') {
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE CURRENT CHIP IMMEDIATELY
-    |--------------------------------------------------------------------------
-    */
-
-    el.closest('.filter-tag').remove();
-
-    setTimeout(() => {
-
-        fetchClientConpanyAgency();
-
-        // filtersdataget();
-
-    }, 100);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE SKILL
-    |--------------------------------------------------------------------------
-    */
+    if (el && el.closest('.filter-tag')) {
+        el.closest('.filter-tag').remove();
+    }
 
     if (type === 'skill') {
-
-        let tagData = tagify.value.find(function(tag){
-
-            return tag.value.toLowerCase() === value.toLowerCase();
-        });
-
-        if (tagData) {
-
-            tagify.removeTags(tagData.value);
+        if (typeof tagify !== 'undefined' && Array.isArray(tagify.value)) {
+            let tagData = tagify.value.find(function(tag){
+                return tag.value.toLowerCase() === value.toLowerCase();
+            });
+            if (tagData) {
+                tagify.removeTags(tagData.value);
+            }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | REMOVE POPULAR ACTIVE CLASS
-        |--------------------------------------------------------------------------
-        */
-
         document.querySelectorAll('.pop-tag').forEach(function(tag){
-
-            if (
-                tag.getAttribute('data-value').toLowerCase()
-                === value.toLowerCase()
-            ) {
+            if (tag.getAttribute('data-value').toLowerCase() === value.toLowerCase()) {
                 tag.classList.remove('pop-added');
             }
         });
-
-        return;
+    } else if (type === 'industry') {
+        var indEl = document.getElementById('industry');
+        if (indEl) indEl.selectedIndex = 0;
+    } else if (type === 'experience') {
+        var expEl = document.getElementById('experience');
+        if (expEl) expEl.selectedIndex = 0;
+    } else if (type === 'country') {
+        var cntEl = document.getElementById('country');
+        if (cntEl) cntEl.selectedIndex = 0;
     }
 
-    
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE INDUSTRY
-    |--------------------------------------------------------------------------
-    */
-
-    if (type === 'industry') {
-
-        document.getElementById('industry').selectedIndex = 0;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE EXPERIENCE
-    |--------------------------------------------------------------------------
-    */
-
-    if (type === 'experience') {
-
-        document.getElementById('experience').selectedIndex = 0;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE COUNTRY
-    |--------------------------------------------------------------------------
-    */
-
-    if (type === 'country') {
-
-        document.getElementById('country').selectedIndex = 0;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REFRESH UI
-    |--------------------------------------------------------------------------
-    */
-
+    fetchClientConpanyAgency(1, $('#search').val() || '', false);
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| EVENTS
-|--------------------------------------------------------------------------
-*/
-
-// document.getElementById('industry').addEventListener('change', updateSelectedFilters);
-
-// document.getElementById('experience').addEventListener('change', updateSelectedFilters);
-
-// document.getElementById('country').addEventListener('change', updateSelectedFilters);
-
-/*
-|--------------------------------------------------------------------------
-| TAGIFY EVENTS
-|--------------------------------------------------------------------------
-*/
-
-// tagify.on('add', updateSelectedFilters);
-
-// tagify.on('remove', updateSelectedFilters);
-
-/*
-|--------------------------------------------------------------------------
-| INITIAL LOAD
-|--------------------------------------------------------------------------
-*/
-
-// updateSelectedFilters();
 
 
     /*
@@ -1107,9 +956,11 @@ function removeFilter(el, type, value = '') {
         });
     });
 
-    $(document).on('click', '#clearAllFilters', function() {
-  
-           tagify.removeAllTags();
+    $(document).off('click', '#clearAllFilters').on('click', '#clearAllFilters', function() {
+        tagify.removeAllTags();
+        if (typeof tagify2 !== 'undefined') {
+            tagify2.removeAllTags();
+        }
         /*
         |--------------------------------------------------------------------------
         | RESET SELECT DROPDOWNS
@@ -1190,62 +1041,63 @@ function removeFilter(el, type, value = '') {
         });
     });
 
-    /* â”€â”€ Find button â”€â”€ */
-    function handleFind() {
-        if (!tags.length) {
-        box.style.borderColor = '#E53E3E';
-        box.style.boxShadow   = '0 0 0 3px rgba(229,62,62,0.1)';
-        input.placeholder = 'Please add at least one keyword...';
-        input.focus();
-        setTimeout(function() {
-            box.style.borderColor = '';
-            box.style.boxShadow   = '';
-        }, 2000);
-        return;
-        }
-        alert('Searching for: ' + tags.join(', '));
-    }
+        var activeDetailXHR = null;
+        window.JeroAgencyDetailCache = window.JeroAgencyDetailCache || new Map();
 
-    /* â”€â”€ Helpers â”€â”€ */
-    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function escJs(s)   { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-    function escRe(s)   { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-    </script>
-
-    <script>
-
-         $(document).on('click', '.show-detail-direct', function() {
-
+        $(document).off('click', '.show-detail-direct').on('click', '.show-detail-direct', function() {
             $('#kt_activitiesDirectClient_toggle').trigger('click');
             var id = $(this).data('row-id');
+            if (!id) return;
+
+            // Check L1 In-Memory Cache (Instant 0ms render without network hit)
+            if (window.JeroAgencyDetailCache.has(id)) {
+                $('#kt_activitiesDirectClient_body').html(window.JeroAgencyDetailCache.get(id));
+                return;
+            }
+
+            // Abort prior in-flight detail fetch to prevent race conditions
+            if (activeDetailXHR && activeDetailXHR.readyState !== 4) {
+                activeDetailXHR.abort();
+            }
+
             var url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
             url = url.replace(':id', id);
 
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            $.ajax({
+            $('#kt_activitiesDirectClient_body').html('<div class="d-flex justify-content-center p-5"><img src="' + baseurl + '" height="35px"></div>');
+
+            activeDetailXHR = $.ajax({
                 type: 'GET',
                 url: url,
-                beforeSend: function() {
-                    $('#kt_activitiesDirectClient_body').html('<img src="' + baseurl +
-                        '" height="35px" width="100%">');
-                },
                 success: function(response) {
-                    $('#kt_activitiesDirectClient_body').html(response.view);
+                    if (response && response.view) {
+                        window.JeroAgencyDetailCache.set(id, response.view);
+                        $('#kt_activitiesDirectClient_body').html(response.view);
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('#kt_activitiesDirectClient_body').html('<div class="alert alert-danger m-4">Failed to load agency details. Please try again.</div>');
+                    }
                 }
             });
         });
 
+        var isFilterSubmitting = false;
+        function filtersdataget() {
+            if (isFilterSubmitting) return;
+            isFilterSubmitting = true;
 
+            var $btn = $('.changetextupdate');
+            var originalText = $btn.html();
+            $btn.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Searching...');
 
-function filtersdataget() {
-            $('.changetextupdate').text('Searching....!');
             fdClose();
-            setTimeout(() => {
-                fetchClientConpanyAgency();
-                $('.changetextupdate').text('Find Agencies');
-            }, 500);
 
-
+            fetchClientConpanyAgency(1, $('#search').val() || '', false).finally(function() {
+                $btn.html(originalText);
+                isFilterSubmitting = false;
+            });
         }
 
 
@@ -1341,9 +1193,96 @@ function filtersdataget() {
 
     var activeAgencyXHR = null;
 
-    function buildAgencyFilterHash(params) {
-        return 'fa_' + btoa(encodeURIComponent(JSON.stringify(params))).slice(0, 40);
+    var CURRENT_TENANT_ID = {{ auth()->check() ? auth()->user()->company_id : 0 }};
+    var CURRENT_USER_ID = {{ auth()->check() ? auth()->user()->id : 0 }};
+
+    function canonicalJsonStringify(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return JSON.stringify(obj);
+        }
+        if (Array.isArray(obj)) {
+            return '[' + obj.map(canonicalJsonStringify).join(',') + ']';
+        }
+        var keys = Object.keys(obj).sort();
+        return '{' + keys.map(function(k) {
+            return JSON.stringify(k) + ':' + canonicalJsonStringify(obj[k]);
+        }).join(',') + '}';
     }
+
+    function sha256Sync(ascii) {
+        function rightRotate(v, a) { return (v >>> a) | (v << (32 - a)); }
+        var lengthProperty = 'length';
+        var i, j;
+        var result = '';
+        var words = [];
+        var asciiBitLength = ascii[lengthProperty] * 8;
+        var hash = [
+            0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+            0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+        ];
+        var k = [
+            0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+            0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+            0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+            0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+            0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+            0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+            0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+            0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+        ];
+        ascii += '\x80';
+        while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+        for (i = 0; i < ascii[lengthProperty]; i++) {
+            words[i >> 2] |= ascii.charCodeAt(i) << ((3 - i % 4) * 8);
+        }
+        words[words[lengthProperty]] = ((asciiBitLength / Math.pow(2, 32)) | 0);
+        words[words[lengthProperty]] = (asciiBitLength);
+        for (j = 0; j < words[lengthProperty];) {
+            var w = words.slice(j, j += 16);
+            var oldHash = hash.slice(0);
+            for (i = 0; i < 64; i++) {
+                var w15 = w[i - 15], w2 = w[i - 2];
+                var a = hash[0], e = hash[4];
+                var temp1 = (hash[7]
+                    + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                    + ((e & hash[5]) ^ ((~e) & hash[6]))
+                    + k[i]
+                    + (w[i] = (i < 16) ? w[i] : (
+                            w[i - 16]
+                            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                            + w[i - 7]
+                            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                        ) | 0
+                    )) | 0;
+                var temp2 = ((rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                    + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]))) | 0;
+                hash = [(temp1 + temp2) | 0].concat(hash);
+                hash[4] = (hash[4] + temp1) | 0;
+                hash.pop();
+            }
+            for (i = 0; i < 8; i++) {
+                hash[i] = (hash[i] + oldHash[i]) | 0;
+            }
+        }
+        for (i = 0; i < 8; i++) {
+            for (var i2 = 3; i2 >= 0; i2--) {
+                var b = (hash[i] >> (i2 * 8)) & 255;
+                result += ((b < 16) ? '0' : '') + b.toString(16);
+            }
+        }
+        return result;
+    }
+
+    function buildAgencyFilterHash(params) {
+        if (!params || typeof params !== 'object') return 'fa_default';
+        var scoped = Object.assign({}, params, {
+            _tenant: CURRENT_TENANT_ID,
+            _user: CURRENT_USER_ID
+        });
+        var utf8String = unescape(encodeURIComponent(canonicalJsonStringify(scoped)));
+        return 'fa_' + sha256Sync(utf8String);
+    }
+
 
     function renderAgencyResponse(response) {
         updateSelectedFilters();
@@ -1356,7 +1295,10 @@ function filtersdataget() {
         event.preventDefault();
 
         var $this = $(this);
-        $this.prop('disabled', true);
+        if ($this.prop('disabled') || $this.hasClass('is-submitting')) return;
+        $this.prop('disabled', true).addClass('is-submitting');
+        var originalBtnText = $this.text();
+        $this.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' + originalBtnText);
 
         var from_company_id = $this.data('row-id');
         var current_jobid = $this.data('row-jobid');
@@ -1412,12 +1354,14 @@ function filtersdataget() {
                     Swal.fire("Success", response.message || "Request updated successfully.", "success");
                 } else if (response.status === "warning" || response.status === "info" || response.status === "closeJob") {
                     Swal.fire("Warning", response.message, "warning");
+                    $this.text(originalBtnText);
                 }
-                $this.prop('disabled', false);
+                $this.prop('disabled', false).removeClass('is-submitting');
             },
             error: function() {
                 Swal.fire("Error", "Could not complete the request. Please try again.", "error");
-                $this.prop('disabled', false);
+                $this.prop('disabled', false).removeClass('is-submitting');
+                $this.text(originalBtnText);
             }
         });
     });
@@ -1448,27 +1392,28 @@ function filtersdataget() {
             }
         }
 
-        $(document).on('click', '#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow', function(e) {
-            e.preventDefault();
+        $(document).off('click', '#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow')
+            .on('click', '#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow', function(e) {
+                e.preventDefault();
 
-            var page = $(this).data('page');
-            if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+                var page = $(this).data('page');
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled') || $(this).hasClass('disabled')) return;
 
-            $(this).addClass('disabled');
-            fetchClientConpanyAgency(page, $('#search').val(), false).then(function() {
-                $('#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow').removeClass('disabled');
-            }).catch(function() {
-                $('#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow').removeClass('disabled');
+                var $btn = $(this);
+                $btn.addClass('disabled');
+                fetchClientConpanyAgency(page, $('#search').val() || '', false).finally(function() {
+                    $btn.removeClass('disabled');
+                });
             });
-        });
 
-        $(document).on('change', '#paginationfindagency .pagi-perpage', function(e) {
-            var selectedPerPage = $(this).val();
-            if (selectedPerPage) {
-                localStorage.setItem('candidatePerPage', selectedPerPage);
-                fetchClientConpanyAgency(1, $('#search').val(), false);
-            }
-        });
+        $(document).off('change', '#paginationfindagency .pagi-perpage')
+            .on('change', '#paginationfindagency .pagi-perpage', function(e) {
+                var selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchClientConpanyAgency(1, $('#search').val() || '', false);
+                }
+            });
     });
 
     function fetchClientConpanyAgency(page, search, forceRefresh) {
@@ -1528,22 +1473,51 @@ function filtersdataget() {
 
             $('.loadingMessage').css({ display: 'block' });
 
+            var headers = {};
+            var cachedInRam = window.JeroFindAgencyRAM.get(cacheKey);
+            if (cachedInRam && cachedInRam._etag) {
+                headers['If-None-Match'] = cachedInRam._etag;
+                headers['X-Has-Representation'] = '1';
+            }
+
             return new Promise(function(resolve, reject) {
                 activeAgencyXHR = $.ajax({
                     url: `{!! route('service_company.find.findAgencyData') !!}?page=${page}`,
                     type: 'GET',
                     cache: false,
+                    headers: headers,
                     data: queryParams,
-                    success: function(response) {
-                        // Store into L1 RAM and L2 IndexedDB
-                        window.JeroFindAgencyRAM.set(cacheKey, response);
-                        window.JeroFindAgencyDB.setPage(cacheKey, response);
+                    statusCode: {
+                        304: function() {
+                            $('.loadingMessage').css({ display: 'none' });
+                            var preserved = window.JeroFindAgencyRAM.get(cacheKey);
+                            if (preserved) {
+                                renderAgencyResponse(preserved);
+                                resolve(preserved);
+                            } else {
+                                fetchClientConpanyAgency(page, search, true).then(resolve).catch(reject);
+                            }
+                        }
+                    },
+                    success: function(response, statusText, xhr) {
+                        if (response) {
+                            var etag = xhr.getResponseHeader('ETag');
+                            if (etag) {
+                                response._etag = etag;
+                            }
+                            // Store into L1 RAM and L2 IndexedDB
+                            window.JeroFindAgencyRAM.set(cacheKey, response);
+                            window.JeroFindAgencyDB.setPage(cacheKey, response);
 
-                        renderAgencyResponse(response);
-                        resolve(response);
+                            renderAgencyResponse(response);
+                            resolve(response);
+                        }
                     },
                     error: function(xhr, status, error) {
                         $('.loadingMessage').css({ display: 'none' });
+                        if (xhr.status === 304) {
+                            return;
+                        }
                         if (status !== 'abort') {
                             reject(error);
                         }

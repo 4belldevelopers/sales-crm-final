@@ -1,0 +1,233 @@
+{
+    "timestamp": "2026-10-14T12:49:16+05:30",
+    "scenarios": [
+        {
+            "scenario": "Scenario 1: Exact Match (lowercase: java)",
+            "input": [
+                "java"
+            ],
+            "original_matches": {
+                "4": 1
+            },
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 2: Exact Match (uppercase: JAVA)",
+            "input": [
+                "JAVA"
+            ],
+            "original_matches": [],
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": false
+        },
+        {
+            "scenario": "Scenario 3: Partial substring (jav in java)",
+            "input": [
+                "jav"
+            ],
+            "original_matches": {
+                "4": 1
+            },
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 4: Multi-skill query (java, aws)",
+            "input": [
+                "java",
+                "aws"
+            ],
+            "original_matches": {
+                "4": 2
+            },
+            "proposed_matches": {
+                "4": 2
+            },
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 5: Multi-word skill with spaces (spring boot)",
+            "input": [
+                "spring boot"
+            ],
+            "original_matches": [],
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": false
+        },
+        {
+            "scenario": "Scenario 6: Substring of multi-word skill (boot in spring boot)",
+            "input": [
+                "boot"
+            ],
+            "original_matches": {
+                "4": 1
+            },
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 7: Mixed Case & Whitespace (  SPRING BOOT  )",
+            "input": [
+                "  SPRING BOOT  "
+            ],
+            "original_matches": [],
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": false
+        },
+        {
+            "scenario": "Scenario 8: Empty and whitespace skills",
+            "input": [
+                "",
+                "   "
+            ],
+            "original_matches": [],
+            "proposed_matches": [],
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 9: Duplicate skills in input (java, JAVA, java)",
+            "input": [
+                "java",
+                "JAVA",
+                "java"
+            ],
+            "original_matches": {
+                "4": 1
+            },
+            "proposed_matches": {
+                "4": 1
+            },
+            "equivalent": true
+        },
+        {
+            "scenario": "Scenario 10: Non-existent skill (zero match)",
+            "input": [
+                "nonexistent_skill_xyz_123"
+            ],
+            "original_matches": [],
+            "proposed_matches": [],
+            "equivalent": true
+        }
+    ],
+    "top_500_cap_audit": {
+        "total_tested": 600,
+        "retained": 500,
+        "omitted": 100,
+        "omitted_agency_ids": [
+            501,
+            502,
+            503,
+            504,
+            505,
+            506,
+            507,
+            508,
+            509,
+            510,
+            511,
+            512,
+            513,
+            514,
+            515,
+            516,
+            517,
+            518,
+            519,
+            520,
+            521,
+            522,
+            523,
+            524,
+            525,
+            526,
+            527,
+            528,
+            529,
+            530,
+            531,
+            532,
+            533,
+            534,
+            535,
+            536,
+            537,
+            538,
+            539,
+            540,
+            541,
+            542,
+            543,
+            544,
+            545,
+            546,
+            547,
+            548,
+            549,
+            550,
+            551,
+            552,
+            553,
+            554,
+            555,
+            556,
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570,
+            571,
+            572,
+            573,
+            574,
+            575,
+            576,
+            577,
+            578,
+            579,
+            580,
+            581,
+            582,
+            583,
+            584,
+            585,
+            586,
+            587,
+            588,
+            589,
+            590,
+            591,
+            592,
+            593,
+            594,
+            595,
+            596,
+            597,
+            598,
+            599,
+            600
+        ],
+        "decision": "REMOVE_CAP_TO_PRESERVE_100_PERCENT_BUSINESS_LOGIC_EQUIVALENCE"
+    }
+}

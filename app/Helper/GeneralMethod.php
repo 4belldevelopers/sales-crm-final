@@ -16502,4 +16502,91 @@ END:VCALENDAR";
             // Failsafe against cache store anomalies
         }
     }
+
+    /**
+     * RFC 9110 compliant entity-tag normalization.
+     * Safely strips W/ weak prefix and surrounding quotes without character-mask trimming.
+     *
+     * @param string|null $tag
+     * @return string
+     */
+    public static function normalizeEntityTag(?string $tag): string
+    {
+        if ($tag === null) {
+            return '';
+        }
+
+        $tag = trim($tag);
+        // If it starts with W/ (case-sensitive as per RFC 9110), remove it
+        if (str_starts_with($tag, 'W/')) {
+            $tag = substr($tag, 2);
+        }
+
+        // Strip surrounding double quotes if present
+        if (str_starts_with($tag, '"') && str_ends_with($tag, '"') && strlen($tag) >= 2) {
+            $tag = substr($tag, 1, -1);
+        }
+
+        return trim($tag);
+    }
+
+    /**
+     * RFC 9110 weak comparison for If-None-Match header against server ETag.
+     * Supports comma-delimited lists of ETags and wildcard '*'.
+     *
+     * @param string|null $ifNoneMatch
+     * @param string|null $serverEtag
+     * @return bool
+     */
+    public static function matchesIfNoneMatch(?string $ifNoneMatch, ?string $serverEtag): bool
+    {
+        if (empty($ifNoneMatch) || empty($serverEtag)) {
+            return false;
+        }
+
+        $ifNoneMatch = trim($ifNoneMatch);
+        if ($ifNoneMatch === '*') {
+            return true;
+        }
+
+        $normalizedServer = self::normalizeEntityTag($serverEtag);
+        if ($normalizedServer === '') {
+            return false;
+        }
+
+        // Split by comma for comma-separated client ETags (e.g. W/"abc", "def")
+        $clientTags = explode(',', $ifNoneMatch);
+        foreach ($clientTags as $clientTag) {
+            if (self::normalizeEntityTag($clientTag) === $normalizedServer) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Collision-resistant canonical SHA-256 hash generator for payloads.
+     * Recursively sorts keys and serializes to JSON before hashing.
+     *
+     * @param mixed $payload
+     * @return string
+     */
+    public static function canonicalHash($payload): string
+    {
+        $normalize = function ($data) use (&$normalize) {
+            if (is_array($data)) {
+                ksort($data);
+                foreach ($data as $k => $v) {
+                    $data[$k] = $normalize($v);
+                }
+                return $data;
+            }
+            return $data;
+        };
+
+        $normalized = $normalize($payload);
+        return hash('sha256', json_encode($normalized, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
 }
+
