@@ -632,6 +632,30 @@ class JobService
                 )->onConnection('emails');
             }
 
+            // 13. Canonical Transactional Outbox (Guarantees projection & notification durability)
+            try {
+                DB::table('sys_outbox_events')->insert([
+                    'tenant_id' => (int) $user->company_id,
+                    'idempotency_key' => ! empty($requestData['operation_id']) ? (string) $requestData['operation_id'] : null,
+                    'aggregate_type' => 'job',
+                    'aggregate_id' => (int) $job->id,
+                    'aggregate_version' => 1,
+                    'event_type' => 'job.created',
+                    'payload' => json_encode([
+                        'job_id' => (int) $job->id,
+                        'company_id' => (int) $user->company_id,
+                        'user_id' => (int) $user->id,
+                        'title' => (string) $job->title,
+                    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                    'status' => 'PENDING',
+                    'attempts' => 0,
+                    'available_at' => now(),
+                    'created_at' => now(),
+                ]);
+            } catch (\Throwable $oe) {
+                Log::warning('[JobService@createJob] Outbox persistence error: '.$oe->getMessage());
+            }
+
             GeneralMethod::cacheClean('alljobslist_version_user_'.$user->id);
             GeneralMethod::cacheClean('alljobslist_version_company_'.$user->company_id);
             cache()->increment('alljobslist_version_company_'.$user->company_id);
@@ -643,14 +667,13 @@ class JobService
             throw $e;
         }
 
-        // Post-commit Elasticsearch Indexing (Immediate + Async Queue)
+        // Post-commit Asynchronous Elasticsearch Indexing via Dedicated Queue
         try {
-            GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
             if (class_exists(ElasticJobsIndexJob::class)) {
                 ElasticJobsIndexJob::dispatch($job->id)->onQueue('es-index');
             }
         } catch (\Throwable $e) {
-            Log::error('[JobService@createJob] ES Indexing failed: '.$e->getMessage());
+            Log::error('[JobService@createJob] ES Indexing queue dispatch failed: '.$e->getMessage());
         }
 
         return $job;

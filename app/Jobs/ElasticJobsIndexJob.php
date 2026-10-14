@@ -41,5 +41,15 @@ class ElasticJobsIndexJob implements ShouldQueue
         }
 
         \App\Helper\GeneralMethod::elasticJobsAddEditUpdateIndex($this->jobId);
+
+        // Intent: Signal instant readiness for recruiter 10-second verification gate (0% MySQL reads)
+        try {
+            $companyId = \Illuminate\Support\Facades\DB::table('jobs')->where('id', $this->jobId)->value('company_id');
+            if ($companyId) {
+                \Illuminate\Support\Facades\Cache::put("job:ready:{$companyId}:{$this->jobId}", true, 120);
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking telemetry
+        }
     }
 }

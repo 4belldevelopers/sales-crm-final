@@ -6936,6 +6936,49 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
+     * Intent: Ultra-lightweight readiness probe with 0% MySQL reads.
+     * Probes Redis readiness epoch or Elasticsearch document existence to ensure
+     * job is guaranteed viewable before client navigates to the Job Tracker listing.
+     *
+     * Tenancy Note: Tenant-scoped by auth()->user()->company_id.
+     *
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkReady($id)
+    {
+        $companyId = (int) (auth()->user()->company_id ?? 0);
+        $jobId = (int) $id;
+
+        if ($companyId <= 0 || $jobId <= 0) {
+            return response()->json(['ready' => false, 'error' => 'invalid_context'], 400);
+        }
+
+        // 1. Fast Path: Check Redis readiness key set by ElasticJobsIndexJob worker (< 1ms)
+        $redisReady = Cache::get("job:ready:{$companyId}:{$jobId}");
+        if ($redisReady === true) {
+            return response()->json(['ready' => true, 'source' => 'cache']);
+        }
+
+        // 2. Fallback Path: Direct Elasticsearch document existence check (< 5ms, 0% MySQL reads)
+        try {
+            $exists = $this->elasticService->getClient()->exists([
+                'index' => 'ats_jobs_elastic',
+                'id'    => (string) $jobId,
+            ])->asBool();
+
+            if ($exists) {
+                Cache::put("job:ready:{$companyId}:{$jobId}", true, 120);
+                return response()->json(['ready' => true, 'source' => 'es']);
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking fallback
+        }
+
+        return response()->json(['ready' => false]);
+    }
+
+    /**
      * Store a newly created Job Requisition.
      *
      * Intent: Delegates job creation, batch persistence, and async ES indexing to JobService.
@@ -7095,6 +7138,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $responsePayload = [
                 'status' => 'success',
                 'job_id' => $job->id,
+                'check_ready_url' => route('service_company.jobs.checkReady', ['id' => $job->id]),
                 'redirect_url' => route('service_company.jobs.index'),
                 'message' => __('menu.jobs').' '.__('messages.createdSuccessfully'),
             ];
