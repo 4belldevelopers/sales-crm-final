@@ -1031,6 +1031,54 @@
 #jrwrap.internal-job-create .jero-dept-input {
     padding-left: 36px !important;
     padding-right: 68px !important;
+    text-overflow: ellipsis !important;
+}
+#jrwrap.internal-job-create .jero-dept-clear-btn {
+    position: absolute !important;
+    right: 36px !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 50% !important;
+    color: #64748b !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 5 !important;
+    transition: all 0.15s ease !important;
+}
+#jrwrap.internal-job-create .jero-dept-clear-btn:hover {
+    color: #ef4444 !important;
+    background: #fee2e2 !important;
+}
+#jrwrap.internal-job-create .jero-dept-chevron {
+    position: absolute !important;
+    right: 10px !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #94a3b8 !important;
+    z-index: 4 !important;
+    padding: 0 !important;
+}
+#jrwrap.internal-job-create .jero-dept-kbd {
+    position: absolute !important;
+    right: 36px !important;
+    z-index: 2 !important;
+}
+#jrwrap.internal-job-create :is(.jero-dept-input-box:focus-within, .jero-dept-input-box.has-value) .jero-dept-kbd {
+    display: none !important;
+}
+#jrwrap.internal-job-create .jero-dept-status-chip.chip-custom {
+    color: #7c3aed !important;
+    background: #f5f3ff !important;
+    border: 1px solid #ddd6fe !important;
 }
 
 #jrwrap.internal-job-create .ij-location-input-wrap {

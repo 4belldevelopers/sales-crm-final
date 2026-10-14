@@ -433,15 +433,40 @@
     #jrwrap .jero-title-status-chip {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
         font-size: 11px;
         font-weight: 500;
-        color: #10B981;
+        padding: 2px 9px;
+        border-radius: 12px;
+        line-height: 1.25;
+        letter-spacing: 0.1px;
+        transition: all 0.2s ease;
+    }
+    #jrwrap .jero-title-status-chip.chip-std {
+        color: #059669;
         background: #ECFDF5;
         border: 1px solid #A7F3D0;
-        padding: 2px 8px;
-        border-radius: 12px;
-        line-height: 1.2;
+    }
+    #jrwrap .jero-title-status-chip.chip-org {
+        color: #1D4ED8;
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+    }
+    #jrwrap .jero-title-status-chip.chip-custom {
+        color: #475569;
+        background: #F1F5F9;
+        border: 1px solid #CBD5E1;
+    }
+    #jrwrap .jero-title-select-wrap.has-selected-suggestion .jero-title-input {
+        border-color: #A7F3D0;
+        background: #FAFCFA;
+    }
+    #jrwrap .jero-title-select-wrap.has-selected-suggestion .jero-title-search-icon {
+        color: #10B981;
+    }
+    #jrwrap .jero-title-select-wrap.has-custom-title .jero-title-input {
+        border-color: #E4E6EF;
+        background: #FFFFFF;
     }
     #jrwrap .jero-title-select-wrap {
         position: relative;
@@ -799,6 +824,11 @@
         background: #ecfdf5;
         border: 1px solid #a7f3d0;
     }
+    #jrwrap .jero-dept-status-chip.chip-custom {
+        color: #7c3aed;
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+    }
     #jrwrap .jero-dept-select-wrap {
         position: relative;
         width: 100%;
@@ -818,6 +848,7 @@
         transition: color 0.2s ease;
         display: flex;
         align-items: center;
+        z-index: 2;
     }
     #jrwrap .jero-dept-input {
         width: 100%;
@@ -833,6 +864,7 @@
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
         font-family: inherit;
+        text-overflow: ellipsis;
     }
     #jrwrap .jero-dept-input:hover {
         border-color: #94a3b8;
@@ -858,7 +890,7 @@
     }
     #jrwrap .jero-dept-kbd {
         position: absolute;
-        right: 32px;
+        right: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -874,40 +906,48 @@
         pointer-events: none;
         box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
         font-family: inherit;
+        z-index: 2;
     }
-    #jrwrap .jero-dept-input-box:focus-within .jero-dept-kbd {
-        display: none;
+    #jrwrap .jero-dept-input-box:focus-within .jero-dept-kbd,
+    #jrwrap .jero-dept-input-box.has-value .jero-dept-kbd {
+        display: none !important;
     }
     #jrwrap .jero-dept-clear-btn {
         position: absolute;
-        right: 30px;
-        background: none;
+        right: 36px;
+        width: 24px;
+        height: 24px;
+        background: transparent;
         border: none;
-        padding: 4px;
-        color: #94a3b8;
+        padding: 0;
+        color: #64748b;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
+        border-radius: 50%;
         transition: all 0.15s ease;
+        z-index: 5;
     }
     #jrwrap .jero-dept-clear-btn:hover {
         color: #ef4444;
-        background: #fef2f2;
+        background: #fee2e2;
     }
     #jrwrap .jero-dept-chevron {
         position: absolute;
-        right: 12px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
         color: #94a3b8;
         pointer-events: auto;
         cursor: pointer;
-        padding: 4px;
+        padding: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 4px;
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+        z-index: 4;
     }
     #jrwrap .jero-dept-chevron:hover {
         color: #1e293b;
@@ -930,9 +970,9 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        max-height: min(340px, calc(100vh - 140px));
+        max-height: min(360px, calc(100vh - 120px));
         animation: jeroDropdownFadeIn 0.15s ease-out;
-        user-select: none;
+        box-sizing: border-box;
     }
     #jrwrap .jero-dept-dropdown.drop-up {
         top: auto;
@@ -1030,29 +1070,32 @@
     }
     #jrwrap .jero-dept-list-container {
         flex: 1 1 auto;
-        min-height: 80px;
-        max-height: 240px;
+        min-height: 60px;
+        max-height: min(280px, 45vh);
         overflow-y: auto;
         overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
         position: relative;
         padding: 4px 0;
         scrollbar-width: thin;
-        scrollbar-color: #94a3b8 #f1f5f9;
+        scrollbar-color: #cbd5e1 #f8fafc;
+        box-sizing: border-box;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar {
-        width: 8px;
+        width: 7px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-track {
-        background: #f1f5f9;
+        background: #f8fafc;
         border-radius: 4px;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb {
-        background: #94a3b8;
+        background: #cbd5e1;
         border-radius: 4px;
-        border: 2px solid #f1f5f9;
     }
     #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    #jrwrap .jero-dept-list-container::-webkit-scrollbar-thumb:active {
         background: #64748b;
     }
     #jrwrap .jero-dept-section-header {
@@ -2765,7 +2808,10 @@
     }
 
     #kt_activitiesRecruiter #kt_activities_header,
-    #kt_activitiesClient #kt_activities_header {
+    #kt_activitiesRecruiter #kt_activitiesRecruiter_header,
+    #kt_activitiesClient #kt_activities_header,
+    #kt_activitiesClient #kt_activitiesClient_header,
+    #kt_add_address #kt_add_address_header {
         border-bottom: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
         min-height: 60px !important;
@@ -3464,14 +3510,20 @@
         max-width: 280px !important;
     }
     </style>
-    {{-- Create-only presentation assets placed AFTER the base styles so all override tokens take precedence. --}}
-    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
+    {{-- Unified Job Form presentation assets (applies to both Create and Edit) placed AFTER the base styles so all override tokens take precedence. --}}
+    @php
+        $isJobUnifiedForm = request()->routeIs('service_company.jobs.create', 'service_company.jobs.edit') 
+            || request()->is('service_company/jobs/create*') 
+            || request()->is('service_company/jobs/*/edit*') 
+            || in_array(($page_event ?? ''), ['ADD', 'EDIT']);
+    @endphp
+    @if($isJobUnifiedForm)
         <style>
             #kt_toolbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261013a">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261014a">
     @endif
 @endpush
 @section('content')
@@ -3539,19 +3591,49 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $cpersonData = $cpData->contact_person_name;
                 $cpersonDataId = @$cpData->id;
             } else {
-                $cpersonData = $cpersonData.' , '.$cpData->contact_person_name;
-                $cpersonDataId = $cpersonDataId.' , '.@$cpData->id;
+                $cpersonData = $cpersonData.','.$cpData->contact_person_name;
+                $cpersonDataId = $cpersonDataId.','.(@$cpData->id ?? '');
             }
             $cp_inc++;
+        }
+
+        // Robust Fallback: If contact person is empty, populate from the hiring organization
+        if (empty($cpersonData)) {
+            $effectiveClientId = ! empty($job->client_id)
+                ? (int) $job->client_id
+                : (int) DB::table('clients')->where('company_id', auth()->user()->company_id ?? 2)->where('self_company', 1)->value('id');
+
+            if ($effectiveClientId > 0) {
+                $clientContacts = DB::table('client_contact_info')
+                    ->select('id', 'contact_person_name')
+                    ->where('client_id', $effectiveClientId)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                if ($clientContacts->isNotEmpty()) {
+                    $cpersonData = $clientContacts->pluck('contact_person_name')->implode(',');
+                    $cpersonDataId = $clientContacts->pluck('id')->implode(',');
+                }
+            }
+        }
+
+        if (empty($recruiterData)) {
+            $recruiterData = auth()->user()->name ?? '';
+            $recruiterDataId = auth()->user()->id ?? '';
         }
 
         if (@$job->carrier_website == 1) {
             $carriew_website_chk = 'checked="checked"';
         }
     }
+
+    $isJobUnifiedForm = request()->routeIs('service_company.jobs.create', 'service_company.jobs.edit') 
+        || request()->is('service_company/jobs/create*') 
+        || request()->is('service_company/jobs/*/edit*') 
+        || in_array(($page_event ?? ''), ['ADD', 'EDIT']);
     ?>
 
-    @if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))
+    @if(!$isJobUnifiedForm)
       <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
         <!--begin::Container-->
@@ -3579,8 +3661,8 @@ $currency_code = GeneralMethod::defaultCurrency();
     @endif
 
 
-    <div id="jrwrap" @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*')) class="internal-job-create" @endif>
-        <div class="content">@if(!request()->routeIs('service_company.jobs.create') && !request()->is('service_company/jobs/create*'))<br>@endif
+    <div id="jrwrap" @if($isJobUnifiedForm) class="internal-job-create" data-page-event="{{ $page_event ?? 'ADD' }}" @endif>
+        <div class="content">@if(!$isJobUnifiedForm)<br>@endif
        
             <!-- Stepper -->
             <div class="stepper-v2" id="stepper">
@@ -3608,7 +3690,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 <div class="step-v2 pending" data-step="4" onclick="goToStep(4)">
                     <div class="step-v2-icon">4</div>
                     <div class="step-v2-info">
-                        <div class="step-v2-label">Review &amp; Publish</div>
+                        <div class="step-v2-label"><?php echo (($page_event ?? '') == 'EDIT') ? 'Review &amp; Update' : 'Review &amp; Publish'; ?></div>
                         <div class="step-v2-desc">Pending</div>
                     </div>
                 </div>
@@ -3765,7 +3847,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                         <label class="form-label required mb-0">Job Title / Designation</label>
                                         <span class="jero-title-status-chip" id="jero_title_status_chip" style="display:none;">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span id="jero_title_status_icon"></span>
                                             <span id="jero_title_status_text">Template active</span>
                                         </span>
                                     </div>
@@ -3792,9 +3874,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             <button type="button" class="jero-title-clear-btn" id="jero_title_clear_btn" style="display:none;" aria-label="Clear job title" title="Clear">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-title-chevron" id="jero_title_chevron">
+                                            <div class="jero-title-chevron" id="jero_title_chevron" role="button" aria-label="Toggle suggestions">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
+                                            <input type="hidden" name="canonical_designation_id" id="canonical_designation_id" value="<?php echo @$job->canonical_designation_id; ?>">
+                                            <input type="hidden" name="raw_designation" id="raw_designation" value="<?php echo @$job->raw_designation ?? @$job->title; ?>">
+                                            <input type="hidden" name="taxonomy_version" id="taxonomy_version" value="<?php echo @$job->taxonomy_version ?? '2.0.0'; ?>">
                                         </div>
 
                                         <!-- Decision-Centric Dropdown Menu -->
@@ -3813,11 +3898,11 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                                             <!-- Custom Title Action Pill -->
                                             <div class="jero-title-custom-action" id="jero_title_custom_action" style="display:none;">
-                                                <div class="jero-title-custom-pill" id="jero_title_custom_pill">
-                                                    <span class="custom-icon">+</span>
+                                                <div class="jero-title-custom-pill" id="jero_title_custom_pill" role="option">
+                                                    <span class="custom-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
                                                     <div class="custom-text-wrap">
                                                         <div class="custom-title-label">Use "<span id="jero_custom_title_text"></span>" as custom title</div>
-                                                        <div class="custom-title-sub">Enter job description and skills manually</div>
+                                                        <div class="custom-title-sub">Manual entry · JD & skills will remain blank</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -3829,7 +3914,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </div>
                                         </div>
                                     </div>
-                                    <span class="form-hint">*Select from the library for automated JD & skills, or enter a custom designation.</span>
+                                    <span class="form-hint" id="jero_title_hint">*Select from library for auto-fill JD & skills, or type a custom title (manual JD & skills).</span>
 
                                     <!-- Safe Auto-Fill Transactional Undo Snackbar -->
                                     <div class="jero-autofill-undo-toast" id="jero_autofill_undo_toast" style="display:none;">
@@ -3858,25 +3943,26 @@ $currency_code = GeneralMethod::defaultCurrency();
                                         </div>
                                     </div>
 
-                                    <!-- Hidden Synchronized Native Select (Preserves 100% Backward Compatibility with Validation & Submit) -->
+                                    <!-- Hidden Synchronized Native Select & Custom Department Input -->
                                     <select id="category_id" name="category_id" style="display:none;" tabindex="-1" aria-hidden="true">
                                         <option value="">Select Department</option>
                                         <?php
                                         $selectedDeptName = '';
-    foreach ($categories as $category) {
-        $sel = '';
-        if (@$job->category_id == @$category->id) {
-            $sel = 'selected="selected"';
-            $selectedDeptName = $category->name;
-        }
-        echo '<option value="'.@$category->id.'" '.$sel.'>'.ucfirst($category->name).'</option>';
-    }
-    ?>
+                                        foreach ($categories as $category) {
+                                            $sel = '';
+                                            if (@$job->category_id == @$category->id) {
+                                                $sel = 'selected="selected"';
+                                                $selectedDeptName = $category->name;
+                                            }
+                                            echo '<option value="'.@$category->id.'" '.$sel.'>'.ucfirst($category->name).'</option>';
+                                        }
+                                        ?>
                                     </select>
+                                    <input type="hidden" id="custom_department" name="custom_department" value="">
 
                                     <!-- God-Level Enterprise Combobox Component (Client-First / 10K Concurrency) -->
                                     <div class="jero-dept-select-wrap" id="jero_dept_select_wrap">
-                                        <div class="jero-dept-input-box">
+                                        <div class="jero-dept-input-box <?php echo $selectedDeptName ? 'has-value' : ''; ?>" id="jero_dept_input_box">
                                             <span class="jero-dept-search-icon">
                                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                             </span>
@@ -3891,11 +3977,11 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                    aria-haspopup="listbox"
                                                    aria-autocomplete="list"
                                                    value="<?php echo htmlspecialchars($selectedDeptName); ?>">
-                                            <kbd class="jero-dept-kbd" id="jero_dept_kbd" title="Press / to search">/</kbd>
-                                            <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            <kbd class="jero-dept-kbd" id="jero_dept_kbd" title="Press / to search" style="<?php echo $selectedDeptName ? 'display:none;' : ''; ?>">/</kbd>
+                                            <button type="button" class="jero-dept-clear-btn" id="jero_dept_clear_btn" aria-label="Clear job department" title="Clear selection" style="<?php echo $selectedDeptName ? 'display:flex;' : 'display:none;'; ?>">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             </button>
-                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" tabindex="-1">
+                                            <div class="jero-dept-chevron" id="jero_dept_chevron" title="Toggle department list" role="button" aria-label="Toggle department list" tabindex="-1">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                                             </div>
                                         </div>
@@ -3951,15 +4037,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                     echo 'selected';
                                                 } ?>>Freshers</option>
                                                 <?php
-                                                    $yearText = 'Year';
-    for ($i = 1; $i <= 30; $i++) {
-        if ($i > 9) {
-            $yearText = 'Years';
-        }
-        $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
-        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
-    }
-    ?>
+                                                for ($i = 1; $i <= 30; $i++) {
+                                                    $yearText = ($i === 1) ? 'Year' : 'Years';
+                                                    $sel = (@$job->min_exp == $i) ? 'selected="selected"' : '';
+                                                    echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+                                                }
+                                                ?>
                                             </select>
                                             <span class="form-hint">Min</span>
                                         </div>
@@ -3971,15 +4054,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                                     echo 'selected';
                                                 } ?>>Freshers</option>
                                                 <?php
-                                                    $yearText = 'Year';
-    for ($i = 1; $i <= 30; $i++) {
-        if ($i > 9) {
-            $yearText = 'Years';
-        }
-        $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
-        echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
-    }
-    ?>
+                                                for ($i = 1; $i <= 30; $i++) {
+                                                    $yearText = ($i === 1) ? 'Year' : 'Years';
+                                                    $sel = (@$job->max_exp == $i) ? 'selected="selected"' : '';
+                                                    echo '<option value="'.$i.'" '.$sel.'>'.$i.' '.$yearText.'</option>';
+                                                }
+                                                ?>
                                             </select>
                                             <span class="form-hint">Max</span>
                                         </div>
@@ -4032,8 +4112,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     <label class="form-label ij-gender-label" for="genderDiversityTrigger">
                                         <span>Gender Diversity</span>
                                         <span class="ij-gender-info-icon" 
-                                              data-bs-toggle="tooltip" 
-                                              data-bs-placement="top" 
+                                              data-toggle="tooltip" 
+                                              data-placement="top" 
                                               title="Specify gender diversity preferences to encourage inclusive hiring.">
                                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -4906,7 +4986,13 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             Screening Questions
                                         </div>
                                         <button type="button" class="btn-ai" id="aiGenerateBtn" onclick="generateAIQuestions()">
-                                            <i class="fas fa-sparkles"></i>
+                                            <svg class="me-1" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px;">
+                                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                                                <path d="M5 3v4"/>
+                                                <path d="M19 17v4"/>
+                                                <path d="M3 5h4"/>
+                                                <path d="M17 19h4"/>
+                                            </svg>
                                             Generate Questions with AI
                                         </button>
                                     </div>
@@ -5293,7 +5379,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         <label class="summary-check"><input type="checkbox" checked></label>
                         <div class="submit-card">
                             <button type="button" class="btn btn-primary" onclick="publishJob()">
-                                <?php echo @$buttontext ? $buttontext : 'Publish Job'; ?>
+                                <?php echo @$buttontext ? $buttontext : ((($page_event ?? '') == 'EDIT') ? 'Update Job' : 'Publish Job'); ?>
                             </button>
                         </div>
                         <span id="badgeEmployment"></span>
@@ -5450,7 +5536,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle"
         data-kt-drawer-close="#kt_activitiesClient_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_activitiesClient_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
@@ -5485,11 +5571,11 @@ $currency_code = GeneralMethod::defaultCurrency();
 
     <div id="kt_add_address_toggle"></div>
     <div id="kt_add_address" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '560px', 'lg': '600px'}"
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_add_address_toggle"
         data-kt-drawer-close="#kt_add_address_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_add_address_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
@@ -5576,7 +5662,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle"
         data-kt-drawer-close="#kt_activitiesRecruiter_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
+            <div class="card-header px-5 py-0" id="kt_activitiesRecruiter_header">
                 <div class="d-flex align-items-center py-1">
                     <div class=" d-flex align-items-center">
                         @php
@@ -5584,8 +5670,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                             // dd($logo_path );
                         @endphp
                         @if (!empty($companylogo))
-                            <div data-row-id="' . $row->id . '"
-                                class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' . $profile_detail_class . ' border-radius-5">
+                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
                                 <a href="javascript:void(0);">
                                     <div class="symbol-label border-radius-5">
                                         <img src="{{ @$logo_path }}" alt="Company Logo" class="border-radius-5 w-100">
@@ -5832,13 +5917,11 @@ $currency_code = GeneralMethod::defaultCurrency();
                 window.JeroTitleIntelligenceEngine.selectByTitle(suggestion);
             } else {
                 $('#title').val(suggestion);
-                changeautofillfield();
             }
         }
 
         $(document).ready(function() {
             $('.address_show').hide();
-            $.noConflict();
 
             // ---- Add Hiring Contact Person ----
             function _atmClearErrors() {
@@ -6069,11 +6152,13 @@ $currency_code = GeneralMethod::defaultCurrency();
             // ---- Hiring Team: render selected people as cards (synced to hidden inputs) ----
             renderHiringCards();
             renderRecruiterCards();
-            // The drawers set the input values programmatically (no change event); poll keeps cards in sync.
-            setInterval(function() {
+            // Event-driven state pipeline replaces 400ms polling loop (Client-First / Zero CPU waste)
+            $(document).on('change input', '#hiring_namager', function() {
                 if (($('#hiring_namager').val() || '') !== _jrLastHM) { renderHiringCards(); }
+            });
+            $(document).on('change input', '#recruiter, #recruiter_id', function() {
                 if (($('#recruiter').val() || '') !== _jrLastRec) { renderRecruiterCards(); }
-            }, 400);
+            });
 
             // Capture each person's real designation from the drawer rows whenever a drawer loads/changes,
             // then re-render the cards so they show the actual designation (not a generic label).
@@ -6593,38 +6678,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
 
-        // ---- Auto-fill JD from title (safe client-first execution + AJAX fallback) ----
+        // ---- Auto-fill JD from title (Neutralized for strict custom title isolation) ----
         function changeautofillfield() {
-            if (window._isApplyingTitleTemplate) return;
-            var rawTitle = ($('#title').val() || '').trim();
-            if (!rawTitle) return;
-
-            if (window.JeroTitleIntelligenceEngine && window.JeroTitleIntelligenceEngine.hasLocalTemplate(rawTitle)) {
-                window.JeroTitleIntelligenceEngine.applyLocalTemplate(rawTitle);
-                return;
-            }
-
-            var data = new FormData();
-            data.append("title", rawTitle);
-            $.ajax({
-                url: '{{ route('service_company.jobs.jdDetails') }}',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                method: "POST", processData: false, contentType: false, data: data, redirect: true,
-                success: function(data) {
-                    if (data.status == 'success') {
-                        var ed = document.getElementById('jobDescription');
-                        var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
-                        if (ed && currentDesc === '') {
-                            ed.innerHTML = data.jd || '';
-                            syncDescription();
-                        }
-                        if (data.skills && skills.length === 0) {
-                            (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
-                            renderSkills();
-                        }
-                    }
-                }
-            });
+            // Intentionally no-op: Data isolation contract guarantees that typed custom titles
+            // never auto-populate JD or skills via background AJAX.
+            // Templates are only applied upon explicit user selection in JeroTitleIntelligenceEngine.
         }
 
         $('#jobDescription').on('input', function() {
@@ -6866,8 +6924,14 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             }
             currentStep = step;
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroDeptIntelligenceEngine.commitIfCustom();
+            }
             if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.close === 'function') {
                 window.JeroDeptIntelligenceEngine.close();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroTitleIntelligenceEngine.commitIfCustom();
             }
             if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.close === 'function') {
                 window.JeroTitleIntelligenceEngine.close();
@@ -6942,9 +7006,10 @@ $currency_code = GeneralMethod::defaultCurrency();
                 focusSelector: '#category_id_display',
                 validate: function() {
                     var val = ($('#category_id').val() || '').trim();
-                    return !!val;
+                    var displayVal = ($('#category_id_display').val() || '').trim();
+                    return !!(val || displayVal);
                 },
-                message: 'Please select a Job Department.'
+                message: 'Please select or enter a Job Department.'
             },
             min_exp: {
                 step: 1,
@@ -8232,7 +8297,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         '<span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>' +
                         '<span class="ij-chip-label">' + escapeHtml(primaryName) + '</span>' +
                         metaHtml +
-                        '<button type="button" class="ij-chip-del" onclick="removeCity(\'' + escapeJsStr(str) + '\')" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
+                        '<button type="button" class="ij-chip-del js-remove-city" data-city="' + escapeHtml(str) + '" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
                         '</span>';
                 }).join('');
             }
@@ -8575,7 +8640,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         var focusedQualIndex = -1;
 
-        function highlightMatch(text, query) {
+        function highlightQualMatch(text, query) {
             if (!query) return escapeHtml(text);
             var idx = text.toLowerCase().indexOf(query.toLowerCase());
             if (idx === -1) return escapeHtml(text);
@@ -8618,7 +8683,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         html += '<div class="' + itemCls + '" data-qual-val="' + escapeHtml(item.name) + '" onclick="addQualification(\'' + String(item.name).replace(/'/g, "\\'") + '\')">' +
                             '<div class="ij-qual-item-left">' +
                                 '<span class="ij-qual-item-icon">' + icon + '</span>' +
-                                '<span class="ij-qual-item-name">' + highlightMatch(item.label, q) + '</span>' +
+                                '<span class="ij-qual-item-name">' + highlightQualMatch(item.label, q) + '</span>' +
                             '</div>' +
                             '<span class="' + badgeCls + '">' + escapeHtml(item.badge) + '</span>' +
                         '</div>';
@@ -8766,7 +8831,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         return '<span class="ij-location-chip ij-qual-chip' + extraClass + '">' +
                             '<span class="ij-chip-pin"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>' +
                             '<span class="ij-chip-label">' + escapeHtml(q) + '</span>' +
-                            '<button type="button" class="ij-chip-del" onclick="removeQualification(\'' + String(q).replace(/'/g, "\\'") + '\')" title="Remove">&times;</button>' +
+                            '<button type="button" class="ij-chip-del js-remove-qual" data-qual="' + escapeHtml(q) + '" title="Remove">&times;</button>' +
                         '</span>';
                     }).join('');
                 }
@@ -8800,7 +8865,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         function renderSkills() {
             var wrapper = document.getElementById('skillsWrapper');
             var input = document.getElementById('skillsInput');
-            var tags = skills.map(function(s) { return '<span class="tag">' + escapeHtml(s) + ' <button type="button" class="tag-remove" onclick="removeSkill(\'' + String(s).replace(/'/g, "\\'") + '\')">&times;</button></span>'; }).join('');
+            var tags = skills.map(function(s) { return '<span class="tag">' + escapeHtml(s) + ' <button type="button" class="tag-remove js-remove-skill" data-skill="' + escapeHtml(s) + '">&times;</button></span>'; }).join('');
             wrapper.querySelectorAll('.tag').forEach(function(t) { t.remove(); });
             input.insertAdjacentHTML('beforebegin', tags);
             input.value = '';
@@ -8809,9 +8874,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                 clearFieldValidationErrors('skills');
             }
         }
+
+        // Delegated chip removal event handlers (Robust against quotes and injection)
+        $(document).on('click', '.js-remove-city', function(e) {
+            e.preventDefault();
+            var c = $(this).attr('data-city');
+            if (c && typeof removeCity === 'function') removeCity(c);
+        });
+        $(document).on('click', '.js-remove-qual', function(e) {
+            e.preventDefault();
+            var q = $(this).attr('data-qual');
+            if (q && typeof removeQualification === 'function') removeQualification(q);
+        });
+        $(document).on('click', '.js-remove-skill', function(e) {
+            e.preventDefault();
+            var s = $(this).attr('data-skill');
+            if (s && typeof removeSkill === 'function') removeSkill(s);
+        });
         function syncSkills() { document.getElementById('tags').value = JSON.stringify(skills.map(function(s) { return { value: s }; })); }
 
         // ---------- RICH TEXT EDITOR ----------
+        $(document).on('mousedown', '.toolbar-btn', function(e) {
+            e.preventDefault(); // Prevents editor blur and selection loss
+        });
         function formatText(command) { document.execCommand(command, false, null); document.getElementById('jobDescription').focus(); syncDescription(); }
         function syncDescription() { var ed = document.getElementById('jobDescription'); var hid = document.getElementById('kt_docs_tinymce_hidden'); if (ed && hid) hid.value = ed.innerHTML; }
         function initCharCount() {
@@ -8982,7 +9067,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 aiQuestions.forEach(function(q) { maxId++; questions.push(Object.assign({}, q, { id: maxId })); });
                 renderQuestions();
                 btn.classList.remove('loading');
-                btn.innerHTML = '<i class="fas fa-sparkles"></i> Generate Questions with AI';
+                btn.innerHTML = '<svg class="me-1" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px;"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Generate Questions with AI';
                 showToast('3 AI-generated questions added!', 'success');
             }, 1500);
         }
@@ -9031,7 +9116,8 @@ $currency_code = GeneralMethod::defaultCurrency();
             var cities = selectedCities.map(function(c) { return String(c).split(' | ')[0]; }).join(', ');
             var titleVal = (document.getElementById('title') ? document.getElementById('title').value : '') || '-';
             setText('rvClient', clientName());
-            setText('rvDepartment', getSelText('category_id'));
+            var deptDisplayVal = ($('#category_id_display').val() || '').trim() || getSelText('category_id') || '-';
+            setText('rvDepartment', deptDisplayVal);
             setText('rvJobTitle', titleVal);
             setText('rvExp', expText());
             setText('rvCompensation', salaryText());
@@ -9120,15 +9206,36 @@ $currency_code = GeneralMethod::defaultCurrency();
         };
 
         // ---------- SYNC ALL HIDDEN INPUTS ----------
-        function syncAll() { syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); }
+        function syncAll() { 
+            if (window.JeroDeptIntelligenceEngine && typeof window.JeroDeptIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroDeptIntelligenceEngine.commitIfCustom();
+            }
+            if (window.JeroTitleIntelligenceEngine && typeof window.JeroTitleIntelligenceEngine.commitIfCustom === 'function') {
+                window.JeroTitleIntelligenceEngine.commitIfCustom();
+            }
+            syncCities(); syncSkills(); syncQual(); syncDescription(); syncQuestions(); syncVisibilityUI(); 
+        }
 
         // ---------- PUBLISH (real submit) ----------
+        var isEditPage = (typeof __pageEvent !== 'undefined' && __pageEvent === 'EDIT');
+        var publishBtnText = isEditPage ? 'Update Job' : 'Publish Job';
+        var publishBtnContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;"><path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/></svg><span>' + publishBtnText + '</span>';
+        function resetPublishBtn($btn) {
+            if (!$btn || !$btn.length) $btn = $('.submit-card .btn-primary');
+            $btn.prop('disabled', false).html(publishBtnContent);
+        }
+
         function publishJob() {
             if (typeof validateAllSteps === 'function' && !validateAllSteps()) return;
 
-            var checkboxes = document.querySelectorAll('.summary-check input');
-            var allChecked = true; checkboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
-            if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
+            // Only enforce compliance checks if they are visibly rendered to the user
+            var visibleCheckboxes = Array.from(document.querySelectorAll('.summary-check input')).filter(function(cb) {
+                return cb.offsetParent !== null && !cb.closest('.d-none');
+            });
+            if (visibleCheckboxes.length > 0) {
+                var allChecked = visibleCheckboxes.every(function(cb) { return cb.checked; });
+                if (!allChecked) { showToast('Please accept all compliance checks', 'error'); return; }
+            }
 
             syncAll();
 
@@ -9144,6 +9251,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             data.append('detail_description', document.getElementById('jobDescription').innerHTML);
             if (!data.has('operation_id') || !data.get('operation_id')) {
                 data.set('operation_id', opId);
+            }
+
+            var deptDisplayVal = ($('#category_id_display').val() || '').trim();
+            if (deptDisplayVal) {
+                data.set('category_id_display', deptDisplayVal);
+                data.set('custom_department', deptDisplayVal);
             }
 
             // Sync explicit visibility payload for career and marketplace (unchecking both = internal only)
@@ -9162,26 +9275,29 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (!navigator.onLine) {
                 Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                $btn.prop('disabled', false).html('Publish Job');
+                resetPublishBtn($btn);
                 return;
             }
 
             $.ajax({
                 url: __submitUrl,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                headers: { 
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': opId
+                },
                 method: "POST", processData: false, contentType: false, data: data, redirect: true,
                 success: function(data) {
                     if (data.status == 'success') {
-                         $btn.prop('disabled', false).html('Publish Job');
-                        showToast('Job saved successfully!', 'success');
+                        resetPublishBtn($btn);
+                        showToast(isEditPage ? 'Job updated successfully!' : 'Job saved successfully!', 'success');
                         setTimeout(function() { window.location = __indexUrl; }, 600);
                     } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
-                        $btn.prop('disabled', false).html('Publish Job');
+                        resetPublishBtn($btn);
                         var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
                         $('#operation_id').val(freshOpId);
-                        showToast('Submission updated. Please click "Publish Job" again.', 'info');
+                        showToast('Submission updated. Please click "' + publishBtnText + '" again.', 'info');
                     } else {
-                        $btn.prop('disabled', false).html('Publish Job');
+                        resetPublishBtn($btn);
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                         }
@@ -9189,7 +9305,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 },
                 error: function(xhr) {
-                    $btn.prop('disabled', false).html('Publish Job');
+                    resetPublishBtn($btn);
                     if (xhr.status === 419) {
                         // TC-10: Session Expiry / 419 Recovery: preserve form state in RAM; refresh CSRF token without page reload
                         fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -9201,8 +9317,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 if (newToken) {
                                     $('meta[name="csrf-token"]').attr('content', newToken);
                                     $('input[name="_token"]').val(newToken);
-                                    var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
-                                    $('#operation_id').val(freshOpId);
+                                    // Retain the same idempotency key for safe replay
                                     showToast('Session refreshed! All your job details are preserved. Please click "Publish Job" to submit.', 'info');
                                 } else {
                                     showToast('Session expired. Please refresh the page.', 'error');
@@ -9223,7 +9338,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (xhr.status === 0 || !navigator.onLine) {
                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                     } else {
-                        showToast('Server error while saving the job. Please try again.', 'error');
+                        var errText = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error while saving the job. Please try again.';
+                        showToast(errText, 'error');
                     }
                 }
             });
@@ -9482,9 +9598,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 });
 
-                // Tooltip initialization if Bootstrap tooltips are active
-                if (window.bootstrap && window.bootstrap.Tooltip) {
-                    var tipEl = wrapper.querySelector('[data-bs-toggle="tooltip"]');
+                // Tooltip initialization (Bootstrap 4 jQuery standard with Bootstrap 5 fallback)
+                var $tipEl = $(wrapper).find('[data-toggle="tooltip"], [data-bs-toggle="tooltip"]');
+                if ($tipEl.length && typeof $tipEl.tooltip === 'function') {
+                    try { $tipEl.tooltip({ boundary: 'window' }); } catch (err) {}
+                } else if (window.bootstrap && window.bootstrap.Tooltip) {
+                    var tipEl = wrapper.querySelector('[data-toggle="tooltip"], [data-bs-toggle="tooltip"]');
                     if (tipEl) {
                         try { new window.bootstrap.Tooltip(tipEl); } catch (err) {}
                     }
@@ -9618,17 +9737,40 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
         }
 
+        <?php
+        $__clientIds = collect($client ?? [])->pluck('id')->filter()->toArray();
+        $__contactsByClient = !empty($__clientIds) 
+            ? DB::table('client_contact_info')
+                ->select('id', 'client_id', 'contact_person_name', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
+                ->whereIn('client_id', $__clientIds)
+                ->get()
+                ->groupBy('client_id')
+            : collect();
+        ?>
         // Seed initial client headers passed from server Blade for 0.0ms initial paint
         window.__INITIAL_CLIENTS__ = [
             <?php if (isset($client) && (is_array($client) || is_object($client))) { ?>
-                <?php foreach ($client as $c) { ?>
+                <?php foreach ($client as $c) { 
+                    $__cContacts = $__contactsByClient->get($c->id, collect());
+                ?>
                 {
                     id: <?php echo (int) $c->id; ?>,
                     n: <?php echo json_encode(ucfirst($c->name)); ?>,
                     t: <?php echo (int) $c->self_company; ?>,
                     s: 1,
                     l: <?php echo json_encode($c->logo ?: ''); ?>,
-                    i: <?php echo json_encode($c->industry ?: ''); ?>
+                    i: <?php echo json_encode($c->industry ?: ''); ?>,
+                    cc: [
+                        <?php foreach ($__cContacts as $__cc) { ?>
+                        {
+                            id: <?php echo (int) $__cc->id; ?>,
+                            n: <?php echo json_encode(ucwords(trim($__cc->contact_person_name))); ?>,
+                            d: <?php echo json_encode($__cc->contact_person_designation ?: 'Hiring Manager'); ?>,
+                            e: <?php echo json_encode($__cc->contact_person_email ?: ''); ?>,
+                            p: <?php echo json_encode($__cc->contact_person_number ?: ''); ?>
+                        },
+                        <?php } ?>
+                    ]
                 },
                 <?php } ?>
             <?php } ?>
@@ -10879,6 +11021,10 @@ $currency_code = GeneralMethod::defaultCurrency();
         var inputDebounceTimer = null;
         var inputRafId = null;
 
+        // Enterprise State Tracking: Explicit Suggestion vs Custom Title
+        var selectedSuggestion = null;        // Holds item object when explicitly selected by user, null when custom
+        var templateAppliedInSession = false;  // True only if template was applied during the active session
+
         // Synonym Intelligence Dictionary
         var TITLE_SYNONYMS = {
             'sde': ['software development engineer', 'software engineer'],
@@ -11213,18 +11359,10 @@ $currency_code = GeneralMethod::defaultCurrency();
             focusedIndex = -1;
 
             var q = currentSearch.trim();
-            var exactMatchExists = false;
 
-            for (var m = 0; m < currentMatches.length; m++) {
-                if (currentMatches[m].title.toLowerCase() === q.toLowerCase()) {
-                    exactMatchExists = true;
-                    break;
-                }
-            }
-
-            // Render Custom Title Action Pill if user has typed something non-empty and non-exact
+            // Render Custom Title Action Pill whenever user has typed something non-empty
             if (customWrap && customText) {
-                if (q && !exactMatchExists) {
+                if (q) {
                     customText.textContent = q;
                     customWrap.style.display = 'block';
                 } else {
@@ -11242,15 +11380,13 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             var html = '';
             var recentItems = getRecentTitles();
-            var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
-            var currentVal = ($('#title').val() || '').trim().toLowerCase();
 
             // When search is empty and viewing 'all', show RECENTLY USED header if available
             if (!q && currentFilter === 'all' && recentItems.length > 0) {
                 html += '<div class="jero-title-section-header">Recently Used</div>';
                 for (var r = 0; r < recentItems.length; r++) {
                     var rec = recentItems[r];
-                    var isSel = (rec.title.toLowerCase() === currentVal);
+                    var isSel = !!(selectedSuggestion && selectedSuggestion.id === rec.id);
                     html += buildItemHtml(rec, '', r, isSel, true);
                 }
                 html += '<div class="jero-title-section-header">Standard & Organization Library</div>';
@@ -11258,7 +11394,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             for (var i = 0; i < currentMatches.length; i++) {
                 var item = currentMatches[i];
-                var isSelected = (item.title.toLowerCase() === currentVal);
+                var isSelected = !!(selectedSuggestion && selectedSuggestion.id === item.id);
                 html += buildItemHtml(item, q, i, isSelected, false);
             }
 
@@ -11405,6 +11541,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (!priorSnapshot) return;
 
             $('#title').val(priorSnapshot.title);
+            $('#raw_designation').val(priorSnapshot.title);
+            $('#canonical_designation_id').val(priorSnapshot.canonical_id || '');
+
             var ed = document.getElementById('jobDescription');
             if (ed) {
                 ed.innerHTML = priorSnapshot.jd;
@@ -11417,22 +11556,62 @@ $currency_code = GeneralMethod::defaultCurrency();
                 if (typeof renderSkills === 'function') renderSkills();
             }
 
+            selectedSuggestion = priorSnapshot.selectedSuggestion;
+            templateAppliedInSession = priorSnapshot.templateAppliedInSession;
+
             hideUndoToast();
-            updateStatusChip(false);
+            if (selectedSuggestion) {
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else if (priorSnapshot.title && priorSnapshot.title.trim()) {
+                updateStatusChip('custom');
+            } else {
+                updateStatusChip('none');
+            }
             priorSnapshot = null;
         }
 
-        function updateStatusChip(isActive, isCustom) {
+        function clearTemplateData() {
+            var ed = document.getElementById('jobDescription');
+            if (ed) {
+                ed.innerHTML = '';
+                if (typeof syncDescription === 'function') syncDescription();
+            }
+            if (typeof skills !== 'undefined' && Array.isArray(skills)) {
+                skills.length = 0;
+                if (typeof renderSkills === 'function') renderSkills();
+            }
+            hideUndoToast();
+            templateAppliedInSession = false;
+        }
+
+        function updateStatusChip(state, item) {
             var chip = document.getElementById('jero_title_status_chip');
+            var icon = document.getElementById('jero_title_status_icon');
             var text = document.getElementById('jero_title_status_text');
+            var wrap = document.getElementById('jero_title_select_wrap');
             if (!chip || !text) return;
 
-            if (isActive) {
+            chip.classList.remove('chip-std', 'chip-org', 'chip-custom');
+            if (wrap) wrap.classList.remove('has-selected-suggestion', 'has-custom-title');
+
+            if (state === 'suggestion' && item) {
                 chip.style.display = 'inline-flex';
-                chip.style.background = isCustom ? '#F1F5F9' : '#ECFDF5';
-                chip.style.borderColor = isCustom ? '#CBD5E1' : '#A7F3D0';
-                chip.style.color = isCustom ? '#475569' : '#10B981';
-                text.textContent = isCustom ? 'Custom designation' : 'Template active';
+                if (wrap) wrap.classList.add('has-selected-suggestion');
+                if (item.is_standard === 1) {
+                    chip.classList.add('chip-std');
+                    if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+                    text.textContent = (item.has_template === 1) ? 'Standard Library · Auto-filled' : 'Standard Library';
+                } else {
+                    chip.classList.add('chip-org');
+                    if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>';
+                    text.textContent = (item.has_template === 1) ? 'My Organization · Auto-filled' : 'My Organization';
+                }
+            } else if (state === 'custom') {
+                chip.style.display = 'inline-flex';
+                chip.classList.add('chip-custom');
+                if (wrap) wrap.classList.add('has-custom-title');
+                if (icon) icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+                text.textContent = 'Custom Title · Manual entry';
             } else {
                 chip.style.display = 'none';
             }
@@ -11450,6 +11629,9 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                 priorSnapshot = {
                     title: $('#title').val(),
+                    canonical_id: $('#canonical_designation_id').val(),
+                    selectedSuggestion: selectedSuggestion,
+                    templateAppliedInSession: templateAppliedInSession,
                     jd: ed ? ed.innerHTML : '',
                     skills: currentSkills
                 };
@@ -11485,8 +11667,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (added && typeof renderSkills === 'function') renderSkills();
                 }
 
+                templateAppliedInSession = true;
                 showUndoToast('Template applied: Job description • Recommended skills');
-                updateStatusChip(true, false);
+                updateStatusChip('suggestion', item);
             } finally {
                 setTimeout(function() {
                     isApplyingTemplate = false;
@@ -11498,7 +11681,16 @@ $currency_code = GeneralMethod::defaultCurrency();
         function selectItem(item) {
             if (!item) return;
 
+            selectedSuggestion = item;
             $('#title').val(item.title);
+            $('#raw_designation').val(item.title);
+            if (item.canonical_id || (item.is_standard && item.id < 1000000)) {
+                $('#canonical_designation_id').val(item.canonical_id || item.id);
+            } else {
+                $('#canonical_designation_id').val(item.id || '');
+            }
+            $('#taxonomy_version').val(item.taxonomy_version || '2.0.0');
+
             saveRecentTitle(item);
             closeDropdown();
 
@@ -11507,25 +11699,85 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (item.has_template === 1) {
                 applyTemplateSafely(item, false);
+                templateAppliedInSession = true;
             } else {
-                updateStatusChip(true, true);
+                templateAppliedInSession = false;
+                updateStatusChip('suggestion', item);
             }
 
             trackTelemetry('title_selected', { id: item.id, title: item.title, is_standard: item.is_standard });
         }
 
-        function selectCustomTitle(customTitle) {
-            var clean = (customTitle || '').trim();
-            if (!clean) return;
+        function commitCustomTitle(customTitle) {
+            var clean = (customTitle !== undefined && customTitle !== null) ? String(customTitle).trim() : '';
+            var input = document.getElementById('title');
+            if (input && input.value !== clean) {
+                input.value = clean;
+            }
 
-            $('#title').val(clean);
+            $('#raw_designation').val(clean);
+            $('#canonical_designation_id').val('');
+            $('#taxonomy_version').val('2.0.0');
+
+            // Data Isolation: If user transitions from a suggestion template to custom title,
+            // clear the template-populated JD and skills so custom title stays isolated
+            if (selectedSuggestion !== null && templateAppliedInSession) {
+                clearTemplateData();
+            }
+            selectedSuggestion = null;
+
             closeDropdown();
 
             var clearBtn = document.getElementById('jero_title_clear_btn');
-            if (clearBtn) clearBtn.style.display = 'flex';
+            if (clearBtn) clearBtn.style.display = clean ? 'flex' : 'none';
 
-            updateStatusChip(true, true);
-            trackTelemetry('custom_title_created', { title: clean });
+            if (clean) {
+                updateStatusChip('custom');
+            } else {
+                updateStatusChip('none');
+            }
+            trackTelemetry('custom_title_committed', { title: clean });
+        }
+
+        function syncInitialState() {
+            var input = document.getElementById('title');
+            var canonicalEl = document.getElementById('canonical_designation_id');
+            if (!input) return;
+
+            var titleVal = (input.value || '').trim();
+            var canonId = canonicalEl ? (canonicalEl.value || '').trim() : '';
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = titleVal ? 'flex' : 'none';
+
+            if (!titleVal) {
+                updateStatusChip('none');
+                return;
+            }
+
+            if (canonId && titlesMap.has(parseInt(canonId, 10))) {
+                selectedSuggestion = titlesMap.get(parseInt(canonId, 10));
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else {
+                var matched = null;
+                if (canonId) {
+                    for (var i = 0; i < titlesList.length; i++) {
+                        if (String(titlesList[i].id) === String(canonId)) {
+                            matched = titlesList[i];
+                            break;
+                        }
+                    }
+                }
+                if (matched) {
+                    selectedSuggestion = matched;
+                    updateStatusChip('suggestion', selectedSuggestion);
+                } else if (canonId) {
+                    updateStatusChip('suggestion', { is_standard: 1, has_template: 0 });
+                } else {
+                    selectedSuggestion = null;
+                    updateStatusChip('custom');
+                }
+            }
         }
 
         function trackTelemetry(event, payload) {
@@ -11542,6 +11794,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             titlesList = manifest.titles;
             buildInvertedIndex(titlesList);
             updateTabCounts();
+            syncInitialState();
         }
 
         async function initCacheAndSync() {
@@ -11614,6 +11867,53 @@ $currency_code = GeneralMethod::defaultCurrency();
                 });
         }
 
+        function handleInputChange() {
+            var input = document.getElementById('title');
+            if (!input) return;
+            var val = input.value;
+            currentSearch = val;
+
+            var clearBtn = document.getElementById('jero_title_clear_btn');
+            if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+
+            // Data Isolation: If user previously selected a suggestion and modifies the title,
+            // immediately clear template-populated JD and skills so the custom title stays isolated
+            if (selectedSuggestion && val.trim().toLowerCase() !== selectedSuggestion.title.toLowerCase()) {
+                if (templateAppliedInSession) {
+                    clearTemplateData();
+                }
+                selectedSuggestion = null;
+                $('#canonical_designation_id').val('');
+            }
+
+            $('#raw_designation').val(val);
+
+            // Enterprise UX visual differentiation
+            if (selectedSuggestion) {
+                updateStatusChip('suggestion', selectedSuggestion);
+            } else if (val.trim()) {
+                $('#canonical_designation_id').val('');
+                updateStatusChip('custom');
+            } else {
+                $('#canonical_designation_id').val('');
+                updateStatusChip('none');
+            }
+
+            if (!isOpen) openDropdown();
+
+            // CRITICAL: Reset keyboard focus index on every keystroke so NO suggestion is highlighted or auto-selected!
+            focusedIndex = -1;
+
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = setTimeout(function() {
+                if (inputRafId) cancelAnimationFrame(inputRafId);
+                inputRafId = requestAnimationFrame(function() {
+                    renderDropdownList();
+                    inputRafId = null;
+                });
+            }, 35);
+        }
+
         function initEventListeners() {
             if (isEventListenersInitialized) return;
             isEventListenersInitialized = true;
@@ -11648,18 +11948,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 });
 
                 input.addEventListener('input', function() {
-                    currentSearch = this.value;
-                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
-                    if (!isOpen) openDropdown();
-
-                    clearTimeout(inputDebounceTimer);
-                    inputDebounceTimer = setTimeout(function() {
-                        if (inputRafId) cancelAnimationFrame(inputRafId);
-                        inputRafId = requestAnimationFrame(function() {
-                            renderDropdownList();
-                            inputRafId = null;
-                        });
-                    }, 35);
+                    handleInputChange();
                 });
 
                 input.addEventListener('keydown', function(e) {
@@ -11679,8 +11968,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                             selectFocusedOrCustom();
                         }
                     } else if (e.key === 'Tab') {
-                        if (isOpen) closeDropdown();
+                        if (isOpen) {
+                            // On Tab: preserve user's typed title as custom title, close dropdown, do NOT auto-select
+                            var val = (input.value || '').trim();
+                            if (val && !selectedSuggestion) {
+                                commitCustomTitle(val);
+                            } else {
+                                closeDropdown();
+                            }
+                        }
                     }
+                });
+
+                input.addEventListener('blur', function() {
+                    // Small delay so item click in dropdown can register before blur commits
+                    setTimeout(function() {
+                        var activeEl = document.activeElement;
+                        var wrap = document.getElementById('jero_title_select_wrap');
+                        if (wrap && wrap.contains(activeEl)) return;
+                        var val = (input.value || '').trim();
+                        if (val && !selectedSuggestion) {
+                            commitCustomTitle(val);
+                        }
+                    }, 200);
                 });
             }
 
@@ -11689,11 +11999,17 @@ $currency_code = GeneralMethod::defaultCurrency();
                     e.preventDefault();
                     if (input) {
                         input.value = '';
+                        $('#canonical_designation_id').val('');
+                        $('#raw_designation').val('');
                         input.focus();
                     }
+                    if (templateAppliedInSession) {
+                        clearTemplateData();
+                    }
+                    selectedSuggestion = null;
                     currentSearch = '';
                     this.style.display = 'none';
-                    updateStatusChip(false);
+                    updateStatusChip('none');
                     renderDropdownList();
                 });
             }
@@ -11726,7 +12042,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (customWrap) {
                 customWrap.addEventListener('click', function() {
                     var q = currentSearch.trim();
-                    if (q) selectCustomTitle(q);
+                    if (q) commitCustomTitle(q);
                 });
             }
 
@@ -11762,7 +12078,15 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.addEventListener('pointerdown', function(e) {
                 var wrap = document.getElementById('jero_title_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
-                    closeDropdown();
+                    if (isOpen) {
+                        var inputEl = document.getElementById('title');
+                        var val = inputEl ? (inputEl.value || '').trim() : '';
+                        if (val && !selectedSuggestion) {
+                            commitCustomTitle(val);
+                        } else {
+                            closeDropdown();
+                        }
+                    }
                 }
             }, true);
 
@@ -11813,15 +12137,31 @@ $currency_code = GeneralMethod::defaultCurrency();
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
             var container = document.getElementById('jero_title_list_container');
             var customPill = document.getElementById('jero_title_custom_pill');
-            var total = items.length + (customPill && customPill.offsetParent !== null ? 1 : 0);
+            var hasCustom = (customPill && customPill.offsetParent !== null && customPill.style.display !== 'none');
+            var total = items.length + (hasCustom ? 1 : 0);
             if (total === 0) return;
 
-            focusedIndex = focusedIndex + direction;
-            if (focusedIndex >= total) focusedIndex = 0;
-            if (focusedIndex < 0) focusedIndex = total - 1;
+            if (direction > 0) {
+                // Moving down
+                focusedIndex++;
+                if (focusedIndex >= total) {
+                    focusedIndex = -1; // Cycle back to input (unfocused)
+                }
+            } else {
+                // Moving up
+                focusedIndex--;
+                if (focusedIndex < -1) {
+                    focusedIndex = total - 1; // Wrap to bottom
+                }
+            }
 
             items.forEach(function(el) { el.classList.remove('focused'); });
             if (customPill) customPill.classList.remove('focused');
+
+            if (focusedIndex === -1) {
+                // Cursor back in input, no item highlighted
+                return;
+            }
 
             if (focusedIndex < items.length) {
                 var el = items[focusedIndex];
@@ -11835,23 +12175,37 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         function selectFocusedOrCustom() {
             var items = document.querySelectorAll('#jero_title_list_container .jero-title-item');
+
+            // 1. If user explicitly used arrow keys to focus a suggestion item:
             if (focusedIndex >= 0 && focusedIndex < items.length) {
                 var itemEl = items[focusedIndex];
                 var id = parseInt(itemEl.getAttribute('data-id'), 10);
                 var item = titlesMap.get(id);
-                if (item) { selectItem(item); return; }
+                if (!item && itemEl.hasAttribute('data-recent-idx')) {
+                    var recentIdx = parseInt(itemEl.getAttribute('data-recent-idx'), 10);
+                    item = getRecentTitles()[recentIdx];
+                }
+                if (item) {
+                    selectItem(item);
+                    return;
+                }
             }
 
+            // 2. If user explicitly navigated to the custom action pill:
             var customPill = document.getElementById('jero_title_custom_pill');
             if (customPill && customPill.classList.contains('focused')) {
-                selectCustomTitle(currentSearch);
+                commitCustomTitle(currentSearch);
                 return;
             }
 
-            if (currentMatches.length > 0) {
-                selectItem(currentMatches[0]);
-            } else if (currentSearch.trim()) {
-                selectCustomTitle(currentSearch.trim());
+            // 3. User pressed Enter without focusing any suggestion (focusedIndex === -1):
+            // PRESERVE user's typed title as custom title!
+            // NEVER auto-select currentMatches[0]!
+            var inputVal = ($('#title').val() || '').trim();
+            if (inputVal) {
+                commitCustomTitle(inputVal);
+            } else {
+                closeDropdown();
             }
         }
 
@@ -11863,30 +12217,30 @@ $currency_code = GeneralMethod::defaultCurrency();
             },
             open: openDropdown,
             close: closeDropdown,
+            commitIfCustom: function() {
+                var input = document.getElementById('title');
+                if (!input) return;
+                var val = (input.value || '').trim();
+                if (val && !selectedSuggestion) {
+                    commitCustomTitle(val);
+                }
+            },
             selectByTitle: function(title) {
+                var clean = (title || '').trim().toLowerCase();
                 for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
+                    if (titlesList[i].title.toLowerCase() === clean) {
                         selectItem(titlesList[i]);
                         return;
                     }
                 }
-                selectCustomTitle(title);
+                commitCustomTitle(title);
             },
             hasLocalTemplate: function(title) {
-                for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
-                        return titlesList[i].has_template === 1;
-                    }
-                }
+                // Deprecated forwarder - returns false to protect data isolation
                 return false;
             },
             applyLocalTemplate: function(title) {
-                for (var i = 0; i < titlesList.length; i++) {
-                    if (titlesList[i].title.toLowerCase() === (title || '').toLowerCase()) {
-                        applyTemplateSafely(titlesList[i], false);
-                        return;
-                    }
-                }
+                // Deprecated forwarder - no-op to protect data isolation
             },
             refresh: function() {
                 fetchBundleFromServer(1);
@@ -11930,9 +12284,13 @@ $currency_code = GeneralMethod::defaultCurrency();
         var focusedIndex = -1;
         var currentMatches = [];
         var isOpen = false;
+        var selectedDepartment = null; // Explicitly selected department object or null
         var deptBroadcast = null;
         var localManifestVersion = 1;
         var lastFocusCheck = 0;
+        var isInteractingWithDropdown = false;
+        var lastCachedMaxHeight = null;
+        var lastCachedListHeight = null;
 
         // Recency storage key
         var RECENT_KEY = 'jero_recent_depts_' + CURRENT_USER_ID;
@@ -12274,7 +12632,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         '<span>' + escapeHtml(item.division_name || 'General') + '</span>' +
                     '</div>';
                 }
-                var isSelected = (String(item.id) === currentVal);
+                var isSelected = (selectedDepartment && selectedDepartment.id === item.id) || (String(item.id) === currentVal);
                 html += buildItemHtml(item, q, i, isSelected);
             }
 
@@ -12343,7 +12701,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                          ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
                          (footerEl ? footerEl.offsetHeight : 34) + 16;
 
-            // Decision: Prefer drop DOWN unless space below is severely constrained (< 220px) AND space above is significantly larger
             var dropUp = false;
             if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
                 dropUp = true;
@@ -12354,24 +12711,34 @@ $currency_code = GeneralMethod::defaultCurrency();
                 dropdown.style.top = 'auto';
                 dropdown.style.bottom = 'calc(100% + 5px)';
 
-                // Clamp max height so dropdown top never extends above viewport top margin
                 var maxAvailable = Math.max(180, Math.min(360, spaceAbove));
-                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (lastCachedMaxHeight !== maxAvailable) {
+                    dropdown.style.maxHeight = maxAvailable + 'px';
+                    lastCachedMaxHeight = maxAvailable;
+                }
                 if (container) {
-                    var listH = Math.max(100, maxAvailable - fixedH);
-                    container.style.maxHeight = listH + 'px';
+                    var listH = Math.max(80, maxAvailable - fixedH);
+                    if (lastCachedListHeight !== listH) {
+                        container.style.maxHeight = listH + 'px';
+                        lastCachedListHeight = listH;
+                    }
                 }
             } else {
                 dropdown.classList.remove('drop-up');
                 dropdown.style.bottom = 'auto';
                 dropdown.style.top = 'calc(100% + 5px)';
 
-                // Clamp max height so dropdown bottom never extends past viewport bottom margin
                 var maxAvailable = Math.max(180, Math.min(360, spaceBelow));
-                dropdown.style.maxHeight = maxAvailable + 'px';
+                if (lastCachedMaxHeight !== maxAvailable) {
+                    dropdown.style.maxHeight = maxAvailable + 'px';
+                    lastCachedMaxHeight = maxAvailable;
+                }
                 if (container) {
-                    var listH = Math.max(100, maxAvailable - fixedH);
-                    container.style.maxHeight = listH + 'px';
+                    var listH = Math.max(80, maxAvailable - fixedH);
+                    if (lastCachedListHeight !== listH) {
+                        container.style.maxHeight = listH + 'px';
+                        lastCachedListHeight = listH;
+                    }
                 }
             }
         }
@@ -12389,8 +12756,6 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (input) {
                 input.setAttribute('aria-expanded', 'true');
                 input.classList.remove('is-invalid');
-
-                // When opening, clear search query so user can view and choose from all 10 divisions
                 currentSearch = '';
                 try {
                     input.select();
@@ -12400,7 +12765,6 @@ $currency_code = GeneralMethod::defaultCurrency();
             renderDropdownList();
             adjustDropdownPosition();
 
-            // Scroll currently selected department into view inside list, or reset to top
             if (container) {
                 var selectedEl = container.querySelector('.jero-dept-item.selected');
                 if (selectedEl) {
@@ -12414,12 +12778,17 @@ $currency_code = GeneralMethod::defaultCurrency();
         function closeDropdown() {
             var dropdown = document.getElementById('jero_dept_dropdown');
             var wrap = document.getElementById('jero_dept_select_wrap');
+            var container = document.getElementById('jero_dept_list_container');
             var input = document.getElementById('category_id_display');
             if (!dropdown || !wrap) return;
 
             isOpen = false;
             wrap.classList.remove('is-open');
             dropdown.style.display = 'none';
+            dropdown.style.maxHeight = '';
+            lastCachedMaxHeight = null;
+            lastCachedListHeight = null;
+            if (container) container.style.maxHeight = '';
             if (input) input.setAttribute('aria-expanded', 'false');
             focusedIndex = -1;
         }
@@ -12443,10 +12812,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             scrollItemIntoView(container, target);
         }
 
-        function selectFocusedItem() {
+        function selectFocusedOrCustom() {
             var container = document.getElementById('jero_dept_list_container');
-            if (!container) return;
-            var items = container.querySelectorAll('.jero-dept-item, .jero-dept-create-action');
+            var items = container ? container.querySelectorAll('.jero-dept-item, .jero-dept-create-action') : [];
+
+            // 1. If user explicitly used arrow keys to focus an option
             if (focusedIndex >= 0 && focusedIndex < items.length) {
                 var el = items[focusedIndex];
                 if (el.classList.contains('jero-dept-create-action')) {
@@ -12457,25 +12827,41 @@ $currency_code = GeneralMethod::defaultCurrency();
                 var id = el.getAttribute('data-id');
                 if (id) {
                     var item = deptMap.get(parseInt(id, 10));
-                    if (item) selectItem(item);
+                    if (item) {
+                        selectItem(item);
+                        return;
+                    }
                 }
-            } else if (currentMatches.length > 0) {
-                selectItem(currentMatches[0]);
-            } else if (currentSearch.trim()) {
-                inlineCreateDepartment(currentSearch.trim());
+            }
+
+            // 2. User pressed Enter without focusing any suggestion (focusedIndex === -1):
+            // CRITICAL ENTERPRISE INVARIANT:
+            // PRESERVE user's manually entered custom value!
+            // NEVER auto-select currentMatches[0]!
+            var input = document.getElementById('category_id_display');
+            var inputVal = input ? (input.value || '').trim() : '';
+            if (inputVal) {
+                commitCustomDepartment(inputVal);
+            } else {
+                closeDropdown();
             }
         }
 
-        function updateStatusChip(item) {
+        function updateStatusChip(type, item) {
             var wrap = document.getElementById('jero_dept_status_wrap');
             var chip = document.getElementById('jero_dept_status_chip');
             if (!wrap || !chip) return;
-            if (!item) {
+
+            if (!type || type === 'none') {
                 wrap.style.display = 'none';
                 return;
             }
+
             wrap.style.display = 'block';
-            if (item.is_standard === 1) {
+            if (type === 'custom') {
+                chip.className = 'jero-dept-status-chip chip-custom';
+                chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Custom Department';
+            } else if (item && item.is_standard === 1) {
                 chip.className = 'jero-dept-status-chip chip-std';
                 chip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Standard Taxonomy';
             } else {
@@ -12487,9 +12873,13 @@ $currency_code = GeneralMethod::defaultCurrency();
         function selectItem(item) {
             if (!item) return;
 
+            selectedDepartment = item;
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var customDeptEl = document.getElementById('custom_department');
 
             // 1. Update native select (add option if not present)
             if (select) {
@@ -12511,27 +12901,165 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $(select).val(item.id).trigger('change');
             }
 
+            if (customDeptEl) {
+                customDeptEl.value = '';
+            }
+
             // 2. Update display input
             if (displayInput) {
                 displayInput.value = item.name;
                 displayInput.classList.remove('is-invalid');
             }
+            if (inputBox) {
+                inputBox.classList.add('has-value');
+            }
 
             // 3. Update status chip
-            updateStatusChip(item);
+            updateStatusChip(item.is_standard === 1 ? 'standard' : 'org', item);
 
-            // 4. Update clear button
-            if (clearBtn) {
-                clearBtn.style.display = 'flex';
-            }
+            // 4. Update clear button & hide KBD badge
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
 
             // 5. Update review text
             if (typeof setText === 'function') {
                 setText('rvDepartment', item.name);
             }
 
-            // 6. Recency
+            // 6. Clear validation error state
+            $('#jero_dept_select_wrap').removeClass('has-validation-error');
+            $('.jero-dept-input-box').removeClass('has-validation-error');
+
+            // 7. Recency
             saveRecentDept(item);
+            closeDropdown();
+        }
+
+        function commitCustomDepartment(customName) {
+            var clean = (customName !== undefined && customName !== null) ? String(customName).trim() : '';
+            var input = document.getElementById('category_id_display');
+            var select = document.getElementById('category_id');
+            var customDeptEl = document.getElementById('custom_department');
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+
+            if (!clean) {
+                clearSelection();
+                return;
+            }
+
+            if (input && input.value !== clean) {
+                input.value = clean;
+            }
+            if (inputBox) {
+                inputBox.classList.add('has-value');
+            }
+
+            // Department Data Isolation: Decouple from any previously selected suggestion
+            selectedDepartment = null;
+
+            if (customDeptEl) {
+                customDeptEl.value = clean;
+            }
+
+            // Check if exact case-insensitive match exists in known dictionary
+            var exactMatchedItem = null;
+            for (var d = 0; d < deptList.length; d++) {
+                if ((deptList[d].name || '').toLowerCase() === clean.toLowerCase()) {
+                    exactMatchedItem = deptList[d];
+                    break;
+                }
+            }
+
+            if (exactMatchedItem && select) {
+                // Link ID behind the scenes while strictly preserving user's typed name
+                var exists = false;
+                for (var o = 0; o < select.options.length; o++) {
+                    if (select.options[o].value == exactMatchedItem.id) {
+                        select.selectedIndex = o;
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = exactMatchedItem.id;
+                    opt.text = exactMatchedItem.name;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                }
+                $(select).val(exactMatchedItem.id).trigger('change');
+                updateStatusChip(exactMatchedItem.is_standard === 1 ? 'standard' : 'org', exactMatchedItem);
+            } else {
+                // Custom department: keep isolated from stale department IDs
+                if (select) {
+                    select.selectedIndex = 0;
+                    $(select).val('').trigger('change');
+                }
+                updateStatusChip('custom');
+
+                // Transparent background creation to prime database before form submit
+                var csrfToken = document.querySelector('meta[name="csrf-token"]')
+                    ? document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    : '{{ csrf_token() }}';
+
+                $.ajax({
+                    url: "{{ route('service_company.account.storeDept') }}",
+                    type: 'POST',
+                    data: {
+                        _token: csrfToken,
+                        dept_name: clean
+                    },
+                    success: function(res) {
+                        if (res && res.status === 'success' && res.category_id) {
+                            var newId = parseInt(res.category_id, 10);
+                            if (select) {
+                                var hasOpt = false;
+                                for (var o = 0; o < select.options.length; o++) {
+                                    if (select.options[o].value == newId) {
+                                        select.selectedIndex = o;
+                                        hasOpt = true;
+                                        break;
+                                    }
+                                }
+                                if (!hasOpt) {
+                                    var newOpt = document.createElement('option');
+                                    newOpt.value = newId;
+                                    newOpt.text = clean;
+                                    newOpt.selected = true;
+                                    select.appendChild(newOpt);
+                                }
+                                $(select).val(newId);
+                            }
+                            var newDept = {
+                                id: newId,
+                                name: res.category_name || clean,
+                                division_id: 1,
+                                division_name: 'General',
+                                is_standard: res.is_standard ? 1 : 0,
+                                keywords: clean
+                            };
+                            if (!deptMap.has(newId)) {
+                                deptList.unshift(newDept);
+                                deptMap.set(newId, newDept);
+                                updateTabCounts();
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+
+            if (typeof setText === 'function') {
+                setText('rvDepartment', clean);
+            }
+
+            $('#jero_dept_select_wrap').removeClass('has-validation-error');
+            $('.jero-dept-input-box').removeClass('has-validation-error');
+
             closeDropdown();
         }
 
@@ -12539,19 +13067,33 @@ $currency_code = GeneralMethod::defaultCurrency();
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
             var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var customDeptEl = document.getElementById('custom_department');
+
+            selectedDepartment = null;
 
             if (select) {
                 select.selectedIndex = 0;
                 $(select).val('').trigger('change');
             }
+            if (customDeptEl) {
+                customDeptEl.value = '';
+            }
             if (displayInput) {
                 displayInput.value = '';
                 displayInput.focus();
             }
+            if (inputBox) {
+                inputBox.classList.remove('has-value');
+            }
             if (clearBtn) {
                 clearBtn.style.display = 'none';
             }
-            updateStatusChip(null);
+            if (kbdEl) {
+                kbdEl.style.display = '';
+            }
+            updateStatusChip('none');
 
             if (typeof setText === 'function') {
                 setText('rvDepartment', '-');
@@ -12562,7 +13104,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         // =========================================================================
-        // God-Level Inline Quick-Create Department Handler
+        // Inline Quick-Create Department Handler
         // =========================================================================
         function inlineCreateDepartment(name) {
             if (!name || !name.trim()) return;
@@ -12654,19 +13196,51 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             updateTabCounts();
 
-            // Check if initial selection needs name resolution & status chip
+            // Sync initial state on initial page paint
+            syncInitialState();
+        }
+
+        function syncInitialState() {
             var select = document.getElementById('category_id');
             var displayInput = document.getElementById('category_id_display');
-            if (select && select.value) {
-                var curr = deptMap.get(parseInt(select.value, 10));
-                if (curr) {
-                    if (displayInput && !displayInput.value) {
-                        displayInput.value = curr.name;
-                    }
-                    var clearBtn = document.getElementById('jero_dept_clear_btn');
-                    if (clearBtn) clearBtn.style.display = 'flex';
-                    updateStatusChip(curr);
+            var clearBtn = document.getElementById('jero_dept_clear_btn');
+            var kbdEl = document.getElementById('jero_dept_kbd');
+            var inputBox = document.getElementById('jero_dept_input_box');
+
+            if (!displayInput) return;
+
+            var currentVal = select ? (select.value || '').trim() : '';
+            var currentText = (displayInput.value || '').trim();
+
+            if (currentVal && deptMap.has(parseInt(currentVal, 10))) {
+                var curr = deptMap.get(parseInt(currentVal, 10));
+                selectedDepartment = curr;
+                if (!currentText) {
+                    displayInput.value = curr.name;
                 }
+                if (inputBox) inputBox.classList.add('has-value');
+                if (clearBtn) clearBtn.style.display = 'flex';
+                if (kbdEl) kbdEl.style.display = 'none';
+                updateStatusChip(curr.is_standard === 1 ? 'standard' : 'org', curr);
+                if (typeof setText === 'function') {
+                    setText('rvDepartment', curr.name);
+                }
+            } else if (currentText) {
+                // Custom department loaded or preserved
+                selectedDepartment = null;
+                if (inputBox) inputBox.classList.add('has-value');
+                if (clearBtn) clearBtn.style.display = 'flex';
+                if (kbdEl) kbdEl.style.display = 'none';
+                updateStatusChip('custom');
+                if (typeof setText === 'function') {
+                    setText('rvDepartment', currentText);
+                }
+            } else {
+                selectedDepartment = null;
+                if (inputBox) inputBox.classList.remove('has-value');
+                if (clearBtn) clearBtn.style.display = 'none';
+                if (kbdEl) kbdEl.style.display = '';
+                updateStatusChip('none');
             }
         }
 
@@ -12753,6 +13327,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             var tabsContainer = document.querySelector('.jero-dept-tabs');
             var container = document.getElementById('jero_dept_list_container');
             var recentBar = document.getElementById('jero_dept_recent_bar');
+            var wrapEl = document.getElementById('jero_dept_select_wrap');
+            var inputBox = document.getElementById('jero_dept_input_box');
+            var kbdEl = document.getElementById('jero_dept_kbd');
 
             if (input) {
                 input.addEventListener('focus', function() {
@@ -12767,14 +13344,52 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 });
 
+                var searchDebounceTimer = null;
+                var searchRafId = null;
                 input.addEventListener('input', function() {
-                    currentSearch = this.value;
-                    if (clearBtn) clearBtn.style.display = currentSearch ? 'flex' : 'none';
+                    var val = this.value;
+                    currentSearch = val;
+                    var clean = val.trim();
+
+                    // Department Data Isolation:
+                    // If user previously selected a suggested department and types something different,
+                    // immediately decouple from the suggestion!
+                    if (selectedDepartment && clean.toLowerCase() !== (selectedDepartment.name || '').toLowerCase()) {
+                        selectedDepartment = null;
+                        var select = document.getElementById('category_id');
+                        if (select) {
+                            select.selectedIndex = 0;
+                            $(select).val('').trigger('change');
+                        }
+                    }
+
+                    if (clean) {
+                        if (inputBox) inputBox.classList.add('has-value');
+                        if (clearBtn) clearBtn.style.display = 'flex';
+                        if (kbdEl) kbdEl.style.display = 'none';
+                        updateStatusChip(selectedDepartment ? (selectedDepartment.is_standard === 1 ? 'standard' : 'org') : 'custom', selectedDepartment);
+                    } else {
+                        if (inputBox) inputBox.classList.remove('has-value');
+                        if (clearBtn) clearBtn.style.display = 'none';
+                        if (kbdEl) kbdEl.style.display = '';
+                        updateStatusChip('none');
+                    }
+
                     if (!isOpen) openDropdown();
-                    renderDropdownList();
+
+                    // CRITICAL: Reset keyboard focus index on every keystroke so NO suggestion is highlighted or auto-selected!
+                    focusedIndex = -1;
+
+                    clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(function() {
+                        if (searchRafId) cancelAnimationFrame(searchRafId);
+                        searchRafId = requestAnimationFrame(function() {
+                            renderDropdownList();
+                            searchRafId = null;
+                        });
+                    }, 35);
                 });
 
-                // Real-World Defense: Prevent Enter key from submitting form prematurely & add Page navigation
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         e.preventDefault();
@@ -12798,13 +13413,33 @@ $currency_code = GeneralMethod::defaultCurrency();
                     } else if (e.key === 'Enter') {
                         e.preventDefault();
                         if (isOpen) {
-                            selectFocusedItem();
+                            selectFocusedOrCustom();
                         } else {
                             openDropdown();
                         }
                     } else if (e.key === 'Tab') {
-                        if (isOpen) closeDropdown();
+                        if (isOpen) {
+                            var val = (input.value || '').trim();
+                            if (val && !selectedDepartment) {
+                                commitCustomDepartment(val);
+                            } else {
+                                closeDropdown();
+                            }
+                        }
                     }
+                });
+
+                input.addEventListener('blur', function() {
+                    // Slight delay so item click in dropdown can register before blur commits
+                    setTimeout(function() {
+                        var activeEl = document.activeElement;
+                        var wrap = document.getElementById('jero_dept_select_wrap');
+                        if (wrap && wrap.contains(activeEl)) return;
+                        var val = (input.value || '').trim();
+                        if (val && !selectedDepartment) {
+                            commitCustomDepartment(val);
+                        }
+                    }, 200);
                 });
             }
 
@@ -12854,17 +13489,23 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (container) {
-                // High-Performance Unfreeze Wheel Scroll Engine: guarantees smooth scroll on all mice/touchpads
+                // High-Performance Hardware Mouse Wheel Scroll Engine
+                // Guaranteed smooth scrolling on physical hardware mice (Logitech, Microsoft line mode)
                 container.addEventListener('wheel', function(e) {
-                    if (this.scrollHeight > this.clientHeight) {
-                        var delta = e.deltaY;
-                        if (e.deltaMode === 1) delta *= 33; // Line mode support
-                        var prev = this.scrollTop;
-                        this.scrollTop += delta;
-                        if (this.scrollTop !== prev) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
+                    var maxScroll = this.scrollHeight - this.clientHeight;
+                    if (maxScroll <= 0) return;
+
+                    var delta = e.deltaY;
+                    if (e.deltaMode === 1) delta *= 33; // Line mode support for physical hardware mice
+                    else if (e.deltaMode === 2) delta *= this.clientHeight; // Page mode
+
+                    var prev = this.scrollTop;
+                    var next = Math.max(0, Math.min(maxScroll, prev + delta));
+
+                    if (next !== prev) {
+                        this.scrollTop = next;
+                        e.preventDefault();
+                        e.stopPropagation();
                     }
                 }, { passive: false });
 
@@ -12897,23 +13538,60 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             });
 
+            // Prevent scrollbar thumb drag outside bounds from triggering accidental outside-click closing
+            if (wrapEl) {
+                wrapEl.addEventListener('pointerdown', function() {
+                    isInteractingWithDropdown = true;
+                });
+                wrapEl.addEventListener('mousedown', function() {
+                    isInteractingWithDropdown = true;
+                });
+            }
+            window.addEventListener('pointerup', function() {
+                setTimeout(function() { isInteractingWithDropdown = false; }, 60);
+            });
+            window.addEventListener('mouseup', function() {
+                setTimeout(function() { isInteractingWithDropdown = false; }, 60);
+            });
+            window.addEventListener('pointercancel', function() {
+                isInteractingWithDropdown = false;
+            });
+
             // Bullet-Proof Outside Click Handler in Capture Phase
-            // Catches clicks before any child or ancestor calls stopPropagation
             document.addEventListener('pointerdown', function(e) {
+                if (isInteractingWithDropdown) return;
                 var wrap = document.getElementById('jero_dept_select_wrap');
                 if (wrap && !wrap.contains(e.target)) {
-                    if (isOpen) closeDropdown();
+                    if (isOpen) {
+                        var inputEl = document.getElementById('category_id_display');
+                        var val = inputEl ? (inputEl.value || '').trim() : '';
+                        if (val && !selectedDepartment) {
+                            commitCustomDepartment(val);
+                        } else {
+                            closeDropdown();
+                        }
+                    }
                 }
             }, true);
 
-            // Responsive Viewport Clamping & Dynamic Repositioning
-            window.addEventListener('resize', function() {
-                if (isOpen) adjustDropdownPosition();
-            });
+            // Responsive Viewport Clamping & Dynamic Repositioning (RAF Throttled)
+            var posRafId = null;
+            function scheduleAdjustPosition() {
+                if (!isOpen) return;
+                if (posRafId) return;
+                posRafId = requestAnimationFrame(function() {
+                    adjustDropdownPosition();
+                    posRafId = null;
+                });
+            }
 
-            window.addEventListener('scroll', function() {
-                if (isOpen) adjustDropdownPosition();
-            }, { passive: true });
+            window.addEventListener('resize', scheduleAdjustPosition, { passive: true });
+
+            // Ignore inner scroll events from the dropdown list itself
+            window.addEventListener('scroll', function(e) {
+                if (e.target && wrapEl && wrapEl.contains(e.target)) return;
+                scheduleAdjustPosition();
+            }, { passive: true, capture: true });
 
             // Keyboard Shortcut: '/' to focus Department Search
             document.addEventListener('keydown', function(e) {
@@ -12927,13 +13605,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 }
             });
-
-            // Window resize auto-adjustment
-            window.addEventListener('resize', function() {
-                if (isOpen) {
-                    adjustDropdownPosition();
-                }
-            }, { passive: true });
         }
 
         function initSyncListeners() {
@@ -12985,6 +13656,17 @@ $currency_code = GeneralMethod::defaultCurrency();
                 currentSearch = q;
                 renderDropdownList();
             },
+            commitIfCustom: function() {
+                var input = document.getElementById('category_id_display');
+                if (!input) return;
+                var val = (input.value || '').trim();
+                if (val && !selectedDepartment) {
+                    commitCustomDepartment(val);
+                }
+            },
+            getSelected: function() {
+                return selectedDepartment;
+            },
             selectById: function(id) {
                 var item = deptMap.get(parseInt(id, 10));
                 if (item) selectItem(item);
@@ -12996,7 +13678,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                         return;
                     }
                 }
+                commitCustomDepartment(name);
             },
+            clear: clearSelection,
             inlineCreate: function(name) {
                 inlineCreateDepartment(name);
             },
@@ -13182,8 +13866,8 @@ $currency_code = GeneralMethod::defaultCurrency();
         function commitRecruiterChanges() {
             var names = assignedRecruiters.map(function(r) { return r.name; });
             var ids = assignedRecruiters.map(function(r) { return r.id; });
-            $('#recruiter').val(names.join(','));
-            $('#recruiter_id').val(ids.join(','));
+            $('#recruiter').val(names.join(',')).trigger('change');
+            $('#recruiter_id').val(ids.join(',')).trigger('change');
 
             if (typeof renderRecruiterCards === 'function') {
                 renderRecruiterCards();
@@ -13198,8 +13882,8 @@ $currency_code = GeneralMethod::defaultCurrency();
         function commitHiringManagerChanges() {
             var names = assignedHiringManagers.map(function(h) { return h.name; });
             var ids = assignedHiringManagers.map(function(h) { return h.id; }).filter(Boolean);
-            $('#hiring_namager').val(names.join(','));
-            $('#hiring_manager_id').val(ids.join(','));
+            $('#hiring_namager').val(names.join(',')).trigger('change');
+            $('#hiring_manager_id').val(ids.join(',')).trigger('change');
 
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
@@ -14009,6 +14693,31 @@ $currency_code = GeneralMethod::defaultCurrency();
             $('#hiring_namager').val('');
             $('#hiring_manager_id').val('');
 
+            // Automatically pre-populate first available contact for the selected client
+            if (clientId > 0) {
+                var clientObj = (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.getClient === 'function')
+                    ? window.JeroClientSelectEngine.getClient(clientId)
+                    : null;
+                var contacts = (clientObj && clientObj.cc && clientObj.cc.length > 0) ? clientObj.cc : [];
+                if (contacts.length > 0) {
+                    var first = contacts[0];
+                    var firstName = first.n || first.contact_person_name || '';
+                    var firstId = first.id || '';
+                    if (firstName) {
+                        $('#hiring_namager').val(firstName);
+                        $('#hiring_manager_id').val(firstId);
+                        assignedHiringManagers.push({
+                            id: firstId,
+                            name: firstName,
+                            role: first.d || first.contact_person_designation || 'Hiring Manager',
+                            email: first.e || first.contact_person_email || '',
+                            phone: first.p || first.contact_person_number || '',
+                            initial: getInitials(firstName)
+                        });
+                    }
+                }
+            }
+
             if (typeof renderHiringCards === 'function') {
                 renderHiringCards();
             }
@@ -14106,12 +14815,13 @@ $currency_code = GeneralMethod::defaultCurrency();
 
     })();
     </script>
-    {{-- Create-only enhancement script — placed LAST so all globals defined in the inline
+    {{-- Unified Job Form enhancement script — placed LAST so all globals defined in the inline
          scripts above (currentStep, goToStep, __indexUrl, validateStep, etc.) are available
          when this file runs. No defer needed here because the script is already at the
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
-    @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261012d"></script>
+    <script src="{{ asset('js/jero-taxonomy-client.js') }}?v=2.0.0"></script>
+    @if($isJobUnifiedForm)
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261014a"></script>
     @endif
 @endpush
