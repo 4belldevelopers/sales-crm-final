@@ -9289,8 +9289,15 @@ $currency_code = GeneralMethod::defaultCurrency();
                 success: function(data) {
                     if (data.status == 'success') {
                         resetPublishBtn($btn);
-                        showToast(isEditPage ? 'Job updated successfully!' : 'Job saved successfully!', 'success');
-                        setTimeout(function() { window.location = __indexUrl; }, 600);
+                        if (isEditPage) {
+                            showToast('Job updated successfully!', 'success');
+                            setTimeout(function() { window.location = __indexUrl; }, 600);
+                        } else if (data.check_ready_url && data.job_id) {
+                            launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, __indexUrl);
+                        } else {
+                            showToast('Job saved successfully!', 'success');
+                            setTimeout(function() { window.location = __indexUrl; }, 600);
+                        }
                     } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
                         resetPublishBtn($btn);
                         var freshOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
@@ -9345,6 +9352,113 @@ $currency_code = GeneralMethod::defaultCurrency();
             });
         }
         function saveDraft() { syncAll(); showToast('Draft synced. Use Publish to save the job.', 'info'); }
+
+        /**
+         * Recruiter-First Verification Gate: Active 10-Second Readiness Countdown
+         * Intent: Holds recruiter on a reassuring verification screen, probing readiness
+         * with 0% MySQL reads until Elasticsearch indexing completes. Eliminates recruiter confusion.
+         */
+        function launchJobReadinessVerificationGate(jobId, checkReadyUrl, indexUrl) {
+            var maxWaitSeconds = 30;
+            var cycleSeconds = 10;
+            var currentCycleRemaining = cycleSeconds;
+            var totalElapsed = 0;
+            var pollInterval = null;
+            var countdownInterval = null;
+            var isReadyConfirmed = false;
+
+            var modalHtml = `
+            <div id="jobReadinessModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.75);backdrop-filter:blur(4px);z-index:999999;display:flex;align-items:center;justify-content:center;">
+                <div style="background:#ffffff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:90%;max-width:480px;padding:32px;text-align:center;font-family:'Poppins',sans-serif;">
+                    <div id="jrGateIconContainer" style="margin-bottom:20px;">
+                        <div style="position:relative;width:80px;height:80px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                            <svg style="transform:rotate(-90deg);width:80px;height:80px;">
+                                <circle cx="40" cy="40" r="34" stroke="#E2E8F0" stroke-width="6" fill="none" />
+                                <circle id="jrProgressCircle" cx="40" cy="40" r="34" stroke="#3B82F6" stroke-width="6" fill="none" stroke-dasharray="213.6" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear;" />
+                            </svg>
+                            <span id="jrCountdownNumber" style="position:absolute;font-size:22px;font-weight:700;color:#1E293B;">10</span>
+                        </div>
+                    </div>
+                    <h3 id="jrGateTitle" style="font-size:20px;font-weight:700;color:#0F172A;margin-bottom:8px;">Job Saved! Readying Your Listing...</h3>
+                    <p id="jrGateSubtitle" style="font-size:13px;color:#64748B;line-height:1.6;margin-bottom:24px;">
+                        Verifying search index so your new job appears immediately on the Job Tracker without any delay or confusion.
+                    </p>
+                    <div id="jrGateActions" style="display:none;margin-top:16px;">
+                        <a href="${indexUrl}" class="btn btn-primary btn-sm" style="margin-right:8px;padding:8px 18px;font-weight:600;">Go to Job Tracker</a>
+                        <button type="button" class="btn btn-light btn-sm" onclick="$('#jobReadinessModal').remove();" style="padding:8px 18px;font-weight:600;">Close</button>
+                    </div>
+                </div>
+            </div>`;
+
+            $('body').append(modalHtml);
+
+            var $circle = $('#jrProgressCircle');
+            var $number = $('#jrCountdownNumber');
+            var circumference = 213.6;
+
+            function navigateSuccess() {
+                if (isReadyConfirmed) return;
+                isReadyConfirmed = true;
+                clearInterval(pollInterval);
+                clearInterval(countdownInterval);
+
+                $('#jrGateIconContainer').html(`
+                    <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                `);
+                $('#jrGateTitle').text('Job Live & Verified!').css('color', '#059669');
+                $('#jrGateSubtitle').text('Your job is indexed and 100% ready to view. Redirecting to your listing now...');
+
+                setTimeout(function() {
+                    window.location.href = indexUrl + (indexUrl.indexOf('?') === -1 ? '?' : '&') + 'new_job_id=' + jobId;
+                }, 800);
+            }
+
+            // Probe loop: every 1200ms
+            pollInterval = setInterval(function() {
+                if (isReadyConfirmed) return;
+                $.ajax({
+                    url: checkReadyUrl,
+                    type: 'GET',
+                    cache: false,
+                    success: function(res) {
+                        if (res && res.ready === true) {
+                            navigateSuccess();
+                        }
+                    },
+                    error: function() {
+                        // Non-blocking
+                    }
+                });
+            }, 1200);
+
+            // Countdown loop: every 1 second
+            countdownInterval = setInterval(function() {
+                if (isReadyConfirmed) return;
+                currentCycleRemaining--;
+                totalElapsed++;
+
+                if (currentCycleRemaining <= 0) {
+                    currentCycleRemaining = cycleSeconds;
+                    $('#jrGateSubtitle').text('Finalizing search indices across your organization... verifying visibility.');
+                }
+
+                $number.text(currentCycleRemaining);
+                var offset = circumference - (currentCycleRemaining / cycleSeconds) * circumference;
+                $circle.css('stroke-dashoffset', offset);
+
+                if (totalElapsed >= maxWaitSeconds) {
+                    clearInterval(pollInterval);
+                    clearInterval(countdownInterval);
+                    $('#jrGateTitle').text('Job Saved (Processing in Background)');
+                    $('#jrGateSubtitle').text('Your requisition # ' + jobId + ' has been saved securely. Search indexing is finishing in the background.');
+                    $('#jrGateActions').show();
+                }
+            }, 1000);
+        }
 
         // ---------- UTILITIES ----------
         function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text == null ? '' : text; return div.innerHTML; }
