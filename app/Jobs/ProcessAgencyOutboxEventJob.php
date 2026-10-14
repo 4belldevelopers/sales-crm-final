@@ -48,11 +48,22 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
             return;
         }
 
+        // Self-healing: reclaim stranded events locked > 5 minutes ago due to worker crash
+        DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'AgencyRequest')
+            ->where('status', 'PROCESSING')
+            ->where('locked_at', '<', now()->subMinutes(5))
+            ->update([
+                'status' => 'PENDING',
+                'available_at' => now(),
+            ]);
+
         // Batch processing when triggered periodically by worker or scheduler
         $events = DB::table('sys_outbox_events')
             ->where('aggregate_type', 'AgencyRequest')
-            ->where('status', 'PENDING')
+            ->whereIn('status', ['PENDING', 'FAILED'])
             ->where('available_at', '<=', now())
+            ->where('attempts', '<', $this->tries)
             ->orderBy('id', 'asc')
             ->limit(25)
             ->pluck('id')
@@ -67,7 +78,13 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
     {
         $claimed = DB::table('sys_outbox_events')
             ->where('id', $eventId)
-            ->where('status', 'PENDING')
+            ->where(function ($q) {
+                $q->whereIn('status', ['PENDING', 'FAILED'])
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', 'PROCESSING')
+                            ->where('locked_at', '<', now()->subMinutes(5));
+                    });
+            })
             ->update([
                 'status' => 'PROCESSING',
                 'locked_at' => now(),
@@ -86,12 +103,21 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
         try {
             $payload = json_decode($event->payload, true) ?? [];
             $invitationId = (int) ($event->aggregate_id ?? $payload['invitation_id'] ?? 0);
+            $relationId = (int) ($payload['relation_id'] ?? 0);
             $fromCompanyId = (int) ($event->tenant_id ?? $payload['from_company_id'] ?? 0);
             $toCompanyId = (int) ($payload['to_company_id'] ?? 0);
             $eventType = $event->event_type;
 
             // 1. Synchronize to Elasticsearch index
-            if ($invitationId > 0 && $eventType === 'AGENCY_REQUEST_SENT') {
+            if ($relationId > 0) {
+                try {
+                    GeneralMethod::jobRequestIndexElastic($relationId);
+                } catch (\Throwable $e) {
+                    Log::warning("[ProcessAgencyOutboxEventJob] ES sync warning for relation #{$relationId}: ".$e->getMessage());
+                }
+            }
+
+            if ($invitationId > 0 && ($eventType === 'AGENCY_REQUEST_SENT' || $eventType === 'BULK_AGENCY_REQUIREMENT_SENT')) {
                 try {
                     GeneralMethod::clientRequestIndexElastic($invitationId);
                 } catch (\Throwable $e) {

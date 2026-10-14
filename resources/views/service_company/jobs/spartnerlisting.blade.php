@@ -1989,6 +1989,13 @@
     /**
      * Bulk Agency Selection State Manager
      */
+    var activeJobIdForDrawer = String($('#current_job_id').val() || '');
+    if (window.currentActiveDrawerJobId !== activeJobIdForDrawer) {
+        window.currentActiveDrawerJobId = activeJobIdForDrawer;
+        if (window.selectedAgencyIds) {
+            window.selectedAgencyIds.clear();
+        }
+    }
     window.selectedAgencyIds = window.selectedAgencyIds || new Set();
 
     function updateMultiSendButtonState() {
