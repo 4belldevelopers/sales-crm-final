@@ -30,8 +30,11 @@
         2 => @$job->max_hourly
     ][@$job->max_sal_mode] ?? @$job->max_salary;
 
+    $canViewBenchSal = \App\Services\SalaryVisibilityPolicy::canViewSalary($job, null, 'agency');
     $bHeroSalStr = '';
-    if (($bMinSal && $bMinSal > 0) || ($bMaxSal && $bMaxSal > 0)) {
+    if (! $canViewBenchSal) {
+        $bHeroSalStr = '🔒 Confidential';
+    } elseif (($bMinSal && $bMinSal > 0) || ($bMaxSal && $bMaxSal > 0)) {
         if ($bMinSal >= 100000 || $bMaxSal >= 100000) {
             $minLpa = $bMinSal > 0 ? number_format($bMinSal / 100000, 2) : '0.00';
             $maxLpa = $bMaxSal > 0 ? number_format($bMaxSal / 100000, 2) : '0.00';
@@ -43,6 +46,8 @@
         } elseif ($bMaxSal > 0) {
             $bHeroSalStr = "₹" . number_format($bMaxSal);
         }
+    } else {
+        $bHeroSalStr = 'Competitive';
     }
 
     $bHeroNoticeStr = @$job->notice_period ?? 'Immediate – 30 Days';
