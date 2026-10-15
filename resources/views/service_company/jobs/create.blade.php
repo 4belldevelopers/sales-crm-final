@@ -3556,8 +3556,20 @@
                 visibility: visible !important;
                 opacity: 1 !important;
             }
+            #jrwrap.internal-job-create .ij-gender-menu {
+                display: none !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+                opacity: 0 !important;
+            }
+            #jrwrap.internal-job-create .ij-gender-menu.is-open {
+                display: flex !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+                opacity: 1 !important;
+            }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis_godlevel_fixed">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis_godlevel_v2">
     @endif
 @endpush
 @section('content')
@@ -4403,7 +4415,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     </div>
 
                                     <!-- Dropdown Trigger Button -->
-                                    <button type="button" class="ij-salvis-trigger-btn" id="salvisTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change salary visibility" onclick="window.toggleSalaryVisibilityPopover && window.toggleSalaryVisibilityPopover(event)">
+                                    <button type="button" class="ij-salvis-trigger-btn" id="salvisTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change salary visibility">
                                         <span class="ij-salvis-badge ij-salvis-badge-{{ $initialSalaryVisibility }}" id="salvisTriggerBadge">
                                             @if($initialSalaryVisibility === 'confidential')
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -10057,7 +10069,6 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                 function openMenu() {
                     menu.style.display = 'flex';
-                    void menu.offsetHeight;
                     menu.classList.add('is-open');
                     trigger.setAttribute('aria-expanded', 'true');
                     trigger.classList.add('is-active');
@@ -10072,14 +10083,10 @@ $currency_code = GeneralMethod::defaultCurrency();
 
                 function closeMenu(focusTrigger) {
                     menu.classList.remove('is-open');
+                    menu.style.display = 'none';
                     trigger.setAttribute('aria-expanded', 'false');
                     trigger.classList.remove('is-active');
                     clearFocus();
-                    setTimeout(function() {
-                        if (trigger.getAttribute('aria-expanded') !== 'true') {
-                            menu.style.display = 'none';
-                        }
-                    }, 150);
                     if (focusTrigger) {
                         trigger.focus();
                     }
