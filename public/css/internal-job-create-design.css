@@ -2595,6 +2595,10 @@
     line-height: 1.25 !important;
 }
 
+#jrwrap.internal-job-create .ij-salvis-trigger-btn * {
+    pointer-events: none !important;
+}
+
 /* Popover Menu */
 #jrwrap.internal-job-create .ij-salvis-popover {
     display: none;
@@ -2607,7 +2611,7 @@
     border-radius: 12px !important;
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 8px rgba(15, 23, 42, 0.06) !important;
     padding: 16px 14px 14px !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
     text-align: left !important;
     box-sizing: border-box !important;
     font-family: 'Poppins', sans-serif !important;
@@ -2615,6 +2619,8 @@
 
 #jrwrap.internal-job-create .ij-salvis-popover.is-open {
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 #jrwrap.internal-job-create .ij-salvis-pop-head {

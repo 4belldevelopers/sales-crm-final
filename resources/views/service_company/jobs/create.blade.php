@@ -3522,8 +3522,42 @@
             #kt_toolbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
+            #jrwrap.internal-job-create .card.ij-compensation-card,
+            #jrwrap.internal-job-create .card.ij-compensation-card .card-body,
+            #jrwrap.internal-job-create .ij-comp-header,
+            #jrwrap.internal-job-create .ij-salvis-header-wrap {
+                overflow: visible !important;
+            }
+            #jrwrap.internal-job-create .ij-salvis-header-wrap {
+                position: relative !important;
+                z-index: 100 !important;
+            }
+            #jrwrap.internal-job-create .ij-salvis-trigger-btn * {
+                pointer-events: none !important;
+            }
+            #jrwrap.internal-job-create .ij-salvis-popover {
+                display: none;
+                position: absolute !important;
+                top: calc(100% + 8px) !important;
+                right: 0 !important;
+                width: 360px !important;
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 8px rgba(15, 23, 42, 0.06) !important;
+                padding: 16px 14px 14px !important;
+                z-index: 999999 !important;
+                text-align: left !important;
+                box-sizing: border-box !important;
+                font-family: 'Poppins', sans-serif !important;
+            }
+            #jrwrap.internal-job-create .ij-salvis-popover.is-open {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis2">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis_godlevel">
     @endif
 @endpush
 @section('content')
@@ -4369,7 +4403,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     </div>
 
                                     <!-- Dropdown Trigger Button -->
-                                    <button type="button" class="ij-salvis-trigger-btn" id="salvisTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change salary visibility">
+                                    <button type="button" class="ij-salvis-trigger-btn" id="salvisTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change salary visibility" onclick="window.toggleSalaryVisibilityPopover && window.toggleSalaryVisibilityPopover(event)">
                                         <span class="ij-salvis-badge ij-salvis-badge-{{ $initialSalaryVisibility }}" id="salvisTriggerBadge">
                                             @if($initialSalaryVisibility === 'confidential')
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -4396,14 +4430,14 @@ $currency_code = GeneralMethod::defaultCurrency();
                                     </button>
 
                                     <!-- Dropdown Popover Menu -->
-                                    <div class="ij-salvis-popover" id="salvisPopover" style="display:none;" tabindex="-1">
+                                    <div class="ij-salvis-popover" id="salvisPopover" tabindex="-1">
                                         <div class="ij-salvis-pop-head">
                                             <div class="ij-salvis-pop-title">Salary Visibility</div>
                                             <div class="ij-salvis-pop-subtitle">Control where compensation is visible for this job.</div>
                                         </div>
                                         <div class="ij-salvis-options-list" role="radiogroup" aria-label="Salary Visibility">
                                             <!-- Option 1: Visible Everywhere -->
-                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'everywhere' ? 'is-selected' : '' }}" data-value="everywhere" role="radio" aria-checked="{{ $initialSalaryVisibility === 'everywhere' ? 'true' : 'false' }}" tabindex="0">
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'everywhere' ? 'is-selected' : '' }}" data-value="everywhere" role="radio" aria-checked="{{ $initialSalaryVisibility === 'everywhere' ? 'true' : 'false' }}" tabindex="0" onclick="window.selectSalaryVisibility && window.selectSalaryVisibility('everywhere', event)">
                                                 <div class="ij-salvis-opt-icon ij-salvis-icon-everywhere">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 </div>
@@ -4417,7 +4451,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </div>
 
                                             <!-- Option 2: ATS + Agencies -->
-                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_agencies' ? 'is-selected' : '' }}" data-value="ats_agencies" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_agencies' ? 'true' : 'false' }}" tabindex="0">
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_agencies' ? 'is-selected' : '' }}" data-value="ats_agencies" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_agencies' ? 'true' : 'false' }}" tabindex="0" onclick="window.selectSalaryVisibility && window.selectSalaryVisibility('ats_agencies', event)">
                                                 <div class="ij-salvis-opt-icon ij-salvis-icon-agencies">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                                 </div>
@@ -4431,7 +4465,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </div>
 
                                             <!-- Option 3: ATS Only -->
-                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_only' ? 'is-selected' : '' }}" data-value="ats_only" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_only' ? 'true' : 'false' }}" tabindex="0">
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_only' ? 'is-selected' : '' }}" data-value="ats_only" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_only' ? 'true' : 'false' }}" tabindex="0" onclick="window.selectSalaryVisibility && window.selectSalaryVisibility('ats_only', event)">
                                                 <div class="ij-salvis-opt-icon ij-salvis-icon-ats">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                                 </div>
@@ -4445,7 +4479,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             </div>
 
                                             <!-- Option 4: Fully Confidential -->
-                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'confidential' ? 'is-selected' : '' }}" data-value="confidential" role="radio" aria-checked="{{ $initialSalaryVisibility === 'confidential' ? 'true' : 'false' }}" tabindex="0">
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'confidential' ? 'is-selected' : '' }}" data-value="confidential" role="radio" aria-checked="{{ $initialSalaryVisibility === 'confidential' ? 'true' : 'false' }}" tabindex="0" onclick="window.selectSalaryVisibility && window.selectSalaryVisibility('confidential', event)">
                                                 <div class="ij-salvis-opt-icon ij-salvis-icon-confidential">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                                 </div>
@@ -6833,14 +6867,8 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
 
-        // Enterprise Salary Visibility Popover Controller
-        function initSalaryVisibilityPopover() {
-            var $trigger = $('#salvisTrigger');
-            var $popover = $('#salvisPopover');
-            var $input = $('#salary_visibility');
-            var $notice = $('#salvisConfidentialNotice');
-            var $salaryInputsRow = $('#ijSalaryInputsRow');
-
+        // Enterprise Salary Visibility Popover Controller (God-Level SSOT)
+        (function initSalaryVisibilityPopoverScope() {
             var icons = {
                 everywhere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
                 ats_agencies: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
@@ -6855,81 +6883,105 @@ $currency_code = GeneralMethod::defaultCurrency();
                 confidential: 'Fully Confidential'
             };
 
+            function getElements() {
+                return {
+                    popover: document.getElementById('salvisPopover'),
+                    trigger: document.getElementById('salvisTrigger'),
+                    input: document.getElementById('salary_visibility'),
+                    notice: document.getElementById('salvisConfidentialNotice'),
+                    inputsRow: document.getElementById('ijSalaryInputsRow'),
+                    triggerBadge: document.getElementById('salvisTriggerBadge'),
+                    triggerLabel: document.getElementById('salvisTriggerLabel')
+                };
+            }
+
             function openPop() {
+                var els = getElements();
+                if (!els.popover) return;
                 if (typeof closeCurrencyPopover === 'function') {
                     closeCurrencyPopover();
                 } else {
-                    $('#ijCurrencyPopover').hide();
+                    var currPop = document.getElementById('ijCurrencyPopover');
+                    if (currPop) currPop.style.display = 'none';
                 }
-                $('#salvisPopover').addClass('is-open').show();
-                $('#salvisTrigger').attr('aria-expanded', 'true');
+                els.popover.classList.add('is-open');
+                els.popover.style.display = 'block';
+                if (els.trigger) els.trigger.setAttribute('aria-expanded', 'true');
             }
 
             function closePop() {
-                $('#salvisPopover').removeClass('is-open').hide();
-                $('#salvisTrigger').attr('aria-expanded', 'false');
+                var els = getElements();
+                if (!els.popover) return;
+                els.popover.classList.remove('is-open');
+                els.popover.style.display = 'none';
+                if (els.trigger) els.trigger.setAttribute('aria-expanded', 'false');
             }
 
-            $(document).off('click.salvisTrigger', '#salvisTrigger').on('click.salvisTrigger', '#salvisTrigger', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if ($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible')) {
+            function togglePop(e) {
+                if (e) {
+                    try {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    } catch (err) {}
+                }
+                var els = getElements();
+                if (!els.popover) return;
+                var isOpen = els.popover.classList.contains('is-open') || els.popover.style.display === 'block';
+                if (isOpen) {
                     closePop();
                 } else {
                     openPop();
                 }
-            });
+            }
 
-            $(document).off('click.salvisOutside').on('click.salvisOutside', function(e) {
-                if (($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible')) && !$(e.target).closest('#salvisPopover, #salvisTrigger').length) {
-                    closePop();
+            function applyVal(val) {
+                var els = getElements();
+                if (els.input) {
+                    els.input.value = val;
+                    if (window.jQuery) $(els.input).trigger('change');
                 }
-            });
 
-            $(document).off('keydown.salvisEsc').on('keydown.salvisEsc', function(e) {
-                if (e.key === 'Escape' && ($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible'))) {
-                    closePop();
-                    $('#salvisTrigger').focus();
-                }
-            });
-
-            $(document).off('click.salvisOpt', '.ij-salvis-opt-row').on('click.salvisOpt', '.ij-salvis-opt-row', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var val = $(this).attr('data-value') || $(this).data('value');
-                if (!val) return;
-                applySalaryVisibility(val);
-                closePop();
-                try { $('#salvisTrigger').focus(); } catch (err) {}
-            });
-
-            $(document).off('keydown.salvisOpt', '.ij-salvis-opt-row').on('keydown.salvisOpt', '.ij-salvis-opt-row', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    $(this).trigger('click');
-                }
-            });
-
-            function applySalaryVisibility(val) {
-                $('#salary_visibility').val(val).trigger('change');
-
-                $('.ij-salvis-opt-row').each(function() {
-                    var rowVal = $(this).attr('data-value') || $(this).data('value');
-                    var isSel = (rowVal === val);
-                    $(this).toggleClass('is-selected', isSel).attr('aria-checked', isSel ? 'true' : 'false');
+                // Update option items state
+                var rows = document.querySelectorAll('.ij-salvis-opt-row');
+                rows.forEach(function(row) {
+                    var rVal = row.getAttribute('data-value') || '';
+                    var isSel = (rVal === val);
+                    if (isSel) {
+                        row.classList.add('is-selected');
+                        row.setAttribute('aria-checked', 'true');
+                    } else {
+                        row.classList.remove('is-selected');
+                        row.setAttribute('aria-checked', 'false');
+                    }
                 });
 
-                $('#salvisTriggerBadge').attr('class', 'ij-salvis-badge ij-salvis-badge-' + val).html(icons[val] || icons.everywhere);
-                $('#salvisTriggerLabel').text(labels[val] || labels.everywhere);
+                if (els.triggerBadge) {
+                    els.triggerBadge.className = 'ij-salvis-badge ij-salvis-badge-' + val;
+                    els.triggerBadge.innerHTML = icons[val] || icons.everywhere;
+                }
+                if (els.triggerLabel) {
+                    els.triggerLabel.textContent = labels[val] || labels.everywhere;
+                }
 
                 if (val === 'confidential') {
                     // Fully Confidential (2nd design): Show 2-column confidential banner, hide salary inputs
-                    $('#salvisConfidentialNotice').addClass('is-visible').css('display', 'flex').show();
-                    $('#ijSalaryInputsRow').hide();
+                    if (els.notice) {
+                        els.notice.classList.add('is-visible');
+                        els.notice.style.display = 'flex';
+                    }
+                    if (els.inputsRow) {
+                        els.inputsRow.style.display = 'none';
+                    }
                 } else {
                     // Rest: No UI changes - Hide banner, show salary inputs
-                    $('#salvisConfidentialNotice').removeClass('is-visible').css('display', 'none').hide();
-                    $('#ijSalaryInputsRow').css('display', 'grid').show();
+                    if (els.notice) {
+                        els.notice.classList.remove('is-visible');
+                        els.notice.style.display = 'none';
+                    }
+                    if (els.inputsRow) {
+                        els.inputsRow.style.display = 'grid';
+                    }
                 }
 
                 if (typeof salaryText === 'function' && document.getElementById('rvCompensation')) {
@@ -6937,14 +6989,77 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             }
 
-            var currentVal = $('#salary_visibility').val() || 'everywhere';
-            applySalaryVisibility(currentVal);
+            function selectVal(val, e) {
+                if (e) {
+                    try {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    } catch (err) {}
+                }
+                if (!val) return;
+                applyVal(val);
+                closePop();
+                var els = getElements();
+                if (els.trigger) {
+                    try { els.trigger.focus(); } catch (err) {}
+                }
+            }
+
+            // Expose globally for both inline and scripted invocations
+            window.toggleSalaryVisibilityPopover = togglePop;
+            window.openSalaryVisibilityPopover = openPop;
+            window.closeSalaryVisibilityPopover = closePop;
+            window.selectSalaryVisibility = selectVal;
+            window.applySalaryVisibility = applyVal;
+            window.initSalaryVisibilityPopover = function() {
+                var currentVal = (document.getElementById('salary_visibility') && document.getElementById('salary_visibility').value) || 'everywhere';
+                applyVal(currentVal);
+            };
+
+            // Delegated jQuery bindings as secondary insurance
+            $(document).off('click.salvisTrig', '#salvisTrigger').on('click.salvisTrig', '#salvisTrigger', function(e) {
+                togglePop(e);
+            });
+
+            $(document).off('click.salvisOpt', '.ij-salvis-opt-row').on('click.salvisOpt', '.ij-salvis-opt-row', function(e) {
+                var val = $(this).attr('data-value') || $(this).data('value');
+                selectVal(val, e);
+            });
+
+            // Native outside-click listener in capture phase: checks element containment natively
+            document.addEventListener('click', function(e) {
+                var els = getElements();
+                if (!els.popover || !els.trigger) return;
+                var isOpen = els.popover.classList.contains('is-open') || els.popover.style.display === 'block';
+                if (!isOpen) return;
+
+                if (els.trigger.contains(e.target) || els.popover.contains(e.target)) {
+                    return; // Click occurred inside trigger or popover
+                }
+                closePop();
+            }, true);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    var els = getElements();
+                    if (els.popover && (els.popover.classList.contains('is-open') || els.popover.style.display === 'block')) {
+                        closePop();
+                        if (els.trigger) {
+                            try { els.trigger.focus(); } catch (err) {}
+                        }
+                    }
+                }
+            });
+
+            // Initial state sync
+            var initialVal = (document.getElementById('salary_visibility') && document.getElementById('salary_visibility').value) || 'everywhere';
+            applyVal(initialVal);
 
             if (window.jQuery && $.fn.tooltip) {
                 $('.ij-salvis-info-icon[data-bs-toggle="tooltip"]').tooltip();
             }
-        }
-        initSalaryVisibilityPopover();
+        })();
 
         // ---- Auto-fill JD from title (Neutralized for strict custom title isolation) ----
         function changeautofillfield() {
