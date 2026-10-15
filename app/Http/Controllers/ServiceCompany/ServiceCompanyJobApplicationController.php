@@ -8012,8 +8012,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             // Multi-tenant atomic cache invalidation across drawer, listings, and candidate records
-            $wiseIds = ! empty($updatedWiseIds) ? $updatedWiseIds : DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
-            \App\Services\CandidateSkillSyncService::invalidateCandidateCaches((int) $jobApplication->id, $wiseIds, (int) $company_id);
+            try {
+                $wiseIds = ! empty($updatedWiseIds) ? $updatedWiseIds : DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
+                \App\Services\CandidateSkillSyncService::invalidateCandidateCaches((int) $jobApplication->id, $wiseIds, (int) $company_id);
+            } catch (\Throwable $e) {
+                \Log::warning('update(): invalidateCandidateCaches failed: '.$e->getMessage());
+            }
 
             try {
                 \App\Events\CandidateDrawerUpdated::dispatch(
@@ -8082,7 +8086,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'mstatus_id' => 'all',
                 ]);
             }
-            DB::commit();
 
             return Reply::successWithData(__('messages.createdSuccessfully'), [
                 'action' => 'redirect',
@@ -8092,10 +8095,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
 
         } catch (\Throwable $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             \Log::error('update() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
-            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed: '.$e->getMessage()]);
         }
 
     }
@@ -13354,17 +13359,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication = JobApplication::withoutGlobalScopes()->findOrFail($id);
         $resume = $resume ?: $jobApplication->resume;
 
-        if (!empty($resume) && str_starts_with($resume, 'http')) {
+        if (! empty($resume) && str_starts_with($resume, 'http')) {
             return redirect()->route('download.resume', ['id' => $id, 'path' => rtrim(strtr(base64_encode($resume), '+/', '-_'), '=')]);
         }
 
         $path = public_path().'/user-uploads/documents/'.$jobApplication->id.'/'.$resume;
-        if (!file_exists($path)) {
-            if (!empty($resume)) {
+        if (! file_exists($path)) {
+            if (! empty($resume)) {
                 return redirect()->route('download.resume', ['id' => $id, 'path' => rtrim(strtr(base64_encode($resume), '+/', '-_'), '=')]);
             }
             abort(404);
         }
+
         return response()->download($path);
     }
 
@@ -16929,25 +16935,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'id' => 101,
                 'title' => 'Strong Fit',
                 'category' => 'Candidate Fit & Experience',
-                'content' => "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role.",
+                'content' => 'Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role.',
             ],
             [
                 'id' => 104,
                 'title' => 'Similar Company / Product Experience',
                 'category' => 'Candidate Fit & Experience',
-                'content' => "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration.",
+                'content' => 'Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration.',
             ],
             [
                 'id' => 102,
                 'title' => '🟢 Immediate Joiner',
                 'category' => 'Availability & Notice Period',
-                'content' => "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change].",
+                'content' => 'Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change].',
             ],
             [
                 'id' => 103,
                 'title' => '🟢 Serving Notice Period',
                 'category' => 'Availability & Notice Period',
-                'content' => "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week.",
+                'content' => 'Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week.',
             ],
         ];
 
