@@ -27,6 +27,7 @@ use App\Http\Controllers\SuperAdmin\SuperadminController;
 use App\Http\Controllers\SuperAdmin\GlobalSettingController;
 use App\Http\Controllers\SuperAdmin\RecruiterNoteTemplateController;
 use App\Http\Controllers\SuperAdmin\BenchRmNoteTemplateController;
+use App\Http\Controllers\SuperAdmin\SuperAdminMarketplaceController;
 
 
 
@@ -172,12 +173,40 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('bench-candidates/{status?}', [SuperAdminCompanyController::class,'bernchNewCandidates'])->name('company.new-bench-candidates');
     Route::get('showdetails-bench-candidates', [SuperAdminCompanyController::class,'bernchDetailsCandidates'])->name('company.showdetails-bench-candidates');
 
-    Route::get('job-public-market/{status?}', [SuperAdminCompanyController::class,'jobPublicMarket'])->name('company.job-public-market');
-    Route::get('marketshow-job-details', [SuperAdminCompanyController::class,'marketshowJobDetails'])->name('company.marketshow-job-details');
-    Route::post('market-auto-approval', [SuperAdminCompanyController::class,'marketautoApproval'])->name('company.market-auto-approval');
-    Route::post('job-approval', [SuperAdminCompanyController::class,'jobApproval'])->name('company.job-approval');
-    Route::post('job_reject_mail/reject_mail/{id?}', [SuperAdminCompanyController::class,'job_reject_mail'])->name('company.job_reject_mail');
-    Route::post('reject_job/reject_mail_send', [SuperAdminCompanyController::class,'reject_mail_send_job'])->name('company.reject_mail_send_job');
+    // =========================================================================
+    // SUPER ADMIN MARKETPLACE OPERATIONS COMMAND CENTER (100% CQRS)
+    // =========================================================================
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('/', [SuperAdminMarketplaceController::class, 'index'])->name('index');
+        Route::get('dashboard', [SuperAdminMarketplaceController::class, 'index'])->name('dashboard');
+        Route::get('jobs', [SuperAdminMarketplaceController::class, 'index'])->name('jobs');
+        Route::get('moderation', [SuperAdminMarketplaceController::class, 'index'])->name('moderation');
+        Route::get('live', [SuperAdminMarketplaceController::class, 'index'])->name('live');
+        Route::get('quarantine', [SuperAdminMarketplaceController::class, 'index'])->name('quarantine');
+        Route::get('delisted', [SuperAdminMarketplaceController::class, 'index'])->name('delisted');
+        Route::get('claims', [SuperAdminMarketplaceController::class, 'index'])->name('claims');
+        Route::get('bench', [SuperAdminMarketplaceController::class, 'index'])->name('bench');
+        Route::get('audit', [SuperAdminMarketplaceController::class, 'index'])->name('audit');
+
+        // High-Performance AJAX Endpoints
+        Route::get('telemetry-ajax', [SuperAdminMarketplaceController::class, 'getTelemetryAjax'])->name('telemetry.ajax');
+        Route::get('jobs-grid-ajax', [SuperAdminMarketplaceController::class, 'getJobsGridAjax'])->name('grid.ajax');
+        Route::get('job-detail-ajax/{id}', [SuperAdminMarketplaceController::class, 'getJobDetailAjax'])->name('detail.ajax');
+
+        // State & Moderation Actions (ACID Writes + Outbox)
+        Route::post('approve', [SuperAdminMarketplaceController::class, 'approveJob'])->name('approve');
+        Route::post('reject', [SuperAdminMarketplaceController::class, 'rejectJob'])->name('reject');
+        Route::post('settings/auto-approval', [SuperAdminMarketplaceController::class, 'updateSettings'])->name('settings.auto-approval');
+        Route::post('outbox/replay', [SuperAdminMarketplaceController::class, 'replayOutboxEvent'])->name('outbox.replay');
+    });
+
+    // Backward-Compatibility Aliases (Legacy Endpoint Mapping)
+    Route::get('job-public-market/{status?}', [SuperAdminMarketplaceController::class, 'index'])->name('company.job-public-market');
+    Route::get('marketshow-job-details', [SuperAdminMarketplaceController::class, 'getJobDetailAjax'])->name('company.marketshow-job-details');
+    Route::post('market-auto-approval', [SuperAdminMarketplaceController::class, 'updateSettings'])->name('company.market-auto-approval');
+    Route::post('job-approval', [SuperAdminMarketplaceController::class, 'approveJob'])->name('company.job-approval');
+    Route::post('job_reject_mail/reject_mail/{id?}', [SuperAdminMarketplaceController::class, 'rejectJob'])->name('company.job_reject_mail');
+    Route::post('reject_job/reject_mail_send', [SuperAdminMarketplaceController::class, 'rejectJob'])->name('company.reject_mail_send_job');
 
 
 
