@@ -273,7 +273,31 @@ class CandidateSkillSyncService
             cache()->forget('candidate:'.$tid);
         }
 
-        // Invalidate tenant listing cache version keys
+        // Multi-tenant Redis/Dragonfly non-blocking wildcard pattern purge for drawer HTML
+        try {
+            if (config('cache.default') === 'redis') {
+                $redis = \Illuminate\Support\Facades\Redis::connection();
+                foreach ($targetIds as $tid) {
+                    $keys = $redis->keys("*tenant:{$companyId}:candidate_details:{$tid}:*");
+                    if (! empty($keys)) {
+                        $redis->del($keys);
+                    }
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        // Invalidate tenant-wide listing cache version keys so all users in the organization see fresh data
+        if ($companyId > 0) {
+            try {
+                cache()->increment('allcvtracker_version_company_'.$companyId);
+                cache()->increment('allapptracker_version_company_'.$companyId);
+                cache()->increment('allclientapp_version_company_'.$companyId);
+            } catch (\Throwable) {
+            }
+        }
+
+        // Invalidate user listing cache version keys
         if (auth()->check()) {
             $userId = auth()->id();
             $cachekeys = [
