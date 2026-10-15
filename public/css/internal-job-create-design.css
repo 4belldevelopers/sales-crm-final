@@ -2254,7 +2254,7 @@
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
     padding: 6px !important;
     z-index: 1060 !important;
-    display: flex !important;
+    display: none !important;
     flex-direction: column !important;
     gap: 2px !important;
     max-height: 330px !important;
@@ -2262,13 +2262,18 @@
     overscroll-behavior: contain !important;
     transform-origin: top center !important;
     opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
     transform: translateY(-4px) scale(0.98) !important;
     transition: opacity 0.15s cubic-bezier(0, 0, 0.2, 1), transform 0.15s cubic-bezier(0, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
 }
 
 #jrwrap.internal-job-create .ij-gender-menu.is-open {
+    display: flex !important;
     opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     transform: translateY(0) scale(1) !important;
 }
 
