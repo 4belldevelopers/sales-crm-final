@@ -26,11 +26,16 @@ use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
+use App\Enums\BenchSubmissionState;
+use App\Enums\ClaimCapacity;
+use App\Enums\MarketModState;
+use App\Enums\MarketPubState;
 use App\Services\AgencyCommercialTermsService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
+use App\Services\MarketplaceModerationService;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -11176,12 +11181,42 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function jobPublicMarket(Request $request)
     {
-        // dd($request->status);
+        $statusTab = $request->status ?? 'pending';
 
-        //    $this->newCandidates =  JobApplication::paginate(10);
+        // High-level KPI deck counts (covers multi-dimensional + legacy statuses)
+        $stats = [
+            'total' => DB::table('jobs')->where(function ($q) {
+                $q->where('jobs.public_market_status', '>', 0)
+                    ->orWhereIn('jobs.market_pub_state', ['published', 'pending_review'])
+                    ->orWhere('jobs.bench_submission', 'enabled');
+            })->count(),
+            'pending' => DB::table('jobs')->where(function ($q) {
+                $q->where('jobs.market_mod_state', 'pending')
+                    ->orWhere('jobs.public_market_status', 1);
+            })->where('jobs.status', 'active')->count(),
+            'approved' => DB::table('jobs')->where(function ($q) {
+                $q->whereIn('jobs.market_mod_state', ['approved', 'auto_approved'])
+                    ->orWhere('jobs.public_market_status', 2);
+            })->where('jobs.status', 'active')->count(),
+            'rejected' => DB::table('jobs')->where(function ($q) {
+                $q->where('jobs.market_mod_state', 'rejected')
+                    ->orWhere('jobs.public_market_status', 3);
+            })->count(),
+            'hold' => DB::table('jobs')->where(function ($q) {
+                $q->where('jobs.claim_capacity', 'limit_reached')
+                    ->orWhere('jobs.public_market_status', 4);
+            })->count(),
+            'bench_enabled' => DB::table('jobs')->where('jobs.bench_submission', 'enabled')->where('jobs.status', 'active')->count(),
+            'agency_requests' => DB::table('recommendation_relation')->count(),
+            'auto_approved' => (bool) DB::table('global_settings')->value('public_market_job_status'),
+        ];
 
-        $benchApplications = DB::table('jobs')
-            ->select(
+        // Base query - Left join clients so jobs without explicit client_id are NEVER dropped!
+        $query = DB::table('jobs')
+            ->join('companies', 'companies.id', '=', 'jobs.company_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+            ->select([
                 'jobs.id',
                 'jobs.title',
                 'jobs.total_positions',
@@ -11197,150 +11232,350 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'jobs.min_salary',
                 'jobs.max_salary',
                 'jobs.min_sal_mode',
-                'jobs.max_yearly',
-                'jobs.max_monthly',
-                'jobs.max_hourly',
-                'jobs.min_yearly',
-                'jobs.min_monthly',
-                'jobs.min_hourly',
                 'jobs.max_sal_mode',
-                'jobs.company_id as from_company_id',
                 'jobs.min_salary_currency',
                 'jobs.max_salary_currency',
-                'recommendation_relation.to_company_id',
+                'jobs.market_pub_state',
+                'jobs.market_mod_state',
+                'jobs.claim_capacity',
+                'jobs.bench_submission',
+                'jobs.commercial_state',
+                'jobs.public_market_status',
+                'jobs.job_description',
+                'jobs.job_requirement',
+                'jobs.company_id as from_company_id',
+                'companies.company_name',
+                'companies.logo as company_logo',
                 'clients.name as clients_name',
                 'clients.logo_logical_path',
-                'recommendation_relation.id as recommendation_relation_id',
-                'recommendation_relation.final_status',
-                'companies.logo',
-                'companies.company_name'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'clients.company_id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', 'jobs.id')
-            ->leftJoin('job_metronics_skills', 'job_metronics_skills.job_id', '=', 'jobs.id')
-            ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
-            ->leftJoin('rec_candidate_assign', 'rec_candidate_assign.source_jobid', '=', 'jobs.id')
-            ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('jobs.id', '>', '0');
+                DB::raw('COUNT(DISTINCT recommendation_relation.id) as agency_claims_count'),
+            ])
+            ->where('jobs.id', '>', 0);
 
-        $status = 1;
         $this->reject = true;
         $this->showAction = true;
-        if ($request->status == 'pending') {
-            $status = 1;
-            $this->status = 'All Pending Jobs';
-        } elseif ($request->status == 'approve') {
-            $status = 2;
-            $this->status = 'All Market Jobs';
-        } elseif ($request->status == 'reject') {
-            $status = 3;
-            $this->status = 'All Reject Jobs';
+
+        if ($statusTab === 'pending') {
+            $this->status = 'Pending Review Jobs';
+            $query->where('jobs.status', 'active')
+                ->where(function ($q) {
+                    $q->where('jobs.market_mod_state', 'pending')
+                        ->orWhere('jobs.public_market_status', 1);
+                });
+        } elseif ($statusTab === 'approve' || $statusTab === 'approved') {
+            $this->status = 'Live Approved Market Jobs';
+            $query->where('jobs.status', 'active')
+                ->where(function ($q) {
+                    $q->whereIn('jobs.market_mod_state', ['approved', 'auto_approved'])
+                        ->orWhere('jobs.public_market_status', 2);
+                });
+        } elseif ($statusTab === 'reject' || $statusTab === 'rejected') {
+            $this->status = 'Rejected Market Jobs';
             $this->reject = false;
-        } elseif ($request->status == 'hold') {
-            $status = 4;
+            $query->where(function ($q) {
+                $q->where('jobs.market_mod_state', 'rejected')
+                    ->orWhere('jobs.public_market_status', 3);
+            });
+        } elseif ($statusTab === 'hold' || $statusTab === 'limit') {
+            $this->status = 'Vendor Capacity Limit Jobs';
             $this->showAction = false;
-            $this->status = 'Limit Over';
+            $query->where(function ($q) {
+                $q->where('jobs.claim_capacity', 'limit_reached')
+                    ->orWhere('jobs.public_market_status', 4);
+            });
+        } elseif ($statusTab === 'bench') {
+            $this->status = 'Agency Bench Sharing Jobs';
+            $query->where('jobs.status', 'active')
+                ->where('jobs.bench_submission', 'enabled');
+        } elseif ($statusTab === 'all') {
+            $this->status = 'All Marketplace Jobs';
+            $query->where(function ($q) {
+                $q->where('jobs.public_market_status', '>', 0)
+                    ->orWhereIn('jobs.market_pub_state', ['published', 'pending_review'])
+                    ->orWhere('jobs.bench_submission', 'enabled');
+            });
+        } else {
+            $this->status = 'Marketplace Jobs';
+            $query->where('jobs.status', 'active')
+                ->where(function ($q) {
+                    $q->where('jobs.market_mod_state', 'pending')
+                        ->orWhere('jobs.public_market_status', 1);
+                });
         }
 
-        $benchApplications->where('jobs.public_market_status', '=', $status);
-        $benchApplications->where('jobs.status', '=', 'active');
-        // $benchApplications->where(function ($query) {
-        // 	$query->whereNull('recommendation_relation.to_company_id');
-        // });
-        // $categories->whereIn('recommendation_relation.final_status', [0, 3]);
-        $benchApplications->groupBy('jobs.id');
-        $benchApplications->orderBy('jobs.id', 'DESC');
-        // dd($benchApplications->get());
+        // Search filter
+        if ($request->filled('search')) {
+            $term = trim($request->search);
+            $query->where(function ($q) use ($term) {
+                $q->where('jobs.title', 'like', "%{$term}%")
+                    ->orWhere('jobs.id', $term)
+                    ->orWhere('companies.company_name', 'like', "%{$term}%")
+                    ->orWhere('clients.name', 'like', "%{$term}%");
+            });
+        }
 
-        $this->newJobs = $benchApplications->paginate(10);
-        //    dd($this->newJobs);
+        $query->groupBy('jobs.id');
+        $query->orderBy('jobs.id', 'DESC');
+
+        $paginatedJobs = $query->paginate(15)->appends($request->all());
+
+        // Run automated risk scoring evaluation on displayed page rows
+        $moderationService = app(MarketplaceModerationService::class);
+        foreach ($paginatedJobs as $row) {
+            $row->risk_eval = $moderationService->evaluateRisk([
+                'title' => $row->title,
+                'job_description' => $row->job_description ?? '',
+                'job_requirement' => $row->job_requirement ?? '',
+                'min_salary' => $row->min_salary ?? 0,
+                'max_salary' => $row->max_salary ?? 0,
+                'company_id' => $row->from_company_id,
+            ]);
+        }
+
+        $this->newJobs = $paginatedJobs;
+        $this->stats = $stats;
+        $this->currentTab = $statusTab;
+        $this->globalSetting = DB::table('global_settings')->select('id', 'public_market_job_status')->first();
 
         return view('super-admin.jobs.index', $this->data);
+    }
 
+    public function marketshowJobDetails(Request $request)
+    {
+        $jobId = $request->id ?? $request->job_id;
+        if (! $jobId) {
+            return response()->json(['status' => 'error', 'message' => 'Job ID is required.'], 400);
+        }
+
+        $job = DB::table('jobs')
+            ->join('companies', 'companies.id', '=', 'jobs.company_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('users', function ($join) {
+                $join->on('users.company_id', '=', 'companies.id')
+                    ->where('users.root_user', '=', 1);
+            })
+            ->where('jobs.id', $jobId)
+            ->select([
+                'jobs.*',
+                'companies.company_name',
+                'companies.logo as company_logo',
+                'companies.company_email',
+                'companies.company_phone',
+                'clients.name as clients_name',
+                'clients.logo_logical_path',
+                'users.name as recruiter_name',
+                'users.email as recruiter_email',
+            ])
+            ->first();
+
+        if (! $job) {
+            return response()->json(['status' => 'error', 'message' => 'Job record not found.'], 404);
+        }
+
+        // Skills
+        $skills = DB::table('job_metronics_skills')
+            ->leftJoin('skills', 'skills.id', '=', 'job_metronics_skills.skill_id')
+            ->where('job_metronics_skills.job_id', $jobId)
+            ->pluck('skills.name')
+            ->filter()
+            ->values()
+            ->all();
+
+        // Locations
+        $locations = DB::table('client_city_jobs')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+            ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+            ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+            ->where('client_city_jobs.job_id', $jobId)
+            ->select('city_list.city as city_name', 'state_list.state_name', 'countries.country_name')
+            ->get();
+
+        // Moderation risk evaluation
+        $moderationService = app(MarketplaceModerationService::class);
+        $riskEval = $moderationService->evaluateRisk([
+            'title' => $job->title,
+            'job_description' => $job->job_description ?? '',
+            'job_requirement' => $job->job_requirement ?? '',
+            'min_salary' => $job->min_salary ?? 0,
+            'max_salary' => $job->max_salary ?? 0,
+            'company_id' => $job->company_id,
+        ]);
+
+        // Audit logs
+        $auditLogs = DB::table('job_marketplace_moderation_logs')
+            ->leftJoin('users', 'users.id', '=', 'job_marketplace_moderation_logs.actor_id')
+            ->where('job_marketplace_moderation_logs.job_id', $jobId)
+            ->select([
+                'job_marketplace_moderation_logs.*',
+                'users.name as actor_name',
+            ])
+            ->orderBy('job_marketplace_moderation_logs.created_at', 'desc')
+            ->get();
+
+        // Agency Claims
+        $agencyClaims = DB::table('recommendation_relation')
+            ->join('companies as agency', 'agency.id', '=', 'recommendation_relation.to_company_id')
+            ->where('recommendation_relation.job_id', $jobId)
+            ->select([
+                'recommendation_relation.*',
+                'agency.company_name as agency_name',
+                'agency.logo as agency_logo',
+            ])
+            ->get();
+
+        $this->job = $job;
+        $this->skills = $skills;
+        $this->locations = $locations;
+        $this->riskEval = $riskEval;
+        $this->auditLogs = $auditLogs;
+        $this->agencyClaims = $agencyClaims;
+
+        $view = view('super-admin.jobs.showdetail', $this->data)->render();
+
+        return response()->json(['status' => 'success', 'view' => $view]);
     }
 
     public function marketautoApproval(Request $request)
     {
-
-        // dd($request->candidate_id);
         $public_market_job_status = DB::table('global_settings')->select('public_market_job_status')->where('id', '=', $request->id)->first();
         $superadminstatus = 1;
-        if ($public_market_job_status) {
-            if ($public_market_job_status->public_market_job_status) {
-                $superadminstatus = 0;
-            }
+        if ($public_market_job_status && $public_market_job_status->public_market_job_status) {
+            $superadminstatus = 0;
         }
         DB::table('global_settings')->where('id', $request->id)->update(['public_market_job_status' => $superadminstatus]);
 
-        $message = 'Changed setting auto approval.';
+        $statusText = $superadminstatus === 1 ? 'enabled' : 'disabled';
+        $message = "Marketplace auto-approval has been {$statusText}.";
 
-        $data = ['status' => 'success', 'message' => $message];
-
-        return response()->json($data);
-
+        return response()->json(['status' => 'success', 'message' => $message, 'auto_status' => $superadminstatus]);
     }
 
     public function jobApproval(Request $request)
     {
+        $datatype = $request->datatype ?? 'approve';
+        $jobIds = is_array($request->job_id) ? $request->job_id : [$request->job_id];
+        $jobIds = array_filter(array_map('intval', $jobIds));
 
-        // dd($request->candidate_id);
+        if (empty($jobIds)) {
+            return response()->json(['status' => 'error', 'message' => 'No jobs selected for action.'], 400);
+        }
 
-        if ($request->datatype == 'approve') {
-            if (count($request->job_id) > 0) {
-                DB::table('jobs')->whereIn('id', $request->job_id)->update(['public_market_status' => 2]);
+        if ($datatype === 'approve' || $datatype === 'approve_all' || $datatype === 'approve_bench') {
+            $isBenchOnly = ($datatype === 'approve_bench');
 
-                $basecompany = GeneralMethod::baseCompany();
-                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                $attachments = [];
-                $benchstatus = 'Live on Platform';
-                $cc = [];
-                for ($i = 0; $i < count($request->job_id); $i++) {
-                    $rowdata = DB::table('jobs')
-                        ->join('companies', 'companies.id', '=', 'jobs.company_id')
-                        ->join('users', 'users.company_id', '=', 'companies.id')
-                        ->where('users.root_user', '=', 1)
-                        ->select('jobs.*', 'companies.company_name', 'users.name as recipient_name', 'users.email as recipient_email ')->where('jobs.id', $request->job_id[$i])->first();
-                    // dd($rowdata);
-                    $checkMailPermision = GeneralMethod::mailPermission(28);
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(28, 1);
-                    if ($checkMailPermision) {
-                        $subject = str_replace(['[{JOB_TITLE}]', '[{STATUS}]'], ['', ''], $mailTypeSubject->subject);
-                        $template_description = $mailTypeSubject->body_description;
-                        $template_description = str_replace(['[{RECIPIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$rowdata->recipient_name, $rowdata->title, $rowdata->id], $template_description);
+            $updatePayload = [
+                'public_market_status' => 2,
+                'market_pub_state' => MarketPubState::PUBLISHED->value,
+                'market_mod_state' => MarketModState::APPROVED->value,
+                'claim_capacity' => $isBenchOnly ? ClaimCapacity::LIMIT_REACHED->value : ClaimCapacity::OPEN->value,
+                'bench_submission' => BenchSubmissionState::ENABLED->value,
+            ];
 
-                        $message = $template_description;
+            DB::table('jobs')->whereIn('id', $jobIds)->update($updatePayload);
 
-                        $notificationemail = GeneralMethod::notification($rowdata->company_id, 'Sales'); // Recuitment Sales
-                        $defailsEmail = DB::table('companies')->where('id', $rowdata->company_id)->first()->company_email;
-                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                        $datamail = [
-                            'message' => $message,
-                        ];
-                        $result = $this->mailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $datamail, $attachments, $fromAddress, $senderName, $cc);
-                        if ($result) {
-                            $jobidGet = $request->job_id[$i];
-                            DB::table('market_job_added_count')->where('job_id', '=', $jobidGet)->where('status', '=', 0)->update(['status' => 1]);
-                        }
-                        // dd($to_Mail_Id,$result);
+            $basecompany = GeneralMethod::baseCompany();
+            $senderName = $basecompany->companyName ?? '';
+            $fromAddress = $basecompany->companyEmail ?? '';
 
-                    }
+            foreach ($jobIds as $jobId) {
+                $rowdata = DB::table('jobs')
+                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                    ->leftJoin('users', function ($join) {
+                        $join->on('users.company_id', '=', 'companies.id')
+                            ->where('users.root_user', '=', 1);
+                    })
+                    ->select('jobs.*', 'companies.company_name', 'users.name as recipient_name', 'users.email as recipient_email')
+                    ->where('jobs.id', $jobId)
+                    ->first();
 
+                if (! $rowdata) {
+                    continue;
                 }
 
+                // Insert into immutable moderation audit logs
+                DB::table('job_marketplace_moderation_logs')->insert([
+                    'job_id' => $jobId,
+                    'company_id' => $rowdata->company_id,
+                    'actor_id' => Auth::id() ?? 1,
+                    'actor_type' => 'superadmin',
+                    'action' => 'manual_approve',
+                    'from_mod_state' => 'pending',
+                    'to_mod_state' => 'approved',
+                    'reason_code' => $isBenchOnly ? 'APPROVED_BENCH_ONLY' : 'APPROVED_OUTSOURCE_AND_BENCH',
+                    'rejection_notes' => $isBenchOnly ? 'Approved by Super Admin for Bench Talent Sharing only.' : 'Approved by Super Admin for full Outsource claims and Bench Talent proposals.',
+                    'risk_score' => 0.00,
+                    'created_at' => now(),
+                ]);
+
+                // Multi-Tenant Atomic Cache Invalidation
+                Cache::forget("company_jobs_{$rowdata->company_id}");
+                Cache::forget("job_details_{$jobId}");
+                Cache::forget("marketplace_public_jobs");
+
+                // Legacy mail permission & notification
+                $checkMailPermision = GeneralMethod::mailPermission(28);
+                $mailTypeSubject = GeneralMethod::mailTypeSubject(28, 1);
+                if ($checkMailPermision && $mailTypeSubject) {
+                    $subject = str_replace(['[{JOB_TITLE}]', '[{STATUS}]'], ['', ''], $mailTypeSubject->subject);
+                    $template_description = $mailTypeSubject->body_description;
+                    $template_description = str_replace(
+                        ['[{RECIPIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'],
+                        [$rowdata->recipient_name ?? 'Recruiter', $rowdata->title, $rowdata->id],
+                        $template_description
+                    );
+
+                    $notificationemail = GeneralMethod::notification($rowdata->company_id, 'Sales');
+                    $defaultEmail = DB::table('companies')->where('id', $rowdata->company_id)->value('company_email');
+                    $to_Mail_Id = $notificationemail->email ?? $defaultEmail ?? ($rowdata->recipient_email ?? '');
+
+                    if (! empty($to_Mail_Id)) {
+                        $datamail = ['message' => $template_description];
+                        $this->mailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $datamail, [], $fromAddress, $senderName, []);
+                    }
+                }
+
+                DB::table('market_job_added_count')->where('job_id', '=', $jobId)->where('status', '=', 0)->update(['status' => 1]);
             }
 
-            $message = 'Selected Jobs Approved.';
+            $message = $isBenchOnly
+                ? 'Selected job(s) approved for Bench Talent Sharing only.'
+                : 'Selected job(s) approved and published on Agency Marketplace.';
         } else {
-            // DB::table('job_applications')->whereIn('id',$request->candidate_id)->update(['superadminstatus'=>2]);
-            $message = 'Selected Jobs Rejected.';
+            // Reject directly
+            $rejectReason = $request->reason ?? $request->notes ?? 'Rejected by Super Admin moderation.';
+            DB::table('jobs')->whereIn('id', $jobIds)->update([
+                'public_market_status' => 3,
+                'market_mod_state' => MarketModState::REJECTED->value,
+                'market_pub_state' => MarketPubState::PRIVATE->value,
+            ]);
+
+            foreach ($jobIds as $jobId) {
+                $compJob = DB::table('jobs')->where('id', $jobId)->first();
+                if ($compJob) {
+                    DB::table('job_marketplace_moderation_logs')->insert([
+                        'job_id' => $jobId,
+                        'company_id' => $compJob->company_id,
+                        'actor_id' => Auth::id() ?? 1,
+                        'actor_type' => 'superadmin',
+                        'action' => 'reject',
+                        'from_mod_state' => $compJob->market_mod_state ?? 'pending',
+                        'to_mod_state' => 'rejected',
+                        'reason_code' => $request->reason_code ?? 'MANUAL_REJECTION',
+                        'rejection_notes' => $rejectReason,
+                        'risk_score' => 0.00,
+                        'created_at' => now(),
+                    ]);
+
+                    Cache::forget("company_jobs_{$compJob->company_id}");
+                    Cache::forget("job_details_{$jobId}");
+                    Cache::forget("marketplace_public_jobs");
+                }
+            }
+
+            $message = 'Selected job(s) rejected from marketplace.';
         }
-        // dd("jsj");
-        $data = ['status' => 'success', 'message' => $message];
 
-        return response()->json($data);
-
+        return response()->json(['status' => 'success', 'message' => $message]);
     }
 
     public function job_reject_mail(Request $request)
