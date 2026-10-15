@@ -186,12 +186,16 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   #kt_wizard > .row {margin: 14px 0 0 !important; padding: 0 !important;}
   #kt_wizard > .row > div {padding: 0 !important;}
   #kt_form > [data-wizard-type="step-content"] {
+    display: none;
     background: var(--client-surface);
     border: 1px solid var(--client-border);
     border-radius: 12px;
     padding: 20px !important;
     min-height: 330px;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+  #kt_form > [data-wizard-type="step-content"][data-wizard-state="current"] {
+    display: block !important;
   }
   #kt_form > [data-wizard-type="step-content"] > h3 {font-size: 14px !important; margin-bottom: 16px !important; color: var(--client-ink) !important;}
   #kt_form .form-control,
@@ -664,20 +668,24 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     .client-review-layout {grid-template-columns: 1fr;}
     .client-review-grid, .client-review-addresses, .client-services-grid {grid-template-columns: 1fr;}
   }
-  /* Strict Button Visibility: Update Client / Submit Client MUST ONLY show on Step 5 (Review & Submit) */
-  #submitBtn, .submitfrm, .updatefrm {
+  /* Button Visibility: Submit Client & Header Back button ONLY show on Step 5 */
+  #submitBtn, .submitfrm, .updatefrm, #client_top_back_btn {
     display: none !important;
   }
   body.on-review-step #submitBtn,
   body.on-review-step .submitfrm,
   body.on-review-step .updatefrm,
+  body.on-review-step #client_top_back_btn,
   [data-wizard-state="last"] #submitBtn,
   [data-wizard-state="last"] .submitfrm,
-  [data-wizard-state="last"] .updatefrm {
+  [data-wizard-state="last"] .updatefrm,
+  [data-wizard-state="last"] #client_top_back_btn {
     display: inline-flex !important;
   }
+  body.on-review-step #client_top_next_btn,
   body.on-review-step #continueButton,
   body.on-review-step [data-wizard-type="action-next"],
+  [data-wizard-state="last"] #client_top_next_btn,
   [data-wizard-state="last"] #continueButton,
   [data-wizard-state="last"] [data-wizard-type="action-next"] {
     display: none !important;
@@ -1137,6 +1145,423 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     font-size: 16px;
     flex-shrink: 0;
   }
+
+  /* =========================================================================
+     God-Level Enterprise Industry Combobox (Client-First / 10K Concurrency)
+     ========================================================================= */
+  .jero-ind-select-wrap {
+    position: relative;
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jero-ind-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .jero-ind-search-icon {
+    position: absolute;
+    left: 12px;
+    color: #94a3b8;
+    pointer-events: none;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+  }
+  .jero-ind-input {
+    width: 100%;
+    padding-left: 36px !important;
+    padding-right: 68px !important;
+    height: 40px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
+    font-family: inherit;
+    text-overflow: ellipsis;
+  }
+  .jero-ind-input:hover {
+    border-color: #94a3b8;
+  }
+  .jero-ind-input:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    outline: none;
+    background-color: #ffffff;
+  }
+  .jero-ind-input.is-invalid,
+  .jero-ind-input-box.has-validation-error .jero-ind-input,
+  .jero-ind-select-wrap.has-validation-error .jero-ind-input {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    animation: jeroShake 0.3s ease;
+  }
+  @keyframes jeroShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+  }
+  .jero-ind-input-box:focus-within .jero-ind-search-icon {
+    color: #2563eb;
+  }
+  .jero-ind-kbd {
+    position: absolute;
+    right: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    min-width: 20px;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    pointer-events: none;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    font-family: inherit;
+    z-index: 2;
+  }
+  .jero-ind-input-box:focus-within .jero-ind-kbd,
+  .jero-ind-input-box.has-value .jero-ind-kbd {
+    display: none !important;
+  }
+  .jero-ind-clear-btn {
+    position: absolute;
+    right: 36px;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #64748b;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+    z-index: 5;
+  }
+  .jero-ind-clear-btn:hover {
+    color: #ef4444;
+    background: #fee2e2;
+  }
+  .jero-ind-chevron {
+    position: absolute;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    color: #94a3b8;
+    pointer-events: auto;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
+    z-index: 4;
+  }
+  .jero-ind-chevron:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+  }
+  .jero-ind-select-wrap.is-open .jero-ind-chevron {
+    transform: rotate(180deg);
+    color: #2563eb;
+  }
+  .jero-ind-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: min(380px, calc(100vh - 120px));
+    animation: jeroDropdownFadeIn 0.15s ease-out;
+    box-sizing: border-box;
+  }
+  .jero-ind-dropdown.drop-up {
+    top: auto;
+    bottom: calc(100% + 5px);
+    box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08);
+  }
+  @keyframes jeroDropdownFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .jero-ind-tabs {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jero-ind-tabs::-webkit-scrollbar { display: none; }
+  .jero-ind-tab-btn {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    background: none;
+    border: none;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .jero-ind-tab-btn:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+  }
+  .jero-ind-tab-btn.active {
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  .jero-ind-tab-btn .tab-count {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .jero-ind-tab-btn.active .tab-count {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+  .jero-ind-recent-bar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jero-ind-recent-bar::-webkit-scrollbar { display: none; }
+  .jero-ind-recent-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    flex-shrink: 0;
+  }
+  .jero-ind-recent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #1e293b;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.12s ease;
+  }
+  .jero-ind-recent-chip:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+  .jero-ind-list-container {
+    flex: 1 1 auto;
+    min-height: 60px;
+    max-height: min(280px, 45vh);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    position: relative;
+    padding: 4px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    box-sizing: border-box;
+  }
+  .jero-ind-list-container::-webkit-scrollbar {
+    width: 7px;
+  }
+  .jero-ind-list-container::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+  }
+  .jero-ind-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .jero-ind-list-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .jero-ind-section-header {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #475569;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+  }
+  .jero-ind-sector-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .jero-ind-sector-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+  .jero-ind-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    margin: 1px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .jero-ind-item:hover,
+  .jero-ind-item.focused {
+    background: #f1f5f9;
+    border-left-color: #2563eb;
+  }
+  .jero-ind-item.selected {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+  }
+  .jero-ind-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .jero-ind-item-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+  }
+  .jero-ind-mark {
+    background: #fef08a !important;
+    color: #854d0e !important;
+    font-weight: 700 !important;
+    padding: 0 2px !important;
+    border-radius: 2px !important;
+  }
+  .jero-ind-item-sub {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.25;
+  }
+  .jero-ind-item-side {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .jero-ind-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+  .jero-ind-item-check {
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+  }
+  .jero-ind-empty-state {
+    padding: 20px 14px;
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+  }
+  .jero-ind-footer {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    font-size: 10px;
+    color: #64748b;
+  }
+  .jero-ind-sync-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #059669;
+    font-weight: 600;
+  }
+  .jero-ind-sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    animation: jeroPulseDot 2s infinite;
+  }
+  @keyframes jeroPulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+  .jero-ind-footer-hint {
+    color: #94a3b8;
+  }
 </style>
 @endpush
 @section('content')
@@ -1172,178 +1597,130 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      }
      
 ?>
-<!--begin::Toolbar-->
-<div class="toolbar" id="kt_toolbar">
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-    <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-      <div class="d-flex flex-column">
-        <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1"><a href="javascript:void(0);" class="text-gray-800 mb-1"><?php echo @$pagetitle; ?></a></h1>
-        <span class="text-dark-800 fw-bold" id="kt_subheader_total"><?php echo $page_event === 'EDIT' ? 'Update the client profile, contacts and business details.' : 'Create a new internal client profile to manage jobs, contacts and interactions.'; ?></span>
-      </div>
-    </div>
-    <div class="client-profile-completion" aria-live="polite">
-      <div class="client-completion-copy">
-        <span class="client-completion-label">Profile Completion</span>
-        <span class="client-completion-status"><i class="la la-check-circle" aria-hidden="true"></i> Details saved as you continue</span>
-      </div>
-      <div class="client-completion-ring" id="client_completion_ring" role="img" aria-label="Profile completion 0 percent">
-        <span id="client_completion_percent">0%</span>
-      </div>
-    </div>
-  </div>
-</div>
-<!--end::Toolbar-->
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4 pb-5" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-3 pb-5" id="kt_content">
   <!--begin::Entry-->
   <div class="d-flex flex-column-fluid">
     <!--begin::Container-->
     <div class="container-fluid px-3">
+
+      <!-- =========================================================================
+           TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR
+           Pixel-perfect match to user reference media_1792068852883.png:
+           Single warm-tinted yellow-bordered bar containing:
+           - Left: Circular back button + Title ("Add Internal Client") & Subtitle
+           - Center: 5-Step horizontal stepper (concentric active halo, gold dividers)
+           - Right: Contextual Next Page / Submit action button
+           ========================================================================= -->
+      <div class="card client-top-nav-card mb-4" style="background:#fffdf2; border:1.5px solid #ffd428; border-radius:12px; padding:12px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          
+          <!-- LEFT: Circular Back Arrow + Title Block -->
+          <div class="d-flex align-items-center gap-3">
+            <button type="button" class="btn client-header-back-btn client-nav-back" id="client_header_back_btn" aria-label="Go Back" style="width:42px; height:42px; border-radius:50%; border:1.5px solid #fde047; background:#ffffff; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; color:#0a1647; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.03); transition:all 0.15s ease;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+            </button>
+            <div>
+              <h2 class="client-header-title" id="client_header_title" style="font-size:18px; font-weight:800; color:#0a1647; margin:0 0 2px 0; line-height:1.2; letter-spacing:-0.2px;"><?php echo $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client'; ?></h2>
+              <p class="client-header-subtitle" id="client_header_subtitle" style="font-size:11.5px; color:#5b6b8b; margin:0; line-height:1.3; font-weight:500;">Create and configure a client profile for jobs, contacts and recruitment operations.</p>
+            </div>
+          </div>
+
+          <!-- CENTER: 5-Step Horizontal Stepper -->
+          <div class="client-stepper-wrap d-flex align-items-center gap-1" id="client_wizard_stepper">
+            
+            <!-- Step 1 -->
+            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="1">
+              <div class="client-step-circle client-step-circle-1" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; background:#ffd428; color:#0a1647; flex-shrink:0; box-shadow:0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428;">1</div>
+              <div class="client-step-text d-none d-xl-block">
+                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Client Information</div>
+                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Basic details</div>
+              </div>
+            </div>
+
+            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
+
+            <!-- Step 2 -->
+            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="2">
+              <div class="client-step-circle client-step-circle-2" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">2</div>
+              <div class="client-step-text d-none d-xl-block">
+                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Client Description</div>
+                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">About the client</div>
+              </div>
+            </div>
+
+            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
+
+            <!-- Step 3 -->
+            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="3">
+              <div class="client-step-circle client-step-circle-3" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">3</div>
+              <div class="client-step-text d-none d-xl-block">
+                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Address Details</div>
+                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Location & address</div>
+              </div>
+            </div>
+
+            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
+
+            <!-- Step 4 -->
+            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="4">
+              <div class="client-step-circle client-step-circle-4" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">4</div>
+              <div class="client-step-text d-none d-xl-block">
+                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Contact Person</div>
+                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Key contacts</div>
+              </div>
+            </div>
+
+            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
+
+            <!-- Step 5 -->
+            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="5">
+              <div class="client-step-circle client-step-circle-5" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">5</div>
+              <div class="client-step-text d-none d-xl-block">
+                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Review & Submit</div>
+                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Confirm & save</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT: Action Buttons (Matches media_1792068852883.png) -->
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <!-- Steps 1-4: Next Page Button -->
+            <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn" style="background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 22px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+              <span>Next Page</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a1647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+
+            <!-- Step 5: Back & Submit Client buttons -->
+            <button type="button" class="btn client-top-back-btn client-nav-back" id="client_top_back_btn" style="display:none !important; background:#ffffff !important; border:1px solid #cbd5e1 !important; color:#0a1647 !important; font-weight:600 !important; font-size:13.5px !important; padding:9px 20px !important; border-radius:8px !important; align-items:center; gap:8px; cursor:pointer;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              <span>Back</span>
+            </button>
+
+            <?php if ($page_event == 'EDIT'): ?>
+              <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important; background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 24px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; align-items:center; gap:8px; cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Update Client</span>
+              </button>
+            <?php else: ?>
+              <button type="button" class="btn client-top-submit-btn submitfrm" id="submitBtn" style="display:none !important; background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 24px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; align-items:center; gap:8px; cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Submit Client</span>
+              </button>
+            <?php endif; ?>
+          </div>
+
+        </div>
+      </div>
+
       <!--Card-->
-      <div class="card card-custom client-wizard-shell">
+      <div class="card card-custom client-wizard-shell" style="background:transparent; border:none; box-shadow:none;">
         <div class="card-body p-0">
           <!--begin::Wizard-->
           <div class="wizard wizard-1" id="kt_wizard" data-wizard-state="first" data-wizard-clickable="false">
-            <!--begin::Wizard Nav-->
-            <div class="wizard-nav border-bottom">
-              <div class="wizard-steps p-8 p-lg-10">
-                <!--begin::Client Information-->
-                <div class="wizard-step" data-wizard-type="step" data-wizard-state="current" data-wizard-process="1">
-                  <div class="wizard-label">
-                    <!-- <i class="wizard-icon flaticon-bus-stop"></i> --><!--begin::Svg Icon-->
-                    <span class="svg-icon svg-icon-4x wizard-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect x="0" y="0" width="24" height="24"/>
-                        <path d="M12.2674799,18.2323597 L12.0084872,5.45852451 C12.0004303,5.06114792 12.1504154,4.6768183 12.4255037,4.38993949 L15.0030167,1.70195304 L17.5910752,4.40093695 C17.8599071,4.6812911 18.0095067,5.05499603 18.0083938,5.44341307 L17.9718262,18.2062508 C17.9694575,19.0329966 17.2985816,19.701953 16.4718324,19.701953 L13.7671717,19.701953 C12.9505952,19.701953 12.2840328,19.0487684 12.2674799,18.2323597 Z" fill="#000000" fill-rule="nonzero" transform="translate(14.701953, 10.701953) rotate(-135.000000) translate(-14.701953, -10.701953) "/>
-                        <path d="M12.9,2 C13.4522847,2 13.9,2.44771525 13.9,3 C13.9,3.55228475 13.4522847,4 12.9,4 L6,4 C4.8954305,4 4,4.8954305 4,6 L4,18 C4,19.1045695 4.8954305,20 6,20 L18,20 C19.1045695,20 20,19.1045695 20,18 L20,13 C20,12.4477153 20.4477153,12 21,12 C21.5522847,12 22,12.4477153 22,13 L22,18 C22,20.209139 20.209139,22 18,22 L6,22 C3.790861,22 2,20.209139 2,18 L2,6 C2,3.790861 3.790861,2 6,2 L12.9,2 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                      </g>
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <h3 class="wizard-title">1. Client Information</h3>
-                  </div>
-                  <span class="svg-icon svg-icon-xl wizard-arrow">
-                  <!--begin::Svg Icon | path:/metronic/theme/html/demo1/dist/assets/media/svg/icons/Navigation/Arrow-right.svg-->
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                      <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-90.000000) translate(-12.000000, -12.000000)" x="11" y="5" width="2" height="14" rx="1"></rect>
-                      <path d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z" fill="#000000" fill-rule="nonzero" transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)"></path>
-                    </g>
-                  </svg>
-                  <!--end::Svg Icon-->
-                  </span> </div>
-                <!--end::Client Information-->
-                <!--begin::Client Description-->
-                <div class="wizard-step" data-wizard-type="step" data-wizard-state="pending" data-wizard-process="2">
-                  <div class="wizard-label">
-                    <!-- <i class="wizard-icon flaticon-list"></i> --><!--begin::Svg Icon-->
-                    <span class="svg-icon svg-icon-4x wizard-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect x="0" y="0" width="24" height="24" />
-                        <path d="M11,20 L11,17 C11,16.4477153 11.4477153,16 12,16 C12.5522847,16 13,16.4477153 13,17 L13,20 L15.5,20 C15.7761424,20 16,20.2238576 16,20.5 C16,20.7761424 15.7761424,21 15.5,21 L8.5,21 C8.22385763,21 8,20.7761424 8,20.5 C8,20.2238576 8.22385763,20 8.5,20 L11,20 Z" fill="#000000" opacity="0.3" />
-                        <path d="M3,5 L21,5 C21.5522847,5 22,5.44771525 22,6 L22,16 C22,16.5522847 21.5522847,17 21,17 L3,17 C2.44771525,17 2,16.5522847 2,16 L2,6 C2,5.44771525 2.44771525,5 3,5 Z M4.5,8 C4.22385763,8 4,8.22385763 4,8.5 C4,8.77614237 4.22385763,9 4.5,9 L13.5,9 C13.7761424,9 14,8.77614237 14,8.5 C14,8.22385763 13.7761424,8 13.5,8 L4.5,8 Z M4.5,10 C4.22385763,10 4,10.2238576 4,10.5 C4,10.7761424 4.22385763,11 4.5,11 L7.5,11 C7.77614237,11 8,10.7761424 8,10.5 C8,10.2238576 7.77614237,10 7.5,10 L4.5,10 Z" fill="#000000" />
-                      </g>
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <h3 class="wizard-title">2. Client Description</h3>
-                  </div>
-                  <span class="svg-icon svg-icon-xl wizard-arrow">
-                  <!--begin::Svg Icon | path:/metronic/theme/html/demo1/dist/assets/media/svg/icons/Navigation/Arrow-right.svg-->
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                      <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-90.000000) translate(-12.000000, -12.000000)" x="11" y="5" width="2" height="14" rx="1"></rect>
-                      <path d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z" fill="#000000" fill-rule="nonzero" transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)"></path>
-                    </g>
-                  </svg>
-                  <!--end::Svg Icon-->
-                  </span> </div>
-                <!--end::Client Description-->
-                <!--begin::Address Details-->
-                <div class="wizard-step" data-wizard-type="step" data-wizard-state="pending" data-wizard-process="3">
-                  <div class="wizard-label">
-                    <!-- <i class="wizard-icon flaticon-responsive"></i> -->
-                    <!--begin::Svg Icon | path:assets/media/svg/icons/Home/Globe.svg-->
-                    <span class="svg-icon svg-icon-4x wizard-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect x="0" y="0" width="24" height="24" />
-                        <path d="M13,18.9450712 L13,20 L14,20 C15.1045695,20 16,20.8954305 16,22 L8,22 C8,20.8954305 8.8954305,20 10,20 L11,20 L11,18.9448245 C9.02872877,18.7261967 7.20827378,17.866394 5.79372555,16.5182701 L4.73856106,17.6741866 C4.36621808,18.0820826 3.73370941,18.110904 3.32581341,17.7385611 C2.9179174,17.3662181 2.88909597,16.7337094 3.26143894,16.3258134 L5.04940685,14.367122 C5.46150313,13.9156769 6.17860937,13.9363085 6.56406875,14.4106998 C7.88623094,16.037907 9.86320756,17 12,17 C15.8659932,17 19,13.8659932 19,10 C19,7.73468744 17.9175842,5.65198725 16.1214335,4.34123851 C15.6753081,4.01567657 15.5775721,3.39010038 15.903134,2.94397499 C16.228696,2.49784959 16.8542722,2.4001136 17.3003976,2.72567554 C19.6071362,4.40902808 21,7.08906798 21,10 C21,14.6325537 17.4999505,18.4476269 13,18.9450712 Z" fill="#000000" fill-rule="nonzero" />
-                        <circle fill="#000000" opacity="0.3" cx="12" cy="10" r="6" />
-                      </g>
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <h3 class="wizard-title">3. Address Details</h3>
-                  </div>
-                  <span class="svg-icon svg-icon-xl wizard-arrow">
-                  <!--begin::Svg Icon | path:/metronic/theme/html/demo1/dist/assets/media/svg/icons/Navigation/Arrow-right.svg-->
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                      <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-90.000000) translate(-12.000000, -12.000000)" x="11" y="5" width="2" height="14" rx="1"></rect>
-                      <path d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z" fill="#000000" fill-rule="nonzero" transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)"></path>
-                    </g>
-                  </svg>
-                  <!--end::Svg Icon-->
-                  </span> </div>
-                <!--end::Address Details-->
-                <!--begin::Contact Person-->
-                <div class="wizard-step" data-wizard-type="step" data-wizard-state="pending" data-wizard-process="4">
-                  <div class="wizard-label">
-                    <!-- <i class="wizard-icon flaticon-truck"></i> --><!--begin::Svg Icon-->
-                    <span class="svg-icon svg-icon-4x wizard-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <polygon points="0 0 24 0 24 24 0 24"/>
-                        <path d="M18,14 C16.3431458,14 15,12.6568542 15,11 C15,9.34314575 16.3431458,8 18,8 C19.6568542,8 21,9.34314575 21,11 C21,12.6568542 19.6568542,14 18,14 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                        <path d="M17.6011961,15.0006174 C21.0077043,15.0378534 23.7891749,16.7601418 23.9984937,20.4 C24.0069246,20.5466056 23.9984937,21 23.4559499,21 L19.6,21 C19.6,18.7490654 18.8562935,16.6718327 17.6011961,15.0006174 Z M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z" fill="#000000" fill-rule="nonzero"/>
-                      </g>
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <h3 class="wizard-title">4. Contact Person</h3>
-                  </div>
-                  <span class="svg-icon svg-icon-xl wizard-arrow">
-                  <!--begin::Svg Icon | path:/metronic/theme/html/demo1/dist/assets/media/svg/icons/Navigation/Arrow-right.svg-->
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                      <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-90.000000) translate(-12.000000, -12.000000)" x="11" y="5" width="2" height="14" rx="1"></rect>
-                      <path d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z" fill="#000000" fill-rule="nonzero" transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)"></path>
-                    </g>
-                  </svg>
-                  <!--end::Svg Icon-->
-                  </span> </div>
-                <!--end::Contact Person-->
-                <!--begin::Review and Submit-->
-                <div class="wizard-step" data-wizard-type="step" data-wizard-state="pending" data-wizard-process="5">
-                  <div class="wizard-label">
-                    <!-- <i class="wizard-icon flaticon-globe"></i> -->
-                    <!--begin::Svg Icon | path:assets/media/svg/icons/General/Notification2.svg-->
-                    <span class="svg-icon svg-icon-4x wizard-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect x="0" y="0" width="24" height="24" />
-                        <path d="M13.2070325,4 C13.0721672,4.47683179 13,4.97998812 13,5.5 C13,8.53756612 15.4624339,11 18.5,11 C19.0200119,11 19.5231682,10.9278328 20,10.7929675 L20,17 C20,18.6568542 18.6568542,20 17,20 L7,20 C5.34314575,20 4,18.6568542 4,17 L4,7 C4,5.34314575 5.34314575,4 7,4 L13.2070325,4 Z" fill="#000000" />
-                        <circle fill="#000000" opacity="0.3" cx="18.5" cy="5.5" r="2.5" />
-                      </g>
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <h3 class="wizard-title">5. Review &amp; Submit</h3>
-                  </div>
-                </div>
-                <!--end::Review and Submit-->
-              </div>
-            </div>
-            <!--end::Wizard Nav-->
             <!--begin::Wizard Body-->
-            <div class="row justify-content-center my-10 px-8 my-lg-15 px-lg-10">
+            <div class="row justify-content-center px-0">
               <div class="col-xl-12 col-xxl-12">
                 <!--begin::Wizard Form-->
                 <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form">
@@ -1368,33 +1745,6 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
                   <!--begin::Review and Submit-->
                   @include('service_company.client.components.tab-review')
-                  <!--begin::Wizard Actions (Docked Sticky Footer Bar)-->
-                  <div class="client-wizard-sticky-footer d-flex align-items-center justify-content-end">
-                    <div class="client-action-right d-flex align-items-center gap-3">
-                      <a href="{{ route('service_company.clients.index') }}" class="btn btn-secondary client-nav-cancel">
-                        <i class="la la-times" style="margin-right: 4px;"></i> Cancel
-                      </a>
-                      <button type="button" class="btn btn-secondary client-nav-back" id="client_btn_back" style="display: none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; margin-right: 6px; display: inline-block; vertical-align: -2px;">
-                          <path d="M5 12h14"/><path d="m12 19-7-7 7-7"/>
-                        </svg>Back
-                      </button>
-<?php
-if ($page_event == 'EDIT') {
-    echo '<button type="button" id="submitBtn" class="btn btn-primary client-submit-btn updatefrm" data-wizard-type="action-submit1" style="display:none;"><i class="la la-paper-plane" style="margin-right: 6px;"></i> Update Client</button>';
-} else {
-    echo '<button type="button" id="submitBtn" class="btn btn-primary client-submit-btn submitfrm" data-wizard-type="action-submit1" style="display:none;"><i class="la la-paper-plane" style="margin-right: 6px;"></i> Submit Client</button>';
-}
-?>
-                      <button type="button" id="continueButton" class="btn btn-primary client-nav-next">
-                        Continue
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; margin-left: 6px; display: inline-block; vertical-align: -2px;">
-                          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <!--end::Wizard Actions-->
                 </form>
                 <!--end::Wizard Form-->
               </div>
@@ -1647,6 +1997,11 @@ if ($page_event == 'EDIT') {
      var $f = ($field instanceof jQuery) ? $field : $($field);
      if (!$f.length) return;
      $f.removeClass('is-invalid');
+     if ($f.attr('id') === 'industry' || $f.attr('id') === 'industry_display') {
+       $('#industry_display').removeClass('is-invalid');
+       $('#jero_ind_input_box').removeClass('has-validation-error');
+       $('#jero_ind_select_wrap').removeClass('has-validation-error');
+     }
      var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
      if ($container.length) {
        $container.find('.client-inline-error').remove();
@@ -1663,6 +2018,11 @@ if ($page_event == 'EDIT') {
      if (!$f.length) return;
      clearFieldError($f);
      $f.addClass('is-invalid');
+     if ($f.attr('id') === 'industry' || $f.attr('id') === 'industry_display') {
+       $('#industry_display').addClass('is-invalid');
+       $('#jero_ind_input_box').addClass('has-validation-error');
+       $('#jero_ind_select_wrap').addClass('has-validation-error');
+     }
      var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
      if ($container.length) {
        $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
@@ -2229,132 +2589,91 @@ if ($page_event == 'EDIT') {
         if (btn) {
             var elBtn = (typeof btn.jquery !== 'undefined' ? btn[0] : btn);
             if (elBtn && typeof elBtn.closest === 'function') {
-                var card = elBtn.closest('.client-address-card, .client-address-container-child, .is-additional, .ij-location-card');
+                var card = elBtn.closest('.client-branch-card, .client-address-card, .client-address-container-child, .is-additional, .ij-location-card');
                 if (card) card.remove();
             }
         }
-        if (window.clientWizardUi && typeof window.clientWizardUi.syncAdditionalAddressEmpty === 'function') {
-            window.clientWizardUi.syncAdditionalAddressEmpty();
-        } else if (typeof syncAdditionalAddressEmpty === 'function') {
-            syncAdditionalAddressEmpty();
-        }
+        $('#additional_addresses_container .client-branch-card, .client-address-container .client-branch-card').each(function(idx) {
+            $(this).find('.client-branch-title, .ij-location-title').text('Additional Address (' + (idx + 1) + ')');
+        });
+        var remaining = $('#additional_addresses_container .client-branch-card, .client-address-container .is-additional').length;
+        $('#client_additional_empty').toggle(remaining === 0);
     }
     window.removeAddressCard = removeAddressCard;
 
-    /* ===== BRANCH CITY AUTOCOMPLETE ENGINE (FOR ADDITIONAL ADDRESSES) ===== */
-    var branchCitySearchAbortCtrl = {};
+    /* ===== UNIFIED CLIENT ADDRESS & CITY SEARCH ENGINE (V5 ARCHITECTURE) ===== */
+    var cityAddressSearchAbortCtrl = {};
 
-    function renderBranchCuratedDropdown(cid) {
-        var dd = document.getElementById('branch_city_dropdown_' + cid);
-        if (!dd) return;
-        var currentVal = ($('#branch_city_search_' + cid).val() || '').toLowerCase().trim();
-        var html = '';
-        curatedLocationGroups.forEach(function(group) {
-            html += '<div class="ij-cd-group">';
-            html += '<div class="ij-cd-group-title">' + escapeHtml(group.region) + '</div>';
-            group.items.forEach(function(item) {
-                var isSelected = (currentVal && (item.city.toLowerCase() === currentVal || item.canonical.toLowerCase() === currentVal));
-                var itemClass = 'ij-cd-item' + (isSelected ? ' is-selected' : '');
-                var clickAttr = 'onclick="selectBranchCity(' + cid + ', \'' + escapeJsStr(item.canonical) + '\', \'' + escapeJsStr(item.city) + '\')"';
-                var statusBadge = isSelected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
-                var subText = item.state ? (item.state + ', ' + item.country) : item.country;
-                html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(item.canonical) + '">';
-                html += '  <div class="ij-cd-left">';
-                html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
-                html += '    <div class="ij-cd-text">';
-                html += '      <span class="ij-cd-name">' + escapeHtml(item.city) + '</span>';
-                html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
-                html += '    </div>';
-                html += '  </div>';
-                html += '  <div class="ij-cd-right">';
-                if (item.badge) {
-                    html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
-                }
-                html += statusBadge;
-                html += '  </div>';
-                html += '</div>';
-            });
-            html += '</div>';
-        });
-        dd.innerHTML = html;
-        dd.classList.add('active');
-    }
+    function selectCityForAddress(cid, canonical, label) {
+        var clean = String(canonical || '').trim();
+        var isHq = (cid === 0 || cid === '0' || cid === '');
+        var searchInput = document.getElementById(isHq ? 'city_search_0' : 'branch_city_search_' + cid);
+        var hiddenInput = document.getElementById(isHq ? 'kt_tagify_work_location_0' : 'kt_tagify_work_location_' + cid);
+        var dd = document.getElementById(isHq ? 'city_dropdown_0' : 'branch_city_dropdown_' + cid);
+        var err = document.getElementById(isHq ? 'city_err_0' : 'branch_city_err_' + cid);
 
-    function renderBranchSearchResults(cid, results, query) {
-        var dd = document.getElementById('branch_city_dropdown_' + cid);
-        if (!dd) return;
-        if (!results || results.length === 0) {
-            var safeQ = escapeHtml(query);
-            var safeJsQ = escapeJsStr(query);
-            dd.innerHTML = '<div class="ij-cd-empty">' +
-                '<div>No matching cities found for &ldquo;' + safeQ + '&rdquo;</div>' +
-                '<button type="button" class="ij-btn-custom-add" onclick="selectBranchCity(' + cid + ', \'' + safeJsQ + '\', \'' + safeJsQ + '\')">' +
-                '+ Set &ldquo;' + safeQ + '&rdquo; as branch city</button>' +
-                '</div>';
-            dd.classList.add('active');
-            return;
+        if (searchInput) {
+            searchInput.value = clean;
+            $(searchInput).removeClass('is-invalid');
         }
-        var html = '<div class="ij-cd-group">';
-        html += '<div class="ij-cd-group-title">Search Results (' + results.length + ')</div>';
-        results.forEach(function(item) {
-            var canonical = item.canonical || item.label || (item.city + (item.state ? ', ' + item.state : '') + (item.country ? ', ' + item.country : ''));
-            var clickAttr = 'onclick="selectBranchCity(' + cid + ', \'' + escapeJsStr(canonical) + '\', \'' + escapeJsStr(item.city) + '\')"';
-            var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
-            html += '<div class="ij-cd-item" ' + clickAttr + ' data-canonical="' + escapeHtml(canonical) + '">';
-            html += '  <div class="ij-cd-left">';
-            html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
-            html += '    <div class="ij-cd-text">';
-            html += '      <span class="ij-cd-name">' + highlightMatch(item.city, query) + '</span>';
-            html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
-            html += '    </div>';
-            html += '  </div>';
-            html += '  <div class="ij-cd-right">';
-            if (item.badge) {
-                html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
-            }
-            html += '  </div>';
-            html += '</div>';
-        });
-        html += '</div>';
-        dd.innerHTML = html;
-        dd.classList.add('active');
+        if (hiddenInput) {
+            var parts = clean.split(/[,|]/).map(function(s) { return s.trim(); });
+            var formattedValue = parts.join(' | ');
+            hiddenInput.value = JSON.stringify([{ value: formattedValue }]);
+        }
+        if (err) err.style.display = 'none';
+        if (dd) dd.classList.remove('active');
+        clearFieldError($(searchInput));
     }
 
-    function performBranchCitySearch(cid, query) {
-        var trimmed = (query || '').trim();
-        var spinner = document.getElementById('branch_city_spinner_' + cid);
-        var clearBtn = document.getElementById('branch_city_clear_' + cid);
-        if (clearBtn) clearBtn.style.display = trimmed ? 'inline-flex' : 'none';
+    function renderCityAddressDropdown(cid, query) {
+        var isHq = (cid === 0 || cid === '0' || cid === '');
+        var dd = document.getElementById(isHq ? 'city_dropdown_0' : 'branch_city_dropdown_' + cid);
+        if (!dd) return;
 
+        var trimmed = (query || '').trim();
         if (!trimmed) {
-            if (spinner) spinner.style.display = 'none';
-            renderBranchCuratedDropdown(cid);
+            var html = '';
+            curatedLocationGroups.forEach(function(group) {
+                group.items.forEach(function(item) {
+                    var subText = item.state ? (item.state + ', ' + item.country) : item.country;
+                    var safeCanon = escapeJsStr(item.canonical);
+                    var safeCity = escapeJsStr(item.city);
+                    html += '<div class="client-addr-dd-item" onclick="selectCityForAddress(\'' + cid + '\', \'' + safeCanon + '\', \'' + safeCity + '\')">' +
+                        '<div class="client-addr-dd-left">' +
+                        '  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                        '  <div>' +
+                        '    <div class="client-addr-dd-city">' + escapeHtml(item.city) + '</div>' +
+                        '    <div class="client-addr-dd-sub">' + escapeHtml(subText) + '</div>' +
+                        '  </div>' +
+                        '</div>' +
+                        (item.badge ? '<span class="client-addr-dd-badge">' + escapeHtml(item.badge) + '</span>' : '') +
+                        '</div>';
+                });
+            });
+            dd.innerHTML = html;
+            dd.classList.add('active');
             return;
         }
 
         var lookupQuery = trimmed.toLowerCase();
         var normalizedQ = citySynonymAliases[lookupQuery] || trimmed;
-
         var cacheKey = normalizedQ.toLowerCase().trim();
         var cached = getCachedCities(cacheKey);
         if (cached) {
-            if (spinner) spinner.style.display = 'none';
-            renderBranchSearchResults(cid, cached, trimmed);
+            renderCityAddressSearchResults(cid, cached, trimmed);
             return;
         }
 
-        if (branchCitySearchAbortCtrl[cid]) {
-            branchCitySearchAbortCtrl[cid].abort();
+        if (cityAddressSearchAbortCtrl[cid]) {
+            cityAddressSearchAbortCtrl[cid].abort();
         }
-        branchCitySearchAbortCtrl[cid] = new AbortController();
-
-        if (spinner) spinner.style.display = 'inline-block';
+        cityAddressSearchAbortCtrl[cid] = new AbortController();
 
         var targetUrl = "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(normalizedQ) + "&format=canonical&limit=25";
-
         fetch(targetUrl, {
             method: 'GET',
-            signal: branchCitySearchAbortCtrl[cid].signal,
+            signal: cityAddressSearchAbortCtrl[cid].signal,
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function(res) {
@@ -2362,14 +2681,12 @@ if ($page_event == 'EDIT') {
             return res.json();
         })
         .then(function(data) {
-            if (spinner) spinner.style.display = 'none';
             var parsed = parseRawCityData(data);
             setCachedCities(cacheKey, parsed);
-            renderBranchSearchResults(cid, parsed, trimmed);
+            renderCityAddressSearchResults(cid, parsed, trimmed);
         })
         .catch(function(err) {
             if (err.name === 'AbortError') return;
-            if (spinner) spinner.style.display = 'none';
             var filtered = [];
             curatedLocationGroups.forEach(function(g) {
                 g.items.forEach(function(item) {
@@ -2379,51 +2696,88 @@ if ($page_event == 'EDIT') {
                     }
                 });
             });
-            renderBranchSearchResults(cid, filtered, trimmed);
+            renderCityAddressSearchResults(cid, filtered, trimmed);
         });
     }
 
-    var debounceBranchCitySearch = debounce(function(cid, val) {
-        performBranchCitySearch(cid, val);
+    function renderCityAddressSearchResults(cid, results, query) {
+        var isHq = (cid === 0 || cid === '0' || cid === '');
+        var dd = document.getElementById(isHq ? 'city_dropdown_0' : 'branch_city_dropdown_' + cid);
+        if (!dd) return;
+
+        if (!results || results.length === 0) {
+            var safeQ = escapeHtml(query);
+            var safeJsQ = escapeJsStr(query);
+            dd.innerHTML = '<div class="client-addr-dd-empty">' +
+                '<div>No matching cities found for &ldquo;' + safeQ + '&rdquo;</div>' +
+                '<button type="button" class="btn btn-sm btn-light-primary mt-2" onclick="selectCityForAddress(\'' + cid + '\', \'' + safeJsQ + '\', \'' + safeJsQ + '\')">' +
+                '+ Set &ldquo;' + safeQ + '&rdquo; as city</button>' +
+                '</div>';
+            dd.classList.add('active');
+            return;
+        }
+
+        var html = '';
+        results.forEach(function(item) {
+            var canonical = item.canonical || item.label || (item.city + (item.state ? ', ' + item.state : '') + (item.country ? ', ' + item.country : ''));
+            var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
+            var safeCanon = escapeJsStr(canonical);
+            var safeCity = escapeJsStr(item.city);
+            html += '<div class="client-addr-dd-item" onclick="selectCityForAddress(\'' + cid + '\', \'' + safeCanon + '\', \'' + safeCity + '\')">' +
+                '<div class="client-addr-dd-left">' +
+                '  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '  <div>' +
+                '    <div class="client-addr-dd-city">' + highlightMatch(item.city, query) + '</div>' +
+                '    <div class="client-addr-dd-sub">' + escapeHtml(subText) + '</div>' +
+                '  </div>' +
+                '</div>' +
+                (item.badge ? '<span class="client-addr-dd-badge">' + escapeHtml(item.badge) + '</span>' : '') +
+                '</div>';
+        });
+        dd.innerHTML = html;
+        dd.classList.add('active');
+    }
+
+    var debounceCityAddressSearch = debounce(function(cid, val) {
+        renderCityAddressDropdown(cid, val);
     }, 180);
 
-    function selectBranchCity(cid, canonical, label) {
-        var clean = String(canonical || '').trim();
-        var searchInput = document.getElementById('branch_city_search_' + cid);
-        var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
-        var clearBtn = document.getElementById('branch_city_clear_' + cid);
-        var dd = document.getElementById('branch_city_dropdown_' + cid);
-
-        if (searchInput) searchInput.value = clean;
-        if (hiddenInput) {
-            var parts = clean.split(/[,|]/).map(function(s) { return s.trim(); });
-            var formattedValue = parts.join(' | ');
-            hiddenInput.value = JSON.stringify([{ value: formattedValue }]);
+    function toggleSuggestionDetails(type) {
+        var drawer = document.getElementById('drawer_' + type);
+        var chevron = document.getElementById('chevron_' + type);
+        if (!drawer) return;
+        var isHidden = (drawer.style.display === 'none' || !drawer.style.display);
+        drawer.style.display = isHidden ? 'block' : 'none';
+        if (chevron) {
+            if (isHidden) chevron.classList.add('is-open');
+            else chevron.classList.remove('is-open');
         }
-        if (clearBtn) clearBtn.style.display = clean ? 'inline-flex' : 'none';
-        if (dd) dd.classList.remove('active');
-        clearFieldError($('#branch_city_search_' + cid));
     }
 
-    function clearBranchCity(cid) {
-        var searchInput = document.getElementById('branch_city_search_' + cid);
-        var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
-        var clearBtn = document.getElementById('branch_city_clear_' + cid);
-        var dd = document.getElementById('branch_city_dropdown_' + cid);
-
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.focus();
+    function applySuggestionDirect(cityName) {
+        var hqCity = ($('#city_search_0').val() || '').trim();
+        if (!hqCity) {
+            selectCityForAddress(0, cityName, cityName.split(',')[0]);
+            $('#city_search_0').focus();
+        } else {
+            $('#btn_add_another_address, .add_address').first().click();
+            var $lastBranch = $('#additional_addresses_container .client-branch-card').last();
+            var cid = $lastBranch.data('cid');
+            if (cid) {
+                selectCityForAddress(cid, cityName, cityName.split(',')[0]);
+                $lastBranch.find('textarea[name="address[]"]').focus();
+            }
         }
-        if (hiddenInput) hiddenInput.value = '';
-        if (clearBtn) clearBtn.style.display = 'none';
-        renderBranchCuratedDropdown(cid);
     }
 
-    window.selectBranchCity = selectBranchCity;
-    window.clearBranchCity = clearBranchCity;
-    window.performBranchCitySearch = performBranchCitySearch;
-    window.renderBranchCuratedDropdown = renderBranchCuratedDropdown;
+    window.selectCityForAddress = selectCityForAddress;
+    window.selectBranchCity = selectCityForAddress;
+    window.renderCityAddressDropdown = renderCityAddressDropdown;
+    window.renderBranchCuratedDropdown = function(cid) { renderCityAddressDropdown(cid, ''); };
+    window.performBranchCitySearch = function(cid, q) { renderCityAddressDropdown(cid, q); };
+    window.toggleSuggestionDetails = toggleSuggestionDetails;
+    window.applySuggestionDirect = applySuggestionDirect;
+    window.clearBranchCity = function(cid) { selectCityForAddress(cid, '', ''); };
    	
 	function isNumberKey(evt)
    		{
@@ -2437,8 +2791,6 @@ if ($page_event == 'EDIT') {
      	$('[data-toggle="tooltip"]').tooltip()
    })
    
-   $.noConflict();
-   
    var loadFile 	=	function(event) {
    		var output 		=	URL.createObjectURL(event.target.files[0]);
    		$('.image-input-wrapper').css('background-image', 'url(' + output + ')');
@@ -2451,17 +2803,35 @@ if ($page_event == 'EDIT') {
     
    $( document ).ready(function() { 
        
-       /* Delegated Chip Removal and Address Removal Listeners */
-       $(document).on('click', '.ij-chip-del, .js-remove-city', function (e) {
-           e.preventDefault();
-           e.stopPropagation();
-           var city = $(this).attr('data-city') || $(this).data('city');
-           if (city && typeof removeCity === 'function') {
-               removeCity(city, true);
-           }
+       /* Delegated Address and City Search Listeners (V5 Architecture) */
+       $(document).on('focus', '.client-addr-city-search, .branch-city-search', function () {
+           var cid = $(this).attr('data-cid') || $(this).data('cid') || '0';
+           var val = $(this).val();
+           renderCityAddressDropdown(cid, val);
        });
 
-       $(document).on('click', '.remove_address_single, .client-remove-address-btn', function (e) {
+       $(document).on('input', '.client-addr-city-search, .branch-city-search', function () {
+           var cid = $(this).attr('data-cid') || $(this).data('cid') || '0';
+           var val = $(this).val();
+           var isHq = (cid === 0 || cid === '0' || cid === '');
+           var hiddenInput = document.getElementById(isHq ? 'kt_tagify_work_location_0' : 'kt_tagify_work_location_' + cid);
+           var errEl = document.getElementById(isHq ? 'city_err_0' : 'branch_city_err_' + cid);
+
+           $(this).removeClass('is-invalid');
+           if (errEl) errEl.style.display = 'none';
+
+           if (hiddenInput) {
+               if (val.trim()) {
+                   var parts = val.split(/[,|]/).map(function(s) { return s.trim(); });
+                   hiddenInput.value = JSON.stringify([{ value: parts.join(' | ') }]);
+               } else {
+                   hiddenInput.value = '';
+               }
+           }
+           debounceCityAddressSearch(cid, val);
+       });
+
+       $(document).on('click', '.remove_address_single, .client-remove-address-btn, .client-branch-remove-btn', function (e) {
            e.preventDefault();
            e.stopPropagation();
            var target = $(this).attr('data-target') || $(this).data('target');
@@ -2470,39 +2840,21 @@ if ($page_event == 'EDIT') {
            }
        });
 
-       /* Delegated Branch City Listeners (For dynamic additional addresses) */
-       $(document).on('focus', '.branch-city-search', function () {
-           var cid = $(this).data('cid');
-           var val = $(this).val();
-           if (!val || !val.trim()) {
-               renderBranchCuratedDropdown(cid);
-           } else {
-               performBranchCitySearch(cid, val);
-           }
-       });
+       $(document).on('input', 'textarea[name="address[]"], .client-addr-textarea, .client-address-textarea', function () {
+           var id = $(this).attr('id') || '';
+           var cid = id.replace('address_', '');
+           var val = $(this).val() || '';
+           var countEl = document.getElementById('address_char_count_' + cid);
+           if (countEl) countEl.textContent = val.length;
 
-       $(document).on('input', '.branch-city-search', function () {
-           var cid = $(this).data('cid');
-           var val = $(this).val();
-           var clearBtn = document.getElementById('branch_city_clear_' + cid);
-           if (clearBtn) clearBtn.style.display = val.trim() ? 'inline-flex' : 'none';
-           var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
-           if (hiddenInput) {
-               var parts = val.split(/[,|]/).map(function(s) { return s.trim(); });
-               hiddenInput.value = val.trim() ? JSON.stringify([{ value: parts.join(' | ') }]) : '';
-           }
-           debounceBranchCitySearch(cid, val);
-       });
-
-       $(document).on('click', '.branch-city-clear', function (e) {
-           e.stopPropagation();
-           var cid = $(this).data('cid');
-           clearBranchCity(cid);
+           $(this).removeClass('is-invalid');
+           var errEl = document.getElementById(cid === '0' || cid === 0 ? 'address_err_0' : 'branch_address_err_' + cid);
+           if (errEl) errEl.style.display = 'none';
        });
 
        $(document).on('click', function (e) {
-           if (!$(e.target).closest('.ij-location-input-wrap').length) {
-               $('.branch-city-dropdown').removeClass('active');
+           if (!$(e.target).closest('.client-addr-input-wrap, .ij-location-input-wrap').length) {
+               $('.client-addr-city-dropdown, .branch-city-dropdown').removeClass('active');
            }
        }); 
        
@@ -2577,71 +2929,111 @@ if ($page_event == 'EDIT') {
     }
     window.getAvatarColor = getAvatarColor;
 
-    $('.add_address').click(function () {
+    $(document).on('click', '#btn_add_another_address, .add_address', function () {
         var addressId = parseInt($('#addressId').val(), 10) || 0;
         addressId++;
         $('#addressId').val(addressId);
 
         var cid = addressId;
-        var additionalIndex = $('.client-address-container .client-address-card.is-additional').length + 1;
+        var branchNumber = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-card.is-additional').length + 1;
 
-        // Instant Browser-Execution in User RAM (< 1ms, 0 server network roundtrip)
-        // Uniform Design: Matches Default Address Details Card (Yellow Gradient Banner, Yellow Pin Badge, Magnifying Glass City Search, Textarea with Counter)
-        var cardHtml = '<div class="card ij-location-card client-address-card is-additional client-address-container-child mt-3" id="clientAddr_' + cid + '">' +
-            '<div class="card-body p-0">' +
-            '<div class="ij-location-card-head">' +
-            '<div class="ij-location-head-left">' +
-            '<span class="ij-location-head-badge">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>' +
-            '<circle cx="12" cy="10" r="3"/>' +
-            '</svg>' +
-            '</span>' +
-            '<div>' +
-            '<h4 class="ij-location-title">Additional Address (' + additionalIndex + ')</h4>' +
-            '<p class="ij-location-subtitle">Branch or regional office location and street address</p>' +
+        var cardHtml = '<div class="client-branch-card" id="clientAddr_' + cid + '" data-cid="' + cid + '">' +
+            '<div class="client-branch-head">' +
+            '  <div class="client-addr-head-left">' +
+            '    <span class="client-addr-icon-badge">' +
+            '      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+            '        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>' +
+            '        <circle cx="12" cy="10" r="3"/>' +
+            '      </svg>' +
+            '    </span>' +
+            '    <div>' +
+            '      <h4 class="client-branch-title">Additional Address (' + branchNumber + ')</h4>' +
+            '      <p class="client-addr-subtitle">Branch or regional office location and street address</p>' +
+            '    </div>' +
+            '  </div>' +
+            '  <button type="button" class="client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')">' +
+            '    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">' +
+            '      <polyline points="3 6 5 6 21 6"></polyline>' +
+            '      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
+            '    </svg>' +
+            '    Remove' +
+            '  </button>' +
             '</div>' +
-            '</div>' +
-            '<button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_' + cid + '" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')">' +
-            '<i class="la la-trash"></i> Remove' +
-            '</button>' +
-            '</div>' +
-            '<div class="ij-location-card-body">' +
-            '<div class="client-field fv-plugins-icon-container mb-3">' +
-            '<label class="form-label required" for="branch_city_search_' + cid + '">Branch City</label>' +
-            '<div class="input-wrapper ij-location-input-wrap">' +
-            '<div class="input-with-icon">' +
-            '<svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-            '<circle cx="11" cy="11" r="8"/>' +
-            '<path d="m21 21-4.3-4.3"/>' +
-            '</svg>' +
-            '<input type="text" class="form-input ij-location-search-input branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="" placeholder="Search branch city (e.g. Mumbai, Pune, London)..." autocomplete="off" spellcheck="false">' +
-            '</div>' +
-            '<span class="ij-search-spinner" id="branch_city_spinner_' + cid + '" style="display:none;" title="Searching..."></span>' +
-            '<button type="button" class="ij-search-clear branch-city-clear" id="branch_city_clear_' + cid + '" style="display:none;" data-cid="' + cid + '" title="Clear city">&times;</button>' +
-            '<div class="search-dropdown ij-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
-            '<input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value="">' +
-            '</div>' +
-            '<span class="form-text text-muted">Select or search for the city where this branch office is located.</span>' +
-            '</div>' +
-            '<div class="client-field fv-plugins-icon-container">' +
-            '<label class="form-label required" for="address_' + cid + '">Full Address Details</label>' +
-            '<textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="3" maxlength="500" placeholder="Building, street, suite/floor, area, landmark, pincode, etc." id="address_' + cid + '"></textarea>' +
-            '<div class="d-flex justify-content-between mt-1">' +
-            '<span class="form-text text-muted">Provide the complete and accurate branch office address.</span>' +
-            '<span class="client-char-count"><span class="client-address-count" id="address_char_count_' + cid + '">0</span>/500</span>' +
-            '</div>' +
-            '</div>' +
-            '</div>' +
+            '<div class="client-branch-body">' +
+            '  <div class="client-addr-field">' +
+            '    <label class="client-addr-label" for="branch_city_search_' + cid + '">City <span class="client-addr-required">*</span></label>' +
+            '    <div class="client-addr-input-wrap">' +
+            '      <svg class="client-addr-icon-left" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">' +
+            '        <circle cx="11" cy="11" r="8"/>' +
+            '        <path d="m21 21-4.3-4.3"/>' +
+            '      </svg>' +
+            '      <input type="text" class="client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="" placeholder="Search branch city..." autocomplete="off" spellcheck="false">' +
+            '      <svg class="client-addr-icon-right" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">' +
+            '        <polyline points="6 9 12 15 18 9"></polyline>' +
+            '      </svg>' +
+            '      <div class="client-addr-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
+            '      <input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value="">' +
+            '    </div>' +
+            '    <div class="client-addr-error" id="branch_city_err_' + cid + '" style="display:none;">' +
+            '      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
+            '      <span>City selection is required for Additional Address (' + branchNumber + ').</span>' +
+            '    </div>' +
+            '  </div>' +
+            '  <div class="client-addr-field mt-3">' +
+            '    <label class="client-addr-label" for="address_' + cid + '">Full Address <span class="client-addr-required">*</span></label>' +
+            '    <div class="client-addr-textarea-wrap">' +
+            '      <svg class="client-addr-textarea-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">' +
+            '        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>' +
+            '        <path d="M9 22v-4h6v4"/>' +
+            '        <path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/>' +
+            '      </svg>' +
+            '      <textarea class="client-addr-textarea" name="address[]" id="address_' + cid + '" rows="3" maxlength="500" placeholder="Building name, street, area, landmark, pincode, etc."></textarea>' +
+            '    </div>' +
+            '    <div class="client-addr-textarea-footer">' +
+            '      <span class="client-addr-help-text">Provide the complete and accurate branch office address.</span>' +
+            '      <span class="client-addr-counter"><span id="address_char_count_' + cid + '">0</span>/500</span>' +
+            '    </div>' +
+            '    <div class="client-addr-error" id="branch_address_err_' + cid + '" style="display:none;">' +
+            '      <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
+            '      <span>Full Address is required for Additional Address (' + branchNumber + ').</span>' +
+            '    </div>' +
+            '  </div>' +
             '</div>' +
             '</div>';
 
         $('#additional_addresses_container').append(cardHtml);
+        $('#client_additional_empty').hide();
 
-        if (window.clientWizardUi) {
-            window.clientWizardUi.syncAdditionalAddressEmpty();
+        if (window.clientWizardUi && typeof window.clientWizardUi.bindAddressCounters === 'function') {
             window.clientWizardUi.bindAddressCounters(document.getElementById('clientAddr_' + cid));
+        } else if (typeof bindAddressCounters === 'function') {
+            bindAddressCounters(document.getElementById('clientAddr_' + cid));
         }
+    });
+
+    $(document).on('click', '#btn_apply_ai_address_suggestion', function () {
+        var suggestedCity = ($('#ai_suggested_location').text() || 'Pune, Maharashtra, India').trim();
+        selectCityForAddress(0, suggestedCity, 'Pune');
+        var $input = $('#city_search_0');
+        $input.focus();
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: '✨ AI Suggestion applied to Headquarters: ' + suggestedCity
+            });
+        }
+    });
+
+    $(document).on('input', '#client_id', function() {
+        var name = $(this).val().trim();
+        $('#ai_suggested_company_name').text(name || 'Jeroworks');
     });
 $('.remove_address').click(function(){
           let container = $('.client-address-container');
@@ -2815,10 +3207,7 @@ $('.remove_address').click(function(){
                								name: {
                    										required: true
                										},
-               								website: {
-   														required: true,
-   														minlength: 5
-   													 }
+               								website: { required: false }
            							}
        					});
    
@@ -3172,9 +3561,14 @@ $('.remove_address').click(function(){
   }
 
   function bindAddressCounters(scope) {
-    $(scope || document).find('.client-address-textarea').each(function () {
+    $(scope || document).find('.client-addr-textarea, .client-address-textarea').each(function () {
       var $textarea = $(this);
-      var $counter = $textarea.closest('.client-field, .client-address-card').find('.client-address-count');
+      var id = $textarea.attr('id') || '';
+      var cid = id.replace('address_', '');
+      var $counter = $('#address_char_count_' + cid);
+      if (!$counter.length) {
+        $counter = $textarea.closest('.client-addr-card, .client-branch-card, .client-field').find('.client-addr-counter span, .client-address-count');
+      }
       var sync = function () {
         $counter.text(($textarea.val() || '').length);
       };
@@ -3184,10 +3578,10 @@ $('.remove_address').click(function(){
   }
 
   function syncAdditionalAddressEmpty() {
-    var $cards = $('.client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
+    var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
     $('#client_additional_empty').toggle($cards.length === 0);
     $cards.each(function(idx) {
-      $(this).find('.ij-location-title').text('Additional Address (' + (idx + 1) + ')');
+      $(this).find('.client-branch-title, .ij-location-title').text('Additional Address (' + (idx + 1) + ')');
     });
   }
 
@@ -3216,27 +3610,84 @@ $('.remove_address').click(function(){
   function renderContactTable() {
     var rows = getContactRowsData();
     var $tbody = $('#client_contact_table_body');
-    $tbody.empty();
+    $tbody.find('tr:not(#client_contact_empty_row)').remove();
+
+    var $emptyRow = $('#client_contact_empty_row');
+    var $minWarning = $('#client_contact_min_warning');
+    var $emptySidebar = $('#client_contact_empty_sidebar');
+    var $popSidebar = $('#client_contact_populated_sidebar');
+
     if (!rows.length) {
-      $tbody.append('<tr id="client_contact_empty_row"><td colspan="6" class="text-center text-muted py-6">No contact person added yet. Click "Add Contact Person" to begin.</td></tr>');
+      if ($emptyRow.length) {
+        $emptyRow.show();
+      } else {
+        $tbody.append(
+          '<tr id="client_contact_empty_row">' +
+            '<td colspan="6" class="text-center py-10" style="background:#ffffff; border:none;">' +
+              '<div style="width:64px; height:64px; border-radius:50%; background:#f1f5f9; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">' +
+                '<i class="la la-users" style="font-size:28px; color:#64748b;"></i>' +
+              '</div>' +
+              '<h5 style="font-size:15px; font-weight:700; color:#1e293b; margin-bottom:4px;">No contact person added yet.</h5>' +
+              '<p style="font-size:12.5px; color:#64748b; margin-bottom:16px;">Click "Add Contact Person" to begin adding key contacts for this client.</p>' +
+              '<button type="button" class="btn btn-warning" onclick="window.openContactDrawer ? window.openContactDrawer(null) : false;" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; display:inline-flex; align-items:center; gap:6px;">' +
+                '<i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person' +
+              '</button>' +
+            '</td>' +
+          '</tr>'
+        );
+      }
+      $minWarning.show();
+      $emptySidebar.show();
+      $popSidebar.hide();
       return;
     }
+
+    if ($emptyRow.length) {
+      $emptyRow.hide();
+    }
+    $minWarning.hide();
+    $emptySidebar.hide();
+    $popSidebar.show();
+
+    var avatarPalettes = [
+      { bg: '#dbeafe', text: '#1e40af' },
+      { bg: '#f3e8ff', text: '#7e22ce' },
+      { bg: '#dcfce7', text: '#166534' },
+      { bg: '#fef3c7', text: '#b45309' },
+      { bg: '#fee2e2', text: '#b91c1c' }
+    ];
+
     rows.forEach(function (row, i) {
       var typeBadge = i === 0
-        ? '<span class="client-badge-primary">Primary</span>'
-        : '<span class="client-badge-secondary">Secondary</span>';
-      var primaryTag = i === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
+        ? '<span class="badge" style="background:#dcfce7; color:#166534; font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:6px;">Primary</span>'
+        : '<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:6px;">Secondary</span>';
+      
+      var pal = avatarPalettes[i % avatarPalettes.length];
+      var initText = initials(row.name);
+      var displayPhone = row.phone || '—';
+
       $tbody.append(
-        '<tr data-contact-index="' + row.index + '">' +
-          '<td><div class="client-contact-person"><span class="client-contact-avatar" style="background-color:' + getAvatarColor(row.name) + '; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; width:32px; height:32px; border-radius:50%; margin-right:8px;">' + escapeHtml(initials(row.name)) + '</span><span class="client-contact-name">' + escapeHtml(row.name) + primaryTag + '</span></div></td>' +
-          '<td>' + escapeHtml(row.designation || '—') + '</td>' +
-          '<td>' + escapeHtml(row.email || '—') + '</td>' +
-          '<td>' + escapeHtml(row.phone || '—') + '</td>' +
-          '<td>' + typeBadge + '</td>' +
-          '<td><div class="client-table-actions">' +
-            '<button type="button" class="client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit"><i class="la la-pencil"></i></button>' +
-            '<button type="button" class="client-delete-contact is-delete" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete"><i class="la la-trash"></i></button>' +
-          '</div></td>' +
+        '<tr data-contact-index="' + row.index + '" style="border-bottom:1px solid #f1f5f9;">' +
+          '<td style="padding:14px 18px;">' +
+            '<div class="d-flex align-items-center">' +
+              '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:34px; height:34px; border-radius:50%; margin-right:10px; font-size:12.5px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
+              '<span style="font-weight:600; color:#1e293b; font-size:13.5px;">' + escapeHtml(row.name) + '</span>' +
+            '</div>' +
+          '</td>' +
+          '<td style="padding:14px 14px; color:#334155; font-size:13px;">' + escapeHtml(row.designation || '—') + '</td>' +
+          '<td style="padding:14px 14px; color:#334155; font-size:13px;">' + escapeHtml(row.email || '—') + '</td>' +
+          '<td style="padding:14px 14px; color:#334155; font-size:13px; font-weight:500;">' + escapeHtml(displayPhone) + '</td>' +
+          '<td style="padding:14px 10px;">' + typeBadge + '</td>' +
+          '<td style="padding:14px 18px; text-align:right;">' +
+            '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
+              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
+                '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
+              '</button>' +
+              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
+                '<i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>' +
+              '</button>' +
+            '</div>' +
+          '</td>' +
         '</tr>'
       );
     });
@@ -3276,13 +3727,40 @@ $('.remove_address').click(function(){
     if (isEdit) {
       var $container = $('.client-cperson-container').eq(editIdx);
       if ($container.length) {
-        $('#client_drawer_name').val($container.find('input[name="cp_name[]"]').val() || '');
-        $('#client_drawer_designation').val($container.find('input[name="cp_desigination[]"]').val() || '');
-        $('#client_drawer_email').val($container.find('input[name="cp_email[]"]').val() || '');
-        $('#client_drawer_phone').val($container.find('input[name="cp_number[]"]').val() || '');
+        var nameVal = $container.find('input[name="cp_name[]"]').val() || '';
+        var desigVal = $container.find('input[name="cp_desigination[]"]').val() || '';
+        var emailVal = $container.find('input[name="cp_email[]"]').val() || '';
+        var phoneVal = $container.find('input[name="cp_number[]"]').val() || '';
+        var callingVal = ($container.find('input[name="calling_code[]"]').val() || '+91').trim();
+
+        $('#client_drawer_name').val(nameVal);
+        $('#client_drawer_designation').val(desigVal);
+        $('#client_drawer_email').val(emailVal);
+
+        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+          window.JeroPhoneBox.setCountry('client_drawer_phone', callingVal);
+        } else {
+          $('#client_drawer_calling_code').val(callingVal).trigger('change');
+        }
+
+        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+          window.JeroPhoneBox.setPhone('client_drawer_phone', phoneVal);
+        } else {
+          $('#client_drawer_phone').val(phoneVal).trigger('input');
+        }
       }
     } else {
-      $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').val('');
+      $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('');
+      if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+        window.JeroPhoneBox.setCountry('client_drawer_phone', '+91');
+      } else {
+        $('#client_drawer_calling_code').val('+91').trigger('change');
+      }
+      if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+        window.JeroPhoneBox.setPhone('client_drawer_phone', '');
+      } else {
+        $('#client_drawer_phone').val('').trigger('input');
+      }
     }
 
     // Ensure drawer is direct child of body to prevent any overflow:hidden clipping
@@ -3299,17 +3777,15 @@ $('.remove_address').click(function(){
     _cdfClearErrors();
   }
 
-  window.openContactDrawer = openContactDrawer;
-  window.closeContactDrawer = closeContactDrawer;
-  window.saveContactDrawer = saveContactDrawer;
-  window.deleteContactRow = deleteContactRow;
-
   function saveContactDrawer() {
     _cdfClearErrors();
     var name        = $('#client_drawer_name').val().trim();
     var designation = $('#client_drawer_designation').val().trim();
     var email       = $('#client_drawer_email').val().trim();
-    var phone       = $('#client_drawer_phone').val().trim();
+    var phone       = window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function'
+      ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone')
+      : ($('#client_drawer_phone').val() || '').replace(/[^\d]/g, '');
+    var callingCode = ($('#client_drawer_calling_code').val() || '+91').trim();
     var emailRe     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     var valid       = true;
     var $firstBad   = null;
@@ -3354,6 +3830,7 @@ $('.remove_address').click(function(){
         $container.find('input[name="cp_desigination[]"]').val(designation);
         $container.find('input[name="cp_email[]"]').val(email);
         $container.find('input[name="cp_number[]"]').val(phone);
+        $container.find('input[name="calling_code[]"]').val(callingCode);
       }
     } else {
       // Check if an empty container exists to reuse
@@ -3372,12 +3849,13 @@ $('.remove_address').click(function(){
         $emptyContainer.find('input[name="cp_desigination[]"]').val(designation);
         $emptyContainer.find('input[name="cp_email[]"]').val(email);
         $emptyContainer.find('input[name="cp_number[]"]').val(phone);
+        $emptyContainer.find('input[name="calling_code[]"]').val(callingCode);
       } else {
         var newIdx = $('.client-cperson-container').length;
         var newHtml = '<div class="row client-cperson-container" data-contact-index="' + newIdx + '">' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(name) + '"></div></div>' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(email) + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(phone) + '"><input type="hidden" value="in" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(phone) + '"><input type="hidden" value="' + escapeHtml(callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + newIdx + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(designation) + '"></div></div>' +
           '</div>';
         $('.client-cperson-row').first().append(newHtml);
@@ -3395,6 +3873,88 @@ $('.remove_address').click(function(){
     closeContactDrawer();
   }
 
+  function addSuggestedContact(contactData) {
+    var c = contactData || {
+      name: 'Rahul Sharma',
+      designation: 'HR Manager',
+      email: 'rahul.sharma@4bell.com',
+      phone: '9876543210',
+      callingCode: '+91'
+    };
+
+    var exists = false;
+    $('.client-cperson-container').each(function () {
+      var e = ($(this).find('input[name="cp_email[]"]').val() || '').trim().toLowerCase();
+      if (e === c.email.toLowerCase()) exists = true;
+    });
+    if (exists) {
+      if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Already Added',
+          text: c.name + ' is already added to contacts list.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+      return;
+    }
+
+    var $emptyContainer = null;
+    $('.client-cperson-container').each(function () {
+      var n = ($(this).find('input[name="cp_name[]"]').val() || '').trim();
+      var e = ($(this).find('input[name="cp_email[]"]').val() || '').trim();
+      if (!n && !e) {
+        $emptyContainer = $(this);
+        return false;
+      }
+    });
+
+    if ($emptyContainer && $emptyContainer.length) {
+      $emptyContainer.find('input[name="cp_name[]"]').val(c.name);
+      $emptyContainer.find('input[name="cp_desigination[]"]').val(c.designation);
+      $emptyContainer.find('input[name="cp_email[]"]').val(c.email);
+      $emptyContainer.find('input[name="cp_number[]"]').val(c.phone);
+      $emptyContainer.find('input[name="calling_code[]"]').val(c.callingCode);
+    } else {
+      var newIdx = $('.client-cperson-container').length;
+      var newHtml = '<div class="row client-cperson-container" data-contact-index="' + newIdx + '">' +
+        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.name) + '"></div></div>' +
+        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '"></div></div>' +
+        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.phone) + '"><input type="hidden" value="' + escapeHtml(c.callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
+        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + newIdx + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(c.designation) + '"></div></div>' +
+        '</div>';
+      $('.client-cperson-row').first().append(newHtml);
+    }
+
+    $('#contactPersonId').val(Math.max(0, $('.client-cperson-container').length - 1));
+    renderContactTable();
+    updateCompletion();
+    if (typeof populateReviewSummaries === 'function') {
+      populateReviewSummaries();
+    }
+
+    if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true
+      });
+      Toast.fire({
+        icon: 'success',
+        title: 'Added ' + c.name + ' to contacts!'
+      });
+    }
+  }
+
+  window.openContactDrawer = openContactDrawer;
+  window.closeContactDrawer = closeContactDrawer;
+  window.saveContactDrawer = saveContactDrawer;
+  window.deleteContactRow = deleteContactRow;
+  window.addSuggestedContact = addSuggestedContact;
+
     /* Clear individual field error on input */
   $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
@@ -3404,18 +3964,38 @@ $('.remove_address').click(function(){
   function populateReviewSummaries() {
     var clientName = ($('#client_id').val() || '').trim();
     var website = ($('#website').val() || '').trim();
-    var industry = $('#industry option:selected').text() || '—';
+    var industry = ($('#industry_display').val() || '').trim();
+    if (!industry || industry === 'Select Industry' || industry === 'Select industry') {
+      industry = $('#industry option:selected').text() || '—';
+    }
     var compSizes = $('#company_sizes option:selected').text() || '';
     var compType = $('#company_type option:selected').text() || '—';
     var founded = ($('#founded').val() || '').trim();
 
     // 1. Client Information Card
     $('.span_name').text(clientName || '—');
-    $('.span_website').text(website || '—').attr('href', website || 'javascript:void(0);');
-    $('.span_industry').text(industry !== 'Select Industry' ? industry : '—');
-    $('.span_company_sizes').text(compSizes && compSizes !== 'Select Company Size' ? compSizes + ' employees' : '—');
-    $('.span_company_type').text(compType !== 'Select Company Type' ? compType : '—');
+    if (website) {
+      var displayWeb = website.replace(/^https?:\/\//i, '');
+      $('.span_website').html(escapeHtml(displayWeb) + ' <i class="la la-external-link" style="font-size:12px;"></i>').attr('href', website.startsWith('http') ? website : ('https://' + website));
+    } else {
+      $('.span_website').html('— <i class="la la-external-link" style="font-size:12px;"></i>').attr('href', 'javascript:void(0);');
+    }
+    $('.span_industry').text(industry && industry !== 'Select industry' && industry !== 'Select Industry' ? industry : '—');
+    $('.span_company_sizes').text(compSizes && compSizes !== 'Select Company Size' && compSizes !== 'Select company size' ? compSizes + (compSizes.indexOf('employees') === -1 ? ' employees' : '') : '—');
+    $('.span_company_type').text(compType && compType !== 'Select company type' && compType !== 'Select Company Type' ? compType : '—');
     $('.span_founded').text(founded || '—');
+
+    var initLetters = initials(clientName) || 'AC';
+    $('#client_review_initials').text(initLetters);
+
+    var bgImg = $('.image-input-wrapper').css('background-image');
+    if (bgImg && bgImg !== 'none' && bgImg.indexOf('blank.png') === -1) {
+      $('#client_review_logo_box').css('background-image', bgImg);
+      $('#client_review_initials').hide();
+    } else {
+      $('#client_review_logo_box').css('background-image', 'none');
+      $('#client_review_initials').show();
+    }
 
     // 2. Client Description Card
     var descHtml = (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden'))
@@ -3441,49 +4021,116 @@ $('.remove_address').click(function(){
     $('.span_tags').text(tagLabels.length ? tagLabels.join(', ') : '—');
 
     // 3. Address Details Card
-    var addressBlocks = [];
-    if (typeof selectedCities !== 'undefined' && selectedCities.length > 0) {
-      var locChips = selectedCities.map(function(c) {
-        return '<span class="ij-location-chip me-1 mb-1"><span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="ij-chip-label">' + escapeHtml(c) + '</span></span>';
-      }).join('');
-      addressBlocks.push('<div class="client-review-address-box col-12 mb-3"><h5><i class="la la-map-marker text-primary me-1"></i>Selected Work Locations (' + selectedCities.length + ')</h5><div class="d-flex flex-wrap gap-1 mt-2">' + locChips + '</div></div>');
+    var hqCity = ($('#city_search_0').val() || '').trim();
+    if (!hqCity) {
+      var hqTagVal = ($('#kt_tagify_work_location_0').val() || '').trim();
+      if (hqTagVal) {
+        try {
+          var parsed = JSON.parse(hqTagVal);
+          if (Array.isArray(parsed) && parsed[0] && parsed[0].value) hqCity = parsed[0].value;
+        } catch (e) { hqCity = hqTagVal; }
+      }
     }
-
     var hqAddress = ($('#address_0').val() || '').trim();
-    if (hqAddress) {
-      addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-building text-primary me-1"></i>Headquarters (Primary) Physical Address</h5><p>' + escapeHtml(hqAddress) + '</p></div>');
-    }
 
-    var addIdx = 0;
-    $('.client-address-container .client-address-card.is-additional').each(function() {
+    $('#client_review_hq_city').text(hqCity || '—');
+    $('#client_review_hq_address').text(hqAddress || '—');
+
+    var addCards = [];
+    var addCount = 0;
+    $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-card.is-additional').each(function() {
       var $card = $(this);
-      addIdx++;
+      addCount++;
       var address = ($card.find('textarea[name="address[]"]').val() || '').trim();
-      var branchCity = ($card.find('.branch-city-search').val() || '').trim();
+      var branchCity = ($card.find('.branch-city-search, .client-addr-city-search').val() || '').trim();
       if (!branchCity) {
         var tagVal = $card.find('input[name="kt_tagify_work_location[]"]').val() || '';
-        branchCity = tagVal.replace(/^\[\{"value":"?/, '').replace(/"?\}\]$/, '');
+        try {
+          var parsedB = JSON.parse(tagVal);
+          if (Array.isArray(parsedB) && parsedB[0] && parsedB[0].value) branchCity = parsedB[0].value;
+        } catch(e) {
+          branchCity = tagVal.replace(/^\[\{"value":"?/, '').replace(/"?\}\]$/, '');
+        }
       }
       if (branchCity || address) {
-        addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-map-pin text-primary me-1"></i>Additional Branch Address (' + addIdx + ')</h5><p>' + (branchCity ? '<strong>' + escapeHtml(branchCity) + '</strong><br>' : '') + escapeHtml(address) + '</p></div>');
+        addCards.push(
+          '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px; display:flex; align-items:flex-start; gap:10px;">' +
+            '<div style="width:30px; height:30px; border-radius:6px; background:#eff6ff; display:inline-flex; align-items:center; justify-content:center; color:#2563eb; flex-shrink:0;">' +
+              '<i class="la la-map-pin" style="font-size:16px;"></i>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:12.5px; font-weight:700; color:#1e293b;">Additional Address (' + addCount + ')</div>' +
+              (branchCity ? '<div style="font-size:12px; font-weight:600; color:#334155;">' + escapeHtml(branchCity) + '</div>' : '') +
+              (address ? '<div style="font-size:11.5px; color:#64748b; line-height:1.4;">' + escapeHtml(address) + '</div>' : '') +
+            '</div>' +
+          '</div>'
+        );
       }
     });
-    $('.divAddressDetail').html(addressBlocks.length ? addressBlocks.join('') : '<span class="text-muted">No address details entered.</span>');
+
+    $('#client_review_additional_header').text('Additional Addresses (' + addCards.length + ')');
+    if (addCards.length) {
+      $('#client_review_additional_list').html(addCards.join(''));
+    } else {
+      $('#client_review_additional_list').html(
+        '<div id="client_review_additional_empty" style="border:1px dashed #cbd5e1; border-radius:8px; padding:22px; text-align:center; background:#fafafa;">' +
+          '<i class="la la-map-marker" style="font-size:24px; color:#94a3b8; display:block; margin-bottom:6px;"></i>' +
+          '<div style="font-size:12px; color:#64748b; margin-bottom:12px;">No additional addresses added yet.</div>' +
+          '<button type="button" class="btn btn-sm btn-outline-primary" onclick="window.goToWizardStep ? window.goToWizardStep(3) : false;" style="background:#fff; border:1px solid #cbd5e1; color:#2563eb; font-weight:600; font-size:12px; border-radius:6px; padding:6px 14px;">' +
+            '<i class="la la-plus"></i> Add Another Address' +
+          '</button>' +
+        '</div>'
+      );
+    }
 
     // 4. Contact Persons Card
-    var contactRows = [];
+    var reviewContactRows = [];
     var contacts = getContactRowsData();
+    var avatarPalettes = [
+      { bg: '#fef08a', text: '#0f172a' }, // Warm yellow matching reference AK
+      { bg: '#dbeafe', text: '#1e40af' }, // Blue
+      { bg: '#f3e8ff', text: '#7e22ce' }, // Purple
+      { bg: '#dcfce7', text: '#166534' }  // Green
+    ];
+
     contacts.forEach(function (row, idx) {
-      var typeBadge = idx === 0 ? '<span class="client-badge-primary">Primary</span>' : '<span class="client-badge-secondary">Secondary</span>';
-      var primaryTag = idx === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
+      var typeBadge = idx === 0
+        ? '<span class="badge" style="background:#dcfce7; color:#16a34a; font-weight:600; font-size:11px; padding:4px 10px; border-radius:9999px; border:1px solid #bbf7d0; display:inline-block;">Primary</span>'
+        : '<span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:600; font-size:11px; padding:4px 10px; border-radius:9999px; border:1px solid #bfdbfe; display:inline-block;">Secondary</span>';
+      var pal = avatarPalettes[idx % avatarPalettes.length];
       var avatarLetters = initials(row.name);
-      var avatarBg = getAvatarColor(row.name);
-      contactRows.push('<tr><td><div class="client-contact-person"><span class="client-contact-avatar" style="background-color:'+avatarBg+'; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; width:32px; height:32px; border-radius:50%; margin-right:8px;">'+escapeHtml(avatarLetters)+'</span><span class="client-contact-name">'+escapeHtml(row.name)+primaryTag+'</span></div></td><td>'+escapeHtml(row.designation || '—')+'</td><td>'+escapeHtml(row.email || '—')+'</td><td>'+escapeHtml(row.phone || '—')+'</td><td>'+typeBadge+'</td></tr>');
+
+      reviewContactRows.push(
+        '<tr style="border-bottom:1px solid #f1f5f9;">' +
+          '<td style="padding:12px 16px;">' +
+            '<div class="d-flex align-items-center">' +
+              '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:32px; height:32px; border-radius:50%; margin-right:10px; font-size:12px; flex-shrink:0;">' + escapeHtml(avatarLetters) + '</span>' +
+              '<span style="font-weight:700; color:#0f172a; font-size:13px;">' + escapeHtml(row.name) + '</span>' +
+            '</div>' +
+          '</td>' +
+          '<td style="padding:12px 12px; color:#334155; font-size:13px;">' + escapeHtml(row.designation || '—') + '</td>' +
+          '<td style="padding:12px 12px; color:#334155; font-size:13px;">' + escapeHtml(row.email || '—') + '</td>' +
+          '<td style="padding:12px 12px; color:#334155; font-size:13px; font-weight:500;">' + escapeHtml(row.phone || '—') + '</td>' +
+          '<td style="padding:12px 12px;">' + typeBadge + '</td>' +
+          '<td style="padding:12px 16px; text-align:right;">' +
+            '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
+              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit" style="width:32px; height:32px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
+                '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
+              '</button>' +
+              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete" style="width:32px; height:32px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:6px;">' +
+                '<i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>' +
+              '</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>'
+      );
     });
-    if (!contactRows.length) {
-      contactRows.push('<tr><td colspan="5" class="text-center text-muted py-4">No contact persons added.</td></tr>');
+
+    if (!reviewContactRows.length) {
+      reviewContactRows.push('<tr><td colspan="6" class="text-center text-muted py-6" style="font-size:12.5px;">No contact persons added yet.</td></tr>');
     }
-    $('.div-contact-person').html(contactRows.join(''));
+    $('#client_review_contact_tbody').html(reviewContactRows.join(''));
+    $('.div-contact-person').html(reviewContactRows.join(''));
 
     // 5. Right Sidebar Summary Cards
     $('.client_summary_name').text(clientName || '—');
@@ -3502,7 +4149,8 @@ $('.remove_address').click(function(){
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       phone10: /^\d{10}$/,
       year4: /^(18|19|20)\d{2}$/,
-      url: /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?$/
+      url: /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i,
+      urlLocal: /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/[^\s]*)?$/i
     };
 
     function validateField(fieldName, value, $element) {
@@ -3520,27 +4168,28 @@ $('.remove_address').click(function(){
           break;
 
         case 'website':
-          if (!value) {
-            result = { valid: false, message: 'Website URL is required.' };
-          } else if (!patterns.url.test(value)) {
+          if (value && !patterns.url.test(value) && !patterns.urlLocal.test(value)) {
             result = { valid: false, message: 'Please enter a valid website URL (e.g. https://example.com).' };
           }
           break;
 
         case 'industry':
           if (!value) {
-            result = { valid: false, message: 'Please select an Industry.' };
+            var disp = ($('#industry_display').val() || '').trim();
+            if (!disp) {
+              result = { valid: false, message: 'Please select an Industry.' };
+            }
           }
           break;
 
         case 'company_sizes':
-          if (!value) {
+          if (!value || value === '-') {
             result = { valid: false, message: 'Please select Company Size.' };
           }
           break;
 
         case 'company_type':
-          if (!value) {
+          if (value === '' || value === null || typeof value === 'undefined') {
             result = { valid: false, message: 'Please select Company Type.' };
           }
           break;
@@ -3554,17 +4203,13 @@ $('.remove_address').click(function(){
           break;
 
         case 'description':
-          if (!value) {
-            result = { valid: false, message: 'Company Description is required.' };
-          } else if (value.length < 5) {
-            result = { valid: false, message: 'Description must be at least 5 characters.' };
+          if (value && value.length < 5) {
+            result = { valid: false, message: 'Description must be at least 5 characters if provided.' };
           }
           break;
 
         case 'tags':
-          if (!value || value === '[]') {
-            result = { valid: false, message: 'Please add at least 1 Service Offering.' };
-          }
+          // Optional per client onboarding standard
           break;
 
         case 'address':
@@ -3620,11 +4265,18 @@ $('.remove_address').click(function(){
   function clearInlineErrors() {
     $('.is-invalid').removeClass('is-invalid');
     $('.client-inline-error').remove();
+    $('#jero_ind_select_wrap').removeClass('has-validation-error');
+    $('#jero_ind_input_box').removeClass('has-validation-error');
   }
 
   function clearFieldError($field) {
     if (!$field || !$field.length) return;
     $field.removeClass('is-invalid');
+    if ($field.attr('id') === 'industry' || $field.attr('id') === 'industry_display') {
+      $('#industry_display').removeClass('is-invalid');
+      $('#jero_ind_input_box').removeClass('has-validation-error');
+      $('#jero_ind_select_wrap').removeClass('has-validation-error');
+    }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
       $container.find('.client-inline-error').remove();
@@ -3634,11 +4286,17 @@ $('.remove_address').click(function(){
       $field.parent().next('.client-inline-error').remove();
     }
   }
+  window.clearFieldError = clearFieldError;
 
   function showInlineError($field, message) {
     if (!$field || !$field.length) return;
     clearFieldError($field);
     $field.addClass('is-invalid');
+    if ($field.attr('id') === 'industry' || $field.attr('id') === 'industry_display') {
+      $('#industry_display').addClass('is-invalid');
+      $('#jero_ind_input_box').addClass('has-validation-error');
+      $('#jero_ind_select_wrap').addClass('has-validation-error');
+    }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
       $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
@@ -3647,14 +4305,39 @@ $('.remove_address').click(function(){
       $target.after('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
     }
   }
+  window.showInlineError = showInlineError;
 
   function validateWizardStep(step) {
+    step = parseInt(step, 10);
     clearInlineErrors();
     var isValid = true;
     var $firstInvalid = null;
 
     // Section 1: Client Information
     if (step === 1) {
+      // Auto-commit any typed industry in combobox before validating
+      var indDispVal = ($('#industry_display').val() || '').trim();
+      if (indDispVal) {
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.commitIfCustom === 'function') {
+          try { window.JeroIndustryIntelligenceEngine.commitIfCustom(); } catch (e) {}
+        }
+        if (!$('#industry').val()) {
+          var $sel = $('#industry');
+          var optFound = false;
+          $sel.find('option').each(function() {
+            if ($(this).text().trim().toLowerCase() === indDispVal.toLowerCase()) {
+              $sel.val($(this).val());
+              optFound = true;
+              return false;
+            }
+          });
+          if (!optFound) {
+            $sel.append(new Option(indDispVal, indDispVal, true, true));
+            $sel.val(indDispVal);
+          }
+        }
+      }
+
       var clientNameRes = ClientValidationEngine.validateField('name', $('#client_id').val(), $('#client_id'));
       if (!clientNameRes.valid) {
         showInlineError($('#client_id'), clientNameRes.message);
@@ -3662,17 +4345,20 @@ $('.remove_address').click(function(){
         isValid = false;
       }
 
-      var websiteRes = ClientValidationEngine.validateField('website', $('#website').val(), $('#website'));
-      if (!websiteRes.valid) {
-        showInlineError($('#website'), websiteRes.message);
-        $firstInvalid = $firstInvalid || $('#website');
-        isValid = false;
+      var webVal = ($('#website').val() || '').trim();
+      if (webVal) {
+        var websiteRes = ClientValidationEngine.validateField('website', webVal, $('#website'));
+        if (!websiteRes.valid) {
+          showInlineError($('#website'), websiteRes.message);
+          $firstInvalid = $firstInvalid || $('#website');
+          isValid = false;
+        }
       }
 
-      var industryRes = ClientValidationEngine.validateField('industry', $('#industry').val(), $('#industry'));
-      if (!industryRes.valid) {
-        showInlineError($('#industry'), industryRes.message);
-        $firstInvalid = $firstInvalid || $('#industry');
+      var industryVal = ($('#industry').val() || '').trim();
+      if (!industryVal && !indDispVal) {
+        showInlineError($('#industry_display'), 'Please select an Industry.');
+        $firstInvalid = $firstInvalid || $('#industry_display');
         isValid = false;
       }
 
@@ -3698,69 +4384,105 @@ $('.remove_address').click(function(){
       }
     }
 
-    // Section 2: Client Description & Offerings
+    // Section 2: Client Description & Offerings (Required per backend and screenshot)
     if (step === 2) {
       var descText = '';
       if (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) {
         descText = tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim();
       } else {
-        descText = ($('#kt_docs_tinymce_hidden').val() || '').trim();
+        descText = ($('#kt_docs_tinymce_hidden').val() || '').replace(/<[^>]*>?/gm, '').trim();
       }
-      var descRes = ClientValidationEngine.validateField('description', descText, $('#kt_docs_tinymce_hidden'));
-      if (!descRes.valid) {
-        showInlineError($('#kt_docs_tinymce_hidden'), descRes.message);
+      if (!descText) {
+        showInlineError($('#kt_docs_tinymce_hidden'), 'Company Description is required.');
+        $firstInvalid = $firstInvalid || $('#kt_docs_tinymce_hidden');
+        isValid = false;
+      } else if (descText.length < 5) {
+        showInlineError($('#kt_docs_tinymce_hidden'), 'Description must be at least 5 characters.');
         $firstInvalid = $firstInvalid || $('#kt_docs_tinymce_hidden');
         isValid = false;
       }
 
       var tagsVal = ($('#tags').val() || '').trim();
-      var tagsRes = ClientValidationEngine.validateField('tags', tagsVal, $('#tags'));
-      if (!tagsRes.valid) {
-        showInlineError($('#tags'), tagsRes.message);
+      if (!tagsVal || tagsVal === '[]') {
+        $('#client_tags_error').show();
         $firstInvalid = $firstInvalid || $('#tags');
         isValid = false;
+      } else {
+        $('#client_tags_error').hide();
       }
     }
 
-    // Section 3: Address Details
+    // Section 3: Address Details (Matching media_1792064818634.png)
     if (step === 3) {
-      if (!selectedCities || selectedCities.length === 0) {
-        var $searchWrap = $('.ij-location-input-wrap').first();
-        showInlineError($searchWrap, 'Please select at least 1 work location city.');
-        $firstInvalid = $firstInvalid || $('#citySearch');
+      var hqCity = ($('#city_search_0').val() || '').trim();
+      var hqTagify = ($('#kt_tagify_work_location_0').val() || '').trim();
+      if (!hqCity && !hqTagify) {
+        $('#city_err_0').show();
+        $('#city_search_0').addClass('is-invalid');
+        $firstInvalid = $firstInvalid || $('#city_search_0');
         isValid = false;
+      } else {
+        $('#city_err_0').hide();
+        $('#city_search_0').removeClass('is-invalid');
+        if (!hqTagify && hqCity) {
+          var parts = hqCity.split(/[,|]/).map(function(s) { return s.trim(); });
+          $('#kt_tagify_work_location_0').val(JSON.stringify([{ value: parts.join(' | ') }]));
+        }
       }
 
-      var $firstAddr = $('textarea[name="address[]"]').first();
-      var addrRes = ClientValidationEngine.validateField('address', ($firstAddr.val() || '').trim(), $firstAddr);
-      if (!addrRes.valid) {
-        showInlineError($firstAddr, addrRes.message);
-        $firstInvalid = $firstInvalid || $firstAddr;
+      var $hqAddr = $('#address_0');
+      var hqAddrVal = ($hqAddr.val() || '').trim();
+      if (!hqAddrVal) {
+        $('#address_err_0').find('span').text('Full Address is required for the primary location.');
+        $('#address_err_0').show();
+        $hqAddr.addClass('is-invalid');
+        $firstInvalid = $firstInvalid || $hqAddr;
         isValid = false;
+      } else if (hqAddrVal.length < 5) {
+        $('#address_err_0').find('span').text('Address must be at least 5 characters.');
+        $('#address_err_0').show();
+        $hqAddr.addClass('is-invalid');
+        $firstInvalid = $firstInvalid || $hqAddr;
+        isValid = false;
+      } else {
+        $('#address_err_0').hide();
+        $hqAddr.removeClass('is-invalid');
       }
 
       // Check any additional branch addresses
-      $('.client-address-container .client-address-card.is-additional').each(function(idx) {
+      $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-card.is-additional').each(function(idx) {
         var $card = $(this);
-        var $cityInput = $card.find('.branch-city-search');
+        var cid = $card.data('cid') || (idx + 1);
+        var $cityInput = $card.find('.branch-city-search, .client-addr-city-search');
         var $textarea = $card.find('textarea[name="address[]"]');
         var cityVal = ($cityInput.val() || '').trim();
         var textVal = ($textarea.val() || '').trim();
 
         if (cityVal || textVal) {
           if (!cityVal) {
-            showInlineError($cityInput, 'Branch city is required for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_city_err_' + cid).show();
+            $cityInput.addClass('is-invalid');
             $firstInvalid = $firstInvalid || $cityInput;
             isValid = false;
+          } else {
+            $card.find('#branch_city_err_' + cid).hide();
+            $cityInput.removeClass('is-invalid');
           }
           if (!textVal) {
-            showInlineError($textarea, 'Full Address is required for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).find('span').text('Full Address is required for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).show();
+            $textarea.addClass('is-invalid');
             $firstInvalid = $firstInvalid || $textarea;
             isValid = false;
           } else if (textVal.length < 5) {
-            showInlineError($textarea, 'Address must be at least 5 characters for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).find('span').text('Address must be at least 5 characters for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).show();
+            $textarea.addClass('is-invalid');
             $firstInvalid = $firstInvalid || $textarea;
             isValid = false;
+          } else {
+            $card.find('#branch_address_err_' + cid).hide();
+            $textarea.removeClass('is-invalid');
           }
         }
       });
@@ -3770,9 +4492,9 @@ $('.remove_address').click(function(){
     if (step === 4) {
       var contacts = getContactRowsData();
       if (!contacts.length) {
-        var $contactSection = $('.client-contact-section, #client_contact_table_body').first();
+        var $contactSection = $('.client-contact-toolbar, .client-contact-section, #client_contact_table_body').first();
         showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
-        $firstInvalid = $firstInvalid || $contactSection;
+        $firstInvalid = $firstInvalid || $('#client_open_contact_drawer');
         isValid = false;
       } else {
         for (var i = 0; i < contacts.length; i++) {
@@ -3795,8 +4517,8 @@ $('.remove_address').click(function(){
     }
 
     if (!isValid && $firstInvalid) {
-      $firstInvalid.focus();
       try {
+        $firstInvalid.focus();
         $('html, body').animate({ scrollTop: $firstInvalid.offset().top - 120 }, 200);
       } catch (e) {}
     }
@@ -3806,46 +4528,97 @@ $('.remove_address').click(function(){
 
   /* Synchronize wizard action buttons and stepper visual tokens */
   function syncWizardNavigationState(activeStep) {
-    if (!activeStep) {
-      activeStep = 1;
-      $('#kt_wizard .wizard-step').each(function (idx) {
-        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active') || $(this).hasClass('current')) {
-          activeStep = idx + 1;
-        }
-      });
+    activeStep = parseInt(activeStep, 10);
+    if (!activeStep || activeStep < 1 || activeStep > 5) {
+      activeStep = (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1;
     }
 
-    // Step 1: Hide Back button; Step >= 2: Show Back button
+    // Header Back button is always visible as in media_1792068852883.png; Text back button is Step 5 only
     if (activeStep <= 1) {
-      $('#client_btn_back, [data-wizard-type="action-prev"]').attr('style', 'display: none !important;');
+      $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
+      $('#client_header_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
     } else {
-      $('#client_btn_back, [data-wizard-type="action-prev"]').attr('style', 'display: inline-flex !important;');
+      $('body').removeClass('on-step-1').addClass('on-step-' + activeStep);
+      $('#client_header_back_btn').attr('style', 'display: inline-flex !important;').show();
     }
 
-    // Step 5: Switch Continue button to Submit / Update Client (ONLY on step 5 Review & Submit!)
+    // Dynamic Top Header Subtitles & Titles matching screenshots
+    var subtitles = {
+      1: 'Create and configure a client profile for jobs, contacts and recruitment operations.',
+      2: 'Enter client details and submit',
+      3: 'Enter the city and full address of this client.',
+      4: 'Add key contacts for this client organization.',
+      5: 'Review all the information before submitting.'
+    };
+    $('#client_header_subtitle').text(subtitles[activeStep] || subtitles[1]);
+
+    // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4
     if (activeStep >= 5) {
       $('body').addClass('on-review-step');
-      $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;');
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;');
-      if (window.clientWizardUi && typeof window.clientWizardUi.populateReviewSummaries === 'function') {
-        window.clientWizardUi.populateReviewSummaries();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      if (typeof populateReviewSummaries === 'function') {
+        populateReviewSummaries();
       }
     } else {
       $('body').removeClass('on-review-step');
-      $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;');
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;');
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm, #client_top_back_btn').attr('style', 'display: none !important;').hide();
     }
 
-        // Synchronize Stepper Tokens (Emerald Green for done, JERO Yellow gradient for current)
+    // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
+    $('#client_wizard_stepper .client-step-item').each(function () {
+      var s = parseInt($(this).data('step'), 10);
+      var $circle = $(this).find('.client-step-circle');
+      var $title = $(this).find('.client-step-name');
+      var $sub = $(this).find('.client-step-sub');
+      var $nextDivider = $(this).next('.client-step-line');
+
+      if (s < activeStep) {
+        $circle.css({
+          'background': '#10b981',
+          'color': '#ffffff',
+          'border': 'none',
+          'box-shadow': '0 1px 3px rgba(16,185,129,0.3)'
+        }).html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
+        $sub.css({ 'color': '#5b6b8b' });
+        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+      } else if (s === activeStep) {
+        $circle.css({
+          'background': '#ffd428',
+          'color': '#0a1647',
+          'border': 'none',
+          'box-shadow': '0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428'
+        }).text(s);
+        $title.css({ 'color': '#0a1647', 'font-weight': '800' });
+        $sub.css({ 'color': '#5b6b8b' });
+        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+      } else {
+        $circle.css({
+          'background': '#ffffff',
+          'color': '#0a1647',
+          'border': '1.5px solid #fde047',
+          'box-shadow': 'none'
+        }).text(s);
+        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
+        $sub.css({ 'color': '#5b6b8b' });
+        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+      }
+    });
+
+    // Synchronize legacy Metronic Stepper Tokens
     $('#kt_wizard .wizard-step').each(function (idx) {
       var stepNum = idx + 1;
       var $step = $(this);
       if (stepNum < activeStep) {
-        $step.attr('data-wizard-state', 'done').addClass('completed').removeClass('current');
+        $step.attr('data-wizard-state', 'done').addClass('completed done').removeClass('current active pending');
       } else if (stepNum === activeStep) {
-        $step.attr('data-wizard-state', 'current').addClass('current').removeClass('completed');
+        $step.attr('data-wizard-state', 'current').addClass('current active').removeClass('completed done pending');
       } else {
-        $step.attr('data-wizard-state', 'pending').removeClass('completed current');
+        $step.attr('data-wizard-state', 'pending').addClass('pending').removeClass('completed done current active');
       }
     });
   }
@@ -3907,24 +4680,58 @@ $('.remove_address').click(function(){
     updateAssistantPanel();
     updateCompletion();
     renderContactTable();
-    syncWizardNavigationState(1);
+    goToWizardStep(1);
 
-    // Navigation Mutex lock to strictly prevent duplicate transitions and double clicks
-    var isNavigating = false;
+    // Deterministic Step Tracking & Non-locking Debounce Engine
+    var currentStepNumber = 1;
+    var lastNavTime = 0;
 
     function getCurrentStepNumber() {
-      var activeStep = 1;
-      $('#kt_wizard .wizard-step').each(function (idx) {
-        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active') || $(this).hasClass('current')) {
-          activeStep = idx + 1;
+      // 1. Primary source of truth: step-content with data-wizard-state="current"
+      var $currentContent = $('#kt_wizard [data-wizard-type="step-content"][data-wizard-state="current"]');
+      if ($currentContent.length) {
+        var cIdx = $('#kt_wizard [data-wizard-type="step-content"]').index($currentContent.first());
+        if (cIdx >= 0 && cIdx <= 4) {
+          currentStepNumber = cIdx + 1;
+          return currentStepNumber;
         }
-      });
-      return activeStep;
+      }
+
+      // 2. Secondary source of truth: wizard-step header with current/active
+      var $currentStep = $('#kt_wizard .wizard-step[data-wizard-state="current"], #kt_wizard .wizard-step.current, #kt_wizard .wizard-step.active');
+      if ($currentStep.length) {
+        var hIdx = $('#kt_wizard .wizard-step').index($currentStep.first());
+        if (hIdx >= 0 && hIdx <= 4) {
+          currentStepNumber = hIdx + 1;
+          return currentStepNumber;
+        }
+      }
+
+      // 3. Fallback to tracked state if in range
+      if (currentStepNumber >= 1 && currentStepNumber <= 5) {
+        return currentStepNumber;
+      }
+
+      return 1;
     }
 
     function goToWizardStep(targetStep) {
       targetStep = parseInt(targetStep, 10);
       if (!targetStep || targetStep < 1 || targetStep > 5) return;
+
+      currentStepNumber = targetStep;
+
+      // Ensure any intelligence dropdown is closed
+      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.close === 'function') {
+        try { window.JeroIndustryIntelligenceEngine.close(); } catch (e) {}
+      }
+
+      // Track step via body class
+      $('body').removeClass('on-step-1 on-step-2 on-step-3 on-step-4 on-step-5 on-review-step')
+               .addClass('on-step-' + targetStep);
+      if (targetStep === 5) {
+        $('body').addClass('on-review-step');
+      }
 
       // Update Metronic outer wizard container state for CSS rules
       var stepState = (targetStep === 1 ? 'first' : (targetStep === 5 ? 'last' : 'between'));
@@ -3933,22 +4740,32 @@ $('.remove_address').click(function(){
       // Synchronize Step Header indicators
       $('#kt_wizard .wizard-step').each(function (idx) {
         var s = idx + 1;
+        var $st = $(this);
         if (s === targetStep) {
-          $(this).attr('data-wizard-state', 'current').addClass('current').removeClass('completed pending');
+          $st.attr('data-wizard-state', 'current').addClass('current active').removeClass('completed done pending');
         } else if (s < targetStep) {
-          $(this).attr('data-wizard-state', 'done').addClass('completed').removeClass('current pending');
+          $st.attr('data-wizard-state', 'done').addClass('completed done').removeClass('current active pending');
         } else {
-          $(this).attr('data-wizard-state', 'pending').addClass('pending').removeClass('current completed');
+          $st.attr('data-wizard-state', 'pending').addClass('pending').removeClass('current active completed done');
         }
       });
 
-      // Synchronize Step Tab Content panels
+      // Synchronize Step Tab Content panels with explicit display & attribute states
       $('#kt_wizard [data-wizard-type="step-content"]').each(function (idx) {
         var s = idx + 1;
+        var $panel = $(this);
         if (s === targetStep) {
-          $(this).attr('data-wizard-state', 'current').show();
+          $panel.attr('data-wizard-state', 'current')
+                .attr('style', 'display: block !important;')
+                .removeClass('d-none')
+                .addClass('d-block')
+                .show();
         } else {
-          $(this).removeAttr('data-wizard-state').hide();
+          $panel.removeAttr('data-wizard-state')
+                .attr('style', 'display: none !important;')
+                .removeClass('d-block')
+                .addClass('d-none')
+                .hide();
         }
       });
 
@@ -3957,71 +4774,118 @@ $('.remove_address').click(function(){
 
       // On Step 5 (Review & Submit), populate real-time review summaries
       if (targetStep === 5 && typeof populateReviewSummaries === 'function') {
-        populateReviewSummaries();
+        try {
+          populateReviewSummaries();
+        } catch (e) {
+          console.warn('populateReviewSummaries error:', e);
+        }
+      }
+
+      // Update Completion Meter
+      if (typeof updateCompletion === 'function') {
+        try { updateCompletion(); } catch (e) {}
       }
 
       // Smooth scroll to top
-      if (typeof KTUtil !== 'undefined' && typeof KTUtil.scrollTop === 'function') {
-        KTUtil.scrollTop();
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      try {
+        if (typeof KTUtil !== 'undefined' && typeof KTUtil.scrollTop === 'function') {
+          KTUtil.scrollTop();
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } catch (e) {
+        window.scrollTo(0, 0);
       }
     }
 
-    // Intercept Continue button clicks — validate current step before advancing (Debounced & Mutex-locked)
-    $(document).on('click', '#continueButton, .client-nav-next', function (e) {
+    // Intercept Continue / Next Page button clicks — validate current step before advancing
+    $(document).on('click', '#continueButton, .client-nav-next, .client-top-next-btn', function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isNavigating) return false;
+      var now = Date.now();
+      if (now - lastNavTime < 250) return false;
+
+      // 1. Force auto-commit any pending industry typed value synchronously before validation
+      var indDisp = ($('#industry_display').val() || '').trim();
+      if (indDisp) {
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.commitIfCustom === 'function') {
+          try { window.JeroIndustryIntelligenceEngine.commitIfCustom(); } catch (err) {}
+        }
+        if (!$('#industry').val()) {
+          var $sel = $('#industry');
+          var optFound = false;
+          $sel.find('option').each(function() {
+            if ($(this).text().trim().toLowerCase() === indDisp.toLowerCase()) {
+              $sel.val($(this).val());
+              optFound = true;
+              return false;
+            }
+          });
+          if (!optFound) {
+            $sel.append(new Option(indDisp, indDisp, true, true));
+            $sel.val(indDisp);
+          }
+        }
+      }
 
       var currentStep = getCurrentStepNumber();
       if (!validateWizardStep(currentStep)) {
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true
+          });
+          Toast.fire({
+            icon: 'warning',
+            title: 'Please fill in the required fields marked in red.'
+          });
+        }
         return false;
       }
 
-      isNavigating = true;
-      var $btn = $(this);
-      $btn.prop('disabled', true).addClass('disabled');
+      // Record successful navigation time
+      lastNavTime = Date.now();
 
-      goToWizardStep(currentStep + 1);
-
-      setTimeout(function () {
-        isNavigating = false;
-        $btn.prop('disabled', false).removeClass('disabled');
-      }, 300);
-    });
-
-    // Intercept Back button clicks — navigate back and sync navigation state (Debounced & Mutex-locked)
-    $(document).on('click', '#client_btn_back, .client-nav-back', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (isNavigating) return false;
-
-      var currentStep = getCurrentStepNumber();
-      if (currentStep > 1) {
-        isNavigating = true;
-        var $btn = $(this);
-        $btn.prop('disabled', true).addClass('disabled');
-
-        goToWizardStep(currentStep - 1);
-
-        setTimeout(function () {
-          isNavigating = false;
-          $btn.prop('disabled', false).removeClass('disabled');
-        }, 300);
+      var nextStep = Math.min(5, currentStep + 1);
+      try {
+        goToWizardStep(nextStep);
+      } catch (err) {
+        console.error('goToWizardStep navigation error:', err);
       }
     });
 
-    // Intercept Step Header clicks — validate preceding steps when moving forward (Debounced & Mutex-locked)
-    $(document).on('click', '#kt_wizard .wizard-step', function (e) {
+    // Intercept Back button clicks — navigate back and sync navigation state
+    $(document).on('click', '#client_btn_back, .client-nav-back, #client_header_back_btn, .client-top-back-btn', function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isNavigating) return false;
+      var now = Date.now();
+      if (now - lastNavTime < 250) return false;
+      lastNavTime = now;
 
-      var targetStep = $(this).index() + 1;
+      var currentStep = getCurrentStepNumber();
+      if (currentStep > 1) {
+        try {
+          goToWizardStep(currentStep - 1);
+        } catch (err) {
+          console.error('goToWizardStep back error:', err);
+        }
+      }
+    });
+
+    // Intercept Step Header clicks — validate preceding steps when moving forward
+    $(document).on('click', '#kt_wizard .wizard-step, #client_wizard_stepper .client-step-item', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var now = Date.now();
+      if (now - lastNavTime < 250) return false;
+
+      var targetStep = parseInt($(this).data('step'), 10) || ($(this).index() + 1);
       var currentStep = getCurrentStepNumber();
       if (targetStep === currentStep) return;
 
@@ -4033,28 +4897,73 @@ $('.remove_address').click(function(){
         }
       }
 
-      isNavigating = true;
-      goToWizardStep(targetStep);
-
-      setTimeout(function () {
-        isNavigating = false;
-      }, 300);
+      lastNavTime = Date.now();
+      try {
+        goToWizardStep(targetStep);
+      } catch (err) {
+        console.error('goToWizardStep step header click error:', err);
+      }
     });
+
+    // Expose Global Navigation & Helper APIs on window
+    window.goToWizardStep = goToWizardStep;
+    window.validateWizardStep = validateWizardStep;
+    window.getCurrentStepNumber = getCurrentStepNumber;
+    window.syncWizardNavigationState = syncWizardNavigationState;
+    window.populateReviewSummaries = populateReviewSummaries;
+
+    window.addSuggestedService = function(svc) {
+      if (window.clientTagsTagify) {
+        window.clientTagsTagify.addTags([svc]);
+        $('#client_tags_error').hide();
+      } else if (window.tagify) {
+        window.tagify.addTags([svc]);
+        $('#client_tags_error').hide();
+      } else {
+        var $tags = $('#tags');
+        var cur = ($tags.val() || '').trim();
+        var list = [];
+        try { list = JSON.parse(cur); } catch (e) { list = cur ? cur.split(',') : []; }
+        if (!Array.isArray(list)) list = [];
+        var already = false;
+        for (var i = 0; i < list.length; i++) {
+          var v = typeof list[i] === 'object' ? list[i].value : list[i];
+          if ((v || '').toLowerCase() === svc.toLowerCase()) { already = true; break; }
+        }
+        if (!already) {
+          list.push({ value: svc });
+          $tags.val(JSON.stringify(list)).trigger('change');
+        }
+        $('#client_tags_error').hide();
+      }
+    };
+
+    window.applyDescriptionSuggestion = function() {
+      var suggestion = $('#client_ai_suggested_desc').text().trim();
+      if (!suggestion) return;
+      if (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) {
+        tinymce.get('kt_docs_tinymce_hidden').setContent(suggestion);
+      } else {
+        $('#kt_docs_tinymce_hidden').val(suggestion).trigger('input');
+      }
+      $('#client_desc_count').text(Math.min(suggestion.length, 2000));
+      if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }).fire({ icon: 'success', title: 'Description suggestion applied!' });
+      }
+    };
 
     // Section Edit buttons in Review & Submit and Sidebar Summary Cards
     $(document).on('click', '[data-client-goto-step], .client-review-edit, .client-summary-edit', function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isNavigating) return false;
+      var now = Date.now();
+      if (now - lastNavTime < 250) return false;
+      lastNavTime = now;
 
       var step = $(this).attr('data-client-goto-step') || $(this).data('client-goto-step');
       if (step) {
-        isNavigating = true;
-        goToWizardStep(step);
-        setTimeout(function () {
-          isNavigating = false;
-        }, 300);
+        goToWizardStep(parseInt(step, 10));
       }
     });
 
@@ -4153,11 +5062,1142 @@ $('.remove_address').click(function(){
   });
 })(jQuery);
 </script>
-<script src="{{ asset('demo/v7/js/pages/crud/file-upload/image-input.js') }}"></script> 
-<script src="{{ asset('demo/v7/js/plugins.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/v7/js/scripts.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
 
+<!-- =========================================================================
+     Client Industry Intelligence Engine (Client-First Execution / 10K Concurrency)
+     ========================================================================= -->
+<script id="jero_industry_seed_data" type="application/json">
+    {!! json_encode(@$industriesManifest ?? ['manifest_id'=>'ind-empty','version'=>1,'sectors'=>[],'industries'=>[]]) !!}
+</script>
 
+<script>
+(function() {
+    'use strict';
 
+    var CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+    var CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+    var BUNDLE_URL = "{{ route('service_company.clients.industriesBundle') }}";
 
+    // Internal State
+    var indList = [];
+    var sectorsList = [];
+    var sectorMap = new Map();
+    var indMap = new Map();
+    var currentSearch = '';
+    var currentSector = 'all'; // 'all' or sector id (number/string)
+    var focusedIndex = -1;
+    var currentMatches = [];
+    var isOpen = false;
+    var selectedIndustry = null;
+    var indBroadcast = null;
+    var localManifestVersion = 1;
+    var lastFocusCheck = 0;
+    var isInteractingWithDropdown = false;
+    var lastCachedMaxHeight = null;
+    var lastCachedListHeight = null;
+
+    // Recency storage key
+    var RECENT_KEY = 'jero_recent_industries_' + CURRENT_USER_ID;
+
+    // Sector Icons & Color Palettes
+    var SECTOR_ICONS = {
+        1: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>', bg: '#eff6ff', color: '#2563eb' }, // Technology, Software & Telecom
+        2: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', bg: '#ecfdf5', color: '#059669' }, // Financial Services & Banking
+        3: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>', bg: '#fff1f2', color: '#e11d48' }, // Healthcare, Life Sciences & Wellness
+        4: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>', bg: '#fffbeb', color: '#d97706' }, // Manufacturing, Industrial & Auto
+        5: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>', bg: '#f1f5f9', color: '#475569' }, // Professional Services & Consulting
+        6: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>', bg: '#fdf4ff', color: '#c026d3' }, // Consumer Goods, Retail & Hospitality
+        7: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', bg: '#ecfeff', color: '#0891b2' }, // Energy, Utilities & Environment
+        8: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', bg: '#eef2ff', color: '#4f46e5' }, // Real Estate & Construction
+        9: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="10" x="1" y="3" rx="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M17 8h4.5a1.5 1.5 0 0 1 1.5 1.5V16h-4"/></svg>', bg: '#f0fdfa', color: '#0d9488' }, // Logistics, Transportation & Supply Chain
+        10: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>', bg: '#f5f3ff', color: '#7c3aed' } // Media, Education & Public Sector
+    };
+    var DEFAULT_SECTOR_ICON = { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>', bg: '#f1f5f9', color: '#64748b' };
+
+    function getRecentIndustries() {
+        try {
+            var raw = localStorage.getItem(RECENT_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveRecentIndustry(item) {
+        try {
+            var list = getRecentIndustries();
+            list = list.filter(function(r) { return r.id !== item.id; });
+            list.unshift({
+                id: item.id,
+                name: item.name,
+                sector_id: item.sector_id,
+                sector_name: item.sector_name,
+                timestamp: Date.now()
+            });
+            if (list.length > 5) list = list.slice(0, 5);
+            localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+        } catch (e) {}
+    }
+
+    // =========================================================================
+    // IndexedDB Persistent Storage (JeroLocalStore_v2 - industries)
+    // =========================================================================
+    var DB_NAME = 'JeroLocalStore_v2';
+    var STORE_NAME = 'industries';
+    var idbInstance = null;
+
+    function openDatabase() {
+        return new Promise(function(resolve, reject) {
+            if (idbInstance) return resolve(idbInstance);
+            if (!window.indexedDB) return reject(new Error('IndexedDB not supported'));
+
+            try {
+                var req = window.indexedDB.open(DB_NAME, 4);
+                req.onupgradeneeded = function(e) {
+                    var db = e.target.result;
+                    if (!db.objectStoreNames.contains('clients')) {
+                        db.createObjectStore('clients', { keyPath: 'key' });
+                    }
+                    if (!db.objectStoreNames.contains('job_titles')) {
+                        db.createObjectStore('job_titles', { keyPath: 'key' });
+                    }
+                    if (!db.objectStoreNames.contains('departments')) {
+                        db.createObjectStore('departments', { keyPath: 'key' });
+                    }
+                    if (!db.objectStoreNames.contains('industries')) {
+                        db.createObjectStore('industries', { keyPath: 'key' });
+                    }
+                };
+                req.onsuccess = function(e) {
+                    idbInstance = e.target.result;
+                    resolve(idbInstance);
+                };
+                req.onerror = function(e) {
+                    reject(e.target ? e.target.error : new Error('IDB open error'));
+                };
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    function idbGet(key) {
+        return openDatabase().then(function(db) {
+            return new Promise(function(resolve) {
+                try {
+                    var tx = db.transaction(STORE_NAME, 'readonly');
+                    var store = tx.objectStore(STORE_NAME);
+                    var req = store.get(key);
+                    req.onsuccess = function() { resolve(req.result ? req.result.value : null); };
+                    req.onerror = function() { resolve(null); };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+        }).catch(function() {
+            try {
+                var fallback = sessionStorage.getItem('idb_fallback_ind_' + key);
+                return fallback ? JSON.parse(fallback) : null;
+            } catch (e) { return null; }
+        });
+    }
+
+    function idbSet(key, value) {
+        return openDatabase().then(function(db) {
+            return new Promise(function(resolve) {
+                try {
+                    var tx = db.transaction(STORE_NAME, 'readwrite');
+                    var store = tx.objectStore(STORE_NAME);
+                    store.put({ key: key, value: value });
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (err) {
+                    resolve(false);
+                }
+            });
+        }).catch(function() {
+            try {
+                sessionStorage.setItem('idb_fallback_ind_' + key, JSON.stringify(value));
+            } catch (e) {}
+        });
+    }
+
+    // =========================================================================
+    // In-Memory Search Engine (< 2ms Latency)
+    // =========================================================================
+    function scoreCandidate(item, query, queryTokens, recentIdSet) {
+        var score = 0;
+        var nameLower = (item.name || '').toLowerCase();
+        var secLower = (item.sector_name || '').toLowerCase();
+        var kwLower = (item.keywords || '').toLowerCase();
+
+        // 1. Exact Name Match
+        if (nameLower === query) {
+            score += 150;
+        } else if (nameLower.indexOf(query) === 0) {
+            score += 100;
+        } else if (nameLower.indexOf(query) > 0) {
+            score += 70;
+        }
+
+        // 2. Multi-Token Set Match
+        var allTokensMatched = true;
+        for (var t = 0; t < queryTokens.length; t++) {
+            var tok = queryTokens[t];
+            if (nameLower.indexOf(tok) !== -1) {
+                score += 25;
+            } else if (secLower.indexOf(tok) !== -1) {
+                score += 20;
+            } else if (kwLower.indexOf(tok) !== -1) {
+                score += 20;
+            } else {
+                allTokensMatched = false;
+            }
+        }
+        if (allTokensMatched) score += 30;
+
+        // 3. Recency Bonus
+        if (recentIdSet.has(item.id)) score += 35;
+
+        return score;
+    }
+
+    function searchIndustries(query, sectorFilter) {
+        var baseList = indList;
+        if (sectorFilter && sectorFilter !== 'all') {
+            var sId = parseInt(sectorFilter, 10);
+            baseList = indList.filter(function(r) { return r.sector_id === sId; });
+        }
+
+        var recentItems = getRecentIndustries();
+        var recentIdSet = new Set(recentItems.map(function(r) { return r.id; }));
+
+        var cleanQ = (query || '').trim().toLowerCase();
+        if (!cleanQ) {
+            return baseList;
+        }
+
+        var queryTokens = cleanQ.split(/[^a-z0-9]+/i).filter(Boolean);
+        if (queryTokens.length === 0) return baseList;
+
+        var scored = [];
+        for (var i = 0; i < baseList.length; i++) {
+            var item = baseList[i];
+            var score = scoreCandidate(item, cleanQ, queryTokens, recentIdSet);
+            if (score > 15) {
+                scored.push({ item: item, score: score });
+            }
+        }
+
+        scored.sort(function(a, b) { return b.score - a.score; });
+        return scored.map(function(s) { return s.item; });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function escapeRegex(str) {
+        if (!str) return '';
+        return String(str).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
+    function highlightMatch(text, query) {
+        if (!query || !query.trim()) return escapeHtml(text);
+        var safeText = escapeHtml(text);
+        var safeQ = escapeRegex(query.trim());
+        try {
+            var regex = new RegExp('(' + safeQ + ')', 'gi');
+            return safeText.replace(regex, '<mark class="jero-ind-mark">$1</mark>');
+        } catch (e) {
+            return safeText;
+        }
+    }
+
+    // =========================================================================
+    // Render & Dropdown UI Engine
+    // =========================================================================
+    function updateSectorTabs() {
+        var tabsWrap = document.getElementById('jero_ind_tabs');
+        if (!tabsWrap) return;
+
+        // Count per sector
+        var counts = {};
+        for (var i = 0; i < indList.length; i++) {
+            var s = indList[i].sector_id;
+            counts[s] = (counts[s] || 0) + 1;
+        }
+
+        var allHtml = '<button type="button" class="jero-ind-tab-btn ' + (currentSector === 'all' ? 'active' : '') + '" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">' + indList.length + '</span></button>';
+
+        for (var sIdx = 0; sIdx < sectorsList.length; sIdx++) {
+            var sec = sectorsList[sIdx];
+            var count = counts[sec.id] || 0;
+            var shortName = sec.name.split(',')[0].split('&')[0].trim();
+            var isActive = (String(currentSector) === String(sec.id)) ? 'active' : '';
+            allHtml += '<button type="button" class="jero-ind-tab-btn ' + isActive + '" data-sector="' + sec.id + '" title="' + escapeHtml(sec.name) + '">' +
+                escapeHtml(shortName) + ' <span class="tab-count">' + count + '</span>' +
+            '</button>';
+        }
+
+        tabsWrap.innerHTML = allHtml;
+    }
+
+    function updateRecentBar() {
+        var bar = document.getElementById('jero_ind_recent_bar');
+        if (!bar) return;
+
+        var q = currentSearch.trim();
+        if (q || currentSector !== 'all') {
+            bar.style.display = 'none';
+            return;
+        }
+
+        var recentItems = getRecentIndustries();
+        if (!recentItems || recentItems.length === 0) {
+            bar.style.display = 'none';
+            return;
+        }
+
+        var html = '<span class="jero-ind-recent-label">Recent:</span>';
+        var count = Math.min(recentItems.length, 3);
+        for (var r = 0; r < count; r++) {
+            var item = recentItems[r];
+            var iconData = SECTOR_ICONS[item.sector_id] || DEFAULT_SECTOR_ICON;
+            html += '<span class="jero-ind-recent-chip" data-id="' + item.id + '" title="' + escapeHtml(item.sector_name || '') + '">' +
+                '<span style="display:inline-flex;width:12px;height:12px;color:' + iconData.color + ';">' + iconData.icon + '</span> ' +
+                escapeHtml(item.name) +
+            '</span>';
+        }
+
+        bar.innerHTML = html;
+        bar.style.display = 'flex';
+    }
+
+    function renderDropdownList() {
+        var container = document.getElementById('jero_ind_list_container');
+        if (!container) return;
+
+        updateRecentBar();
+        currentMatches = searchIndustries(currentSearch, currentSector);
+        focusedIndex = -1;
+
+        var q = currentSearch.trim();
+        var html = '';
+
+        if (currentMatches.length === 0) {
+            container.innerHTML = '<div class="jero-ind-empty-state">' +
+                (q ? 'No industries match "' + escapeHtml(q) + '".' : 'No industries available in this sector.') +
+            '</div>';
+            adjustDropdownPosition();
+            return;
+        }
+
+        var currentVal = ($('#industry').val() || '').trim();
+
+        // Group by sector when no search query
+        var currentSecId = null;
+        for (var i = 0; i < currentMatches.length; i++) {
+            var item = currentMatches[i];
+            if (!q && currentSector === 'all' && item.sector_id !== currentSecId) {
+                currentSecId = item.sector_id;
+                var secIconData = SECTOR_ICONS[item.sector_id] || DEFAULT_SECTOR_ICON;
+                html += '<div class="jero-ind-section-header">' +
+                    '<span class="jero-ind-sector-icon" style="background:' + secIconData.bg + '; color:' + secIconData.color + ';">' +
+                        secIconData.icon +
+                    '</span>' +
+                    '<span>' + escapeHtml(item.sector_name || 'General') + '</span>' +
+                '</div>';
+            }
+            var isSelected = (selectedIndustry && selectedIndustry.id === item.id) || (String(item.id) === currentVal);
+            html += buildItemHtml(item, q, i, isSelected);
+        }
+
+        container.innerHTML = html;
+        adjustDropdownPosition();
+    }
+
+    function buildItemHtml(item, query, index, isSelected) {
+        var checkHtml = isSelected
+            ? '<span class="jero-ind-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>'
+            : '';
+
+        return '<div class="jero-ind-item ' + (isSelected ? 'selected' : '') + '" data-idx="' + index + '" data-id="' + item.id + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+            '<div class="jero-ind-item-main">' +
+                '<div class="jero-ind-item-name">' + highlightMatch(item.name, query) + '</div>' +
+                '<div class="jero-ind-item-sub">' + escapeHtml(item.sector_name || '') + '</div>' +
+            '</div>' +
+            '<div class="jero-ind-item-side">' +
+                checkHtml +
+            '</div>' +
+        '</div>';
+    }
+
+    function scrollItemIntoView(container, target) {
+        if (!container || !target) return;
+        var cRect = container.getBoundingClientRect();
+        var tRect = target.getBoundingClientRect();
+
+        if (tRect.top < cRect.top) {
+            container.scrollTop -= (cRect.top - tRect.top + 6);
+        } else if (tRect.bottom > cRect.bottom) {
+            container.scrollTop += (tRect.bottom - cRect.bottom + 6);
+        }
+    }
+
+    function adjustDropdownPosition() {
+        var wrap = document.getElementById('jero_ind_select_wrap');
+        var dropdown = document.getElementById('jero_ind_dropdown');
+        var container = document.getElementById('jero_ind_list_container');
+        if (!wrap || !dropdown || !isOpen) return;
+
+        var rect = wrap.getBoundingClientRect();
+        var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
+
+        if (rect.bottom < 0 || rect.top > viewportH) {
+            closeDropdown();
+            return;
+        }
+
+        var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
+        var spaceAbove = Math.max(0, rect.top - 12);
+
+        var tabsEl = dropdown.querySelector('.jero-ind-tabs');
+        var recentEl = document.getElementById('jero_ind_recent_bar');
+        var footerEl = dropdown.querySelector('.jero-ind-footer');
+
+        var fixedH = (tabsEl ? tabsEl.offsetHeight : 38) +
+                     ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
+                     (footerEl ? footerEl.offsetHeight : 34) + 16;
+
+        var dropUp = false;
+        if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+            dropUp = true;
+        }
+
+        if (dropUp) {
+            dropdown.classList.add('drop-up');
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = 'calc(100% + 5px)';
+
+            var maxAvailable = Math.max(180, Math.min(380, spaceAbove));
+            if (lastCachedMaxHeight !== maxAvailable) {
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                lastCachedMaxHeight = maxAvailable;
+            }
+            if (container) {
+                var listH = Math.max(80, maxAvailable - fixedH);
+                if (lastCachedListHeight !== listH) {
+                    container.style.maxHeight = listH + 'px';
+                    lastCachedListHeight = listH;
+                }
+            }
+        } else {
+            dropdown.classList.remove('drop-up');
+            dropdown.style.bottom = 'auto';
+            dropdown.style.top = 'calc(100% + 5px)';
+
+            var maxAvailable = Math.max(180, Math.min(380, spaceBelow));
+            if (lastCachedMaxHeight !== maxAvailable) {
+                dropdown.style.maxHeight = maxAvailable + 'px';
+                lastCachedMaxHeight = maxAvailable;
+            }
+            if (container) {
+                var listH = Math.max(80, maxAvailable - fixedH);
+                if (lastCachedListHeight !== listH) {
+                    container.style.maxHeight = listH + 'px';
+                    lastCachedListHeight = listH;
+                }
+            }
+        }
+    }
+
+    function openDropdown() {
+        var dropdown = document.getElementById('jero_ind_dropdown');
+        var wrap = document.getElementById('jero_ind_select_wrap');
+        var input = document.getElementById('industry_display');
+        var container = document.getElementById('jero_ind_list_container');
+        if (!dropdown || !wrap) return;
+
+        isOpen = true;
+        wrap.classList.add('is-open');
+        dropdown.style.display = 'flex';
+        if (input) {
+            input.setAttribute('aria-expanded', 'true');
+            input.classList.remove('is-invalid');
+            currentSearch = '';
+            try {
+                input.select();
+            } catch (e) {}
+        }
+
+        renderDropdownList();
+        adjustDropdownPosition();
+
+        if (container) {
+            var selectedEl = container.querySelector('.jero-ind-item.selected');
+            if (selectedEl) {
+                scrollItemIntoView(container, selectedEl);
+            } else {
+                container.scrollTop = 0;
+            }
+        }
+    }
+
+    function closeDropdown() {
+        var dropdown = document.getElementById('jero_ind_dropdown');
+        var wrap = document.getElementById('jero_ind_select_wrap');
+        var container = document.getElementById('jero_ind_list_container');
+        var input = document.getElementById('industry_display');
+        if (!dropdown || !wrap) return;
+
+        isOpen = false;
+        wrap.classList.remove('is-open');
+        dropdown.style.display = 'none';
+        dropdown.style.maxHeight = '';
+        lastCachedMaxHeight = null;
+        lastCachedListHeight = null;
+        if (container) container.style.maxHeight = '';
+        if (input) input.setAttribute('aria-expanded', 'false');
+        focusedIndex = -1;
+    }
+
+    function moveFocus(delta) {
+        var container = document.getElementById('jero_ind_list_container');
+        if (!container) return;
+        var items = container.querySelectorAll('.jero-ind-item');
+        if (items.length === 0) return;
+
+        if (focusedIndex >= 0 && focusedIndex < items.length) {
+            items[focusedIndex].classList.remove('focused');
+        }
+
+        focusedIndex += delta;
+        if (focusedIndex < 0) focusedIndex = items.length - 1;
+        if (focusedIndex >= items.length) focusedIndex = 0;
+
+        var target = items[focusedIndex];
+        target.classList.add('focused');
+        scrollItemIntoView(container, target);
+    }
+
+    function selectFocused() {
+        var container = document.getElementById('jero_ind_list_container');
+        var items = container ? container.querySelectorAll('.jero-ind-item') : [];
+
+        if (focusedIndex >= 0 && focusedIndex < items.length) {
+            var el = items[focusedIndex];
+            var id = el.getAttribute('data-id');
+            if (id) {
+                var item = indMap.get(parseInt(id, 10));
+                if (item) {
+                    selectItem(item);
+                    return;
+                }
+            }
+        }
+
+        // If user pressed Enter and there are matches
+        if (currentMatches && currentMatches.length > 0) {
+            selectItem(currentMatches[0]);
+            return;
+        }
+
+        closeDropdown();
+    }
+
+    function selectItem(item) {
+        if (!item) return;
+
+        selectedIndustry = item;
+        var select = document.getElementById('industry');
+        var displayInput = document.getElementById('industry_display');
+        var clearBtn = document.getElementById('jero_ind_clear_btn');
+        var kbdEl = document.getElementById('jero_ind_kbd');
+        var inputBox = document.getElementById('jero_ind_input_box');
+
+        // 1. Update native select (add option if not present)
+        if (select) {
+            var exists = false;
+            for (var o = 0; o < select.options.length; o++) {
+                if (select.options[o].value == item.id) {
+                    select.selectedIndex = o;
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                var opt = document.createElement('option');
+                opt.value = item.id;
+                opt.text = item.name;
+                opt.selected = true;
+                select.appendChild(opt);
+            }
+            $(select).val(item.id).trigger('change');
+        }
+
+        if (displayInput) {
+            displayInput.value = item.name;
+        }
+        if (inputBox) {
+            inputBox.classList.add('has-value');
+        }
+        if (clearBtn) clearBtn.style.display = 'flex';
+        if (kbdEl) kbdEl.style.display = 'none';
+
+        // Update review text
+        $('.span_industry').text(item.name);
+
+        // Clear validation error state
+        $('#jero_ind_select_wrap').removeClass('has-validation-error');
+        $('.jero-ind-input-box').removeClass('has-validation-error');
+        if (typeof window.clearFieldError === 'function') {
+            window.clearFieldError($('#industry'));
+        }
+
+        // Recency
+        saveRecentIndustry(item);
+        closeDropdown();
+    }
+
+    function commitCustomIndustry(customName) {
+        var clean = (customName !== undefined && customName !== null) ? String(customName).trim() : '';
+        var select = document.getElementById('industry');
+        var displayInput = document.getElementById('industry_display');
+        var clearBtn = document.getElementById('jero_ind_clear_btn');
+        var kbdEl = document.getElementById('jero_ind_kbd');
+        var inputBox = document.getElementById('jero_ind_input_box');
+
+        if (!clean) {
+            clearSelection();
+            return;
+        }
+
+        if (displayInput && displayInput.value !== clean) {
+            displayInput.value = clean;
+        }
+        if (inputBox) {
+            inputBox.classList.add('has-value');
+        }
+        if (clearBtn) clearBtn.style.display = 'flex';
+        if (kbdEl) kbdEl.style.display = 'none';
+
+        // 1. Check if exact case-insensitive match exists in indList
+        var exactMatchedItem = null;
+        for (var i = 0; i < indList.length; i++) {
+            if ((indList[i].name || '').toLowerCase() === clean.toLowerCase()) {
+                exactMatchedItem = indList[i];
+                break;
+            }
+        }
+        if (exactMatchedItem) {
+            selectItem(exactMatchedItem);
+            return;
+        }
+
+        // 2. Check if starts-with / prefix match exists in indList
+        var prefixMatchedItem = null;
+        for (var p = 0; p < indList.length; p++) {
+            if ((indList[p].name || '').toLowerCase().indexOf(clean.toLowerCase()) === 0) {
+                prefixMatchedItem = indList[p];
+                break;
+            }
+        }
+        if (prefixMatchedItem) {
+            selectItem(prefixMatchedItem);
+            return;
+        }
+
+        // 3. Check if substring match exists in indList
+        var subMatchedItem = null;
+        for (var s = 0; s < indList.length; s++) {
+            if ((indList[s].name || '').toLowerCase().indexOf(clean.toLowerCase()) !== -1) {
+                subMatchedItem = indList[s];
+                break;
+            }
+        }
+        if (subMatchedItem) {
+            selectItem(subMatchedItem);
+            return;
+        }
+
+        // 4. Check existing native select options
+        if (select) {
+            for (var o = 0; o < select.options.length; o++) {
+                if ((select.options[o].text || '').toLowerCase() === clean.toLowerCase()) {
+                    select.selectedIndex = o;
+                    var matchedVal = select.options[o].value;
+                    $(select).val(matchedVal).trigger('change');
+                    $('.span_industry').text(select.options[o].text);
+                    $('#jero_ind_select_wrap').removeClass('has-validation-error');
+                    $('.jero-ind-input-box').removeClass('has-validation-error');
+                    if (typeof window.clearFieldError === 'function') {
+                        window.clearFieldError($('#industry'));
+                    }
+                    selectedIndustry = { id: matchedVal, name: select.options[o].text };
+                    closeDropdown();
+                    return;
+                }
+            }
+
+            // 5. If not matched, dynamically create option so native select has value
+            var customExists = false;
+            for (var c = 0; c < select.options.length; c++) {
+                if (select.options[c].value === clean || select.options[c].text === clean) {
+                    select.selectedIndex = c;
+                    customExists = true;
+                    break;
+                }
+            }
+            if (!customExists) {
+                var customOpt = document.createElement('option');
+                customOpt.value = clean;
+                customOpt.text = clean;
+                customOpt.selected = true;
+                select.appendChild(customOpt);
+            }
+            $(select).val(clean).trigger('change');
+        }
+
+        selectedIndustry = { id: clean, name: clean, is_custom: true };
+        $('.span_industry').text(clean);
+        $('#jero_ind_select_wrap').removeClass('has-validation-error');
+        $('.jero-ind-input-box').removeClass('has-validation-error');
+        if (typeof window.clearFieldError === 'function') {
+            window.clearFieldError($('#industry'));
+        }
+        closeDropdown();
+    }
+
+    function commitIfCustom() {
+        var input = document.getElementById('industry_display');
+        if (!input) return;
+        var val = (input.value || '').trim();
+        if (val) {
+            if (!selectedIndustry || (selectedIndustry.name || '').toLowerCase() !== val.toLowerCase()) {
+                commitCustomIndustry(val);
+            }
+        } else {
+            clearSelection();
+        }
+    }
+
+    function clearSelection() {
+        var select = document.getElementById('industry');
+        var displayInput = document.getElementById('industry_display');
+        var clearBtn = document.getElementById('jero_ind_clear_btn');
+        var kbdEl = document.getElementById('jero_ind_kbd');
+        var inputBox = document.getElementById('jero_ind_input_box');
+
+        selectedIndustry = null;
+
+        if (select) {
+            select.selectedIndex = 0;
+            $(select).val('').trigger('change');
+        }
+        if (displayInput) {
+            displayInput.value = '';
+            displayInput.focus();
+        }
+        if (inputBox) {
+            inputBox.classList.remove('has-value');
+        }
+        if (clearBtn) {
+            clearBtn.style.display = 'none';
+        }
+        if (kbdEl) {
+            kbdEl.style.display = '';
+        }
+
+        $('.span_industry').text('-');
+        currentSearch = '';
+        renderDropdownList();
+    }
+
+    function ingestManifest(manifest) {
+        if (!manifest || !Array.isArray(manifest.industries)) return;
+        indList = manifest.industries;
+        sectorsList = manifest.sectors || [];
+        indMap.clear();
+        sectorMap.clear();
+        localManifestVersion = manifest.version || 1;
+
+        for (var s = 0; s < sectorsList.length; s++) {
+            sectorMap.set(sectorsList[s].id, sectorsList[s]);
+        }
+        for (var i = 0; i < indList.length; i++) {
+            indMap.set(indList[i].id, indList[i]);
+        }
+
+        updateSectorTabs();
+        syncInitialState();
+    }
+
+    function syncInitialState() {
+        var select = document.getElementById('industry');
+        var displayInput = document.getElementById('industry_display');
+        var clearBtn = document.getElementById('jero_ind_clear_btn');
+        var kbdEl = document.getElementById('jero_ind_kbd');
+        var inputBox = document.getElementById('jero_ind_input_box');
+
+        if (!displayInput) return;
+
+        var currentVal = select ? (select.value || '').trim() : '';
+        if (currentVal && indMap.has(parseInt(currentVal, 10))) {
+            var curr = indMap.get(parseInt(currentVal, 10));
+            selectedIndustry = curr;
+            displayInput.value = curr.name;
+            if (inputBox) inputBox.classList.add('has-value');
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+            $('.span_industry').text(curr.name);
+        } else if (currentVal && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
+            var text = select.options[select.selectedIndex].text;
+            displayInput.value = text;
+            if (inputBox) inputBox.classList.add('has-value');
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+            $('.span_industry').text(text);
+        } else {
+            selectedIndustry = null;
+            if (inputBox) inputBox.classList.remove('has-value');
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (kbdEl) kbdEl.style.display = '';
+        }
+    }
+
+    async function initCacheAndSync() {
+        var cacheKey = 'ind_tenant_' + CURRENT_TENANT_ID;
+
+        // 1. Check Pre-Seeded HTML DOM script tag (0ms Cold Start)
+        var seedEl = document.getElementById('jero_industry_seed_data');
+        if (seedEl && seedEl.textContent.trim()) {
+            try {
+                var seedManifest = JSON.parse(seedEl.textContent);
+                if (seedManifest && Array.isArray(seedManifest.industries) && seedManifest.industries.length > 0) {
+                    ingestManifest(seedManifest);
+                    idbSet(cacheKey, { manifest: seedManifest, timestamp: Date.now() });
+                    checkServerVersion(seedManifest.version);
+                    return;
+                }
+            } catch (e) {}
+        }
+
+        // 2. Check IndexedDB L1 Persistent Store (< 5ms)
+        try {
+            var cached = await idbGet(cacheKey);
+            if (cached && cached.manifest && Array.isArray(cached.manifest.industries)) {
+                ingestManifest(cached.manifest);
+                checkServerVersion(cached.manifest.version);
+                return;
+            }
+        } catch (err) {}
+
+        // 3. Fallback: Fetch bundle from server
+        fetchBundleFromServer(1);
+    }
+
+    function checkServerVersion(localVersion) {
+        fetch(BUNDLE_URL, {
+            method: 'GET',
+            headers: {
+                'If-None-Match': 'W/"tindex_' + CURRENT_TENANT_ID + '_ind_ind-tenant-' + CURRENT_TENANT_ID + '-v' + localVersion + '"'
+            }
+        }).then(function(res) {
+            if (res.status === 304) return null;
+            if (res.ok) return res.json();
+            return null;
+        }).then(function(newManifest) {
+            if (newManifest && Array.isArray(newManifest.industries)) {
+                ingestManifest(newManifest);
+                idbSet('ind_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
+                if (indBroadcast) {
+                    indBroadcast.postMessage({ type: 'IND_UPDATED', version: newManifest.version });
+                }
+            }
+        }).catch(function() {});
+    }
+
+    function fetchBundleFromServer(version) {
+        var statusEl = document.getElementById('jero_ind_sync_status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="jero-ind-sync-dot"></span><span>Syncing...</span>';
+        }
+
+        fetch(BUNDLE_URL)
+            .then(function(res) { return res.json(); })
+            .then(function(manifest) {
+                if (manifest && Array.isArray(manifest.industries)) {
+                    ingestManifest(manifest);
+                    idbSet('ind_tenant_' + CURRENT_TENANT_ID, { manifest: manifest, timestamp: Date.now() });
+                }
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="jero-ind-sync-dot"></span><span>Live Synced</span>';
+                }
+            }).catch(function() {
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="jero-ind-sync-dot" style="background:#e11d48;"></span><span>Offline Cache</span>';
+                }
+            });
+    }
+
+    function initEventListeners() {
+        var input = document.getElementById('industry_display');
+        var clearBtn = document.getElementById('jero_ind_clear_btn');
+        var chevron = document.getElementById('jero_ind_chevron');
+        var tabsContainer = document.getElementById('jero_ind_tabs');
+        var container = document.getElementById('jero_ind_list_container');
+        var recentBar = document.getElementById('jero_ind_recent_bar');
+        var wrapEl = document.getElementById('jero_ind_select_wrap');
+
+        if (input) {
+            input.addEventListener('focus', function() {
+                if (!isOpen) {
+                    openDropdown();
+                }
+            });
+
+            input.addEventListener('click', function(e) {
+                if (!isOpen) {
+                    openDropdown();
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(function() {
+                    var activeEl = document.activeElement;
+                    var wrap = document.getElementById('jero_ind_select_wrap');
+                    if (wrap && wrap.contains(activeEl)) return;
+                    commitIfCustom();
+                }, 200);
+            });
+
+            input.addEventListener('input', function() {
+                currentSearch = this.value;
+                renderDropdownList();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!isOpen) openDropdown();
+                    else moveFocus(1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!isOpen) openDropdown();
+                    else moveFocus(-1);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isOpen) {
+                        selectFocused();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDropdown();
+                }
+            });
+        }
+
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
+                    if (input) input.focus();
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearSelection();
+            });
+        }
+
+        if (tabsContainer) {
+            tabsContainer.addEventListener('click', function(e) {
+                var btn = e.target.closest('.jero-ind-tab-btn');
+                if (!btn) return;
+                var sector = btn.getAttribute('data-sector');
+                if (!sector) return;
+
+                currentSector = sector;
+                var allTabs = tabsContainer.querySelectorAll('.jero-ind-tab-btn');
+                for (var t = 0; t < allTabs.length; t++) {
+                    allTabs[t].classList.remove('active');
+                }
+                btn.classList.add('active');
+
+                renderDropdownList();
+                if (input) input.focus();
+            });
+        }
+
+        if (container) {
+            container.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-ind-item');
+                if (!itemEl) return;
+                var id = itemEl.getAttribute('data-id');
+                if (id) {
+                    var item = indMap.get(parseInt(id, 10));
+                    if (item) {
+                        selectItem(item);
+                    }
+                }
+            });
+        }
+
+        if (recentBar) {
+            recentBar.addEventListener('click', function(e) {
+                var chip = e.target.closest('.jero-ind-recent-chip');
+                if (!chip) return;
+                var id = chip.getAttribute('data-id');
+                if (id) {
+                    var item = indMap.get(parseInt(id, 10));
+                    if (item) {
+                        selectItem(item);
+                    }
+                }
+            });
+        }
+
+        // Global hotkey '/' to search industry when not in other input
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && !isOpen) {
+                var tag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : '';
+                if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+                    e.preventDefault();
+                    if (input) {
+                        input.focus();
+                        openDropdown();
+                    }
+                }
+            }
+        });
+
+        // Pointer outside click handling
+        if (wrapEl) {
+            wrapEl.addEventListener('pointerdown', function() {
+                isInteractingWithDropdown = true;
+            });
+        }
+        window.addEventListener('mouseup', function() {
+            setTimeout(function() { isInteractingWithDropdown = false; }, 60);
+        });
+        window.addEventListener('pointercancel', function() {
+            isInteractingWithDropdown = false;
+        });
+
+        document.addEventListener('pointerdown', function(e) {
+            if (isInteractingWithDropdown) return;
+            var wrap = document.getElementById('jero_ind_select_wrap');
+            if (wrap && !wrap.contains(e.target)) {
+                if (isOpen) {
+                    var inputEl = document.getElementById('industry_display');
+                    if (inputEl && inputEl.value.trim()) {
+                        commitIfCustom();
+                    }
+                    closeDropdown();
+                }
+            }
+        }, true);
+
+        // Reposition on window resize or scroll
+        window.addEventListener('resize', function() {
+            if (isOpen) adjustDropdownPosition();
+        }, { passive: true });
+        window.addEventListener('scroll', function() {
+            if (isOpen) adjustDropdownPosition();
+        }, { passive: true });
+
+        // Synchronize if native select is changed programmatically
+        $('#industry').on('change', function() {
+            var val = $(this).val();
+            if (!selectedIndustry || String(selectedIndustry.id) !== String(val)) {
+                syncInitialState();
+            }
+        });
+
+        // BroadcastChannel for cross-tab sync
+        if ('BroadcastChannel' in window) {
+            try {
+                indBroadcast = new BroadcastChannel('jero_industry_channel');
+                indBroadcast.onmessage = function(ev) {
+                    if (ev.data && ev.data.type === 'IND_UPDATED') {
+                        fetchBundleFromServer(ev.data.version || 1);
+                    }
+                };
+            } catch (e) {}
+        }
+
+        // Storage event fallback
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'jero_industry_sync_timestamp') {
+                fetchBundleFromServer(1);
+            }
+        });
+
+        // Tab focus reconciliation
+        window.addEventListener('focus', function() {
+            var now = Date.now();
+            if (now - lastFocusCheck > 30000) {
+                lastFocusCheck = now;
+                checkServerVersion(localManifestVersion);
+            }
+        });
+    }
+
+    // Global export for backward compatibility & testing
+    window.JeroIndustryIntelligenceEngine = {
+        open: openDropdown,
+        close: closeDropdown,
+        isOpen: function() { return isOpen; },
+        commitIfCustom: commitIfCustom,
+        commitCustomIndustry: commitCustomIndustry,
+        getSelected: function() { return selectedIndustry; },
+        search: function(q) {
+            currentSearch = q;
+            renderDropdownList();
+        },
+        selectById: function(id) {
+            var item = indMap.get(parseInt(id, 10));
+            if (item) selectItem(item);
+        },
+        selectByName: function(name) {
+            var clean = (name || '').trim().toLowerCase();
+            for (var i = 0; i < indList.length; i++) {
+                if (indList[i].name.toLowerCase() === clean) {
+                    selectItem(indList[i]);
+                    return;
+                }
+            }
+        },
+        clear: clearSelection,
+        refresh: function() {
+            fetchBundleFromServer(1);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            initCacheAndSync();
+            initEventListeners();
+        });
+    } else {
+        initCacheAndSync();
+        initEventListeners();
+    }
+})();
+</script>
 @endpush

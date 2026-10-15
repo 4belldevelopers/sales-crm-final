@@ -1,146 +1,316 @@
-<!--begin::Client Information-->
+<!--begin::Client Information (God-Level Design Aligned with media_1792065526584.png)-->
 <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
-  <!-- Purpose: group identity and company metadata into compact cards that scan well on laptop screens. -->
   <div class="client-step-layout">
     <div class="client-main-column">
-      <section class="client-section-card" aria-labelledby="client-branding-title">
-        <h3 class="client-section-heading" id="client-branding-title">Company Branding</h3>
-        <p class="client-section-copy">Upload company logo for visual identification.</p>
-        <div class="client-branding-grid">
-          <label class="client-logo-upload" for="client_logo_input">
-            <span class="client-upload-icon"><i class="la la-cloud-upload-alt" aria-hidden="true"></i></span>
-            <span class="client-upload-title">Upload Company Logo</span>
-            <span class="client-upload-copy">PNG or JPG (Max. 2MB)</span>
-            <span class="client-upload-copy">Recommended: square image</span>
-          </label>
-          <div class="client-logo-preview">
-            <span class="client-preview-label">Preview</span>
-            <div class="image-input image-input-outline" id="client_logo_preview">
-              <div class="image-input-wrapper" style="background-image: url(<?php echo @$background_image; ?>);"></div>
-              <label data-kt-image-input-action="change" title="Change company logo">
-                <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg" onchange="loadFile(event)"/>
-                <input type="hidden" name="avatar_remove" />
-              </label>
-            </div>
-            <button type="button" class="client-preview-remove" data-kt-image-input-action="cancel"><i class="la la-trash" aria-hidden="true"></i> Remove</button>
+
+      <!-- ==========================================
+           SECTION 1: Company Identity
+           ========================================== -->
+      <section class="card client-section-card mb-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;" aria-labelledby="client-identity-title">
+        <div class="card-header border-0 py-4 px-6 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f1f5f9 !important;">
+          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+            <i class="la la-user" style="font-size:20px; color:#ca8a04;"></i>
           </div>
-          <div class="client-brand-fields">
-            <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="website">Website</label>
-              <div class="input-group input-group-solid">
-                <span class="input-group-text"><i class="la la-globe"></i></span>
-                <input type="text" class="form-control form-control-solid" name="website" id="website" value="<?php echo @$website; ?>" placeholder="https://www.example.com">
-                <button type="button" class="btn client-auto-fetch" id="client_auto_fetch"><i class="la la-magic" aria-hidden="true"></i> Auto Fetch Data</button>
+          <div>
+            <h3 class="client-section-heading" id="client-identity-title" style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Company Identity</h3>
+            <p class="client-section-copy" style="font-size:12px; color:#64748b; margin:0;">Upload logo and enter basic details for this client.</p>
+          </div>
+        </div>
+
+        <div class="card-body p-6">
+          <div class="client-branding-grid" style="display:grid; grid-template-columns:180px 140px minmax(0, 1fr); gap:16px; align-items:start;">
+            
+            <!-- Logo Upload Dashed Area -->
+            <label class="client-logo-upload" for="client_logo_input" style="border:1.5px dashed #cbd5e1; border-radius:10px; padding:16px 12px; text-align:center; background:#fafafa; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:148px; transition:border-color 0.15s ease;">
+              <div style="width:44px; height:44px; border-radius:50%; background:#eff6ff; display:inline-flex; align-items:center; justify-content:center; position:relative; margin-bottom:8px;">
+                <i class="la la-building" style="font-size:22px; color:#3b82f6;"></i>
+                <span style="position:absolute; bottom:-1px; right:-1px; width:15px; height:15px; border-radius:50%; background:#2563eb; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; line-height:1;">+</span>
               </div>
-              <span class="form-text text-muted">Enter website to auto-fetch available company details.</span>
+              <span class="client-upload-title" style="font-size:12px; font-weight:600; color:#2563eb; margin-bottom:2px;">Upload Company Logo</span>
+              <span class="client-upload-copy" style="font-size:10.5px; color:#64748b; line-height:1.3;">PNG or JPG (Max. 2MB)</span>
+              <span class="client-upload-copy" style="font-size:10px; color:#94a3b8; margin-top:2px;">Recommended: square image</span>
+            </label>
+
+            <!-- Logo Preview -->
+            <div class="client-logo-preview" style="border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center; background:#ffffff; min-height:148px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <span class="client-preview-label" style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:8px;">Preview</span>
+              <div class="image-input image-input-outline" id="client_logo_preview" style="width:68px; height:68px; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden; margin-bottom:8px; display:inline-flex; align-items:center; justify-content:center; background:#f8fafc;">
+                <div class="image-input-wrapper" style="width:100%; height:100%; background-size:cover; background-position:center; background-image: url(<?php echo @$background_image; ?>);">
+                  <?php if(empty(@$background_image)): ?>
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#94a3b8;">
+                      <i class="la la-building" style="font-size:30px;"></i>
+                    </div>
+                  <?php endif; ?>
+                </div>
+                <label data-kt-image-input-action="change" title="Change company logo" style="display:none;">
+                  <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg" onchange="loadFile(event)"/>
+                  <input type="hidden" name="avatar_remove" />
+                </label>
+              </div>
+              <button type="button" class="btn btn-sm client-preview-remove" data-kt-image-input-action="cancel" style="border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:6px; font-size:10.5px; font-weight:600; padding:3px 10px; display:inline-flex; align-items:center; gap:3px;">
+                <i class="la la-trash" style="font-size:11px;"></i> Remove
+              </button>
             </div>
-            <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="client_id">Client Name</label>
-              <div class="input-group input-group-solid">
-                <span class="input-group-text"><i class="la la-user"></i></span>
-                <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name">
+
+            <!-- Client Name & Website Fields -->
+            <div class="client-brand-fields d-flex flex-column gap-3">
+              <!-- Client Name Field -->
+              <div class="client-field fv-plugins-icon-container">
+                <label class="form-label required" for="client_id" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Client Name <span class="text-danger">*</span></label>
+                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                  <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-user" style="font-size:16px;"></i></span>
+                  <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name" style="border:none; height:42px; font-size:13px; color:#1e293b;">
+                </div>
+              </div>
+
+              <!-- Company Website Field with Fetch Button -->
+              <div class="client-field fv-plugins-icon-container">
+                <label class="form-label required" for="website" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Website</label>
+                <div class="input-group" style="display:flex; align-items:stretch; gap:6px;">
+                  <div class="input-group-solid" style="display:flex; align-items:center; flex:1; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                    <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-globe" style="font-size:16px;"></i></span>
+                    <input type="text" class="form-control form-control-solid" name="website" id="website" value="<?php echo @$website; ?>" placeholder="https://www.example.com" style="border:none; height:42px; font-size:13px; color:#1e293b;">
+                  </div>
+                  <button type="button" class="btn client-auto-fetch" id="client_auto_fetch" style="background:#fffdf0; border:1px solid #fef08a; color:#854d0e; font-weight:700; font-size:12.5px; padding:0 14px; border-radius:8px; white-space:nowrap; display:inline-flex; align-items:center; gap:5px;">
+                    <i class="la la-magic" style="font-size:14px; color:#ca8a04;"></i> Fetch Company Details
+                  </button>
+                </div>
+                <div class="client-info-banner mt-2 mb-0" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:6px; padding:8px 12px; display:flex; align-items:center; gap:8px; color:#1e40af; font-size:11.5px;">
+                  <i class="la la-info-circle" style="color:#3b82f6; font-size:14px;"></i>
+                  <span>We will fetch and suggest company information from the website.</span>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      <section class="client-section-card" aria-labelledby="client-details-title">
-        <h3 class="client-section-heading" id="client-details-title">Company Details</h3>
-        <p class="client-section-copy">Enter essential details about the client organization.</p>
-        <div class="client-details-grid">
-          <div class="client-field fv-plugins-icon-container">
-            <label class="form-label required" for="industry">Industry</label>
-            <div class="input-group input-group-solid">
-              <span class="input-group-text"><i class="la la-briefcase"></i></span>
-              <select class="form-select form-select-solid" name="industry" id="industry">
+      <!-- ==========================================
+           SECTION 2: Organization Profile
+           ========================================== -->
+      <section class="card client-section-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;" aria-labelledby="client-details-title">
+        <div class="card-header border-0 py-4 px-6 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f1f5f9 !important;">
+          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+            <i class="la la-building" style="font-size:20px; color:#ca8a04;"></i>
+          </div>
+          <div>
+            <h3 class="client-section-heading" id="client-details-title" style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Organization Profile</h3>
+            <p class="client-section-copy" style="font-size:12px; color:#64748b; margin:0;">Tell us a little about the organization.</p>
+          </div>
+        </div>
+
+        <div class="card-body p-6">
+          <div class="client-details-grid" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px;">
+            
+            <!-- Industry Field (God-Level Combobox) -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label required" for="industry_display" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Industry <span class="text-danger">*</span></label>
+              <!-- Native select kept synchronized for form POST & validation -->
+              <select name="industry" id="industry" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
                 <option value="">Select industry</option>
                 <?php foreach($department as $key => $val){
                   $sel = $val->ind_id == $industry ? 'selected="selected"' : '';
                   echo '<option value="'.@$val->ind_id.'" '.@$sel.'>'.ucwords(@$val->ind_name).'</option>';
                 } ?>
               </select>
+
+              <?php
+                $selectedIndName = '';
+                if (!empty($industry) && !empty($department)) {
+                    foreach ($department as $val) {
+                        if ($val->ind_id == $industry) {
+                            $selectedIndName = ucwords($val->ind_name);
+                            break;
+                        }
+                    }
+                }
+              ?>
+
+              <!-- God-Level Enterprise Industry Combobox Component -->
+              <div class="jero-ind-select-wrap" id="jero_ind_select_wrap">
+                <div class="jero-ind-input-box <?php echo $selectedIndName ? 'has-value' : ''; ?>" id="jero_ind_input_box" style="height:42px; border-radius:8px; border:1px solid #cbd5e1;">
+                  <span class="jero-ind-search-icon">
+                    <i class="la la-building" style="font-size:16px; color:#94a3b8;"></i>
+                  </span>
+                  <input type="text"
+                         class="jero-ind-input"
+                         id="industry_display"
+                         placeholder="Select industry"
+                         autocomplete="off"
+                         spellcheck="false"
+                         role="combobox"
+                         aria-expanded="false"
+                         aria-haspopup="listbox"
+                         aria-autocomplete="list"
+                         value="<?php echo htmlspecialchars($selectedIndName); ?>"
+                         style="font-size:13px; color:#1e293b;">
+                  <kbd class="jero-ind-kbd" id="jero_ind_kbd" title="Press / to search" style="<?php echo $selectedIndName ? 'display:none;' : ''; ?>">/</kbd>
+                  <button type="button" class="jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="<?php echo $selectedIndName ? 'display:flex;' : 'display:none;'; ?>">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                  <div class="jero-ind-chevron" id="jero_ind_chevron" title="Toggle industry list" role="button" aria-label="Toggle industry list" tabindex="-1">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
+
+                <!-- Decision-Centric Hierarchical Dropdown Menu -->
+                <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Client Industries">
+                  <!-- Sector Filter Tabs -->
+                  <div class="jero-ind-tabs" id="jero_ind_tabs">
+                    <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
+                  </div>
+
+                  <!-- Recently Used Bar (1-Click Quick Picks) -->
+                  <div class="jero-ind-recent-bar" id="jero_ind_recent_bar" style="display:none;"></div>
+
+                  <!-- Scrollable Options List Container -->
+                  <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
+
+                  <!-- Sticky Footer Bar -->
+                  <div class="jero-ind-footer">
+                    <div class="jero-ind-sync-status" id="jero_ind_sync_status">
+                      <span class="jero-ind-sync-dot"></span>
+                      <span>Live Synced</span>
+                    </div>
+                    <span class="jero-ind-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Company Size Field -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label required" for="company_sizes" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Size <span class="text-danger">*</span></label>
+              <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-users" style="font-size:16px;"></i></span>
+                <select name="company_sizes" class="form-select form-select-solid" id="company_sizes" style="border:none; height:42px; font-size:13px; color:#1e293b;">
+                  <option value="">Select company size</option>
+                  <option value="1-10"         <?php echo (@$company_sizes == '1-10'         ? 'selected' : ''); ?>>1–10</option>
+                  <option value="11-50"        <?php echo (@$company_sizes == '11-50'        ? 'selected' : ''); ?>>11–50</option>
+                  <option value="51-200"       <?php echo (@$company_sizes == '51-200'       ? 'selected' : ''); ?>>51–200</option>
+                  <option value="201-500"      <?php echo (@$company_sizes == '201-500'      ? 'selected' : ''); ?>>201–500</option>
+                  <option value="501-1000"     <?php echo (@$company_sizes == '501-1000'     ? 'selected' : ''); ?>>501–1,000</option>
+                  <option value="1001-5000"    <?php echo (@$company_sizes == '1001-5000'    ? 'selected' : ''); ?>>1,001–5,000</option>
+                  <option value="5001-10000"   <?php echo (@$company_sizes == '5001-10000'   ? 'selected' : ''); ?>>5,001–10,000</option>
+                  <option value="10000-999999" <?php echo (@$company_sizes == '10000-999999' ? 'selected' : ''); ?>>10,000+</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Company Type Field -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label required" for="company_type" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Type <span class="text-danger">*</span></label>
+              <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-city" style="font-size:16px;"></i></span>
+                <select class="form-select form-select-solid" name="company_type" id="company_type" style="border:none; height:42px; font-size:13px; color:#1e293b;">
+                  <option value="">Select company type</option>
+                  <?php foreach($companyType as $key => $val){
+                    $sel = $key == $company_type ? 'selected="selected"' : '';
+                    echo '<option value="'.@$key.'" '.@$sel.'>'.ucwords(@$val).'</option>';
+                  } ?>
+                </select>
+              </div>
+            </div>
+
+            <!-- Founded Year Field -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label required" for="founded" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Founded Year <span class="text-danger">*</span></label>
+              <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-calendar" style="font-size:16px;"></i></span>
+                <input type="number" class="form-control form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="Select year" style="border:none; height:42px; font-size:13px; color:#1e293b;">
+              </div>
+            </div>
+
           </div>
-          <div class="client-field fv-plugins-icon-container">
-            <label class="form-label required" for="company_sizes">Company Size</label>
-            <div class="input-group input-group-solid">
-              <span class="input-group-text"><i class="la la-users"></i></span>
-              <select name="company_sizes" class="form-select form-select-solid" id="company_sizes">
-                <option value="">Select Company Size</option>
-                <option value="1-10"         <?php echo (@$company_sizes == '1-10'         ? 'selected' : ''); ?>>1–10</option>
-                <option value="11-50"        <?php echo (@$company_sizes == '11-50'        ? 'selected' : ''); ?>>11–50</option>
-                <option value="51-200"       <?php echo (@$company_sizes == '51-200'       ? 'selected' : ''); ?>>51–200</option>
-                <option value="201-500"      <?php echo (@$company_sizes == '201-500'      ? 'selected' : ''); ?>>201–500</option>
-                <option value="501-1000"     <?php echo (@$company_sizes == '501-1000'     ? 'selected' : ''); ?>>501–1,000</option>
-                <option value="1001-5000"    <?php echo (@$company_sizes == '1001-5000'    ? 'selected' : ''); ?>>1,001–5,000</option>
-                <option value="5001-10000"   <?php echo (@$company_sizes == '5001-10000'   ? 'selected' : ''); ?>>5,001–10,000</option>
-                <option value="10000-999999" <?php echo (@$company_sizes == '10000-999999' ? 'selected' : ''); ?>>10,000+</option>
-              </select>
-            </div>
-          </div>
-          <div class="client-field fv-plugins-icon-container">
-            <label class="form-label required" for="company_type">Type</label>
-            <div class="input-group input-group-solid">
-              <span class="input-group-text"><i class="la la-city"></i></span>
-              <select class="form-select form-select-solid" name="company_type" id="company_type">
-                <option value="">Select company type</option>
-                <?php foreach($companyType as $key => $val){
-                  $sel = $key == $company_type ? 'selected="selected"' : '';
-                  echo '<option value="'.@$key.'" '.@$sel.'>'.ucwords(@$val).'</option>';
-                } ?>
-              </select>
-            </div>
-          </div>
-          <div class="client-field fv-plugins-icon-container">
-            <label class="form-label required" for="founded">Founded Year</label>
-            <div class="input-group input-group-solid">
-              <span class="input-group-text"><i class="la la-calendar"></i></span>
-              <input type="number" class="form-control form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="Select year">
-            </div>
+
+          <div class="client-tip mt-4" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:6px; padding:10px 14px; display:flex; align-items:center; gap:8px; color:#1e40af; font-size:12px;">
+            <i class="la la-info-circle" style="color:#3b82f6; font-size:16px;"></i>
+            <span><strong>Tip:</strong> You can update these details anytime from the client profile.</span>
           </div>
         </div>
-        <div class="client-tip"><i class="la la-info-circle" aria-hidden="true"></i><span><strong>Tip:</strong> You can update these details anytime from the client profile.</span></div>
       </section>
+
     </div>
 
-    <aside class="client-assistant" aria-labelledby="client-assistant-title">
-      <div class="client-assistant-head">
-        <div>
+    <!-- ==========================================
+         RIGHT SIDEBAR: AI Assist & Quick Tips
+         ========================================== -->
+    <aside class="client-side-column" aria-labelledby="client-assistant-title">
+      <!-- AI Company Assist Card -->
+      <div class="client-helper-card mb-4" style="background:#f5f3ff; border:1px solid #ede9fe; border-radius:12px; padding:16px;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
-            <h3 class="client-assistant-title" id="client-assistant-title">AI Assistant</h3>
-            <span class="client-beta">Beta</span>
+            <div style="width:30px; height:30px; border-radius:8px; background:#ede9fe; display:inline-flex; align-items:center; justify-content:center; color:#7e22ce;">
+              <i class="la la-magic" style="font-size:16px; color:#7e22ce;"></i>
+            </div>
+            <h4 style="font-size:13.5px; font-weight:700; color:#1e1b4b; margin:0;" id="client-assistant-title">AI Company Assist</h4>
           </div>
-          <p class="client-assistant-copy">We can auto-fetch available information from the company website.</p>
+          <span class="badge" style="background:#ede9fe; color:#7e22ce; font-weight:600; font-size:10.5px; padding:3px 8px; border-radius:6px;">Beta</span>
         </div>
-        <span class="client-assistant-spark"><i class="la la-magic" aria-hidden="true"></i></span>
+        <p style="font-size:11.5px; color:#6b7280; line-height:1.45; margin-bottom:14px;">We can auto-fetch and suggest company information from the website.</p>
+
+        <div style="font-size:11.5px; font-weight:700; color:#374151; margin-bottom:10px;">Information we can find</div>
+        <ul style="list-style:none; padding:0; margin:0 0 14px 0;">
+          <li style="display:flex; align-items:center; gap:8px; font-size:12px; color:#374151; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#3b82f6;"></i>
+            <span>Industry</span>
+          </li>
+          <li style="display:flex; align-items:center; gap:8px; font-size:12px; color:#374151; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#3b82f6;"></i>
+            <span>Company Size</span>
+          </li>
+          <li style="display:flex; align-items:center; gap:8px; font-size:12px; color:#374151; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#3b82f6;"></i>
+            <span>Company Type</span>
+          </li>
+          <li style="display:flex; align-items:center; gap:8px; font-size:12px; color:#374151; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#3b82f6;"></i>
+            <span>Founded Year</span>
+          </li>
+          <li style="display:flex; align-items:center; gap:8px; font-size:12px; color:#374151;">
+            <i class="la la-check-circle" style="font-size:16px; color:#3b82f6;"></i>
+            <span>Company Description</span>
+          </li>
+        </ul>
+
+        <button type="button" class="btn w-100" id="client_fetch_side_btn" onclick="$('#client_auto_fetch').click();" style="background:#ede9fe; color:#6d28d9; font-weight:600; font-size:12px; border-radius:8px; padding:10px 14px; border:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <i class="la la-globe"></i> Enter website and fetch details &rarr;
+        </button>
+        <div style="font-size:11px; color:#6b7280; margin-top:10px; display:flex; align-items:center; gap:6px;">
+          <i class="la la-check-circle" style="color:#3b82f6; font-size:13px;"></i> Review the suggested information before applying.
+        </div>
       </div>
-      <div class="client-suggestions">
-        <div class="client-suggestions-title">Profile Suggestions</div>
-        <div class="client-suggestion-row">
-          <span class="client-suggestion-label">Industry</span>
-          <span class="client-assistant-value" data-client-field="industry">Not set</span>
-          <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
+
+      <!-- Quick Tips Card -->
+      <div class="client-helper-card" style="background:#fffdf0; border:1px solid #fef08a; border-radius:12px; padding:16px;">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div style="width:30px; height:30px; border-radius:8px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04;">
+            <i class="la la-lightbulb-o" style="font-size:16px; color:#ca8a04;"></i>
+          </div>
+          <h4 style="font-size:13.5px; font-weight:700; color:#854d0e; margin:0;">Quick Tips</h4>
         </div>
-        <div class="client-suggestion-row">
-          <span class="client-suggestion-label">Company Size</span>
-          <span class="client-assistant-value" data-client-field="company_sizes">Not set</span>
-          <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-        </div>
-        <div class="client-suggestion-row">
-          <span class="client-suggestion-label">Company Type</span>
-          <span class="client-assistant-value" data-client-field="company_type">Not set</span>
-          <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-        </div>
-        <div class="client-suggestion-row">
-          <span class="client-suggestion-label">Founded Year</span>
-          <span class="client-assistant-value" data-client-field="founded">Not set</span>
-          <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-        </div>
-        <button type="button" class="client-assistant-action" id="client_review_details"><i class="la la-magic" aria-hidden="true"></i> Apply Website Data</button>
-        <p class="client-assistant-note">Not accurate? You can edit every field manually.</p>
+        <ul style="list-style:none; padding:0; margin:0;">
+          <li style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#713f12; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#eab308; margin-top:1px;"></i>
+            <span>Enter company name and website to fetch details.</span>
+          </li>
+          <li style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#713f12; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#eab308; margin-top:1px;"></i>
+            <span>Verify and edit the suggested information.</span>
+          </li>
+          <li style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#713f12; margin-bottom:8px;">
+            <i class="la la-check-circle" style="font-size:16px; color:#eab308; margin-top:1px;"></i>
+            <span>You can update all details later from the client profile.</span>
+          </li>
+          <li style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#713f12;">
+            <i class="la la-check-circle" style="font-size:16px; color:#eab308; margin-top:1px;"></i>
+            <span>Complete all 5 sections to create the client.</span>
+          </li>
+        </ul>
       </div>
     </aside>
+
   </div>
 </div>
 <!--end::Client Information-->
