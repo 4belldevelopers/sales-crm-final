@@ -3162,10 +3162,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 }
                 $department = $categoriesMap[$row->category_id] ?? '';
 
+                $rawSalaryVis = $row->salary_visibility ?? null;
+                $normSalaryVis = \App\Services\SalaryVisibilityPolicy::normalize($rawSalaryVis);
+                $isSalaryZero = ((float) ($row->min_salary ?? 0) === 0.0 && (float) ($row->max_salary ?? 0) === 0.0);
+                $isSalaryConfidential = ($normSalaryVis === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                    || ($rawSalaryVis === 'confidential')
+                    || ($isSalaryZero && ($rawSalaryVis === 'confidential' || empty($rawSalaryVis) || ! isset($row->salary_visibility)));
+
                 $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode ?? 0] ?? '';
                 $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '$';
                 $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
                 $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
+                $salary_display = $isSalaryConfidential ? 'Confidential' : ($min_salary_currency . ' ' . $min_salary . ' - ' . $max_salary . ' ' . $min_sal_mode);
 
                 $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
                 if ($isDirectClientJob) {
@@ -3350,6 +3358,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'max_salary' => $max_salary,
                     'min_salary_currency' => $min_salary_currency,
                     'min_sal_mode' => $min_sal_mode,
+                    'salary_display' => $salary_display,
+                    'salary_visibility' => $isSalaryConfidential ? 'confidential' : $normSalaryVis,
+                    'is_salary_confidential' => $isSalaryConfidential,
                     'work_type' => $work_type,
                     'city' => $cityName,
                     'country' => $countryName,

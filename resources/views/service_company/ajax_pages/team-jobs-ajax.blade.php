@@ -247,7 +247,15 @@
           {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
         </div>
         <div class="sal-row">
-          {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
+          @php
+            $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$row->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                || ((empty($row->min_salary) || (float)$row->min_salary === 0.0) && (empty($row->max_salary) || (float)$row->max_salary === 0.0) && (@$row->salary_visibility === 'confidential'));
+          @endphp
+          @if($isSalConf)
+            <span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
+          @else
+            {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
+          @endif
         </div>
         <span class="badge-type">
           {!! $svg !!}
