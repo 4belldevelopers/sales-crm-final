@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td>
                     <div class="d-flex flex-column gap-1">
                         <span class="text-gray-900 fw-bold fs-8" title="Method 1: Agency Hiring Claims (Vendor Allocation Limit)">
-                            <i class="fas fa-handshake text-info me-1 fs-9"></i>${row.claimed_count || 0} / ${row.vendor_limit || 5} <span class="text-muted fw-normal fs-9">Agencies</span>
+                            <i class="fas fa-handshake text-info me-1 fs-9"></i>${row.claimed_count || 0} / ${row.vendor_limit || 20} <span class="text-muted fw-normal fs-9">Agencies</span>
                         </span>
                         <span class="text-gray-800 fs-9" title="Method 2: Bench Talent Submissions (Open / No Submission Limit)">
                             <i class="fas fa-user-check text-primary me-1 fs-9"></i>${row.bench_submissions_count || 0} <span class="text-muted">Bench CVs</span> <span class="badge badge-light-success py-0 px-1 fs-10 fw-normal">Unlimited</span>
@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <p class="text-muted fs-8">Authorizes external staffing vendors to recruit and submit candidate slates.</p>
                         <div class="row g-3 mt-2">
                             <div class="col-sm-4"><div class="p-3 bg-light rounded"><span class="text-muted fs-9 d-block">Channel Status</span><strong class="fs-7 text-success">${job.show_vendor === 'yes' ? 'ENABLED' : 'DISABLED'}</strong></div></div>
-                            <div class="col-sm-4"><div class="p-3 bg-light rounded"><span class="text-muted fs-9 d-block">Vendor Capacity Limit</span><strong class="fs-7">${job.vendor_limit || 5} Agencies Cap</strong></div></div>
+                            <div class="col-sm-4"><div class="p-3 bg-light rounded"><span class="text-muted fs-9 d-block">Vendor Capacity Limit</span><strong class="fs-7">${job.vendor_limit || 20} Agencies Cap</strong></div></div>
                             <div class="col-sm-4"><div class="p-3 bg-light rounded"><span class="text-muted fs-9 d-block">Claim Capacity</span><strong class="fs-7 text-primary">${job.claim_capacity || 'OPEN'}</strong></div></div>
                         </div>
                     </div>`;

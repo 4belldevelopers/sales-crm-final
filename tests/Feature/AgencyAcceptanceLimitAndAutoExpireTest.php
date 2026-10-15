@@ -45,7 +45,7 @@ class AgencyAcceptanceLimitAndAutoExpireTest extends TestCase
         parent::setUp();
         config([
             'database.default' => 'mysql',
-            'database.connections.mysql.database' => 'newdata',
+            'database.connections.mysql.database' => 'dbmaster',
         ]);
         DB::purge('mysql');
         DB::reconnect('mysql');

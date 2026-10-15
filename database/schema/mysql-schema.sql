@@ -4938,13 +4938,12 @@ CREATE TABLE `sys_processed_events` (
 
 ALTER TABLE `recommendation_relation` ADD INDEX `idx_rec_rel_marketplace_claim` (`job_id`, `to_company_id`, `final_status`);
 
-<<<<<<< HEAD
 -- Client Module V2 High-Concurrency Performance Indexes
 ALTER TABLE `clients` ADD INDEX `idx_clients_company_id` (`company_id`);
 ALTER TABLE `clients` ADD INDEX `idx_clients_website` (`website`);
 ALTER TABLE `client_contact_info` ADD INDEX `idx_client_contact_info_client_id` (`client_id`);
 ALTER TABLE `client_location` ADD INDEX `idx_client_location_company_id` (`company_id`);
-=======
+
 DROP TABLE IF EXISTS `marketplace_channels`;
 CREATE TABLE `marketplace_channels` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -4955,7 +4954,7 @@ CREATE TABLE `marketplace_channels` (
   `moderation_status` ENUM('PENDING_REVIEW', 'APPROVED', 'REJECTED', 'QUARANTINED') NOT NULL DEFAULT 'PENDING_REVIEW',
   `publication_status` ENUM('DRAFT', 'LIVE', 'CLAIM_LIMIT_REACHED', 'PAUSED', 'DELISTED') NOT NULL DEFAULT 'DRAFT',
   `approval_mode` ENUM('AUTO', 'MANUAL') NOT NULL DEFAULT 'MANUAL',
-  `vendor_limit` INT NULL DEFAULT 5 COMMENT 'Applies to AGENCY_HIRING only; NULL for BENCH_TALENT',
+  `vendor_limit` INT NULL DEFAULT 20 COMMENT 'Applies to AGENCY_HIRING only; NULL for BENCH_TALENT',
   `moderated_by` INT UNSIGNED NULL COMMENT 'Super Admin User ID',
   `moderated_at` TIMESTAMP NULL DEFAULT NULL,
   `moderation_reason` VARCHAR(255) NULL,
@@ -5038,7 +5037,6 @@ CREATE TABLE `marketplace_risk_rules` (
   UNIQUE KEY `uq_risk_rule_code` (`rule_code`),
   KEY `idx_risk_category_active` (`category`, `is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
->>>>>>> ebf2273a712e6f9af9b1c5ca2adc7bed8190a34f
 
 
 

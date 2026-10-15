@@ -86,7 +86,20 @@ class AutoCloseJobsService
 
             // dd($valid_date);
 
-            $candidateRequCount = DB::table('rec_candidate_assign')->where('created_at', '<', $valid_date)->where('ac_status', '=', 0)->get();
+            // Method 2: Expire pending candidate recommendations submitted for these expired jobs
+            DB::table('rec_candidate_assign')
+                ->whereIn('source_jobid', $jobsCount)
+                ->where('ac_status', 0)
+                ->update(['ac_status' => 3, 'updated_at' => now()]); // 3 = expired/closed with job
+
+            try {
+                DB::table('marketplace_submissions')
+                    ->whereIn('job_id', $jobsCount)
+                    ->where('status', 'SUBMITTED')
+                    ->update(['status' => 'DELISTED', 'updated_at' => now()]);
+            } catch (\Throwable $subEx) {
+                // Ignore if table does not exist
+            }
 
             DB::table('jobs')->whereIn('id', $jobsCount)->where('status', '=', 'active')->update(['status' => 'inactive', 'closeType' => 1, 'public_market_status' => 0]);
             DB::table('recommendation_relation')->whereIn('job_id', $jobsCount)->where('final_status', '=', 1)->update(['final_status' => 2]);
@@ -211,6 +224,7 @@ class AutoCloseJobsService
                         'body' => [
                             'doc' => [
                                 'status' => 'inactive',
+                                'public_market_status' => 0,
                             ],
                             'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],
