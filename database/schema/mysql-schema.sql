@@ -2437,6 +2437,7 @@ CREATE TABLE `jobs` (
   `max_salary_currency` int(11) DEFAULT NULL,
   `min_sal_mode` int(11) DEFAULT NULL,
   `max_sal_mode` int(11) DEFAULT NULL,
+  `salary_visibility` varchar(50) NOT NULL DEFAULT 'everywhere',
   `carrier_website` int(11) DEFAULT NULL,
   `work_type` varchar(50) NOT NULL DEFAULT 'no',
   `show_vendor` varchar(50) NOT NULL DEFAULT 'no',

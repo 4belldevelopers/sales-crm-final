@@ -3523,7 +3523,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261014a">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis">
     @endif
 @endpush
 @section('content')
@@ -4312,6 +4312,287 @@ $currency_code = GeneralMethod::defaultCurrency();
                             </div>
                         </div>
                     </div>
+                    <div class="card ij-compensation-card">
+                        <div class="card-body">
+                            <?php
+                            $initialCurrCode = $currency_code;
+    $initialCurrSymbol = '₹';
+    foreach ($currency as $key => $val) {
+        $isSel = false;
+        if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
+            if ($currency_code == $val) {
+                $isSel = true;
+            }
+        } else {
+            if (@$job->min_salary_currency == $key) {
+                $isSel = true;
+            }
+        }
+        if ($isSel) {
+            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+            $initialCurrCode = $val;
+            $initialCurrSymbol = $cMeta['symbol'] ?? $val;
+            break;
+        }
+    }
+    $initialSalaryVisibility = \App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility ?? 'everywhere');
+    ?>
+                            <div class="ij-comp-header">
+                                <div class="section-title">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+                                    </svg>Compensation
+                                </div>
+                                <div class="ij-salvis-header-wrap">
+                                    {{-- Backward-compatible hidden element for currency sync script --}}
+                                    <button type="button" class="d-none" id="headerCurrTrigger" aria-hidden="true" tabindex="-1">
+                                        <span id="headerCurrSymbol"><?php echo e($initialCurrSymbol); ?></span>
+                                        <span id="headerCurrCode"><?php echo e($initialCurrCode); ?></span>
+                                    </button>
+
+                                    <div class="ij-salvis-label-wrap">
+                                        <span class="ij-salvis-label-text">Salary Visibility</span>
+                                        <span class="ij-salvis-info-icon" title="Control where compensation is visible for this job." data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Salary visibility info">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+
+                                    <!-- Dropdown Trigger Button -->
+                                    <button type="button" class="ij-salvis-trigger-btn" id="salvisTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change salary visibility">
+                                        <span class="ij-salvis-badge ij-salvis-badge-{{ $initialSalaryVisibility }}" id="salvisTriggerBadge">
+                                            @if($initialSalaryVisibility === 'confidential')
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            @elseif($initialSalaryVisibility === 'ats_only')
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            @elseif($initialSalaryVisibility === 'ats_agencies')
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                            @else
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            @endif
+                                        </span>
+                                        <span class="ij-salvis-trigger-label" id="salvisTriggerLabel">
+                                            @if($initialSalaryVisibility === 'confidential')
+                                                Fully Confidential
+                                            @elseif($initialSalaryVisibility === 'ats_only')
+                                                ATS Only
+                                            @elseif($initialSalaryVisibility === 'ats_agencies')
+                                                ATS + Agencies
+                                            @else
+                                                Visible Everywhere
+                                            @endif
+                                        </span>
+                                        <svg class="ij-salvis-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
+
+                                    <!-- Dropdown Popover Menu -->
+                                    <div class="ij-salvis-popover" id="salvisPopover" style="display:none;" tabindex="-1">
+                                        <div class="ij-salvis-pop-head">
+                                            <div class="ij-salvis-pop-title">Salary Visibility</div>
+                                            <div class="ij-salvis-pop-subtitle">Control where compensation is visible for this job.</div>
+                                        </div>
+                                        <div class="ij-salvis-options-list" role="radiogroup" aria-label="Salary Visibility">
+                                            <!-- Option 1: Visible Everywhere -->
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'everywhere' ? 'is-selected' : '' }}" data-value="everywhere" role="radio" aria-checked="{{ $initialSalaryVisibility === 'everywhere' ? 'true' : 'false' }}" tabindex="0">
+                                                <div class="ij-salvis-opt-icon ij-salvis-icon-everywhere">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </div>
+                                                <div class="ij-salvis-opt-text">
+                                                    <div class="ij-salvis-opt-title">Visible Everywhere</div>
+                                                    <div class="ij-salvis-opt-desc">Visible in ATS, authorized agencies, agency marketplace and career page.</div>
+                                                </div>
+                                                <div class="ij-salvis-opt-radio">
+                                                    <div class="ij-salvis-radio-dot"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Option 2: ATS + Agencies -->
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_agencies' ? 'is-selected' : '' }}" data-value="ats_agencies" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_agencies' ? 'true' : 'false' }}" tabindex="0">
+                                                <div class="ij-salvis-opt-icon ij-salvis-icon-agencies">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                                </div>
+                                                <div class="ij-salvis-opt-text">
+                                                    <div class="ij-salvis-opt-title">ATS + Agencies</div>
+                                                    <div class="ij-salvis-opt-desc">Visible in ATS and authorized agencies only. Hidden from agency marketplace and career page.</div>
+                                                </div>
+                                                <div class="ij-salvis-opt-radio">
+                                                    <div class="ij-salvis-radio-dot"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Option 3: ATS Only -->
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'ats_only' ? 'is-selected' : '' }}" data-value="ats_only" role="radio" aria-checked="{{ $initialSalaryVisibility === 'ats_only' ? 'true' : 'false' }}" tabindex="0">
+                                                <div class="ij-salvis-opt-icon ij-salvis-icon-ats">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                </div>
+                                                <div class="ij-salvis-opt-text">
+                                                    <div class="ij-salvis-opt-title">ATS Only</div>
+                                                    <div class="ij-salvis-opt-desc">Visible only in ATS. Hidden from agencies, agency marketplace and career page.</div>
+                                                </div>
+                                                <div class="ij-salvis-opt-radio">
+                                                    <div class="ij-salvis-radio-dot"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Option 4: Fully Confidential -->
+                                            <div class="ij-salvis-opt-row {{ $initialSalaryVisibility === 'confidential' ? 'is-selected' : '' }}" data-value="confidential" role="radio" aria-checked="{{ $initialSalaryVisibility === 'confidential' ? 'true' : 'false' }}" tabindex="0">
+                                                <div class="ij-salvis-opt-icon ij-salvis-icon-confidential">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                </div>
+                                                <div class="ij-salvis-opt-text">
+                                                    <div class="ij-salvis-opt-title">Fully Confidential</div>
+                                                    <div class="ij-salvis-opt-desc">Hidden everywhere. Visible only to authorized ATS users.</div>
+                                                </div>
+                                                <div class="ij-salvis-opt-radio">
+                                                    <div class="ij-salvis-radio-dot"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Preserved backend select elements for full backward compatibility --}}
+                            <select name="min_salary_currency" id="min_salary_currency" class="d-none">
+                                <?php
+        foreach ($currency as $key => $val) {
+            $sel = '';
+            if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
+                if ($currency_code == $val) {
+                    $sel = 'selected="selected"';
+                }
+            } else {
+                if (@$job->min_salary_currency == $key) {
+                    $sel = 'selected="selected"';
+                }
+            }
+            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+            $symbol = $cMeta['symbol'] ?? '';
+            $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
+            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
+        }
+    ?>
+                            </select>
+                            <select name="max_salary_currency" id="max_salary_currency" class="d-none">
+                                <?php
+    foreach ($currency as $key => $val) {
+        $sel = '';
+        if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') {
+            if ($currency_code == $val) {
+                $sel = 'selected="selected"';
+            }
+        } else {
+            if (@$job->max_salary_currency == $key) {
+                $sel = 'selected="selected"';
+            }
+        }
+        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+        $symbol = $cMeta['symbol'] ?? '';
+        $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
+        echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
+    }
+    ?>
+                            </select>
+
+                            {{-- Dedicated salary_visibility hidden input submitted with form --}}
+                            <input type="hidden" name="salary_visibility" id="salary_visibility" value="{{ $initialSalaryVisibility }}">
+
+                            {{-- Confidential notice banner: Displays when Fully Confidential is selected --}}
+                            <div class="ij-salvis-confidential-banner" id="salvisConfidentialNotice" style="{{ $initialSalaryVisibility === 'confidential' ? 'display:flex;' : 'display:none;' }}">
+                                <div class="ij-salvis-conf-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </div>
+                                <div class="ij-salvis-conf-content">
+                                    <div class="ij-salvis-conf-title">
+                                        <span class="ij-salvis-lock-ico">🔒</span> Salary details are confidential
+                                    </div>
+                                    <div class="ij-salvis-conf-desc">
+                                        Compensation will not be visible on Agency Marketplace, Career Page, agencies, or any external job view.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-grid form-grid-3">
+                                <div class="form-group-cus">
+                                    <label class="form-label required">Minimum Salary</label>
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="minSalaryWrap">
+                                        <button type="button" class="ij-currency-btn" id="minCurrTrigger" data-target="minSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
+                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
+                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
+                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
+                                        <input type="number" class="form-input" name="minimum_salary" id="minimum_salary" value="<?php echo @$job->min_salary; ?>" placeholder="Enter min salary" min="0">
+                                    </div>
+                                    <span class="form-hint minimum_salary_word">*Minimum salary offered for this position.</span>
+                                </div>
+                                <div class="form-group-cus">
+                                    <label class="form-label required">Maximum Salary</label>
+                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="maxSalaryWrap">
+                                        <button type="button" class="ij-currency-btn" id="maxCurrTrigger" data-target="maxSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
+                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
+                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
+                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
+                                        <input type="number" class="form-input" name="maximum_salary" id="maximum_salary" value="<?php echo @$job->max_salary; ?>" placeholder="Enter max salary" min="0">
+                                    </div>
+                                    <span class="form-hint maximum_salary_word">*Maximum salary offered for this position.</span>
+                                </div>
+                                <div class="form-group-cus">
+                                    <label class="form-label required">Salary Type</label>
+                                    <select class="form-select" name="min_sal_mode" id="min_sal_mode">
+                                        <?php
+            foreach ($salaryMode as $key => $val) {
+                $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
+                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+            }
+    ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Modern Enterprise Currency Dropdown Popover -->
+                            <div class="ij-curr-popover" id="ijCurrencyPopover" style="display:none;" tabindex="-1">
+                                <div class="ij-curr-pop-search-wrap">
+                                    <svg class="ij-curr-pop-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                                    </svg>
+                                    <input type="text" class="ij-curr-pop-search" id="ijCurrPopSearch" placeholder="Search currency (code, name, symbol)..." autocomplete="off" spellcheck="false">
+                                </div>
+                                <div class="ij-curr-pop-quick">
+                                    <span class="ij-curr-pop-quick-label">Popular:</span>
+                                    <div class="ij-curr-pop-quick-chips">
+                                        <button type="button" class="ij-curr-pop-chip" data-code="INR">INR (₹)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="USD">USD ($)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="EUR">EUR (€)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="GBP">GBP (£)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="AED">AED (د.إ)</button>
+                                        <button type="button" class="ij-curr-pop-chip" data-code="SGD">SGD (S$)</button>
+                                    </div>
+                                </div>
+                                <div class="ij-curr-pop-list" id="ijCurrPopList">
+                                    <?php
+                                    foreach ($currency as $key => $val) {
+                                        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                        $symbol = $cMeta['symbol'] ?? '';
+                                        $name = $cMeta['name'] ?? $val;
+                                        $search = strtolower($cMeta['keywords'].' '.$val.' '.$name.' '.$symbol);
+                                        $isSel = ($val === $initialCurrCode);
+                                        ?>
+                                        <div class="ij-curr-pop-item <?php echo $isSel ? 'is-selected' : ''; ?>" data-val="<?php echo e($key); ?>" data-code="<?php echo e($val); ?>" data-symbol="<?php echo e($symbol); ?>" data-name="<?php echo e($name); ?>" data-search="<?php echo e($search); ?>">
+                                            <div class="ij-curr-item-left">
+                                                <span class="ij-curr-badge"><strong class="ij-curr-badge-code"><?php echo e($val); ?></strong> <span class="ij-curr-badge-symbol"><?php echo e($symbol); ?></span></span>
+                                                <span class="ij-curr-name"><?php echo e($name); ?></span>
+                                            </div>
+                                            <svg class="ij-curr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card ij-location-card">
                         <div class="card-body">
                             <div class="section-title">
@@ -4510,166 +4791,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 </select>
                             </div>
                             <span class="form-hint" style="margin-top:10px;display:block;">Specify the operational working shift or timezone required.</span>
-                        </div>
-                    </div>
-                    <div class="card ij-compensation-card">
-                        <div class="card-body">
-                            <?php
-                            $initialCurrCode = $currency_code;
-    $initialCurrSymbol = '₹';
-    foreach ($currency as $key => $val) {
-        $isSel = false;
-        if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
-            if ($currency_code == $val) {
-                $isSel = true;
-            }
-        } else {
-            if (@$job->min_salary_currency == $key) {
-                $isSel = true;
-            }
-        }
-        if ($isSel) {
-            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-            $initialCurrCode = $val;
-            $initialCurrSymbol = $cMeta['symbol'] ?? $val;
-            break;
-        }
-    }
-    ?>
-                            <div class="ij-comp-header">
-                                <div class="section-title">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
-                                    </svg>Compensation
-                                </div>
-                                <div class="ij-comp-currency-wrap">
-                                    <label class="ij-comp-currency-label" for="headerCurrTrigger">Currency:</label>
-                                    <button type="button" class="ij-header-curr-btn" id="headerCurrTrigger" aria-haspopup="dialog" aria-expanded="false" title="Click to change currency">
-                                        <span class="ij-header-curr-symbol" id="headerCurrSymbol"><?php echo e($initialCurrSymbol); ?></span>
-                                        <span class="ij-header-curr-code" id="headerCurrCode"><?php echo e($initialCurrCode); ?></span>
-                                        <svg class="ij-header-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            {{-- Preserved backend select elements for full backward compatibility --}}
-                            <select name="min_salary_currency" id="min_salary_currency" class="d-none">
-                                <?php
-        foreach ($currency as $key => $val) {
-            $sel = '';
-            if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') {
-                if ($currency_code == $val) {
-                    $sel = 'selected="selected"';
-                }
-            } else {
-                if (@$job->min_salary_currency == $key) {
-                    $sel = 'selected="selected"';
-                }
-            }
-            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-            $symbol = $cMeta['symbol'] ?? '';
-            $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
-            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
-        }
-    ?>
-                            </select>
-                            <select name="max_salary_currency" id="max_salary_currency" class="d-none">
-                                <?php
-    foreach ($currency as $key => $val) {
-        $sel = '';
-        if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') {
-            if ($currency_code == $val) {
-                $sel = 'selected="selected"';
-            }
-        } else {
-            if (@$job->max_salary_currency == $key) {
-                $sel = 'selected="selected"';
-            }
-        }
-        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-        $symbol = $cMeta['symbol'] ?? '';
-        $shortText = ! empty($symbol) ? $cMeta['code'].' ('.$symbol.')' : $cMeta['code'];
-        echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($symbol).'" data-short="'.e($shortText).'" data-search="'.e($cMeta['keywords']).'" '.$sel.'>'.e($cMeta['label']).'</option>';
-    }
-    ?>
-                            </select>
-
-                            <div class="form-grid form-grid-3">
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Minimum Salary</label>
-                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="minSalaryWrap">
-                                        <button type="button" class="ij-currency-btn" id="minCurrTrigger" data-target="minSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
-                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
-                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
-                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                        </button>
-                                        <input type="number" class="form-input" name="minimum_salary" id="minimum_salary" value="<?php echo @$job->min_salary; ?>" placeholder="Enter min salary" min="0">
-                                    </div>
-                                    <span class="form-hint minimum_salary_word">*Minimum salary offered for this position.</span>
-                                </div>
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Maximum Salary</label>
-                                    <div class="salary-input-wrapper ij-salary-input-wrapper" id="maxSalaryWrap">
-                                        <button type="button" class="ij-currency-btn" id="maxCurrTrigger" data-target="maxSalaryWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
-                                            <span class="ij-curr-pill-symbol"><?php echo e($initialCurrSymbol); ?></span>
-                                            <span class="ij-curr-pill-code"><?php echo e($initialCurrCode); ?></span>
-                                            <svg class="ij-curr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                        </button>
-                                        <input type="number" class="form-input" name="maximum_salary" id="maximum_salary" value="<?php echo @$job->max_salary; ?>" placeholder="Enter max salary" min="0">
-                                    </div>
-                                    <span class="form-hint maximum_salary_word">*Maximum salary offered for this position.</span>
-                                </div>
-                                <div class="form-group-cus">
-                                    <label class="form-label required">Salary Type</label>
-                                    <select class="form-select" name="min_sal_mode" id="min_sal_mode">
-                                        <?php
-            foreach ($salaryMode as $key => $val) {
-                $sel = (@$job->min_sal_mode == $key) ? 'selected="selected"' : '';
-                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-            }
-    ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Modern Enterprise Currency Dropdown Popover -->
-                            <div class="ij-curr-popover" id="ijCurrencyPopover" style="display:none;" tabindex="-1">
-                                <div class="ij-curr-pop-search-wrap">
-                                    <svg class="ij-curr-pop-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                                    </svg>
-                                    <input type="text" class="ij-curr-pop-search" id="ijCurrPopSearch" placeholder="Search currency (code, name, symbol)..." autocomplete="off" spellcheck="false">
-                                </div>
-                                <div class="ij-curr-pop-quick">
-                                    <span class="ij-curr-pop-quick-label">Popular:</span>
-                                    <div class="ij-curr-pop-quick-chips">
-                                        <button type="button" class="ij-curr-pop-chip" data-code="INR">INR (₹)</button>
-                                        <button type="button" class="ij-curr-pop-chip" data-code="USD">USD ($)</button>
-                                        <button type="button" class="ij-curr-pop-chip" data-code="EUR">EUR (€)</button>
-                                        <button type="button" class="ij-curr-pop-chip" data-code="GBP">GBP (£)</button>
-                                        <button type="button" class="ij-curr-pop-chip" data-code="AED">AED (د.إ)</button>
-                                        <button type="button" class="ij-curr-pop-chip" data-code="SGD">SGD (S$)</button>
-                                    </div>
-                                </div>
-                                <div class="ij-curr-pop-list" id="ijCurrPopList">
-                                    <?php
-                                    foreach ($currency as $key => $val) {
-                                        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                                        $symbol = $cMeta['symbol'] ?? '';
-                                        $name = $cMeta['name'] ?? $val;
-                                        $search = strtolower($cMeta['keywords'].' '.$val.' '.$name.' '.$symbol);
-                                        $isSel = ($val === $initialCurrCode);
-                                        ?>
-                                        <div class="ij-curr-pop-item <?php echo $isSel ? 'is-selected' : ''; ?>" data-val="<?php echo e($key); ?>" data-code="<?php echo e($val); ?>" data-symbol="<?php echo e($symbol); ?>" data-name="<?php echo e($name); ?>" data-search="<?php echo e($search); ?>">
-                                            <div class="ij-curr-item-left">
-                                                <span class="ij-curr-badge"><strong class="ij-curr-badge-code"><?php echo e($val); ?></strong> <span class="ij-curr-badge-symbol"><?php echo e($symbol); ?></span></span>
-                                                <span class="ij-curr-name"><?php echo e($name); ?></span>
-                                            </div>
-                                            <svg class="ij-curr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="card ij-qual-card">
@@ -6691,6 +6812,115 @@ $currency_code = GeneralMethod::defaultCurrency();
         $('body').on('change', '#min_sal_mode', function() {
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
+
+        // Enterprise Salary Visibility Popover Controller
+        (function initSalaryVisibilityPopover() {
+            var $trigger = $('#salvisTrigger');
+            var $popover = $('#salvisPopover');
+            var $input = $('#salary_visibility');
+            var $notice = $('#salvisConfidentialNotice');
+            var $triggerBadge = $('#salvisTriggerBadge');
+            var $triggerLabel = $('#salvisTriggerLabel');
+
+            var icons = {
+                everywhere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+                ats_agencies: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                ats_only: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+                confidential: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+            };
+
+            var labels = {
+                everywhere: 'Visible Everywhere',
+                ats_agencies: 'ATS + Agencies',
+                ats_only: 'ATS Only',
+                confidential: 'Fully Confidential'
+            };
+
+            function openPop() {
+                if (typeof closeCurrencyPopover === 'function') {
+                    closeCurrencyPopover();
+                } else {
+                    $('#ijCurrencyPopover').hide();
+                }
+                $popover.stop(true, true).fadeIn(120);
+                $trigger.attr('aria-expanded', 'true');
+            }
+
+            function closePop() {
+                $popover.stop(true, true).fadeOut(120);
+                $trigger.attr('aria-expanded', 'false');
+            }
+
+            $trigger.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if ($popover.is(':visible')) {
+                    closePop();
+                } else {
+                    openPop();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if ($popover.is(':visible') && !$(e.target).closest('#salvisPopover, #salvisTrigger').length) {
+                    closePop();
+                }
+            });
+
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $popover.is(':visible')) {
+                    closePop();
+                    $trigger.focus();
+                }
+            });
+
+            $(document).on('click', '.ij-salvis-opt-row', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var val = $(this).attr('data-value') || $(this).data('value');
+                if (!val) return;
+                applySalaryVisibility(val);
+                closePop();
+                try { $trigger.focus(); } catch (err) {}
+            });
+
+            $(document).on('keydown', '.ij-salvis-opt-row', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $(this).trigger('click');
+                }
+            });
+
+            function applySalaryVisibility(val) {
+                $input.val(val).trigger('change');
+
+                $('.ij-salvis-opt-row').each(function() {
+                    var rowVal = $(this).attr('data-value') || $(this).data('value');
+                    var isSel = (rowVal === val);
+                    $(this).toggleClass('is-selected', isSel).attr('aria-checked', isSel ? 'true' : 'false');
+                });
+
+                $triggerBadge.attr('class', 'ij-salvis-badge ij-salvis-badge-' + val).html(icons[val] || icons.everywhere);
+                $triggerLabel.text(labels[val] || labels.everywhere);
+
+                if (val === 'confidential') {
+                    $notice.stop(true, true).slideDown(150);
+                } else {
+                    $notice.stop(true, true).slideUp(150);
+                }
+
+                if (typeof salaryText === 'function' && document.getElementById('rvCompensation')) {
+                    document.getElementById('rvCompensation').textContent = salaryText();
+                }
+            }
+
+            var currentVal = $input.val() || 'everywhere';
+            applySalaryVisibility(currentVal);
+
+            if (window.jQuery && $.fn.tooltip) {
+                $('.ij-salvis-info-icon[data-bs-toggle="tooltip"]').tooltip();
+            }
+        })();
 
         // ---- Auto-fill JD from title (Neutralized for strict custom title isolation) ----
         function changeautofillfield() {
@@ -9134,8 +9364,17 @@ $currency_code = GeneralMethod::defaultCurrency();
         function salaryText() {
             var c1 = getSelText('min_salary_currency'); var s1 = document.getElementById('minimum_salary').value;
             var s2 = document.getElementById('maximum_salary').value; var mode = getSelText('min_sal_mode');
+            var vis = document.getElementById('salary_visibility') ? document.getElementById('salary_visibility').value : 'everywhere';
             if (!s1 && !s2) return '';
-            return (c1 + ' ' + (s1 || '') + ' - ' + c1 + ' ' + (s2 || '') + ' ' + mode).trim();
+            var base = (c1 + ' ' + (s1 || '') + ' - ' + c1 + ' ' + (s2 || '') + ' ' + mode).trim();
+            if (vis === 'confidential') {
+                return base + ' (🔒 Fully Confidential)';
+            } else if (vis === 'ats_only') {
+                return base + ' (ATS Only)';
+            } else if (vis === 'ats_agencies') {
+                return base + ' (ATS + Agencies)';
+            }
+            return base;
         }
         function expText() {
             var a = getSelText('min_exp'); var b = getSelText('max_exp');
