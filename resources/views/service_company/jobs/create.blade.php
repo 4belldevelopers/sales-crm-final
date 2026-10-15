@@ -3523,7 +3523,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis2">
     @endif
 @endpush
 @section('content')
@@ -4338,11 +4338,17 @@ $currency_code = GeneralMethod::defaultCurrency();
     $initialSalaryVisibility = \App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility ?? 'everywhere');
     ?>
                             <div class="ij-comp-header">
-                                <div class="section-title">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
-                                    </svg>Compensation
+                                <div class="ij-comp-header-left">
+                                    <span class="ij-comp-badge">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+                                        </svg>
+                                    </span>
+                                    <div class="ij-comp-title-wrap">
+                                        <div class="ij-comp-title">Compensation</div>
+                                        <div class="ij-comp-subtitle">Define the salary details for this position.</div>
+                                    </div>
                                 </div>
                                 <div class="ij-salvis-header-wrap">
                                     {{-- Backward-compatible hidden element for currency sync script --}}
@@ -4500,22 +4506,36 @@ $currency_code = GeneralMethod::defaultCurrency();
                             {{-- Dedicated salary_visibility hidden input submitted with form --}}
                             <input type="hidden" name="salary_visibility" id="salary_visibility" value="{{ $initialSalaryVisibility }}">
 
-                            {{-- Confidential notice banner: Displays when Fully Confidential is selected --}}
-                            <div class="ij-salvis-confidential-banner" id="salvisConfidentialNotice" style="{{ $initialSalaryVisibility === 'confidential' ? 'display:flex;' : 'display:none;' }}">
-                                <div class="ij-salvis-conf-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                </div>
-                                <div class="ij-salvis-conf-content">
-                                    <div class="ij-salvis-conf-title">
-                                        <span class="ij-salvis-lock-ico">🔒</span> Salary details are confidential
+                            {{-- Confidential notice banner: Displays when Fully Confidential is selected (2nd Design) --}}
+                            <div class="ij-salvis-confidential-banner {{ $initialSalaryVisibility === 'confidential' ? 'is-visible' : '' }}" id="salvisConfidentialNotice" style="{{ $initialSalaryVisibility === 'confidential' ? 'display:flex;' : 'display:none;' }}">
+                                <div class="ij-salvis-conf-left">
+                                    <div class="ij-salvis-conf-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                        </svg>
                                     </div>
-                                    <div class="ij-salvis-conf-desc">
-                                        Compensation will not be visible on Agency Marketplace, Career Page, agencies, or any external job view.
+                                    <div class="ij-salvis-conf-left-text">
+                                        <div class="ij-salvis-conf-title">Salary details are confidential</div>
+                                        <div class="ij-salvis-conf-subtitle">Compensation details will be discussed during the hiring process.</div>
+                                    </div>
+                                </div>
+                                <div class="ij-salvis-conf-divider"></div>
+                                <div class="ij-salvis-conf-right">
+                                    <div class="ij-salvis-conf-info-ico">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="16" x2="12" y2="12"/>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="ij-salvis-conf-right-text">
+                                        The salary range will not be visible to agencies, agency marketplace, career page or any other job view. Only authorized ATS users can access the compensation details.
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="form-grid form-grid-3">
+                            <div class="form-grid form-grid-3" id="ijSalaryInputsRow" style="{{ $initialSalaryVisibility === 'confidential' ? 'display:none;' : '' }}">
                                 <div class="form-group-cus">
                                     <label class="form-label required">Minimum Salary</label>
                                     <div class="salary-input-wrapper ij-salary-input-wrapper" id="minSalaryWrap">
@@ -6814,13 +6834,12 @@ $currency_code = GeneralMethod::defaultCurrency();
         });
 
         // Enterprise Salary Visibility Popover Controller
-        (function initSalaryVisibilityPopover() {
+        function initSalaryVisibilityPopover() {
             var $trigger = $('#salvisTrigger');
             var $popover = $('#salvisPopover');
             var $input = $('#salary_visibility');
             var $notice = $('#salvisConfidentialNotice');
-            var $triggerBadge = $('#salvisTriggerBadge');
-            var $triggerLabel = $('#salvisTriggerLabel');
+            var $salaryInputsRow = $('#ijSalaryInputsRow');
 
             var icons = {
                 everywhere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -6842,49 +6861,49 @@ $currency_code = GeneralMethod::defaultCurrency();
                 } else {
                     $('#ijCurrencyPopover').hide();
                 }
-                $popover.stop(true, true).fadeIn(120);
-                $trigger.attr('aria-expanded', 'true');
+                $('#salvisPopover').addClass('is-open').show();
+                $('#salvisTrigger').attr('aria-expanded', 'true');
             }
 
             function closePop() {
-                $popover.stop(true, true).fadeOut(120);
-                $trigger.attr('aria-expanded', 'false');
+                $('#salvisPopover').removeClass('is-open').hide();
+                $('#salvisTrigger').attr('aria-expanded', 'false');
             }
 
-            $trigger.on('click', function(e) {
+            $(document).off('click.salvisTrigger', '#salvisTrigger').on('click.salvisTrigger', '#salvisTrigger', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if ($popover.is(':visible')) {
+                if ($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible')) {
                     closePop();
                 } else {
                     openPop();
                 }
             });
 
-            $(document).on('click', function(e) {
-                if ($popover.is(':visible') && !$(e.target).closest('#salvisPopover, #salvisTrigger').length) {
+            $(document).off('click.salvisOutside').on('click.salvisOutside', function(e) {
+                if (($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible')) && !$(e.target).closest('#salvisPopover, #salvisTrigger').length) {
                     closePop();
                 }
             });
 
-            $(document).on('keydown', function(e) {
-                if (e.key === 'Escape' && $popover.is(':visible')) {
+            $(document).off('keydown.salvisEsc').on('keydown.salvisEsc', function(e) {
+                if (e.key === 'Escape' && ($('#salvisPopover').hasClass('is-open') || $('#salvisPopover').is(':visible'))) {
                     closePop();
-                    $trigger.focus();
+                    $('#salvisTrigger').focus();
                 }
             });
 
-            $(document).on('click', '.ij-salvis-opt-row', function(e) {
+            $(document).off('click.salvisOpt', '.ij-salvis-opt-row').on('click.salvisOpt', '.ij-salvis-opt-row', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var val = $(this).attr('data-value') || $(this).data('value');
                 if (!val) return;
                 applySalaryVisibility(val);
                 closePop();
-                try { $trigger.focus(); } catch (err) {}
+                try { $('#salvisTrigger').focus(); } catch (err) {}
             });
 
-            $(document).on('keydown', '.ij-salvis-opt-row', function(e) {
+            $(document).off('keydown.salvisOpt', '.ij-salvis-opt-row').on('keydown.salvisOpt', '.ij-salvis-opt-row', function(e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     $(this).trigger('click');
@@ -6892,7 +6911,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             });
 
             function applySalaryVisibility(val) {
-                $input.val(val).trigger('change');
+                $('#salary_visibility').val(val).trigger('change');
 
                 $('.ij-salvis-opt-row').each(function() {
                     var rowVal = $(this).attr('data-value') || $(this).data('value');
@@ -6900,13 +6919,17 @@ $currency_code = GeneralMethod::defaultCurrency();
                     $(this).toggleClass('is-selected', isSel).attr('aria-checked', isSel ? 'true' : 'false');
                 });
 
-                $triggerBadge.attr('class', 'ij-salvis-badge ij-salvis-badge-' + val).html(icons[val] || icons.everywhere);
-                $triggerLabel.text(labels[val] || labels.everywhere);
+                $('#salvisTriggerBadge').attr('class', 'ij-salvis-badge ij-salvis-badge-' + val).html(icons[val] || icons.everywhere);
+                $('#salvisTriggerLabel').text(labels[val] || labels.everywhere);
 
                 if (val === 'confidential') {
-                    $notice.stop(true, true).slideDown(150);
+                    // Fully Confidential (2nd design): Show 2-column confidential banner, hide salary inputs
+                    $('#salvisConfidentialNotice').addClass('is-visible').css('display', 'flex').show();
+                    $('#ijSalaryInputsRow').hide();
                 } else {
-                    $notice.stop(true, true).slideUp(150);
+                    // Rest: No UI changes - Hide banner, show salary inputs
+                    $('#salvisConfidentialNotice').removeClass('is-visible').css('display', 'none').hide();
+                    $('#ijSalaryInputsRow').css('display', 'grid').show();
                 }
 
                 if (typeof salaryText === 'function' && document.getElementById('rvCompensation')) {
@@ -6914,13 +6937,14 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             }
 
-            var currentVal = $input.val() || 'everywhere';
+            var currentVal = $('#salary_visibility').val() || 'everywhere';
             applySalaryVisibility(currentVal);
 
             if (window.jQuery && $.fn.tooltip) {
                 $('.ij-salvis-info-icon[data-bs-toggle="tooltip"]').tooltip();
             }
-        })();
+        }
+        initSalaryVisibilityPopover();
 
         // ---- Auto-fill JD from title (Neutralized for strict custom title isolation) ----
         function changeautofillfield() {
@@ -7073,7 +7097,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
         // ---------- INIT ----------
         document.addEventListener('DOMContentLoaded', function() {
-            initCitySearch(); initQualSearch(); initSkillsInput(); initCharCount(); updateCompensationCurrencyContext();
+            initCitySearch(); initQualSearch(); initSkillsInput(); initCharCount(); updateCompensationCurrencyContext(); if (typeof initSalaryVisibilityPopover === 'function') initSalaryVisibilityPopover();
 
             // EDIT prefill: locations
             if (__editLoc) {
