@@ -190,7 +190,17 @@
                 </div>
                 <div class="jc-meta-item" title="Salary">
                     <i class="fa-solid fa-indian-rupee-sign"></i>
-                    <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salModeShort }}</span>
+                    @php
+                        $canViewSal = \App\Services\SalaryVisibilityPolicy::canViewSalary($row, null, 'marketplace');
+                        $hasSal = (($row->min_yearly ?? 0) > 0 || ($row->max_yearly ?? 0) > 0 || ($row->min_salary ?? 0) > 0 || ($row->max_salary ?? 0) > 0);
+                    @endphp
+                    @if (! $canViewSal)
+                        <span class="badge badge-light-danger fw-bolder px-2 py-1 fs-8" style="color:#ef4444;background:#fee2e2;">🔒 Confidential</span>
+                    @elseif (! $hasSal)
+                        <span class="badge badge-light-primary fw-bolder px-2 py-1 fs-8" style="color:#2563eb;background:#eff6ff;">Competitive</span>
+                    @else
+                        <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salModeShort }}</span>
+                    @endif
                 </div>
             </div>
 

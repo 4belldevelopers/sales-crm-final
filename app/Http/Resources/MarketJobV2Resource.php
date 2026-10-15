@@ -252,8 +252,14 @@ class MarketJobV2Resource extends JsonResource
                 $formattedCommercialRate = $matchedContractRate.' / '.$contractBillingModel;
             }
         } else {
-            // Fall back to job salary offering range
-            $formattedCommercialRate = "{$currencySymbol}{$minSalFormatted} – {$maxSalFormatted} / {$salModeShort}";
+            // Fall back to job salary offering range (Rule 4: Confidential / Competitive fallback)
+            if (! $canViewSalary) {
+                $formattedCommercialRate = '🔒 Confidential';
+            } elseif ($minSalFormatted === '0' && $maxSalFormatted === '0') {
+                $formattedCommercialRate = 'Competitive';
+            } else {
+                $formattedCommercialRate = "{$currencySymbol}{$minSalFormatted} – {$maxSalFormatted} / {$salModeShort}";
+            }
         }
 
         // Resolve Full-Time hiring fee (Fixed Fee vs Percentage) linked with posting company
@@ -319,8 +325,8 @@ class MarketJobV2Resource extends JsonResource
             'created_at_formatted' => "{$formattedDate} ({$daysAgo})",
             'created_at_date' => $formattedDate,
             'salary_currency' => $currencySymbol,
-            'min_salary' => $minSalFormatted,
-            'max_salary' => $maxSalFormatted,
+            'min_salary' => $canViewSalary ? $minSalFormatted : null,
+            'max_salary' => $canViewSalary ? $maxSalFormatted : null,
             'salary_mode_short' => $salModeShort,
             'salary_visibility' => \App\Services\SalaryVisibilityPolicy::normalize($row->salary_visibility ?? null),
             'is_salary_confidential' => ! $canViewSalary,
