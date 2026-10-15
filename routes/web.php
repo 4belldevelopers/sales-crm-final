@@ -258,7 +258,7 @@ Route::get('/zoom/authorize', [ZoomController::class, 'redirectToZoom'])->name('
 Route::get('/zoom/callback', [ZoomController::class, 'callback']);
 Route::get('/zoom/create', [ZoomController::class, 'createMeeting']);
 
-Route::get('/zoom/create-meeting', 'ZoomController@createZoomMeeting');
+Route::get('/zoom/create-meeting', [ZoomController::class, 'createZoomMeeting']);
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('redirectToGoogle');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
@@ -339,7 +339,7 @@ Route::get('help/{slug?}', [SaasFrontController::class, 'help'])->name('help');
 // Front routes start
 // Route::prefix('Front')->group(function () {
 
-Route::group(['namespace' => 'Front'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Front'], function () {
 
     Route::get('/careers/{slug}', 'FrontJobsController@jobOpenings')->name('jobOpenings');
     Route::get('/careers/{slug}/job-listing', 'FrontJobsController@jobListing')->name('job-listing');
@@ -356,7 +356,7 @@ Route::group(['namespace' => 'Front'], function () {
     Route::get('auth/redirect/{provider}', 'FrontJobsController@redirect')->name('linkedinRedirect');
 
 });
-Route::group(['namespace' => 'FrontOld', 'as' => 'jobs.'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\Front', 'as' => 'jobs.'], function () {
     if (! module_enabled('Subdomain')) {
         Route::get('/careers', 'FrontJobsController@jobOpenings')->name('jobOpenings');
         // Route::get('/job/{companySlug}/{slug}', 'FrontJobsController@jobDetailWithCompany')->name('jobDetail');

@@ -1749,7 +1749,7 @@ class SaasFrontController extends SaasFrontBaseController
                 $clientName = null;
             }
 
-            // Single query leveraging website index with prefix search
+            // Single query leveraging idx_clients_website index with prefix search
             $matchingClients = DB::table('clients')
                 ->select('id', 'company_id', 'logo', 'logo_logical_path')
                 ->where(function ($query) use ($mainDomain, $request) {
@@ -1758,8 +1758,7 @@ class SaasFrontController extends SaasFrontBaseController
                         ->orWhere('website', 'LIKE', 'https://'.$mainDomain.'%')
                         ->orWhere('website', 'LIKE', 'http://www.'.$mainDomain.'%')
                         ->orWhere('website', 'LIKE', 'https://www.'.$mainDomain.'%')
-                        ->orWhere('website', 'LIKE', $mainDomain.'%')
-                        ->orWhere('website', 'LIKE', '%'.$mainDomain.'%');
+                        ->orWhere('website', 'LIKE', $mainDomain.'%');
                 })
                 ->get();
 

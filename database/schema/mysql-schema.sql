@@ -4938,4 +4938,11 @@ CREATE TABLE `sys_processed_events` (
 
 ALTER TABLE `recommendation_relation` ADD INDEX `idx_rec_rel_marketplace_claim` (`job_id`, `to_company_id`, `final_status`);
 
+-- Client Module V2 High-Concurrency Performance Indexes
+ALTER TABLE `clients` ADD INDEX `idx_clients_company_id` (`company_id`);
+ALTER TABLE `clients` ADD INDEX `idx_clients_website` (`website`);
+ALTER TABLE `client_contact_info` ADD INDEX `idx_client_contact_info_client_id` (`client_id`);
+ALTER TABLE `client_location` ADD INDEX `idx_client_location_company_id` (`company_id`);
+
+
 
