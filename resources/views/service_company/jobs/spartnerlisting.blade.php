@@ -1380,7 +1380,15 @@
                 <span class="text-gray-300">•</span>
                 <span class="adh-meta-item">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    {!! $salary_currency !!} {{ $min_salary }}–{{ $max_salary }} / {{ $max_sal_mode }}
+                    @php
+                        $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                            || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
+                    @endphp
+                    @if($isSalConf)
+                        <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
+                    @else
+                        {!! $salary_currency !!} {{ $min_salary }}–{{ $max_salary }} / {{ $max_sal_mode }}
+                    @endif
                 </span>
                 <span class="text-gray-300">•</span>
                 <span class="adh-meta-item">

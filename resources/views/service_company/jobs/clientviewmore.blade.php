@@ -227,7 +227,20 @@ $logo_path = url('public/user-uploads/company-logo/' . @$logos->logo);
             </svg>
             </span>
             <!--end::Svg Icon-->
-            <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Salary</span> <span class="fw-bolder fs-3"> <?php echo @$currency[@$job->min_salary_currency]; ?><?php echo @$min_salary; ?>- <?php echo @$max_salary; ?>/<?php echo @$max_sal_mode; ?> </span> </div>
+            @php
+              $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                  || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
+            @endphp
+            <div class="d-flex flex-column text-dark-75">
+              <span class="fw-bolder fs-6">Salary</span>
+              <span class="fw-bolder fs-3">
+                @if($isSalConf)
+                  <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px; font-size: 15px;"><i class="fas fa-lock" style="font-size: 13px; color: #dc2626;"></i> Confidential</span>
+                @else
+                  <?php echo @$currency[@$job->min_salary_currency]; ?><?php echo @$min_salary; ?>- <?php echo @$max_salary; ?>/<?php echo @$max_sal_mode; ?>
+                @endif
+              </span>
+            </div>
           </div>
           <!--end: Salary-->
           <!--begin: Openings-->

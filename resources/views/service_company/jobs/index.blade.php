@@ -1465,6 +1465,19 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 var directClientLabelText = job.recommendation_text || (job.is_direct_client ? 'Direct Client' : ((job.self_company == 1) ? 'Internal' : 'Internal Client'));
 
+                var isSalaryConfidential = Boolean(
+                    job.is_salary_confidential ||
+                    job.salary_visibility === 'confidential' ||
+                    job.salary_visibility === 'fully_confidential' ||
+                    job.salary_display === 'Confidential' ||
+                    ((parseFloat(job.min_salary) === 0 || !job.min_salary || job.min_salary === '0') &&
+                     (parseFloat(job.max_salary) === 0 || !job.max_salary || job.max_salary === '0'))
+                );
+
+                var salaryHtml = isSalaryConfidential
+                    ? '<div class="sal-row"><span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span></div>'
+                    : '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>';
+
                 html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
                     '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
                         '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
@@ -1477,7 +1490,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     '<div class="col-exp">' +
                       '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>' +
+                      salaryHtml +
                       '<span class="badge-type employment-badge employment-badge-' + employmentMeta.tone + '"><i class="fas ' + employmentMeta.icon + '"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
                     '</div>' +
 

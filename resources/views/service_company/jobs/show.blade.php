@@ -1737,16 +1737,29 @@ $end_date   =	date('d-M-Y', $date);
                                             {{-- <button class="info-card-edit" onclick="showEditPopup('Compensation & Shift')">Edit</button> --}}
                                         </div>
                                     </div>
+                                    @php
+                                        $vis = \App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility);
+                                        $isSalConfidential = ($vis === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                                            || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
+                                    @endphp
                                     <div class="info-row"><span class="info-label">Min Salary</span><span class="info-value">
-                                    {!! $currency[@$job->min_salary_currency ?? 0] !!} {{ @$min_salary }} /{{ @$min_sal_mode }}</span></div>
-                                    <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">{!! $currency[@$job->min_salary_currency ?? 0]!!} {{@$max_salary}} /{{@$max_sal_mode}}</span></div>
+                                        @if($isSalConfidential)
+                                            <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
+                                        @else
+                                            {!! $currency[@$job->min_salary_currency ?? 0] !!} {{ @$min_salary }} /{{ @$min_sal_mode }}
+                                        @endif
+                                    </span></div>
+                                    <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">
+                                        @if($isSalConfidential)
+                                            <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
+                                        @else
+                                            {!! $currency[@$job->min_salary_currency ?? 0]!!} {{@$max_salary}} /{{@$max_sal_mode}}
+                                        @endif
+                                    </span></div>
                                     <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
                                     {{ $drawerPayType }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ $currencyArr[@$job->min_salary_currency ?? 0] }}</span></div>
                                     <div class="info-row"><span class="info-label">Salary Visibility</span><span class="info-value">
-                                        @php
-                                            $vis = \App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility);
-                                        @endphp
                                         @if($vis === 'confidential')
                                             <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;">
                                                 🔒 Fully Confidential
@@ -3398,9 +3411,17 @@ $end_date   =	date('d-M-Y', $date);
                 @php
                     // Clean currency: use text symbol, not FontAwesome HTML icon
                     $currText    = html_entity_decode($currencyArr[$job->min_salary_currency ?? 0] ?? 'INR');
-                    $salaryRange = $currText . ' ' . $min_salary . ' - ' . $currText . ' ' . $max_salary . ' / ' . $drawerPayType;
-                    $salaryMin   = $currText . ' ' . $min_salary . ' / ' . $min_sal_mode;
-                    $salaryMax   = $currText . ' ' . $max_salary . ' / ' . $max_sal_mode;
+                    $isSalConfidential = (\App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                        || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
+                    if ($isSalConfidential) {
+                        $salaryRange = 'Confidential';
+                        $salaryMin   = 'Confidential';
+                        $salaryMax   = 'Confidential';
+                    } else {
+                        $salaryRange = $currText . ' ' . $min_salary . ' - ' . $currText . ' ' . $max_salary . ' / ' . $drawerPayType;
+                        $salaryMin   = $currText . ' ' . $min_salary . ' / ' . $min_sal_mode;
+                        $salaryMax   = $currText . ' ' . $max_salary . ' / ' . $max_sal_mode;
+                    }
                     $payType     = html_entity_decode($drawerPayType ?? '');
                     $indName     = html_entity_decode($companyOrClientDetails->ind_name ?? '');
                     $companyWeb  = html_entity_decode($companyOrClientDetails->company_website ?? '');
