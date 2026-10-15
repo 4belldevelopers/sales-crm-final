@@ -360,6 +360,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('cvtracker/copyjobtable', [ServiceCompanyCvTrackerController::class, 'copyjobtable'])->name('cvtracker.copyjobtable');
 
                 Route::get('benchTalents/list/{id?}', [ServiceCompanyJobsController::class, 'btlisting'])->name('jobs.btlisting');
+                Route::get('benchTalents/submission-history/{id}', [ServiceCompanyJobsController::class, 'benchSubmissionHistory'])->name('jobs.bench_submission_history');
 
                 Route::get('bench-talents/copybenchtable', [ServiceCompanyCvTrackerController::class, 'copybenchtable'])->name('bench.copybenchtable');
 

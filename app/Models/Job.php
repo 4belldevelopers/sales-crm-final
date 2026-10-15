@@ -30,9 +30,34 @@ class Job extends Model
         'state_version' => 'integer',
     ];
 
+    /**
+     * Intent: Authoritative accessor for salary_visibility defaulting to everywhere.
+     */
+    public function getSalaryVisibilityAttribute($value): string
+    {
+        return \App\Services\SalaryVisibilityPolicy::normalize($value);
+    }
+
+    /**
+     * Helper: Check if salary details are marked confidential.
+     */
+    public function isSalaryConfidential(): bool
+    {
+        return $this->salary_visibility === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL;
+    }
+
+    /**
+     * Helper: Check if salary is visible to authorized ATS user in current session.
+     */
+    public function canUserViewSalary(?User $user = null, string $context = 'ats'): bool
+    {
+        return \App\Services\SalaryVisibilityPolicy::canViewSalary($this, $user, $context);
+    }
+
     protected $appends = [
         'active',
         'public_market_status',
+        'salary_visibility',
     ];
 
     public function applications()
@@ -218,4 +243,3 @@ class Job extends Model
         return $this->hasMany(JobMarketplaceModerationLog::class, 'job_id');
     }
 }
-

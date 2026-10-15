@@ -2216,8 +2216,8 @@
                     <div class="jc-date-item">
                         <i class="fa-regular fa-clock"></i>
                         <div class="jc-date-content">
-                            <span class="jc-date-label">Submission Deadline</span>
-                            <span class="jc-date-val ${row.submission_deadline_formatted ? 'jc-text-red' : 'jc-text-green'}">
+                            <span class="jc-date-label">${row.is_bench_enabled ? 'Bench Submission' : 'Submission Deadline'}</span>
+                            <span class="jc-date-val ${row.is_bench_enabled ? 'jc-text-green' : (row.is_direct_expired ? 'jc-text-red' : 'jc-text-green')}">
                                 ${row.submission_deadline_formatted || 'Open till filled'}
                             </span>
                         </div>
@@ -3004,6 +3004,9 @@
                         }
                         if (typeof window.fetchCandidatesbench === 'function') {
                             window.fetchCandidatesbench(1, '', true);
+                        }
+                        if (typeof window.fetchBenchSubmissionHistory === 'function') {
+                            window.fetchBenchSubmissionHistory(true);
                         }
                     },
                     error: function () {

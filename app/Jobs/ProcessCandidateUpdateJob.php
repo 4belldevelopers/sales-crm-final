@@ -188,7 +188,8 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                         'state_list.state as state_name',
                         'city_list.city as city_name',
                         'countries.country_name',
-                        'qualification_master.name as qualification_name'
+                        'qualification_master.name as qualification_name',
+                        'add_job_wise_condidates.skill_match as ajw_skill_match'
                     )
                         ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
                         ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
@@ -197,49 +198,43 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                         ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
                         ->where('add_job_wise_condidates.id', $addJobWiseCandidateId)
                         ->first();
-                       
+
                     if ($applications_up) {
-                        // Sync skills from job_metronics_skills that have exp data
-                        $jobSkill = DB::table('job_metronics_skills')
-                            ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId) {
-                                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                                    ->where('candidate_job_skill_exp.candidate_id', '=', $appId);
-                            })
-                            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
-                            ->where('job_metronics_skills.job_id', '=', $jobId)
+                        // Candidate skills SSOT: read strictly from job_application_skills, fallback to parsed job_applications.skills
+                        // Do NOT re-insert job_metronics_skills here to prevent resurrecting deleted candidate skills.
+                        $skillsRecords = DB::table('job_application_skills')
+                            ->where('job_application_id', $appId)
                             ->get();
 
-                        foreach ($jobSkill as $sval) {
-                            $skillValue = str_replace(['Years', 'Year', ' '], '', $sval->skill_value);
-                            if (! is_null($skillValue) && ! empty($skillValue) && $skillValue !== '0.') {
-                                if (! DB::table('job_application_skills')
-                                    ->where('job_application_id', $appId)
-                                    ->where('skills', 'LIKE', '%'.$sval->skill_name.'%')
-                                    ->exists()
-                                ) {
-                                    DB::table('job_application_skills')->insert([
-                                        'job_application_id' => $appId,
-                                        'skills' => $sval->skill_name,
-                                    ]);
-                                }
+                        if ($skillsRecords->isEmpty() && ! empty($applications_up->skills)) {
+                            $parsedSkills = \App\Services\CandidateSkillSyncService::parseSkills($applications_up->skills);
+                            foreach ($parsedSkills as $pSkill) {
+                                DB::table('job_application_skills')->insert([
+                                    'job_application_id' => $appId,
+                                    'skills' => $pSkill,
+                                ]);
                             }
+                            $skillsRecords = DB::table('job_application_skills')
+                                ->where('job_application_id', $appId)
+                                ->get();
                         }
 
-                        $job_application_skills = DB::table('job_application_skills')
-                            ->where('job_application_id', $appId)
-                            ->get()
+                        $job_application_skills = $skillsRecords
                             ->map(fn ($s) => [
                                 'id' => $s->id,
-                                'job_application_id' => $s->id,
+                                'job_application_id' => $s->job_application_id ?? $appId,
                                 'skills' => strtolower($s->skills),
                             ])
                             ->toArray();
 
-                        $application_skills = DB::table('job_application_skills')
-                            ->where('job_application_id', $appId)
+                        $application_skills = $skillsRecords
                             ->pluck('skills')
                             ->map(fn ($skill) => strtolower($skill))
                             ->implode(',');
+
+                        if (empty($application_skills) && ! empty($applications_up->skills)) {
+                            $application_skills = strtolower((string) $applications_up->skills);
+                        }
 
                         // Format interview dates
                         $defaultTimeFormat = GeneralMethod::defaultTimeFormat($this->companyId);
@@ -305,6 +300,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                                     'ectc_monthly' => $applications_up->ectc_monthly,
                                     'ectc_yearly' => $applications_up->ectc_yearly,
                                     'status' => $applications_up->status,
+                                    'skill_match' => (int) ($applications_up->ajw_skill_match ?? 0),
                                     'duplicate' => (int) ($applications_up->duplicate ?? 0),
                                     'is_duplicate' => (bool) (($applications_up->duplicate ?? 0) == 1),
                                     'bill_rate_currency' => $applications_up->bill_rate_currency,

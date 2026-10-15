@@ -40,6 +40,7 @@ class StoreJob extends CoreRequest
             'min_exp' => 'nullable|integer|min:0',
             'max_exp' => 'nullable|integer|min:0',
             'carrier_website' => 'nullable|string|max:500',
+            'salary_visibility' => 'nullable|string|max:50',
         ];
     }
 

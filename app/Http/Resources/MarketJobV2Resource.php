@@ -53,12 +53,21 @@ class MarketJobV2Resource extends JsonResource
         $currencyCode = $currencies[$cur] ?? 'INR';
         $currencySymbol = $currencySymbols[$cur] ?? '₹';
 
-        $convertedEctc = GeneralMethod::conversionRates($currencyCode, $row->max_yearly ?? 0, $mod);
-        $convertedCtc = GeneralMethod::conversionRates($currencyCode, $row->min_yearly ?? 0, $mod);
+        $canViewSalary = \App\Services\SalaryVisibilityPolicy::canViewSalary($row, $request->user(), 'marketplace');
 
-        $minSalFormatted = GeneralMethod::formatK($convertedCtc[$mod] ?? 0);
-        $maxSalFormatted = GeneralMethod::formatK($convertedEctc[$mod] ?? 0);
-        $salModeShort = mb_substr($salaryMode[$mod] ?? 'Annual', 0, 1);
+        if ($canViewSalary) {
+            $convertedEctc = GeneralMethod::conversionRates($currencyCode, $row->max_yearly ?? 0, $mod);
+            $convertedCtc = GeneralMethod::conversionRates($currencyCode, $row->min_yearly ?? 0, $mod);
+
+            $minSalFormatted = GeneralMethod::formatK($convertedCtc[$mod] ?? 0);
+            $maxSalFormatted = GeneralMethod::formatK($convertedEctc[$mod] ?? 0);
+            $salModeShort = mb_substr($salaryMode[$mod] ?? 'Annual', 0, 1);
+        } else {
+            $currencySymbol = '';
+            $minSalFormatted = null;
+            $maxSalFormatted = null;
+            $salModeShort = '';
+        }
 
         // Work type text
         $workType = match ($row->work_type ?? '') {
@@ -178,11 +187,16 @@ class MarketJobV2Resource extends JsonResource
         $updatedAt = $row->updated_at ?? $createdAt;
         $updatedAtAgo = GeneralMethod::timeAgo($updatedAt);
 
-        // Submission Deadline — maps to end_date in ES (the job's closing date)
+        // Submission Deadline & Bench Intake Lifecycle
+        // Direct Outsourcing follows end_date deadline; Bench Talent has NO expiry date and remains continuously active
+        $isBenchEnabled = (isset($row->bench_submission) && $row->bench_submission === 'enabled') || ((int) ($row->public_market_status ?? 0) === 2);
         $submissionDeadlineRaw = $row->end_date ?? null;
-        $submissionDeadlineFormatted = $submissionDeadlineRaw
-            ? date('d M Y', strtotime($submissionDeadlineRaw))
-            : null;
+        $isDirectExpired = $submissionDeadlineRaw ? \Carbon\Carbon::parse($submissionDeadlineRaw)->isPast() : false;
+        $directDeadlineFormatted = $submissionDeadlineRaw ? date('d M Y', strtotime($submissionDeadlineRaw)) : null;
+
+        $submissionDeadlineFormatted = $isBenchEnabled
+            ? 'Continuous / Open'
+            : ($directDeadlineFormatted ?: 'Open till filled');
 
         // Commercial Terms — pre-fetched via MarketJobV2Service::getCommercialTermsBulk() and
         // attached as v2_commercial_terms. Fallback to null if not available (drawer still works).
@@ -238,8 +252,14 @@ class MarketJobV2Resource extends JsonResource
                 $formattedCommercialRate = $matchedContractRate.' / '.$contractBillingModel;
             }
         } else {
-            // Fall back to job salary offering range
-            $formattedCommercialRate = "{$currencySymbol}{$minSalFormatted} – {$maxSalFormatted} / {$salModeShort}";
+            // Fall back to job salary offering range (Rule 4: Confidential / Competitive fallback)
+            if (! $canViewSalary) {
+                $formattedCommercialRate = '🔒 Confidential';
+            } elseif ($minSalFormatted === '0' && $maxSalFormatted === '0') {
+                $formattedCommercialRate = 'Competitive';
+            } else {
+                $formattedCommercialRate = "{$currencySymbol}{$minSalFormatted} – {$maxSalFormatted} / {$salModeShort}";
+            }
         }
 
         // Resolve Full-Time hiring fee (Fixed Fee vs Percentage) linked with posting company
@@ -305,9 +325,11 @@ class MarketJobV2Resource extends JsonResource
             'created_at_formatted' => "{$formattedDate} ({$daysAgo})",
             'created_at_date' => $formattedDate,
             'salary_currency' => $currencySymbol,
-            'min_salary' => $minSalFormatted,
-            'max_salary' => $maxSalFormatted,
+            'min_salary' => $canViewSalary ? $minSalFormatted : null,
+            'max_salary' => $canViewSalary ? $maxSalFormatted : null,
             'salary_mode_short' => $salModeShort,
+            'salary_visibility' => \App\Services\SalaryVisibilityPolicy::normalize($row->salary_visibility ?? null),
+            'is_salary_confidential' => ! $canViewSalary,
             'skills' => $displaySkills,
             'remaining_skills_count' => $remainingSkillsCount,
             'bench_match_count' => (int) $benchMatchCount,
@@ -325,6 +347,9 @@ class MarketJobV2Resource extends JsonResource
             'employment_type_badge' => $employmentTypeBadge,
             'updated_at_ago' => $updatedAtAgo,
             'submission_deadline_formatted' => $submissionDeadlineFormatted,
+            'is_bench_enabled' => $isBenchEnabled,
+            'is_direct_expired' => $isDirectExpired,
+            'direct_deadline_formatted' => $directDeadlineFormatted,
             'commercial_terms' => $commercialTerms,
         ];
     }

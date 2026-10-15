@@ -309,17 +309,24 @@
                     } else {
                         $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id, $currentJobId);
                     }
+                    $cycleCount = $benchCyclesMap[$row->id] ?? 1;
                     $btnStyle = 'white-space:nowrap;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;';
                     if ($benchRequestCheck == null) {
                         echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Submit Candidate</a>';
                     } else if ($benchRequestCheck->ac_status == 0) {
-                        echo '<a href="javascript:void(0);" class="btn btn-sm btn-success" style="' . $btnStyle . 'background:#10B981;border-color:#10B981;color:#fff;">Request sent</a>';
+                        echo '<span class="badge badge-light-warning fs-7 fw-bold" style="padding:6px 12px;background:#FEF3C7;color:#D97706;border:1px solid #FCD34D;">Under Review</span>';
                     } else if ($benchRequestCheck->ac_status == 1) {
-                        echo '<span class="badge badge-light-primary fs-7 fw-bold" style="padding:6px 12px;">Added</span>';
+                        echo '<span class="badge badge-light-success fs-7 fw-bold" style="padding:6px 12px;background:#D1FAE5;color:#059669;border:1px solid #6EE7B7;">Added to Job</span>';
                     } else if ($benchRequestCheck->ac_status == 2) {
-                        echo '<span class="badge badge-light-danger fs-7 fw-bold" style="padding:6px 12px;">Expired</span>';
+                        echo '<div class="d-flex flex-column align-items-end gap-1">';
+                        echo '<span class="badge badge-light-danger fs-8 fw-semibold" style="padding:3px 8px;">Rejected (Cycle #' . $cycleCount . ')</span>';
+                        echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Resubmit Candidate</a>';
+                        echo '</div>';
                     } else if ($benchRequestCheck->ac_status == 3) {
-                        echo '<span class="badge badge-light-danger fs-7 fw-bold" style="padding:6px 12px;">Removed</span>';
+                        echo '<div class="d-flex flex-column align-items-end gap-1">';
+                        echo '<span class="badge badge-light-secondary fs-8 fw-semibold" style="padding:3px 8px;">Expired (Cycle #' . $cycleCount . ')</span>';
+                        echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Resubmit Candidate</a>';
+                        echo '</div>';
                     }
                 @endphp
             </td>

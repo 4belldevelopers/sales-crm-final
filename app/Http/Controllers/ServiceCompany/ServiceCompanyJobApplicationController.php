@@ -504,96 +504,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
-        // Recalculate skill match score for this job and candidate
-        $candSkills = DB::table('job_applications')->where('id', $appId)->value('skills') ?? '';
-        $candSkillArr = array_filter(array_map('trim', explode(',', $candSkills)));
-        if (! empty($insertedSkills)) {
-            foreach ($insertedSkills as $is) {
-                if (! empty($is['skill_name']) && ! in_array($is['skill_name'], $candSkillArr)) {
-                    $candSkillArr[] = $is['skill_name'];
-                }
-            }
-            $candSkills = implode(',', array_unique($candSkillArr));
-            DB::table('job_applications')->where('id', $appId)->update([
-                'skills' => $candSkills,
-                'updated_at' => now(),
-            ]);
-        }
+        // SSOT Synchronization: Recalculate skill match score and sync without mutating candidate primary skills
+        $syncResult = \App\Services\CandidateSkillSyncService::syncCandidateSkillsAndMatch(
+            (int) $appId,
+            null, // preserve existing candidate primary skills (do not pollute with job skills)
+            (int) $job_id,
+            (int) $companyId
+        );
 
-        $matchPct = 0;
-        try {
-            $calc = GeneralMethod::calculateSkillMatch((int) $job_id, $candSkills);
-            $matchPct = (int) ($calc['percentage'] ?? 0);
-        } catch (\Throwable $e) {
-            \Log::warning('skillExperienceUpdate calculateSkillMatch failed: '.$e->getMessage());
-        }
-
-        if ($job_id > 0) {
-            DB::table('add_job_wise_condidates')
-                ->where('job_application_id', $appId)
-                ->where('job_id', $job_id)
-                ->update([
-                    'skill_match' => $matchPct,
-                    'updated_at' => now(),
-                ]);
-        }
-
-        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
-        try {
-            foreach ($wiseIds as $wId) {
-                GeneralMethod::JobApplicationsAddEditUpload($wId);
-            }
-        } catch (\Throwable $e) {
-            \Log::warning('skillExperienceUpdate JobApplicationsAddEditUpload failed: '.$e->getMessage());
-        }
-
-        try {
-            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
-            }
-        } catch (\Throwable $e) {
-            \Log::warning('skillExperienceUpdate ELASTIC_CANDIDATES refresh failed: '.$e->getMessage());
-        }
-
-        // Bust candidate drawer cache across all slugs and associated job-wise IDs
-        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
-        $targetIds = array_unique(array_merge([$appId], $wiseIds));
-        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
-
-        foreach ($targetIds as $tid) {
-            foreach ($slugs as $slug) {
-                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
-            }
-        }
-
-        $cachekeys = [
-            'candidateDetails_version_user_'.$this->user->id,
-            'allcvtracker_version_user_'.$this->user->id,
-            'allapptracker_version_user_'.$this->user->id,
-            'allclientapp_version_user_'.$this->user->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
-
-        // Intent: Phase 3 Reverb broadcast to invalidate client RAM cache in all connected recruiter tabs
-        try {
-            \App\Events\CandidateDrawerUpdated::dispatch(
-                (int) $companyId,
-                (int) $appId,
-                time(),
-                'skills_updated',
-                array_map('intval', $wiseIds),
-                $matchPct,
-                $candSkills,
-                null,
-                null,
-                null,
-                (int) $job_id
-            );
-        } catch (\Throwable $e) {
-            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
-        }
+        $candSkills = $syncResult['canonical_skills_str'];
+        $matchPct = $syncResult['primary_match_pct'];
+        $wiseIds = $syncResult['wise_ids'];
 
         return response()->json([
             'status' => true,
@@ -3725,7 +3646,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if (! empty($skillVal)) {
                         if (! DB::table('job_application_skills')
                             ->where('job_application_id', '=', $jobApplication->id)
-                            ->where('skills', 'LIKE', '%'.$skillVal.'%')
+                            ->whereRaw('LOWER(TRIM(skills)) = ?', [mb_strtolower(trim($skillVal))])
                             ->exists()) {
                             DB::table('job_application_skills')->insert([
                                 'job_application_id' => $jobApplication->id,
@@ -7736,42 +7657,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
         $jobApplication->pincode = $experienceGet; // (@$request->pincode) ? @$request->pincode : '';
 
-        $cnt = 0;
-        $skillStr = '';
-        $skillArr = json_decode($request->skills, true);
-        if (! empty($skillArr)) {
-            $requiredSkills = array_column($skillArr, 'value');
-            GeneralMethod::skillsAddElastic($requiredSkills);
+        $parsedSkillList = \App\Services\CandidateSkillSyncService::parseSkills($request->input('skills'));
+        if (! empty($parsedSkillList)) {
+            GeneralMethod::skillsAddElastic($parsedSkillList);
         }
-
-        if (! empty($skillArr)) {
-            if (DB::table('job_application_skills')->where('job_application_id', '=', $jobApplication->id)->exists()) {
-                DB::table('job_application_skills')->where('job_application_id', '=', $jobApplication->id)->delete();
-            }
-            foreach ($skillArr as $sval) {
-
-                $values = [
-                    'job_application_id' => $jobApplication->id,
-                    'skills' => $sval['value'],
-                ];
-                if (! DB::table('job_application_skills')->where('job_application_id', '=', $jobApplication->id)->where('skills', 'LIKE', '%'.$sval['value'].'%')->exists()) {
-                    DB::table('job_application_skills')->insert($values);
-                }
-
-                if ($cnt == 0) {
-                    $skillStr .= $sval['value'];
-                } else {
-                    $skillStr .= ' , '.$sval['value'];
-                }
-                $cnt++;
-            }
-        }
-
-        // if (!empty($request->current_designation)) {
-        // 	if(!DB::table('job_application_skills')->where('job_application_id','=',$jobApplication->id)->where('skills','LIKE', '%'. @$request->current_designation.'%')->exists()){
-        // 		DB::table('job_application_skills')->insert(['job_application_id' => $jobApplication->id,'skills' =>  @$request->current_designation]);
-        // 		}
-        // }
+        $skillStr = implode(',', $parsedSkillList);
         $jobApplication->skills = $skillStr;
 
         if ($request->hasFile('photo')) {
@@ -7837,6 +7727,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $jobApplication->save();
+
+            // Atomically synchronize job_application_skills inside MySQL transaction
+            DB::table('job_application_skills')->where('job_application_id', $jobApplication->id)->delete();
+            $jasRows = [];
+            foreach ($parsedSkillList as $pskill) {
+                $jasRows[] = [
+                    'job_application_id' => $jobApplication->id,
+                    'skills' => $pskill,
+                ];
+            }
+            if (! empty($jasRows)) {
+                DB::table('job_application_skills')->insert($jasRows);
+            }
 
             $resumeIntent = $request->input('resume_intent');
             $oldResumeId = $jobApplication->current_resume_id;
@@ -8108,30 +8011,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Log::warning('ELASTIC_CANDIDATES refresh in update() failed: '.$e->getMessage());
             }
 
-            // Post-commit cache clean
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'allapptracker_version_user_'.$this->user->id,
-                'allclientapp_version_user_'.$this->user->id,
-                'candidateDetails_version_user_'.$this->user->id,
-                'candidate:'.$jobApplication->id,
-                'candidate:'.$jobApplication->id.':resume',
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
-            // Bust candidate drawer cache across all slugs and associated job-wise IDs
-            $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+            // Multi-tenant atomic cache invalidation across drawer, listings, and candidate records
             $wiseIds = ! empty($updatedWiseIds) ? $updatedWiseIds : DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
-            $targetIds = array_unique(array_merge([(int) $jobApplication->id], $wiseIds));
-            $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
-
-            foreach ($targetIds as $tid) {
-                foreach ($slugs as $slug) {
-                    cache()->forget('tenant:'.$company_id.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
-                }
-            }
+            \App\Services\CandidateSkillSyncService::invalidateCandidateCaches((int) $jobApplication->id, $wiseIds, (int) $company_id);
 
             try {
                 \App\Events\CandidateDrawerUpdated::dispatch(
@@ -12718,7 +12600,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if (! empty($skillVal)) {
                         if (! DB::table('job_application_skills')
                             ->where('job_application_id', '=', $application_id)
-                            ->where('skills', 'LIKE', '%'.$skillVal.'%')
+                            ->whereRaw('LOWER(TRIM(skills)) = ?', [mb_strtolower(trim($skillVal))])
                             ->exists()) {
                             DB::table('job_application_skills')->insert([
                                 'job_application_id' => $application_id,

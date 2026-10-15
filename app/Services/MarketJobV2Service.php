@@ -136,10 +136,10 @@ class MarketJobV2Service
                 $sort[] = ['id' => ['order' => 'asc']];
                 break;
             case 3:
-                $sort[] = ['max_salary' => ['order' => 'asc']];
+                $sort[] = ['max_salary' => ['order' => 'asc', 'missing' => '_last']];
                 break;
             case 4:
-                $sort[] = ['max_salary' => ['order' => 'desc']];
+                $sort[] = ['max_salary' => ['order' => 'desc', 'missing' => '_last']];
                 break;
             case 5:
                 $sort[] = ['client_name' => ['order' => 'asc']];
@@ -320,10 +320,11 @@ class MarketJobV2Service
             default => 'max_yearly',
         };
 
-        if ($minSalary !== null) {
+        // Salary Range Filters — strictly bounded to positive values (Rule 1: omit if no positive salary boundary)
+        if ($minSalary !== null && (float) $minSalary > 0) {
             $filter[] = ['range' => [$salaryField => ['gte' => (float) $minSalary]]];
         }
-        if ($maxSalary !== null && $maxSalary > 0) {
+        if ($maxSalary !== null && (float) $maxSalary > 0) {
             $filter[] = ['range' => [$salaryField => ['lte' => (float) $maxSalary]]];
         }
 

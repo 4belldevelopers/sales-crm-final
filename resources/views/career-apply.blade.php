@@ -5822,8 +5822,20 @@ var KTUPDATECandidate = {
               remove.setAttribute('aria-label', 'Remove ' + skill.name);
               remove.title = 'Remove ' + skill.name;
               remove.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
-              remove.addEventListener('click', function () {
-                  tagifyskill.removeTag(skill.name);
+              remove.addEventListener('click', function (e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  chip.remove();
+                  if (typeof tagifyskill !== 'undefined' && tagifyskill) {
+                      tagifyskill.removeTags([skill.name]);
+                      if (tagifyskill.DOM && tagifyskill.DOM.originalInput) {
+                          tagifyskill.DOM.originalInput.value = JSON.stringify(tagifyskill.value || []);
+                          $(tagifyskill.DOM.originalInput).trigger('change');
+                      }
+                  }
+                  if (candidatePrimarySkillChips && !candidatePrimarySkillChips.children.length && candidatePrimarySkillEmpty) {
+                      candidatePrimarySkillEmpty.hidden = false;
+                  }
               });
               chip.append(label, remove);
               candidatePrimarySkillChips.appendChild(chip);
@@ -7651,6 +7663,17 @@ var KTAddCandidate = function () {
             }
 
             var formData = new FormData($('#createForm')[0]);
+
+            // SSOT Primary Skills synchronization: ensure Tagify skills are explicitly serialized into formData
+            try {
+                if (window.tagifyskill && Array.isArray(window.tagifyskill.value)) {
+                    formData.set('skills', JSON.stringify(window.tagifyskill.value));
+                } else if ($('#kt_tagify_2').val()) {
+                    formData.set('skills', $('#kt_tagify_2').val());
+                }
+            } catch (skillErr) {
+                console.warn('Failed to explicitly set skills in formData:', skillErr);
+            }
             var upPath = $('#uploaded_file_path').val() ? String($('#uploaded_file_path').val()).trim() : '';
             var sessUuid = $('#resume_session_uuid').val() ? String($('#resume_session_uuid').val()).trim() : '';
             var origName = $('#resume_original_name').val() ? String($('#resume_original_name').val()).trim() : '';
