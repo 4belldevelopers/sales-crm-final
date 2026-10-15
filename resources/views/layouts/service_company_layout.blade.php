@@ -3499,6 +3499,8 @@ $( document ).ready(function() {
               if (window.__atsCandidateL2DB) window.__atsCandidateL2DB.clear();
           } else if (e.data.type === 'match_score_updated' && window.JWRealtimeSync) {
               window.JWRealtimeSync.updateMatchScore(e.data.candidate_id, e.data.wise_ids, e.data.score, false);
+          } else if (e.data.type === 'skills_updated' && window.JWRealtimeSync && typeof window.JWRealtimeSync.updateSkillsList === 'function') {
+              window.JWRealtimeSync.updateSkillsList(e.data.candidate_id, e.data.wise_ids, e.data.skills, e.data.score, false);
           } else if (e.data.type === 'recruiter_note_updated' && window.JWRealtimeSync) {
               window.JWRealtimeSync.updateRecruiterNote(e.data.candidate_id, e.data.note, false);
           } else if (e.data.type === 'tracker_stage_updated' && window.JWRealtimeSync) {
@@ -3744,6 +3746,36 @@ $( document ).ready(function() {
           }
       },
 
+      updateSkillsList: function(candidateId, wiseIds, skillsStr, matchPct, broadcast) {
+          if (!candidateId && (!wiseIds || !wiseIds.length)) return;
+          var cid = candidateId ? String(candidateId) : null;
+          var wids = Array.isArray(wiseIds) ? wiseIds.map(String) : (wiseIds ? [String(wiseIds)] : []);
+
+          // 1. Immediately invalidate client RAM drawer caches so subsequent drawer open fetches fresh SSOT
+          if (cid) window.invalidateCandidateDrawerCache(cid, false);
+          wids.forEach(function(wid) {
+              window.invalidateCandidateDrawerCache(wid, false);
+          });
+
+          // 2. Synchronize match score badges across rows and drawer
+          if (matchPct !== null && matchPct !== undefined) {
+              this.updateMatchScore(candidateId, wiseIds, matchPct, false);
+          }
+
+          // 3. Broadcast to other recruiter tabs if local action
+          if (broadcast !== false && candidateBroadcastChannel) {
+              try {
+                  candidateBroadcastChannel.postMessage({
+                      type: 'skills_updated',
+                      candidate_id: cid,
+                      wise_ids: wids,
+                      skills: skillsStr,
+                      score: matchPct
+                  });
+              } catch(e) {}
+          }
+      },
+
       updateRecruiterNote: function(candidateId, note, broadcast) {
           if (!candidateId) return;
           var cid = String(candidateId);
@@ -3870,6 +3902,9 @@ $( document ).ready(function() {
                   }
                   if (e.skill_match !== null && e.skill_match !== undefined && window.JWRealtimeSync) {
                       window.JWRealtimeSync.updateMatchScore(e.candidate_id, e.wise_ids, e.skill_match, false);
+                  }
+                  if (e.skills !== null && e.skills !== undefined && window.JWRealtimeSync && typeof window.JWRealtimeSync.updateSkillsList === 'function') {
+                      window.JWRealtimeSync.updateSkillsList(e.candidate_id, e.wise_ids, e.skills, e.skill_match, false);
                   }
                   if (e.recruiter_note !== null && e.recruiter_note !== undefined && window.JWRealtimeSync) {
                       window.JWRealtimeSync.updateRecruiterNote(e.candidate_id, e.recruiter_note, false);
