@@ -6620,6 +6620,8 @@ $currency_code = GeneralMethod::defaultCurrency();
         function convertToWords(num) { return formatAmountInWords(num, getActiveCurrencyCode()); }
 
         function salary_check() {
+            var vis = ($('#salary_visibility').val() || '').trim();
+            if (vis === 'confidential') return;
             var minimum_salary = parseInt($("#minimum_salary").val());
             var maximum_salary = parseInt($("#maximum_salary").val());
             if (!isNaN(minimum_salary) && !isNaN(maximum_salary) && minimum_salary > 0 && maximum_salary > 0) {
@@ -7048,6 +7050,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                     if (els.inputsRow) {
                         els.inputsRow.style.display = 'none';
+                    }
+                    if (typeof clearFieldValidationErrors === 'function') {
+                        clearFieldValidationErrors('minimum_salary');
+                        clearFieldValidationErrors('maximum_salary');
+                        clearFieldValidationErrors('min_sal_mode');
+                        clearFieldValidationErrors('salary');
                     }
                 } else {
                     // Rest: No UI changes - Hide banner, show salary inputs
@@ -7611,6 +7619,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 highlightSelector: '#minSalaryWrap',
                 focusSelector: '#minimum_salary',
                 validate: function() {
+                    var vis = ($('#salary_visibility').val() || '').trim();
+                    if (vis === 'confidential') return true;
                     var val = ($('#minimum_salary').val() || '').trim();
                     return val !== '' && !isNaN(val) && parseFloat(val) >= 0;
                 },
@@ -7624,6 +7634,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 highlightSelector: '#maxSalaryWrap',
                 focusSelector: '#maximum_salary',
                 validate: function() {
+                    var vis = ($('#salary_visibility').val() || '').trim();
+                    if (vis === 'confidential') return true;
                     var min = ($('#minimum_salary').val() || '').trim();
                     var max = ($('#maximum_salary').val() || '').trim();
                     if (max === '' || isNaN(max) || parseFloat(max) < 0) return false;
@@ -7647,6 +7659,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 highlightSelector: '#min_sal_mode',
                 focusSelector: '#min_sal_mode',
                 validate: function() {
+                    var vis = ($('#salary_visibility').val() || '').trim();
+                    if (vis === 'confidential') return true;
                     var val = ($('#min_sal_mode').val() || '').trim();
                     return !!val;
                 },
@@ -9610,14 +9624,15 @@ $currency_code = GeneralMethod::defaultCurrency();
             return ro ? ro.value : '';
         }
         function salaryText() {
+            var vis = document.getElementById('salary_visibility') ? document.getElementById('salary_visibility').value : 'everywhere';
+            if (vis === 'confidential') {
+                return '🔒 Fully Confidential (Discussed during hiring)';
+            }
             var c1 = getSelText('min_salary_currency'); var s1 = document.getElementById('minimum_salary').value;
             var s2 = document.getElementById('maximum_salary').value; var mode = getSelText('min_sal_mode');
-            var vis = document.getElementById('salary_visibility') ? document.getElementById('salary_visibility').value : 'everywhere';
-            if (!s1 && !s2) return '';
+            if (!s1 && !s2) return '-';
             var base = (c1 + ' ' + (s1 || '') + ' - ' + c1 + ' ' + (s2 || '') + ' ' + mode).trim();
-            if (vis === 'confidential') {
-                return base + ' (🔒 Fully Confidential)';
-            } else if (vis === 'ats_only') {
+            if (vis === 'ats_only') {
                 return base + ' (ATS Only)';
             } else if (vis === 'ats_agencies') {
                 return base + ' (ATS + Agencies)';
@@ -9788,6 +9803,14 @@ $currency_code = GeneralMethod::defaultCurrency();
             data.set('visibility_internal', isInternal ? '1' : '0');
             data.set('bench_submission', isBench ? 'enabled' : 'disabled');
             data.set('public_market_status', (isMarket || isBench) ? '2' : '0');
+
+            // If salary visibility is confidential, ensure numeric 0 defaults for database integrity
+            if (data.get('salary_visibility') === 'confidential') {
+                if (!data.get('minimum_salary')) data.set('minimum_salary', '0');
+                if (!data.get('maximum_salary')) data.set('maximum_salary', '0');
+                if (!data.get('min_sal_mode')) data.set('min_sal_mode', '0');
+                if (!data.get('max_sal_mode')) data.set('max_sal_mode', '0');
+            }
 
             var $btn = $('.submit-card .btn-primary');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
