@@ -8,14 +8,44 @@
 <!--Add New Css of Metronic-7 End-->
 <style>
 /* Purpose: give the shared add/edit client wizard a compact, reference-aligned Metronic presentation without changing its form contract. */
+/* ===== Design tokens (aligned with Job Create) ===== */
 :root {
-  --client-primary: #1769f5;
-  --client-primary-soft: #edf4ff;
-  --client-ink: #0d194d;
-  --client-muted: #68738d;
-  --client-border: #dde4ef;
+  --primary: #ffd428;
+  --primary-hover: #f5c400;
+  --primary-gradient: linear-gradient(180deg, #ffd428 0%, #f5c400 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #fbc02d 0%, #f59e0b 100%);
+  --primary-text: #10143b;
+  --primary-border: #d4a017;
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --border-focus: #ffd428;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --warning: #f59e0b;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Compatibility aliases for client wizard blade components */
+  --client-primary: #ffd428;
+  --client-primary-soft: #fffbeb;
+  --client-ink: #0f172a;
+  --client-muted: #64748b;
+  --client-border: #e2e8f0;
   --client-surface: #ffffff;
-  --client-page: #f7f9fc;
+  --client-page: #f8fafc;
 }
 
 body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
@@ -53,19 +83,19 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     color: red;
   }
 
-  /* The legacy wizard stays responsible for state; these rules only modernize its visual language. */
+  /* The legacy wizard stays responsible for state; these rules modernize its visual language to Job Create standard */
   .client-wizard-shell.card {background: transparent; box-shadow: none;}
   #kt_wizard .wizard-nav {
     background: var(--client-surface);
     border: 1px solid var(--client-border) !important;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(17, 28, 68, 0.03);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     overflow: hidden;
   }
   #kt_wizard .wizard-steps {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    padding: 14px 18px !important;
+    padding: 16px 20px !important;
     gap: 0;
   }
   #kt_wizard .wizard-step {
@@ -73,28 +103,38 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center;
     min-width: 0;
     position: relative;
-    padding-right: 26px;
+    padding-right: 24px;
+    cursor: pointer;
   }
   #kt_wizard .wizard-step:not(:last-child)::after {
     content: '';
-    height: 1px;
-    background: #dce3ee;
+    height: 2px;
+    background: #e2e8f0;
     position: absolute;
     right: 8px;
-    width: 20px;
-    top: 18px;
+    width: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: background 0.2s ease;
   }
-  #kt_wizard .wizard-label {display: grid !important; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; width: 100%; align-items: center;}
+  #kt_wizard .wizard-step[data-wizard-state="done"]::after,
+  #kt_wizard .wizard-step.completed::after {
+    background: #10b981 !important;
+  }
+  #kt_wizard .wizard-label {display: grid !important; grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; width: 100%; align-items: center;}
   #kt_wizard .wizard-icon {
     grid-row: 1 / span 2;
-    width: 36px !important;
-    height: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
     display: grid !important;
     place-items: center;
     border-radius: 50%;
-    background: #f2f5f9;
-    border: 1px solid #dce3ee;
-    color: #344054 !important;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    color: #64748b !important;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
   }
   #kt_wizard .wizard-icon svg {display: none;}
   #kt_wizard .wizard-icon::before {content: attr(data-step-number); font-size: 12px; font-weight: 600;}
@@ -103,32 +143,55 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   #kt_wizard .wizard-step:nth-child(3) .wizard-icon::before {content: '3';}
   #kt_wizard .wizard-step:nth-child(4) .wizard-icon::before {content: '4';}
   #kt_wizard .wizard-step:nth-child(5) .wizard-icon::before {content: '5';}
-  #kt_wizard .wizard-title {font-size: 12px !important; font-weight: 600 !important; color: var(--client-ink) !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-  #kt_wizard .wizard-title::after {display: block; margin-top: 2px; color: #7b8497; font-size: 10.5px; font-weight: 400;}
+  #kt_wizard .wizard-title {font-size: 12.5px !important; font-weight: 600 !important; color: #334155 !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  #kt_wizard .wizard-title::after {display: block; margin-top: 2px; color: #64748b; font-size: 10.5px; font-weight: 400;}
   #kt_wizard .wizard-step:nth-child(1) .wizard-title::after {content: 'Basic details';}
   #kt_wizard .wizard-step:nth-child(2) .wizard-title::after {content: 'About the client';}
   #kt_wizard .wizard-step:nth-child(3) .wizard-title::after {content: 'Location & address';}
   #kt_wizard .wizard-step:nth-child(4) .wizard-title::after {content: 'Key contacts';}
   #kt_wizard .wizard-step:nth-child(5) .wizard-title::after {content: 'Confirm & save';}
   #kt_wizard .wizard-arrow {display: none !important;}
-  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-icon,
-  #kt_wizard .wizard-step[data-wizard-state="done"] .wizard-icon {
-    background: var(--client-primary);
-    border-color: var(--client-primary);
-    color: #fff !important;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22);
+  
+  /* Completed step token: Emerald Green with checkmark (Job Create standard) */
+  #kt_wizard .wizard-step[data-wizard-state="done"] .wizard-icon,
+  #kt_wizard .wizard-step.completed .wizard-icon {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
   }
-  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-title {color: var(--client-primary) !important;}
+  #kt_wizard .wizard-step[data-wizard-state="done"] .wizard-icon::before,
+  #kt_wizard .wizard-step.completed .wizard-icon::before {
+    content: '✓' !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+  
+  /* Current / Active step token: JERO Gold ring */
+  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-icon,
+  #kt_wizard .wizard-step.current .wizard-icon {
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    border-color: #d4a017 !important;
+    color: #10143b !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 3px rgba(245, 196, 0, 0.28), 0 2px 8px rgba(245, 196, 0, 0.25) !important;
+  }
+  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-title,
+  #kt_wizard .wizard-step.current .wizard-title {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+  
   #kt_wizard, #kt_wizard > .row, #kt_wizard > .row > div, #kt_form {width: 100%; max-width: 100%; min-width: 0;}
   #kt_wizard > .row {margin: 14px 0 0 !important; padding: 0 !important;}
   #kt_wizard > .row > div {padding: 0 !important;}
   #kt_form > [data-wizard-type="step-content"] {
     background: var(--client-surface);
     border: 1px solid var(--client-border);
-    border-radius: 10px;
-    padding: 18px !important;
+    border-radius: 12px;
+    padding: 20px !important;
     min-height: 330px;
-    box-shadow: 0 2px 8px rgba(17, 28, 68, 0.03);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   }
   #kt_form > [data-wizard-type="step-content"] > h3 {font-size: 14px !important; margin-bottom: 16px !important; color: var(--client-ink) !important;}
   #kt_form .form-control,
@@ -142,21 +205,25 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   #kt_form .form-control:focus,
   #kt_form .form-select:focus,
-  #kt_form .tagify:focus-within {border-color: var(--client-primary) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;}
+  #kt_form .tagify:focus-within {
+    border-color: #ffd428 !important;
+    box-shadow: 0 0 0 3px rgba(245, 196, 0, 0.2) !important;
+    outline: none !important;
+  }
   #kt_form .form-text {font-size: 10.5px !important; color: #7b8497 !important; margin-top: 5px;}
   .client-info-step {background: transparent !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; min-height: auto !important;}
   .client-step-layout {display: grid; width: 100%; max-width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: stretch;}
   .client-main-column {min-width: 0;}
   .client-side-column {min-width: 0;}
-  .client-section-card {background: #fff; border: 1px solid var(--client-border); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(17, 28, 68, 0.04);}
+  .client-section-card {background: #fff; border: 1px solid var(--client-border); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);}
   .client-main-column .client-section-card:last-child {margin-bottom: 0;}
   .client-section-heading {font-size: 13px; font-weight: 600; color: var(--client-ink); margin: 0 0 3px;}
   .client-section-copy {font-size: 10.5px; color: var(--client-muted); margin: 0 0 15px;}
   .client-branding-grid {display: grid; width: 100%; min-width: 0; grid-template-columns: 190px 130px minmax(0, 1fr); gap: 16px; align-items: stretch;}
-  .client-logo-upload {border: 1px dashed #8db5ff; border-radius: 8px; background: #fbfdff; min-height: 152px; padding: 14px; display: flex; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: border-color .2s ease, background .2s ease;}
-  .client-logo-upload:hover {border-color: var(--client-primary); background: #f5f9ff;}
-  .client-upload-icon {display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 6px; border-radius: 50%; background: var(--client-primary-soft); color: var(--client-primary); font-size: 23px;}
-  .client-logo-upload .client-upload-title {font-size: 11.5px; color: var(--client-primary); font-weight: 600;}
+  .client-logo-upload {border: 1px dashed #ffd428; border-radius: 8px; background: #fffdf5; min-height: 152px; padding: 14px; display: flex; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: border-color .2s ease, background .2s ease;}
+  .client-logo-upload:hover {border-color: #d4a017; background: #fffbeb;}
+  .client-upload-icon {display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 6px; border-radius: 50%; background: #fff8d6; color: #d4a017; font-size: 23px;}
+  .client-logo-upload .client-upload-title {font-size: 11.5px; color: #b45309; font-weight: 600;}
   .client-logo-upload .client-upload-copy {font-size: 10px; color: #7b8497; margin-top: 3px;}
   .client-logo-preview {border: 1px solid var(--client-border); border-radius: 8px; overflow: hidden; min-height: 152px; display: flex; flex-direction: column; background: #fff;}
   .client-preview-label {padding: 9px 11px 0; color: var(--client-ink); font-size: 10.5px; font-weight: 600;}
@@ -177,7 +244,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     background: #fff !important;
     overflow: hidden;
   }
-  #kt_form .client-field .input-group:focus-within {border-color: var(--client-primary) !important; box-shadow: 0 0 0 3px rgba(23, 105, 245, 0.1);}
+  #kt_form .client-field .input-group:focus-within {border-color: #ffd428 !important; box-shadow: 0 0 0 3px rgba(245, 196, 0, 0.2);}
   #kt_form .client-field .input-group-text {flex: 0 0 38px; width: 38px; justify-content: center; color: #53607e; border: 0 !important; background: #fff !important;}
   #kt_form .client-field .input-group .form-control,
   #kt_form .client-field .input-group .form-select {
@@ -192,9 +259,10 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     padding-left: 8px !important;
   }
   #kt_form .client-field .input-group .form-control::placeholder {color: #8993a8; opacity: 1;}
-  .client-tip {display: flex; align-items: center; gap: 8px; background: var(--client-primary-soft); color: #405174; border-radius: 7px; padding: 9px 11px; font-size: 10.5px; margin-top: 15px;}
-  .client-tip i {color: var(--client-primary); font-size: 14px;}
-  .client-auto-fetch {flex: 0 0 auto; max-width: 145px; border: 0 !important; border-left: 1px solid #b9d1ff !important; border-radius: 0 !important; color: var(--client-primary) !important; background: #f5f9ff !important; white-space: nowrap; font-size: 10.5px !important; font-weight: 600; padding: 0 10px !important;}
+  .client-tip {display: flex; align-items: center; gap: 8px; background: #fffbeb; color: #78350f; border-radius: 7px; padding: 9px 11px; font-size: 10.5px; margin-top: 15px; border: 1px solid #fef3c7;}
+  .client-tip i {color: #d97706; font-size: 14px;}
+  .client-auto-fetch {flex: 0 0 auto; max-width: 145px; border: 0 !important; border-left: 1px solid #e2e8f0 !important; border-radius: 0 !important; color: #10143b !important; background: #ffd428 !important; white-space: nowrap; font-size: 10.5px !important; font-weight: 600; padding: 0 10px !important; transition: background 0.2s;}
+  .client-auto-fetch:hover {background: #f5c400 !important;}
   .client-assistant {min-width: 0; overflow: hidden; border: 1px solid #e0e4f5; border-radius: 10px; padding: 18px; min-height: 100%; background: linear-gradient(145deg, #fbfaff 0%, #f4f6ff 100%); box-shadow: 0 2px 8px rgba(17, 28, 68, 0.04);}
   .client-assistant-head {display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 15px;}
   .client-assistant-title {font-size: 13px; font-weight: 600; color: #4c38ed; margin: 0;}
@@ -208,18 +276,91 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-assistant-value {color: var(--client-ink); text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
   .client-suggestion-status {color: #10a66a; font-size: 12px;}
   .client-suggestion-status.is-missing {color: #b7bfce;}
-  .client-assistant-action {width: calc(100% - 22px); margin: 12px 11px 0; min-height: 34px; border: 0; border-radius: 6px; background: linear-gradient(90deg, #3f46f5, #116cf5); color: #fff; font-size: 10.5px; font-weight: 600;}
+  .client-assistant-action {width: calc(100% - 22px); margin: 12px 11px 0; min-height: 34px; border: 0; border-radius: 6px; background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%); color: #10143b; font-size: 10.5px; font-weight: 600;}
   .client-assistant-note {font-size: 9.5px; color: #7b8497; text-align: center; margin: 10px 8px 12px;}
-  #kt_form > .d-flex.border-top {background: #fff; border: 1px solid var(--client-border) !important; border-radius: 10px; margin-top: 14px !important; padding: 10px 12px !important; justify-content: space-between !important; gap: 8px;}
-  .client-action-left, .client-action-right {display: flex; align-items: center; gap: 8px;}
-  #kt_form > .d-flex.border-top .btn {min-height: 36px; padding: 8px 18px !important; font-size: 11.5px !important; text-transform: none !important; border-radius: 7px;}
-  #continueButton {min-width: 128px; background: linear-gradient(90deg, #315efb, #2557e7);}
-  .client-cancel-btn {border: 1px solid #cfd7e6; color: var(--client-ink); background: #fff;}
+  
+  /* ===== Sticky Action Navigation Bar (Docked & Ergonomic) ===== */
+  .client-wizard-sticky-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 12px 12px;
+    padding: 14px 24px;
+    margin-top: 24px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+  .client-action-left, .client-action-center, .client-action-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Primary Action Buttons (Job Create Gold Gradient) */
+  .btn-primary, #continueButton, .client-submit-btn, .submitfrm, .updatefrm {
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    background-color: #ffd428 !important;
+    color: #10143b !important;
+    border: 1px solid #d4a017 !important;
+    box-shadow: 0 1px 2px rgba(16, 20, 59, 0.08), 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 9px 20px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .btn-primary:hover, #continueButton:hover, .client-submit-btn:hover, .submitfrm:hover, .updatefrm:hover {
+    background: linear-gradient(180deg, #fbc02d 0%, #f59e0b 100%) !important;
+    background-color: #f59e0b !important;
+    color: #0f172a !important;
+    border-color: #b45309 !important;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.32) !important;
+    transform: translateY(-1px) !important;
+  }
+  .btn-primary:active, #continueButton:active, .client-submit-btn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 1px 2px rgba(16, 20, 59, 0.12) !important;
+  }
+
+  /* Secondary Buttons (Back, Cancel, Draft) */
+  .btn-secondary, .client-cancel-btn, .client-draft-btn, .client-nav-back, .client-nav-cancel, .client-nav-draft, [data-wizard-type="action-prev"] {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    padding: 9px 18px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .btn-secondary:hover, .client-cancel-btn:hover, .client-draft-btn:hover, .client-nav-back:hover, .client-nav-cancel:hover, .client-nav-draft:hover, [data-wizard-type="action-prev"]:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px) !important;
+  }
+
   .client-profile-completion {display: flex; align-items: center; gap: 10px; margin-left: auto;}
   .client-completion-copy {text-align: right;}
   .client-completion-label {font-size: 10px; color: var(--client-ink); font-weight: 600;}
   .client-completion-status {display: block; margin-top: 3px; font-size: 9.5px; color: #10a66a;}
-  .client-completion-ring {--completion: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--client-primary) calc(var(--completion) * 1%), #e5ebf4 0); position: relative;}
+  .client-completion-ring {--completion: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(#10b981 calc(var(--completion) * 1%), #e5ebf4 0); position: relative;}
   .client-completion-ring::before {content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--client-page);}
   .client-completion-ring span {position: relative; color: var(--client-ink); font-size: 9.5px; font-weight: 600;}
 
@@ -393,18 +534,18 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-table-actions button.is-delete:hover {border-color: #f5c2cb; color: #e5484d;}
   .client-contact-fields {position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;}
   /* ── Contact Person Drawer ── */
-  .client-contact-drawer-backdrop {position: fixed; inset: 0; background: rgba(15,25,77,.38); z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .25s ease; backdrop-filter: blur(2px);}
-  .client-contact-drawer-backdrop.is-open {opacity: 1; visibility: visible;}
+  .client-contact-drawer-backdrop {position: fixed !important; inset: 0 !important; background: rgba(15,25,77,.45) !important; z-index: 99998 !important; opacity: 0 !important; visibility: hidden !important; transition: opacity .25s ease !important; backdrop-filter: blur(2px) !important;}
+  .client-contact-drawer-backdrop.is-open {opacity: 1 !important; visibility: visible !important;}
   .client-contact-drawer {
-    position: fixed; top: 0; right: 0; height: 100vh;
-    width: min(500px, 100vw);
-    background: #fff; z-index: 1051;
-    box-shadow: -12px 0 48px rgba(17,28,68,.14);
-    border-left: 1px solid #e2e8f4;
-    transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
-    display: flex; flex-direction: column;
+    position: fixed !important; top: 0 !important; right: 0 !important; height: 100vh !important;
+    width: min(500px, 100vw) !important;
+    background: #ffffff !important; z-index: 99999 !important;
+    box-shadow: -12px 0 48px rgba(17,28,68,.2) !important;
+    border-left: 1px solid #e2e8f4 !important;
+    transform: translateX(100%) !important; transition: transform .28s cubic-bezier(.4,0,.2,1) !important;
+    display: flex !important; flex-direction: column !important;
   }
-  .client-contact-drawer.is-open {transform: translateX(0);}
+  .client-contact-drawer.is-open {transform: translateX(0) !important; visibility: visible !important;}
   @media (max-width: 767px) { .client-contact-drawer { width: 100vw; } }
   @media (min-width: 768px) and (max-width: 1024px) { .client-contact-drawer { width: min(420px, 100vw); } }
 
@@ -523,7 +664,479 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     .client-review-layout {grid-template-columns: 1fr;}
     .client-review-grid, .client-review-addresses, .client-services-grid {grid-template-columns: 1fr;}
   }
+  /* Strict Button Visibility: Update Client / Submit Client MUST ONLY show on Step 5 (Review & Submit) */
+  #submitBtn, .submitfrm, .updatefrm {
+    display: none !important;
+  }
+  body.on-review-step #submitBtn,
+  body.on-review-step .submitfrm,
+  body.on-review-step .updatefrm,
+  [data-wizard-state="last"] #submitBtn,
+  [data-wizard-state="last"] .submitfrm,
+  [data-wizard-state="last"] .updatefrm {
+    display: inline-flex !important;
+  }
+  body.on-review-step #continueButton,
+  body.on-review-step [data-wizard-type="action-next"],
+  [data-wizard-state="last"] #continueButton,
+  [data-wizard-state="last"] [data-wizard-type="action-next"] {
+    display: none !important;
+  }
 
+  /* ==========================================================================
+     Client Location / Work Location Architecture (V4 Canonical Location Engine)
+     Matches User Screenshot media_1792046189393.png & media_1792046199055.png
+     ========================================================================== */
+  .ij-location-card {
+    position: relative !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    overflow: visible !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+  }
+  .ij-location-card-head {
+    background: linear-gradient(110deg, #fffdf1, #fff9df) !important;
+    border-bottom: 1px solid #f3e5b3 !important;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 12px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .ij-location-head-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .ij-location-head-badge {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    background: #ffd428 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #10143b !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.3) !important;
+  }
+  .ij-location-head-badge svg {
+    width: 17px !important;
+    height: 17px !important;
+    stroke: #10143b !important;
+  }
+  .ij-location-title {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #10143b !important;
+    margin: 0 0 2px 0 !important;
+    line-height: 1.25 !important;
+  }
+  .ij-location-subtitle {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+  .ij-location-card-body {
+    padding: 14px 18px 16px !important;
+  }
+  .ij-popular-hubs-wrap {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 8px 12px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+  }
+  .ij-popular-label {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+  }
+  .ij-popular-pills {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .ij-pop-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3.5px 11px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 999px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+    line-height: 1.2 !important;
+  }
+  .ij-pop-pill:hover {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-1px) !important;
+  }
+  .ij-pop-pill.is-active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.25) !important;
+  }
+  .ij-location-input-wrap {
+    position: relative !important;
+    width: 100% !important;
+  }
+  .ij-location-input-wrap .input-with-icon {
+    position: relative !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .ij-location-input-wrap .input-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: #94a3b8 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+  }
+  .ij-location-search-input {
+    width: 100% !important;
+    height: 40px !important;
+    padding-left: 38px !important;
+    padding-right: 36px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    color: #0f172a !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+  }
+  .ij-location-search-input:focus {
+    border-color: #ffd428 !important;
+    box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.28) !important;
+    outline: none !important;
+  }
+  .ij-search-spinner {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 14px !important;
+    height: 14px !important;
+    border: 2px solid #cbd5e1 !important;
+    border-top-color: #2563eb !important;
+    border-radius: 50% !important;
+    animation: ijSpin 0.6s linear infinite !important;
+    z-index: 3 !important;
+  }
+  @keyframes ijSpin { to { transform: translateY(-50%) rotate(360deg); } }
+  .ij-search-clear {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    background: #cbd5e1 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    transition: background 0.15s ease !important;
+    z-index: 3 !important;
+  }
+  .ij-search-clear:hover {
+    background: #64748b !important;
+  }
+  .ij-city-dropdown {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.18), 0 8px 16px -4px rgba(15, 23, 42, 0.1) !important;
+    z-index: 1050 !important;
+    max-height: min(340px, calc(100vh - 140px)) !important;
+    overflow-y: auto !important;
+    display: none;
+    font-family: 'Poppins', sans-serif !important;
+  }
+  .ij-city-dropdown.active {
+    display: block !important;
+  }
+  .ij-cd-group {
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+  .ij-cd-group:last-child {
+    border-bottom: none !important;
+  }
+  .ij-cd-group-title {
+    padding: 7px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    color: #1e40af !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+  }
+  .ij-cd-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 8.5px 12px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    border-bottom: 1px solid #f8fafc !important;
+  }
+  .ij-cd-item:hover,
+  .ij-cd-item.is-highlighted {
+    background: #eff6ff !important;
+  }
+  .ij-cd-item.is-selected {
+    background: #f8fafc !important;
+    cursor: default !important;
+  }
+  .ij-cd-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  .ij-cd-pin {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    border-radius: 6px !important;
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+  .ij-cd-pin svg {
+    width: 13px !important;
+    height: 13px !important;
+    stroke: currentColor !important;
+  }
+  .ij-cd-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    min-width: 0 !important;
+  }
+  .ij-cd-name {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .ij-cd-meta {
+    font-size: 11px !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
+  }
+  .ij-cd-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  .ij-cd-badge {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+  }
+  .ij-cd-status {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+  }
+  .ij-cd-empty {
+    padding: 18px 14px !important;
+    text-align: center !important;
+    font-size: 12px !important;
+    color: #64748b !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .ij-btn-custom-add {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 11px !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+  }
+  .ij-btn-custom-add:hover {
+    background: #1d4ed8 !important;
+  }
+  .ij-selected-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 14px !important;
+    margin-bottom: 8px !important;
+  }
+  .ij-selected-header .selected-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  .ij-selected-header .clear-all {
+    font-size: 12px !important;
+    color: #b45309 !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    background: none !important;
+    border: none !important;
+    font-family: inherit !important;
+    padding: 0 !important;
+    transition: color 0.15s ease !important;
+  }
+  .ij-selected-header .clear-all:hover {
+    color: #92400e !important;
+    text-decoration: underline !important;
+  }
+  .ij-selected-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    min-height: 28px !important;
+    margin-top: 4px !important;
+  }
+  .ij-location-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 5px 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1e40af !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08) !important;
+    transition: all 0.15s ease !important;
+  }
+  .ij-location-chip:hover {
+    border-color: #60a5fa !important;
+    background: #eff6ff !important;
+  }
+  .ij-chip-pin {
+    color: #2563eb !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+  .ij-chip-pin svg {
+    width: 12px !important;
+    height: 12px !important;
+    stroke: currentColor !important;
+  }
+  .ij-chip-label {
+    line-height: 1.2 !important;
+  }
+  .ij-chip-region {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    margin-left: 2px !important;
+  }
+  .ij-chip-del {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    border-radius: 50% !important;
+    background: #e2e8f0 !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    margin-left: 3px !important;
+    line-height: 1 !important;
+    border: none !important;
+    transition: all 0.15s ease !important;
+    padding: 0 !important;
+  }
+  .ij-chip-del:hover {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+  }
+  .ij-no-locs {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    font-style: italic !important;
+    padding: 4px 0 !important;
+  }
+  .client-hq-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
 </style>
 @endpush
 @section('content')
@@ -735,6 +1348,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                 <!--begin::Wizard Form-->
                 <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
+                  <input type="hidden" name="idempotency_key" id="kt_form_idempotency_key" value="" />
                   <!--begin::Client Information-->
                   @include('service_company.client.components.tab-basic-info')
 
@@ -745,29 +1359,39 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                   @include('service_company.client.components.tab-locations')
 
                   <!--begin::Contact Person-->
-                  @include('service_company.client.components.tab-contacts')
+                  @include('service_company.client.components.tab-contacts', [
+    'client_contact_info' => $client_contact_info ?? [],
+    'client_contact_arr'  => $client_contact_arr ?? ($client_contact_info ?? []),
+    'page_event'          => $page_event,
+    'country_code'        => $country_code ?? 'in'
+])
 
                   <!--begin::Review and Submit-->
                   @include('service_company.client.components.tab-review')
-                  <!--begin::Wizard Actions-->
-                  <div class="d-flex border-top mt-5 pt-10">
-                    <div class="client-action-left">
-                      <a href="{{ route('service_company.clients.index') }}" class="btn client-cancel-btn"><i class="la la-times"></i> Cancel</a>
-                      <button type="button" class="btn client-draft-btn" id="client_save_draft"><i class="la la-bookmark"></i> Save as Draft</button>
-                    </div>
-                    <div class="client-action-right ms-auto">
-                      <button type="button" class="btn client-cancel-btn" data-wizard-type="action-prev"><i class="la la-arrow-left"></i> Back</button>
-                      <div class="client-submit-wrap">
+                  <!--begin::Wizard Actions (Docked Sticky Footer Bar)-->
+                  <div class="client-wizard-sticky-footer d-flex align-items-center justify-content-end">
+                    <div class="client-action-right d-flex align-items-center gap-3">
+                      <a href="{{ route('service_company.clients.index') }}" class="btn btn-secondary client-nav-cancel">
+                        <i class="la la-times" style="margin-right: 4px;"></i> Cancel
+                      </a>
+                      <button type="button" class="btn btn-secondary client-nav-back" id="client_btn_back" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; margin-right: 6px; display: inline-block; vertical-align: -2px;">
+                          <path d="M5 12h14"/><path d="m12 19-7-7 7-7"/>
+                        </svg>Back
+                      </button>
 <?php
 if ($page_event == 'EDIT') {
-    echo '<button type="button" id="submitBtn" class="btn client-submit-btn updatefrm" data-wizard-type="action-submit1" style="display:none"><i class="la la-paper-plane"></i> Update Client</button>';
+    echo '<button type="button" id="submitBtn" class="btn btn-primary client-submit-btn updatefrm" data-wizard-type="action-submit1" style="display:none;"><i class="la la-paper-plane" style="margin-right: 6px;"></i> Update Client</button>';
 } else {
-    echo '<button type="button" id="submitBtn" class="btn client-submit-btn submitfrm" data-wizard-type="action-submit1" style="display:none"><i class="la la-paper-plane"></i> Submit Client</button>';
+    echo '<button type="button" id="submitBtn" class="btn btn-primary client-submit-btn submitfrm" data-wizard-type="action-submit1" style="display:none;"><i class="la la-paper-plane" style="margin-right: 6px;"></i> Submit Client</button>';
 }
 ?>
-                        <button type="button" id="continueButton" class="btn btn-primary" data-wizard-type="action-next">Continue <i class="la la-arrow-right"></i></button>
-                        <p class="client-submit-note">After submission, you can't edit basic details.</p>
-                      </div>
+                      <button type="button" id="continueButton" class="btn btn-primary client-nav-next">
+                        Continue
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; margin-left: 6px; display: inline-block; vertical-align: -2px;">
+                          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   <!--end::Wizard Actions-->
@@ -1017,108 +1641,789 @@ if ($page_event == 'EDIT') {
      });
    });
    
-   const cities = @json($cities);
-   var countAddrees  = "{{ $countAddrees }}";
-for (let i = 0; i < countAddrees; i++) {
-    let inputId = `#kt_tagify_work_location_${i}`;
-    let inputElement = document.querySelector(inputId);
-    var cityDataGet = $(inputId).val();
-    var enforceWhitelist = true;
-    if(page_event=='EDIT'){
-      enforceWhitelist = false;
-    }
-    
+   // ---------- GLOBAL INLINE ERROR UTILITIES ----------
+   function clearFieldError($field) {
+     if (!$field) return;
+     var $f = ($field instanceof jQuery) ? $field : $($field);
+     if (!$f.length) return;
+     $f.removeClass('is-invalid');
+     var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
+     if ($container.length) {
+       $container.find('.client-inline-error').remove();
+     } else {
+       $f.siblings('.client-inline-error').remove();
+       $f.parent().find('.client-inline-error').remove();
+     }
+   }
+   window.clearFieldError = clearFieldError;
 
-    if (inputElement) {
+   function showInlineError($field, message) {
+     if (!$field) return;
+     var $f = ($field instanceof jQuery) ? $field : $($field);
+     if (!$f.length) return;
+     clearFieldError($f);
+     $f.addClass('is-invalid');
+     var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
+     if ($container.length) {
+       $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+     } else {
+       $f.after('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+     }
+   }
+   window.showInlineError = showInlineError;
 
-      
-        let tagifyInstance = new Tagify(inputElement, {
-            whitelist: cities,
-            enforceWhitelist: enforceWhitelist, // Prevents users from adding custom values
-            maxTags: 1,
-            dropdown: {
-                maxItems: 20,           // maximum allowed rendered suggestions
-                classname: "", // custom classname for this dropdown
-                enabled: 0,             // show suggestions on focus
-                closeOnSelect: true    // do not hide the suggestions dropdown once an item has been selected
+   // ---------- GOD-LEVEL CANONICAL LOCATION ENGINE (V4 ARCHITECTURE) ----------
+   function debounce(func, delay) { let timer; return function (...args) { clearTimeout(timer); timer = setTimeout(() => func.apply(this, args), delay); }; }
+
+   var selectedCities = [];
+   if (window.serverInitialCities && Array.isArray(window.serverInitialCities)) {
+       selectedCities = window.serverInitialCities.slice();
+   }
+
+   // Layer 1: In-Browser Curated Global Hubs (30 worldwide hubs grouped by Region)
+   var curatedLocationGroups = [
+       {
+           region: 'India Tech Hubs',
+           items: [
+               { city: 'Bengaluru', state: 'Karnataka', country: 'India', badge: 'Metro Hub', canonical: 'Bengaluru, Karnataka, India' },
+               { city: 'Mumbai', state: 'Maharashtra', country: 'India', badge: 'Financial Capital', canonical: 'Mumbai, Maharashtra, India' },
+               { city: 'New Delhi', state: 'Delhi', country: 'India', badge: 'National Capital', canonical: 'New Delhi, Delhi, India' },
+               { city: 'Hyderabad', state: 'Telangana', country: 'India', badge: 'Tech Hub', canonical: 'Hyderabad, Telangana, India' },
+               { city: 'Pune', state: 'Maharashtra', country: 'India', badge: 'IT Hub', canonical: 'Pune, Maharashtra, India' },
+               { city: 'Chennai', state: 'Tamil Nadu', country: 'India', badge: 'SaaS Capital', canonical: 'Chennai, Tamil Nadu, India' },
+               { city: 'Gurugram', state: 'Haryana', country: 'India', badge: 'NCR Hub', canonical: 'Gurugram, Haryana, India' },
+               { city: 'Noida', state: 'Uttar Pradesh', country: 'India', badge: 'NCR Hub', canonical: 'Noida, Uttar Pradesh, India' },
+               { city: 'Kolkata', state: 'West Bengal', country: 'India', badge: 'Metro Hub', canonical: 'Kolkata, West Bengal, India' },
+               { city: 'Ahmedabad', state: 'Gujarat', country: 'India', badge: 'Commercial Hub', canonical: 'Ahmedabad, Gujarat, India' }
+           ]
+       },
+       {
+           region: 'North America',
+           items: [
+               { city: 'San Francisco', state: 'California', country: 'United States', badge: 'Silicon Valley', canonical: 'San Francisco, California, United States' },
+               { city: 'New York City', state: 'New York', country: 'United States', badge: 'Global Hub', canonical: 'New York City, New York, United States' },
+               { city: 'Seattle', state: 'Washington', country: 'United States', badge: 'Cloud Hub', canonical: 'Seattle, Washington, United States' },
+               { city: 'Austin', state: 'Texas', country: 'United States', badge: 'Tech Hub', canonical: 'Austin, Texas, United States' },
+               { city: 'Boston', state: 'Massachusetts', country: 'United States', badge: 'Biotech / AI', canonical: 'Boston, Massachusetts, United States' },
+               { city: 'Toronto', state: 'Ontario', country: 'Canada', badge: 'Canada Tech Hub', canonical: 'Toronto, Ontario, Canada' },
+               { city: 'Vancouver', state: 'British Columbia', country: 'Canada', badge: 'Tech Center', canonical: 'Vancouver, British Columbia, Canada' }
+           ]
+       },
+       {
+           region: 'Europe & UK',
+           items: [
+               { city: 'London', state: 'England', country: 'United Kingdom', badge: 'FinTech Capital', canonical: 'London, England, United Kingdom' },
+               { city: 'Berlin', state: 'Berlin', country: 'Germany', badge: 'Startup Capital', canonical: 'Berlin, Germany' },
+               { city: 'Amsterdam', state: 'North Holland', country: 'Netherlands', badge: 'Tech Hub', canonical: 'Amsterdam, Netherlands' },
+               { city: 'Dublin', state: 'Leinster', country: 'Ireland', badge: 'EMEA HQ Hub', canonical: 'Dublin, Ireland' },
+               { city: 'Paris', state: 'Île-de-France', country: 'France', badge: 'Tech Hub', canonical: 'Paris, France' }
+           ]
+       },
+       {
+           region: 'APAC & Middle East',
+           items: [
+               { city: 'Singapore', state: 'Central', country: 'Singapore', badge: 'Asia Gateway', canonical: 'Singapore, Singapore' },
+               { city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates', badge: 'MENA Hub', canonical: 'Dubai, United Arab Emirates' },
+               { city: 'Tokyo', state: 'Tokyo', country: 'Japan', badge: 'Asia Metro', canonical: 'Tokyo, Japan' },
+               { city: 'Sydney', state: 'New South Wales', country: 'Australia', badge: 'ANZ Hub', canonical: 'Sydney, New South Wales, Australia' },
+               { city: 'Melbourne', state: 'Victoria', country: 'Australia', badge: 'Tech Center', canonical: 'Melbourne, Victoria, Australia' }
+           ]
+       }
+   ];
+
+   // Layer 1 Instant Quick-Select Popular Hubs
+   var popularPillList = [
+       { label: 'Bengaluru', canonical: 'Bengaluru, Karnataka, India' },
+       { label: 'Mumbai', canonical: 'Mumbai, Maharashtra, India' },
+       { label: 'Delhi NCR', canonical: 'New Delhi, Delhi, India' },
+       { label: 'Hyderabad', canonical: 'Hyderabad, Telangana, India' },
+       { label: 'Pune', canonical: 'Pune, Maharashtra, India' },
+       { label: 'London', canonical: 'London, England, United Kingdom' },
+       { label: 'New York', canonical: 'New York City, New York, United States' },
+       { label: 'Singapore', canonical: 'Singapore, Singapore' }
+   ];
+
+   // Layer 1 In-Memory Synonym Aliases
+   var citySynonymAliases = {
+       'baroda': 'Vadodara',
+       'vizag': 'Visakhapatnam',
+       'bombay': 'Mumbai',
+       'calcutta': 'Kolkata',
+       'madras': 'Chennai',
+       'poona': 'Pune',
+       'bangalore': 'Bengaluru',
+       'bengaluru': 'Bengaluru',
+       'gurgaon': 'Gurugram',
+       'gurugram': 'Gurugram',
+       'trivandrum': 'Thiruvananthapuram',
+       'cochin': 'Kochi',
+       'sf': 'San Francisco',
+       'bay area': 'San Francisco',
+       'nyc': 'New York City',
+       'ny': 'New York City',
+       'la': 'Los Angeles',
+       'dc': 'Washington',
+       'kl': 'Kuala Lumpur',
+       'sg': 'Singapore',
+       'uae': 'Dubai'
+   };
+
+   // Layer 2 Session LRU In-Memory Cache (Capacity: 100, TTL: 30 minutes)
+   var cityLruCache = new Map();
+   var CITY_CACHE_MAX = 100;
+   var CITY_CACHE_TTL = 1800000;
+   var citySearchAbortCtrl = null;
+   var cityHighlightedIdx = -1;
+
+   function getCachedCities(key) {
+       var entry = cityLruCache.get(key);
+       if (!entry) return null;
+       if (Date.now() - entry.ts > CITY_CACHE_TTL) {
+           cityLruCache.delete(key);
+           return null;
+       }
+       cityLruCache.delete(key);
+       cityLruCache.set(key, entry);
+       return entry.data;
+   }
+
+   function setCachedCities(key, data) {
+       if (cityLruCache.size >= CITY_CACHE_MAX) {
+           var firstKey = cityLruCache.keys().next().value;
+           cityLruCache.delete(firstKey);
+       }
+       cityLruCache.set(key, { ts: Date.now(), data: data });
+   }
+
+   function escapeJsStr(val) {
+       return String(val || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+   }
+
+   function isCitySelected(canonical, label) {
+       var cNorm = String(canonical || '').toLowerCase().trim();
+       var lNorm = String(label || '').toLowerCase().trim();
+       return selectedCities.some(function(item) {
+           var it = String(item || '').toLowerCase().trim();
+           if (it === cNorm || (lNorm && it === lNorm)) return true;
+           var cityPart = it.split(/[,|]/)[0].trim();
+           if (lNorm && cityPart === lNorm) return true;
+           if (cNorm && it.indexOf(cNorm) === 0) return true;
+           return false;
+       });
+   }
+
+   function renderPopularPills() {
+       var container = document.getElementById('popularHubsPills');
+       if (!container) return;
+       container.innerHTML = popularPillList.map(function(p) {
+           var active = isCitySelected(p.canonical, p.label);
+           var activeClass = active ? ' is-active' : '';
+           var prefix = active ? '✓ ' : '+ ';
+           return '<button type="button" class="ij-pop-pill' + activeClass + '" onclick="togglePopularPill(\'' + escapeJsStr(p.canonical) + '\', \'' + escapeJsStr(p.label) + '\')">' +
+               prefix + escapeHtml(p.label) + '</button>';
+       }).join('');
+   }
+
+   function togglePopularPill(canonical, label) {
+       var existingIdx = selectedCities.findIndex(function(item) {
+           var it = String(item || '').toLowerCase().trim();
+           var cNorm = String(canonical || '').toLowerCase().trim();
+           var lNorm = String(label || '').toLowerCase().trim();
+           return it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm);
+       });
+       if (existingIdx !== -1) {
+           selectedCities.splice(existingIdx, 1);
+       } else {
+           if (selectedCities.length >= 15) {
+               Swal.fire({ text: 'Maximum 15 cities allowed', icon: 'info' });
+               return;
+           }
+           selectedCities.push(canonical);
+       }
+       renderSelectedCities();
+   }
+
+   function renderCuratedDropdown() {
+       var dd = document.getElementById('cityDropdown');
+       if (!dd) return;
+       cityHighlightedIdx = -1;
+       var html = '';
+       curatedLocationGroups.forEach(function(group) {
+           html += '<div class="ij-cd-group">';
+           html += '<div class="ij-cd-group-title">' + escapeHtml(group.region) + '</div>';
+           group.items.forEach(function(item) {
+               var selected = isCitySelected(item.canonical, item.city);
+               var itemClass = 'ij-cd-item' + (selected ? ' is-selected' : '');
+               var clickAttr = selected ? '' : 'onclick="selectCity(\'' + escapeJsStr(item.canonical) + '\')"';
+               var statusBadge = selected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
+               var subText = item.state ? (item.state + ', ' + item.country) : item.country;
+               html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(item.canonical) + '">';
+               html += '  <div class="ij-cd-left">';
+               html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+               html += '    <div class="ij-cd-text">';
+               html += '      <span class="ij-cd-name">' + escapeHtml(item.city) + '</span>';
+               html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+               html += '    </div>';
+               html += '  </div>';
+               html += '  <div class="ij-cd-right">';
+               if (item.badge) {
+                   html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+               }
+               html += statusBadge;
+               html += '  </div>';
+               html += '</div>';
+           });
+           html += '</div>';
+       });
+       dd.innerHTML = html;
+       dd.classList.add('active');
+   }
+
+   function highlightMatch(text, query) {
+       if (!query) return escapeHtml(text);
+       var regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+       return escapeHtml(text).replace(regex, '<strong style="color:#2563eb;">$1</strong>');
+   }
+
+   function renderCitySearchResults(results, query) {
+       var dd = document.getElementById('cityDropdown');
+       if (!dd) return;
+       cityHighlightedIdx = -1;
+       if (!results || results.length === 0) {
+           var safeQ = escapeHtml(query);
+           var safeJsQ = escapeJsStr(query);
+           dd.innerHTML = '<div class="ij-cd-empty">' +
+               '<div>No matching cities found for &ldquo;' + safeQ + '&rdquo;</div>' +
+               '<button type="button" class="ij-btn-custom-add" onclick="addCustomCityDirect(\'' + safeJsQ + '\')">' +
+               '+ Add &ldquo;' + safeQ + '&rdquo; as custom location</button>' +
+               '</div>';
+           dd.classList.add('active');
+           return;
+       }
+       var html = '<div class="ij-cd-group">';
+       html += '<div class="ij-cd-group-title">Search Results (' + results.length + ')</div>';
+       results.forEach(function(item) {
+           var canonical = item.canonical || item.label || (item.city + (item.state ? ', ' + item.state : '') + (item.country ? ', ' + item.country : ''));
+           var selected = isCitySelected(canonical, item.city);
+           var itemClass = 'ij-cd-item' + (selected ? ' is-selected' : '');
+           var clickAttr = selected ? '' : 'onclick="selectCity(\'' + escapeJsStr(canonical) + '\')"';
+           var statusBadge = selected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
+           var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
+           html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(canonical) + '">';
+           html += '  <div class="ij-cd-left">';
+           html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+           html += '    <div class="ij-cd-text">';
+           html += '      <span class="ij-cd-name">' + highlightMatch(item.city, query) + '</span>';
+           html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+           html += '    </div>';
+           html += '  </div>';
+           html += '  <div class="ij-cd-right">';
+           if (item.badge) {
+               html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+           }
+           html += statusBadge;
+           html += '  </div>';
+           html += '</div>';
+       });
+       html += '</div>';
+       dd.innerHTML = html;
+       dd.classList.add('active');
+   }
+
+   function parseRawCityData(data) {
+       var rawList = [];
+       if (data && Array.isArray(data.results)) {
+           rawList = data.results;
+       } else if (Array.isArray(data)) {
+           rawList = data;
+       }
+       return rawList.map(function(c) {
+           if (typeof c === 'object' && c !== null) {
+               var cityName = c.city || (c.label ? c.label.split(',')[0].trim() : '');
+               var stateName = c.state || (c.label ? (c.label.split(',')[1] || '').trim() : '');
+               var countryName = c.country || (c.label ? (c.label.split(',')[2] || '').trim() : '');
+               var canon = c.canonical || c.label || [cityName, stateName, countryName].filter(Boolean).join(', ');
+               var badge = c.badge || (countryName === 'India' ? (stateName || 'India') : countryName);
+               return {
+                   id: c.id,
+                   city: cityName || canon,
+                   state: stateName,
+                   country: countryName,
+                   label: c.label || canon,
+                   canonical: canon,
+                   badge: badge
+               };
+           } else {
+               var str = String(c || '').trim();
+               var parts = str.split(/[,|]/).map(function(s) { return s.trim(); });
+               var cityName = parts[0] || str;
+               var stateName = parts[1] || '';
+               var countryName = parts[2] || '';
+               return {
+                   city: cityName,
+                   state: stateName,
+                   country: countryName,
+                   label: str,
+                   canonical: str,
+                   badge: countryName || stateName || ''
+               };
+           }
+       });
+   }
+
+   function performCitySearch(query) {
+       var trimmed = query.trim();
+       var spinner = document.getElementById('citySearchSpinner');
+       var clearBtn = document.getElementById('citySearchClear');
+       if (clearBtn) clearBtn.style.display = trimmed ? 'inline-flex' : 'none';
+
+       if (!trimmed) {
+           if (spinner) spinner.style.display = 'none';
+           renderCuratedDropdown();
+           return;
+       }
+
+       var lookupQuery = trimmed.toLowerCase();
+       var normalizedQ = citySynonymAliases[lookupQuery] || trimmed;
+
+       var cacheKey = normalizedQ.toLowerCase().trim();
+       var cached = getCachedCities(cacheKey);
+       if (cached) {
+           if (spinner) spinner.style.display = 'none';
+           renderCitySearchResults(cached, trimmed);
+           return;
+       }
+
+       if (citySearchAbortCtrl) {
+           citySearchAbortCtrl.abort();
+       }
+       citySearchAbortCtrl = new AbortController();
+
+       if (spinner) spinner.style.display = 'inline-block';
+
+       var targetUrl = "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(normalizedQ) + "&format=canonical&limit=25";
+
+       fetch(targetUrl, {
+           method: 'GET',
+           signal: citySearchAbortCtrl.signal,
+           headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+       })
+       .then(function(res) {
+           if (!res.ok) throw new Error('Network error: ' + res.status);
+           return res.json();
+       })
+       .then(function(data) {
+           if (spinner) spinner.style.display = 'none';
+           var parsed = parseRawCityData(data);
+           setCachedCities(cacheKey, parsed);
+           renderCitySearchResults(parsed, trimmed);
+       })
+       .catch(function(err) {
+           if (err.name === 'AbortError') return;
+           if (spinner) spinner.style.display = 'none';
+           var filtered = [];
+           curatedLocationGroups.forEach(function(g) {
+               g.items.forEach(function(item) {
+                   if (item.city.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1 ||
+                       item.canonical.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1) {
+                       filtered.push(item);
+                   }
+               });
+           });
+           renderCitySearchResults(filtered, trimmed);
+       });
+   }
+
+   var debounceCitySearch = debounce(function(val) {
+       performCitySearch(val);
+   }, 180);
+
+   function clearCitySearchInput() {
+       var input = document.getElementById('citySearch');
+       var clearBtn = document.getElementById('citySearchClear');
+       var spinner = document.getElementById('citySearchSpinner');
+       if (input) {
+           input.value = '';
+           input.focus();
+       }
+       if (clearBtn) clearBtn.style.display = 'none';
+       if (spinner) spinner.style.display = 'none';
+       renderCuratedDropdown();
+   }
+
+   function initCitySearch() {
+       var input = document.getElementById('citySearch');
+       var dropdown = document.getElementById('cityDropdown');
+       var clearBtn = document.getElementById('citySearchClear');
+       renderPopularPills();
+
+       if (!input || !dropdown) return;
+
+       input.addEventListener('focus', function() {
+           if (!input.value.trim()) {
+               renderCuratedDropdown();
+           } else {
+               performCitySearch(input.value);
+           }
+       });
+
+       input.addEventListener('input', function(e) {
+           var v = e.target.value;
+           if (clearBtn) clearBtn.style.display = v.trim() ? 'inline-flex' : 'none';
+           debounceCitySearch(v);
+       });
+
+       input.addEventListener('keydown', function(e) {
+           var items = dropdown.querySelectorAll('.ij-cd-item');
+           if (!dropdown.classList.contains('active') || items.length === 0) {
+               if (e.key === 'Enter') {
+                   e.preventDefault();
+                   addCustomCity();
+               }
+               return;
+           }
+           if (e.key === 'ArrowDown') {
+               e.preventDefault();
+               cityHighlightedIdx = (cityHighlightedIdx + 1) % items.length;
+               items.forEach(function(el, i) {
+                   if (i === cityHighlightedIdx) {
+                       el.classList.add('is-highlighted');
+                       el.scrollIntoView({ block: 'nearest' });
+                   } else {
+                       el.classList.remove('is-highlighted');
+                   }
+               });
+           } else if (e.key === 'ArrowUp') {
+               e.preventDefault();
+               cityHighlightedIdx = (cityHighlightedIdx - 1 + items.length) % items.length;
+               items.forEach(function(el, i) {
+                   if (i === cityHighlightedIdx) {
+                       el.classList.add('is-highlighted');
+                       el.scrollIntoView({ block: 'nearest' });
+                   } else {
+                       el.classList.remove('is-highlighted');
+                   }
+               });
+           } else if (e.key === 'Enter') {
+               e.preventDefault();
+               if (cityHighlightedIdx >= 0 && items[cityHighlightedIdx]) {
+                   items[cityHighlightedIdx].click();
+               } else {
+                   addCustomCity();
+               }
+           } else if (e.key === 'Escape') {
+               dropdown.classList.remove('active');
+           }
+       });
+
+       document.addEventListener('click', function(e) {
+           if (!input.contains(e.target) && !dropdown.contains(e.target) && !(clearBtn && clearBtn.contains(e.target))) {
+               dropdown.classList.remove('active');
+           }
+       });
+   }
+
+   function selectCity(city, isManual) {
+       if (!city) return;
+       var clean = String(city).trim();
+       if (isCitySelected(clean, clean.split(',')[0].trim())) {
+           return;
+       }
+       if (selectedCities.length >= 15) {
+           Swal.fire({ text: 'Maximum 15 cities allowed', icon: 'info' });
+           return;
+       }
+       selectedCities.push(clean);
+       renderSelectedCities();
+       var input = document.getElementById('citySearch');
+       if (input) input.value = '';
+       var clearBtn = document.getElementById('citySearchClear');
+       if (clearBtn) clearBtn.style.display = 'none';
+       var dd = document.getElementById('cityDropdown');
+       if (dd) dd.classList.remove('active');
+   }
+
+   function addCustomCityDirect(val) {
+       if (!val) return;
+       selectCity(val, true);
+   }
+
+   function addCustomCity() {
+       var input = document.getElementById('citySearch');
+       if (!input) return;
+       var val = input.value.trim();
+       if (!val) return;
+       selectCity(val, true);
+   }
+
+   function clearAllCities(isManual) {
+       selectedCities = [];
+       renderSelectedCities();
+   }
+
+   function removeCity(city, isManual) {
+       var cNorm = String(city || '').toLowerCase().trim();
+       var lNorm = cNorm.split(/[,|]/)[0].trim();
+       selectedCities = selectedCities.filter(function(c) {
+           var it = String(c || '').toLowerCase().trim();
+           return !(it === cNorm || (lNorm && it === lNorm) || (lNorm && it.split(/[,|]/)[0].trim() === lNorm));
+       });
+       renderSelectedCities();
+   }
+
+   function renderSelectedCities() {
+       var countEl = document.getElementById('selectedCount');
+       if (countEl) countEl.textContent = selectedCities.length;
+       var container = document.getElementById('selectedCities');
+       if (!container) return;
+
+       if (selectedCities.length === 0) {
+           container.innerHTML = '<span class="ij-no-locs">No locations selected yet. Choose from popular hubs above or search.</span>';
+       } else {
+           container.innerHTML = selectedCities.map(function(city) {
+               var str = String(city || '').trim();
+               var parts = str.split(/[,|]/).map(function(s) { return s.trim(); });
+               var primaryName = parts[0] || str;
+               var regionMeta = parts.slice(1).join(', ');
+               var metaHtml = regionMeta ? '<span class="ij-chip-region">(' + escapeHtml(regionMeta) + ')</span>' : '';
+               return '<span class="ij-location-chip">' +
+                   '<span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>' +
+                   '<span class="ij-chip-label">' + escapeHtml(primaryName) + '</span>' +
+                   metaHtml +
+                   '<button type="button" class="ij-chip-del js-remove-city" onclick="removeCity(\'' + escapeJsStr(str) + '\', true)" data-city="' + escapeHtml(str) + '" title="Remove ' + escapeHtml(primaryName) + '" aria-label="Remove">&times;</button>' +
+                   '</span>';
+           }).join('');
+       }
+       syncCities();
+       renderPopularPills();
+       if (selectedCities.length > 0) {
+           clearFieldError($('#kt_tagify_work_location'));
+           clearFieldError($('.ij-location-input-wrap'));
+       }
+   }
+
+   function syncCities() {
+       var hidden = document.getElementById('kt_tagify_work_location');
+       if (hidden) {
+           hidden.value = JSON.stringify(selectedCities.map(function(c) {
+               var str = String(c || '').trim();
+               var parts = str.split(/[,|]/).map(function(s) { return s.trim(); });
+               var formattedValue = parts.join(' | ');
+               return { value: formattedValue };
+           }));
+       }
+   }
+
+   window.selectCity = selectCity;
+   window.removeCity = removeCity;
+   window.clearAllCities = clearAllCities;
+   window.clearCitySearchInput = clearCitySearchInput;
+   window.togglePopularPill = togglePopularPill;
+    window.addCustomCityDirect = addCustomCityDirect;
+
+    function removeAddressCard(btn, targetId) {
+        if (targetId) {
+            var el = document.getElementById(targetId);
+            if (el) el.remove();
+        }
+        if (btn) {
+            var elBtn = (typeof btn.jquery !== 'undefined' ? btn[0] : btn);
+            if (elBtn && typeof elBtn.closest === 'function') {
+                var card = elBtn.closest('.client-address-card, .client-address-container-child, .is-additional, .ij-location-card');
+                if (card) card.remove();
             }
+        }
+        if (window.clientWizardUi && typeof window.clientWizardUi.syncAdditionalAddressEmpty === 'function') {
+            window.clientWizardUi.syncAdditionalAddressEmpty();
+        } else if (typeof syncAdditionalAddressEmpty === 'function') {
+            syncAdditionalAddressEmpty();
+        }
+    }
+    window.removeAddressCard = removeAddressCard;
+
+    /* ===== BRANCH CITY AUTOCOMPLETE ENGINE (FOR ADDITIONAL ADDRESSES) ===== */
+    var branchCitySearchAbortCtrl = {};
+
+    function renderBranchCuratedDropdown(cid) {
+        var dd = document.getElementById('branch_city_dropdown_' + cid);
+        if (!dd) return;
+        var currentVal = ($('#branch_city_search_' + cid).val() || '').toLowerCase().trim();
+        var html = '';
+        curatedLocationGroups.forEach(function(group) {
+            html += '<div class="ij-cd-group">';
+            html += '<div class="ij-cd-group-title">' + escapeHtml(group.region) + '</div>';
+            group.items.forEach(function(item) {
+                var isSelected = (currentVal && (item.city.toLowerCase() === currentVal || item.canonical.toLowerCase() === currentVal));
+                var itemClass = 'ij-cd-item' + (isSelected ? ' is-selected' : '');
+                var clickAttr = 'onclick="selectBranchCity(' + cid + ', \'' + escapeJsStr(item.canonical) + '\', \'' + escapeJsStr(item.city) + '\')"';
+                var statusBadge = isSelected ? '<span class="ij-cd-status">✓ Selected</span>' : '';
+                var subText = item.state ? (item.state + ', ' + item.country) : item.country;
+                html += '<div class="' + itemClass + '" ' + clickAttr + ' data-canonical="' + escapeHtml(item.canonical) + '">';
+                html += '  <div class="ij-cd-left">';
+                html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+                html += '    <div class="ij-cd-text">';
+                html += '      <span class="ij-cd-name">' + escapeHtml(item.city) + '</span>';
+                html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="ij-cd-right">';
+                if (item.badge) {
+                    html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+                }
+                html += statusBadge;
+                html += '  </div>';
+                html += '</div>';
+            });
+            html += '</div>';
         });
+        dd.innerHTML = html;
+        dd.classList.add('active');
+    }
 
-
-        // Prevent creating tags on blur or enter key
-        tagifyInstance.on('input', function(e) {
-            tagifyInstance.dropdown.show(); // show the dropdown immediately
+    function renderBranchSearchResults(cid, results, query) {
+        var dd = document.getElementById('branch_city_dropdown_' + cid);
+        if (!dd) return;
+        if (!results || results.length === 0) {
+            var safeQ = escapeHtml(query);
+            var safeJsQ = escapeJsStr(query);
+            dd.innerHTML = '<div class="ij-cd-empty">' +
+                '<div>No matching cities found for &ldquo;' + safeQ + '&rdquo;</div>' +
+                '<button type="button" class="ij-btn-custom-add" onclick="selectBranchCity(' + cid + ', \'' + safeJsQ + '\', \'' + safeJsQ + '\')">' +
+                '+ Set &ldquo;' + safeQ + '&rdquo; as branch city</button>' +
+                '</div>';
+            dd.classList.add('active');
+            return;
+        }
+        var html = '<div class="ij-cd-group">';
+        html += '<div class="ij-cd-group-title">Search Results (' + results.length + ')</div>';
+        results.forEach(function(item) {
+            var canonical = item.canonical || item.label || (item.city + (item.state ? ', ' + item.state : '') + (item.country ? ', ' + item.country : ''));
+            var clickAttr = 'onclick="selectBranchCity(' + cid + ', \'' + escapeJsStr(canonical) + '\', \'' + escapeJsStr(item.city) + '\')"';
+            var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
+            html += '<div class="ij-cd-item" ' + clickAttr + ' data-canonical="' + escapeHtml(canonical) + '">';
+            html += '  <div class="ij-cd-left">';
+            html += '    <span class="ij-cd-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>';
+            html += '    <div class="ij-cd-text">';
+            html += '      <span class="ij-cd-name">' + highlightMatch(item.city, query) + '</span>';
+            html += '      <span class="ij-cd-meta">' + escapeHtml(subText) + '</span>';
+            html += '    </div>';
+            html += '  </div>';
+            html += '  <div class="ij-cd-right">';
+            if (item.badge) {
+                html += '    <span class="ij-cd-badge">' + escapeHtml(item.badge) + '</span>';
+            }
+            html += '  </div>';
+            html += '</div>';
         });
+        html += '</div>';
+        dd.innerHTML = html;
+        dd.classList.add('active');
+    }
 
-        // Create tags only on select
-        tagifyInstance.on('dropdown:select', function(e) {
-            tagifyInstance.addTags([e.detail.data.value]);
-        });
+    function performBranchCitySearch(cid, query) {
+        var trimmed = (query || '').trim();
+        var spinner = document.getElementById('branch_city_spinner_' + cid);
+        var clearBtn = document.getElementById('branch_city_clear_' + cid);
+        if (clearBtn) clearBtn.style.display = trimmed ? 'inline-flex' : 'none';
 
-        tagifyInstance.on('add', function(e) {
-          // Remove the tag if it wasn't selected from the dropdown
-          // if (!cities.includes(e.detail.data.value)) {
-          //   tagifyInstance.removeTag(e.detail.data.value);
-          // }
-        });
-
-
-         function debounce(func, delay) {     
-            let timer;
-            return function (...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => func.apply(this, args), delay);
-            };
+        if (!trimmed) {
+            if (spinner) spinner.style.display = 'none';
+            renderBranchCuratedDropdown(cid);
+            return;
         }
 
-        const fetchSuggestions = debounce(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-                method: 'GET',
-                success: function(data) {
-                    console.warn("Fetched Cities: ", data);
+        var lookupQuery = trimmed.toLowerCase();
+        var normalizedQ = citySynonymAliases[lookupQuery] || trimmed;
 
-                    if (Array.isArray(data)) {
-                      tagifyInstance.settings.whitelist = data; 
-                      // tagifyInstance.dropdown.show(query); 
-                      tagifyInstance.dropdown.show.call(tagifyInstance);
-                    } else {
-                        console.error("Invalid API response format: Expected array.");
+        var cacheKey = normalizedQ.toLowerCase().trim();
+        var cached = getCachedCities(cacheKey);
+        if (cached) {
+            if (spinner) spinner.style.display = 'none';
+            renderBranchSearchResults(cid, cached, trimmed);
+            return;
+        }
+
+        if (branchCitySearchAbortCtrl[cid]) {
+            branchCitySearchAbortCtrl[cid].abort();
+        }
+        branchCitySearchAbortCtrl[cid] = new AbortController();
+
+        if (spinner) spinner.style.display = 'inline-block';
+
+        var targetUrl = "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(normalizedQ) + "&format=canonical&limit=25";
+
+        fetch(targetUrl, {
+            method: 'GET',
+            signal: branchCitySearchAbortCtrl[cid].signal,
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Network error: ' + res.status);
+            return res.json();
+        })
+        .then(function(data) {
+            if (spinner) spinner.style.display = 'none';
+            var parsed = parseRawCityData(data);
+            setCachedCities(cacheKey, parsed);
+            renderBranchSearchResults(cid, parsed, trimmed);
+        })
+        .catch(function(err) {
+            if (err.name === 'AbortError') return;
+            if (spinner) spinner.style.display = 'none';
+            var filtered = [];
+            curatedLocationGroups.forEach(function(g) {
+                g.items.forEach(function(item) {
+                    if (item.city.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1 ||
+                        item.canonical.toLowerCase().indexOf(normalizedQ.toLowerCase()) !== -1) {
+                        filtered.push(item);
                     }
-                },
-                error: function(err) {
-                    console.error("Error fetching cities:", err);
-                }
+                });
             });
-        }, 200); // 300ms delay
-        tagifyInstance.on('input', function(e) {
-            var query = e.detail.value.trim();
-            if (query.length < 2) return;
-            fetchSuggestions(query);
+            renderBranchSearchResults(cid, filtered, trimmed);
         });
-
-        // setTimeout(() => {
-        //   var city = cityDataGet;
-        //   if(city !=''){
-        //     var cityArray = city.split(","); // Split multiple locations
-        //     var cityNames = cityArray.map(entry => entry.split(" | ")[0]); // Extract city names
-            
-        //     fetchSuggestions(cityNames.join(", ")); 
-        //   }
-        // }, 100);
-        // setTimeout(() => {
-        //      var city = cityDataGet;
-        //     //  alert(cityDataGet);
-        //     //  var defaultLocation = JSON.stringify(city);// Ensure proper Blade syntax for JavaScript
-        //     //  alert(defaultLocation);
-        //     if (cityDataGet) {
-        //       tagifyInstance.addTags([cityDataGet]); // Add the default location as a tag
-        //     }
-        // }, 3000); 
-
-
     }
-}
+
+    var debounceBranchCitySearch = debounce(function(cid, val) {
+        performBranchCitySearch(cid, val);
+    }, 180);
+
+    function selectBranchCity(cid, canonical, label) {
+        var clean = String(canonical || '').trim();
+        var searchInput = document.getElementById('branch_city_search_' + cid);
+        var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
+        var clearBtn = document.getElementById('branch_city_clear_' + cid);
+        var dd = document.getElementById('branch_city_dropdown_' + cid);
+
+        if (searchInput) searchInput.value = clean;
+        if (hiddenInput) {
+            var parts = clean.split(/[,|]/).map(function(s) { return s.trim(); });
+            var formattedValue = parts.join(' | ');
+            hiddenInput.value = JSON.stringify([{ value: formattedValue }]);
+        }
+        if (clearBtn) clearBtn.style.display = clean ? 'inline-flex' : 'none';
+        if (dd) dd.classList.remove('active');
+        clearFieldError($('#branch_city_search_' + cid));
+    }
+
+    function clearBranchCity(cid) {
+        var searchInput = document.getElementById('branch_city_search_' + cid);
+        var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
+        var clearBtn = document.getElementById('branch_city_clear_' + cid);
+        var dd = document.getElementById('branch_city_dropdown_' + cid);
+
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        if (hiddenInput) hiddenInput.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        renderBranchCuratedDropdown(cid);
+    }
+
+    window.selectBranchCity = selectBranchCity;
+    window.clearBranchCity = clearBranchCity;
+    window.performBranchCitySearch = performBranchCitySearch;
+    window.renderBranchCuratedDropdown = renderBranchCuratedDropdown;
    	
 	function isNumberKey(evt)
    		{
@@ -1145,6 +2450,61 @@ for (let i = 0; i < countAddrees; i++) {
         
     
    $( document ).ready(function() { 
+       
+       /* Delegated Chip Removal and Address Removal Listeners */
+       $(document).on('click', '.ij-chip-del, .js-remove-city', function (e) {
+           e.preventDefault();
+           e.stopPropagation();
+           var city = $(this).attr('data-city') || $(this).data('city');
+           if (city && typeof removeCity === 'function') {
+               removeCity(city, true);
+           }
+       });
+
+       $(document).on('click', '.remove_address_single, .client-remove-address-btn', function (e) {
+           e.preventDefault();
+           e.stopPropagation();
+           var target = $(this).attr('data-target') || $(this).data('target');
+           if (typeof removeAddressCard === 'function') {
+               removeAddressCard(this, target);
+           }
+       });
+
+       /* Delegated Branch City Listeners (For dynamic additional addresses) */
+       $(document).on('focus', '.branch-city-search', function () {
+           var cid = $(this).data('cid');
+           var val = $(this).val();
+           if (!val || !val.trim()) {
+               renderBranchCuratedDropdown(cid);
+           } else {
+               performBranchCitySearch(cid, val);
+           }
+       });
+
+       $(document).on('input', '.branch-city-search', function () {
+           var cid = $(this).data('cid');
+           var val = $(this).val();
+           var clearBtn = document.getElementById('branch_city_clear_' + cid);
+           if (clearBtn) clearBtn.style.display = val.trim() ? 'inline-flex' : 'none';
+           var hiddenInput = document.getElementById('kt_tagify_work_location_' + cid);
+           if (hiddenInput) {
+               var parts = val.split(/[,|]/).map(function(s) { return s.trim(); });
+               hiddenInput.value = val.trim() ? JSON.stringify([{ value: parts.join(' | ') }]) : '';
+           }
+           debounceBranchCitySearch(cid, val);
+       });
+
+       $(document).on('click', '.branch-city-clear', function (e) {
+           e.stopPropagation();
+           var cid = $(this).data('cid');
+           clearBranchCity(cid);
+       });
+
+       $(document).on('click', function (e) {
+           if (!$(e.target).closest('.ij-location-input-wrap').length) {
+               $('.branch-city-dropdown').removeClass('active');
+           }
+       }); 
        
       
        
@@ -1196,49 +2556,94 @@ for (let i = 0; i < countAddrees; i++) {
    }, 500);
  
   }, 500);
-   
-   		$('.add_address').click(function (){	
-   	
-   	
-					var addressId			=	$('#addressId').val();
-					addressId++;
-					$('#addressId').val(addressId);
-				   
-					var clientAddr_id		=	"clientAddr_"+addressId;
-					var address_id			=	"address_"+addressId;
-					var country_id			=	"country_"+addressId;	
-					var state_id			=	"state_"+addressId;
-					var city_id				=	"city_"+addressId;
-					var postcode_id			=	"postcode_"+addressId;
-						
-					var countryListing		=	'';
-				   
-				   $('#addressLoader').show();
-				   $('#addressLoader').html('');
-					
-				   var baseurl    		=	"{{ asset('assets/images/Loading2.gif') }}"; 	
-				   var cid				=	addressId ;
-				   var url 				=	"{{ route('service_company.clients.addresslist',':cid') }}";
-				   url 					=	url.replace(':cid', cid);
-				   $.ajax({
-									type		: 'GET',
-									url			: url,
-									 beforeSend	: function() {
-																
-																	$('#addressLoader').html('<img src="'+baseurl+'" height="35px" width="100%">');
-															},
-									success		: function (response) {																		
-																		$('#addressLoader').hide();
-																		$('.client-address-container').last().append(response.data);
-                                    if (window.clientWizardUi) {
-                                      window.clientWizardUi.syncAdditionalAddressEmpty();
-                                      window.clientWizardUi.bindAddressCounters(document);
-                                    }
-																  }		
-						});		
-   		});
-   	
-   		$('.remove_address').click(function(){
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    window.escapeHtml = escapeHtml;
+
+    // Metronic Avatar Palette (patterned from Create Job form)
+    function getAvatarColor(str) {
+        var colors = ['#3E97FF', '#7239EA', '#50CD89', '#F6C000', '#F1416C', '#009EF7'];
+        if (!str) return colors[0];
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        return colors[Math.abs(hash) % colors.length];
+    }
+    window.getAvatarColor = getAvatarColor;
+
+    $('.add_address').click(function () {
+        var addressId = parseInt($('#addressId').val(), 10) || 0;
+        addressId++;
+        $('#addressId').val(addressId);
+
+        var cid = addressId;
+        var additionalIndex = $('.client-address-container .client-address-card.is-additional').length + 1;
+
+        // Instant Browser-Execution in User RAM (< 1ms, 0 server network roundtrip)
+        // Uniform Design: Matches Default Address Details Card (Yellow Gradient Banner, Yellow Pin Badge, Magnifying Glass City Search, Textarea with Counter)
+        var cardHtml = '<div class="card ij-location-card client-address-card is-additional client-address-container-child mt-3" id="clientAddr_' + cid + '">' +
+            '<div class="card-body p-0">' +
+            '<div class="ij-location-card-head">' +
+            '<div class="ij-location-head-left">' +
+            '<span class="ij-location-head-badge">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>' +
+            '<circle cx="12" cy="10" r="3"/>' +
+            '</svg>' +
+            '</span>' +
+            '<div>' +
+            '<h4 class="ij-location-title">Additional Address (' + additionalIndex + ')</h4>' +
+            '<p class="ij-location-subtitle">Branch or regional office location and street address</p>' +
+            '</div>' +
+            '</div>' +
+            '<button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_' + cid + '" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')">' +
+            '<i class="la la-trash"></i> Remove' +
+            '</button>' +
+            '</div>' +
+            '<div class="ij-location-card-body">' +
+            '<div class="client-field fv-plugins-icon-container mb-3">' +
+            '<label class="form-label required" for="branch_city_search_' + cid + '">Branch City</label>' +
+            '<div class="input-wrapper ij-location-input-wrap">' +
+            '<div class="input-with-icon">' +
+            '<svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<circle cx="11" cy="11" r="8"/>' +
+            '<path d="m21 21-4.3-4.3"/>' +
+            '</svg>' +
+            '<input type="text" class="form-input ij-location-search-input branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="" placeholder="Search branch city (e.g. Mumbai, Pune, London)..." autocomplete="off" spellcheck="false">' +
+            '</div>' +
+            '<span class="ij-search-spinner" id="branch_city_spinner_' + cid + '" style="display:none;" title="Searching..."></span>' +
+            '<button type="button" class="ij-search-clear branch-city-clear" id="branch_city_clear_' + cid + '" style="display:none;" data-cid="' + cid + '" title="Clear city">&times;</button>' +
+            '<div class="search-dropdown ij-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
+            '<input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value="">' +
+            '</div>' +
+            '<span class="form-text text-muted">Select or search for the city where this branch office is located.</span>' +
+            '</div>' +
+            '<div class="client-field fv-plugins-icon-container">' +
+            '<label class="form-label required" for="address_' + cid + '">Full Address Details</label>' +
+            '<textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="3" maxlength="500" placeholder="Building, street, suite/floor, area, landmark, pincode, etc." id="address_' + cid + '"></textarea>' +
+            '<div class="d-flex justify-content-between mt-1">' +
+            '<span class="form-text text-muted">Provide the complete and accurate branch office address.</span>' +
+            '<span class="client-char-count"><span class="client-address-count" id="address_char_count_' + cid + '">0</span>/500</span>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+
+        $('#additional_addresses_container').append(cardHtml);
+
+        if (window.clientWizardUi) {
+            window.clientWizardUi.syncAdditionalAddressEmpty();
+            window.clientWizardUi.bindAddressCounters(document.getElementById('clientAddr_' + cid));
+        }
+    });
+$('.remove_address').click(function(){
           let container = $('.client-address-container');
           let totalChildren = container.children().length;
           if (totalChildren > 1) {
@@ -1293,7 +2698,7 @@ for (let i = 0; i < countAddrees; i++) {
    								
    	});
     	
-   		$(document).on('click', '.btn', function() { 
+   		$(document).on('click', '.legacy-btn-disabled', function() { 
    	
    		var state 	=	$('#kt_wizard').attr("data-wizard-state"); 
       
@@ -1312,17 +2717,17 @@ for (let i = 0; i < countAddrees; i++) {
    			$('.div-contact-person').html('');
    				
    			var name			=	$('#client_id').val();
-   			$('.span_name').html(name);			
+   			$('.span_name').text(name);			
    			var website			=	$('#website').val();
-   			$('.span_website').html(website).attr('href', website);			
+   			$('.span_website').text(website).attr('href', website);			
    			var industry		=	$('#industry option:selected').text(); 
-   			$('.span_industry').html(industry);			
+   			$('.span_industry').text(industry);			
    			var company_sizes	=	$('#company_sizes option:selected').text();
-   			$('.span_company_sizes').html(company_sizes && company_sizes !== 'Select Company Size' ? company_sizes + ' employees' : '');			
+   			$('.span_company_sizes').text(company_sizes && company_sizes !== 'Select Company Size' ? company_sizes + ' employees' : '');			
    			var company_type	=	$('#company_type option:selected').text(); 
-   			$('.span_company_type').html(company_type);			
+   			$('.span_company_type').text(company_type);			
    			var founded			=	$('#founded').val(); 
-   			$('.span_founded').html(founded);
+   			$('.span_founded').text(founded);
    			
    			var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();
 			$('.span_kt_docs_tinymce_hidden').html(kt_docs_tinymce_hidden);
@@ -1333,22 +2738,38 @@ for (let i = 0; i < countAddrees; i++) {
    			for(let len=0; len<json_tags.length; len++){
    				tagLabels.push(json_tags[len].value);
    			}
-   			$('.span_tags').html(tagLabels.join(', '));
+   			$('.span_tags').text(tagLabels.join(', '));
 
-   			var addressId = $('#addressId').val();
-   			var addressBlocks = [];
-   			for(let cntAdd=0; cntAdd<=addressId; cntAdd++)
-   			{
-   				var address = $('#address_'+cntAdd).val();
-   				var cextractedValueity = $('#kt_tagify_work_location_'+cntAdd).val();
-   				if (typeof address === 'undefined') continue;
-            var city = cextractedValueity
-                    .replace('[{"value":"', '')
-                    .replace('"}]', '');
-            var title = cntAdd === 0 ? 'Headquarters (Primary)' : 'Additional Address ('+cntAdd+')';
-            addressBlocks.push('<div class="client-review-address-box"><h5>'+title+'</h5><p><strong>'+city+'</strong><br>'+address+'</p></div>');
-   			}
-   			$('.divAddressDetail').html(addressBlocks.join(''));
+			var addressId = parseInt($('#addressId').val(), 10) || 0;
+			var addressBlocks = [];
+
+			if (typeof selectedCities !== 'undefined' && selectedCities.length > 0) {
+				var locChips = selectedCities.map(function(c) {
+					return '<span class="ij-location-chip me-1 mb-1"><span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="ij-chip-label">' + escapeHtml(c) + '</span></span>';
+				}).join('');
+				addressBlocks.push('<div class="client-review-address-box col-12 mb-3"><h5><i class="la la-map-marker text-primary me-1"></i>Selected Work Locations (' + selectedCities.length + ')</h5><div class="d-flex flex-wrap gap-1 mt-2">' + locChips + '</div></div>');
+			}
+
+			var hqAddress = ($('#address_0').val() || '').trim();
+			if (hqAddress) {
+				addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-building text-primary me-1"></i>Headquarters (Primary) Physical Address</h5><p>' + escapeHtml(hqAddress) + '</p></div>');
+			}
+
+						var addIdx = 0;
+			$('.client-address-container .client-address-card.is-additional').each(function() {
+				var $card = $(this);
+				addIdx++;
+				var address = ($card.find('textarea[name="address[]"]').val() || '').trim();
+				var branchCity = ($card.find('.branch-city-search').val() || '').trim();
+				if (!branchCity) {
+					var tagVal = $card.find('input[name="kt_tagify_work_location[]"]').val() || '';
+					branchCity = tagVal.replace(/^\[\{"value":"?/, '').replace(/"?\}\]$/, '');
+				}
+				if (branchCity || address) {
+					addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-map-pin text-primary me-1"></i>Additional Branch Address (' + addIdx + ')</h5><p>' + (branchCity ? '<strong>' + escapeHtml(branchCity) + '</strong><br>' : '') + escapeHtml(address) + '</p></div>');
+				}
+			});
+			$('.divAddressDetail').html(addressBlocks.join(''));
    			
    			var contactPersonCounter = $('#contactPersonId').val();
    			var contactRows = [];
@@ -1361,7 +2782,9 @@ for (let i = 0; i < countAddrees; i++) {
             if(typeof cp_name == 'undefined' || !cp_name) continue;
             var typeBadge = contactRows.length === 0 ? '<span class="client-badge-primary">Primary</span>' : '<span class="client-badge-secondary">Secondary</span>';
             var primaryTag = contactRows.length === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
-            contactRows.push('<tr><td><div class="client-contact-person"><span class="client-contact-avatar">'+cp_name.trim().split(/\s+/).slice(0,2).map(function(p){return p.charAt(0).toUpperCase();}).join('')+'</span><span class="client-contact-name">'+cp_name+primaryTag+'</span></div></td><td>'+(cp_desigination || '—')+'</td><td>'+(cp_email || '—')+'</td><td>'+(cp_number || '—')+'</td><td>'+typeBadge+'</td></tr>');
+            var avatarLetters = cp_name.trim().split(/\s+/).slice(0,2).map(function(p){return p.charAt(0).toUpperCase();}).join('');
+            var avatarBg = getAvatarColor(cp_name);
+            contactRows.push('<tr><td><div class="client-contact-person"><span class="client-contact-avatar" style="background-color:'+avatarBg+'; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; width:32px; height:32px; border-radius:50%; margin-right:8px;">'+escapeHtml(avatarLetters)+'</span><span class="client-contact-name">'+escapeHtml(cp_name)+primaryTag+'</span></div></td><td>'+escapeHtml(cp_desigination || '—')+'</td><td>'+escapeHtml(cp_email || '—')+'</td><td>'+escapeHtml(cp_number || '—')+'</td><td>'+typeBadge+'</td></tr>');
    			}
    			$('.div-contact-person').html(contactRows.join(''));
 
@@ -1593,75 +3016,93 @@ for (let i = 0; i < countAddrees; i++) {
 
 
  
+  // In-memory RAM cache for domain verification (prevents repeat network requests)
+  window._clientDomainCheckCache = window._clientDomainCheckCache || {};
+  window._lastCheckedWebsite = '';
+
   function clientDomainRegisterChk(){
+    var website = ($('#website').val() || '').trim();
+    if (!website) return false;
 
-    var data 			=	new FormData();
-   	var form_data 		=	$('#kt_form').serializeArray();
-   	$.each(form_data, function (key, input) {
-       		data.append(input.name, input.value);
-   	});  	
-   	var file_data 		= $('input[name="logo"]')[0].files;
-   	for (var i = 0; i < file_data.length; i++) {
-       		data.append("logo", file_data[i]);
-   	}  
+    // Skip redundant check if website hasn't changed and is already verified
+    if (website === window._lastCheckedWebsite && window._clientDomainCheckCache[website]) {
+        return false;
+    }
 
-  
-    
-	var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();// CKEDITOR.instances.kt_docs_tinymce_hidden.getData();	
-	data.append("description", kt_docs_tinymce_hidden);
-   	
-	data.append('key', 'value');
-  data.append("check_client_id", "{{ @$client->id }}");
+    // Fast-path: Instant User RAM cache lookup (0ms latency, 0 server requests)
+    if (window._clientDomainCheckCache[website]) {
+        var response = window._clientDomainCheckCache[website];
+        if (response.status === 'fail') {
+            Swal.fire("Warning", response.message, "warning");
+            $('.updatefrm').prop("disabled", true);
+            $('#website').val('');
+            if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
+                formValidationInstance.revalidateField('website');
+            }
+        } else {
+            $("#client_id").val(response.clientName);
+            if (response.logo_url) {
+                $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
+            }
+            if (window.clientWizardUi) {
+                window.clientWizardUi.updateAssistantPanel();
+                window.clientWizardUi.updateCompletion();
+            }
+        }
+        return false;
+    }
 
-  var website = $('#website').val();
+    $('.page-loader').css('display', 'flex');
 
-    
-    if(website != '')
-      {
-        $('.page-loader').css('display', 'flex');
-          $.ajax({
-              url: "{{route('client-domain-register-chk')}}",
-              headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-              type: "POST",
-              processData			: false,
-              contentType			: false,
-              data: data,
-              success: function(response) {
-                $('.page-loader').css('display', 'none');                            
-                                  if(response.status == 'fail')
-                                  {
-                                      Swal.fire("Warning", response.message, "warning");
-                                      $('.updatefrm').prop("disabled", true);
-                                      $('#website').val('');
-                                    if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
-                                        formValidationInstance.revalidateField('website');
-                                    }
-                                  }else{
-                                    $("#client_id").val(response.clientName);
-                                      $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
-                                      if (window.clientWizardUi) {
-                                        window.clientWizardUi.updateAssistantPanel();
-                                        window.clientWizardUi.updateCompletion();
-                                      }
-                                  }
-                            }
-            });             		
-      }
+    // Lean AJAX payload: sends only website and check_client_id (zero form/file serialization overhead)
+    $.ajax({
+        url: "{{route('client-domain-register-chk')}}",
+        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        type: "POST",
+        data: {
+            website: website,
+            check_client_id: "{{ @$client->id }}"
+        },
+        success: function(response) {
+            $('.page-loader').css('display', 'none');
+            window._lastCheckedWebsite = website;
+            window._clientDomainCheckCache[website] = response;
 
+            if (response.status === 'fail') {
+                Swal.fire("Warning", response.message, "warning");
+                $('.updatefrm').prop("disabled", true);
+                $('#website').val('');
+                if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
+                    formValidationInstance.revalidateField('website');
+                }
+            } else {
+                $("#client_id").val(response.clientName);
+                if (response.logo_url) {
+                    $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
+                }
+                if (window.clientWizardUi) {
+                    window.clientWizardUi.updateAssistantPanel();
+                    window.clientWizardUi.updateCompletion();
+                }
+            }
+        },
+        error: function() {
+            $('.page-loader').css('display', 'none');
+        }
+    });
 
     return false;
-
   }
 
 </script>
-<script src="{{ asset('demo/v7/js/add-clients.js') }}<?php echo TM_VERSION; ?>"></script>
+{{-- Note: demo/v7/js/add-clients.js removed for Service Company per Rule 17 (Blade Isolation). Navigation & validation are self-contained below. --}}
 <script>
 /**
  * Purpose: client create wizard UX layer — completion meter, assistant panel, contact drawer,
  * review summaries, and draft persistence without changing the underlying submit contract.
  */
 (function ($) {
-  var draftKey = 'jero_client_create_draft';
+  // Draft handling removed per user request
 
   function initials(name) {
     return (name || '').trim().split(/\s+/).slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join('') || 'NA';
@@ -1710,7 +3151,7 @@ for (let i = 0; i < countAddrees; i++) {
       (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) ? tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim() : '',
       $('#tags').val(),
       $('textarea[name="address[]"]').first().val(),
-      $('input[name="kt_tagify_work_location[]"]').first().val(),
+      ((typeof selectedCities !== 'undefined' && selectedCities.length) ? 'loc_set' : $('input[name="kt_tagify_work_location[]"]').first().val()),
       $('input[name="cp_name[]"]').first().val()
     ];
     var filled = checks.filter(function (v) { return !!v; }).length;
@@ -1743,24 +3184,30 @@ for (let i = 0; i < countAddrees; i++) {
   }
 
   function syncAdditionalAddressEmpty() {
-    var extraCount = $('.client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional').length;
-    $('#client_additional_empty').toggle(extraCount === 0);
+    var $cards = $('.client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
+    $('#client_additional_empty').toggle($cards.length === 0);
+    $cards.each(function(idx) {
+      $(this).find('.ij-location-title').text('Additional Address (' + (idx + 1) + ')');
+    });
   }
 
   function getContactRowsData() {
     var rows = [];
     $('.client-cperson-container').each(function (idx) {
-      var index = $(this).data('contact-index');
-      if (typeof index === 'undefined') index = idx;
-      var name = $('#cp_name_' + index).val() || '';
-      if (!name.trim()) return;
+      var $container = $(this);
+      var name = ($container.find('input[name="cp_name[]"]').val() || '').trim();
+      var email = ($container.find('input[name="cp_email[]"]').val() || '').trim();
+      var phone = ($container.find('input[name="cp_number[]"]').val() || '').trim();
+      var designation = ($container.find('input[name="cp_desigination[]"]').val() || '').trim();
+      var callingCode = ($container.find('input[name="calling_code[]"]').val() || 'in').trim();
+      if (!name && !email) return;
       rows.push({
-        index: index,
-        name: name.trim(),
-        email: ($('#cp_email_' + index).val() || '').trim(),
-        phone: ($('#cp_number_' + index).val() || '').trim(),
-        designation: ($('#cp_desigination_' + index).val() || '').trim(),
-        callingCode: ($('#calling_code_' + index).val() || 'in')
+        index: idx,
+        name: name,
+        email: email,
+        phone: phone,
+        designation: designation,
+        callingCode: callingCode
       });
     });
     return rows;
@@ -1781,18 +3228,34 @@ for (let i = 0; i < countAddrees; i++) {
       var primaryTag = i === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
       $tbody.append(
         '<tr data-contact-index="' + row.index + '">' +
-          '<td><div class="client-contact-person"><span class="client-contact-avatar">' + initials(row.name) + '</span><span class="client-contact-name">' + row.name + primaryTag + '</span></div></td>' +
-          '<td>' + (row.designation || '—') + '</td>' +
-          '<td>' + (row.email || '—') + '</td>' +
-          '<td>' + (row.phone || '—') + '</td>' +
+          '<td><div class="client-contact-person"><span class="client-contact-avatar" style="background-color:' + getAvatarColor(row.name) + '; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; width:32px; height:32px; border-radius:50%; margin-right:8px;">' + escapeHtml(initials(row.name)) + '</span><span class="client-contact-name">' + escapeHtml(row.name) + primaryTag + '</span></div></td>' +
+          '<td>' + escapeHtml(row.designation || '—') + '</td>' +
+          '<td>' + escapeHtml(row.email || '—') + '</td>' +
+          '<td>' + escapeHtml(row.phone || '—') + '</td>' +
           '<td>' + typeBadge + '</td>' +
           '<td><div class="client-table-actions">' +
-            '<button type="button" class="client-edit-contact" data-index="' + row.index + '" title="Edit"><i class="la la-pencil"></i></button>' +
-            '<button type="button" class="client-delete-contact is-delete" data-index="' + row.index + '" title="Delete"><i class="la la-trash"></i></button>' +
+            '<button type="button" class="client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit"><i class="la la-pencil"></i></button>' +
+            '<button type="button" class="client-delete-contact is-delete" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete"><i class="la la-trash"></i></button>' +
           '</div></td>' +
         '</tr>'
       );
     });
+  }
+
+  function deleteContactRow(index) {
+    var idx = parseInt(index, 10);
+    var $rows = $('.client-cperson-container');
+    if ($rows.length > 1) {
+      $rows.eq(idx).remove();
+    } else {
+      $rows.eq(0).find('input').val('');
+    }
+    $('#contactPersonId').val(Math.max(0, $('.client-cperson-container').length - 1));
+    renderContactTable();
+    updateCompletion();
+    if (typeof populateReviewSummaries === 'function') {
+      populateReviewSummaries();
+    }
   }
 
   function _cdfClearErrors() {
@@ -1802,28 +3265,44 @@ for (let i = 0; i < countAddrees; i++) {
 
   function openContactDrawer(index) {
     _cdfClearErrors();
-    $('#client_drawer_edit_index').val(index === null ? '' : index);
-    var isEdit = index !== null;
+    var isEdit = (typeof index === 'number' && !isNaN(index) && index >= 0) || (typeof index === 'string' && index !== '' && !isNaN(parseInt(index, 10)));
+    var editIdx = isEdit ? parseInt(index, 10) : null;
+    $('#client_drawer_edit_index').val(editIdx !== null ? editIdx : '');
     $('#client_contact_drawer_title').text(isEdit ? 'Edit Contact Person' : 'Add Contact Person');
     $('#client_contact_drawer_subtitle').text(isEdit ? 'Update the contact details below.' : 'Add the primary or secondary contact details for this client.');
     $('#client_save_contact_drawer .cdf-btn-text').text(isEdit ? 'Save Changes' : 'Add Contact Person');
     $('#client_save_contact_drawer .cdf-btn-icon').toggleClass('la-user-plus', !isEdit).toggleClass('la-save', isEdit);
-    if (!isEdit) {
-      $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').val('');
+
+    if (isEdit) {
+      var $container = $('.client-cperson-container').eq(editIdx);
+      if ($container.length) {
+        $('#client_drawer_name').val($container.find('input[name="cp_name[]"]').val() || '');
+        $('#client_drawer_designation').val($container.find('input[name="cp_desigination[]"]').val() || '');
+        $('#client_drawer_email').val($container.find('input[name="cp_email[]"]').val() || '');
+        $('#client_drawer_phone').val($container.find('input[name="cp_number[]"]').val() || '');
+      }
     } else {
-      $('#client_drawer_name').val($('#cp_name_' + index).val());
-      $('#client_drawer_designation').val($('#cp_desigination_' + index).val());
-      $('#client_drawer_email').val($('#cp_email_' + index).val());
-      $('#client_drawer_phone').val($('#cp_number_' + index).val());
+      $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').val('');
     }
+
+    // Ensure drawer is direct child of body to prevent any overflow:hidden clipping
+    if ($('#client_contact_drawer').length && $('#client_contact_drawer').parent()[0] !== document.body) {
+      $('body').append($('#client_contact_drawer_backdrop'), $('#client_contact_drawer'));
+    }
+
     $('#client_contact_drawer, #client_contact_drawer_backdrop').addClass('is-open').attr('aria-hidden', 'false');
-    setTimeout(function () { $('#client_drawer_name').focus(); }, 280);
+    setTimeout(function () { $('#client_drawer_name').focus(); }, 120);
   }
 
   function closeContactDrawer() {
     $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
     _cdfClearErrors();
   }
+
+  window.openContactDrawer = openContactDrawer;
+  window.closeContactDrawer = closeContactDrawer;
+  window.saveContactDrawer = saveContactDrawer;
+  window.deleteContactRow = deleteContactRow;
 
   function saveContactDrawer() {
     _cdfClearErrors();
@@ -1860,68 +3339,283 @@ for (let i = 0; i < countAddrees; i++) {
       valid = false;
     }
     if (!valid) {
-      if ($firstBad) { $firstBad.focus(); $('.client-drawer-body').animate({ scrollTop: $firstBad.closest('.client-drawer-field').position().top - 10 }, 200); }
+      if ($firstBad) { $firstBad.focus(); }
       return;
     }
 
-    /* Loading state */
-    var $btn = $('#client_save_contact_drawer');
-    $btn.prop('disabled', true).addClass('is-loading');
-    var origText = $btn.find('.cdf-btn-text').text();
-    $btn.find('.cdf-btn-text').text('Saving…');
+    var editIndexStr = $('#client_drawer_edit_index').val();
+    var isEdit = (editIndexStr !== '' && !isNaN(parseInt(editIndexStr, 10)));
 
-    /* Simulate brief async so UI updates (save is synchronous/local — restore immediately) */
-    setTimeout(function () {
-      var editIndex = $('#client_drawer_edit_index').val();
-      if (editIndex === '') {
-        var targetIndex = null;
-        $('.client-cperson-container').each(function () {
-          var idx = $(this).data('contact-index');
-          if (!$('#cp_name_' + idx).val().trim()) { targetIndex = idx; return false; }
-        });
-        if (targetIndex === null) {
-          $('.add_cperson').trigger('click');
-          targetIndex = parseInt($('#contactPersonId').val(), 10);
-          $('.client-cperson-container').last().attr('data-contact-index', targetIndex);
-        }
-        $('#cp_name_' + targetIndex).val(name);
-        $('#cp_desigination_' + targetIndex).val(designation);
-        $('#cp_email_' + targetIndex).val(email);
-        $('#cp_number_' + targetIndex).val(phone);
-      } else {
-        $('#cp_name_' + editIndex).val(name);
-        $('#cp_desigination_' + editIndex).val(designation);
-        $('#cp_email_' + editIndex).val(email);
-        $('#cp_number_' + editIndex).val(phone);
+    if (isEdit) {
+      var editIdx = parseInt(editIndexStr, 10);
+      var $container = $('.client-cperson-container').eq(editIdx);
+      if ($container.length) {
+        $container.find('input[name="cp_name[]"]').val(name);
+        $container.find('input[name="cp_desigination[]"]').val(designation);
+        $container.find('input[name="cp_email[]"]').val(email);
+        $container.find('input[name="cp_number[]"]').val(phone);
       }
-      renderContactTable();
-      updateCompletion();
-      closeContactDrawer();
-      $btn.prop('disabled', false).removeClass('is-loading');
-      $btn.find('.cdf-btn-text').text(origText);
-    }, 180);
+    } else {
+      // Check if an empty container exists to reuse
+      var $emptyContainer = null;
+      $('.client-cperson-container').each(function () {
+        var n = ($(this).find('input[name="cp_name[]"]').val() || '').trim();
+        var e = ($(this).find('input[name="cp_email[]"]').val() || '').trim();
+        if (!n && !e) {
+          $emptyContainer = $(this);
+          return false;
+        }
+      });
+
+      if ($emptyContainer && $emptyContainer.length) {
+        $emptyContainer.find('input[name="cp_name[]"]').val(name);
+        $emptyContainer.find('input[name="cp_desigination[]"]').val(designation);
+        $emptyContainer.find('input[name="cp_email[]"]').val(email);
+        $emptyContainer.find('input[name="cp_number[]"]').val(phone);
+      } else {
+        var newIdx = $('.client-cperson-container').length;
+        var newHtml = '<div class="row client-cperson-container" data-contact-index="' + newIdx + '">' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(name) + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(email) + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(phone) + '"><input type="hidden" value="in" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + newIdx + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(designation) + '"></div></div>' +
+          '</div>';
+        $('.client-cperson-row').first().append(newHtml);
+      }
+    }
+
+    var totalContainers = $('.client-cperson-container').length;
+    $('#contactPersonId').val(Math.max(0, totalContainers - 1));
+
+    renderContactTable();
+    updateCompletion();
+    if (typeof populateReviewSummaries === 'function') {
+      populateReviewSummaries();
+    }
+    closeContactDrawer();
   }
 
-  /* Clear individual field error on input */
+    /* Clear individual field error on input */
   $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
   $(document).on('input', '#client_drawer_email', function () { $(this).removeClass('is-invalid'); $('#cdf_err_email').removeClass('visible'); });
   $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
 
   function populateReviewSummaries() {
-    $('.client_summary_name').text($('#client_id').val() || '—');
+    var clientName = ($('#client_id').val() || '').trim();
+    var website = ($('#website').val() || '').trim();
+    var industry = $('#industry option:selected').text() || '—';
+    var compSizes = $('#company_sizes option:selected').text() || '';
+    var compType = $('#company_type option:selected').text() || '—';
+    var founded = ($('#founded').val() || '').trim();
+
+    // 1. Client Information Card
+    $('.span_name').text(clientName || '—');
+    $('.span_website').text(website || '—').attr('href', website || 'javascript:void(0);');
+    $('.span_industry').text(industry !== 'Select Industry' ? industry : '—');
+    $('.span_company_sizes').text(compSizes && compSizes !== 'Select Company Size' ? compSizes + ' employees' : '—');
+    $('.span_company_type').text(compType !== 'Select Company Type' ? compType : '—');
+    $('.span_founded').text(founded || '—');
+
+    // 2. Client Description Card
+    var descHtml = (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden'))
+      ? tinymce.get('kt_docs_tinymce_hidden').getContent()
+      : ($('#kt_docs_tinymce_hidden').val() || '');
     var descText = (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden'))
       ? tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim()
-      : '';
-    $('.client_summary_desc').text(descText ? descText.substring(0, 80) + (descText.length > 80 ? '…' : '') : '—');
-    var firstCity = $('input[name="kt_tagify_work_location[]"]').first().val();
-    var cityLabel = parseTagifyValue(firstCity)[0] || firstCity || '—';
-    $('.client_summary_address').text(cityLabel);
+      : (descHtml ? $('<div>').html(descHtml).text().trim() : '');
+    $('.span_kt_docs_tinymce_hidden').html(descHtml || '<span class="text-muted">No description provided.</span>');
+
+    var tags = $('#tags').val();
+    var tagLabels = [];
+    if (tags) {
+      try {
+        var jsonTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+        if (Array.isArray(jsonTags)) {
+          tagLabels = jsonTags.map(function(t) { return t.value || t; });
+        }
+      } catch(e) {
+        tagLabels = [tags];
+      }
+    }
+    $('.span_tags').text(tagLabels.length ? tagLabels.join(', ') : '—');
+
+    // 3. Address Details Card
+    var addressBlocks = [];
+    if (typeof selectedCities !== 'undefined' && selectedCities.length > 0) {
+      var locChips = selectedCities.map(function(c) {
+        return '<span class="ij-location-chip me-1 mb-1"><span class="ij-chip-pin"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="ij-chip-label">' + escapeHtml(c) + '</span></span>';
+      }).join('');
+      addressBlocks.push('<div class="client-review-address-box col-12 mb-3"><h5><i class="la la-map-marker text-primary me-1"></i>Selected Work Locations (' + selectedCities.length + ')</h5><div class="d-flex flex-wrap gap-1 mt-2">' + locChips + '</div></div>');
+    }
+
+    var hqAddress = ($('#address_0').val() || '').trim();
+    if (hqAddress) {
+      addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-building text-primary me-1"></i>Headquarters (Primary) Physical Address</h5><p>' + escapeHtml(hqAddress) + '</p></div>');
+    }
+
+    var addIdx = 0;
+    $('.client-address-container .client-address-card.is-additional').each(function() {
+      var $card = $(this);
+      addIdx++;
+      var address = ($card.find('textarea[name="address[]"]').val() || '').trim();
+      var branchCity = ($card.find('.branch-city-search').val() || '').trim();
+      if (!branchCity) {
+        var tagVal = $card.find('input[name="kt_tagify_work_location[]"]').val() || '';
+        branchCity = tagVal.replace(/^\[\{"value":"?/, '').replace(/"?\}\]$/, '');
+      }
+      if (branchCity || address) {
+        addressBlocks.push('<div class="client-review-address-box"><h5><i class="la la-map-pin text-primary me-1"></i>Additional Branch Address (' + addIdx + ')</h5><p>' + (branchCity ? '<strong>' + escapeHtml(branchCity) + '</strong><br>' : '') + escapeHtml(address) + '</p></div>');
+      }
+    });
+    $('.divAddressDetail').html(addressBlocks.length ? addressBlocks.join('') : '<span class="text-muted">No address details entered.</span>');
+
+    // 4. Contact Persons Card
+    var contactRows = [];
     var contacts = getContactRowsData();
+    contacts.forEach(function (row, idx) {
+      var typeBadge = idx === 0 ? '<span class="client-badge-primary">Primary</span>' : '<span class="client-badge-secondary">Secondary</span>';
+      var primaryTag = idx === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
+      var avatarLetters = initials(row.name);
+      var avatarBg = getAvatarColor(row.name);
+      contactRows.push('<tr><td><div class="client-contact-person"><span class="client-contact-avatar" style="background-color:'+avatarBg+'; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; width:32px; height:32px; border-radius:50%; margin-right:8px;">'+escapeHtml(avatarLetters)+'</span><span class="client-contact-name">'+escapeHtml(row.name)+primaryTag+'</span></div></td><td>'+escapeHtml(row.designation || '—')+'</td><td>'+escapeHtml(row.email || '—')+'</td><td>'+escapeHtml(row.phone || '—')+'</td><td>'+typeBadge+'</td></tr>');
+    });
+    if (!contactRows.length) {
+      contactRows.push('<tr><td colspan="5" class="text-center text-muted py-4">No contact persons added.</td></tr>');
+    }
+    $('.div-contact-person').html(contactRows.join(''));
+
+    // 5. Right Sidebar Summary Cards
+    $('.client_summary_name').text(clientName || '—');
+    $('.client_summary_desc').text(descText ? descText.substring(0, 80) + (descText.length > 80 ? '…' : '') : '—');
+    var cityLabel = (typeof selectedCities !== 'undefined' && selectedCities.length)
+      ? (selectedCities[0] + (selectedCities.length > 1 ? ' (+' + (selectedCities.length - 1) + ' more)' : ''))
+      : '—';
+    $('.client_summary_address').text(cityLabel);
     $('.client_summary_contacts').text(contacts.length ? contacts.length + ' contact(s)' : '—');
     $('#client_review_logo').css('background-image', $('.image-input-wrapper').css('background-image'));
-    $('#client_preview_company').text($('#client_id').val() || 'Company Name');
+    $('#client_preview_company').text(clientName || 'Company Name');
   }
+  /* ===== PRE-LOADED CLIENT VALIDATION ENGINE (RAM-RESIDENT) ===== */
+  var ClientValidationEngine = (function () {
+    var patterns = {
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      phone10: /^\d{10}$/,
+      year4: /^(18|19|20)\d{2}$/,
+      url: /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?$/
+    };
+
+    function validateField(fieldName, value, $element) {
+      value = (value || '').trim();
+      var result = { valid: true, message: '' };
+
+      switch (fieldName) {
+        case 'name':
+        case 'client_id':
+          if (!value) {
+            result = { valid: false, message: 'Client Name is required.' };
+          } else if (value.length < 2) {
+            result = { valid: false, message: 'Client Name must be at least 2 characters.' };
+          }
+          break;
+
+        case 'website':
+          if (!value) {
+            result = { valid: false, message: 'Website URL is required.' };
+          } else if (!patterns.url.test(value)) {
+            result = { valid: false, message: 'Please enter a valid website URL (e.g. https://example.com).' };
+          }
+          break;
+
+        case 'industry':
+          if (!value) {
+            result = { valid: false, message: 'Please select an Industry.' };
+          }
+          break;
+
+        case 'company_sizes':
+          if (!value) {
+            result = { valid: false, message: 'Please select Company Size.' };
+          }
+          break;
+
+        case 'company_type':
+          if (!value) {
+            result = { valid: false, message: 'Please select Company Type.' };
+          }
+          break;
+
+        case 'founded':
+          if (!value) {
+            result = { valid: false, message: 'Founded Year is required.' };
+          } else if (!patterns.year4.test(value)) {
+            result = { valid: false, message: 'Founded Year must be a valid 4-digit year (e.g. 2015).' };
+          }
+          break;
+
+        case 'description':
+          if (!value) {
+            result = { valid: false, message: 'Company Description is required.' };
+          } else if (value.length < 5) {
+            result = { valid: false, message: 'Description must be at least 5 characters.' };
+          }
+          break;
+
+        case 'tags':
+          if (!value || value === '[]') {
+            result = { valid: false, message: 'Please add at least 1 Service Offering.' };
+          }
+          break;
+
+        case 'address':
+          if (!value) {
+            result = { valid: false, message: 'Full Address is required for the primary location.' };
+          } else if (value.length < 5) {
+            result = { valid: false, message: 'Address must be at least 5 characters.' };
+          }
+          break;
+
+        case 'city':
+          if (!value || value === '[]') {
+            result = { valid: false, message: 'City selection is required for the primary location.' };
+          }
+          break;
+
+        case 'cp_name':
+          if (!value) {
+            result = { valid: false, message: 'Contact person name is required.' };
+          }
+          break;
+
+        case 'cp_email':
+          if (!value) {
+            result = { valid: false, message: 'Email address is required.' };
+          } else if (!patterns.email.test(value)) {
+            result = { valid: false, message: 'Please enter a valid email address (e.g. contact@example.com).' };
+          }
+          break;
+
+        case 'cp_number':
+          if (value && (value.length < 6 || value.length > 15 || isNaN(value))) {
+            result = { valid: false, message: 'Please enter a valid phone number (6-15 digits).' };
+          }
+          break;
+
+        case 'cp_desigination':
+          if (!value) {
+            result = { valid: false, message: 'Designation is required.' };
+          }
+          break;
+      }
+
+      return result;
+    }
+
+    return {
+      patterns: patterns,
+      validateField: validateField
+    };
+  })();
 
   function clearInlineErrors() {
     $('.is-invalid').removeClass('is-invalid');
@@ -1961,34 +3655,44 @@ for (let i = 0; i < countAddrees; i++) {
 
     // Section 1: Client Information
     if (step === 1) {
-      var clientName   = ($('#client_id').val() || '').trim();
-      var industry     = ($('#industry').val() || '').trim();
-      var companySizes = ($('#company_sizes').val() || '').trim();
-      var companyType  = ($('#company_type').val() || '').trim();
-      var founded      = ($('#founded').val() || '').trim();
-
-      if (!clientName) {
-        showInlineError($('#client_id'), 'Client Name is required.');
+      var clientNameRes = ClientValidationEngine.validateField('name', $('#client_id').val(), $('#client_id'));
+      if (!clientNameRes.valid) {
+        showInlineError($('#client_id'), clientNameRes.message);
         $firstInvalid = $firstInvalid || $('#client_id');
         isValid = false;
       }
-      if (!industry) {
-        showInlineError($('#industry'), 'Please select an Industry.');
+
+      var websiteRes = ClientValidationEngine.validateField('website', $('#website').val(), $('#website'));
+      if (!websiteRes.valid) {
+        showInlineError($('#website'), websiteRes.message);
+        $firstInvalid = $firstInvalid || $('#website');
+        isValid = false;
+      }
+
+      var industryRes = ClientValidationEngine.validateField('industry', $('#industry').val(), $('#industry'));
+      if (!industryRes.valid) {
+        showInlineError($('#industry'), industryRes.message);
         $firstInvalid = $firstInvalid || $('#industry');
         isValid = false;
       }
-      if (!companySizes) {
-        showInlineError($('#company_sizes'), 'Please select Company Size.');
+
+      var companySizesRes = ClientValidationEngine.validateField('company_sizes', $('#company_sizes').val(), $('#company_sizes'));
+      if (!companySizesRes.valid) {
+        showInlineError($('#company_sizes'), companySizesRes.message);
         $firstInvalid = $firstInvalid || $('#company_sizes');
         isValid = false;
       }
-      if (!companyType) {
-        showInlineError($('#company_type'), 'Please select Company Type.');
+
+      var companyTypeRes = ClientValidationEngine.validateField('company_type', $('#company_type').val(), $('#company_type'));
+      if (!companyTypeRes.valid) {
+        showInlineError($('#company_type'), companyTypeRes.message);
         $firstInvalid = $firstInvalid || $('#company_type');
         isValid = false;
       }
-      if (!founded) {
-        showInlineError($('#founded'), 'Please select Founded Year.');
+
+      var foundedRes = ClientValidationEngine.validateField('founded', $('#founded').val(), $('#founded'));
+      if (!foundedRes.valid) {
+        showInlineError($('#founded'), foundedRes.message);
         $firstInvalid = $firstInvalid || $('#founded');
         isValid = false;
       }
@@ -2002,15 +3706,17 @@ for (let i = 0; i < countAddrees; i++) {
       } else {
         descText = ($('#kt_docs_tinymce_hidden').val() || '').trim();
       }
-      var tagsVal = ($('#tags').val() || '').trim();
-
-      if (!descText) {
-        showInlineError($('#kt_docs_tinymce_hidden'), 'Company Description is required.');
+      var descRes = ClientValidationEngine.validateField('description', descText, $('#kt_docs_tinymce_hidden'));
+      if (!descRes.valid) {
+        showInlineError($('#kt_docs_tinymce_hidden'), descRes.message);
         $firstInvalid = $firstInvalid || $('#kt_docs_tinymce_hidden');
         isValid = false;
       }
-      if (!tagsVal || tagsVal === '[]') {
-        showInlineError($('#tags'), 'Please add at least 1 Service Offering.');
+
+      var tagsVal = ($('#tags').val() || '').trim();
+      var tagsRes = ClientValidationEngine.validateField('tags', tagsVal, $('#tags'));
+      if (!tagsRes.valid) {
+        showInlineError($('#tags'), tagsRes.message);
         $firstInvalid = $firstInvalid || $('#tags');
         isValid = false;
       }
@@ -2018,21 +3724,46 @@ for (let i = 0; i < countAddrees; i++) {
 
     // Section 3: Address Details
     if (step === 3) {
-      var $firstAddr = $('textarea[name="address[]"]').first();
-      var $firstCity = $('input[name="kt_tagify_work_location[]"]').first();
-      var firstAddress = ($firstAddr.val() || '').trim();
-      var firstCityVal = ($firstCity.val() || '').trim();
+      if (!selectedCities || selectedCities.length === 0) {
+        var $searchWrap = $('.ij-location-input-wrap').first();
+        showInlineError($searchWrap, 'Please select at least 1 work location city.');
+        $firstInvalid = $firstInvalid || $('#citySearch');
+        isValid = false;
+      }
 
-      if (!firstAddress) {
-        showInlineError($firstAddr, 'Full Address is required for the primary location.');
+      var $firstAddr = $('textarea[name="address[]"]').first();
+      var addrRes = ClientValidationEngine.validateField('address', ($firstAddr.val() || '').trim(), $firstAddr);
+      if (!addrRes.valid) {
+        showInlineError($firstAddr, addrRes.message);
         $firstInvalid = $firstInvalid || $firstAddr;
         isValid = false;
       }
-      if (!firstCityVal || firstCityVal === '[]') {
-        showInlineError($firstCity, 'City selection is required for the primary location.');
-        $firstInvalid = $firstInvalid || $firstCity;
-        isValid = false;
-      }
+
+      // Check any additional branch addresses
+      $('.client-address-container .client-address-card.is-additional').each(function(idx) {
+        var $card = $(this);
+        var $cityInput = $card.find('.branch-city-search');
+        var $textarea = $card.find('textarea[name="address[]"]');
+        var cityVal = ($cityInput.val() || '').trim();
+        var textVal = ($textarea.val() || '').trim();
+
+        if (cityVal || textVal) {
+          if (!cityVal) {
+            showInlineError($cityInput, 'Branch city is required for Additional Address (' + (idx + 1) + ').');
+            $firstInvalid = $firstInvalid || $cityInput;
+            isValid = false;
+          }
+          if (!textVal) {
+            showInlineError($textarea, 'Full Address is required for Additional Address (' + (idx + 1) + ').');
+            $firstInvalid = $firstInvalid || $textarea;
+            isValid = false;
+          } else if (textVal.length < 5) {
+            showInlineError($textarea, 'Address must be at least 5 characters for Additional Address (' + (idx + 1) + ').');
+            $firstInvalid = $firstInvalid || $textarea;
+            isValid = false;
+          }
+        }
+      });
     }
 
     // Section 4: Contact Person
@@ -2043,6 +3774,23 @@ for (let i = 0; i < countAddrees; i++) {
         showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
         $firstInvalid = $firstInvalid || $contactSection;
         isValid = false;
+      } else {
+        for (var i = 0; i < contacts.length; i++) {
+          var c = contacts[i];
+          var nameRes = ClientValidationEngine.validateField('cp_name', c.name);
+          var emailRes = ClientValidationEngine.validateField('cp_email', c.email);
+          var phoneRes = ClientValidationEngine.validateField('cp_number', c.phone);
+          var desigRes = ClientValidationEngine.validateField('cp_desigination', c.designation);
+
+          if (!nameRes.valid || !emailRes.valid || !phoneRes.valid || !desigRes.valid) {
+            var $contactRow = $('#client_contact_table_body tr').eq(i);
+            var errMsg = !nameRes.valid ? nameRes.message : (!emailRes.valid ? emailRes.message : (!phoneRes.valid ? phoneRes.message : desigRes.message));
+            showInlineError($contactRow, 'Contact #' + (i + 1) + ': ' + errMsg);
+            $firstInvalid = $firstInvalid || $contactRow;
+            isValid = false;
+            break;
+          }
+        }
       }
     }
 
@@ -2056,35 +3804,80 @@ for (let i = 0; i < countAddrees; i++) {
     return isValid;
   }
 
-  // Real-time listener: Immediately clear inline error as soon as user types or selects a value
-  $(document).on('input change keyup blur select2:select', '#kt_form input, #kt_form select, #kt_form textarea', function () {
+  /* Synchronize wizard action buttons and stepper visual tokens */
+  function syncWizardNavigationState(activeStep) {
+    if (!activeStep) {
+      activeStep = 1;
+      $('#kt_wizard .wizard-step').each(function (idx) {
+        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active') || $(this).hasClass('current')) {
+          activeStep = idx + 1;
+        }
+      });
+    }
+
+    // Step 1: Hide Back button; Step >= 2: Show Back button
+    if (activeStep <= 1) {
+      $('#client_btn_back, [data-wizard-type="action-prev"]').attr('style', 'display: none !important;');
+    } else {
+      $('#client_btn_back, [data-wizard-type="action-prev"]').attr('style', 'display: inline-flex !important;');
+    }
+
+    // Step 5: Switch Continue button to Submit / Update Client (ONLY on step 5 Review & Submit!)
+    if (activeStep >= 5) {
+      $('body').addClass('on-review-step');
+      $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;');
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;');
+      if (window.clientWizardUi && typeof window.clientWizardUi.populateReviewSummaries === 'function') {
+        window.clientWizardUi.populateReviewSummaries();
+      }
+    } else {
+      $('body').removeClass('on-review-step');
+      $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;');
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;');
+    }
+
+        // Synchronize Stepper Tokens (Emerald Green for done, JERO Yellow gradient for current)
+    $('#kt_wizard .wizard-step').each(function (idx) {
+      var stepNum = idx + 1;
+      var $step = $(this);
+      if (stepNum < activeStep) {
+        $step.attr('data-wizard-state', 'done').addClass('completed').removeClass('current');
+      } else if (stepNum === activeStep) {
+        $step.attr('data-wizard-state', 'current').addClass('current').removeClass('completed');
+      } else {
+        $step.attr('data-wizard-state', 'pending').removeClass('completed current');
+      }
+    });
+  }
+
+  // Pre-loaded Real-time reactive listener: Instant 0ms self-clearing error banners
+  $(document).on('input keyup change blur select2:select select2:clear', '#kt_form input, #kt_form select, #kt_form textarea', function (e) {
     var $field = $(this);
     var val = ($field.val() || '').trim();
     if (val && val !== '[]') {
       clearFieldError($field);
     }
+
+    // Immediate field-level format validation on blur
+    if (e.type === 'blur' || e.type === 'focusout') {
+      var fieldId = $field.attr('id') || $field.attr('name') || '';
+      if (fieldId.indexOf('founded') !== -1 && val) {
+        var fRes = ClientValidationEngine.validateField('founded', val, $field);
+        if (!fRes.valid) showInlineError($field, fRes.message);
+      } else if (fieldId.indexOf('website') !== -1 && val) {
+        var wRes = ClientValidationEngine.validateField('website', val, $field);
+        if (!wRes.valid) showInlineError($field, wRes.message);
+      } else if (fieldId.indexOf('cp_email') !== -1 && val) {
+        var eRes = ClientValidationEngine.validateField('cp_email', val, $field);
+        if (!eRes.valid) showInlineError($field, eRes.message);
+      } else if (fieldId.indexOf('cp_number') !== -1 && val) {
+        var pRes = ClientValidationEngine.validateField('cp_number', val, $field);
+        if (!pRes.valid) showInlineError($field, pRes.message);
+      }
+    }
   });
 
-  // Native DOM Capture Phase Listener — Intercepts navigation BEFORE Metronic or jQuery handlers
-  document.addEventListener('click', function (e) {
-    var navTarget = e.target.closest('#continueButton, [data-wizard-type="action-next"], .wizard-step, [data-wizard-type="step"]');
-    if (!navTarget) return;
-
-    var activeStep = 1;
-    $('#kt_wizard .wizard-step').each(function (idx) {
-      if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active')) {
-        activeStep = idx + 1;
-      }
-    });
-
-    if (!validateWizardStep(activeStep)) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      return false;
-    }
-  }, true);
-
+  // Single-source deterministic wizard navigation state
   window.clientWizardUi = {
     syncAdditionalAddressEmpty: syncAdditionalAddressEmpty,
     bindAddressCounters: bindAddressCounters,
@@ -2092,67 +3885,178 @@ for (let i = 0; i < countAddrees; i++) {
     updateAssistantPanel: updateAssistantPanel,
     updateCompletion: updateCompletion,
     renderContactTable: renderContactTable,
-    validateWizardStep: validateWizardStep
+    validateWizardStep: validateWizardStep,
+    syncWizardNavigationState: syncWizardNavigationState
   };
 
   $(function () {
+    // Append contact drawer directly to document.body on ready so it is never clipped
+    if ($('#client_contact_drawer').length && $('#client_contact_drawer').parent()[0] !== document.body) {
+      $('body').append($('#client_contact_drawer_backdrop'), $('#client_contact_drawer'));
+    }
+    if (typeof initCitySearch === 'function') {
+      try {
+        initCitySearch();
+        renderSelectedCities();
+      } catch (err) {
+        console.warn('initCitySearch error:', err);
+      }
+    }
     bindAddressCounters(document);
     syncAdditionalAddressEmpty();
     updateAssistantPanel();
     updateCompletion();
     renderContactTable();
+    syncWizardNavigationState(1);
+
+    // Navigation Mutex lock to strictly prevent duplicate transitions and double clicks
+    var isNavigating = false;
 
     function getCurrentStepNumber() {
       var activeStep = 1;
       $('#kt_wizard .wizard-step').each(function (idx) {
-        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active')) {
+        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active') || $(this).hasClass('current')) {
           activeStep = idx + 1;
         }
       });
       return activeStep;
     }
 
-    // Intercept Continue button clicks — validate current step before advancing
-    $(document).on('click', '#continueButton, [data-wizard-type="action-next"]', function (e) {
+    function goToWizardStep(targetStep) {
+      targetStep = parseInt(targetStep, 10);
+      if (!targetStep || targetStep < 1 || targetStep > 5) return;
+
+      // Update Metronic outer wizard container state for CSS rules
+      var stepState = (targetStep === 1 ? 'first' : (targetStep === 5 ? 'last' : 'between'));
+      $('#kt_wizard').attr('data-wizard-state', stepState);
+
+      // Synchronize Step Header indicators
+      $('#kt_wizard .wizard-step').each(function (idx) {
+        var s = idx + 1;
+        if (s === targetStep) {
+          $(this).attr('data-wizard-state', 'current').addClass('current').removeClass('completed pending');
+        } else if (s < targetStep) {
+          $(this).attr('data-wizard-state', 'done').addClass('completed').removeClass('current pending');
+        } else {
+          $(this).attr('data-wizard-state', 'pending').addClass('pending').removeClass('current completed');
+        }
+      });
+
+      // Synchronize Step Tab Content panels
+      $('#kt_wizard [data-wizard-type="step-content"]').each(function (idx) {
+        var s = idx + 1;
+        if (s === targetStep) {
+          $(this).attr('data-wizard-state', 'current').show();
+        } else {
+          $(this).removeAttr('data-wizard-state').hide();
+        }
+      });
+
+      // Synchronize Sticky Footer Buttons
+      syncWizardNavigationState(targetStep);
+
+      // On Step 5 (Review & Submit), populate real-time review summaries
+      if (targetStep === 5 && typeof populateReviewSummaries === 'function') {
+        populateReviewSummaries();
+      }
+
+      // Smooth scroll to top
+      if (typeof KTUtil !== 'undefined' && typeof KTUtil.scrollTop === 'function') {
+        KTUtil.scrollTop();
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Intercept Continue button clicks — validate current step before advancing (Debounced & Mutex-locked)
+    $(document).on('click', '#continueButton, .client-nav-next', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isNavigating) return false;
+
       var currentStep = getCurrentStepNumber();
       if (!validateWizardStep(currentStep)) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
         return false;
+      }
+
+      isNavigating = true;
+      var $btn = $(this);
+      $btn.prop('disabled', true).addClass('disabled');
+
+      goToWizardStep(currentStep + 1);
+
+      setTimeout(function () {
+        isNavigating = false;
+        $btn.prop('disabled', false).removeClass('disabled');
+      }, 300);
+    });
+
+    // Intercept Back button clicks — navigate back and sync navigation state (Debounced & Mutex-locked)
+    $(document).on('click', '#client_btn_back, .client-nav-back', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isNavigating) return false;
+
+      var currentStep = getCurrentStepNumber();
+      if (currentStep > 1) {
+        isNavigating = true;
+        var $btn = $(this);
+        $btn.prop('disabled', true).addClass('disabled');
+
+        goToWizardStep(currentStep - 1);
+
+        setTimeout(function () {
+          isNavigating = false;
+          $btn.prop('disabled', false).removeClass('disabled');
+        }, 300);
       }
     });
 
-    // Intercept Step Header clicks — validate preceding steps when moving forward
-    $(document).on('click', '#kt_wizard .wizard-step, [data-wizard-type="step"]', function (e) {
+    // Intercept Step Header clicks — validate preceding steps when moving forward (Debounced & Mutex-locked)
+    $(document).on('click', '#kt_wizard .wizard-step', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isNavigating) return false;
+
       var targetStep = $(this).index() + 1;
       var currentStep = getCurrentStepNumber();
+      if (targetStep === currentStep) return;
+
       if (targetStep > currentStep) {
         for (var s = currentStep; s < targetStep; s++) {
           if (!validateWizardStep(s)) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
             return false;
           }
         }
       }
+
+      isNavigating = true;
+      goToWizardStep(targetStep);
+
+      setTimeout(function () {
+        isNavigating = false;
+      }, 300);
     });
 
-    // Hook Metronic KTWizard beforeNext event validation if available
-    setTimeout(function () {
-      if (window.KTWizard && $('#kt_wizard').length) {
-        var wizardInst = window.KTWizard.getInstance ? window.KTWizard.getInstance($('#kt_wizard')[0]) : null;
-        if (wizardInst && typeof wizardInst.on === 'function') {
-          wizardInst.on('beforeNext', function (wizardObj) {
-            var step = wizardObj.getStep();
-            if (!validateWizardStep(step)) {
-              wizardObj.stop();
-            }
-          });
-        }
+    // Section Edit buttons in Review & Submit and Sidebar Summary Cards
+    $(document).on('click', '[data-client-goto-step], .client-review-edit, .client-summary-edit', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isNavigating) return false;
+
+      var step = $(this).attr('data-client-goto-step') || $(this).data('client-goto-step');
+      if (step) {
+        isNavigating = true;
+        goToWizardStep(step);
+        setTimeout(function () {
+          isNavigating = false;
+        }, 300);
       }
-    }, 600);
+    });
 
     $(document).on('input change', '#kt_form input, #kt_form select, #kt_form textarea', function () {
       updateAssistantPanel();
@@ -2171,50 +4075,49 @@ for (let i = 0; i < countAddrees; i++) {
       $('#tags').focus();
     });
 
-    $('#client_open_contact_drawer').on('click', function () { openContactDrawer(null); });
-    $('#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop').on('click', closeContactDrawer);
-    $('#client_save_contact_drawer').on('click', saveContactDrawer);
-    $(document).on('click', '.client-edit-contact', function () { openContactDrawer($(this).data('index')); });
-    $(document).on('click', '.client-delete-contact', function () {
-      var index = $(this).data('index');
-      $('.client-cperson-container[data-contact-index="' + index + '"]').remove();
-      renderContactTable();
-      updateCompletion();
+    $(document).on('click', '#client_open_contact_drawer', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openContactDrawer(null);
+    });
+    $(document).on('click', '#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop', function (e) {
+      e.preventDefault();
+      closeContactDrawer();
+    });
+    $(document).on('click', '#client_save_contact_drawer', function (e) {
+      e.preventDefault();
+      saveContactDrawer();
+    });
+    $(document).on('click', '.client-edit-contact', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var index = $(this).attr('data-index');
+      openContactDrawer(index);
     });
 
-    $(document).on('click', '.remove_address_single', function () {
-      var target = $(this).data('target');
-      $('#' + target).remove();
-      syncAdditionalAddressEmpty();
+    $(document).on('click', '.client-delete-contact', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var index = parseInt($(this).attr('data-index'), 10);
+      deleteContactRow(index);
     });
 
-    $(document).on('click', '[data-client-goto-step]', function () {
-      var step = parseInt($(this).data('client-goto-step'), 10);
-      if (window.KTWizard && window.KTWizard.getInstance && $('#kt_wizard').length) {
-        var wizard = KTWizard.getInstance($('#kt_wizard')[0]);
-        if (wizard) wizard.goTo(step);
+    $(document).on('click', '.remove_address_single, .client-remove-address-btn', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var target = $(this).attr('data-target') || $(this).data('target');
+      if (typeof removeAddressCard === 'function') {
+        removeAddressCard(this, target);
+      } else {
+        if (target && $('#' + target).length) $('#' + target).remove();
+        else $(this).closest('.client-address-card, .client-address-container-child, .is-additional').remove();
+        syncAdditionalAddressEmpty();
       }
     });
 
-    $('#client_save_draft').on('click', function () {
-      var draft = $('#kt_form').serializeArray();
-      if (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) {
-        draft.push({ name: 'description_draft', value: tinymce.get('kt_docs_tinymce_hidden').getContent() });
-      }
-      localStorage.setItem(draftKey, JSON.stringify(draft));
-      $('.client-completion-status').html('<i class="la la-check-circle"></i> Draft saved locally');
-    });
+// Goto-step listener unified in goToWizardStep above
 
-    var existingDraft = localStorage.getItem(draftKey);
-    if (existingDraft && page_event === 'ADD') {
-      try {
-        var draftData = JSON.parse(existingDraft);
-        draftData.forEach(function (item) {
-          var $field = $('[name="' + item.name + '"]');
-          if ($field.length) $field.val(item.value).trigger('change');
-        });
-      } catch (e) {}
-    }
+    // Draft save and restore removed per user request
 
     if (window.clientTagsTagify) {
       var refreshTags = function () {

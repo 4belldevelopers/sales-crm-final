@@ -12,8 +12,8 @@ namespace App\Http\Controllers\ServiceCompany;
 
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
+use App\Jobs\ProcessClientOutboxEventJob;
 use App\Jobs\QueueNotificationMailService;
-use App\Jobs\SyncClientToElasticJob;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
@@ -28,7 +28,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class ServiceCompanyClientController extends ServiceCompanyBaseController
@@ -1325,7 +1324,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         });
         $this->companyType = GeneralMethod::companyType();
         $this->department = cache()->remember('global_td_industries_all', 86400, function () {
-            return GeneralMethod::industries();
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
         });
         $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
             return GeneralMethod::getAllCountryList();
@@ -2100,7 +2102,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return GeneralMethod::department();
         });
         $this->industries = cache()->remember('global_td_industries_all', 86400, function () {
-            return GeneralMethod::industries();
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
         });
         $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
             return GeneralMethod::getAllCountryList();
@@ -2530,6 +2535,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->select('*')
             ->where('client_id', $id)
             ->get();
+        $this->client_contact_arr = $this->client_contact_info;
 
         /**
          * Cache global static reference datasets for Edit Client view.
@@ -2576,6 +2582,60 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $company_id = $request->user()->company_id;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+
+        $canonicalHash = hash('sha256', json_encode([
+            'client_id' => $id,
+            'company_id' => $company_id,
+            'name' => trim($request->name ?? ''),
+            'website' => trim($request->website ?? ''),
+            'industry' => $request->industry,
+            'company_sizes' => $request->company_sizes,
+            'company_type' => $request->company_type,
+            'founded' => $request->founded,
+            'description' => trim(strip_tags($request->description ?? '')),
+            'tags' => $request->tags,
+            'address' => $request->address,
+            'cp_name' => $request->cp_name,
+            'cp_email' => $request->cp_email,
+        ]));
+
+        if (! empty($idempotencyKey)) {
+            $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'request_hash' => $canonicalHash,
+                'status' => 'PROCESSING',
+                'expires_at' => now()->addHours(24),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            if (! $inserted) {
+                $existing = DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->first();
+
+                if ($existing) {
+                    if ($existing->request_hash !== $canonicalHash) {
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Idempotency key payload mismatch.']);
+                    }
+                    if ($existing->status === 'COMPLETED') {
+                        $cachedBody = json_decode($existing->response_body, true);
+                        if (is_array($cachedBody) && isset($cachedBody['url'])) {
+                            return Reply::redirect($cachedBody['url'], $cachedBody['message'] ?? (__('menu.clients').' '.__('messages.updatedSuccessfully')));
+                        }
+
+                        return Reply::redirect(route('service_company.clients.index'), __('menu.clients').' '.__('messages.updatedSuccessfully'));
+                    }
+                    if ($existing->status === 'PROCESSING') {
+                        return response()->json(['status' => 'processing', 'message' => 'Update is currently being processed.'], 425);
+                    }
+                }
+            }
+        }
+
         /**
          * Tenancy Scoped Client Fetch
          * Intent: Enforce strict multi-tenant boundary on client updates.
@@ -2584,6 +2644,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $client = Client::where('id', $id)
             ->where('company_id', $company_id)
             ->firstOrFail();
+
         // FIRST TAB-1
         if (! empty($request->name)) {
             $client->name = $request->name;
@@ -2605,17 +2666,48 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (! empty($request->founded)) {
             $client->founded = $request->founded;
         }
+
         // SECOND TAB-2
-        if (! empty(@$request->description)) {
-            $client->description = @$request->description;
+        if (! empty($request->description)) {
+            $client->description = $request->description;
         }
-        if (! empty(@$request->tags)) {
-            $tags = @$request->tags;
+        if (! empty($request->tags)) {
+            $tags = $request->tags;
             $tags = json_decode($tags, true);
             $tags = array_column($tags, 'value');
             $tags = implode(',', $tags);
             $client->tags = $tags;
         }
+
+        // Handle logo upload outside database transaction
+        $timeStamp = time();
+        if ($request->hasFile('logo')) {
+            $directoryPath = GeneralMethod::document_manage_directory($company_id);
+            $file = $request->file('logo');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $allowed = ['png', 'jpeg', 'jpg'];
+            if (in_array($ext, $allowed)) {
+                $filename = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+                $altfilename = GeneralMethod::getValidUploadFileName($filename).'-'.$timeStamp.'.'.$ext;
+                $target_file = $directoryPath.'/'.$altfilename;
+
+                $file->move($directoryPath, $altfilename);
+
+                $companyNameR2 = DB::table('companies')
+                    ->where('id', $company_id)
+                    ->value('company_name');
+                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                $companyNameRTwo = $companyNameR2.'_'.$company_id;
+                $r2Filename = uniqid('JERO_logo').'.'.$ext;
+                $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$r2Filename}";
+
+                $client->logo = $altfilename;
+                $client->logo_physical_path = $target_file;
+                $client->logo_logical_path = $fileUrl;
+            }
+        }
+
         $lock = Cache::lock('client:update:'.$id, 10);
         if (! $lock->get()) {
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Another user is currently updating this client. Please try again in a moment.']);
@@ -2625,16 +2717,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             DB::beginTransaction();
 
             $client->save();
-
             $client_id = $id;
 
-            // THIRD TAB-3: Single-pass location sync
-            /**
-             * V2 Location Synchronization Optimization
-             * Intent: Resolve location updates, inserts, and removals in a single pass to eliminate duplicate DB queries.
-             * Tenancy Note: Location records are bound to $client_id.
-             */
-            $addressId = @$request->addressId;
+            // THIRD TAB-3: Single-pass location sync with cached geocoding
+            $addressId = (int) (@$request->addressId ?? 0);
             $addIdGet = [];
 
             for ($i = 0; $i <= $addressId; $i++) {
@@ -2643,25 +2729,46 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
 
-                if (! empty($work_city)) {
+                if (! empty($work_city) && is_array($work_city_all)) {
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
+                        $valStr = trim($cityVal['value'] ?? '');
+                        if (empty($valStr)) {
+                            continue;
+                        }
+                        $parts = (strpos($valStr, '|') !== false) ? explode('|', $valStr) : explode(',', $valStr);
+                        $cityName = trim($parts[0] ?? '');
+                        $countrName = isset($parts[2]) ? trim($parts[2]) : (isset($parts[1]) ? trim($parts[1]) : '');
 
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
+                        $cityCacheKey = 'city_geo_lookup_'.md5($cityName.'_'.$countrName);
+                        $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
+                            $query = DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName);
+
+                            if (! empty($countrName)) {
+                                $query->where('countries.country_name', '=', $countrName);
+                            }
+                            $row = $query->first();
+                            if (! $row) {
+                                $row = DB::table('city_list')
+                                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                    ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                    ->where('city_list.city', '!=', '')
+                                    ->where('city_list.city', '=', $cityName)
+                                    ->first();
+                            }
+
+                            return $row;
+                        });
 
                         if ($city_row) {
                             $cityID = $city_row->city_id;
                             $countryID = $city_row->country_id;
-                            $stateId = GeneralMethod::stateId($cityID);
+                            $stateId = $city_row->state_id ?? GeneralMethod::stateId($cityID);
 
                             $values = [
                                 'company_id' => $company_id,
@@ -2698,18 +2805,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->delete();
 
             // FORTH TAB-4: Soft sync strategy for contact persons
-            /**
-             * V2 Contact Persons Upsert Strategy
-             * Intent: Update existing contact records by email/ID and delete only removed records, preserving auto-increment IDs.
-             * Tenancy Note: Contact info is bound to $client_id.
-             */
             $existingContacts = DB::table('client_contact_info')
                 ->where('client_id', $client_id)
                 ->get()
                 ->keyBy('contact_person_email');
 
             $processedContactIds = [];
-            $contactPersonId = @$request->contactPersonId;
+            $totalCpNames = is_array($request->cp_name) ? count($request->cp_name) : 0;
+            $contactPersonId = max($totalCpNames - 1, (int) (@$request->contactPersonId ?? 0));
 
             for ($j = 0; $j <= $contactPersonId; $j++) {
                 $cp_name = @$request->cp_name[$j];
@@ -2744,60 +2847,52 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->whereNotIn('id', $processedContactIds)
                 ->delete();
 
-            $maxsize = 5242880;
-            $directoryPath = GeneralMethod::document_manage_directory($company_id);
-            $timeStamp = time();
+            // Transactional Outbox Pattern: Atomic event persistence
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'Client',
+                'aggregate_id' => $client_id,
+                'aggregate_version' => 2,
+                'event_type' => 'ClientUpdated',
+                'payload' => json_encode([
+                    'tenant_id' => $company_id,
+                    'client_id' => $client_id,
+                    'client_name' => $client->name,
+                    'action' => 'ClientUpdated',
+                    'timestamp' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
 
-            if ($request->hasFile('logo')) {
-                $name = $file_size = $file_type = $temp = $target_file = $logicalpath = $fileUrl = '';
-                $file_size = @$_FILES['logo']['size'];
-                $file_type = @$_FILES['logo']['type'];
-                $temp = @$_FILES['logo']['tmp_name'];
-
-                $path_parts = pathinfo($_FILES['logo']['name']);
-                $extension = $path_parts['extension'];
-                $filename = strtolower($path_parts['filename']);
-                $altfilename = GeneralMethod::getValidUploadFileName($filename).'-'.$timeStamp.'.'.$extension;
-                $dirArr = explode('/', $directoryPath);
-                $target_file = $directoryPath.'/'.$altfilename;
-                $allowed = ['png', 'jpeg', 'jpg', 'PNG', 'JPEG', 'JPG'];
-                $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
-                if (in_array($ext, $allowed)) {
-
-                    $logicalpath = substr($target_file, strpos($target_file, 'user-uploads'));
-                    $file = $request->file('logo');
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id', auth()->user()->company_id)
-                        ->value('company_name');   // change column if needed
-                    $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                    $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                    $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-
-                    $filename = uniqid('JERO_logo').'.'.$file->getClientOriginalExtension();
-
-                    $tempPath = $file->storeAs('Companies/'.$companyNameRTwo.'/Images', $filename, 'r2'); // STORAGE/app/temp
-                    $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$filename}";
-
-                    if (move_uploaded_file($temp, $target_file)) {
-
-                        $client = Client::withoutGlobalScopes()->find($client_id);
-                        $client->logo = @$altfilename;
-                        $client->logo_physical_path = @$target_file;
-                        $client->logo_logical_path = @$fileUrl;
-                        $client->save();
-                    }
-                }
+            // Mark idempotency key as COMPLETED
+            if (! empty($idempotencyKey)) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode([
+                            'status' => 'success',
+                            'url' => route('service_company.clients.index'),
+                            'message' => __('menu.clients').' '.__('messages.updatedSuccessfully'),
+                        ]),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
             }
 
-            if ($client_id > 0) {
-                /**
-                 * V2 Asynchronous Elasticsearch Client Indexing
-                 * Intent: Offload heavy Elasticsearch indexing to Horizon queue (es-index queue) off the HTTP web response thread.
-                 * Tenancy Note: Scoped by $client_id.
-                 */
-                // SyncClientToElasticJob::dispatch((int) $client_id);
-                GeneralMethod::clientStaffingPartner($client_id);
+            DB::commit();
+
+            // Asynchronous Outbox Worker dispatch post-commit off HTTP thread
+            try {
+                ProcessClientOutboxEventJob::dispatch($outboxId)->afterCommit();
+            } catch (\Throwable $e) {
+                \Log::warning('ProcessClientOutboxEventJob dispatch warning: '.$e->getMessage());
             }
 
             $cachekeys = [
@@ -2809,13 +2904,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 GeneralMethod::cacheClean($key);
             }
 
-            DB::commit();
-
             return Reply::redirect(route('service_company.clients.index'), __('menu.clients').' '.__('messages.updatedSuccessfully'));
 
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error('clients update() transaction failed: '.$e->getMessage(), ['exception' => $e]);
+
+            if (! empty($idempotencyKey)) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_RETRYABLE',
+                        'last_error' => substr($e->getMessage(), 0, 1000),
+                        'updated_at' => now(),
+                    ]);
+            }
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
         } finally {
@@ -2867,18 +2971,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function citylist($state_id)
     {
+        /**
+         * Global Reference Cache: City List by State ID
+         * Intent: Eliminate repeated DB queries on state change; reference data is static and non-tenant-scoped.
+         */
+        $custom = cache()->remember("global_citylist_html_state_{$state_id}", 86400, function () use ($state_id) {
+            $Rawcitylist = DB::table('city_list')
+                ->select('city_list.city_id as id', 'city_list.city as name')
+                ->where('city_list.state_id', $state_id)
+                ->orderBy('city_list.city')
+                ->get()->toArray();
+            $citylist = json_decode(json_encode($Rawcitylist), true);
 
-        $Rawcitylist = DB::table('city_list')
-            ->select('city_list.city_id as id', 'city_list.city as name')
-            ->where('city_list.state_id', $state_id)
-            ->orderBy('city_list.city')
-            ->get()->toArray();
-        $citylist = json_decode(json_encode($Rawcitylist), true);
+            $html = '<option>Select City</option>';
+            foreach ($citylist as $sval) {
+                $html .= '<option value="'.$sval['id'].'">'.$sval['name'].'</option>';
+            }
 
-        $custom = '<option>Select City</option>';
-        foreach ($citylist as $sval) {
-            $custom .= '<option value="'.$sval['id'].'">'.$sval['name'].'</option>';
-        }
+            return $html;
+        });
 
         return Reply::dataOnly(['status' => 'success', 'data' => $custom]);
     }
@@ -2952,31 +3063,81 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function store(Request $request)
     {
-
         abort_if(Gate::denies('add_clients'), 403);
 
         if ($validationError = $this->validateClientSubmission($request)) {
             return $validationError;
         }
 
-        $company_id = '';
-        $timeStamp = time();
-        $names = $request->name;
         $company_id = $request->user()->company_id;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
+        $canonicalHash = hash('sha256', json_encode([
+            'company_id' => $company_id,
+            'name' => trim($request->name ?? ''),
+            'website' => trim($request->website ?? ''),
+            'industry' => $request->industry,
+            'company_sizes' => $request->company_sizes,
+            'company_type' => $request->company_type,
+            'founded' => $request->founded,
+            'description' => trim(strip_tags($request->description ?? '')),
+            'tags' => $request->tags,
+            'address' => $request->address,
+            'cp_name' => $request->cp_name,
+            'cp_email' => $request->cp_email,
+        ]));
+
+        if (! empty($idempotencyKey)) {
+            $inserted = DB::table('sys_idempotency_keys')->insertOrIgnore([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'request_hash' => $canonicalHash,
+                'status' => 'PROCESSING',
+                'expires_at' => now()->addHours(24),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            if (! $inserted) {
+                $existing = DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->first();
+
+                if ($existing) {
+                    if ($existing->request_hash !== $canonicalHash) {
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Idempotency key payload mismatch.']);
+                    }
+                    if ($existing->status === 'COMPLETED') {
+                        $cachedBody = json_decode($existing->response_body, true);
+                        if (is_array($cachedBody) && isset($cachedBody['url'])) {
+                            return Reply::redirect($cachedBody['url'], $cachedBody['message'] ?? (__('menu.clients').' '.__('messages.createdSuccessfully')));
+                        }
+
+                        return Reply::redirect(route('service_company.clients.custom_client').'/0', __('menu.clients').' '.__('messages.createdSuccessfully'));
+                    }
+                    if ($existing->status === 'PROCESSING') {
+                        return response()->json(['status' => 'processing', 'message' => 'Request is currently being processed.'], 425);
+                    }
+                }
+            }
+        }
+
+        $timeStamp = time();
         $client = new Client;
-        $client->company_id = @$company_id;
+        $client->company_id = $company_id;
+
         // FIRST TAB-1
-        if (! empty(@$request->name)) {
-            $client->name = @$request->name;
+        if (! empty($request->name)) {
+            $client->name = $request->name;
         }
-        if (! empty(@$request->website)) {
-            $client->website = @$request->website;
+        if (! empty($request->website)) {
+            $client->website = $request->website;
         }
-        if (! empty(@$request->industry)) {
-            $client->industry = @$request->industry;
+        if (! empty($request->industry)) {
+            $client->industry = $request->industry;
         }
-        if (! empty(@$request->company_sizes)) {
+        if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
             $client->company_size_from = $from_size;
             $client->company_sizes = $to_size;
@@ -2984,82 +3145,115 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (isset($request->company_type) && $request->company_type !== '') {
             $client->company_type = $request->company_type;
         }
-        if (! empty(@$request->founded)) {
-            $client->founded = @$request->founded;
+        if (! empty($request->founded)) {
+            $client->founded = $request->founded;
         }
+
         // SECOND TAB-2
-        if (! empty(@$request->description)) {
-            $client->description = @$request->description;
-            // $client->detail = @$request->detail;
+        if (! empty($request->description)) {
+            $client->description = $request->description;
         }
-        if (! empty(@$request->tags)) {
-            $tags = @$request->tags;
+        if (! empty($request->tags)) {
+            $tags = $request->tags;
             $tags = json_decode($tags, true);
             $tags = array_column($tags, 'value');
             $tags = implode(',', $tags);
             $client->tags = $tags;
         }
 
+        // Handle logo upload outside database transaction
+        $altfilename = null;
+        $target_file = null;
+        $fileUrl = null;
+        if ($request->hasFile('logo')) {
+            $directoryPath = GeneralMethod::document_manage_directory($company_id);
+            $file = $request->file('logo');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $allowed = ['png', 'jpeg', 'jpg'];
+            if (in_array($ext, $allowed)) {
+                $origFilename = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+                $altfilename = GeneralMethod::getValidUploadFileName($origFilename).'-'.$timeStamp.'.'.$ext;
+                $target_file = $directoryPath.'/'.$altfilename;
+
+                $file->move($directoryPath, $altfilename);
+
+                $companyNameR2 = DB::table('companies')
+                    ->where('id', $company_id)
+                    ->value('company_name');
+                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                $companyNameRTwo = $companyNameR2.'_'.$company_id;
+                $r2Filename = uniqid('JERO_logo').'.'.$ext;
+                $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$r2Filename}";
+
+                $client->logo = $altfilename;
+                $client->logo_physical_path = $target_file;
+                $client->logo_logical_path = $fileUrl;
+            }
+        }
+
         DB::beginTransaction();
         try {
-
             $client->save();
             $client_id = $client->id;
 
-            // THIRD TAB-3
+            // THIRD TAB-3: Location Batch Preparation with Cached Geocoding Resolution
             $Location = [];
             $locationBatch = [];
-            // if (!empty(@$request->addressId)) {
-            $addressId = @$request->addressId;
+            $addressId = (int) (@$request->addressId ?? 0);
 
             for ($i = 0; $i <= $addressId; $i++) {
-
                 $address = @$request->address[$i];
-                $country = ''; // @$request->country[$i];
-                $state = ''; // @$request->state[$i];
-
-                $postcode = '0'; // @$request->postcode[$i];
-
-                $city_id = $city = '';
-                // if($country == 101){
-                $city_id = @$request->kt_tagify_work_location[$i];
-                // }else{
-                // 	$city 				= @$request->city[$i];
-                // }
-
-                $stateId = '';
-                $cityID = '';
-                $countryID = '';
-                $city = '';
+                $postcode = '0';
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
-                    foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
 
-                        // dd($city_row);
+                if (! empty($work_city) && is_array($work_city_all)) {
+                    foreach ($work_city_all as $cityVal) {
+                        $valStr = trim($cityVal['value'] ?? '');
+                        if (empty($valStr)) {
+                            continue;
+                        }
+                        $parts = (strpos($valStr, '|') !== false) ? explode('|', $valStr) : explode(',', $valStr);
+                        $cityName = trim($parts[0] ?? '');
+                        $countrName = isset($parts[2]) ? trim($parts[2]) : (isset($parts[1]) ? trim($parts[1]) : '');
+
+                        $cityCacheKey = 'city_geo_lookup_'.md5($cityName.'_'.$countrName);
+                        $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
+                            $query = DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName);
+
+                            if (! empty($countrName)) {
+                                $query->where('countries.country_name', '=', $countrName);
+                            }
+                            $row = $query->first();
+                            if (! $row) {
+                                $row = DB::table('city_list')
+                                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                    ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                    ->where('city_list.city', '!=', '')
+                                    ->where('city_list.city', '=', $cityName)
+                                    ->first();
+                            }
+
+                            return $row;
+                        });
 
                         if ($city_row) {
-                            $cityID = (@$city_row) ? $city_row->city_id : '';
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
-                            $stateId = GeneralMethod::stateId($cityID);
+                            $cityID = $city_row->city_id;
+                            $countryID = $city_row->country_id;
+                            $stateId = $city_row->state_id ?? GeneralMethod::stateId($cityID);
 
                             $values = [
                                 'company_id' => $company_id,
                                 'client_id' => $client_id,
                                 'country_id' => $countryID,
-                                'city' => $city,
+                                'city' => '',
                                 'city_id' => $cityID,
                                 'address' => $address,
                                 'postcode' => $postcode,
@@ -3068,39 +3262,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
                             $locationBatch[] = $values;
                             $Location[] = (object) $values;
-
                         }
-
                     }
                 }
-
-                // $values 			= array(
-                // 								'client_id' 	=> $client_id,
-                // 								'country_id' 	=> $country,
-                // 								'city' 			=> $city,
-                // 								'city_id' 		=> $city_id,
-                // 								'address' 		=> $address,
-                // 								'postcode' 		=> $postcode,
-                // 								'state' 		=> $state
-                // 							);
-                // DB::table('client_location')->insert($values);
-
             }
-            // }
 
-            /**
-             * V2 Bulk Location Insertion
-             * Intent: Execute single bulk insert query for client locations instead of N individual database calls.
-             * Tenancy Note: Scoped to newly created $client_id.
-             */
             if (! empty($locationBatch)) {
                 DB::table('client_location')->insert($locationBatch);
             }
 
-            // FORTH TAB-4
+            // FORTH TAB-4: Contact Persons Bulk Insertion
             $contacDetails = [];
             $contactBatch = [];
-            $contactPersonId = @$request->contactPersonId;
+            $totalCpNames = is_array($request->cp_name) ? count($request->cp_name) : 0;
+            $contactPersonId = max($totalCpNames - 1, (int) (@$request->contactPersonId ?? 0));
             for ($j = 0; $j <= $contactPersonId; $j++) {
                 $cp_name = @$request->cp_name[$j];
                 $cp_email = @$request->cp_email[$j];
@@ -3122,112 +3297,89 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
 
-            /**
-             * V2 Bulk Contact Persons Insertion
-             * Intent: Execute single bulk insert query for client contact info instead of N individual database calls.
-             * Tenancy Note: Scoped to newly created $client_id.
-             */
             if (! empty($contactBatch)) {
                 DB::table('client_contact_info')->insert($contactBatch);
             }
 
-            $maxsize = 5242880;
-            $directoryPath = GeneralMethod::document_manage_directory($company_id);
+            // Transactional Outbox Pattern: Atomic event persistence
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'Client',
+                'aggregate_id' => $client_id,
+                'aggregate_version' => 1,
+                'event_type' => 'ClientCreated',
+                'payload' => json_encode([
+                    'tenant_id' => $company_id,
+                    'client_id' => $client_id,
+                    'client_name' => $client->name,
+                    'action' => 'ClientCreated',
+                    'timestamp' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
 
-            $comp = Company::withoutGlobalScopes()->find($company_id);
-            $added_in_com_user = Company::where('companies.id', $company_id)->join('users', 'users.company_id', '=', 'companies.id')->first();
-
-            $data = [
-                'Status' => 'Active | Hold | Closed',
-                'ClientID' => $client_id,
-                'CompanyName' => $comp->company_name,
-                'ClientName' => @$request->name,
-                'addedBy' => @$request->user()->name,
-                'added_in_con_user' => @$added_in_com_user->name,
-                'Location' => $Location,
-                'contacDetails' => $contacDetails,
-            ];
-
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
-            $cc = [];
-            $subject = 'New Client Added';
-
-            QueueNotificationMailService::dispatch(
-                auth()->user()->email,
-                $subject,
-                'email.client.add-client',
-                (object) $data,
-                $attachments,
-                $fromAddress,
-                $senderName,
-                $cc,
-                $company_id
-            )->onConnection('emails');
-
-            // $result = $this->notificationMailService->sendEmail(auth()->user()->email, $subject, 'email.client.add-client', (object) $data, $attachments, $fromAddress, $senderName, $cc);
-
-            // Mail::to(auth()->user()->email)->send(new AddClient((object) $data));
-
-            if ($request->hasFile('logo')) {
-
-                $name = $file_size = $file_type = $temp = $target_file = $logicalpath = $fileUrl = '';
-                $file_size = @$_FILES['logo']['size'];
-                $file_type = @$_FILES['logo']['type'];
-                $temp = @$_FILES['logo']['tmp_name'];
-
-                $path_parts = pathinfo($_FILES['logo']['name']);
-                $extension = $path_parts['extension'];
-                $filename = strtolower($path_parts['filename']);
-                $altfilename = GeneralMethod::getValidUploadFileName($filename).'-'.$timeStamp.'.'.$extension;
-                $dirArr = explode('/', $directoryPath);
-                $target_file = $directoryPath.'/'.$altfilename;
-                $allowed = ['png', 'jpeg', 'jpg', 'PNG', 'JPEG', 'JPG'];
-                $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
-                if (in_array($ext, $allowed)) {
-                    $logicalpath = substr($target_file, strpos($target_file, 'user-uploads'));
-                    $file = $request->file('logo');
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id', auth()->user()->company_id)
-                        ->value('company_name');   // change column if needed
-                    $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                    $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                    $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-
-                    $filename = uniqid('JERO_logo').'.'.$file->getClientOriginalExtension();
-
-                    $tempPath = $file->storeAs('Companies/'.$companyNameRTwo.'/Images', $filename, 'r2'); // STORAGE/app/temp
-                    $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$filename}";
-
-                    // $filename = time() . '.' . $file->getClientOriginalExtension();
-                    // $filePath = 'Images/' . $filename;
-
-                    // Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // $fileUrl = Storage::disk('s3')->url($filePath);
-                    if (move_uploaded_file($temp, $target_file)) {
-
-                        $client = Client::withoutGlobalScopes()->find($client_id);
-                        $client->logo = @$altfilename;
-                        $client->logo_physical_path = @$target_file;
-                        $client->logo_logical_path = @$fileUrl;
-                        $client->save();
-
-                    }
-                }
-
+            // Update idempotency key to COMPLETED
+            if (! empty($idempotencyKey)) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode([
+                            'status' => 'success',
+                            'url' => route('service_company.clients.custom_client').'/0',
+                            'message' => __('menu.clients').' '.__('messages.createdSuccessfully'),
+                        ]),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
             }
-            if ($client_id > 0) {
-                /**
-                 * V2 Asynchronous Elasticsearch Client Indexing
-                 * Intent: Offload heavy Elasticsearch indexing to Horizon queue (es-index queue) off the HTTP web response thread.
-                 * Tenancy Note: Scoped by $client_id.
-                 */
-                // SyncClientToElasticJob::dispatch((int) $client_id);
-                GeneralMethod::clientStaffingPartner($client_id);
+
+            DB::commit();
+
+            // Asynchronous side effects post-commit off HTTP thread
+            try {
+                ProcessClientOutboxEventJob::dispatch($outboxId)->afterCommit();
+            } catch (\Throwable $e) {
+                \Log::warning('ProcessClientOutboxEventJob dispatch warning: '.$e->getMessage());
+            }
+
+            // Notification Email post-commit
+            try {
+                $comp = Company::withoutGlobalScopes()->find($company_id);
+                $added_in_com_user = Company::where('companies.id', $company_id)->join('users', 'users.company_id', '=', 'companies.id')->first();
+                $mailData = [
+                    'Status' => 'Active | Hold | Closed',
+                    'ClientID' => $client_id,
+                    'CompanyName' => $comp->company_name ?? '',
+                    'ClientName' => @$request->name,
+                    'addedBy' => @$request->user()->name,
+                    'added_in_con_user' => @$added_in_com_user->name,
+                    'Location' => $Location,
+                    'contacDetails' => $contacDetails,
+                ];
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = $basecompany->companyName ?? '';
+                $fromAddress = $basecompany->companyEmail ?? '';
+
+                QueueNotificationMailService::dispatch(
+                    auth()->user()->email,
+                    'New Client Added',
+                    'email.client.add-client',
+                    (object) $mailData,
+                    [],
+                    $fromAddress,
+                    $senderName,
+                    [],
+                    $company_id
+                )->onConnection('emails')->afterCommit();
+            } catch (\Throwable $e) {
+                \Log::warning('Client creation email notification warning: '.$e->getMessage());
             }
 
             $cachekeys = [
@@ -3239,13 +3391,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 GeneralMethod::cacheClean($key);
             }
 
-            DB::commit();
-
             return Reply::redirect(route('service_company.clients.custom_client').'/0', __('menu.clients').' '.__('messages.createdSuccessfully'));
 
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error('clients store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
+
+            if (! empty($idempotencyKey)) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_RETRYABLE',
+                        'last_error' => substr($e->getMessage(), 0, 1000),
+                        'updated_at' => now(),
+                    ]);
+            }
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         }
@@ -3253,17 +3414,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function addresslist($cid)
     {
-        // dd("djdh");
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        // $this->statelist 		=	GeneralMethod::statelist(101);
-        $this->cid = $cid;
-        $this->cities = GeneralMethod::allCities();
+        $cid = (int) $cid;
+        $cacheKey = "client_addresslist_partial_{$cid}";
+        $cachedView = cache()->remember($cacheKey, 86400, function () use ($cid) {
+            $this->countryArr = GeneralMethod::getAllCountryList();
+            $this->cid = $cid;
+            $this->cities = GeneralMethod::allCities();
+            $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
-        $this->default_loc = GeneralMethod::allCitiesSelected([]);
+            return view('service_company.client.addresslist', $this->data)->render();
+        });
 
-        $view = view('service_company.client.addresslist', $this->data)->render();
-
-        return Reply::dataOnly(['status' => 'success', 'data' => $view]);
+        return Reply::dataOnly(['status' => 'success', 'data' => $cachedView]);
     }
 
     public function request_update(Request $request)
@@ -3275,7 +3437,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $from_company = $request->input('from_company', $_REQUEST['from_company'] ?? null);
         $invitation_id = $request->input('invitation_id', $_REQUEST['invitation_id'] ?? null);
 
-        if (!$invitation_id || !$event_id) {
+        if (! $invitation_id || ! $event_id) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Invalid parameters']);
         }
 
@@ -3284,7 +3446,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $lockKey = "lock:client_req_update:{$company_id}:{$invitation_id}";
         $lock = Cache::lock($lockKey, 8);
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return Reply::dataOnly([
                 'status' => 'success',
                 'clientDataCnt' => $this->commonclient(),
@@ -3299,229 +3461,229 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->where('to_company_id', $company_id)
                 ->first();
 
-            if (!$invitationRow) {
+            if (! $invitationRow) {
                 return Reply::dataOnly(['status' => 'error', 'message' => 'Invitation not found or access denied.']);
             }
 
             // If already resolved to -1 or 1, return idempotent success immediately
-            if (in_array((int)$invitationRow->to_invitation_status, [-1, 1])) {
+            if (in_array((int) $invitationRow->to_invitation_status, [-1, 1])) {
                 return Reply::dataOnly([
                     'status' => 'success',
                     'clientDataCnt' => $this->commonclient(),
-                    'message' => ((int)$invitationRow->to_invitation_status === 1) ? 'Request has already been Accepted' : 'Request has already been Ignored',
+                    'message' => ((int) $invitationRow->to_invitation_status === 1) ? 'Request has already been Accepted' : 'Request has already been Ignored',
                 ]);
             }
 
-        if ($event_id == -1) {
-            // CLIENT INVIDATION IGNORE
-            $updateArr = ['to_invitation_status' => -1];
-            DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
-            $exists = $this->elasticService->getClient()->exists([
-                'index' => ELASTIC_CLIENT_REQUEST,
-                'id' => $invitation_id,
-            ]);
-
-            if ($exists) {
-
-                // 2. Prepare the update timestamp
-                $updateTime = now()->toIso8601String();
-
-                // 3. Execute update with debugging
-                $updateParams = [
+            if ($event_id == -1) {
+                // CLIENT INVIDATION IGNORE
+                $updateArr = ['to_invitation_status' => -1];
+                DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
+                $exists = $this->elasticService->getClient()->exists([
                     'index' => ELASTIC_CLIENT_REQUEST,
                     'id' => $invitation_id,
-                    'body' => [
-                        'doc' => [
-                            'to_invitation_status' => -1,
-                            'updated_at' => $updateTime,
+                ]);
+
+                if ($exists) {
+
+                    // 2. Prepare the update timestamp
+                    $updateTime = now()->toIso8601String();
+
+                    // 3. Execute update with debugging
+                    $updateParams = [
+                        'index' => ELASTIC_CLIENT_REQUEST,
+                        'id' => $invitation_id,
+                        'body' => [
+                            'doc' => [
+                                'to_invitation_status' => -1,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
-                ];
-                $this->elasticService->getClient()->update($updateParams);
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
+                    ];
+                    $this->elasticService->getClient()->update($updateParams);
 
-            }
+                }
 
-            // CLIENT RELATION IGNORE
-            $updateArr = ['final_status' => -1];
-            DB::table('staffing_company_relation')
-                ->where('staffing_company_relation.from_company_id', $from_company)
-                ->where('staffing_company_relation.to_company_id', $company_id)
-                ->update($updateArr);
-            // CLIENT JOB IGNORE
-            $updateArr = ['final_status' => -1];
-            DB::table('recommendation_relation')
-                ->where('recommendation_relation.from_company_id', $from_company)
-                ->where('recommendation_relation.to_company_id', $company_id)
-                ->update($updateArr);
+                // CLIENT RELATION IGNORE
+                $updateArr = ['final_status' => -1];
+                DB::table('staffing_company_relation')
+                    ->where('staffing_company_relation.from_company_id', $from_company)
+                    ->where('staffing_company_relation.to_company_id', $company_id)
+                    ->update($updateArr);
+                // CLIENT JOB IGNORE
+                $updateArr = ['final_status' => -1];
+                DB::table('recommendation_relation')
+                    ->where('recommendation_relation.from_company_id', $from_company)
+                    ->where('recommendation_relation.to_company_id', $company_id)
+                    ->update($updateArr);
 
-            $clientDataCnt = $this->commonclient();
-
-            $cachekeys = [
-                'allclients_version_user_'.$this->user->id,
-                'allclientrequest_version_user_'.$this->user->id,
-                'alldirectclient_version_user_'.$this->user->id,
-                'allconsultancy_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
-            return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Ignored']);
-        } elseif ($event_id == 1) {
-
-            $updateArr = ['to_invitation_status' => $event_id];
-            DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
-
-            $exists = $this->elasticService->getClient()->exists([
-                'index' => ELASTIC_CLIENT_REQUEST,
-                'id' => $invitation_id,
-            ]);
-
-            if ($exists) {
-
-                // 2. Prepare the update timestamp
-                $updateTime = now()->toIso8601String();
-
-                // 3. Execute update with debugging
-                $updateParams = [
-                    'index' => ELASTIC_CLIENT_REQUEST,
-                    'id' => $invitation_id,
-                    'body' => [
-                        'doc' => [
-                            'to_invitation_status' => 1,
-                            'updated_at' => $updateTime,
-                        ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
-                ];
-                $this->elasticService->getClient()->update($updateParams);
+                $clientDataCnt = $this->commonclient();
 
                 $cachekeys = [
-                    'allclientrequest_version_user_'.$this->user->id,
                     'allclients_version_user_'.$this->user->id,
+                    'allclientrequest_version_user_'.$this->user->id,
                     'alldirectclient_version_user_'.$this->user->id,
+                    'allconsultancy_version_user_'.$this->user->id,
                 ];
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
                 }
 
-            }
+                return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Ignored']);
+            } elseif ($event_id == 1) {
 
-            $invitationRow = DB::table('staffing_company_invitation')->select('*')->where('id', $invitation_id)->first();
+                $updateArr = ['to_invitation_status' => $event_id];
+                DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
 
-            $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
+                $exists = $this->elasticService->getClient()->exists([
+                    'index' => ELASTIC_CLIENT_REQUEST,
+                    'id' => $invitation_id,
+                ]);
 
-            $from_company_id = $invitationRow->from_company_id;
-            $from_client_id = $invitationRow->from_client_id;
-            $from_user_id = $invitationRow->from_user_id;
-            $from_status = $invitationRow->from_status;
-            $from_created_at = $invitationRow->from_created_at;
+                if ($exists) {
 
-            $to_company_id = $invitationRow->to_company_id;
-            $to_email = $invitationRow->to_email;
-            $to_status = $invitationRow->to_status;
-            $job_id = $invitationRow->job_id;
-            $to_invitation_status = $invitationRow->to_invitation_status;
+                    // 2. Prepare the update timestamp
+                    $updateTime = now()->toIso8601String();
 
-            $values = [
-                'from_company_id' => $from_company_id,
-                'from_client_id' => $from_client_id,
-                'from_user_id' => $from_user_id,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
-
-                'to_company_id' => $company_id,
-                'to_client_id' => @$clientRow->id,
-                'to_user_id' => @$user_id,
-                'to_status' => 1,
-                'to_created_at' => date('Y-m-d'),
-
-                'final_status' => 1,
-                'created_at' => date('Y-m-d'),
-                'updated_at' => date('Y-m-d'),
-            ];
-
-            // ── Phase 4 Idempotency Protection: Ensure relationship is not duplicated ──
-            $existingRel = DB::table('staffing_company_relation')
-                ->where('from_company_id', $from_company_id)
-                ->where('to_company_id', $company_id)
-                ->first();
-
-            if (!$existingRel) {
-                DB::table('staffing_company_relation')->insert($values);
-                $relationId = DB::getPdo()->lastInsertId();
-                GeneralMethod::appendClientNestedData($relationId);
-            } else {
-                DB::table('staffing_company_relation')
-                    ->where('id', $existingRel->id)
-                    ->update(['final_status' => 1, 'updated_at' => date('Y-m-d')]);
-            }
-
-            $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
-            if ($job) {
-
-                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
-                $basecompany = GeneralMethod::baseCompany();
-                $senderName = (auth()->user()->name) ? auth()->user()->name : '';
-                $fromAddress = (auth()->user()->email) ? auth()->user()->email : '';
-                $attachments = [];
-
-                $cc = [];
-                $checkMailPermision = GeneralMethod::mailPermission(20);
-                if ($checkMailPermision) {
-
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(20, 1);
-
-                    $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, @$job->title, @$job->id], $mailTypeSubject->subject);
-
-                    $template_description = $mailTypeSubject->body_description;
-
-                    $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{VENDOR_NAME}]', '[{VENDOR_PHONE}]', '[{VENDOR_EMAIL}]', '[{TERMS}]'], [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_phone, ''], $template_description);
-
-                    $message = $template_description;
-
-                    $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
-                    $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
-                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                    //    dd($to_Mail_Id);
-                    $data = [
-                        'message' => $message,
+                    // 3. Execute update with debugging
+                    $updateParams = [
+                        'index' => ELASTIC_CLIENT_REQUEST,
+                        'id' => $invitation_id,
+                        'body' => [
+                            'doc' => [
+                                'to_invitation_status' => 1,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false, // Changed to false since we verified existence
+                        ],
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
                     ];
+                    $this->elasticService->getClient()->update($updateParams);
 
-                    QueueNotificationMailService::dispatch(
-                        $to_Mail_Id,
-                        $subject,
-                        'email.common.index',
-                        (object) $data,
-                        $attachments,
-                        $fromAddress,
-                        $senderName,
-                        $cc,
-                        $from_company_id
-                    )->onConnection('emails');
+                    $cachekeys = [
+                        'allclientrequest_version_user_'.$this->user->id,
+                        'allclients_version_user_'.$this->user->id,
+                        'alldirectclient_version_user_'.$this->user->id,
+                    ];
+                    foreach ($cachekeys as $key) {
+                        GeneralMethod::cacheClean($key);
+                    }
 
-                    // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
                 }
+
+                $invitationRow = DB::table('staffing_company_invitation')->select('*')->where('id', $invitation_id)->first();
+
+                $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
+
+                $from_company_id = $invitationRow->from_company_id;
+                $from_client_id = $invitationRow->from_client_id;
+                $from_user_id = $invitationRow->from_user_id;
+                $from_status = $invitationRow->from_status;
+                $from_created_at = $invitationRow->from_created_at;
+
+                $to_company_id = $invitationRow->to_company_id;
+                $to_email = $invitationRow->to_email;
+                $to_status = $invitationRow->to_status;
+                $job_id = $invitationRow->job_id;
+                $to_invitation_status = $invitationRow->to_invitation_status;
+
+                $values = [
+                    'from_company_id' => $from_company_id,
+                    'from_client_id' => $from_client_id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+
+                    'to_company_id' => $company_id,
+                    'to_client_id' => @$clientRow->id,
+                    'to_user_id' => @$user_id,
+                    'to_status' => 1,
+                    'to_created_at' => date('Y-m-d'),
+
+                    'final_status' => 1,
+                    'created_at' => date('Y-m-d'),
+                    'updated_at' => date('Y-m-d'),
+                ];
+
+                // ── Phase 4 Idempotency Protection: Ensure relationship is not duplicated ──
+                $existingRel = DB::table('staffing_company_relation')
+                    ->where('from_company_id', $from_company_id)
+                    ->where('to_company_id', $company_id)
+                    ->first();
+
+                if (! $existingRel) {
+                    DB::table('staffing_company_relation')->insert($values);
+                    $relationId = DB::getPdo()->lastInsertId();
+                    GeneralMethod::appendClientNestedData($relationId);
+                } else {
+                    DB::table('staffing_company_relation')
+                        ->where('id', $existingRel->id)
+                        ->update(['final_status' => 1, 'updated_at' => date('Y-m-d')]);
+                }
+
+                $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
+                if ($job) {
+
+                    $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
+                    $basecompany = GeneralMethod::baseCompany();
+                    $senderName = (auth()->user()->name) ? auth()->user()->name : '';
+                    $fromAddress = (auth()->user()->email) ? auth()->user()->email : '';
+                    $attachments = [];
+
+                    $cc = [];
+                    $checkMailPermision = GeneralMethod::mailPermission(20);
+                    if ($checkMailPermision) {
+
+                        $mailTypeSubject = GeneralMethod::mailTypeSubject(20, 1);
+
+                        $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, @$job->title, @$job->id], $mailTypeSubject->subject);
+
+                        $template_description = $mailTypeSubject->body_description;
+
+                        $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{VENDOR_NAME}]', '[{VENDOR_PHONE}]', '[{VENDOR_EMAIL}]', '[{TERMS}]'], [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_phone, ''], $template_description);
+
+                        $message = $template_description;
+
+                        $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
+                        $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
+                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+                        //    dd($to_Mail_Id);
+                        $data = [
+                            'message' => $message,
+                        ];
+
+                        QueueNotificationMailService::dispatch(
+                            $to_Mail_Id,
+                            $subject,
+                            'email.common.index',
+                            (object) $data,
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $from_company_id
+                        )->onConnection('emails');
+
+                        // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
+                    }
+                }
+
+                $clientDataCnt = $this->commonclient();
+                // dd("kd");
+
+                $cachekeys = [
+                    'allclients_version_user_'.$this->user->id,
+                    'allclientrequest_version_user_'.$this->user->id,
+                    'alldirectclient_version_user_'.$this->user->id,
+                    'allconsultancy_version_user_'.$this->user->id,
+                ];
+                foreach ($cachekeys as $key) {
+                    GeneralMethod::cacheClean($key);
+                }
+
+                return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Accepted']);
             }
-
-            $clientDataCnt = $this->commonclient();
-            // dd("kd");
-
-            $cachekeys = [
-                'allclients_version_user_'.$this->user->id,
-                'allclientrequest_version_user_'.$this->user->id,
-                'alldirectclient_version_user_'.$this->user->id,
-                'allconsultancy_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
-            return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Accepted']);
-        }
 
         } finally {
             $lock->release();
@@ -3623,5 +3785,103 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
+    }
+
+    /**
+     * Atomically claim an idempotency key using MySQL INSERT ... ON DUPLICATE KEY or insertOrIgnore.
+     * Guaranteed safe across concurrent web workers.
+     *
+     * @param  int|string  $tenantId
+     * @return array|null Null if successfully claimed (proceed with mutation); array response if already claimed/completed
+     */
+    protected function claimIdempotency($tenantId, string $key, array $payload): ?array
+    {
+        $tenantId = (int) $tenantId;
+        $hash = hash('sha256', json_encode($payload));
+        $claimed = DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => $tenantId,
+            'idempotency_key' => $key,
+            'request_hash' => $hash,
+            'status' => 'PROCESSING',
+            'expires_at' => now()->addHours(24),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (! $claimed) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $tenantId)
+                ->where('idempotency_key', $key)
+                ->first();
+
+            if ($existing) {
+                if ($existing->request_hash !== $hash) {
+                    return ['status' => 'error', 'message' => 'Idempotency key reused with different request payload (mismatch).'];
+                }
+                if ($existing->status === 'COMPLETED') {
+                    $cached = json_decode($existing->response_body, true);
+                    if ($cached) {
+                        $cached['idempotent_replay'] = true;
+                    }
+
+                    return $cached ?? ['status' => 'success', 'idempotent_replay' => true];
+                }
+                if ($existing->status === 'PROCESSING') {
+                    return ['status' => 'warning', 'message' => 'A request is currently being processed with this idempotency key. Please wait a moment.'];
+                }
+                if ($existing->status === 'FAILED_RETRYABLE') {
+                    DB::table('sys_idempotency_keys')
+                        ->where('id', $existing->id)
+                        ->update([
+                            'status' => 'PROCESSING',
+                            'request_hash' => $hash,
+                            'last_error' => null,
+                            'updated_at' => now(),
+                        ]);
+
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Mark idempotency key as COMPLETED with persisted response payload.
+     *
+     * @param  int|string  $tenantId
+     */
+    protected function completeIdempotency($tenantId, string $key, array $response): void
+    {
+        $tenantId = (int) $tenantId;
+        DB::table('sys_idempotency_keys')
+            ->where('tenant_id', $tenantId)
+            ->where('idempotency_key', $key)
+            ->update([
+                'status' => 'COMPLETED',
+                'response_status' => 200,
+                'response_body' => json_encode($response),
+                'completed_at' => now(),
+                'updated_at' => now(),
+            ]);
+    }
+
+    /**
+     * Mark idempotency key as FAILED_RETRYABLE on error so client can safely retry.
+     *
+     * @param  int|string  $tenantId
+     */
+    protected function failIdempotency($tenantId, string $key, string $error): void
+    {
+        $tenantId = (int) $tenantId;
+        DB::table('sys_idempotency_keys')
+            ->where('tenant_id', $tenantId)
+            ->where('idempotency_key', $key)
+            ->update([
+                'status' => 'FAILED_RETRYABLE',
+                'last_error' => substr($error, 0, 1000),
+                'updated_at' => now(),
+            ]);
     }
 }

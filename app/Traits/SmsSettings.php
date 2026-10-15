@@ -35,7 +35,9 @@ trait SmsSettings{
         // Config::set('app.name', $company[0]);
         // Config::set('mail.from.name', $company[0]);
 
-        (new NexmoChannelServiceProvider(app()))->register();
+        if (class_exists(\Illuminate\Notifications\NexmoChannelServiceProvider::class)) {
+            (new NexmoChannelServiceProvider(app()))->register();
+        }
     }
 }
 

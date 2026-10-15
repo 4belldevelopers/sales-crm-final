@@ -310,7 +310,30 @@ use Carbon\Carbon;
             $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName)), 0, 2))));
 
             $industries_name = '';
-            if (trim((string) @$client->industry) != '') { $industries_name = $department[@$client->industry] ?? ''; }
+            if (trim((string) @$client->industry) !== '') {
+                $targetIndId = (string) @$client->industry;
+                if (isset($department) && is_iterable($department)) {
+                    foreach ($department as $dItem) {
+                        if (is_object($dItem) && isset($dItem->ind_id) && (string)$dItem->ind_id === $targetIndId) {
+                            $industries_name = (string) ($dItem->ind_name ?? $dItem->name ?? '');
+                            break;
+                        } elseif (is_array($dItem) && isset($dItem['ind_id']) && (string)$dItem['ind_id'] === $targetIndId) {
+                            $industries_name = (string) ($dItem['ind_name'] ?? $dItem['name'] ?? '');
+                            break;
+                        }
+                    }
+                }
+                if ($industries_name === '' && isset($department[$client->industry])) {
+                    $rawInd = $department[$client->industry];
+                    if (is_object($rawInd)) {
+                        $industries_name = (string) ($rawInd->ind_name ?? $rawInd->name ?? '');
+                    } elseif (is_array($rawInd)) {
+                        $industries_name = (string) ($rawInd['ind_name'] ?? $rawInd['name'] ?? '');
+                    } else {
+                        $industries_name = (string) $rawInd;
+                    }
+                }
+            }
             $tagsArr = array_filter(array_map('trim', explode(',', (string) @$client->tags)));
         @endphp
         <div class="cd-hero">
@@ -593,10 +616,17 @@ use Carbon\Carbon;
                                         <span class="cd-info-value">{{ $industries_name }}</span>
                                     </div>
                                     @endif
-                                    @if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type]))
+                                    @php
+                                        $company_type_val = '';
+                                        if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type])) {
+                                            $rawComp = $companyType[$client->company_type];
+                                            $company_type_val = is_string($rawComp) ? $rawComp : (is_object($rawComp) ? (string)($rawComp->name ?? '') : '');
+                                        }
+                                    @endphp
+                                    @if ($company_type_val !== '')
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $companyType[$client->company_type] }}</span>
+                                        <span class="cd-info-value">{{ $company_type_val }}</span>
                                     </div>
                                     @endif
                                     <div class="cd-info-row">

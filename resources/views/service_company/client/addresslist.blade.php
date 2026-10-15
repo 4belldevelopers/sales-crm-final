@@ -4,7 +4,7 @@
 <div class="client-address-card is-additional client-address-container-child" id="clientAddr_<?php echo @$cid; ?>">
   <div class="client-address-card-head">
     <h4>Additional Address (<?php echo max(1, $additionalIndex); ?>)</h4>
-    <button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_<?php echo @$cid; ?>"><i class="la la-trash"></i> Remove</button>
+    <button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_<?php echo @$cid; ?>" onclick="removeAddressCard(this, 'clientAddr_<?php echo @$cid; ?>')"><i class="la la-trash"></i> Remove</button>
   </div>
   <div class="client-field fv-plugins-icon-container mb-3">
     <label class="form-label required" for="kt_tagify_work_location_<?php echo @$cid; ?>">City</label>

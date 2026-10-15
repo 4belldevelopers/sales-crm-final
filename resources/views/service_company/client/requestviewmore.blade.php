@@ -49,10 +49,32 @@
     $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName ?: 'C')), 0, 2))));
 
     $industries_name = '';
-    if (!empty(@$directClientDetail->industry) && isset($department[@$directClientDetail->industry])) {
-        $industries_name = $department[@$directClientDetail->industry];
-    } elseif (!empty(@$directClientDetail->industries) && isset($industries[@$directClientDetail->industries])) {
-        $industries_name = $industries[@$directClientDetail->industries];
+    $lookupInd = function ($source, $indId) {
+        if (empty($indId) || empty($source)) return '';
+        $targetId = (string) $indId;
+        if (is_iterable($source)) {
+            foreach ($source as $item) {
+                if (is_object($item) && isset($item->ind_id) && (string) $item->ind_id === $targetId) {
+                    return (string) ($item->ind_name ?? $item->name ?? '');
+                } elseif (is_array($item) && isset($item['ind_id']) && (string) $item['ind_id'] === $targetId) {
+                    return (string) ($item['ind_name'] ?? $item['name'] ?? '');
+                }
+            }
+        }
+        if (isset($source[$indId])) {
+            $val = $source[$indId];
+            if (is_object($val)) return (string) ($val->ind_name ?? $val->name ?? '');
+            if (is_array($val)) return (string) ($val['ind_name'] ?? $val['name'] ?? '');
+            return (string) $val;
+        }
+        return '';
+    };
+
+    if (!empty(@$directClientDetail->industry)) {
+        $industries_name = $lookupInd($department, @$directClientDetail->industry);
+    }
+    if (empty($industries_name) && !empty(@$directClientDetail->industries)) {
+        $industries_name = $lookupInd($industries, @$directClientDetail->industries);
     }
 
     $tagsArr = array_filter(array_map('trim', explode(',', (string) @$directClientDetail->tags)));
@@ -279,10 +301,17 @@
                                         <span class="cd-info-value">{{ $industries_name }}</span>
                                     </div>
                                     @endif
-                                    @if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type]))
+                                    @php
+                                        $rc_company_type_val = '';
+                                        if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type])) {
+                                            $rawRcComp = $companyType[$directClientDetail->company_type];
+                                            $rc_company_type_val = is_string($rawRcComp) ? $rawRcComp : (is_object($rawRcComp) ? (string)($rawRcComp->name ?? '') : '');
+                                        }
+                                    @endphp
+                                    @if ($rc_company_type_val !== '')
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $companyType[$directClientDetail->company_type] }}</span>
+                                        <span class="cd-info-value">{{ $rc_company_type_val }}</span>
                                     </div>
                                     @endif
                                     <div class="cd-info-row">
