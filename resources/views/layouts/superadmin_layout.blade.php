@@ -9,10 +9,10 @@
             @lang('app.superAdminPanel')
         @else
             @lang('Meecruit')
-        @endif | {{ __($pageTitle) }}
+        @endif | {{ __($pageTitle ?? 'Marketplace Operations') }}
     </title>
-    <meta name="description" content="{{ __($pageTitle) }}" />
-    <meta name="keywords" content="{{ __($pageTitle) }}" />
+    <meta name="description" content="{{ __($pageTitle ?? 'Marketplace Operations') }}" />
+    <meta name="keywords" content="{{ __($pageTitle ?? 'Marketplace Operations') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
@@ -106,7 +106,7 @@
         <div class="page d-flex flex-row flex-column-fluid">
             <!--begin::Aside-->
 
-            @if ($user->is_superadmin)
+            @if (($user ?? auth()->user())?->is_superadmin)
                 @include('sections.superadmin-left-sidebar')
             @else
                 @include('sections.left-sidebar')
@@ -2267,7 +2267,7 @@
             });
         });
 
-        @if ($user->hasRole('admin'))
+        @if (($user ?? auth()->user())?->hasRole('admin'))
 
             function addOrEditStickyNote(id) {
                 var url = '';

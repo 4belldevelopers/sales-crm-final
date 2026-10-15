@@ -4938,11 +4938,107 @@ CREATE TABLE `sys_processed_events` (
 
 ALTER TABLE `recommendation_relation` ADD INDEX `idx_rec_rel_marketplace_claim` (`job_id`, `to_company_id`, `final_status`);
 
+<<<<<<< HEAD
 -- Client Module V2 High-Concurrency Performance Indexes
 ALTER TABLE `clients` ADD INDEX `idx_clients_company_id` (`company_id`);
 ALTER TABLE `clients` ADD INDEX `idx_clients_website` (`website`);
 ALTER TABLE `client_contact_info` ADD INDEX `idx_client_contact_info_client_id` (`client_id`);
 ALTER TABLE `client_location` ADD INDEX `idx_client_location_company_id` (`company_id`);
+=======
+DROP TABLE IF EXISTS `marketplace_channels`;
+CREATE TABLE `marketplace_channels` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `job_id` INT UNSIGNED NOT NULL,
+  `company_id` INT UNSIGNED NOT NULL COMMENT 'Hiring Company Tenant ID',
+  `channel_type` ENUM('AGENCY_HIRING', 'BENCH_TALENT') NOT NULL,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `moderation_status` ENUM('PENDING_REVIEW', 'APPROVED', 'REJECTED', 'QUARANTINED') NOT NULL DEFAULT 'PENDING_REVIEW',
+  `publication_status` ENUM('DRAFT', 'LIVE', 'CLAIM_LIMIT_REACHED', 'PAUSED', 'DELISTED') NOT NULL DEFAULT 'DRAFT',
+  `approval_mode` ENUM('AUTO', 'MANUAL') NOT NULL DEFAULT 'MANUAL',
+  `vendor_limit` INT NULL DEFAULT 5 COMMENT 'Applies to AGENCY_HIRING only; NULL for BENCH_TALENT',
+  `moderated_by` INT UNSIGNED NULL COMMENT 'Super Admin User ID',
+  `moderated_at` TIMESTAMP NULL DEFAULT NULL,
+  `moderation_reason` VARCHAR(255) NULL,
+  `published_by` INT UNSIGNED NULL COMMENT 'Recruiter or Admin User ID',
+  `published_at` TIMESTAMP NULL DEFAULT NULL,
+  `paused_by` INT UNSIGNED NULL,
+  `paused_at` TIMESTAMP NULL DEFAULT NULL,
+  `rejected_by` INT UNSIGNED NULL,
+  `rejected_at` TIMESTAMP NULL DEFAULT NULL,
+  `closed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_job_channel_unique` (`job_id`, `channel_type`),
+  KEY `idx_channel_company` (`company_id`, `channel_type`),
+  KEY `idx_channel_pub_state` (`channel_type`, `publication_status`, `moderation_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `marketplace_submissions`;
+CREATE TABLE `marketplace_submissions` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Canonical business submission_id',
+  `job_id` INT UNSIGNED NOT NULL,
+  `company_id` INT UNSIGNED NOT NULL COMMENT 'Hiring Client Tenant ID',
+  `agency_id` INT UNSIGNED NOT NULL COMMENT 'Partner Agency Tenant ID',
+  `candidate_id` INT UNSIGNED NOT NULL,
+  `channel` ENUM('AGENCY_HIRING', 'BENCH_TALENT') NOT NULL COMMENT 'Business engagement domain',
+  `source` ENUM('MARKETPLACE', 'DIRECT_JOB_TRACKER', 'ADMIN', 'API', 'IMPORT') NOT NULL COMMENT 'Origin surface',
+  `application_id` INT UNSIGNED NULL COMMENT 'ATS implementation reference to job_applications.id',
+  `lifecycle_status` VARCHAR(32) NOT NULL DEFAULT 'SUBMITTED' COMMENT 'Mirrors authoritative ATS pipeline stage',
+  `version` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Monotonic client sync counter for optimistic concurrency',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_submission_identity` (`job_id`, `agency_id`, `candidate_id`, `channel`),
+  KEY `idx_sub_job_agency` (`job_id`, `agency_id`),
+  KEY `idx_sub_company_status` (`company_id`, `lifecycle_status`),
+  KEY `idx_sub_candidate` (`candidate_id`),
+  KEY `idx_sub_app_ref` (`application_id`),
+  CONSTRAINT `fk_sub_job` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sub_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sub_agency` FOREIGN KEY (`agency_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sub_app` FOREIGN KEY (`application_id`) REFERENCES `job_applications` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `marketplace_submission_audit_logs`;
+CREATE TABLE `marketplace_submission_audit_logs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `submission_id` BIGINT UNSIGNED NOT NULL,
+  `actor_id` INT UNSIGNED NOT NULL,
+  `actor_role` ENUM('client_recruiter', 'agency_recruiter', 'superadmin', 'system') NOT NULL,
+  `action` ENUM('SUBMITTED', 'STATUS_CHANGED', 'NOTE_ADDED', 'INTERVIEW_SCHEDULED', 'OFFER_EXTENDED', 'WITHDRAWN') NOT NULL,
+  `from_status` VARCHAR(32) NULL,
+  `to_status` VARCHAR(32) NOT NULL,
+  `source` ENUM('MARKETPLACE', 'DIRECT_JOB_TRACKER', 'CLIENT_ATS', 'ADMIN_PANEL', 'API') NOT NULL,
+  `reason` VARCHAR(255) NULL,
+  `ip_address` VARCHAR(45) NULL,
+  `correlation_id` VARCHAR(64) NULL COMMENT 'Distributed tracing ID across microservices',
+  `snapshot_hash` VARCHAR(64) NULL COMMENT 'SHA-256 state snapshot hash for cryptographic tamper verification',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sub_audit_history` (`submission_id`, `created_at`),
+  KEY `idx_sub_actor` (`actor_id`, `created_at`),
+  KEY `idx_sub_corr_id` (`correlation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `marketplace_risk_rules`;
+CREATE TABLE `marketplace_risk_rules` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `rule_code` VARCHAR(64) NOT NULL,
+  `category` ENUM('HEURISTIC', 'POLICY', 'COMMERCIAL', 'TRUST') NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
+  `description` VARCHAR(255) NULL,
+  `weight` INT NOT NULL COMMENT 'Negative points or penalty score',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `action_on_match` ENUM('FLAG', 'QUARANTINE', 'REJECT') NOT NULL DEFAULT 'FLAG',
+  `regex_pattern` VARCHAR(512) NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_risk_rule_code` (`rule_code`),
+  KEY `idx_risk_category_active` (`category`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> ebf2273a712e6f9af9b1c5ca2adc7bed8190a34f
 
 
 

@@ -533,50 +533,72 @@
                     </span>
                     <div class="menu-sub menu-sub-accordion">
 
-                        <!--begin::cmsGeneral-->
+                        <!--begin::Command Center-->
+                        <div class="menu-item">
+                            <a href="{{ route('superadmin.company.job-public-market', 'all') }}"
+                                class="menu-link {{ (request()->is('super-admin/job-public-market/all') || request()->is('super-admin/job-public-market')) ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Command Center</span>
+                            </a>
+                        </div>
+                        <!--end::Command Center-->
+                        <!--begin::Pending-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.job-public-market', 'pending') }}"
-                                class="menu-link {{ request()->is('super-admin/job-public-market/pending') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/job-public-market/pending') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
-                                <span class="menu-title">All Pending Jobs </span>
+                                <span class="menu-title">Pending Review</span>
                             </a>
                         </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
+                        <!--end::Pending-->
+                        <!--begin::Approved-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.job-public-market', 'approve') }}"
-                                class="menu-link {{ request()->is('super-admin/job-public-market/approve') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/job-public-market/approve') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
-                                <span class="menu-title">All Approve Jobs</span>
+                                <span class="menu-title">Live Approved Jobs</span>
                             </a>
                         </div>
-                        <!--end::cmsGeneral-->
-                        <!--begin::cmsGeneral-->
+                        <!--end::Approved-->
+                        <!--begin::Bench Sharing-->
+                        <div class="menu-item">
+                            <a href="{{ route('superadmin.company.job-public-market', 'bench') }}"
+                                class="menu-link {{ request()->is('super-admin/job-public-market/bench') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Bench Sharing Jobs</span>
+                            </a>
+                        </div>
+                        <!--end::Bench Sharing-->
+                        <!--begin::Vendor Limit-->
+                        <div class="menu-item">
+                            <a href="{{ route('superadmin.company.job-public-market', 'hold') }}"
+                                class="menu-link {{ request()->is('super-admin/job-public-market/hold') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Vendor Limit Jobs</span>
+                            </a>
+                        </div>
+                        <!--end::Vendor Limit-->
+                        <!--begin::Rejected-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.job-public-market', 'reject') }}"
-                                class="menu-link {{ request()->is('super-admin/job-public-market/reject') ? 'active' : '' }}"">
+                                class="menu-link {{ request()->is('super-admin/job-public-market/reject') ? 'active' : '' }}">
                                 <span class="menu-bullet">
                                     <span class="bullet bullet-dot"></span>
                                 </span>
-                                <span class="menu-title">All Reject jobs</span>
+                                <span class="menu-title">Rejected Jobs</span>
                             </a>
                         </div>
-                        <!--end::cmsGeneral-->
-                         <!--begin::cmsGeneral-->
-                         <div class="menu-item">
-                            <a href="{{ route('superadmin.company.job-public-market', 'hold') }}"
-                                class="menu-link {{ request()->is('super-admin/job-public-market/hold') ? 'active' : '' }}"">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">All Over Vendor jobs</span>
-                            </a>
-                        </div>
-                        <!--end::cmsGeneral-->
+                        <!--end::Rejected-->
                     </div>
                 </div>
                  <!--end::Jobs Public Market-->

@@ -135,6 +135,7 @@ class MarketplaceModerationService
             'risk_score' => $finalRiskScore,
             'hard_blocked' => $hardBlocked,
             'reasons' => $reasons,
+            'flags' => $reasons,
         ];
     }
 

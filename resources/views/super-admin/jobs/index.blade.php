@@ -1,925 +1,803 @@
 @extends('layouts.superadmin_layout')
 @php
     use App\Helper\GeneralMethod;
-    $job_status = GeneralMethod::job_status();
-    $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-
+    $salaryMode = GeneralMethod::salaryMode();
+    $activeTab = $currentTab ?? 'pending';
 @endphp
+
 @push('head-script')
-    <link rel="stylesheet" href="//cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.bootstrap.min.css">
-    <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-    <!--<link rel="stylesheet" href="{{ asset('assets/node_modules/dropify/dist/css/dropify.min.css') }}">-->
-    <link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"
-        type="text/css" />
     <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"
-        type="text/css" />
     <style>
-        body {
-            overflow-x: hidden;
+        .company-logo { max-height: 40px; max-width: 100px; object-fit: contain; }
+        .kpi-card { transition: transform 0.15s ease, box-shadow 0.15s ease; border-radius: 0.65rem; }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08); }
+        .risk-gauge-pill { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-radius: 1rem; padding: 0.2rem 0.65rem; }
+        .table-custom-class tbody tr { vertical-align: middle; }
+        .table-custom-class tbody tr:hover { background-color: #f8fafc; }
+        @media only screen and (min-width: 1024px) {
+            #kt_activitiesMarketplaceJob { width: 1250px !important; }
         }
-
-        .company-logo {
-            max-height: 50px;
-            max-width: 120px;
+        @media only screen and (max-width: 1023px) {
+            #kt_activitiesMarketplaceJob { width: 95vw !important; }
         }
-
-        .company-logo-div {
-            border-radius: 2px;
-            padding: 2px 2px 2px 2px;
-            margin-bottom: 2px;
-        }
-
-        .symbol.symbol-circle,
-        .symbol.symbol-circle .symbol-label,
-        .symbol.symbol-circle>img {
-            border-radius: 10%;
-        }
-
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesDefaultPackage {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesDefaultPackage {
-                width: 1200px;
-            }
-        }
-
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesBenchApplication {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesBenchApplication {
-                width: 1200px;
-            }
-        }
-        .table-custom-class tbody tr {
-    height: 82px; /* Adjust the height as per your requirement */
-    position: relative;
-}
-
     </style>
 @endpush
 
 @section('content')
-    <!--begin::toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">{{ $status }}<span
-                        class="h-20px border-gray-200 border-start ms-3 mx-2 d-none"></span> <small
-                        class="text-muted fs-7 fw-bold my-1 ms-1 d-none">#XRS-45670</small> </h1>
-            </div>
-            @if (@$showAction)
-                <div class="d-flex align-items-center py-1">
-                    @if (@$reject)
-                        <span class="svg-icon svg-icon-primary svg-icon-1x"> Auto Approved </span>&nbsp;&nbsp;&nbsp;
-                        <div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                            @php
-                                $bench_status = DB::table('global_settings')->select('public_market_job_status', 'id')->first();
-                            @endphp
-                            <input class="form-check-input chkStatus" type="checkbox" value="{{ @$bench_status->id }}"
-                                name="staus" {{ @$bench_status->public_market_job_status ? 'checked' : '' }}>
-                        </div> &nbsp;&nbsp;&nbsp;
-                    @endif
 
-                    <a href="javascript:void(0);" type="button" data-type="approve"
-                        class="btn btn-sm btn-flex btn-light-primary clickbtn approve fw-bolder me-3 d-none"
-                        data-toggle="modal" data-target="#approve"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Approve
-                    </a>
-                    @if (@$reject)
-                        <a href="javascript:void(0);" type="button" data-type="disapprove"
-                            class="btn btn-sm btn-flex btn-light-danger reject_mail disapprove fw-bolder me-3 d-none"
-                            data-toggle="modal" data-target="#disapprove"> <span
-                                class="svg-icon svg-icon-primary svg-icon-1x">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                        <rect x="0" y="0" width="24" height="24" />
-                                        <path
-                                            d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                            fill="#000000" opacity="0.3" />
-                                        <path
-                                            d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                            fill="#000000" />
-                                    </g>
-                                </svg>
-                            </span> Reject
-                        </a>
-                    @endif
+<!--begin::Toolbar-->
+<div class="toolbar py-3" id="kt_toolbar">
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack flex-wrap gap-2">
+        <div class="page-title d-flex align-items-center flex-wrap me-3">
+            <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">
+                Marketplace Command Center
+                <span class="h-20px border-gray-200 border-start ms-3 mx-2"></span>
+                <span class="text-muted fs-7 fw-bold">{{ $status ?? 'All Marketplace Jobs' }}</span>
+            </h1>
+        </div>
 
+        <!-- Auto-Approval Toggle & Quick Actions -->
+        <div class="d-flex align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center bg-white border border-gray-300 rounded px-3 py-2 shadow-sm">
+                <span class="fw-bolder text-gray-800 me-2 fs-7">Auto-Approval:</span>
+                <div class="form-check form-switch form-check-custom form-check-solid form-check-sm">
+                    <input class="form-check-input chkAutoApproval" type="checkbox" id="chkAutoApproval" 
+                           value="{{ @$globalSetting->id }}" {{ @$globalSetting->public_market_job_status ? 'checked' : '' }}>
                 </div>
-            @endif
+                <span class="badge badge-light-{{ @$globalSetting->public_market_job_status ? 'success' : 'secondary' }} ms-2 fs-8 fw-bold" id="autoApprovalStatusBadge">
+                    {{ @$globalSetting->public_market_job_status ? 'ACTIVE (Risk < 0.20)' : 'PAUSED (Manual Review)' }}
+                </span>
+            </div>
+
+            <a href="{{ route('superadmin.company.job-public-market', $activeTab) }}" class="btn btn-sm btn-icon btn-light" title="Refresh Feed">
+                <i class="fas fa-sync-alt text-gray-600"></i>
+            </a>
         </div>
     </div>
+</div>
+<!--end::Toolbar-->
 
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+    <div class="container-fluid px-4" id="kt_content_container">
+        
+        <!-- ================= TOP KPI DECK (6 Metrics) ================= -->
+        <div class="row g-4 mb-5">
+            <!-- Total Market Jobs -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card kpi-card bg-white border border-gray-200 shadow-sm p-4 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold fs-7">Total Market Jobs</span>
+                        <span class="badge badge-light-primary"><i class="fas fa-briefcase text-primary"></i></span>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-gray-900">{{ number_format($stats['total'] ?? 0) }}</span>
+                    </div>
+                    <span class="text-muted fs-8 mt-1">Across all tenants</span>
+                </div>
+            </div>
 
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
-        <!--begin::Post-->
-        <div class="post d-flex flex-column-fluid" id="kt_post">
-            <!--begin::Container-->
-            <div id="kt_content_container" class="container-fluid px-3">
-                <!--begin::Card-->
-                <div class="card">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5">
-
-                        <div id="benchListingTable_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
-                            <div id="benchListingTable_processing" class="dataTables_processing card"
-                                style="display: none;">Processing...</div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5 no-footer dataTable table-custom-class"
-                                id="benchListingTable" role="grid" aria-describedby="benchListingTable_info"
-                                style="width: 1293px;">
-                                <thead>
-                                    <tr class="fw-bolder text-muted" role="row">
-                                        <th class="w-10px pe-0 sorting_disabled" rowspan="1" colspan="1"
-                                            style="width: 40px;">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input datatable_chk chk_list" type="checkbox"
-                                                    data-kt-check="true" data-kt-check-target="#myTable .form-check-input"
-                                                    value="1">
-                                            </div>
-                        </div>
-                        </th>
-                        <th class="align-items-center sorting_disabled" rowspan="1" colspan="1"
-                            style="width: 171px;">Jobs
-
-                        </th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 34px;">Exp</th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 137px;">Salary</th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 120px;">Location
-                        </th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 109px;">Status	
-                        </th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 83px;">Date</th>
-                        <th class="sorting_disabled" rowspan="1" colspan="1" style="width: 63px;">Terms</th>
-                        </tr>
-                        </thead>
-                        @php
-                            $sr = 1;
-                            $salaryMode = GeneralMethod::salaryMode();
-                            $currencySymbole = GeneralMethod::currencySymbole();
-                        @endphp
-                        @if ($newJobs)
-                            @foreach ($newJobs as $row)
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                            <input class="form-check-input chk_list_item " name="chk_list_item[]"
-                                                type="checkbox" data-jobid="{{ @$row->id }}"
-                                                value="{{ @$row->id }}">
-                                        </div>
-                                    </td>
-                                    <td class="bench_show_application_detail" data-id="{{ @$row->id }}">
-                                        @php
-                                            $bgTextDecore = $strVal = '';
-                                            $str = trim(@$row->title);
-                                            $str = $strVal = strtolower($str[0]);
-                                            $str = ord($str);
-                                            if ($str >= 97 && $str <= 101) {
-                                                $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                            } elseif ($str >= 102 && $str <= 106) {
-                                                $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                            } elseif ($str >= 107 && $str <= 111) {
-                                                $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                            } elseif ($str >= 112 && $str <= 116) {
-                                                $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                            } elseif ($str >= 117 && $str <= 121) {
-                                                $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                            } else {
-                                                $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                            }
-
-                                            $icon =
-                                                '<div data-row-id="' .
-                                                $row->id .
-                                                '" class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 show-detail" style="float:left">
-                                        <a href="javascript:void(0);" data-row-id="' .
-                                                $row->id .
-                                                '" class="show-detail">
-                                          <div class="symbol-label ' .
-                                                $bgTextDecore .
-                                                ' border-radius-5">' .
-                                                ucwords($strVal) .
-                                                '</div>
-                                        </a>
-                                      </div>';
-
-                                            $logo_path = ''; //url('img/client-default.png');
-                                            if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                                            	$logo_path = @$row->logo;
-                                            }
-
-                                            if (!empty($logo_path)) {
-                                                $icon =
-                                                    '<div data-row-id="' .
-                                                    $row->id .
-                                                    '" class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5 show-detail">
-                                                            <a href="javascript:void(0);">
-                                                                <div class="symbol-label border-radius-5">
-                                                                <img src="' .
-                                                    $logo_path .
-                                                    '" alt="Company Logo" class="border-radius-5 w-100">
-                                                                </div>
-                                                            </a>
-                                                        </div>';
-                                            }
-
-                                            $skilltag = '';
-                                            $skilltagclass = '';
-                                            if (empty($limit)) {
-                                                $skillArr = DB::table('job_metronics_skills')
-                                                    ->select('*')
-                                                    ->where('job_id', $row->id)
-                                                    ->get();
-                                                if (!empty($skillArr)) {
-                                                    foreach ($skillArr as $sval) {
-                                                        $skilltag .=
-                                                            '<span class="badge badge-light my-1">' .
-                                                            ucfirst($sval->skill_name) .
-                                                            '</span>  ';
-                                                    }
-                                                }
-                                            } else {
-                                                $skilltagclass = 'd-none';
-                                            }
-                                        @endphp
-
-
-                                        <div class=" d-flex align-items-center border-0">
-
-                                            {!! $icon !!}
-
-                                            <div class="d-flex flex-column">
-                                                <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                                    class="text-dark fw-bolder text-hover-primary fs-6 show-detail "
-                                                    data-toggle="tooltip1" data-row-id="{{$row->id}}" title="" data-bs-original-title="2">
-                                                    {{ ucwords(substr(@$row->title, 0, 15)) }}
-                                                </a>
-                                                <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                                    class="fw-bold text-muted d-block fs-7 text-hover-primary show-detail" data-row-id="{{$row->id}}">
-                                                    {{ $row->company_name}}
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="{{ $skilltagclass }}" style="position: absolute; bottom: 0;">
-                                            <span class="badge badge-light-success my-1">Skills:</span>
-
-                                            {!! $skilltag !!}
-
-
-                                    </td>
-
-                                    <td>
-                                        <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">{{ @$row->max_exp }} +</span>
-                                            <span
-                                                class="text-muted fw-bold text-muted d-block fs-7">{{ @$row->min_exp }}+</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $sal_mode = 0;
-                                            $min_salary_currency = 0;
-                                            $min_sal_mode = $max_sal_mode = $max_salary_currency = $max_salary = $min_salary =
-                                                '';
-                                            $min_sal_mode = strtoupper(substr($salaryMode[$sal_mode], 0, 1));
-                                            $max_sal_mode = strtoupper(substr($salaryMode[$sal_mode], 0, 1));
-                                            $salary_currency = $currencySymbole[@$min_salary_currency];
-
-                                            $cur = $min_salary_currency;
-                                            $mod = $sal_mode;
-                                            $currencymain = GeneralMethod::currency(); // Currency code
-                                            $currency = $currencymain[$cur];
-                                            $convertedAmounEctc = GeneralMethod::conversionRates($currency,$row->max_yearly,0);
-                                            $convertedAmounCtc = GeneralMethod::conversionRates($currency,$row->min_yearly, 0);
-
-                                            $ectc = $convertedAmounEctc[$mod];
-                                            $ctc = $convertedAmounCtc[$mod];
-
-                                            $max_salary = '';
-                                            $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
-                                            $min_salary = '';
-                                            $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
-                                        @endphp
-
-                                        <div class="d-flex flex-column">
-                                            <span
-                                                class="text-dark fw-bolder fs-6">{!! $salary_currency !!} {{ $max_salary . '/' . $min_sal_mode }}</span>
-                                            <span
-                                                class="fw-bold text-muted d-block fs-7">{!! $salary_currency !!} {{ $min_salary . '/' . $max_sal_mode }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                     @php
-	
-                                        $country_id = $country_name = '';
-                                        $jobid = $row->id;
-                                        $client_loc = DB::table('client_location_jobs')
-                                            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                            ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-                                            ->where('client_location_jobs.job_id', $jobid)
-                                            ->first();
-                        
-                                        $country_id = @$client_loc->country_id;
-                                        if (@$country_id > 0) {
-                                            $country_name = GeneralMethod::getCountryName($country_id);
-                                            foreach ($country_name as $cval) {
-                                                $country_name = ucwords($cval['sortname']);
-                                            }
-                                        }
-                        
-                                        $city = substr(@$client_loc->city, 0, 6);
-                                        // if (@$client_loc->country_id == 101) {
-                                            $city = substr(@$client_loc->city_name, 0, 6);
-                                        // }
-                        
-                        
-                        
-                                        $jobLocation = DB::table('client_location_jobs')
-                                            ->where('client_location_jobs.job_id', $jobid)->count();
-                        
-                                        $jobCitySelected = DB::table('client_city_jobs')
-                                            ->where('client_city_jobs.job_id', $jobid)->count();
-                        
-                                            $employment_type = 'Full-time';
-                                            if($row->employment_type==1){
-                                                 $employment_type = 'Contract';
-                                            }
-                        
-                                        if ($row->work_type == 'yes') {
-                                           echo ' <div class="d-flex flex-column">
-                                                <span class="text-dark fw-bolder fs-6">Remote</span>
-                                                <div class="d-flex align-items-center">
-                                                  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords(@$employment_type) . '" >' . ucwords(substr(@$employment_type, 0, 10)) . '</span>
-                                                  </div>
-                                                </div>
-                                              </div>';
-                                        } elseif ($row->work_type == 'no') {
-                        
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                $client_loc = DB::table('client_city_jobs')
-                                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                    ->select('city_list.city as city_name','countries.country_name')
-                                                    ->where('client_city_jobs.job_id', $jobid)
-                                                    ->first();
-                                                    $city = substr(@$client_loc->city_name, 0, 21);
-                                                    $country_name = substr(@$client_loc->country_name, 0, 6);
-                        
-                                               echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                          <span class="text-dark fw-bolder fs-6">' . ucwords(substr(@$city, 0, 10)) . '</span>
-                                                        </div>
-                                                        
-                                                      <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords(@$employment_type) . '" >' . ucwords(substr(@$employment_type, 0, 10)) . '</span>
-                                                      </div>
-                                                    </div>
-                                                  </div>';
-                                            } else {
-                                               echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                          <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                                        </div>
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords(@$employment_type) . '" >' . ucwords(substr(@$employment_type, 0, 10)) . '</span>
-                                                  </div>
-                                                </div>
-                                              </div>';
-                                            }
-                        
-                                        } elseif ($row->work_type == 'any') {
-                        
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                $client_loc = DB::table('client_city_jobs')
-                                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                    ->select('city_list.city as city_name','countries.country_name')
-                                                    ->where('client_city_jobs.job_id', $jobid)
-                                                    ->first();
-                                                    $city = substr(@$client_loc->city_name, 0, 21);
-                                                    $country_name = substr(@$client_loc->country_name, 0, 6);
-                                                    
-                                               echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                          <span class="text-dark fw-bolder fs-6">' . ucwords(substr(@$city, 0, 10)) . '</span>
-                                                        </div>
-                                                        
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords(@$employment_type) . '" >' . ucwords(substr(@$employment_type, 0, 10)) . '</span>
-                                                      </div>
-                                                    </div>
-                                                  </div>';
-                                            } else {
-                                               echo ' <div class="d-flex flex-column">
-                                                <div class="d-flex align-items-center">
-                                                  <span class="text-dark fw-bolder fs-6">Remote</span>
-                                                  &nbsp;|&nbsp;
-                                                          <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                                        </div>
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' . ucwords(@$employment_type) . '" >' . ucwords(substr(@$employment_type, 0, 10)) . '</span>
-                        
-                                                  </div>
-                                                </div>
-                                              </div>';
-                                            }
-                        
-                                        }
-                                        @endphp
-                        
-                                    </td>
-                                    <td>
-                                        @php
-                                            $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                                            $status = ucwords($row->status);
-                                            $class = $job_status[$row->status];
-                                            $recommendation_id = $row->recommendation_relation_id;
-                                            if ($status == 'Inactive') {
-                                                $status = 'Closed';
-                                            }
-                                            $final_status = '';
-                                            if (
-                                                ($row->final_status == 2 || $row->final_status == 3) &&
-                                                @$row->to_company_id == auth()->user()->company_id
-                                            ) {
-                                                $status = 'Removed';
-                                                $class = 'closed-bg';
-                                            }
-
-                                            $ulink =
-                                                '<a href="javascript.void(0);" data-row-id="' .
-                                                @$row->id .
-                                                '" class="d-flex flex-column ' .
-                                                @$class .
-                                                ' status_stage text-hover-success" data-toggle="modal" data-target="#status_stage">' .
-                                                $status .
-                                                '</a>';
-
-                                            $recommendation_text = 'Custom';
-                                            if (
-                                                $recommendation_id > 0 &&
-                                                @$row->to_company_id == auth()->user()->company_id
-                                            ) {
-                                                $recommendation_text = 'Client';
-                                                $ulink =
-                                                    '<a href="javascript:void(0);" class="fs-6 ' .
-                                                    @$class .
-                                                    ' text-hover-success">' .
-                                                    $status .
-                                                    '</a>';
-                                            }
-                                        @endphp
-
-                                        <div class="d-flex flex-column">
-                                            {!! $ulink !!}
-                                            <span class="fw-bold text-muted d-block fs-7">R
-                                                {{ @$row->id . ' -' . $recommendation_text }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $total_positions = '';
-                                            $total_positions = number_format($row->total_positions);
-
-                                            $created_at = '';
-                                            $created_at = $row->created_at;
-                                            $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                                        @endphp
-                                        <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">{{ $newDate }}</span>
-                                            <span class="text-muted fw-bold d-block fs-7">{{ $total_positions  }}
-                                                Opening</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div data-row-id="{{ $row->id }}"
-                                            data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}"
-                                            class="client-terms-listing"><i class="fa fa-eye"
-                                                style="font-size: 20px;"></i></div>
-
-                                    </td>
-
-
-                                </tr>
-                                @php
-                                    $sr++;
-                                @endphp
-                            @endforeach
+            <!-- Pending Review (Urgent) -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <a href="{{ route('superadmin.company.job-public-market', 'pending') }}" class="card kpi-card bg-white border border-warning shadow-sm p-4 h-100 text-decoration-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-warning fw-bold fs-7">Pending Review</span>
+                        @if(($stats['pending'] ?? 0) > 0)
+                            <span class="bullet bullet-dot bg-warning h-10px w-10px animation-blink"></span>
+                        @else
+                            <span class="badge badge-light-warning"><i class="fas fa-clock text-warning"></i></span>
                         @endif
-                        <tbody>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-warning">{{ number_format($stats['pending'] ?? 0) }}</span>
+                        @if(($stats['pending'] ?? 0) > 0)
+                            <span class="badge badge-light-danger ms-2 fs-8">Requires Action</span>
+                        @endif
+                    </div>
+                    <span class="text-muted fs-8 mt-1">SLA Target < 24 Hours</span>
+                </a>
+            </div>
 
+            <!-- Live & Approved -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <a href="{{ route('superadmin.company.job-public-market', 'approve') }}" class="card kpi-card bg-white border border-gray-200 shadow-sm p-4 h-100 text-decoration-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold fs-7">Live Approved</span>
+                        <span class="badge badge-light-success"><i class="fas fa-check-circle text-success"></i></span>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-success">{{ number_format($stats['approved'] ?? 0) }}</span>
+                    </div>
+                    <span class="text-muted fs-8 mt-1">Active on Marketplace</span>
+                </a>
+            </div>
+
+            <!-- Bench Sharing Enabled -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <a href="{{ route('superadmin.company.job-public-market', 'bench') }}" class="card kpi-card bg-white border border-gray-200 shadow-sm p-4 h-100 text-decoration-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold fs-7">Bench Sharing</span>
+                        <span class="badge badge-light-info"><i class="fas fa-users text-info"></i></span>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-info">{{ number_format($stats['bench_enabled'] ?? 0) }}</span>
+                    </div>
+                    <span class="text-muted fs-8 mt-1">Accepting bench talent</span>
+                </a>
+            </div>
+
+            <!-- Capacity Limit Reached -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <a href="{{ route('superadmin.company.job-public-market', 'hold') }}" class="card kpi-card bg-white border border-gray-200 shadow-sm p-4 h-100 text-decoration-none">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold fs-7">Vendor Limit</span>
+                        <span class="badge badge-light-warning"><i class="fas fa-lock text-warning"></i></span>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-gray-700">{{ number_format($stats['hold'] ?? 0) }}</span>
+                    </div>
+                    <span class="text-muted fs-8 mt-1">Max claims reached</span>
+                </a>
+            </div>
+
+            <!-- Agency Claims Total -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card kpi-card bg-white border border-gray-200 shadow-sm p-4 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold fs-7">Agency Claims</span>
+                        <span class="badge badge-light-primary"><i class="fas fa-handshake text-primary"></i></span>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <span class="fs-2x fw-bolder text-primary">{{ number_format($stats['agency_requests'] ?? 0) }}</span>
+                    </div>
+                    <span class="text-muted fs-8 mt-1">Submitted claim requests</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MAIN DATA CARD ================= -->
+        <div class="card border border-gray-200 shadow-sm">
+            
+            <!-- Navigation Tabs & Search Toolbar -->
+            <div class="card-header border-bottom py-3 px-5 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                
+                <!-- Quick Filter Tabs -->
+                <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-6 fw-bolder">
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'pending' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'pending') }}">
+                            <i class="fas fa-clock me-1 text-warning"></i> Pending Review
+                            <span class="badge badge-circle badge-sm badge-warning ms-1">{{ $stats['pending'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'approve' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'approve') }}">
+                            <i class="fas fa-check-circle me-1 text-success"></i> Live Approved
+                            <span class="badge badge-circle badge-sm badge-success ms-1">{{ $stats['approved'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'bench' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'bench') }}">
+                            <i class="fas fa-users me-1 text-info"></i> Bench Sharing Active
+                            <span class="badge badge-circle badge-sm badge-info ms-1">{{ $stats['bench_enabled'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'hold' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'hold') }}">
+                            <i class="fas fa-lock me-1 text-warning"></i> Vendor Limit
+                            <span class="badge badge-circle badge-sm badge-light-warning ms-1">{{ $stats['hold'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'reject' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'reject') }}">
+                            <i class="fas fa-times-circle me-1 text-danger"></i> Rejected
+                            <span class="badge badge-circle badge-sm badge-light-danger ms-1">{{ $stats['rejected'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-2 px-3 {{ $activeTab === 'all' ? 'active' : '' }}" 
+                           href="{{ route('superadmin.company.job-public-market', 'all') }}">
+                            All Market Jobs
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Search & Bulk Action Controls -->
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Bulk Actions Toolbar (shown on row select) -->
+                    <div id="bulkActionsToolbar" class="d-none align-items-center gap-2">
+                        <span class="text-muted fs-8 fw-bold"><span id="selectedCount">0</span> selected</span>
+                        <button type="button" class="btn btn-sm btn-success fw-bolder btn-bulk-approve">
+                            <i class="fas fa-check me-1"></i> Approve Selected
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light-danger fw-bolder btn-bulk-reject">
+                            <i class="fas fa-times me-1"></i> Reject Selected
+                        </button>
+                    </div>
+
+                    <!-- Search Input -->
+                    <form method="GET" action="{{ route('superadmin.company.job-public-market', $activeTab) }}" class="d-flex align-items-center">
+                        <div class="position-relative">
+                            <i class="fas fa-search position-absolute top-50 translate-middle-y ms-3 text-gray-500 fs-7"></i>
+                            <input type="text" class="form-control form-control-sm form-control-solid ps-9 w-200px w-lg-250px" 
+                                   name="search" value="{{ request('search') }}" placeholder="Search title, ID, company...">
+                        </div>
+                        @if(request('search'))
+                            <a href="{{ route('superadmin.company.job-public-market', $activeTab) }}" class="btn btn-sm btn-icon btn-light ms-1" title="Clear">
+                                <i class="fas fa-times text-gray-500"></i>
+                            </a>
+                        @endif
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Table Body -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle table-row-dashed fs-7 gy-3 px-5 mb-0 table-custom-class" id="marketplaceMasterTable">
+                        <thead>
+                            <tr class="text-start text-muted fw-bolder fs-7 text-uppercase gs-0 bg-light">
+                                <th class="w-20px ps-4">
+                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                        <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                                    </div>
+                                </th>
+                                <th class="min-w-250px">Job & Tenant Profile</th>
+                                <th class="min-w-120px">Channel Mode</th>
+                                <th class="min-w-110px">State / Moderation</th>
+                                <th class="min-w-110px">Risk Index</th>
+                                <th class="min-w-130px">Compensation</th>
+                                <th class="min-w-100px">Agency Activity</th>
+                                <th class="min-w-90px">Submitted</th>
+                                <th class="text-end min-w-120px pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700 fw-bold">
+                            @if(!empty($newJobs) && $newJobs->count() > 0)
+                                @foreach($newJobs as $row)
+                                    @php
+                                        $riskScore = floatval($row->risk_eval['risk_score'] ?? 0.0);
+                                        $flags = $row->risk_eval['flags'] ?? [];
+                                        $hasCircumvention = !empty($flags);
+                                        
+                                        $minCurr = $currencySymbole[@$row->min_salary_currency] ?? '₹';
+                                        $salModeText = $salaryMode[@$row->min_sal_mode] ?? ($salaryMode[@$row->max_sal_mode] ?? 'Per Annum');
+                                    @endphp
+                                    <tr>
+                                        <!-- Checkbox -->
+                                        <td class="ps-4">
+                                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input row-select-checkbox" type="checkbox" 
+                                                       value="{{ $row->id }}" data-job-title="{{ $row->title }}">
+                                            </div>
+                                        </td>
+
+                                        <!-- Job & Tenant Profile -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="symbol symbol-40px me-3">
+                                                    @if(!empty($row->company_logo))
+                                                        <img src="{{ asset('user-uploads/company-logo/' . $row->company_logo) }}" 
+                                                             alt="Logo" class="company-logo rounded border" onerror="this.src='{{ asset('assets/images/building.png') }}';">
+                                                    @else
+                                                        <div class="symbol-label bg-light-primary text-primary fw-bolder fs-6">
+                                                            {{ strtoupper(substr($row->company_name ?? 'C', 0, 2)) }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="d-flex flex-column">
+                                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6 btn-open-cockpit" 
+                                                       data-job-id="{{ $row->id }}" title="Open Moderation Cockpit">
+                                                        {{ $row->title }}
+                                                    </a>
+                                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                                        <span class="badge badge-light-secondary fs-8">#JOB-{{ $row->id }}</span>
+                                                        <span class="text-muted fs-8">{{ $row->company_name ?? 'Tenant' }}</span>
+                                                        @if(!empty($row->clients_name))
+                                                            <span class="text-muted fs-8">• Client: <strong class="text-gray-800">{{ $row->clients_name }}</strong></span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Channel Mode -->
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                @if($row->bench_submission === 'enabled')
+                                                    <span class="badge badge-light-info fw-bold fs-8">
+                                                        <i class="fas fa-users text-info me-1"></i>Bench Sharing
+                                                    </span>
+                                                @endif
+                                                @if($row->claim_capacity === 'open' || $row->public_market_status == 2)
+                                                    <span class="badge badge-light-success fw-bold fs-8">
+                                                        <i class="fas fa-handshake text-success me-1"></i>Outsource Open
+                                                    </span>
+                                                @elseif($row->claim_capacity === 'limit_reached' || $row->public_market_status == 4)
+                                                    <span class="badge badge-light-warning fw-bold fs-8">Limit Reached</span>
+                                                @else
+                                                    <span class="badge badge-light-secondary fs-8">Restricted</span>
+                                                @endif
+                                            </div>
+                                        </td>
+
+                                        <!-- State / Moderation -->
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                @if(in_array($row->market_mod_state, ['approved', 'auto_approved']) || $row->public_market_status == 2)
+                                                    <span class="badge badge-light-success fw-bold">Live Approved</span>
+                                                @elseif($row->market_mod_state === 'pending' || $row->public_market_status == 1)
+                                                    <span class="badge badge-light-warning fw-bold">Pending Review</span>
+                                                @elseif($row->market_mod_state === 'rejected' || $row->public_market_status == 3)
+                                                    <span class="badge badge-light-danger fw-bold">Rejected</span>
+                                                @elseif($row->claim_capacity === 'limit_reached' || $row->public_market_status == 4)
+                                                    <span class="badge badge-light-warning fw-bold">Capacity Full</span>
+                                                @else
+                                                    <span class="badge badge-light-secondary fw-bold">Unpublished</span>
+                                                @endif
+
+                                                <span class="text-muted fs-8">Pub: {{ $row->market_pub_state ?? ($row->public_market_status == 2 ? 'published' : 'pending') }}</span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Automated Risk Index -->
+                                        <td>
+                                            @if($riskScore > 0.50 || $hasCircumvention)
+                                                <span class="risk-gauge-pill bg-light-danger text-danger fs-8" 
+                                                      data-bs-toggle="tooltip" title="{{ implode(', ', $flags) ?: 'High risk flagged' }}">
+                                                    <i class="fas fa-exclamation-triangle text-danger"></i> {{ number_format($riskScore, 2) }} High Risk
+                                                </span>
+                                            @elseif($riskScore > 0.20)
+                                                <span class="risk-gauge-pill bg-light-warning text-warning fs-8" 
+                                                      data-bs-toggle="tooltip" title="Requires manual inspection">
+                                                    <i class="fas fa-shield-alt text-warning"></i> {{ number_format($riskScore, 2) }} Review
+                                                </span>
+                                            @else
+                                                <span class="risk-gauge-pill bg-light-success text-success fs-8" 
+                                                      data-bs-toggle="tooltip" title="Passed anti-circumvention scan">
+                                                    <i class="fas fa-check-circle text-success"></i> {{ number_format($riskScore, 2) }} Clean
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <!-- Compensation & Openings -->
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="text-gray-900 fw-bolder fs-7">
+                                                    {!! $minCurr !!} {{ number_format($row->min_salary) }} - {{ number_format($row->max_salary) }}
+                                                </span>
+                                                <span class="text-muted fs-8">{{ $salModeText }} • <strong>{{ $row->total_positions }} Openings</strong></span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Agency Activity -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge badge-light fw-bold fs-7">
+                                                    <i class="fas fa-briefcase text-muted me-1"></i> {{ $row->agency_claims_count ?? 0 }} Claims
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Submitted / Age -->
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="text-gray-800 fs-8">{{ \Carbon\Carbon::parse($row->created_at)->format('d M, Y') }}</span>
+                                                <span class="text-muted fs-8">{{ \Carbon\Carbon::parse($row->created_at)->diffForHumans() }}</span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                                <button type="button" class="btn btn-sm btn-icon btn-light-primary btn-open-cockpit" 
+                                                        data-job-id="{{ $row->id }}" title="Open 3-Panel Cockpit">
+                                                    <i class="fas fa-desktop fs-6"></i>
+                                                </button>
+
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-icon btn-light-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v fs-6"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm fs-7">
+                                                        <li>
+                                                            <a class="dropdown-item py-2 text-success fw-bold btn-table-action" href="javascript:void(0);" 
+                                                               data-action="approve_all" data-job-id="{{ $row->id }}">
+                                                                <i class="fas fa-check-circle text-success me-2"></i> Approve Outsource & Bench
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item py-2 text-info fw-bold btn-table-action" href="javascript:void(0);" 
+                                                               data-action="approve_bench" data-job-id="{{ $row->id }}">
+                                                                <i class="fas fa-users text-info me-2"></i> Approve Bench Only
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li>
+                                                            <a class="dropdown-item py-2 text-danger fw-bold btn-table-reject" href="javascript:void(0);" 
+                                                               data-job-id="{{ $row->id }}" data-job-title="{{ $row->title }}">
+                                                                <i class="fas fa-times-circle text-danger me-2"></i> Reject Job
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="9" class="text-center py-10">
+                                        <div class="d-flex flex-column align-items-center justify-content-center">
+                                            <i class="fas fa-folder-open fs-2x text-muted mb-2"></i>
+                                            <span class="text-gray-800 fw-bolder fs-6">No jobs found in this section.</span>
+                                            <span class="text-muted fs-7">Try selecting another filter tab or clearing search parameters.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
-
-                        </table>
-
-                        <x-custom-pagination :paginator="$newJobs" />  
-                    </div>
-
-
-
-
-
-
-
-
+                    </table>
                 </div>
-                <!--end::Card body-->
-            </div>
-            <!--end::Card-->
-        </div>
-        <!--end::Container-->
-    </div>
-    <!--end::Post-->
 
-    </div>
-    <!--end::Content-->
-
-
-
-    <!--begin::Mass Mail - Modal-->
-    <div class="modal fade" id="disapprove" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Bench Candidate Reject</h2>
-                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-dismiss="modal">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" fill="black" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" fill="black" />
-                            </svg>
-                        </span>
+                <!-- Pagination -->
+                @if(!empty($newJobs))
+                    <div class="px-5 py-3 border-top d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="text-muted fs-7">
+                            Showing {{ $newJobs->firstItem() ?? 0 }} to {{ $newJobs->lastItem() ?? 0 }} of {{ $newJobs->total() ?? 0 }} records
+                        </div>
+                        <div>
+                            {{ $newJobs->links() }}
+                        </div>
                     </div>
-                </div>
-                <div class="card-body position-relative px-0 py-0" id="application_reject_mail_body_content"></div>
+                @endif
             </div>
-        </div>
-    </div>
-    <!--end::Mass Mail - Modal-->
 
-
-
-    <div id="kt_activitiesBenchApplication_toggle"></div>
-    <div id="kt_activitiesBenchApplication" class="bg-body" data-kt-drawer="true"
-        data-kt-drawer-name="activitiesBenchApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#kt_activitiesBenchApplication_toggle"
-        data-kt-drawer-close="#kt_activitiesBenchApplication_close">
-        <div class="card shadow-none rounded-0 w-100" id="bench_application_show_right_bar"></div>
-    </div>
-
-
-
-    <!--start terms::Content-->
-
-<div id="kt_activitiesTerms_toggle"></div>
-<div id="kt_activitiesTerms" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesTerms_toggle" data-kt-drawer-close="#kt_activitiesTerms_close">
-   <div class="card shadow-none rounded-0 w-100">
-      <div class="card-header px-5 py-0" id="kt_activities_header">
-         <div class="d-flex align-items-center py-1">
-            <h3 class="card-title fw-bolder text-dark" id="company_or_client">Terms & Condition</h3>
-            <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> 
-         </div>
-         <div class="card-toolbar">
-            <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesTerms_close">
-               <span class="svg-icon svg-icon-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                     <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-                        <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1"></rect>
-                        <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1"></rect>
-                     </g>
-                  </svg>
-               </span>
-            </button>
-         </div>
-      </div>
-      <div class="card-body position-relative px-0 py-0"> 
-
-        <div class="card-body position-relative px-0 py-0" id="kt_terms_body">
-          <div id="kt_terms_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_terms_body" data-kt-scroll-dependencies="#kt_terms_header, #kt_terms_footer" data-kt-scroll-offset="5px" style="">
-            <div class="card card-custom mx-2">
-              <div class="card-body py-7" id="kt_activitiesTerms_body">
-
-              </div>
-            </div>
-          </div>
         </div>
 
-      </div>
-   </div>
+    </div>
+</div>
+<!--end::Content-->
+
+<!-- ================= 3-PANEL MODERATION COCKPIT DRAWER ================= -->
+<div id="kt_activitiesMarketplaceJob_toggle" class="d-none"></div>
+<div id="kt_activitiesMarketplaceJob" class="bg-body" data-kt-drawer="true"
+    data-kt-drawer-name="activitiesMarketplaceJob" data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'300px', 'md': '750px', 'lg': '1150px', 'xl': '1350px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_activitiesMarketplaceJob_toggle"
+    data-kt-drawer-close="#kt_activitiesMarketplaceJob_close">
+    <div class="card shadow-none rounded-0 w-100 h-100" id="marketplace_job_cockpit_body">
+        <!-- Dynamically loaded via AJAX from superadmin.company.marketshow-job-details -->
+    </div>
 </div>
 
-<!--end terms ::Content-->
+<!-- ================= QUICK REJECT MODAL ================= -->
+<div class="modal fade" id="marketplaceRejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bolder text-danger"><i class="fas fa-times-circle me-1 text-danger"></i> Reject Marketplace Job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <input type="hidden" id="modalRejectJobId" value="">
+                <div class="mb-3">
+                    <label class="form-label fw-bold fs-7">Job Title:</label>
+                    <div class="fw-bolder text-gray-900 fs-6" id="modalRejectJobTitle">-</div>
+                </div>
 
+                <div class="mb-3">
+                    <label class="form-label fw-bold fs-7">Rejection Reason Code:</label>
+                    <select class="form-select form-select-sm form-select-solid" id="modalRejectReasonCode">
+                        <option value="CONTACT_CIRCUMVENTION">Prohibited Contact Details (Email, Phone, WhatsApp)</option>
+                        <option value="COMPENSATION_ANOMALY">Unrealistic / Below Minimum Compensation</option>
+                        <option value="LOW_JD_QUALITY">Low Quality / Incomplete Job Description</option>
+                        <option value="DUPLICATE_POSTING">Duplicate Job Listing</option>
+                        <option value="COMMERCIAL_DISPUTE">Commercial Terms Incomplete or Disputed</option>
+                        <option value="OTHER">Other Custom Reason</option>
+                    </select>
+                </div>
 
-
+                <div class="mb-3">
+                    <label class="form-label fw-bold fs-7">Moderation Notes / Comments for Recruiter:</label>
+                    <textarea class="form-control form-control-solid fs-7" rows="4" id="modalRejectNotes" 
+                              placeholder="Explain specific reasons or required changes before this job can be approved on the marketplace..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2">
+                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger fw-bolder" id="btnConfirmReject">Confirm & Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
 @push('footer-script')
-    <script src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
-    <script src="//cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
-    <script src="//cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap.min.js"></script>
-    <script src="//cdn.datatables.net/colreorder/1.5.2/js/dataTables.colReorder.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.6.1/js/buttons.colVis.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var token = "{{ csrf_token() }}";
+        var showDetailsUrl = "{{ route('superadmin.company.marketshow-job-details') }}";
+        var approvalUrl = "{{ route('superadmin.company.job-approval') }}";
+        var autoApprovalUrl = "{{ route('superadmin.company.market-auto-approval') }}";
 
+        // ---------- OPEN 3-PANEL COCKPIT DRAWER ----------
+        $(document).on('click', '.btn-open-cockpit', function(e) {
+            e.preventDefault();
+            var jobId = $(this).data('job-id');
+            if (!jobId) return;
 
-    <script>
-        $('body').on('click', '#editDefaultPackage', function() {
+            $('#marketplace_job_cockpit_body').html(
+                '<div class="d-flex flex-column align-items-center justify-content-center h-100 py-20">' +
+                '<div class="spinner-border text-primary mb-3" role="status"></div>' +
+                '<span class="text-muted fw-bold fs-6">Loading God-Level Moderation Cockpit...</span>' +
+                '</div>'
+            );
 
-            $('#kt_activitiesDefaultPackage_toggle').trigger('click');
-            var url = "{{ route('superadmin.defaultpackages.editDefaultPackage') }}";
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $('#kt_activitiesMarketplaceJob_toggle').trigger('click');
+
             $.ajax({
                 type: 'GET',
-                url: url,
-                beforeSend: function() {
-                    $('#kt_activitiesDefaultPackage_body').html('<img src="' + baseurl +
-                        '" height="35px" width="100%">');
+                url: showDetailsUrl,
+                data: { id: jobId },
+                success: function(res) {
+                    if (res.status === 'success') {
+                        $('#marketplace_job_cockpit_body').html(res.view);
+                    } else {
+                        $('#marketplace_job_cockpit_body').html(
+                            '<div class="alert alert-danger m-5">Failed to load cockpit: ' + (res.message || 'Unknown error') + '</div>'
+                        );
+                    }
                 },
-                success: function(response) {
-                    setTimeout(
-                        () => {
-                            if (response.status == "success") {
-                                $('#kt_activitiesDefaultPackage_body').html(response.view);
-                            }
-                        }, 500);
-
+                error: function(xhr) {
+                    $('#marketplace_job_cockpit_body').html(
+                        '<div class="alert alert-danger m-5">Error connecting to server. Please try again.</div>'
+                    );
                 }
             });
         });
 
-
-
-
-
-        $(document).ready(function() {
-
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
-
-            $('.chkStatus').click(function() {
-                var id = $(this).val();
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var url = "{{ route('superadmin.company.market-auto-approval') }}";
-                var token = "{{ csrf_token() }}";
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'id': id
-                    },
-                    beforeSend: function() {
-                        $('#approve').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-
-                            //   $('#main_container').html(response.view);
-                            swalWithBootstrapButtons.fire(
-                                'Success!',
-                                response.message,
-                                'success'
-                            )
-                            setTimeout(() => {
-                                // location.reload();
-                            }, 2000);
-
-                        }
-                    }
-                });
-
-
-
-            });
-
-            $('.clickbtn').click(function() {
-                var datatype = $(this).attr('data-type');
-                swalWithBootstrapButtons.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to approved this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes,  Do approved',
-                    cancelButtonText: 'No, cancel!',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                        var token = "{{ csrf_token() }}";
-                        var job_id = $(".chk_list_item:checked").map(function() {
-                            return this.value;
-                        }).get();
-                        var url = "{{ route('superadmin.company.job-approval') }}";
-
-                        $.ajax({
-                            type: 'POST',
-                            url: url,
-                            data: {
-                                '_token': token,
-                                '_method': 'POST',
-                                'job_id': job_id,
-                                'datatype': datatype
-                            },
-                            beforeSend: function() {
-                                $('#approve').html('<img src="' + baseurl +
-                                    '" height="35px" width="100%">');
-                            },
-                            success: function(response) {
-                                if (response.status == "success") {
-
-                                    //   $('#main_container').html(response.view);
-                                    swalWithBootstrapButtons.fire(
-                                        'Success!',
-                                        response.message,
-                                        'success'
-                                    )
-                                    setTimeout(() => {
-                                        location.reload();
-                                    }, 2000);
-
-                                }
-                            }
-                        });
-
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        swalWithBootstrapButtons.fire(
-                            'Cancelled',
-                            'Selected request is safe :)',
-                            'error'
-                        )
-                    }
-
-                });
-            })
-
-
-
-
-
-
-
-
-            $('.chk_list').click(function() {
-                setTimeout(() => {
-                    if ($(".chk_list").prop('checked') == true) {
-                        $('.chk_list_item').attr('checked', 'checked');
-                        $('.approve').removeClass("d-none");
-                        $('.disapprove').removeClass("d-none");
-                    } else {
-                        $('.chk_list_item').removeAttr('checked');
-                        $('.approve').addClass("d-none");
-                        $('.disapprove').addClass("d-none");
-                    }
-                }, 500);
-            });
-
-
-
-            $('.chk_list_item').click(function() {
-
-                var i = 0;
-                var arr = [];
-                $('.chk_list_item:checked').each(function() {
-                    arr.push($(this).val());
-                });
-                setTimeout(() => {
-                    if (arr.length > 0) {
-                        $('.approve').removeClass("d-none");
-                        $('.disapprove').removeClass("d-none");
-                    } else {
-                        $('.approve').addClass("d-none");
-                        $('.disapprove').addClass("d-none");
-                    }
-                }, 500);
-
-            });
-
-
-            $('.show-detailnot').click(function() {
-                $('#kt_activitiesBenchApplication_toggle').trigger('click');
-                var id = $(this).data('row-id');
-                var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?bechshowtab=1";
-                url     		=	url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    beforeSend: function() {
-                        $('#bench_application_show_right_bar').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        $('#bench_application_show_right_bar').html(response.view);
-                    }
-                });
-            });
-
-           $('.client-terms-listing').click(function (){
-   		$('#kt_activitiesTerms_toggle').trigger('click');		
-   		  var id    		= $(this).data('row-id');
-        var recommendation_relation_id    		= $(this).data('row-recommendation_relation_id');
-        var url   		= "{{ route('service_company.jobs.termshmlisting',':id') }}";
-        url     		= url.replace(':id', id)+"?recommendation_relation_id="+recommendation_relation_id;
-   		  var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-        $.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesTerms_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success 	: function (response) {
-   				       // $('#kt_activitiesTerms_body').html(response.view);
-               $('#kt_activitiesTerms_body').html(response.terms);			
-   						}
-   	  			});
-            
-   	});
-
-
-
-
-
-            $('.reject_mail').click(function(e) {
-
-                e.preventDefault();
-                $('#application_reject_mail_body_content').html('');
-                var arr = [];
-                var jobIdArr = [];
-                $('.chk_list_item:checked').each(function() {
-
-                    var jobId = $(this).attr('data-jobId');
-                    arr.push($(this).val());
-                    jobIdArr.push(jobId);
-                });
-
-                console.log(jobIdArr);
-
-                var id = jobIdArr[0];
-                var url = "{{ route('superadmin.company.job_reject_mail', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var token = "{{ csrf_token() }}";
-
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr
-                    },
-                    cache: false,
-                    success: function(response) {
-                        if (response.status == "success") {
-                            $('#application_reject_mail_body_content').html(response.view);
-                        }
-                    }
-                });
-
-            });
-
-
-
+        // Close cockpit drawer
+        $(document).on('click', '#kt_activitiesMarketplaceJob_close', function() {
+            var drawer = KTDrawer.getInstance(document.querySelector("#kt_activitiesMarketplaceJob"));
+            if (drawer) { drawer.hide(); }
         });
-    </script>
+
+        // ---------- GLOBAL AUTO-APPROVAL SWITCH TOGGLE ----------
+        $('#chkAutoApproval').on('change', function() {
+            var settingId = $(this).val();
+            var $badge = $('#autoApprovalStatusBadge');
+
+            $.ajax({
+                type: 'POST',
+                url: autoApprovalUrl,
+                data: {
+                    '_token': token,
+                    'id': settingId
+                },
+                success: function(res) {
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Auto-Approval Updated',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        if (res.auto_status === 1) {
+                            $badge.removeClass('badge-light-secondary').addClass('badge-light-success').text('ACTIVE (Risk < 0.20)');
+                        } else {
+                            $badge.removeClass('badge-light-success').addClass('badge-light-secondary').text('PAUSED (Manual Review)');
+                        }
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Unable to update auto-approval setting.', 'error');
+                }
+            });
+        });
+
+        // ---------- APPROVE JOB ACTIONS (TABLE & COCKPIT) ----------
+        $(document).on('click', '.btn-table-action, .btn-cockpit-action', function(e) {
+            e.preventDefault();
+            var actionType = $(this).data('action');
+            var jobId = $(this).data('job-id');
+
+            var promptText = (actionType === 'approve_bench')
+                ? 'Approve this job for Bench Talent Sharing only? Partner agencies will submit bench profiles, but standard claim lockout will remain inactive.'
+                : 'Approve and publish this job on the Agency Marketplace for full outsource claims & bench talent proposals?';
+
+            Swal.fire({
+                title: 'Confirm Approval',
+                text: promptText,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve Job',
+                cancelButtonText: 'Cancel',
+                customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-light' }
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: approvalUrl,
+                        data: {
+                            '_token': token,
+                            'datatype': actionType,
+                            'job_id': [jobId]
+                        },
+                        success: function(res) {
+                            if (res.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Approved!',
+                                    text: res.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(function() {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', res.message || 'Operation failed', 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Server error while approving job.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // ---------- REJECT JOB MODAL TRIGGER ----------
+        $(document).on('click', '.btn-table-reject, .btn-cockpit-reject', function(e) {
+            e.preventDefault();
+            var jobId = $(this).data('job-id');
+            var jobTitle = $(this).data('job-title') || ('#JOB-' + jobId);
+
+            $('#modalRejectJobId').val(jobId);
+            $('#modalRejectJobTitle').text(jobTitle);
+            $('#modalRejectNotes').val('');
+
+            var modal = new bootstrap.Modal(document.getElementById('marketplaceRejectModal'));
+            modal.show();
+        });
+
+        // Confirm rejection submission
+        $('#btnConfirmReject').on('click', function() {
+            var jobId = $('#modalRejectJobId').val();
+            var reasonCode = $('#modalRejectReasonCode').val();
+            var notes = $('#modalRejectNotes').val();
+
+            if (!jobId) return;
+
+            $.ajax({
+                type: 'POST',
+                url: approvalUrl,
+                data: {
+                    '_token': token,
+                    'datatype': 'reject',
+                    'job_id': [jobId],
+                    'reason_code': reasonCode,
+                    'notes': notes
+                },
+                success: function(res) {
+                    $('#marketplaceRejectModal').modal('hide');
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Job Rejected',
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(function() {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message || 'Failed to reject job', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Server communication failure.', 'error');
+                }
+            });
+        });
+
+        // ---------- ROW CHECKBOXES & BULK ACTIONS ----------
+        function updateBulkToolbar() {
+            var checkedCount = $('.row-select-checkbox:checked').length;
+            $('#selectedCount').text(checkedCount);
+            if (checkedCount > 0) {
+                $('#bulkActionsToolbar').removeClass('d-none').addClass('d-flex');
+            } else {
+                $('#bulkActionsToolbar').removeClass('d-flex').addClass('d-none');
+            }
+        }
+
+        $('#selectAllCheckbox').on('change', function() {
+            $('.row-select-checkbox').prop('checked', $(this).is(':checked'));
+            updateBulkToolbar();
+        });
+
+        $(document).on('change', '.row-select-checkbox', function() {
+            updateBulkToolbar();
+        });
+
+        // Bulk Approve
+        $('.btn-bulk-approve').on('click', function() {
+            var selectedIds = $('.row-select-checkbox:checked').map(function() { return $(this).val(); }).get();
+            if (selectedIds.length === 0) return;
+
+            Swal.fire({
+                title: 'Bulk Approval',
+                text: 'Approve and publish all ' + selectedIds.length + ' selected jobs on the marketplace?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve All',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: approvalUrl,
+                        data: {
+                            '_token': token,
+                            'datatype': 'approve_all',
+                            'job_id': selectedIds
+                        },
+                        success: function(res) {
+                            if (res.status === 'success') {
+                                Swal.fire('Success', res.message, 'success').then(function() {
+                                    location.reload();
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // Bulk Reject
+        $('.btn-bulk-reject').on('click', function() {
+            var selectedIds = $('.row-select-checkbox:checked').map(function() { return $(this).val(); }).get();
+            if (selectedIds.length === 0) return;
+
+            Swal.fire({
+                title: 'Bulk Rejection',
+                text: 'Reject all ' + selectedIds.length + ' selected jobs from the marketplace?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Reject All',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: approvalUrl,
+                        data: {
+                            '_token': token,
+                            'datatype': 'reject',
+                            'job_id': selectedIds,
+                            'notes': 'Bulk rejected by Super Admin'
+                        },
+                        success: function(res) {
+                            if (res.status === 'success') {
+                                Swal.fire('Success', res.message, 'success').then(function() {
+                                    location.reload();
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+</script>
 @endpush

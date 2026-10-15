@@ -4,7 +4,7 @@
 							<!--begin::Copyright-->
 							<div class="text-dark order-2 order-md-1">
 								<span class="text-muted fw-bold me-1">&copy; {{ \Carbon\Carbon::today()->year }}</span>
-								<a href="https://keenthemes.com" target="_blank" class="text-gray-800 text-hover-primary">@lang('app.by') {{ $companyName }}</a>
+								<a href="https://keenthemes.com" target="_blank" class="text-gray-800 text-hover-primary">@lang('app.by') {{ $companyName ?? ($global->company_name ?? config('app.name')) }}</a>
 							</div>
 							<!--end::Copyright-->
 							<!--begin::Menu-->
