@@ -2437,6 +2437,7 @@ CREATE TABLE `jobs` (
   `max_salary_currency` int(11) DEFAULT NULL,
   `min_sal_mode` int(11) DEFAULT NULL,
   `max_sal_mode` int(11) DEFAULT NULL,
+  `salary_visibility` varchar(50) NOT NULL DEFAULT 'everywhere',
   `carrier_website` int(11) DEFAULT NULL,
   `work_type` varchar(50) NOT NULL DEFAULT 'no',
   `show_vendor` varchar(50) NOT NULL DEFAULT 'no',
@@ -4938,13 +4939,12 @@ CREATE TABLE `sys_processed_events` (
 
 ALTER TABLE `recommendation_relation` ADD INDEX `idx_rec_rel_marketplace_claim` (`job_id`, `to_company_id`, `final_status`);
 
-<<<<<<< HEAD
 -- Client Module V2 High-Concurrency Performance Indexes
 ALTER TABLE `clients` ADD INDEX `idx_clients_company_id` (`company_id`);
 ALTER TABLE `clients` ADD INDEX `idx_clients_website` (`website`);
 ALTER TABLE `client_contact_info` ADD INDEX `idx_client_contact_info_client_id` (`client_id`);
 ALTER TABLE `client_location` ADD INDEX `idx_client_location_company_id` (`company_id`);
-=======
+
 DROP TABLE IF EXISTS `marketplace_channels`;
 CREATE TABLE `marketplace_channels` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -4955,7 +4955,7 @@ CREATE TABLE `marketplace_channels` (
   `moderation_status` ENUM('PENDING_REVIEW', 'APPROVED', 'REJECTED', 'QUARANTINED') NOT NULL DEFAULT 'PENDING_REVIEW',
   `publication_status` ENUM('DRAFT', 'LIVE', 'CLAIM_LIMIT_REACHED', 'PAUSED', 'DELISTED') NOT NULL DEFAULT 'DRAFT',
   `approval_mode` ENUM('AUTO', 'MANUAL') NOT NULL DEFAULT 'MANUAL',
-  `vendor_limit` INT NULL DEFAULT 5 COMMENT 'Applies to AGENCY_HIRING only; NULL for BENCH_TALENT',
+  `vendor_limit` INT NULL DEFAULT 20 COMMENT 'Applies to AGENCY_HIRING only; NULL for BENCH_TALENT',
   `moderated_by` INT UNSIGNED NULL COMMENT 'Super Admin User ID',
   `moderated_at` TIMESTAMP NULL DEFAULT NULL,
   `moderation_reason` VARCHAR(255) NULL,
@@ -4982,14 +4982,15 @@ CREATE TABLE `marketplace_submissions` (
   `agency_id` INT UNSIGNED NOT NULL COMMENT 'Partner Agency Tenant ID',
   `candidate_id` INT UNSIGNED NOT NULL,
   `channel` ENUM('AGENCY_HIRING', 'BENCH_TALENT') NOT NULL COMMENT 'Business engagement domain',
-  `source` ENUM('MARKETPLACE', 'DIRECT_JOB_TRACKER', 'ADMIN', 'API', 'IMPORT') NOT NULL COMMENT 'Origin surface',
+  `origin_source` ENUM('MARKETPLACE', 'DIRECT_JOB_TRACKER', 'ADMIN', 'API', 'IMPORT') NOT NULL COMMENT 'Origin surface',
   `application_id` INT UNSIGNED NULL COMMENT 'ATS implementation reference to job_applications.id',
   `lifecycle_status` VARCHAR(32) NOT NULL DEFAULT 'SUBMITTED' COMMENT 'Mirrors authoritative ATS pipeline stage',
+  `cycle` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Submission cycle count for resubmissions',
   `version` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Monotonic client sync counter for optimistic concurrency',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_submission_identity` (`job_id`, `agency_id`, `candidate_id`, `channel`),
+  UNIQUE KEY `uq_submission_identity` (`job_id`, `agency_id`, `candidate_id`, `channel`, `cycle`),
   KEY `idx_sub_job_agency` (`job_id`, `agency_id`),
   KEY `idx_sub_company_status` (`company_id`, `lifecycle_status`),
   KEY `idx_sub_candidate` (`candidate_id`),
@@ -5038,7 +5039,6 @@ CREATE TABLE `marketplace_risk_rules` (
   UNIQUE KEY `uq_risk_rule_code` (`rule_code`),
   KEY `idx_risk_category_active` (`category`, `is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
->>>>>>> ebf2273a712e6f9af9b1c5ca2adc7bed8190a34f
 
 
 

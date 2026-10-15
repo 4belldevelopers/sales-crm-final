@@ -5537,6 +5537,14 @@ var KTUPDATECandidate = {
       });
       window.tagifyskill = tagifyskill;
 
+      // Ensure existing candidate skills from value attribute are fully loaded into Tagify on edit page
+      if ((!tagifyskill.value || tagifyskill.value.length === 0) && candidateSkillInput.getAttribute('value')) {
+          var initialSkills = candidateSkillInput.getAttribute('value');
+          if (initialSkills && initialSkills.trim()) {
+              tagifyskill.addTags(initialSkills);
+          }
+      }
+
       // The custom visual layer delegates all mutations to Tagify so the submitted contract stays unchanged.
       var candidateRequiredSkills = @json($candidateRequiredSkills ?? []);
       var candidatePrimarySkillQuickInput = document.querySelector('#candidatePrimarySkillInput');
@@ -6361,6 +6369,49 @@ var KTUPDATECandidate = {
           }
       };
 
+      function removeCandidatePrimarySkill(skillName) {
+          if (!skillName || !tagifyskill) return;
+          var targetNorm = candidateSkillKey(skillName);
+
+          // 1. Instant DOM tag removal without animation delay
+          if (typeof tagifyskill.getTagElms === 'function') {
+              var tagElms = tagifyskill.getTagElms() || [];
+              for (var i = 0; i < tagElms.length; i++) {
+                  var elm = tagElms[i];
+                  var tagData = typeof tagifyskill.tagData === 'function' ? tagifyskill.tagData(elm) : null;
+                  var val = tagData ? (tagData.value || tagData.name) : elm.getAttribute('value');
+                  if (candidateSkillKey(val) === targetNorm) {
+                      if (typeof tagifyskill.removeTags === 'function') {
+                          tagifyskill.removeTags(elm, true);
+                      }
+                      break;
+                  }
+              }
+          }
+
+          // 2. Direct removeTag fallback
+          if (typeof tagifyskill.removeTag === 'function') {
+              try { tagifyskill.removeTag(skillName); } catch (e) {}
+          }
+
+          // 3. Synchronously filter tagifyskill.value so internal state cannot keep stale skills
+          if (Array.isArray(tagifyskill.value)) {
+              tagifyskill.value = tagifyskill.value.filter(function (t) {
+                  var val = typeof t === 'object' ? (t.value || t.name) : t;
+                  return candidateSkillKey(val) !== targetNorm;
+              });
+          }
+
+          // 4. Synchronously update Tagify underlying input
+          if (typeof tagifyskill.update === 'function') {
+              tagifyskill.update();
+          }
+
+          // 5. Instantly refresh visual chips, match ring, and suggestions
+          refreshCandidatePrimarySkills();
+      }
+      window.removeCandidatePrimarySkill = removeCandidatePrimarySkill;
+
       function refreshCandidatePrimarySkills() {
           var required = candidateUniqueSkills(candidateRequiredSkills);
           var selected = candidateSelectedSkills();
@@ -6398,7 +6449,7 @@ var KTUPDATECandidate = {
               remove.title = 'Remove ' + skill.name;
               remove.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
               remove.addEventListener('click', function () {
-                  tagifyskill.removeTag(skill.name);
+                  removeCandidatePrimarySkill(skill.name);
               });
               chip.append(label, remove);
               candidatePrimarySkillChips.appendChild(chip);
@@ -7796,6 +7847,11 @@ var KTAddCandidate = function () {
             // Strip binary resume file if already uploaded to R2
             if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
                 if (formData.delete) { formData.delete('resume'); }
+            }
+
+            // SSOT Guarantee: explicitly serialize latest Tagify skills into the payload
+            if (window.tagifyskill && Array.isArray(window.tagifyskill.value)) {
+                formData.set('skills', JSON.stringify(window.tagifyskill.value));
             }
 
             var candidateEditId = '{{ @$application->id ?: @$appId }}';

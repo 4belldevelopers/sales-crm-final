@@ -530,21 +530,9 @@ class JobApplyService
         $jobApplication->referencename = $request->input('referencename');
         $jobApplication->reason_for_job_change = $request->input('reason_for_job_change');
 
-        /* Parse skills JSON string */
-        $cnt = 0;
-        $skillStr = '';
-        $skillArr = json_decode((string) $request->input('skills'), true);
-        if (! empty($skillArr)) {
-            foreach ($skillArr as $sval) {
-                if ($cnt == 0) {
-                    $skillStr .= $sval['value'];
-                } else {
-                    $skillStr .= ' , '.$sval['value'];
-                }
-                $cnt++;
-            }
-        }
-        $jobApplication->skills = $skillStr;
+        /* Intent: Parse skills using SSOT CandidateSkillSyncService (supports Tagify JSON, array, comma string) */
+        $cleanSkillList = CandidateSkillSyncService::parseSkills($request->input('skills'));
+        $jobApplication->skills = implode(' , ', $cleanSkillList);
         $jobApplication->master_status_id = 8;
         $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim((string) $request->input('secondrary_email'))) : null;
         $jobApplication->secondary_mobile = $request->input('secondary_mobile');
@@ -748,27 +736,25 @@ class JobApplyService
                 }
             }
 
-            /* Add global skills to elastic dictionary if present */
-            if (! empty($skillArr)) {
-                $skillsAddElastic = array_column($skillArr, 'value');
-                if (count($skillsAddElastic) > 0) {
-                    GeneralMethod::skillsAddElastic($skillsAddElastic);
-                }
+            /* Intent: Add global skills to elastic dictionary if present */
+            if (! empty($cleanSkillList)) {
+                GeneralMethod::skillsAddElastic($cleanSkillList);
             }
 
-            /* Batch insert job_application_skills */
-            if (! empty($skillArr)) {
+            /* Intent: Batch insert job_application_skills with exact case matching */
+            if (! empty($cleanSkillList)) {
                 $existingSkills = DB::table('job_application_skills')
                     ->where('job_application_id', $jobApplication->id)
                     ->pluck('skills')
+                    ->map(fn ($s) => mb_strtolower(trim((string) $s)))
                     ->toArray();
 
                 $batchSkills = [];
-                foreach ($skillArr as $sval) {
-                    if (! in_array($sval['value'], $existingSkills)) {
+                foreach ($cleanSkillList as $sval) {
+                    if (! in_array(mb_strtolower($sval), $existingSkills, true)) {
                         $batchSkills[] = [
                             'job_application_id' => $jobApplication->id,
-                            'skills' => $sval['value'],
+                            'skills' => $sval,
                         ];
                     }
                 }
@@ -1061,7 +1047,8 @@ class JobApplyService
                 Log::warning('AppTrackerCandidateAssignedEvent broadcast warning: '.$e->getMessage());
             }
 
-            /* Intent: Invalidate tenant career caches so application counts and candidate state are fresh (Rule 6) */
+            /* Intent: Invalidate candidate and company listing caches across Redis & Dragonfly (Rule 6) */
+            CandidateSkillSyncService::invalidateCandidateCaches($jobApplication->id, $company_id);
             GeneralMethod::invalidateCareerTenantCache($company_id, $jobId);
 
             $message = 'messages.createdSuccessfully';

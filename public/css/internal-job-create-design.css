@@ -2413,4 +2413,485 @@
     font-family: 'Poppins', sans-serif !important;
 }
 
+/* ==========================================================================
+   Salary Visibility Dropdown, Popover & Confidential Banner
+   ========================================================================== */
+#jrwrap.internal-job-create .ij-salvis-header-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-label-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    cursor: default !important;
+    user-select: none !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-label-text {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    letter-spacing: -0.1px !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-info-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #64748b !important;
+    cursor: help !important;
+    transition: color 0.15s ease !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-info-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-info-icon:hover {
+    color: #0f172a !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 4px 12px 4px 6px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-btn:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-btn[aria-expanded="true"] {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-btn[aria-expanded="true"] .ij-salvis-arrow {
+    transform: rotate(180deg) !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge-everywhere {
+    background: #d1fae5 !important;
+    color: #059669 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge-ats_agencies {
+    background: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge-ats_only {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-badge-confidential {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-label {
+    white-space: nowrap !important;
+    letter-spacing: -0.1px !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-arrow {
+    width: 12px !important;
+    height: 12px !important;
+    color: #64748b !important;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-left: 2px !important;
+}
+
+/* Container & Overflow Protection */
+#jrwrap.internal-job-create .card.ij-compensation-card,
+#jrwrap.internal-job-create .card.ij-compensation-card .card-body,
+#jrwrap.internal-job-create .ij-comp-header,
+#jrwrap.internal-job-create .ij-salvis-header-wrap {
+    overflow: visible !important;
+}
+
+/* Header Left Title & Badge (Images 1 & 2) */
+#jrwrap.internal-job-create .ij-comp-header-left {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex: 1 1 auto !important;
+}
+
+#jrwrap.internal-job-create .ij-comp-badge {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 8px !important;
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-comp-badge svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+#jrwrap.internal-job-create .ij-comp-title-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#jrwrap.internal-job-create .ij-comp-title {
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.1px !important;
+    margin: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-comp-subtitle {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    line-height: 1.25 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-trigger-btn * {
+    pointer-events: none !important;
+}
+
+/* Popover Menu */
+#jrwrap.internal-job-create .ij-salvis-popover {
+    display: none;
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    width: 360px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 8px rgba(15, 23, 42, 0.06) !important;
+    padding: 16px 14px 14px !important;
+    z-index: 999999 !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-popover.is-open {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-pop-head {
+    margin-bottom: 12px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-pop-title {
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.2px !important;
+    margin: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-pop-subtitle {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 3px !important;
+    line-height: 1.35 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-options-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+/* Option Row */
+#jrwrap.internal-job-create .ij-salvis-opt-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    border: 1px solid transparent !important;
+    user-select: none !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-row:hover {
+    background: #f8fafc !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-row.is-selected {
+    background: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+}
+
+/* Option Icon */
+#jrwrap.internal-job-create .ij-salvis-opt-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-icon-everywhere {
+    background: #d1fae5 !important;
+    color: #059669 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-icon-agencies {
+    background: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-icon-ats {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-icon-confidential {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+/* Option Text */
+#jrwrap.internal-job-create .ij-salvis-opt-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.1px !important;
+    margin: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-desc {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    line-height: 1.35 !important;
+    margin-top: 2px !important;
+}
+
+/* Radio Indicator */
+#jrwrap.internal-job-create .ij-salvis-opt-radio {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-radio-dot {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    border: 2px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    transition: all 0.15s ease !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-row.is-selected .ij-salvis-radio-dot {
+    border-color: #059669 !important;
+    background: #059669 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-opt-row.is-selected .ij-salvis-radio-dot::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+}
+
+/* Confidential Notice Banner (2nd Design - Image 2) */
+#jrwrap.internal-job-create .ij-salvis-confidential-banner {
+    display: none;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    padding: 14px 20px !important;
+    background: #fff7f7 !important;
+    border: 1px solid #fee2e2 !important;
+    border-radius: 10px !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-confidential-banner.is-visible {
+    display: flex !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    flex: 0 0 auto !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 8px !important;
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-left-text {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-title {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.1px !important;
+    margin: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-subtitle {
+    font-size: 12px !important;
+    color: #64748b !important;
+    margin-top: 3px !important;
+    line-height: 1.35 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-divider {
+    width: 1px !important;
+    height: 38px !important;
+    background: #e2e8f0 !important;
+    margin: 0 16px !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex: 1 1 auto !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-info-ico {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #2563eb !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-info-ico svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+#jrwrap.internal-job-create .ij-salvis-conf-right-text {
+    font-size: 12px !important;
+    color: #475569 !important;
+    line-height: 1.45 !important;
+}
+
+@media (max-width: 768px) {
+    #jrwrap.internal-job-create .ij-salvis-confidential-banner {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    #jrwrap.internal-job-create .ij-salvis-conf-divider {
+        width: 100% !important;
+        height: 1px !important;
+        margin: 6px 0 !important;
+    }
+    #jrwrap.internal-job-create .ij-salvis-popover {
+        right: -10px !important;
+        width: calc(100vw - 40px) !important;
+        max-width: 360px !important;
+    }
+}
+
+
 

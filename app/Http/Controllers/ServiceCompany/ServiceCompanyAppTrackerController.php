@@ -6251,9 +6251,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $salaryRange['lte'] = (float) $max_salary;
             }
 
+            // Inclusive of candidates with no salary recorded (missing-salary protection)
             $boolQuery['bool']['filter'][] = [
-                'range' => [
-                    $salaryField => $salaryRange,
+                'bool' => [
+                    'should' => [
+                        ['range' => [$salaryField => $salaryRange]],
+                        ['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
             ];
         }
@@ -8136,9 +8141,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $salaryRange['lte'] = (float) $max_salary;
             }
 
+            // Inclusive of candidates with no salary recorded (missing-salary protection)
             $boolQuery['bool']['filter'][] = [
-                'range' => [
-                    $salaryField => $salaryRange,
+                'bool' => [
+                    'should' => [
+                        ['range' => [$salaryField => $salaryRange]],
+                        ['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
             ];
         }
@@ -10446,9 +10456,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $salaryRange['lte'] = (float) $max_salary;
             }
 
+            // Inclusive of candidates with no salary recorded (missing-salary protection)
             $boolQuery['bool']['filter'][] = [
-                'range' => [
-                    $salaryField => $salaryRange,
+                'bool' => [
+                    'should' => [
+                        ['range' => [$salaryField => $salaryRange]],
+                        ['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
             ];
         }

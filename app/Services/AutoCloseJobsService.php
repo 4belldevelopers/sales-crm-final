@@ -86,12 +86,101 @@ class AutoCloseJobsService
 
             // dd($valid_date);
 
-            $candidateRequCount = DB::table('rec_candidate_assign')->where('created_at', '<', $valid_date)->where('ac_status', '=', 0)->get();
+            // Decouple Direct Outsourcing Expiry from Bench Talent Submission
+            // Jobs with bench_submission = 'enabled' remain continuously active on the marketplace for bench intake
+            $benchEnabledJobIds = DB::table('jobs')
+                ->whereIn('id', $jobsCount)
+                ->where('bench_submission', 'enabled')
+                ->pluck('id')
+                ->toArray();
 
-            DB::table('jobs')->whereIn('id', $jobsCount)->where('status', '=', 'active')->update(['status' => 'inactive', 'closeType' => 1, 'public_market_status' => 0]);
-            DB::table('recommendation_relation')->whereIn('job_id', $jobsCount)->where('final_status', '=', 1)->update(['final_status' => 2]);
+            $fullyExpiredJobIds = array_values(array_diff($jobsCount, $benchEnabledJobIds));
 
-            foreach ($jobsCount as $jobid) {
+            // 1. For Bench-Enabled Jobs: Expire Direct Outsource channel only, keep job active for bench intake
+            if (! empty($benchEnabledJobIds)) {
+                // Expire direct outsourcing recommendations relations
+                DB::table('recommendation_relation')
+                    ->whereIn('job_id', $benchEnabledJobIds)
+                    ->where('final_status', 1)
+                    ->update(['final_status' => 2]);
+
+                // Expire pending direct outsource recommendations (not bench candidates)
+                DB::table('rec_candidate_assign')
+                    ->whereIn('source_jobid', $benchEnabledJobIds)
+                    ->where('source_from_type', '!=', 1)
+                    ->where('ac_status', 0)
+                    ->update(['ac_status' => 3, 'updated_at' => now()]);
+
+                try {
+                    DB::table('marketplace_submissions')
+                        ->whereIn('job_id', $benchEnabledJobIds)
+                        ->where('channel', 'AGENCY_HIRING')
+                        ->where('lifecycle_status', 'SUBMITTED')
+                        ->update(['lifecycle_status' => 'DELISTED', 'updated_at' => now()]);
+                } catch (\Throwable $subEx) {
+                    // Ignore if column/table doesn't exist
+                }
+
+                try {
+                    DB::table('marketplace_channels')
+                        ->whereIn('job_id', $benchEnabledJobIds)
+                        ->where('channel_type', 'AGENCY_HIRING')
+                        ->update(['publication_status' => 'DELISTED', 'closed_at' => now(), 'updated_at' => now()]);
+                } catch (\Throwable $chEx) {
+                    // Ignore if table does not exist
+                }
+
+                // Stop direct vendor invitations, but keep job active and marketplace open for bench intake
+                DB::table('jobs')
+                    ->whereIn('id', $benchEnabledJobIds)
+                    ->where('status', 'active')
+                    ->update(['show_vendor' => 'no', 'updated_at' => now()]);
+
+                foreach ($benchEnabledJobIds as $bJobId) {
+                    if ($this->elasticService->getClient()->exists(['index' => ELASTIC_JOBS, 'id' => $bJobId])) {
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_JOBS,
+                            'id' => $bJobId,
+                            'body' => [
+                                'doc' => [
+                                    'show_vendor' => 'no',
+                                ],
+                                'doc_as_upsert' => false,
+                            ],
+                            'refresh' => false,
+                        ]);
+                    }
+                }
+            }
+
+            // 2. For Non-Bench Jobs: Fully close job and expire all candidate submissions
+            if (! empty($fullyExpiredJobIds)) {
+                DB::table('rec_candidate_assign')
+                    ->whereIn('source_jobid', $fullyExpiredJobIds)
+                    ->where('ac_status', 0)
+                    ->update(['ac_status' => 3, 'updated_at' => now()]);
+
+                try {
+                    DB::table('marketplace_submissions')
+                        ->whereIn('job_id', $fullyExpiredJobIds)
+                        ->where('lifecycle_status', 'SUBMITTED')
+                        ->update(['lifecycle_status' => 'DELISTED', 'updated_at' => now()]);
+                } catch (\Throwable $subEx) {
+                    // Ignore if table does not exist
+                }
+
+                DB::table('jobs')
+                    ->whereIn('id', $fullyExpiredJobIds)
+                    ->where('status', '=', 'active')
+                    ->update(['status' => 'inactive', 'closeType' => 1, 'public_market_status' => 0]);
+
+                DB::table('recommendation_relation')
+                    ->whereIn('job_id', $fullyExpiredJobIds)
+                    ->where('final_status', '=', 1)
+                    ->update(['final_status' => 2]);
+            }
+
+            foreach ($fullyExpiredJobIds as $jobid) {
 
                 $m_n_id = 47;
 
@@ -211,6 +300,7 @@ class AutoCloseJobsService
                         'body' => [
                             'doc' => [
                                 'status' => 'inactive',
+                                'public_market_status' => 0,
                             ],
                             'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],

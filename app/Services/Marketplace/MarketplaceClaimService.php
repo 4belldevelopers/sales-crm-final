@@ -37,7 +37,12 @@ class MarketplaceClaimService
                 ->where('channel_type', 'AGENCY_HIRING')
                 ->first();
 
-            $vendorLimit = $channel ? ($channel->vendor_limit ?? 5) : ($job->vendor_limit ?? 5);
+            $meta = is_string($job->meta_details) ? json_decode($job->meta_details, true) : (array) ($job->meta_details ?? []);
+            $jobVendorLimit = (int) ($meta['vendor_limit'] ?? 20);
+            $vendorLimit = $channel ? ($channel->vendor_limit ?? $jobVendorLimit) : $jobVendorLimit;
+            if ($vendorLimit <= 0) {
+                $vendorLimit = 20;
+            }
             $channelEnabled = $channel ? ($channel->enabled && $channel->publication_status === 'LIVE') : ($job->show_vendor === 'yes');
 
             if (! $channelEnabled) {

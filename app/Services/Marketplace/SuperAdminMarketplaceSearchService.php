@@ -323,6 +323,12 @@ class SuperAdminMarketplaceSearchService
             abort(404, 'Marketplace job requisition not found.');
         }
 
+        $jobMeta = is_string($job->meta_details) ? json_decode($job->meta_details, true) : (array) ($job->meta_details ?? []);
+        $job->vendor_limit = (int) ($jobMeta['vendor_limit'] ?? 20);
+        if ($job->vendor_limit <= 0) {
+            $job->vendor_limit = 20;
+        }
+
         // 2. Fetch Channels State
         $channels = DB::table('marketplace_channels')
             ->where('job_id', $jobId)
@@ -406,7 +412,7 @@ class SuperAdminMarketplaceSearchService
                 'jobs.employment_type', 'jobs.status', 'jobs.min_salary', 'jobs.max_salary',
                 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.market_pub_state',
                 'jobs.market_mod_state', 'jobs.claim_capacity', 'jobs.bench_submission',
-                'jobs.show_vendor', DB::raw('5 as vendor_limit'), 'jobs.public_market_status',
+                'jobs.show_vendor', DB::raw("COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(jobs.meta_details, '$.vendor_limit')), ''), 20) as vendor_limit"), 'jobs.public_market_status',
                 'jobs.state_version', 'jobs.created_at',
                 'companies.company_name', 'companies.logo as company_logo',
                 'clients.name as client_name',
