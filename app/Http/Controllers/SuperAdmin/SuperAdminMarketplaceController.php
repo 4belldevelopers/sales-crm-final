@@ -43,11 +43,17 @@ class SuperAdminMarketplaceController extends SuperAdminBaseController
         $user = auth()->user();
         $this->user = $user;
         $this->companyName = $this->global?->company_name ?? config('app.name');
-        $this->adminTheme = $this->adminTheme ?? \App\Models\ThemeSetting::whereNull('company_id')->first();
-
-        $tab = $status ?? $request->query('tab', 'moderation');
-        if ($tab === 'all') {
-            $tab = 'moderation';
+        $rawTab = $status ?? $request->query('tab') ?? $request->segment(3) ?? 'all';
+        $tabMap = [
+            'pending' => 'moderation',
+            'approve' => 'live',
+            'approved' => 'live',
+            'hold' => 'quarantine',
+            'reject' => 'delisted',
+        ];
+        $tab = $tabMap[$rawTab] ?? $rawTab;
+        if (! in_array($tab, ['all', 'moderation', 'live', 'quarantine', 'delisted', 'claims', 'bench'])) {
+            $tab = 'all';
         }
         $this->initialTab = $tab;
         $this->autoApproval = (bool) DB::table('global_settings')->value('public_market_job_status');

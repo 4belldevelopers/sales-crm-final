@@ -27,8 +27,13 @@ class SuperAdminMarketplaceSearchService
         $this->esClient = $elasticService->getClient();
     }
 
+    public function getIndexName(): string
+    {
+        return defined('ELASTIC_JOBS') ? ELASTIC_JOBS : 'ats_jobs_elastic';
+    }
+
     /**
-     * Executes 100% CQRS faceted search against ats_jobs index.
+     * Executes 100% CQRS faceted search against ats_jobs_elastic index.
      *
      * @param  array  $filters  Contains 'q', 'tab', 'status', 'company_id', 'employment_type', 'min_salary', 'max_salary', 'page', 'per_page'
      * @return array Contains 'hits', 'total', 'page', 'per_page', 'aggregations'
@@ -46,12 +51,12 @@ class SuperAdminMarketplaceSearchService
         $mustClauses = [];
         $filterClauses = [];
 
-        // 1. Text Search across Title, Description, Requirements, and Skills
+        // 1. Text Search across Title, Description, Requirements, Company Name, Client Name
         if (! empty($queryText)) {
             $mustClauses[] = [
                 'multi_match' => [
                     'query' => $queryText,
-                    'fields' => ['title^3', 'job_description^1.5', 'job_requirement^1.5', 'skills.name^2', 'company_name^2'],
+                    'fields' => ['title^3', 'job_description^1.5', 'job_requirement^1.5', 'company_name^2', 'client_name^2'],
                     'type' => 'best_fields',
                     'fuzziness' => 'AUTO',
                 ],
@@ -63,11 +68,12 @@ class SuperAdminMarketplaceSearchService
         // 2. Tab Filter Mapping
         switch ($tab) {
             case 'moderation':
+            case 'pending':
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
-                            ['term' => ['market_mod_state' => 'pending']],
                             ['term' => ['public_market_status' => 1]],
+                            ['term' => ['market_mod_state.keyword' => 'pending']],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -76,13 +82,13 @@ class SuperAdminMarketplaceSearchService
                 break;
 
             case 'live':
+            case 'approve':
+            case 'approved':
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
                             ['term' => ['public_market_status' => 2]],
-                            ['term' => ['market_pub_state' => 'published']],
-                            ['term' => ['agency_channel.publication_status' => 'LIVE']],
-                            ['term' => ['bench_channel.publication_status' => 'LIVE']],
+                            ['term' => ['market_pub_state.keyword' => 'published']],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -91,11 +97,12 @@ class SuperAdminMarketplaceSearchService
                 break;
 
             case 'quarantine':
+            case 'hold':
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
-                            ['term' => ['market_mod_state' => 'quarantined']],
-                            ['range' => ['risk_score' => ['gte' => 0.70]]],
+                            ['term' => ['public_market_status' => 4]],
+                            ['term' => ['market_mod_state.keyword' => 'quarantined']],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -103,11 +110,11 @@ class SuperAdminMarketplaceSearchService
                 break;
 
             case 'delisted':
+            case 'reject':
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
                             ['terms' => ['status' => ['closed', 'inactive', 'cancelled']]],
-                            ['term' => ['market_pub_state' => 'delisted']],
                             ['term' => ['public_market_status' => 3]],
                         ],
                         'minimum_should_match' => 1,
@@ -119,8 +126,8 @@ class SuperAdminMarketplaceSearchService
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
-                            ['term' => ['agency_channel.enabled' => true]],
-                            ['term' => ['show_vendor' => 'yes']],
+                            ['term' => ['show_vendor.keyword' => 'yes']],
+                            ['range' => ['vendor_added_count' => ['gt' => 0]]],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -132,8 +139,8 @@ class SuperAdminMarketplaceSearchService
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
-                            ['term' => ['bench_channel.enabled' => true]],
-                            ['term' => ['bench_submission' => 'enabled']],
+                            ['term' => ['public_market_status' => 2]],
+                            ['term' => ['bench_submission.keyword' => 'enabled']],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -143,14 +150,11 @@ class SuperAdminMarketplaceSearchService
 
             case 'all':
             default:
-                // Marketplace eligibility filter
                 $filterClauses[] = [
                     'bool' => [
                         'should' => [
                             ['range' => ['public_market_status' => ['gt' => 0]]],
-                            ['terms' => ['market_pub_state' => ['published', 'pending_review']]],
-                            ['term' => ['bench_submission' => 'enabled']],
-                            ['term' => ['show_vendor' => 'yes']],
+                            ['term' => ['show_vendor.keyword' => 'yes']],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -172,7 +176,7 @@ class SuperAdminMarketplaceSearchService
         }
 
         $esParams = [
-            'index' => 'ats_jobs',
+            'index' => $this->getIndexName(),
             'body' => [
                 'from' => $from,
                 'size' => $perPage,
@@ -180,20 +184,6 @@ class SuperAdminMarketplaceSearchService
                     'bool' => [
                         'must' => $mustClauses,
                         'filter' => $filterClauses,
-                    ],
-                ],
-                'aggs' => [
-                    'by_employment_type' => ['terms' => ['field' => 'employment_type']],
-                    'by_pub_status' => ['terms' => ['field' => 'public_market_status']],
-                    'risk_ranges' => [
-                        'range' => [
-                            'field' => 'risk_score',
-                            'ranges' => [
-                                ['to' => 0.30],
-                                ['from' => 0.30, 'to' => 0.70],
-                                ['from' => 0.70],
-                            ],
-                        ],
                     ],
                 ],
                 'sort' => [
@@ -243,7 +233,7 @@ class SuperAdminMarketplaceSearchService
         return Cache::remember('superadmin:marketplace:telemetry_v2', 30, function () {
             try {
                 $response = $this->esClient->search([
-                    'index' => 'ats_jobs',
+                    'index' => $this->getIndexName(),
                     'body' => [
                         'size' => 0,
                         'aggs' => [
@@ -254,7 +244,6 @@ class SuperAdminMarketplaceSearchService
                                 'filter' => [
                                     'bool' => [
                                         'should' => [
-                                            ['term' => ['market_mod_state' => 'pending']],
                                             ['term' => ['public_market_status' => 1]],
                                         ],
                                     ],
@@ -265,7 +254,6 @@ class SuperAdminMarketplaceSearchService
                                     'bool' => [
                                         'should' => [
                                             ['term' => ['public_market_status' => 2]],
-                                            ['term' => ['market_pub_state' => 'published']],
                                         ],
                                     ],
                                 ],
@@ -274,14 +262,10 @@ class SuperAdminMarketplaceSearchService
                                 'filter' => [
                                     'bool' => [
                                         'should' => [
-                                            ['term' => ['market_mod_state' => 'quarantined']],
-                                            ['range' => ['risk_score' => ['gte' => 0.70]]],
+                                            ['term' => ['public_market_status' => 4]],
                                         ],
                                     ],
                                 ],
-                            ],
-                            'bench_enabled' => [
-                                'filter' => ['term' => ['bench_submission' => 'enabled']],
                             ],
                         ],
                     ],
@@ -289,13 +273,14 @@ class SuperAdminMarketplaceSearchService
 
                 $aggs = $response['aggregations'] ?? [];
                 $autoApprovalSetting = (bool) DB::table('global_settings')->value('public_market_job_status');
+                $benchCount = DB::table('jobs')->where('status', 'active')->where('bench_submission', 'enabled')->count();
 
                 return [
                     'total_active' => $aggs['active_jobs']['doc_count'] ?? 0,
                     'pending_moderation' => $aggs['pending_moderation']['doc_count'] ?? 0,
                     'live_marketplace' => $aggs['live_marketplace']['doc_count'] ?? 0,
                     'quarantined' => $aggs['quarantined']['doc_count'] ?? 0,
-                    'bench_enabled' => $aggs['bench_enabled']['doc_count'] ?? 0,
+                    'bench_enabled' => $benchCount,
                     'auto_approval' => $autoApprovalSetting,
                     'source' => 'elasticsearch',
                     'updated_at' => now()->toIso8601String(),
@@ -306,7 +291,7 @@ class SuperAdminMarketplaceSearchService
                     'total_active' => DB::table('jobs')->where('status', 'active')->count(),
                     'pending_moderation' => DB::table('jobs')->where('status', 'active')->where(fn ($q) => $q->where('market_mod_state', 'pending')->orWhere('public_market_status', 1))->count(),
                     'live_marketplace' => DB::table('jobs')->where('status', 'active')->where(fn ($q) => $q->where('market_pub_state', 'published')->orWhere('public_market_status', 2))->count(),
-                    'quarantined' => DB::table('jobs')->where('market_mod_state', 'quarantined')->count(),
+                    'quarantined' => DB::table('jobs')->where(fn ($q) => $q->where('market_mod_state', 'quarantined')->orWhere('public_market_status', 4))->count(),
                     'bench_enabled' => DB::table('jobs')->where('status', 'active')->where('bench_submission', 'enabled')->count(),
                     'auto_approval' => (bool) DB::table('global_settings')->value('public_market_job_status'),
                     'source' => 'db_fallback',
@@ -421,11 +406,81 @@ class SuperAdminMarketplaceSearchService
                 'jobs.employment_type', 'jobs.status', 'jobs.min_salary', 'jobs.max_salary',
                 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.market_pub_state',
                 'jobs.market_mod_state', 'jobs.claim_capacity', 'jobs.bench_submission',
-                'jobs.show_vendor', 'jobs.vendor_limit', 'jobs.public_market_status',
+                'jobs.show_vendor', DB::raw('5 as vendor_limit'), 'jobs.public_market_status',
                 'jobs.state_version', 'jobs.created_at',
                 'companies.company_name', 'companies.logo as company_logo',
                 'clients.name as client_name',
             ]);
+
+        $tab = $filters['tab'] ?? 'all';
+        switch ($tab) {
+            case 'moderation':
+            case 'pending':
+                $query->where('jobs.status', 'active')
+                    ->where(function ($q) {
+                        $q->where('jobs.market_mod_state', 'pending')
+                            ->orWhere('jobs.public_market_status', 1);
+                    });
+                break;
+
+            case 'live':
+            case 'approve':
+            case 'approved':
+                $query->where('jobs.status', 'active')
+                    ->where(function ($q) {
+                        $q->where('jobs.market_pub_state', 'published')
+                            ->orWhere('jobs.public_market_status', 2);
+                    });
+                break;
+
+            case 'bench':
+                $query->where('jobs.status', 'active')
+                    ->where('jobs.bench_submission', 'enabled');
+                break;
+
+            case 'quarantine':
+            case 'hold':
+                $query->where(function ($q) {
+                    $q->where('jobs.market_mod_state', 'quarantined')
+                        ->orWhere('jobs.claim_capacity', 'limit_reached')
+                        ->orWhere('jobs.public_market_status', 4);
+                });
+                break;
+
+            case 'delisted':
+            case 'reject':
+                $query->where(function ($q) {
+                    $q->whereIn('jobs.status', ['closed', 'inactive', 'cancelled'])
+                        ->orWhere('jobs.market_mod_state', 'rejected')
+                        ->orWhere('jobs.public_market_status', 3);
+                });
+                break;
+
+            case 'claims':
+                $query->where('jobs.status', 'active')
+                    ->where('jobs.show_vendor', 'yes');
+                break;
+
+            case 'all':
+            default:
+                $query->where(function ($q) {
+                    $q->where('jobs.public_market_status', '>', 0)
+                        ->orWhereIn('jobs.market_pub_state', ['published', 'pending_review'])
+                        ->orWhere('jobs.bench_submission', 'enabled')
+                        ->orWhere('jobs.show_vendor', 'yes');
+                });
+                break;
+        }
+
+        if (! empty($filters['q'])) {
+            $term = trim($filters['q']);
+            $query->where(function ($q) use ($term) {
+                $q->where('jobs.title', 'like', "%{$term}%")
+                    ->orWhere('jobs.id', $term)
+                    ->orWhere('companies.company_name', 'like', "%{$term}%")
+                    ->orWhere('clients.name', 'like', "%{$term}%");
+            });
+        }
 
         $paginator = $query->orderBy('jobs.id', 'desc')->paginate($perPage, ['*'], 'page', $page);
 

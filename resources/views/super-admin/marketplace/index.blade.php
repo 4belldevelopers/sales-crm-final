@@ -128,37 +128,37 @@
                 <!-- Navigation Tabs -->
                 <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-8 fw-bolder flex-nowrap overflow-auto" id="marketplace_tabs">
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer active" data-tab="moderation">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'moderation' ? 'active' : '' }}" data-tab="moderation">
                             Pending Moderation <span class="badge badge-circle badge-warning ms-1 fs-9" id="tab_badge_moderation">0</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="live">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'live' ? 'active' : '' }}" data-tab="live">
                             Live Marketplace
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="all">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'all' ? 'active' : '' }}" data-tab="all">
                             All Platform Requisitions
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="quarantine">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'quarantine' ? 'active' : '' }}" data-tab="quarantine">
                             Quarantined &amp; Leaks
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="delisted">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'delisted' ? 'active' : '' }}" data-tab="delisted">
                             Delisted / Closed
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="claims">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'claims' ? 'active' : '' }}" data-tab="claims">
                             Agency Claims (Method 1)
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary px-3 py-2 cursor-pointer" data-tab="bench">
+                        <a href="javascript:void(0);" class="nav-link text-active-primary px-3 py-2 cursor-pointer {{ ($initialTab ?? 'all') === 'bench' ? 'active' : '' }}" data-tab="bench">
                             Bench Deployments (Method 2)
                         </a>
                     </li>
@@ -355,13 +355,43 @@ document.addEventListener('DOMContentLoaded', function () {
         autoApproval: "{{ route('superadmin.marketplace.settings.auto-approval') }}",
     };
 
-    let currentTab = "{{ $initialTab ?? 'moderation' }}";
+    let currentTab = "{{ $initialTab ?? 'all' }}";
     let searchQuery = '';
     let currentPage = 1;
     let abortController = null;
     let debounceTimer = null;
     let activeJobDetail = null;
     let currentDrawerTab = 'overview';
+
+    // Helper to switch active tabs cleanly
+    function switchTab(tabName) {
+        currentTab = tabName;
+        currentPage = 1;
+
+        document.querySelectorAll('#marketplace_tabs a[data-tab]').forEach(t => {
+            if (t.getAttribute('data-tab') === tabName) {
+                t.classList.add('active');
+            } else {
+                t.classList.remove('active');
+            }
+        });
+
+        const labelMap = {
+            'all': 'All Platform Requisitions',
+            'moderation': 'Pending Moderation',
+            'live': 'Live Marketplace',
+            'quarantine': 'Quarantined & Leaks',
+            'delisted': 'Delisted / Closed',
+            'claims': 'Agency Claims (Method 1)',
+            'bench': 'Bench Deployments (Method 2)'
+        };
+        const currentLabel = document.getElementById('current_view_label');
+        if (currentLabel && labelMap[tabName]) {
+            currentLabel.textContent = labelMap[tabName];
+        }
+
+        executeSearch();
+    }
 
     // 1. Initial Telemetry & Grid Fetch
     loadTelemetry();
@@ -371,11 +401,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('#marketplace_tabs a[data-tab]').forEach(tab => {
         tab.addEventListener('click', function (e) {
             e.preventDefault();
-            document.querySelectorAll('#marketplace_tabs a').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            currentTab = this.getAttribute('data-tab');
-            currentPage = 1;
-            executeSearch();
+            const tabName = this.getAttribute('data-tab');
+            switchTab(tabName);
         });
     });
 
@@ -383,8 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.tab-trigger[data-tab]').forEach(card => {
         card.addEventListener('click', function () {
             const tabName = this.getAttribute('data-tab');
-            const targetLink = document.querySelector(`#marketplace_tabs a[data-tab="${tabName}"]`);
-            if (targetLink) targetLink.click();
+            switchTab(tabName);
         });
     });
 
@@ -477,17 +503,21 @@ document.addEventListener('DOMContentLoaded', function () {
             </tr>`;
 
         try {
-            const url = `${Endpoints.grid}?q=${encodeURIComponent(searchQuery)}&tab=${currentTab}&page=${currentPage}&per_page=15`;
+            const url = `${Endpoints.grid}?q=${encodeURIComponent(searchQuery)}&tab=${encodeURIComponent(currentTab)}&page=${currentPage}&per_page=15`;
             const res = await fetch(url, {
                 signal: abortController.signal,
                 headers: { 'Accept': 'application/json' },
             });
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: Failed to fetch grid data`);
+            }
             const data = await res.json();
             renderGrid(data.hits || []);
             renderPagination(data);
         } catch (err) {
             if (err.name !== 'AbortError') {
-                gridBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-6">Failed to load marketplace grid.</td></tr>`;
+                console.error('Failed to load marketplace grid', err);
+                gridBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-6">Failed to load marketplace grid: ${escapeHtml(err.message || 'Error')}</td></tr>`;
             }
         }
     }
