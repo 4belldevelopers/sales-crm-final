@@ -20,6 +20,7 @@ use App\Models\Country;
 use App\Models\JobCategory;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetsServiceGet;
+use App\Services\IndustryTaxonomyService;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
@@ -2570,6 +2571,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->cities = GeneralMethod::allCities();
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
+        $companyId = (int) auth()->user()->company_id;
+        $this->industriesManifest = IndustryTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':industry_version', 1));
+
         return view('service_company.client.create', $this->data);
     }
 
@@ -2927,6 +2931,61 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
     }
 
+    /**
+     * Return tenant-scoped versioned industries bundle with ETag HTTP 304 caching.
+     *
+     * Intent: Client-first industry autocomplete and classification (10K concurrent users, 0% server read strain).
+     * Tenancy Note: Tenant cache keys tenant:{$companyId}:dataset:industries_bundle:v{$version}.
+     *
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     */
+    public function industriesBundle(?Request $request = null)
+    {
+        $request = $request ?: request();
+        abort_if(! auth()->check(), 401);
+        $companyId = (int) auth()->user()->company_id;
+        $version = (int) Cache::get('tenant:'.$companyId.':industry_version', 1);
+        $cacheKey = 'tenant:'.$companyId.':dataset:industries_bundle:v'.$version;
+
+        $clientEtag = $request->header('If-None-Match');
+
+        try {
+            $bundle = Cache::get($cacheKey);
+        } catch (\Throwable $e) {
+            \Log::warning('Redis connection error in industriesBundle: '.$e->getMessage());
+            $bundle = null;
+        }
+
+        if (! $bundle) {
+            $lockKey = 'tenant:'.$companyId.':industries:refresh_lock';
+            $lock = Cache::lock($lockKey, 10);
+
+            if ($lock->get()) {
+                try {
+                    $bundle = IndustryTaxonomyService::buildTenantManifest($companyId, $version);
+                    Cache::put($cacheKey, $bundle, 86400);
+                } finally {
+                    $lock->release();
+                }
+            } else {
+                $bundle = IndustryTaxonomyService::buildTenantManifest($companyId, $version);
+            }
+        }
+
+        $manifestId = $bundle['manifest_id'] ?? ('ind-tenant-'.$companyId.'-v'.$version);
+        $etag = 'W/"tindex_'.$companyId.'_ind_'.$manifestId.'"';
+
+        if ($clientEtag && trim($clientEtag) === trim($etag)) {
+            return response(null, 304)
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, must-revalidate');
+        }
+
+        return response()->json($bundle)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, must-revalidate');
+    }
+
     public function create()
     {
         abort_if(Gate::denies('add_clients'), 403);
@@ -2965,6 +3024,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->cities = GeneralMethod::allCities();
 
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
+
+        $companyId = (int) auth()->user()->company_id;
+        $this->industriesManifest = IndustryTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':industry_version', 1));
 
         return view('service_company.client.create', $this->data);
     }
