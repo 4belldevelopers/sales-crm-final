@@ -186,7 +186,7 @@
                                 <th class="min-w-160px">Hiring Client</th>
                                 <th class="min-w-120px">Marketplace Channels</th>
                                 <th class="min-w-140px">Commercial Terms</th>
-                                <th class="min-w-120px">Activity &amp; Submissions</th>
+                                <th class="min-w-150px">Agency Claims &amp; Bench CVs</th>
                                 <th class="min-w-220px">Unified Channel Health Visual Badge</th>
                                 <th class="min-w-100px text-end pe-4">Actions</th>
                             </tr>
@@ -582,9 +582,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </td>
                 <td>
-                    <div class="d-flex flex-column">
-                        <span class="text-gray-800 fw-bold fs-8">${row.claimed_count || 0} / ${row.vendor_limit || 5} Claims</span>
-                        <span class="text-muted fs-9">${row.bench_submissions_count || 0} Bench CVs</span>
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-gray-900 fw-bold fs-8" title="Method 1: Agency Hiring Claims (Vendor Allocation Limit)">
+                            <i class="fas fa-handshake text-info me-1 fs-9"></i>${row.claimed_count || 0} / ${row.vendor_limit || 5} <span class="text-muted fw-normal fs-9">Agencies</span>
+                        </span>
+                        <span class="text-gray-800 fs-9" title="Method 2: Bench Talent Submissions (Open / No Submission Limit)">
+                            <i class="fas fa-user-check text-primary me-1 fs-9"></i>${row.bench_submissions_count || 0} <span class="text-muted">Bench CVs</span> <span class="badge badge-light-success py-0 px-1 fs-10 fw-normal">Unlimited</span>
+                        </span>
                     </div>
                 </td>
                 <td>
