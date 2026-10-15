@@ -1,3 +1,6 @@
+@php
+    $pageTitle = $pageTitle ?? 'Marketplace Operations Command Center';
+@endphp
 @extends('layouts.superadmin_layout')
 
 @section('content')

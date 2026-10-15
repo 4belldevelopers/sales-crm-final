@@ -23,23 +23,43 @@ use Illuminate\View\View;
  * Tenancy:
  * Super Admin global administrative scope.
  */
-class SuperAdminMarketplaceController extends Controller
+class SuperAdminMarketplaceController extends SuperAdminBaseController
 {
     public function __construct(
         private readonly SuperAdminMarketplaceSearchService $searchService,
         private readonly MarketplaceModerationService $moderationService
-    ) {}
+    ) {
+        parent::__construct();
+        $this->pageTitle = 'Marketplace Operations Command Center';
+    }
 
     /**
      * Renders the unified Marketplace Command Center view.
      * Zero DB queries on initial render; client fetches data asynchronously.
      */
-    public function index(Request $request): View
+    public function index(Request $request, ?string $status = null): View
     {
-        return view('super-admin.marketplace.index', [
-            'initialTab' => $request->query('tab', 'moderation'),
-            'autoApproval' => (bool) DB::table('global_settings')->value('public_market_job_status'),
-        ]);
+        $this->pageTitle = 'Marketplace Operations Command Center';
+        $user = auth()->user();
+        $this->user = $user;
+        $this->companyName = $this->global?->company_name ?? config('app.name');
+        $this->adminTheme = $this->adminTheme ?? \App\Models\ThemeSetting::whereNull('company_id')->first();
+
+        $tab = $status ?? $request->query('tab', 'moderation');
+        if ($tab === 'all') {
+            $tab = 'moderation';
+        }
+        $this->initialTab = $tab;
+        $this->autoApproval = (bool) DB::table('global_settings')->value('public_market_job_status');
+
+        return view('super-admin.marketplace.index', array_merge($this->data, [
+            'pageTitle' => $this->pageTitle,
+            'user' => $user,
+            'companyName' => $this->companyName,
+            'adminTheme' => $this->adminTheme,
+            'initialTab' => $this->initialTab,
+            'autoApproval' => $this->autoApproval,
+        ]));
     }
 
     /**
