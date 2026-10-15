@@ -8534,10 +8534,23 @@ END:VCALENDAR";
                 ->where('job_application_id', $application->id)
                 ->get();
 
+            if ($skills->isEmpty() && ! empty($application->skills)) {
+                $parsedSkills = \App\Services\CandidateSkillSyncService::parseSkills($application->skills);
+                foreach ($parsedSkills as $pSkill) {
+                    DB::table('job_application_skills')->insert([
+                        'job_application_id' => $application->id,
+                        'skills' => $pSkill,
+                    ]);
+                }
+                $skills = DB::table('job_application_skills')
+                    ->where('job_application_id', $application->id)
+                    ->get();
+            }
+
             $job_application_skills = $skills->map(function ($s) {
                 return [
                     'id' => $s->id,
-                    'job_application_id' => $s->job_application_id,   // ← FIXED (you had wrong value)
+                    'job_application_id' => $s->job_application_id,
                     'skills' => strtolower((string) $s->skills),
                 ];
             })->toArray();
@@ -8546,6 +8559,10 @@ END:VCALENDAR";
                 ->pluck('skills')
                 ->map(fn ($skill) => strtolower((string) $skill))
                 ->implode(',');
+
+            if (empty($application_skills) && ! empty($application->skills)) {
+                $application_skills = strtolower((string) $application->skills);
+            }
 
             $duplicate = (int) ($application->duplicate ?? 0);
 
