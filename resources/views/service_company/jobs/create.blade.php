@@ -3535,29 +3535,29 @@
             #jrwrap.internal-job-create .ij-salvis-trigger-btn * {
                 pointer-events: none !important;
             }
+            .ij-salvis-popover,
             #jrwrap.internal-job-create .ij-salvis-popover {
                 display: none;
-                position: absolute !important;
-                top: calc(100% + 8px) !important;
-                right: 0 !important;
+                position: fixed !important;
                 width: 360px !important;
                 background: #ffffff !important;
                 border: 1px solid #e2e8f0 !important;
                 border-radius: 12px !important;
                 box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 8px rgba(15, 23, 42, 0.06) !important;
                 padding: 16px 14px 14px !important;
-                z-index: 999999 !important;
+                z-index: 99999999 !important;
                 text-align: left !important;
                 box-sizing: border-box !important;
                 font-family: 'Poppins', sans-serif !important;
             }
+            .ij-salvis-popover.is-open,
             #jrwrap.internal-job-create .ij-salvis-popover.is-open {
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
             }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis_godlevel">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261015_salvis_godlevel_fixed">
     @endif
 @endpush
 @section('content')
@@ -6867,7 +6867,17 @@ $currency_code = GeneralMethod::defaultCurrency();
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
         });
 
-        // Enterprise Salary Visibility Popover Controller (God-Level SSOT)
+        // ==========================================================================
+        // ENTERPRISE SALARY VISIBILITY POPOVER CONTROLLER (GOD-LEVEL SSOT)
+        // Purpose: Accessible, high-concurrency salary visibility dropdown & popover.
+        // Architecture:
+        //   - Appended to document.body to prevent parent container overflow clipping & stacking-context traps.
+        //   - Viewport boundary clamping & position: fixed anchored to #salvisTrigger.
+        //   - Single-dispatch click idempotency guard (__salvisHandled) preventing duplicate toggles.
+        //   - Bidirectional real-time sync with hidden #salary_visibility input and confidential notice.
+        //   - Keyboard accessibility (Esc to close, Enter/Space to select, Tab/focus management).
+        // Tenancy: Scoped strictly to #salary_visibility and service company job form.
+        // ==========================================================================
         (function initSalaryVisibilityPopoverScope() {
             var icons = {
                 everywhere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -6895,30 +6905,83 @@ $currency_code = GeneralMethod::defaultCurrency();
                 };
             }
 
+            function positionPopover() {
+                var els = getElements();
+                if (!els.popover || !els.trigger) return;
+
+                var rect = els.trigger.getBoundingClientRect();
+                var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                var popWidth = Math.min(360, viewportWidth - 24);
+                var popHeight = els.popover.offsetHeight || 330;
+
+                // Align right edge of popover with right edge of trigger button
+                var left = rect.right - popWidth;
+
+                // Screen boundary horizontal clamping
+                if (left + popWidth > viewportWidth - 12) {
+                    left = viewportWidth - popWidth - 12;
+                }
+                if (left < 12) {
+                    left = 12;
+                }
+
+                // Vertical positioning: default below trigger (+6px)
+                var top = rect.bottom + 6;
+                // If not enough room below, flip above trigger
+                if (top + popHeight > viewportHeight - 10 && rect.top > popHeight + 10) {
+                    top = rect.top - popHeight - 6;
+                }
+
+                els.popover.style.position = 'fixed';
+                els.popover.style.top = top + 'px';
+                els.popover.style.left = left + 'px';
+                els.popover.style.width = popWidth + 'px';
+                els.popover.style.zIndex = '99999999';
+            }
+
             function openPop() {
                 var els = getElements();
-                if (!els.popover) return;
+                if (!els.popover || !els.trigger) return;
+
+                // Relocate to body so parent card overflow/stacking context cannot clip or trap the popover
+                if (els.popover.parentNode !== document.body) {
+                    document.body.appendChild(els.popover);
+                }
+
+                // Mutual exclusion: Close currency popover if open
                 if (typeof closeCurrencyPopover === 'function') {
                     closeCurrencyPopover();
                 } else {
                     var currPop = document.getElementById('ijCurrencyPopover');
                     if (currPop) currPop.style.display = 'none';
                 }
+
                 els.popover.classList.add('is-open');
                 els.popover.style.display = 'block';
-                if (els.trigger) els.trigger.setAttribute('aria-expanded', 'true');
+                positionPopover();
+
+                els.trigger.setAttribute('aria-expanded', 'true');
+                els.trigger.classList.add('is-active');
             }
 
             function closePop() {
                 var els = getElements();
                 if (!els.popover) return;
+
                 els.popover.classList.remove('is-open');
                 els.popover.style.display = 'none';
-                if (els.trigger) els.trigger.setAttribute('aria-expanded', 'false');
+
+                if (els.trigger) {
+                    els.trigger.setAttribute('aria-expanded', 'false');
+                    els.trigger.classList.remove('is-active');
+                }
             }
 
             function togglePop(e) {
                 if (e) {
+                    if (e.__salvisHandled) return;
+                    e.__salvisHandled = true;
                     try {
                         e.preventDefault();
                         e.stopPropagation();
@@ -6927,6 +6990,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
                 var els = getElements();
                 if (!els.popover) return;
+
                 var isOpen = els.popover.classList.contains('is-open') || els.popover.style.display === 'block';
                 if (isOpen) {
                     closePop();
@@ -6991,6 +7055,8 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             function selectVal(val, e) {
                 if (e) {
+                    if (e.__salvisHandled) return;
+                    e.__salvisHandled = true;
                     try {
                         e.preventDefault();
                         e.stopPropagation();
@@ -7012,35 +7078,45 @@ $currency_code = GeneralMethod::defaultCurrency();
             window.closeSalaryVisibilityPopover = closePop;
             window.selectSalaryVisibility = selectVal;
             window.applySalaryVisibility = applyVal;
+            window.positionSalaryVisibilityPopover = positionPopover;
             window.initSalaryVisibilityPopover = function() {
                 var currentVal = (document.getElementById('salary_visibility') && document.getElementById('salary_visibility').value) || 'everywhere';
                 applyVal(currentVal);
             };
 
-            // Delegated jQuery bindings as secondary insurance
-            $(document).off('click.salvisTrig', '#salvisTrigger').on('click.salvisTrig', '#salvisTrigger', function(e) {
+            // Delegated jQuery trigger click (with idempotency guard against inline onclick)
+            $(document).off('click.salvisTrigger', '#salvisTrigger').on('click.salvisTrigger', '#salvisTrigger', function(e) {
                 togglePop(e);
             });
 
+            // Delegated option row clicks
             $(document).off('click.salvisOpt', '.ij-salvis-opt-row').on('click.salvisOpt', '.ij-salvis-opt-row', function(e) {
                 var val = $(this).attr('data-value') || $(this).data('value');
                 selectVal(val, e);
             });
 
-            // Native outside-click listener in capture phase: checks element containment natively
-            document.addEventListener('click', function(e) {
+            $(document).off('keydown.salvisOpt', '.ij-salvis-opt-row').on('keydown.salvisOpt', '.ij-salvis-opt-row', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    var val = $(this).attr('data-value') || $(this).data('value');
+                    selectVal(val, e);
+                }
+            });
+
+            // Outside-click dismissal using closest (matches Currency Popover standard)
+            $(document).off('click.salvisOutside').on('click.salvisOutside', function(e) {
                 var els = getElements();
-                if (!els.popover || !els.trigger) return;
+                if (!els.popover) return;
                 var isOpen = els.popover.classList.contains('is-open') || els.popover.style.display === 'block';
                 if (!isOpen) return;
 
-                if (els.trigger.contains(e.target) || els.popover.contains(e.target)) {
-                    return; // Click occurred inside trigger or popover
+                if (!$(e.target).closest('#salvisPopover, #salvisTrigger').length) {
+                    closePop();
                 }
-                closePop();
-            }, true);
+            });
 
-            document.addEventListener('keydown', function(e) {
+            // Escape key dismiss
+            $(document).off('keydown.salvisEsc').on('keydown.salvisEsc', function(e) {
                 if (e.key === 'Escape') {
                     var els = getElements();
                     if (els.popover && (els.popover.classList.contains('is-open') || els.popover.style.display === 'block')) {
@@ -7051,6 +7127,27 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                 }
             });
+
+            // Auto-reposition on scroll and resize
+            window.addEventListener('scroll', function() {
+                var els = getElements();
+                if (els.popover && (els.popover.classList.contains('is-open') || els.popover.style.display === 'block')) {
+                    positionPopover();
+                }
+            }, true);
+
+            window.addEventListener('resize', function() {
+                var els = getElements();
+                if (els.popover && (els.popover.classList.contains('is-open') || els.popover.style.display === 'block')) {
+                    positionPopover();
+                }
+            });
+
+            // Relocate to body immediately so markup is properly detached from card stacking contexts
+            var initialEls = getElements();
+            if (initialEls.popover && initialEls.popover.parentNode !== document.body) {
+                document.body.appendChild(initialEls.popover);
+            }
 
             // Initial state sync
             var initialVal = (document.getElementById('salary_visibility') && document.getElementById('salary_visibility').value) || 'everywhere';
