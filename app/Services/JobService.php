@@ -106,11 +106,11 @@ class JobService
         ];
 
         $job->min_salary_currency = $requestData['min_salary_currency'] ?? null;
-        $job->min_salary = $requestData['minimum_salary'] ?? null;
+        $job->min_salary = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (int) $requestData['minimum_salary'] : 0;
         $job->min_sal_mode = $requestData['min_sal_mode'] ?? null;
 
         $job->max_salary_currency = $requestData['max_salary_currency'] ?? null;
-        $job->max_salary = $requestData['maximum_salary'] ?? null;
+        $job->max_salary = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (int) $requestData['maximum_salary'] : 0;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
         $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility'] ?? null);
 
@@ -167,8 +167,8 @@ class JobService
 
         $maxSalCurr = $requestData['max_salary_currency'] ?? null;
         $ecurrency = $currency[$maxSalCurr] ?? null;
-        $econvertedAmount = $requestData['maximum_salary'] ?? 0;
-        if ($maxSalCurr > 0 && $ecurrency) {
+        $econvertedAmount = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (float) $requestData['maximum_salary'] : 0;
+        if ($maxSalCurr > 0 && $ecurrency && $econvertedAmount > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
         $ectcdivided = GeneralMethod::salaryDividedByMode($requestData['max_sal_mode'] ?? null, $econvertedAmount);
@@ -178,8 +178,8 @@ class JobService
 
         $minSalCurr = $requestData['min_salary_currency'] ?? null;
         $mcurrency = $currency[$minSalCurr] ?? null;
-        $convertedAmount = $requestData['minimum_salary'] ?? 0;
-        if ($minSalCurr > 0 && $mcurrency) {
+        $convertedAmount = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (float) $requestData['minimum_salary'] : 0;
+        if ($minSalCurr > 0 && $mcurrency && $convertedAmount > 0) {
             $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $mcurrency);
         }
         $ctcdivided = GeneralMethod::salaryDividedByMode($requestData['min_sal_mode'] ?? null, $convertedAmount);
@@ -787,11 +787,11 @@ class JobService
         ];
 
         $job->min_salary_currency = $requestData['min_salary_currency'] ?? null;
-        $job->min_salary = $requestData['minimum_salary'] ?? null;
+        $job->min_salary = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (int) $requestData['minimum_salary'] : 0;
         $job->min_sal_mode = $requestData['min_sal_mode'] ?? null;
 
         $job->max_salary_currency = $requestData['max_salary_currency'] ?? null;
-        $job->max_salary = $requestData['maximum_salary'] ?? null;
+        $job->max_salary = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (int) $requestData['maximum_salary'] : 0;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
         if (isset($requestData['salary_visibility'])) {
             $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility']);
@@ -820,8 +820,8 @@ class JobService
                             'title' => $job->title,
                             'job_description' => $job->job_description ?? ($requestData['detail_description'] ?? ''),
                             'job_requirement' => $job->job_requirement ?? '',
-                            'min_salary' => $requestData['minimum_salary'] ?? 0,
-                            'max_salary' => $requestData['maximum_salary'] ?? 0,
+                            'min_salary' => (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (int) $requestData['minimum_salary'] : 0,
+                            'max_salary' => (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (int) $requestData['maximum_salary'] : 0,
                             'company_id' => $job->company_id,
                             'id' => $job->id,
                         ]);
@@ -854,8 +854,8 @@ class JobService
 
         $maxSalCurr = $requestData['max_salary_currency'] ?? null;
         $ecurrency = $currency[$maxSalCurr] ?? null;
-        $econvertedAmount = $requestData['maximum_salary'] ?? 0;
-        if ($maxSalCurr > 0 && $ecurrency) {
+        $econvertedAmount = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (float) $requestData['maximum_salary'] : 0;
+        if ($maxSalCurr > 0 && $ecurrency && $econvertedAmount > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
         $ectcdivided = GeneralMethod::salaryDividedByMode($requestData['max_sal_mode'] ?? null, $econvertedAmount);
@@ -865,8 +865,8 @@ class JobService
 
         $minSalCurr = $requestData['min_salary_currency'] ?? null;
         $mcurrency = $currency[$minSalCurr] ?? null;
-        $convertedAmount = $requestData['minimum_salary'] ?? 0;
-        if ($minSalCurr > 0 && $mcurrency) {
+        $convertedAmount = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (float) $requestData['minimum_salary'] : 0;
+        if ($minSalCurr > 0 && $mcurrency && $convertedAmount > 0) {
             $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $mcurrency);
         }
         $ctcdivided = GeneralMethod::salaryDividedByMode($requestData['min_sal_mode'] ?? null, $convertedAmount);
