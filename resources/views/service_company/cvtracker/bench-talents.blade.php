@@ -654,6 +654,25 @@
 }
 </style>
 
+        <!-- Navigation Tabs: Available Matching Talents vs Submission History -->
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-light-primary fw-bolder px-4 py-2 bench-tab-btn active" id="tab_btn_available_talents" style="border-radius: 8px;">
+                    <i class="fa-solid fa-users me-2"></i>Available Matching Talents
+                </button>
+                <button type="button" class="btn btn-sm btn-light fw-bolder px-4 py-2 bench-tab-btn" id="tab_btn_submission_history" style="border-radius: 8px;">
+                    <i class="fa-solid fa-clock-rotate-left me-2"></i>Submission History
+                    <span class="badge badge-primary ms-1 fs-8" id="submissionHistoryCountBadge">{{ $submissionHistoryCount ?? 0 }}</span>
+                </button>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-light-success fs-8 fw-bolder px-3 py-2" style="border: 1px solid #A7F3D0;">
+                    <i class="fa-solid fa-check-circle text-success me-1"></i>Continuous Bench Intake Active
+                </span>
+            </div>
+        </div>
+
+        <div id="section_available_talents">
         <!-- Full-Width Search Input Bar & Right-Shifted Filter Button -->
         <div class="d-flex align-items-center justify-content-between gap-3 mb-4 mt-2 px-1 w-100">
             <!-- Search Input Field (Full Width) -->
@@ -917,6 +936,49 @@
         </table>
         </div>
 		 <div id="paginationcopy"></div>
+        </div>
+        <!-- End Section: Available Talents -->
+
+        <!-- Begin Section: Submission History (Method 2 Multi-Cycle Tracking) -->
+        <div id="section_submission_history" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3 p-3 bg-light rounded" style="border: 1px solid #E2E8F0;">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="text-muted fs-8 fw-bold text-uppercase me-1">Status Filter:</span>
+                    <button type="button" class="btn btn-sm btn-primary px-3 py-1 fs-8 fw-bolder history-filter-pill active" data-filter="all">All</button>
+                    <button type="button" class="btn btn-sm btn-light px-3 py-1 fs-8 fw-bolder history-filter-pill" data-filter="under_review">Under Review</button>
+                    <button type="button" class="btn btn-sm btn-light px-3 py-1 fs-8 fw-bolder history-filter-pill" data-filter="accepted">Accepted</button>
+                    <button type="button" class="btn btn-sm btn-light px-3 py-1 fs-8 fw-bolder history-filter-pill" data-filter="expired">Expired</button>
+                    <button type="button" class="btn btn-sm btn-light px-3 py-1 fs-8 fw-bolder history-filter-pill" data-filter="rejected">Rejected</button>
+                    <button type="button" class="btn btn-sm btn-light-warning px-3 py-1 fs-8 fw-bolder history-filter-pill" data-filter="resubmittable">Eligible for Resubmission</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-light-primary px-3 py-1 fs-8 fw-bold" onclick="fetchBenchSubmissionHistory(true);">
+                    <i class="fa-solid fa-arrows-rotate me-1"></i>Refresh
+                </button>
+            </div>
+
+            <div class="bench-bt">
+                <table class="table align-middle table-row-dashed fs-6">
+                    <thead>
+                        <tr class="fw-bolder text-muted text-uppercase fs-8">
+                            <th class="min-w-220px">CANDIDATE</th>
+                            <th class="min-w-140px">SUBMISSION CYCLE</th>
+                            <th class="min-w-180px">SUBMITTED ON</th>
+                            <th class="min-w-140px">SUBMISSION STATUS</th>
+                            <th class="min-w-120px">JOB STATUS</th>
+                            <th class="text-end min-w-160px">ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 fw-bold" id="submissionHistoryTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading candidate submission history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- End Section: Submission History -->
       </div>
     </div>
   </div>
@@ -1053,8 +1115,106 @@
 <script>	
    $(document).ready(function() {	
 
-        
+        // ── Tab Switching: Available Talents vs Submission History ──
+        $(document).on('click', '#tab_btn_available_talents', function(e) {
+            e.preventDefault();
+            $('#tab_btn_available_talents').addClass('active btn-light-primary').removeClass('btn-light');
+            $('#tab_btn_submission_history').removeClass('active btn-light-primary').addClass('btn-light');
+            $('#section_available_talents').show();
+            $('#section_submission_history').hide();
+        });
 
+        $(document).on('click', '#tab_btn_submission_history', function(e) {
+            e.preventDefault();
+            $('#tab_btn_submission_history').addClass('active btn-light-primary').removeClass('btn-light');
+            $('#tab_btn_available_talents').removeClass('active btn-light-primary').addClass('btn-light');
+            $('#section_available_talents').hide();
+            $('#section_submission_history').show();
+            fetchBenchSubmissionHistory();
+        });
+
+        var cachedHistorySubmissions = [];
+        var currentHistoryFilter = 'all';
+
+        function fetchBenchSubmissionHistory(forceRefresh) {
+            var jobId = '{{ @$currentJobId }}';
+            if (!jobId) return;
+
+            var url = "{{ route('service_company.jobs.bench_submission_history', ':id') }}".replace(':id', jobId);
+            $('#submissionHistoryTableBody').html('<tr><td colspan="6" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading candidate submission history...</td></tr>');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(res) {
+                    if (res && res.status === 'success') {
+                        cachedHistorySubmissions = res.submissions || [];
+                        $('#submissionHistoryCountBadge').text(res.total_submissions || 0);
+                        renderSubmissionHistoryTable(cachedHistorySubmissions, currentHistoryFilter);
+                    } else {
+                        $('#submissionHistoryTableBody').html('<tr><td colspan="6" class="text-center py-5 text-muted">Failed to load submission history.</td></tr>');
+                    }
+                },
+                error: function() {
+                    $('#submissionHistoryTableBody').html('<tr><td colspan="6" class="text-center py-5 text-danger">Error retrieving submission history.</td></tr>');
+                }
+            });
+        }
+        window.fetchBenchSubmissionHistory = fetchBenchSubmissionHistory;
+
+        function renderSubmissionHistoryTable(items, filter) {
+            currentHistoryFilter = filter || 'all';
+            var filtered = (items || []).filter(function(item) {
+                if (currentHistoryFilter === 'under_review') return item.ac_status === 0;
+                if (currentHistoryFilter === 'accepted') return item.ac_status === 1;
+                if (currentHistoryFilter === 'expired') return item.ac_status === 3;
+                if (currentHistoryFilter === 'rejected') return item.ac_status === 2;
+                if (currentHistoryFilter === 'resubmittable') return item.can_resubmit;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                $('#submissionHistoryTableBody').html('<tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa-solid fa-inbox fs-2 text-gray-400 d-block mb-2"></i>No candidate submissions found matching this filter.</td></tr>');
+                return;
+            }
+
+            var html = '';
+            filtered.forEach(function(item) {
+                var cycleBadge = '<span class="badge badge-light-primary fw-bold fs-8">Cycle #' + item.cycle + (item.is_latest ? ' <span class="text-primary">(Latest)</span>' : '') + '</span>';
+
+                var actionCol = '';
+                if (item.can_resubmit) {
+                    actionCol = '<a href="javascript:void(0);" data-jobId="{{ @$currentJobId }}" data-conId="' + item.candidate_id + '" class="btn btn-sm btn-primary request-send py-1 px-3 fs-8 fw-bolder">Resubmit Candidate</a>';
+                } else if (item.ac_status === 0) {
+                    actionCol = '<span class="badge badge-light-warning fs-8 fw-bold">Under Review</span>';
+                } else if (item.ac_status === 1) {
+                    actionCol = '<span class="badge badge-light-success fs-8 fw-bold"><i class="fa-solid fa-check me-1"></i>Active in Job</span>';
+                } else {
+                    actionCol = '<span class="text-muted fs-8">—</span>';
+                }
+
+                var skillsHtml = item.candidate_skills ? '<div class="text-muted fs-8 text-truncate mt-1" style="max-width:240px;" title="' + $('<div>').text(item.candidate_skills).html() + '">' + $('<div>').text(item.candidate_skills).html() + '</div>' : '';
+
+                html += '<tr>' +
+                    '<td><div class="d-flex flex-column"><span class="text-dark fw-bolder fs-6">' + $('<div>').text(item.candidate_name).html() + '</span>' + skillsHtml + '</div></td>' +
+                    '<td>' + cycleBadge + '</td>' +
+                    '<td><div class="d-flex flex-column"><span class="text-dark fw-bold fs-7">' + item.submitted_at_formatted + '</span><span class="text-muted fs-8">' + item.submitted_at_ago + ' by ' + $('<div>').text(item.submitted_by).html() + '</span></div></td>' +
+                    '<td><span class="badge ' + item.status_badge_class + ' fs-7 fw-bold">' + item.status_text + '</span></td>' +
+                    '<td><span class="badge badge-light fs-8 fw-semibold">' + item.job_status + '</span></td>' +
+                    '<td class="text-end">' + actionCol + '</td>' +
+                '</tr>';
+            });
+
+            $('#submissionHistoryTableBody').html(html);
+        }
+
+        $(document).on('click', '.history-filter-pill', function(e) {
+            e.preventDefault();
+            $('.history-filter-pill').removeClass('active btn-primary').addClass('btn-light');
+            $(this).addClass('active btn-primary').removeClass('btn-light');
+            var filterType = $(this).data('filter');
+            renderSubmissionHistoryTable(cachedHistorySubmissions, filterType);
+        });
 
         $('#inputCopySearch').on('keydown', function(e) {
             if (e.key === 'Enter') {

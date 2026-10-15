@@ -13838,9 +13838,114 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->logo = $this->client_types->logo ?? null;
         $this->cities = GeneralMethod::allCities();
 
+        $this->submissionHistoryCount = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $this->currentJobId)
+            ->where('source_from_company_id', $company_id)
+            ->where('source_from_type', 1)
+            ->count();
+
         $view = view('service_company.cvtracker.bench-talents', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view, 'company_or_client' => $company_or_client, 'logo' => $this->logo]);
+    }
+
+    /**
+     * Fetch complete candidate submission history for this job and agency.
+     * Groups by candidate to track submission cycles, distinguishes latest vs historical status,
+     * and enables resubmissions when previous cycle expired (3) or was rejected (2).
+     */
+    public function benchSubmissionHistory(Request $request, $id)
+    {
+        $companyId = (int) (auth()->user()->company_id ?? 0);
+        $job = Job::withoutGlobalScopes()->find($id);
+        if (! $job) {
+            return Reply::error('Job requirement not found.');
+        }
+
+        $submissions = DB::table('rec_candidate_assign')
+            ->join('job_applications', 'job_applications.id', '=', 'rec_candidate_assign.source_application_id')
+            ->leftJoin('users', 'users.id', '=', 'rec_candidate_assign.source_from_user_id')
+            ->where('rec_candidate_assign.source_jobid', $id)
+            ->where('rec_candidate_assign.source_from_company_id', $companyId)
+            ->where('rec_candidate_assign.source_from_type', 1)
+            ->select(
+                'rec_candidate_assign.id as assign_id',
+                'rec_candidate_assign.source_application_id as candidate_id',
+                'rec_candidate_assign.ac_status',
+                'rec_candidate_assign.created_at as submitted_at',
+                'rec_candidate_assign.updated_at as last_updated_at',
+                'job_applications.full_name as candidate_name',
+                'job_applications.email as candidate_email',
+                'job_applications.skills as candidate_skills',
+                'job_applications.status as candidate_master_status',
+                'users.name as submitted_by_name'
+            )
+            ->orderBy('rec_candidate_assign.source_application_id', 'asc')
+            ->orderBy('rec_candidate_assign.id', 'asc')
+            ->get();
+
+        $candidateGroups = $submissions->groupBy('candidate_id');
+        $historyList = [];
+        $isActiveJob = ($job->status === 'active');
+
+        foreach ($candidateGroups as $candId => $items) {
+            $totalCycles = $items->count();
+
+            foreach ($items as $idx => $item) {
+                $cycleNumber = $idx + 1;
+                $isLatest = ($cycleNumber === $totalCycles);
+
+                $statusText = match ((int) $item->ac_status) {
+                    0 => 'Under Review',
+                    1 => 'Accepted',
+                    2 => 'Rejected',
+                    3 => 'Expired',
+                    default => 'Submitted',
+                };
+
+                $statusBadgeClass = match ((int) $item->ac_status) {
+                    0 => 'badge-light-warning',
+                    1 => 'badge-light-success',
+                    2 => 'badge-light-danger',
+                    3 => 'badge-light-secondary',
+                    default => 'badge-light-primary',
+                };
+
+                // Can resubmit only if it's the latest cycle, status is expired (3) or rejected (2), and job is active
+                $canResubmit = $isLatest && in_array((int) $item->ac_status, [2, 3], true) && $isActiveJob;
+
+                $historyList[] = [
+                    'assign_id' => $item->assign_id,
+                    'candidate_id' => $candId,
+                    'candidate_name' => $item->candidate_name,
+                    'candidate_email' => $item->candidate_email,
+                    'candidate_skills' => $item->candidate_skills,
+                    'submitted_at_formatted' => Carbon::parse($item->submitted_at)->format('d M Y, h:i A'),
+                    'submitted_at_ago' => GeneralMethod::timeAgo($item->submitted_at),
+                    'cycle' => $cycleNumber,
+                    'total_cycles' => $totalCycles,
+                    'is_latest' => $isLatest,
+                    'status_text' => $statusText,
+                    'status_badge_class' => $statusBadgeClass,
+                    'ac_status' => (int) $item->ac_status,
+                    'can_resubmit' => $canResubmit,
+                    'job_status' => ucfirst($job->status ?? 'Active'),
+                    'submitted_by' => $item->submitted_by_name ?? 'Recruiter',
+                ];
+            }
+        }
+
+        // Latest submissions first
+        usort($historyList, fn ($a, $b) => $b['assign_id'] <=> $a['assign_id']);
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'job_id' => (int) $id,
+            'job_title' => $job->title,
+            'job_status' => ucfirst($job->status ?? 'Active'),
+            'total_submissions' => count($historyList),
+            'submissions' => $historyList,
+        ]);
     }
 
     public function termshmlisting(Request $request, $id)

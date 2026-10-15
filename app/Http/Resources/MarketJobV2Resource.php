@@ -178,11 +178,16 @@ class MarketJobV2Resource extends JsonResource
         $updatedAt = $row->updated_at ?? $createdAt;
         $updatedAtAgo = GeneralMethod::timeAgo($updatedAt);
 
-        // Submission Deadline — maps to end_date in ES (the job's closing date)
+        // Submission Deadline & Bench Intake Lifecycle
+        // Direct Outsourcing follows end_date deadline; Bench Talent has NO expiry date and remains continuously active
+        $isBenchEnabled = (isset($row->bench_submission) && $row->bench_submission === 'enabled') || ((int) ($row->public_market_status ?? 0) === 2);
         $submissionDeadlineRaw = $row->end_date ?? null;
-        $submissionDeadlineFormatted = $submissionDeadlineRaw
-            ? date('d M Y', strtotime($submissionDeadlineRaw))
-            : null;
+        $isDirectExpired = $submissionDeadlineRaw ? \Carbon\Carbon::parse($submissionDeadlineRaw)->isPast() : false;
+        $directDeadlineFormatted = $submissionDeadlineRaw ? date('d M Y', strtotime($submissionDeadlineRaw)) : null;
+
+        $submissionDeadlineFormatted = $isBenchEnabled
+            ? 'Continuous / Open'
+            : ($directDeadlineFormatted ?: 'Open till filled');
 
         // Commercial Terms — pre-fetched via MarketJobV2Service::getCommercialTermsBulk() and
         // attached as v2_commercial_terms. Fallback to null if not available (drawer still works).
@@ -325,6 +330,9 @@ class MarketJobV2Resource extends JsonResource
             'employment_type_badge' => $employmentTypeBadge,
             'updated_at_ago' => $updatedAtAgo,
             'submission_deadline_formatted' => $submissionDeadlineFormatted,
+            'is_bench_enabled' => $isBenchEnabled,
+            'is_direct_expired' => $isDirectExpired,
+            'direct_deadline_formatted' => $directDeadlineFormatted,
             'commercial_terms' => $commercialTerms,
         ];
     }
