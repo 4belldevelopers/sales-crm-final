@@ -2524,15 +2524,28 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $candidateIds = collect($data)->pluck('id')->filter()->toArray();
         $benchRequestsMap = [];
         $benchManagersMap = [];
+        $benchCyclesMap = [];
 
         if (! empty($candidateIds)) {
             if (! empty($currentJobId)) {
+                // Fetch latest submission status per candidate (ordered by id desc)
                 $benchRequestsMap = DB::table('rec_candidate_assign')
                     ->where('source_from_company_id', $company_id)
                     ->where('source_jobid', $currentJobId)
                     ->whereIn('source_application_id', $candidateIds)
+                    ->orderBy('id', 'desc')
                     ->get()
                     ->keyBy('source_application_id');
+
+                // Compute total submission cycles per candidate
+                $benchCyclesMap = DB::table('rec_candidate_assign')
+                    ->where('source_from_company_id', $company_id)
+                    ->where('source_jobid', $currentJobId)
+                    ->whereIn('source_application_id', $candidateIds)
+                    ->select('source_application_id', DB::raw('count(*) as total_cycles'))
+                    ->groupBy('source_application_id')
+                    ->pluck('total_cycles', 'source_application_id')
+                    ->toArray();
             }
 
             $managerRows = DB::table('bench_assign')
@@ -2558,7 +2571,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-talents-ajax', compact('data', 'userPermissions', 'company_id', 'currentJobId', 'sal_currency', 'sal_mode', 'benchRequestsMap', 'benchManagersMap'))->render(),
+            'html' => view('service_company.ajax_pages.bench-talents-ajax', compact('data', 'userPermissions', 'company_id', 'currentJobId', 'sal_currency', 'sal_mode', 'benchRequestsMap', 'benchManagersMap', 'benchCyclesMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'stats' => [

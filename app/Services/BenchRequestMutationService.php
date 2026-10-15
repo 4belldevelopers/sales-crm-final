@@ -120,18 +120,26 @@ class BenchRequestMutationService
             // Authoritative Pre-conditions: Fetch Job and Candidate
             $job = Job::withoutGlobalScopes()->findOrFail($jobId);
 
-            // Method 2: Job-Wise Expiry Pre-Condition Validation
-            if ($job->status !== 'active') {
+            // Method 2: Bench Talent Submission Lifecycle Validation
+            // Bench talent submission remains continuously available until the job is explicitly On Hold or Closed
+            if ($job->status === 'hold') {
                 return [
                     'status' => 'error',
-                    'message' => 'This job requirement is no longer active and cannot accept candidate submissions.',
+                    'message' => 'This job requirement is currently on hold and cannot accept candidate submissions.',
                 ];
             }
 
-            if (! empty($job->end_date) && \Carbon\Carbon::parse($job->end_date)->isPast()) {
+            if ($job->status !== 'active') {
                 return [
                     'status' => 'error',
-                    'message' => 'This job requirement has expired (submission deadline passed) and cannot accept submissions.',
+                    'message' => 'This job requirement is closed and cannot accept candidate submissions.',
+                ];
+            }
+
+            if (isset($job->bench_submission) && $job->bench_submission === 'disabled') {
+                return [
+                    'status' => 'error',
+                    'message' => 'Bench talent submission is disabled for this job requirement.',
                 ];
             }
 
@@ -142,18 +150,24 @@ class BenchRequestMutationService
             $source_application_id = $candidateId;
             $source_jobid = $jobId;
 
-            // Concurrency check — prevent duplicate assignment submission in rec_candidate_assign
-            $alreadyAssigned = DB::table('rec_candidate_assign')
+            // Concurrency check — prevent duplicate active assignment submission in rec_candidate_assign
+            // Active states: 0 = Under Review / Pending, 1 = Accepted / Added to pipeline
+            // If a previous submission expired (3) or was rejected (2), resubmission is explicitly allowed as a new cycle
+            $activeAssignment = DB::table('rec_candidate_assign')
                 ->where('source_jobid', $source_jobid)
                 ->where('source_application_id', $source_application_id)
                 ->where('source_from_company_id', $source_from_company_id)
                 ->whereIn('ac_status', [0, 1])
-                ->exists();
+                ->first();
 
-            if ($alreadyAssigned) {
+            if ($activeAssignment) {
+                $duplicateMsg = ($activeAssignment->ac_status == 1)
+                    ? 'Candidate has already been accepted and added to this job requirement.'
+                    : 'Candidate submission is currently under review for this job.';
+
                 $duplicateResponse = [
                     'status' => 'warning',
-                    'message' => 'Candidate request already submitted for this job.',
+                    'message' => $duplicateMsg,
                 ];
 
                 DB::table('sys_idempotency_keys')
@@ -169,6 +183,14 @@ class BenchRequestMutationService
 
                 return $duplicateResponse;
             }
+
+            // Calculate submission cycle number for resubmission audit tracking
+            $previousCyclesCount = DB::table('rec_candidate_assign')
+                ->where('source_jobid', $source_jobid)
+                ->where('source_application_id', $source_application_id)
+                ->where('source_from_company_id', $source_from_company_id)
+                ->count();
+            $currentCycle = $previousCyclesCount + 1;
 
             // Coin Validations
             $eventId = 25;
@@ -203,23 +225,68 @@ class BenchRequestMutationService
                 DB::table('rec_candidate_assign')->insert($values);
                 $recId = (int) DB::getPdo()->lastInsertId();
 
-                // God-Level Marketplace Canonical Submission Synchronization
+                // God-Level Marketplace Canonical Submission Synchronization & Cycle Audit Trail
                 try {
-                    DB::table('marketplace_submissions')->updateOrInsert(
-                        [
+                    $existingSub = DB::table('marketplace_submissions')
+                        ->where('job_id', $source_jobid)
+                        ->where('agency_id', $source_from_company_id)
+                        ->where('candidate_id', $source_application_id)
+                        ->where('channel', 'BENCH_TALENT')
+                        ->first();
+
+                    $subId = null;
+                    if ($existingSub) {
+                        DB::table('marketplace_submissions')
+                            ->where('id', $existingSub->id)
+                            ->update([
+                                'company_id' => $source_company_id,
+                                'application_id' => $source_application_id,
+                                'lifecycle_status' => 'SUBMITTED',
+                                'version' => ($existingSub->version ?? 1) + 1,
+                                'updated_at' => now(),
+                            ]);
+                        $subId = $existingSub->id;
+                    } else {
+                        $insertData = [
                             'job_id' => $source_jobid,
                             'agency_id' => $source_from_company_id,
+                            'company_id' => $source_company_id,
                             'candidate_id' => $source_application_id,
                             'channel' => 'BENCH_TALENT',
-                        ],
-                        [
-                            'company_id' => $source_company_id,
-                            'source' => 'MARKETPLACE',
                             'application_id' => $source_application_id,
                             'lifecycle_status' => 'SUBMITTED',
+                            'version' => 1,
+                            'created_at' => now(),
                             'updated_at' => now(),
-                        ]
-                    );
+                        ];
+                        try {
+                            $insertData['origin_source'] = 'MARKETPLACE';
+                            $subId = DB::table('marketplace_submissions')->insertGetId($insertData);
+                        } catch (\Throwable $colEx) {
+                            unset($insertData['origin_source']);
+                            $insertData['source'] = 'MARKETPLACE';
+                            $subId = DB::table('marketplace_submissions')->insertGetId($insertData);
+                        }
+                    }
+
+                    // Record Immutable Audit Log for this cycle
+                    if ($subId) {
+                        try {
+                            DB::table('marketplace_submission_audit_logs')->insert([
+                                'submission_id' => $subId,
+                                'actor_id' => $userId,
+                                'actor_role' => 'agency_recruiter',
+                                'action' => 'SUBMITTED',
+                                'from_status' => $existingSub ? $existingSub->lifecycle_status : null,
+                                'to_status' => 'SUBMITTED',
+                                'source' => 'MARKETPLACE',
+                                'reason' => $currentCycle > 1 ? "Resubmission Cycle #{$currentCycle} after previous cycle expired/inactive" : 'Initial bench candidate submission',
+                                'created_at' => now(),
+                            ]);
+                        } catch (\Throwable $auditEx) {
+                            // Safe fallback if audit log table is optional
+                        }
+                    }
                 } catch (\Throwable $mktSubEx) {
                     Log::warning('[MarketplaceSubmission] Sync failed: '.$mktSubEx->getMessage());
                 }
@@ -242,6 +309,7 @@ class BenchRequestMutationService
                     'source_company_id' => $source_company_id,
                     'user_id' => $userId,
                     'epoch' => $newEpoch,
+                    'cycle' => $currentCycle,
                     'action' => $action,
                     'tab' => $tab,
                     'timestamp' => now()->toIso8601String(),
