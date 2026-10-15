@@ -8,10 +8,8 @@ use App\Enums\MarketModState;
 use App\Enums\MarketPubState;
 use App\Helper\GeneralMethod;
 use App\Jobs\ElasticJobsIndexJob;
-use App\Jobs\ProcessMarketJobOutboxEventJob;
 use App\Jobs\QueueNotificationMailService;
 use App\Models\Job;
-use App\Models\JobMarketplaceModerationLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -114,6 +112,7 @@ class JobService
         $job->max_salary_currency = $requestData['max_salary_currency'] ?? null;
         $job->max_salary = $requestData['maximum_salary'] ?? null;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
+        $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility'] ?? null);
 
         if (! empty($requestData['detail_description'])) {
             $job->job_description = $requestData['detail_description'];
@@ -794,6 +793,9 @@ class JobService
         $job->max_salary_currency = $requestData['max_salary_currency'] ?? null;
         $job->max_salary = $requestData['maximum_salary'] ?? null;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
+        if (isset($requestData['salary_visibility'])) {
+            $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility']);
+        }
 
         $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
         $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));

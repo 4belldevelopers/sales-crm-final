@@ -25,6 +25,9 @@ class JobResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $canView = \App\Services\SalaryVisibilityPolicy::canViewSalary($this->resource, $request->user(), 'api');
+        $visibility = \App\Services\SalaryVisibilityPolicy::normalize($this->salary_visibility ?? null);
+
         return [
             'id' => $this->id,
             'company_id' => $this->company_id,
@@ -36,10 +39,12 @@ class JobResource extends JsonResource
             'employment_type' => $this->employment_type,
             'min_exp' => $this->min_exp,
             'max_exp' => $this->max_exp,
-            'min_salary' => $this->min_salary,
-            'max_salary' => $this->max_salary,
-            'min_salary_currency' => $this->min_salary_currency,
-            'max_salary_currency' => $this->max_salary_currency,
+            'salary_visibility' => $visibility,
+            'is_salary_confidential' => ! $canView,
+            'min_salary' => $canView ? $this->min_salary : null,
+            'max_salary' => $canView ? $this->max_salary : null,
+            'min_salary_currency' => $canView ? $this->min_salary_currency : null,
+            'max_salary_currency' => $canView ? $this->max_salary_currency : null,
             'work_type' => $this->work_type,
             'work_shifts' => $this->work_shifts,
             'start_date' => $this->start_date ? date('Y-m-d', strtotime($this->start_date)) : null,

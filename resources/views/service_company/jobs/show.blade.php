@@ -1743,6 +1743,28 @@ $end_date   =	date('d-M-Y', $date);
                                     <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
                                     {{ $drawerPayType }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ $currencyArr[@$job->min_salary_currency ?? 0] }}</span></div>
+                                    <div class="info-row"><span class="info-label">Salary Visibility</span><span class="info-value">
+                                        @php
+                                            $vis = \App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility);
+                                        @endphp
+                                        @if($vis === 'confidential')
+                                            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;">
+                                                🔒 Fully Confidential
+                                            </span>
+                                        @elseif($vis === 'ats_only')
+                                            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#FEF3C7;color:#D97706;border:1px solid #FDE68A;">
+                                                🔒 ATS Only
+                                            </span>
+                                        @elseif($vis === 'ats_agencies')
+                                            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#DBEAFE;color:#2563EB;border:1px solid #BFDBFE;">
+                                                👥 ATS + Agencies
+                                            </span>
+                                        @else
+                                            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#D1FAE5;color:#059669;border:1px solid #A7F3D0;">
+                                                👁 Visible Everywhere
+                                            </span>
+                                        @endif
+                                    </span></div>
                                     <div class="info-row"><span class="info-label">Assigned Recruiter</span><span class="info-value">{{ @$hrManager ?: 'Not assigned' }}</span></div>
                                     <div class="info-row"><span class="info-label">Hiring Manager</span><span class="info-value">{{ @$hiringManager ?: 'Not assigned' }}</span></div>
                                 </div>

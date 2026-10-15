@@ -1827,12 +1827,16 @@ class HomeController extends Controller
 
         /* Intent: 300s Redis cache for specific target job application metadata (jobDetail, location, additional detail, skills) */
         $jobSpec = Cache::remember("job_apply_spec:{$jobId}:{$company_id}", 300, function () use ($jobId, $company_id) {
-            $jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+            $jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.salary_visibility')
                 ->leftJoin('clients', 'clients.id', 'jobs.client_id')
                 ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
                 ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
                 ->where('jobs.id', '=', $jobId)
                 ->first();
+
+            if ($jobDetail) {
+                \App\Services\SalaryVisibilityPolicy::filterSalaryData($jobDetail, 'career_page');
+            }
 
             $job_additional_detail = DB::table('job_additional_detail')
                 ->select('*')
@@ -1948,6 +1952,7 @@ class HomeController extends Controller
                 'jobs.max_salary_currency',
                 'jobs.min_sal_mode',
                 'jobs.max_sal_mode',
+                'jobs.salary_visibility',
                 'jobs.carrier_website',
                 'clients.name as client_name',
                 'clients.self_company',
@@ -1969,6 +1974,8 @@ class HomeController extends Controller
             if (! $job) {
                 return null;
             }
+
+            \App\Services\SalaryVisibilityPolicy::filterSalaryData($job, 'career_page');
 
             $skillArr = DB::table('job_metronics_skills')->select('id', 'job_id', 'skill_name')->where('job_id', $job->id)->get();
 

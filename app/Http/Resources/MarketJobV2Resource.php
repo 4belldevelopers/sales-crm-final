@@ -53,12 +53,21 @@ class MarketJobV2Resource extends JsonResource
         $currencyCode = $currencies[$cur] ?? 'INR';
         $currencySymbol = $currencySymbols[$cur] ?? '₹';
 
-        $convertedEctc = GeneralMethod::conversionRates($currencyCode, $row->max_yearly ?? 0, $mod);
-        $convertedCtc = GeneralMethod::conversionRates($currencyCode, $row->min_yearly ?? 0, $mod);
+        $canViewSalary = \App\Services\SalaryVisibilityPolicy::canViewSalary($row, $request->user(), 'marketplace');
 
-        $minSalFormatted = GeneralMethod::formatK($convertedCtc[$mod] ?? 0);
-        $maxSalFormatted = GeneralMethod::formatK($convertedEctc[$mod] ?? 0);
-        $salModeShort = mb_substr($salaryMode[$mod] ?? 'Annual', 0, 1);
+        if ($canViewSalary) {
+            $convertedEctc = GeneralMethod::conversionRates($currencyCode, $row->max_yearly ?? 0, $mod);
+            $convertedCtc = GeneralMethod::conversionRates($currencyCode, $row->min_yearly ?? 0, $mod);
+
+            $minSalFormatted = GeneralMethod::formatK($convertedCtc[$mod] ?? 0);
+            $maxSalFormatted = GeneralMethod::formatK($convertedEctc[$mod] ?? 0);
+            $salModeShort = mb_substr($salaryMode[$mod] ?? 'Annual', 0, 1);
+        } else {
+            $currencySymbol = '';
+            $minSalFormatted = null;
+            $maxSalFormatted = null;
+            $salModeShort = '';
+        }
 
         // Work type text
         $workType = match ($row->work_type ?? '') {
@@ -313,6 +322,8 @@ class MarketJobV2Resource extends JsonResource
             'min_salary' => $minSalFormatted,
             'max_salary' => $maxSalFormatted,
             'salary_mode_short' => $salModeShort,
+            'salary_visibility' => \App\Services\SalaryVisibilityPolicy::normalize($row->salary_visibility ?? null),
+            'is_salary_confidential' => ! $canViewSalary,
             'skills' => $displaySkills,
             'remaining_skills_count' => $remainingSkillsCount,
             'bench_match_count' => (int) $benchMatchCount,
