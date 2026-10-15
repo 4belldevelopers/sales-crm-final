@@ -14012,6 +14012,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $limitVal = (int) $request->input('vendor_limit');
                 $jobMeta['vendor_limit'] = $limitVal;
                 $changes[] = "Agency Acceptance Limit set to {$limitVal} agencies";
+
+                try {
+                    DB::table('marketplace_channels')->updateOrInsert(
+                        ['job_id' => $job->id, 'channel_type' => 'AGENCY_HIRING'],
+                        [
+                            'company_id' => $job->company_id,
+                            'vendor_limit' => $limitVal,
+                            'updated_at' => now(),
+                        ]
+                    );
+                } catch (\Throwable $mktChEx) {
+                    \Illuminate\Support\Facades\Log::warning('[MarketplaceChannel] Sync vendor_limit failed: '.$mktChEx->getMessage());
+                }
             }
 
             if ($hasAutoExpire) {
@@ -14155,6 +14168,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $limitVal = (int) $request->input('vendor_limit');
                 $jobMeta['vendor_limit'] = $limitVal;
                 $settingsUpdated = true;
+
+                try {
+                    DB::table('marketplace_channels')->updateOrInsert(
+                        ['job_id' => $job->id, 'channel_type' => 'AGENCY_HIRING'],
+                        [
+                            'company_id' => $job->company_id,
+                            'vendor_limit' => $limitVal,
+                            'updated_at' => now(),
+                        ]
+                    );
+                } catch (\Throwable $mktChEx) {
+                    \Illuminate\Support\Facades\Log::warning('[MarketplaceChannel] Sync vendor_limit failed on publish: '.$mktChEx->getMessage());
+                }
             }
             if ($hasAutoExpire) {
                 $expireVal = (int) $request->input('auto_expire');

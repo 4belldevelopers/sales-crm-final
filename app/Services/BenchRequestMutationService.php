@@ -120,6 +120,21 @@ class BenchRequestMutationService
             // Authoritative Pre-conditions: Fetch Job and Candidate
             $job = Job::withoutGlobalScopes()->findOrFail($jobId);
 
+            // Method 2: Job-Wise Expiry Pre-Condition Validation
+            if ($job->status !== 'active') {
+                return [
+                    'status' => 'error',
+                    'message' => 'This job requirement is no longer active and cannot accept candidate submissions.',
+                ];
+            }
+
+            if (! empty($job->end_date) && \Carbon\Carbon::parse($job->end_date)->isPast()) {
+                return [
+                    'status' => 'error',
+                    'message' => 'This job requirement has expired (submission deadline passed) and cannot accept submissions.',
+                ];
+            }
+
             $source_from_company_id = $tenantId;
             $source_from_user_id = $userId;
             $source_from_type = 1; // 1 for Bench
@@ -187,6 +202,27 @@ class BenchRequestMutationService
 
                 DB::table('rec_candidate_assign')->insert($values);
                 $recId = (int) DB::getPdo()->lastInsertId();
+
+                // God-Level Marketplace Canonical Submission Synchronization
+                try {
+                    DB::table('marketplace_submissions')->updateOrInsert(
+                        [
+                            'job_id' => $source_jobid,
+                            'agency_id' => $source_from_company_id,
+                            'candidate_id' => $source_application_id,
+                            'channel' => 'BENCH_TALENT',
+                        ],
+                        [
+                            'company_id' => $source_company_id,
+                            'source' => 'MARKETPLACE',
+                            'application_id' => $source_application_id,
+                            'lifecycle_status' => 'SUBMITTED',
+                            'updated_at' => now(),
+                        ]
+                    );
+                } catch (\Throwable $mktSubEx) {
+                    Log::warning('[MarketplaceSubmission] Sync failed: '.$mktSubEx->getMessage());
+                }
 
                 // Coins Deductions within transaction
                 GeneralMethod::coinsDeductions((int) $source_from_company_id, $eventId, $userId, $source_company_id, '', '');
