@@ -259,8 +259,15 @@ class CandidateSkillSyncService
      *
      * @param  array<int>  $wiseIds
      */
-    public static function invalidateCandidateCaches(int $candidateId, array $wiseIds, int $companyId): void
+    public static function invalidateCandidateCaches(int $candidateId, array $wiseIds = [], ?int $companyId = null): void
     {
+        if ($companyId === null || $companyId <= 0) {
+            $companyId = (int) (DB::table('job_applications')->where('id', $candidateId)->value('company_id') ?: (auth()->check() ? auth()->user()->company_id : 0));
+        }
+        if (empty($wiseIds)) {
+            $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $candidateId)->pluck('id')->toArray();
+        }
+
         $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
         $targetIds = array_unique(array_merge([$candidateId], $wiseIds));
         $slugs = ['', 'cvtracker', 'apptracker', 'clientapp', 'interview-schedule'];
@@ -275,11 +282,11 @@ class CandidateSkillSyncService
 
         // Multi-tenant Redis/Dragonfly non-blocking wildcard pattern purge for drawer HTML
         try {
-            if (config('cache.default') === 'redis') {
+            if (config('cache.default') === 'redis' && class_exists(\Illuminate\Support\Facades\Redis::class)) {
                 $redis = \Illuminate\Support\Facades\Redis::connection();
                 foreach ($targetIds as $tid) {
                     $keys = $redis->keys("*tenant:{$companyId}:candidate_details:{$tid}:*");
-                    if (! empty($keys)) {
+                    if (! empty($keys) && is_array($keys)) {
                         $redis->del($keys);
                     }
                 }
@@ -290,9 +297,21 @@ class CandidateSkillSyncService
         // Invalidate tenant-wide listing cache version keys so all users in the organization see fresh data
         if ($companyId > 0) {
             try {
-                cache()->increment('allcvtracker_version_company_'.$companyId);
-                cache()->increment('allapptracker_version_company_'.$companyId);
-                cache()->increment('allclientapp_version_company_'.$companyId);
+                if (cache()->has('allcvtracker_version_company_'.$companyId)) {
+                    cache()->increment('allcvtracker_version_company_'.$companyId);
+                } else {
+                    cache()->put('allcvtracker_version_company_'.$companyId, 2, 86400 * 30);
+                }
+                if (cache()->has('allapptracker_version_company_'.$companyId)) {
+                    cache()->increment('allapptracker_version_company_'.$companyId);
+                } else {
+                    cache()->put('allapptracker_version_company_'.$companyId, 2, 86400 * 30);
+                }
+                if (cache()->has('allclientapp_version_company_'.$companyId)) {
+                    cache()->increment('allclientapp_version_company_'.$companyId);
+                } else {
+                    cache()->put('allclientapp_version_company_'.$companyId, 2, 86400 * 30);
+                }
             } catch (\Throwable) {
             }
         }
