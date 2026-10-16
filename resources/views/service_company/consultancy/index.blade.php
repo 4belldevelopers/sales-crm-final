@@ -1386,6 +1386,262 @@
         transition: background 0.15s;
       }
       .ag-filters-btn:hover { background: #E5E7EB; }
+
+      /* ==========================================================================
+         Add Agency Right-Side Drawer (Isolated to Service Company Consultancy)
+         Replaces centered modal with a 520px smooth slide-in drawer on the right.
+         ========================================================================== */
+      .add-agency-drawer-overlay {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        opacity: 0;
+        visibility: hidden;
+        z-index: 10055;
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .add-agency-drawer-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .add-agency-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 520px;
+        max-width: 90vw;
+        height: 100vh;
+        height: 100dvh;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 10060;
+        box-shadow: -8px 0 28px rgba(0, 0, 0, 0.12), -2px 0 8px rgba(0, 0, 0, 0.04);
+        border-left: 1px solid #e2e8f0;
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .add-agency-drawer.open {
+        transform: translateX(0);
+      }
+
+      body.add-agency-drawer-open {
+        overflow: hidden !important;
+      }
+
+      .add-agency-drawer__header {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid #edf2f7;
+        gap: 16px;
+      }
+      .add-agency-drawer__title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+        color: #111827;
+        line-height: 1.4;
+        letter-spacing: -0.2px;
+        font-family: 'Poppins', sans-serif;
+      }
+      .add-agency-drawer__close {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.15s ease;
+      }
+      .add-agency-drawer__close:hover,
+      .add-agency-drawer__close:focus {
+        background: #f8fafc;
+        color: #0f172a;
+        border-color: #cbd5e1;
+        outline: none;
+      }
+
+      .add-agency-drawer__body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 24px;
+        background: #ffffff;
+      }
+      .add-agency-drawer__section {
+        margin-bottom: 22px;
+      }
+      .add-agency-drawer__section:last-child {
+        margin-bottom: 0;
+      }
+      .add-agency-drawer__label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 8px;
+        line-height: 1.4;
+        font-family: 'Poppins', sans-serif;
+      }
+      .add-agency-drawer__input-group {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .add-agency-drawer__input {
+        flex: 1;
+        min-width: 0;
+        height: 44px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-family: 'Poppins', sans-serif;
+        color: #1e293b;
+        background: #f8fafc !important;
+        border: 1px solid #dce3ee !important;
+        border-radius: 8px !important;
+        transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      }
+      .add-agency-drawer__input:focus {
+        background: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+        outline: none !important;
+      }
+      .add-agency-drawer__input[readonly] {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        cursor: text;
+      }
+      .add-agency-drawer__btn {
+        height: 44px;
+        min-width: 104px;
+        padding: 0 18px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        border-radius: 8px !important;
+        border: 1px solid #dce3ee !important;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.15s ease;
+      }
+      .add-agency-drawer__btn:hover,
+      .add-agency-drawer__btn:focus {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+        outline: none !important;
+      }
+
+      .add-agency-drawer__divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 24px 0;
+      }
+      .add-agency-drawer__divider::before,
+      .add-agency-drawer__divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .add-agency-drawer__divider span {
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .add-agency-drawer__footer {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 16px 24px;
+        background: #ffffff;
+        border-top: 1px solid #edf2f7;
+        gap: 12px;
+      }
+      .add-agency-drawer__cancel-btn {
+        height: 40px;
+        padding: 0 22px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: 'Poppins', sans-serif;
+        border-radius: 8px !important;
+        border: 1px solid #dce3ee !important;
+        background: #ffffff !important;
+        color: #475569 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .add-agency-drawer__cancel-btn:hover,
+      .add-agency-drawer__cancel-btn:focus {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+        outline: none !important;
+      }
+
+      @media (max-width: 576px) {
+        .add-agency-drawer {
+          width: 100% !important;
+          max-width: 100vw !important;
+          left: 0 !important;
+          right: 0 !important;
+          box-shadow: none;
+        }
+        .add-agency-drawer__header {
+          padding: 16px 18px;
+        }
+        .add-agency-drawer__body {
+          padding: 18px;
+        }
+        .add-agency-drawer__footer {
+          padding: 14px 18px;
+        }
+      }
+      @media (max-width: 420px) {
+        .add-agency-drawer__input-group {
+          flex-direction: column;
+          gap: 8px;
+        }
+        .add-agency-drawer__btn {
+          width: 100%;
+          height: 42px;
+        }
+      }
     </style>
 
     <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -1528,7 +1784,7 @@
                                 </div>
                                 <div class="ag-top-right">
                                     @if (in_array('add_staffing_partners', $userPermissions))
-                                    <button class="ag-btn-primary add_staffing_partners_frm" data-toggle="modal" data-target="#add_staffing_partners">
+                                    <button type="button" class="ag-btn-primary add_staffing_partners_frm" id="open_add_agency_drawer" aria-haspopup="dialog" aria-expanded="false" aria-controls="add_agency_drawer">
                                         <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
                                         Add Agency
                                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1792,89 +2048,78 @@
             <div class="card-body position-relative px-0 py-0" id="kt_activitiesSP_body"> &nbsp; </div>
         </div>
     </div>
-    <!--begin::Add staffing partners - popup-->
+    <!--begin::Add staffing partners - right-side drawer-->
+    <div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true"></div>
 
-    <div class="modal fade show" id="add_staffing_partners" tabindex="-1" aria-modal="true" role="dialog">
-        <div class="modal-dialog modal-dialog-centered mw-650px">
-            <div class="modal-content">
-                <div class="modal-header" id="add_staffing_partners_header">
-                    <h2 class="fw-bolder">Invite {{__('messages.Agency')}} or Recruitment consultant</h2>
-                    <div class="btn btn-icon btn-sm btn-active-icon-primary add_staffing_close" data-dismiss="modal">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" fill="black"></rect>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" fill="black"></rect>
-                            </svg>
-                        </span>
+    <div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true">
+        <div class="add-agency-drawer__header" id="add_staffing_partners_header">
+            <h2 class="add-agency-drawer__title fw-bolder" id="add_agency_drawer_title">Invite {{__('messages.Agency')}} or Recruitment consultant</h2>
+            <button type="button" class="add-agency-drawer__close add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="add-agency-drawer__body">
+            <form id="add_staffing_partners_form" name="add_staffing_partners_form"
+                class="fv-row form fv-plugins-bootstrap5 fv-plugins-framework add_staffing_partners_form"
+                action="#" onsubmit="return false;">
+                
+                <!-- Section 1 — Invite by Email -->
+                <div class="add-agency-drawer__section">
+                    <div class="fv-row mb-1 fv-plugins-icon-container">
+                        <label for="staffing_partners_email" class="add-agency-drawer__label fw-bold fs-6 mb-2">
+                            Invite {{__('messages.Agency')}} or Consultant, by entering the email id
+                        </label>
+                        <div class="add-agency-drawer__input-group">
+                            <input type="email" name="staffing_partners_email" id="staffing_partners_email"
+                                class="form-control form-control-solid add-agency-drawer__input"
+                                placeholder="Enter email address" value="" autocomplete="off">
+                            <button type="button" class="btn btn-light fw-bold flex-shrink-0 add-agency-drawer__btn" id="submit_staffing_partners" style="width: 103px;">
+                                <span class="indicator-label">Invite</span>
+                                <span class="indicator-progress" style="display:none;">Wait...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="fv-plugins-message-container invalid-feedback" for="staffing_partners_email"></div>
                     </div>
                 </div>
-                <div class="modal-body scroll-y mx-5 my-0">
-                    <form id="add_staffing_partners_form" name="add_staffing_partners_form"
-                        class="fv-row form fv-plugins-bootstrap5 fv-plugins-framework add_staffing_partners_form"
-                        action="#">
-                        <div class="d-flex flex-column scroll-y me-n7 pe-7" id="add_staffing_partners_scroll"
-                            data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}"
-                            data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#add_staffing_partners_header"
-                            data-kt-scroll-wrappers="#add_staffing_partners_scroll" data-kt-scroll-offset="300px"
-                            style="max-height: 10px;">
-                            <div class="fv-row mb-7 fv-plugins-icon-container">
-                                <label class="fw-bold fs-6 mb-2">Invite {{__('messages.Agency')}} or Consultant, by entering the email id</label>
 
-                                <div class="d-flex">
-                                    <input type="email" name="staffing_partners_email" id="staffing_partners_email"
-                                    class="form-control form-control-solid me-3 flex-grow-1"
-                                    placeholder="Enter email address" value="">
-                                    <button type="button" class="btn btn-light fw-bold flex-shrink-0" id="submit_staffing_partners" style="width: 103px;"> <span
-                                        class="indicator-label">Invite</span> <span class="indicator-progress">Wait...
-                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                </button>
-                                </div>
+                @php
+                $encode = base64_encode(auth()->user()->company_id);
+                $Url = url('/company-registration-invitation/'.$encode);
+                @endphp
 
-
-                               
-                                <div class="fv-plugins-message-container invalid-feedback" for="staffing_partners_email">
-                                </div>
-                            </div>
-                        </div>
-                        
-                            @php
-                            $encode				=	base64_encode(auth()->user()->company_id);
-							$Url 				=	url('/company-registration-invitation/'.$encode);
-                            @endphp
-                            <div class="text-center pb-5">
-                                <h4 class="fs-5 fw-semibold text-gray-500">OR</h4>
-                            </div>
-                            <!--begin::Input wrapper-->
-                                <div class="w-100">
-                                    <!--begin::Title-->
-                                    <h4 class="fw-bold fs-6 mb-2">Share below referral link to invite {{__('messages.Agencies')}}  </h4>
-                                    <!--end::Title-->
-
-                                    <!--begin::Title-->
-                                    <div class="d-flex">
-                                        <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid me-3 flex-grow-1"
-                                        name="search" value="{{$Url}}" readonly/>
-
-                                        <button id="kt_share_earn_link_copy_button" class="btn btn-light fw-bold flex-shrink-0"
-                                        data-clipboard-target="#kt_share_earn_link_input" style="width: 103px;">Copy Link</button>
-                                    </div>
-                                    <!--end::Title-->
-                                </div>
-                            <!--end::Input wrapper-->
-                            <br>
-                            <div class="text-center pt-5">
-                            <button type="button" class="btn btn-light me-3" data-kt-users-modal-action="close"
-                                data-dismiss="modal">Cancel</button>
-                        </div>
-                    </form>
+                <!-- OR Divider -->
+                <div class="add-agency-drawer__divider">
+                    <span>OR</span>
                 </div>
-            </div>
+
+                <!-- Section 2 — Referral Link -->
+                <div class="add-agency-drawer__section">
+                    <div class="w-100">
+                        <label for="kt_share_earn_link_input" class="add-agency-drawer__label fw-bold fs-6 mb-2">
+                            Share below referral link to invite {{__('messages.Agencies')}}
+                        </label>
+                        <div class="add-agency-drawer__input-group">
+                            <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid add-agency-drawer__input"
+                                name="search" value="{{$Url}}" readonly>
+                            <button type="button" id="kt_share_earn_link_copy_button" class="btn btn-light fw-bold flex-shrink-0 add-agency-drawer__btn"
+                                data-clipboard-target="#kt_share_earn_link_input" style="width: 103px;">Copy Link</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="add-agency-drawer__footer">
+            <button type="button" class="btn btn-light add-agency-drawer__cancel-btn add_staffing_close"
+                id="add_agency_drawer_cancel_btn" data-kt-users-modal-action="close" data-dismiss="modal">Cancel</button>
         </div>
     </div>
-    <!--end::Add staffing partners - popup-->
+    <!--end::Add staffing partners - right-side drawer-->
 
     <div id="kt_activitiesDirectClient_toggle"></div>
     <div id="kt_activitiesDirectClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
@@ -1947,12 +2192,57 @@ $(document).ready(function() {
         // new Tagify(input2);
     </script>
     <script>
-         $(document).on('click', '.add_staffing_partners_frm', function() {
+        /**
+         * Add Agency Right-Side Drawer Controller (Isolated to Consultancy Page)
+         * Replaces centered modal with a 520px smooth right-to-left slide-in drawer.
+         * Handles drawer open/close, backdrop dimming, ESC key, and body scroll lock.
+         */
+        function openAddAgencyDrawer() {
+            $('#add_agency_drawer_overlay').addClass('show').attr('aria-hidden', 'false');
+            $('#add_agency_drawer').addClass('open').attr('aria-hidden', 'false');
+            $('#open_add_agency_drawer').attr('aria-expanded', 'true');
+            $('body').addClass('add-agency-drawer-open');
+            setTimeout(function() {
+                $('#staffing_partners_email').focus();
+            }, 180);
+        }
+
+        function closeAddAgencyDrawer() {
+            $('#add_agency_drawer_overlay').removeClass('show').attr('aria-hidden', 'true');
+            $('#add_agency_drawer').removeClass('open').attr('aria-hidden', 'true');
+            $('#open_add_agency_drawer').attr('aria-expanded', 'false');
+            $('body').removeClass('add-agency-drawer-open');
+            if (typeof $ !== 'undefined' && $.fn && $.fn.validate) {
+                var validator = $("#add_staffing_partners_form").validate();
+                if (validator && validator.resetForm) {
+                    validator.resetForm();
+                }
+            }
+            $('.fv-plugins-message-container').empty();
+            $('#open_add_agency_drawer').focus();
+        }
+
+        // Open drawer on Add Agency button click
+        $(document).on('click', '.add_staffing_partners_frm, #open_add_agency_drawer', function(e) {
+            e.preventDefault();
             $('#staffing_partners_email').val('');
+            openAddAgencyDrawer();
         });
 
+        // Close drawer on Close icon, Cancel button, or overlay click
+        $(document).on('click', '.add_staffing_close, #add_agency_drawer_overlay, #add_agency_drawer_close_btn, #add_agency_drawer_cancel_btn', function(e) {
+            e.preventDefault();
+            closeAddAgencyDrawer();
+        });
 
-         var filterDebounceTimer = null;
+        // Dismiss drawer with Escape key
+        $(document).on('keydown', function(e) {
+            if ((e.key === 'Escape' || e.key === 'Esc') && $('#add_agency_drawer').hasClass('open')) {
+                closeAddAgencyDrawer();
+            }
+        });
+
+        var filterDebounceTimer = null;
 
         function filtersdataget() {
             clearTimeout(filterDebounceTimer);
@@ -2031,43 +2321,51 @@ $(document).ready(function() {
 
             var KTUsersAddUser = function() {
                 // Shared variables
-                const element = document.getElementById('add_staffing_partners');
+                const element = document.getElementById('add_agency_drawer') || document.getElementById('add_staffing_partners');
+                if (!element) return { init: function() {} };
                 const form = element.querySelector('#add_staffing_partners_form');
-                const modal = new bootstrap.Modal(element);
+                if (!form) return { init: function() {} };
+                const modal = (element.classList && element.classList.contains('modal') && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(element) : null;
 
                 // Init add schedule modal
                 var initAddUser = () => {
 
                     // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-                    var validator = FormValidation.formValidation(
-                        form, {
-                            fields: {
-                                user_email: {
-                                    validators: {
-                                        notEmpty: {
-                                            message: "Email address is required"
-                                        },
-                                        emailAddress: {
-                                            message: "The value is not a valid email address"
+                    var validator = null;
+                    if (typeof FormValidation !== 'undefined' && FormValidation.formValidation) {
+                        try {
+                            validator = FormValidation.formValidation(
+                                form, {
+                                    fields: {
+                                        user_email: {
+                                            validators: {
+                                                notEmpty: {
+                                                    message: "Email address is required"
+                                                },
+                                                emailAddress: {
+                                                    message: "The value is not a valid email address"
+                                                }
+                                            }
                                         }
+                                    },
+
+                                    plugins: {
+                                        trigger: new FormValidation.plugins.Trigger(),
+                                        bootstrap: new FormValidation.plugins.Bootstrap5({
+                                            rowSelector: '.fv-row',
+                                            eleInvalidClass: '',
+                                            eleValidClass: ''
+                                        })
                                     }
                                 }
-                            },
-
-                            plugins: {
-                                trigger: new FormValidation.plugins.Trigger(),
-                                bootstrap: new FormValidation.plugins.Bootstrap5({
-                                    rowSelector: '.fv-row',
-                                    eleInvalidClass: '',
-                                    eleValidClass: ''
-                                })
-                            }
-                        }
-                    );
+                            );
+                        } catch(e) {}
+                    }
 
                     // Submit button handler
                     const submitButton = element.querySelector('[data-kt-users-modal-action="submit"]');
-                    submitButton.addEventListener('click', e => {
+                    if (submitButton) {
+                        submitButton.addEventListener('click', e => {
                         e.preventDefault();
 
                         // Validate form before submit
@@ -2126,74 +2424,87 @@ $(document).ready(function() {
                             });
                         }
                     });
+                    }
 
                     // Cancel button handler
                     const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');
-                    cancelButton.addEventListener('click', e => {
-                        e.preventDefault();
+                    if (cancelButton) {
+                        cancelButton.addEventListener('click', e => {
+                            e.preventDefault();
 
-                        Swal.fire({
-                            text: "Are you sure you would like to cancel?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            confirmButtonText: "Yes, cancel it!",
-                            cancelButtonText: "No, return",
-                            customClass: {
-                                confirmButton: "btn btn-primary",
-                                cancelButton: "btn btn-active-light"
-                            }
-                        }).then(function(result) {
-                            if (result.value) {
-                                form.reset(); // Reset form			
-                                modal.hide();
-                            } else if (result.dismiss === 'cancel') {
-                                Swal.fire({
-                                    text: "Your form has not been cancelled!.",
-                                    icon: "error",
-                                    buttonsStyling: false,
-                                    confirmButtonText: "Ok, got it!",
-                                    customClass: {
-                                        confirmButton: "btn btn-primary",
+                            Swal.fire({
+                                text: "Are you sure you would like to cancel?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                buttonsStyling: false,
+                                confirmButtonText: "Yes, cancel it!",
+                                cancelButtonText: "No, return",
+                                customClass: {
+                                    confirmButton: "btn btn-primary",
+                                    cancelButton: "btn btn-active-light"
+                                }
+                            }).then(function(result) {
+                                if (result.value) {
+                                    form.reset(); // Reset form			
+                                    if (modal && modal.hide) {
+                                        modal.hide();
+                                    } else {
+                                        closeAddAgencyDrawer();
                                     }
-                                });
-                            }
+                                } else if (result.dismiss === 'cancel') {
+                                    Swal.fire({
+                                        text: "Your form has not been cancelled!.",
+                                        icon: "error",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, got it!",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                        }
+                                    });
+                                }
+                            });
                         });
-                    });
+                    }
 
                     // Close button handler
                     const closeButton = element.querySelector('[data-kt-users-modal-action="close"]');
-                    closeButton.addEventListener('click', e => {
-                        e.preventDefault();
+                    if (closeButton) {
+                        closeButton.addEventListener('click', e => {
+                            e.preventDefault();
 
-                        Swal.fire({
-                            text: "Are you sure you would like to cancel?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            confirmButtonText: "Yes, cancel it!",
-                            cancelButtonText: "No, return",
-                            customClass: {
-                                confirmButton: "btn btn-primary",
-                                cancelButton: "btn btn-active-light"
-                            }
-                        }).then(function(result) {
-                            if (result.value) {
-                                form.reset(); // Reset form			
-                                modal.hide();
-                            } else if (result.dismiss === 'cancel') {
-                                Swal.fire({
-                                    text: "Your form has not been cancelled!.",
-                                    icon: "error",
-                                    buttonsStyling: false,
-                                    confirmButtonText: "Ok, got it!",
-                                    customClass: {
-                                        confirmButton: "btn btn-primary",
+                            Swal.fire({
+                                text: "Are you sure you would like to cancel?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                buttonsStyling: false,
+                                confirmButtonText: "Yes, cancel it!",
+                                cancelButtonText: "No, return",
+                                customClass: {
+                                    confirmButton: "btn btn-primary",
+                                    cancelButton: "btn btn-active-light"
+                                }
+                            }).then(function(result) {
+                                if (result.value) {
+                                    form.reset(); // Reset form			
+                                    if (modal && modal.hide) {
+                                        modal.hide();
+                                    } else {
+                                        closeAddAgencyDrawer();
                                     }
-                                });
-                            }
+                                } else if (result.dismiss === 'cancel') {
+                                    Swal.fire({
+                                        text: "Your form has not been cancelled!.",
+                                        icon: "error",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, got it!",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                        }
+                                    });
+                                }
+                            });
                         });
-                    });
+                    }
                 }
 
                 return {
@@ -2272,11 +2583,15 @@ $(document).ready(function() {
                     email: {
                         required: true,
                         email: true
+                    },
+                    staffing_partners_email: {
+                        required: true,
+                        email: true
                     }
                 },
                 messages: {
-
-                    email: "Please enter a valid email address"
+                    email: "Please enter a valid email address",
+                    staffing_partners_email: "Please enter a valid email address"
                 }
             });
 
@@ -2287,7 +2602,11 @@ $(document).ready(function() {
 
         $(document).on('click', '#submit_staffing_partners', function() {
 
-            $("#add_staffing_partners_form").valid();
+            if ($("#add_staffing_partners_form").length && typeof $("#add_staffing_partners_form").valid === 'function') {
+                if (!$("#add_staffing_partners_form").valid()) {
+                    return false;
+                }
+            }
 
             var staffing_partners_email = $('#staffing_partners_email').val();
             var id = 0;
@@ -2313,7 +2632,7 @@ $(document).ready(function() {
                             title: "Failed!",
                             text: response.message,
                             type: "warning",
-                            timer: 1000,
+                            timer: 2000,
                             showConfirmButton: true
                         }, function() {
                             //location.reload();
@@ -2349,7 +2668,7 @@ $(document).ready(function() {
                             text: response.message,
                             html: true,
                             type: "success",
-                            timer: 1000,
+                            timer: 1500,
                             showConfirmButton: true
                         }, function() {
                             $('.add_staffing_close').click();
@@ -2357,6 +2676,11 @@ $(document).ready(function() {
                         });
 
                     }
+                },
+                error: function() {
+                    $('#submit_staffing_partners').prop('disabled', false);
+                    $('.indicator-label').show();
+                    $('.indicator-progress').hide();
                 }
 
             });
@@ -2368,169 +2692,184 @@ $(document).ready(function() {
             // Class definition
             var KTUsersAddUser = function() {
                 // Shared variables
-                const element = document.getElementById('add_staffing_partners');
+                const element = document.getElementById('add_agency_drawer') || document.getElementById('add_staffing_partners');
+                if (!element) return { init: function() {} };
                 const form = element.querySelector('#add_staffing_partners_form');
-                const modal = new bootstrap.Modal(element);
+                if (!form) return { init: function() {} };
+                const modal = (element.classList && element.classList.contains('modal') && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(element) : null;
 
                 // Init add schedule modal
                 var initAddUser = () => {
 
                     // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-                    var validator = FormValidation.formValidation(
-                        form, {
-                            fields: {
-                                user_email: {
-                                    validators: {
-                                        notEmpty: {
-                                            message: "Email address is required"
-                                        },
-                                        emailAddress: {
-                                            message: "The value is not a valid email address"
+                    var validator = null;
+                    if (typeof FormValidation !== 'undefined' && FormValidation.formValidation) {
+                        try {
+                            validator = FormValidation.formValidation(
+                                form, {
+                                    fields: {
+                                        user_email: {
+                                            validators: {
+                                                notEmpty: {
+                                                    message: "Email address is required"
+                                                },
+                                                emailAddress: {
+                                                    message: "The value is not a valid email address"
+                                                }
+                                            }
                                         }
+                                    },
+
+                                    plugins: {
+                                        trigger: new FormValidation.plugins.Trigger(),
+                                        bootstrap: new FormValidation.plugins.Bootstrap5({
+                                            rowSelector: '.fv-row',
+                                            eleInvalidClass: '',
+                                            eleValidClass: ''
+                                        })
                                     }
                                 }
-                            },
-
-                            plugins: {
-                                trigger: new FormValidation.plugins.Trigger(),
-                                bootstrap: new FormValidation.plugins.Bootstrap5({
-                                    rowSelector: '.fv-row',
-                                    eleInvalidClass: '',
-                                    eleValidClass: ''
-                                })
-                            }
-                        }
-                    );
+                            );
+                        } catch(e) {}
+                    }
 
                     // Submit button handler
                     const submitButton = element.querySelector('[data-kt-users-modal-action="submit"]');
-                    submitButton.addEventListener('click', e => {
-                        e.preventDefault();
+                    if (submitButton) {
+                        submitButton.addEventListener('click', e => {
+                            e.preventDefault();
 
-                        // Validate form before submit
-                        if (validator) {
-                            validator.validate().then(function(status) {
-                                console.log('validated!');
+                            // Validate form before submit
+                            if (validator) {
+                                validator.validate().then(function(status) {
+                                    console.log('validated!');
 
-                                if (status == 'Valid') {
-                                    // Show loading indication
-                                    submitButton.setAttribute('data-kt-indicator', 'on');
+                                    if (status == 'Valid') {
+                                        // Show loading indication
+                                        submitButton.setAttribute('data-kt-indicator', 'on');
 
-                                    // Disable button to avoid multiple click 
-                                    submitButton.disabled = true;
+                                        // Disable button to avoid multiple click 
+                                        submitButton.disabled = true;
 
-                                    // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                                    setTimeout(function() {
-                                        // Remove loading indication
-                                        submitButton.removeAttribute(
-                                            'data-kt-indicator');
+                                        // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+                                        setTimeout(function() {
+                                            // Remove loading indication
+                                            submitButton.removeAttribute(
+                                                'data-kt-indicator');
 
-                                        // Enable button
-                                        submitButton.disabled = false;
+                                            // Enable button
+                                            submitButton.disabled = false;
 
-                                        // Show popup confirmation 
+                                            // Show popup confirmation 
+                                            Swal.fire({
+                                                    text: "Invitation has been sent!",
+                                                    icon: "success",
+                                                    buttonsStyling: false,
+                                                    confirmButtonText: "Ok, got it!",
+                                                    customClass: {
+                                                        confirmButton: "btn btn-primary"
+                                                    }
+                                                })
+                                                .then(function() {
+                                                    window.location = "";
+                                                });
+                                        }, 2e3);
+                                    } else {
+                                        // Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                                         Swal.fire({
-                                                text: "Invitation has been sent!",
-                                                icon: "success",
-                                                buttonsStyling: false,
-                                                confirmButtonText: "Ok, got it!",
-                                                customClass: {
-                                                    confirmButton: "btn btn-primary"
-                                                }
-                                            })
-                                            // .then(function (t)
-                                            // {
-                                            //    t.isConfirmed && e && e.hide();
-                                            // });
-                                            .then(function() {
-                                                window.location = "";
-                                            });
+                                            text: "Sorry, looks like there are some errors detected, please try again.",
+                                            icon: "error",
+                                            buttonsStyling: false,
+                                            confirmButtonText: "Ok, got it!",
+                                            customClass: {
+                                                confirmButton: "btn btn-primary"
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
 
-                                        //form.submit(); // Submit form
-                                    }, 2e3);
-                                } else {
-                                    // Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+                    // Cancel button handler
+                    const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');
+                    if (cancelButton) {
+                        cancelButton.addEventListener('click', e => {
+                            e.preventDefault();
+
+                            Swal.fire({
+                                text: "Are you sure you would like to cancel?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                buttonsStyling: false,
+                                confirmButtonText: "Yes, cancel it!",
+                                cancelButtonText: "No, return",
+                                customClass: {
+                                    confirmButton: "btn btn-primary",
+                                    cancelButton: "btn btn-active-light"
+                                }
+                            }).then(function(result) {
+                                if (result.value) {
+                                    form.reset(); // Reset form			
+                                    if (modal && modal.hide) {
+                                        modal.hide();
+                                    } else {
+                                        closeAddAgencyDrawer();
+                                    }
+                                } else if (result.dismiss === 'cancel') {
                                     Swal.fire({
-                                        text: "Sorry, looks like there are some errors detected, please try again.",
+                                        text: "Your form has not been cancelled!.",
                                         icon: "error",
                                         buttonsStyling: false,
                                         confirmButtonText: "Ok, got it!",
                                         customClass: {
-                                            confirmButton: "btn btn-primary"
+                                            confirmButton: "btn btn-primary",
                                         }
                                     });
                                 }
                             });
-                        }
-                    });
-
-                    // Cancel button handler
-                    const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');
-                    cancelButton.addEventListener('click', e => {
-                        e.preventDefault();
-
-                        Swal.fire({
-                            text: "Are you sure you would like to cancel?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            confirmButtonText: "Yes, cancel it!",
-                            cancelButtonText: "No, return",
-                            customClass: {
-                                confirmButton: "btn btn-primary",
-                                cancelButton: "btn btn-active-light"
-                            }
-                        }).then(function(result) {
-                            if (result.value) {
-                                form.reset(); // Reset form			
-                                modal.hide();
-                            } else if (result.dismiss === 'cancel') {
-                                Swal.fire({
-                                    text: "Your form has not been cancelled!.",
-                                    icon: "error",
-                                    buttonsStyling: false,
-                                    confirmButtonText: "Ok, got it!",
-                                    customClass: {
-                                        confirmButton: "btn btn-primary",
-                                    }
-                                });
-                            }
                         });
-                    });
+                    }
 
                     // Close button handler
                     const closeButton = element.querySelector('[data-kt-users-modal-action="close"]');
-                    closeButton.addEventListener('click', e => {
-                        e.preventDefault();
+                    if (closeButton) {
+                        closeButton.addEventListener('click', e => {
+                            e.preventDefault();
 
-                        Swal.fire({
-                            text: "Are you sure you would like to cancel?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            confirmButtonText: "Yes, cancel it!",
-                            cancelButtonText: "No, return",
-                            customClass: {
-                                confirmButton: "btn btn-primary",
-                                cancelButton: "btn btn-active-light"
-                            }
-                        }).then(function(result) {
-                            if (result.value) {
-                                form.reset(); // Reset form			
-                                modal.hide();
-                            } else if (result.dismiss === 'cancel') {
-                                Swal.fire({
-                                    text: "Your form has not been cancelled!.",
-                                    icon: "error",
-                                    buttonsStyling: false,
-                                    confirmButtonText: "Ok, got it!",
-                                    customClass: {
-                                        confirmButton: "btn btn-primary",
+                            Swal.fire({
+                                text: "Are you sure you would like to cancel?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                buttonsStyling: false,
+                                confirmButtonText: "Yes, cancel it!",
+                                cancelButtonText: "No, return",
+                                customClass: {
+                                    confirmButton: "btn btn-primary",
+                                    cancelButton: "btn btn-active-light"
+                                }
+                            }).then(function(result) {
+                                if (result.value) {
+                                    form.reset(); // Reset form			
+                                    if (modal && modal.hide) {
+                                        modal.hide();
+                                    } else {
+                                        closeAddAgencyDrawer();
                                     }
-                                });
-                            }
+                                } else if (result.dismiss === 'cancel') {
+                                    Swal.fire({
+                                        text: "Your form has not been cancelled!.",
+                                        icon: "error",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, got it!",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                        }
+                                    });
+                                }
+                            });
                         });
-                    });
+                    }
                 }
 
                 return {
