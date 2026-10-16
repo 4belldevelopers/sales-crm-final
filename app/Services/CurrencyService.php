@@ -105,14 +105,22 @@ class CurrencyService
     public static function getCurrencies(): array
     {
         return Cache::remember('currency_codesww', self::TTL_METADATA, function () {
-            $list = DB::table('currencies')
-                ->orderBy('getKey', 'ASC')
-                ->pluck('currency_code', 'getKey')
-                ->toArray();
+            try {
+                $list = DB::table('currencies')
+                    ->orderBy('getKey', 'ASC')
+                    ->pluck('currency_code', 'getKey')
+                    ->toArray();
 
-            return ! empty($list) ? $list : [
-                0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
-            ];
+                return ! empty($list) ? $list : [
+                    0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
+                    6 => 'CAD', 7 => 'AUD', 8 => 'SGD', 9 => 'CHF', 10 => 'NZD', 11 => 'ZAR',
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
+                    6 => 'CAD', 7 => 'AUD', 8 => 'SGD', 9 => 'CHF', 10 => 'NZD', 11 => 'ZAR',
+                ];
+            }
         });
     }
 
@@ -142,16 +150,24 @@ class CurrencyService
     public static function getCurrencySymbols(): array
     {
         return Cache::remember('currency_symbols_map', self::TTL_METADATA, function () {
-            $rows = DB::table('currencies')->select('currency_code', 'currency_symbol')->get();
-            $symbols = [];
-            foreach ($rows as $row) {
-                $symbols[strtoupper(trim($row->currency_code))] = $row->currency_symbol;
-            }
-            if (empty($symbols)) {
-                $symbols = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ'];
+            try {
+                $rows = DB::table('currencies')->select('currency_code', 'currency_symbol')->get();
+                $symbols = [];
+                foreach ($rows as $row) {
+                    $symbols[strtoupper(trim($row->currency_code))] = $row->currency_symbol;
+                }
+                if (! empty($symbols)) {
+                    return $symbols;
+                }
+            } catch (\Throwable $e) {
+                // Fallback for tests / offline
             }
 
-            return $symbols;
+            return [
+                'INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ',
+                'CAD' => 'CA$', 'AUD' => 'A$', 'SGD' => 'S$', 'JPY' => '¥', 'CHF' => 'CHF',
+                'NZD' => 'NZ$', 'ZAR' => 'R',
+            ];
         });
     }
 
@@ -163,25 +179,60 @@ class CurrencyService
     public static function getAllCurrenciesWithMeta(): array
     {
         return Cache::remember('currencies_all_with_meta', self::TTL_METADATA, function () {
-            $rows = DB::table('currencies')
-                ->orderBy('getKey', 'ASC')
-                ->get();
+            try {
+                $rows = DB::table('currencies')
+                    ->orderBy('getKey', 'ASC')
+                    ->get();
+
+                $result = [];
+                foreach ($rows as $row) {
+                    $code = strtoupper(trim($row->currency_code));
+                    $key = (int) $row->getKey;
+                    $flag = self::CURRENCY_FLAGS[$code] ?? '🌐';
+                    $meta = GeneralMethod::currencyEnterpriseMeta($code);
+
+                    $result[] = [
+                        'key' => $key,
+                        'code' => $code,
+                        'name' => $row->currency_name ?: ($meta['name'] ?? $code),
+                        'symbol' => $row->currency_symbol ?: ($meta['symbol'] ?? ''),
+                        'flag' => $flag,
+                        'label' => $meta['label'] ?? "{$flag} {$code} - {$row->currency_name}",
+                        'keywords' => $meta['keywords'] ?? "{$code} {$row->currency_name}",
+                    ];
+                }
+
+                if (! empty($result)) {
+                    return $result;
+                }
+            } catch (\Throwable $e) {
+                // Fallback for tests / offline
+            }
+
+            $defaults = [
+                0 => ['code' => 'INR', 'name' => 'Indian Rupee', 'symbol' => '₹'],
+                1 => ['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€'],
+                2 => ['code' => 'JPY', 'name' => 'Japanese Yen', 'symbol' => '¥'],
+                3 => ['code' => 'GBP', 'name' => 'British Pound', 'symbol' => '£'],
+                4 => ['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$'],
+                5 => ['code' => 'AED', 'name' => 'UAE Dirham', 'symbol' => 'د.إ'],
+                6 => ['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'CA$'],
+                7 => ['code' => 'AUD', 'name' => 'Australian Dollar', 'symbol' => 'A$'],
+                8 => ['code' => 'SGD', 'name' => 'Singapore Dollar', 'symbol' => 'S$'],
+            ];
 
             $result = [];
-            foreach ($rows as $row) {
-                $code = strtoupper(trim($row->currency_code));
-                $key = (int) $row->getKey;
+            foreach ($defaults as $k => $info) {
+                $code = $info['code'];
                 $flag = self::CURRENCY_FLAGS[$code] ?? '🌐';
-                $meta = GeneralMethod::currencyEnterpriseMeta($code);
-
                 $result[] = [
-                    'key' => $key,
+                    'key' => $k,
                     'code' => $code,
-                    'name' => $row->currency_name ?: ($meta['name'] ?? $code),
-                    'symbol' => $row->currency_symbol ?: ($meta['symbol'] ?? ''),
+                    'name' => $info['name'],
+                    'symbol' => $info['symbol'],
                     'flag' => $flag,
-                    'label' => $meta['label'] ?? "{$flag} {$code} - {$row->currency_name}",
-                    'keywords' => $meta['keywords'] ?? "{$code} {$row->currency_name}",
+                    'label' => "{$flag} {$code} - {$info['name']}",
+                    'keywords' => "{$code} {$info['name']}",
                 ];
             }
 
@@ -533,54 +584,99 @@ class CurrencyService
     }
 
     /**
-     * Get the authoritative currency code for a given job.
+     * Get the authoritative currency code for a given job or job ID.
      *
-     * @param  object|array|null  $job
-     * @return string (e.g. 'USD', 'INR')
+     * @param  object|array|int|string|null  $jobOrId
+     * @return string (e.g. 'USD', 'INR', 'AED')
      */
-    public static function getJobCurrencyCode($job): string
+    public static function getJobCurrencyCode($jobOrId): string
     {
-        if (is_array($job)) {
-            $job = (object) $job;
-        }
-
-        if (! $job) {
+        if (empty($jobOrId)) {
             return self::getTenantCurrency();
         }
 
-        $currencyKey = $job->min_salary_currency ?? ($job->max_salary_currency ?? null);
+        if (is_numeric($jobOrId)) {
+            $jobId = (int) $jobOrId;
+
+            return Cache::remember("job_currency_code:{$jobId}", self::TTL_METADATA, function () use ($jobId) {
+                $job = DB::table('jobs')
+                    ->select('id', 'company_id', 'min_salary_currency', 'max_salary_currency')
+                    ->where('id', $jobId)
+                    ->first();
+
+                if (! $job) {
+                    return self::getTenantCurrency();
+                }
+
+                $currencyKey = $job->min_salary_currency ?? ($job->max_salary_currency ?? null);
+                if ($currencyKey !== null && $currencyKey !== '') {
+                    return self::resolveCurrencyCode($currencyKey);
+                }
+
+                return self::getTenantCurrency($job->company_id ?? null);
+            });
+        }
+
+        if (is_array($jobOrId)) {
+            $jobOrId = (object) $jobOrId;
+        }
+
+        $currencyKey = $jobOrId->min_salary_currency ?? ($jobOrId->max_salary_currency ?? null);
         if ($currencyKey !== null && $currencyKey !== '') {
             return self::resolveCurrencyCode($currencyKey);
         }
 
-        $companyId = $job->company_id ?? null;
+        $companyId = $jobOrId->company_id ?? null;
 
         return self::getTenantCurrency($companyId);
     }
 
     /**
-     * Get the authoritative currency integer key for a given job.
+     * Get the authoritative currency integer key for a given job or job ID.
      *
-     * @param  object|array|null  $job
+     * @param  object|array|int|string|null  $jobOrId
      */
-    public static function getJobCurrencyKey($job): int
+    public static function getJobCurrencyKey($jobOrId): int
     {
-        $code = self::getJobCurrencyCode($job);
+        $code = self::getJobCurrencyCode($jobOrId);
 
         return self::resolveCurrencyKey($code);
     }
 
     /**
-     * Get the currency symbol for a given job.
+     * Get the currency symbol for a given job or job ID.
      *
-     * @param  object|array|null  $job
+     * @param  object|array|int|string|null  $jobOrId
      */
-    public static function getJobCurrencySymbol($job): string
+    public static function getJobCurrencySymbol($jobOrId): string
     {
-        $code = self::getJobCurrencyCode($job);
+        $code = self::getJobCurrencyCode($jobOrId);
         $symbols = self::getCurrencySymbols();
 
         return $symbols[$code] ?? '$';
+    }
+
+    /**
+     * Get comprehensive authoritative metadata for a given job or job ID.
+     *
+     * @param  object|array|int|string|null  $jobOrId
+     * @return array{code: string, key: int, symbol: string, flag: string, name: string}
+     */
+    public static function getJobCurrencyMeta($jobOrId): array
+    {
+        $code = self::getJobCurrencyCode($jobOrId);
+        $key = self::resolveCurrencyKey($code);
+        $symbol = self::getJobCurrencySymbol($jobOrId);
+        $flag = self::CURRENCY_FLAGS[$code] ?? '🌐';
+        $meta = GeneralMethod::currencyEnterpriseMeta($code);
+
+        return [
+            'code' => $code,
+            'key' => $key,
+            'symbol' => $symbol,
+            'flag' => $flag,
+            'name' => $meta['label'] ?? $code,
+        ];
     }
 
     /**

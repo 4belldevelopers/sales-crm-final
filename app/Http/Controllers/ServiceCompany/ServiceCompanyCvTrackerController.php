@@ -2770,6 +2770,45 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                      * vendor company's job_applications row (submitted_by, job_id, master_status_id, ctc/ectc).
                      * Instead, increment countforadd (and set status=1 when countforadd >= 3) for cross-company bench.
                      */
+                    // Smart Job Currency Normalization & Conversion (RULE-CURRENCY-JOB-AUTHORITATIVE-001)
+                    // If target job has a specific currency, enforce it.
+                    // If candidate's current currency differs from target job currency, convert CTC and ECTC.
+                    // If identical, preserve exact values without conversion drift.
+                    $targetJobCurKey = \App\Services\CurrencyService::getJobCurrencyKey($jobRow);
+                    $candCurKey      = $applicationRow->current_ctc_cur ?? null;
+                    $sourceCtc       = (float) ($applicationRow->ctc ?? 0);
+                    $sourceEctc      = (float) ($applicationRow->ectc ?? 0);
+
+                    $finalCtc        = $sourceCtc;
+                    $finalEctc       = $sourceEctc;
+                    $finalCurKey     = $candCurKey;
+
+                    if ($targetJobCurKey !== null) {
+                        $finalCurKey = (int) $targetJobCurKey;
+                        if ($candCurKey !== null && (int) $candCurKey !== (int) $targetJobCurKey) {
+                            if ($sourceCtc > 0) {
+                                $finalCtc = round(\App\Services\CurrencyService::convert($sourceCtc, (int) $candCurKey, (int) $targetJobCurKey), 2);
+                            }
+                            if ($sourceEctc > 0) {
+                                $finalEctc = round(\App\Services\CurrencyService::convert($sourceEctc, (int) $candCurKey, (int) $targetJobCurKey), 2);
+                            }
+                        }
+                    }
+
+                    $currencyMap = GeneralMethod::currency();
+                    $finalCurCode = $currencyMap[$finalCurKey] ?? 'INR';
+                    $ectcConvertedAmount = $finalEctc;
+                    if ($finalCurKey > 0) {
+                        $ectcConvertedAmount = GeneralMethod::convertToINR($ectcConvertedAmount, $finalCurCode);
+                    }
+                    $ectcdivided = GeneralMethod::salaryDividedByMode(0, $ectcConvertedAmount);
+
+                    $ctcConvertedAmount = $finalCtc;
+                    if ($finalCurKey > 0) {
+                        $ctcConvertedAmount = GeneralMethod::convertToINR($ctcConvertedAmount, $finalCurCode);
+                    }
+                    $ctcdivided = GeneralMethod::salaryDividedByMode(0, $ctcConvertedAmount);
+
                     if ($isBenchCandidate) {
                         if ($isCrossCompanyBench) {
                             $newCountForAdd = ((int) ($dbAppRow->countforadd ?? 0)) + 1;
@@ -2807,12 +2846,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'total_exp' => @$applicationRow->total_exp,
                             'rel_exp' => @$applicationRow->rel_exp,
                             'passport' => @$applicationRow->passport,
-                            'ctc' => @$applicationRow->ctc,
-                            'current_ctc_cur' => @$applicationRow->current_ctc_cur,
+                            'ctc' => $finalCtc,
+                            'current_ctc_cur' => $finalCurKey,
                             'current_ctc_mode' => @$applicationRow->current_ctc_mode,
-                            'ectc' => @$applicationRow->ectc,
-                            'current_ectc_cur' => @$applicationRow->current_ectc_cur,
+                            'ectc' => $finalEctc,
+                            'current_ectc_cur' => $finalCurKey,
                             'current_ectc_mode' => @$applicationRow->current_ectc_mode,
+                            'ctc_yearly' => @$ctcdivided->yearly,
+                            'ctc_monthly' => @$ctcdivided->monthly,
+                            'ctc_hourly' => @$ctcdivided->hourly,
+                            'ectc_yearly' => @$ectcdivided->yearly,
+                            'ectc_monthly' => @$ectcdivided->monthly,
+                            'ectc_hourly' => @$ectcdivided->hourly,
                             'current_location' => @$applicationRow->current_location,
                             'current_designation' => @$applicationRow->current_designation,
                             'current_company' => @$applicationRow->current_company,
