@@ -824,6 +824,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
       </a>
 
+      {{-- Forward Resume Header Action (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17) --}}
+      <button type="button" class="cdr-action-btn cdr-btn-secondary {{ $dnone }}" id="hdr_fwd_resume_btn" onclick="openCandidateForwardResume({{ (int)$application->id }}, {{ !empty($jobId) ? (int)$jobId : 'null' }})" title="Forward candidate resume to client or hiring team">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        Forward Resume
+      </button>
+
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
 
       @php
@@ -7540,5 +7549,166 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   });
 };
 
+})();
+</script>
+
+<style>
+  /* Ensure Forward Resume drawer always displays above Candidate Drawer (z-index: 999999) */
+  #kt_test_fwd_resume_drawer,
+  #kt_test_fwd_resume_drawer_aptk,
+  #kt_test_fwd_resume_drawer_clientapp {
+    z-index: 1000050 !important;
+  }
+  /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
+  #kt_activitiesApplication .cdr-topbar-group {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+/**
+ * Forward Resume Launcher for Candidate Drawer (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17)
+ * Authoritative Client-First execution: auto-selects ONLY the currently open candidate
+ * and launches the existing Forward Resume workflow (ForwardResumeManager V4.1 with circuit-breaker fallback).
+ */
+(function() {
+  function ensureForwardResumeDrawerShell() {
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (!drawerEl) {
+      var shellMarkup = 
+        '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
+        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
+        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
+        '    data-kt-drawer-width="{default:\'90%\', \'lg\': \'80%\'}" data-kt-drawer-direction="end"' +
+        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
+        '    style="z-index: 1000050 !important;">' +
+        '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
+        '    <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">' +
+        '      <div class="d-flex align-items-center py-1"><h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3></div>' +
+        '      <div class="card-toolbar">' +
+        '        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_test_fwd_resume_drawer_close">' +
+        '          <span class="svg-icon svg-icon-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>' +
+        '        </button>' +
+        '      </div>' +
+        '    </div>' +
+        '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>' +
+        '  </div>' +
+        '</div>';
+      $('body').append(shellMarkup);
+      drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
+      if (typeof KTDrawer !== 'undefined') {
+        KTDrawer.createInstances();
+      }
+    }
+    if (drawerEl) {
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+    }
+    return drawerEl;
+  }
+
+  function ensureForwardResumeManager() {
+    if (window.ForwardResumeManager) {
+      return Promise.resolve(window.ForwardResumeManager);
+    }
+    return new Promise(function(resolve, reject) {
+      var existing = document.getElementById('fwd_resume_manager_script');
+      if (existing) {
+        if (window.ForwardResumeManager) return resolve(window.ForwardResumeManager);
+        existing.addEventListener('load', function() { resolve(window.ForwardResumeManager); });
+        existing.addEventListener('error', function(e) { reject(e); });
+        return;
+      }
+      var s = document.createElement('script');
+      s.id = 'fwd_resume_manager_script';
+      s.src = "{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}";
+      s.onload = function() { resolve(window.ForwardResumeManager); };
+      s.onerror = function(err) { reject(err); };
+      document.body.appendChild(s);
+    });
+  }
+
+  window.openCandidateForwardResume = function(candidateId, jobId) {
+    if (!candidateId) {
+      console.warn('[CDR-FWD] Candidate ID is missing.');
+      return;
+    }
+
+    var candArr = [parseInt(candidateId, 10)];
+    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
+
+    var drawerEl = ensureForwardResumeDrawerShell();
+
+    ensureForwardResumeManager().then(function(mgr) {
+      if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
+        mgr.initRoutes({
+          shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
+          engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
+          data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
+          recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
+          intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+          send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+          quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+          emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
+          legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
+        });
+      }
+
+      // Enforce clean state: isolate strictly to current candidate
+      if (mgr) {
+        mgr._currentCandidateIds = candArr;
+        mgr._currentJobIdArr = jobArr;
+        mgr._compiledAttachments = {};
+        mgr._recipientsCache = null;
+        mgr.open(candArr, jobArr, {});
+      }
+    }).catch(function(err) {
+      console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
+      if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) { drawer.show(); } else { $(drawerEl).addClass('drawer-on'); }
+      } else if (drawerEl) {
+        $(drawerEl).addClass('drawer-on');
+      }
+
+      var bodyContainer = $('#application_test_fwd_resume_body_content');
+      if (bodyContainer.length) {
+        bodyContainer.html(
+          '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
+          '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
+        );
+
+        var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
+        var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
+
+        $.ajax({
+          type: 'POST',
+          url: url,
+          data: {
+            '_token': "{{ csrf_token() }}",
+            'arr': candArr,
+            'jobIdArr': jobArr,
+            'matchMap': {}
+          },
+          cache: false,
+          success: function(response) {
+            if (response && response.status === 'success' && response.view) {
+              bodyContainer.html(response.view);
+            } else {
+              bodyContainer.html('<div class="p-8 text-center text-danger">' + ((response && response.message) || 'Failed to initialize Forward Resume') + '</div>');
+            }
+          },
+          error: function() {
+            bodyContainer.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
+          }
+        });
+      }
+    });
+  };
 })();
 </script>
