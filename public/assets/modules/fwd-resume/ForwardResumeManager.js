@@ -392,6 +392,7 @@
             self._confirmedMissing = false;
             self._compiledAttachments = {};
             self._draftState = 'HYDRATING';
+            self._lastOpenedTime = Date.now();
 
             // 1. Instant Drawer Display (< 16ms)
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
@@ -2416,6 +2417,9 @@
                 var drawer = KTDrawer.getInstance(drawerEl);
                 if (drawer) drawer.hide();
             }
+            if (drawerEl) {
+                drawerEl.classList.remove('drawer-on');
+            }
             self.closeRecipientDrawer();
         }
     };
@@ -2438,6 +2442,62 @@
                 window.ForwardResumeManager.closeFormatDropdown();
             }
         }
+    });
+
+    // Dismiss Forward Resume drawer when clicking anywhere outside
+    $(document).on('click', function (e) {
+        var mgr = window.ForwardResumeManager;
+        if (!mgr) return;
+
+        // Ignore clicks within 250ms of drawer opening to prevent closing from the trigger click
+        if (Date.now() - (mgr._lastOpenedTime || 0) < 250) {
+            return;
+        }
+
+        var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                       document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                       document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+        if (!drawerEl || !drawerEl.classList.contains('drawer-on')) {
+            return;
+        }
+
+        var rcpEl = document.getElementById('kt_test_recipient_drawer');
+
+        // Check if event originated inside the main drawer or recipient drawer using composedPath if available
+        var path = (e.originalEvent && typeof e.originalEvent.composedPath === 'function') ? e.originalEvent.composedPath() : null;
+        if (path && Array.isArray(path)) {
+            if (path.includes(drawerEl) || (rcpEl && path.includes(rcpEl))) {
+                return;
+            }
+        }
+
+        // Direct DOM ancestry check
+        if (drawerEl.contains(e.target) || $(e.target).closest(drawerEl).length) {
+            return;
+        }
+
+        // Recipient drawer ancestry check
+        if (rcpEl && (rcpEl.contains(e.target) || $(e.target).closest(rcpEl).length)) {
+            return;
+        }
+
+        // If node was removed/detached from DOM during click handling (e.g., tag removal, DOM re-render)
+        if (!document.body.contains(e.target) && (!path || !path.includes(document.body))) {
+            return;
+        }
+
+        // Do not close if interacting with floating dialogs, dropdowns, popups attached to body
+        if ($(e.target).closest('.swal2-container, .swal2-popup, .select2-container, .select2-dropdown, .flatpickr-calendar, .tagify__dropdown, .cke_dialog, .cke, .modal, .modal-backdrop, .tooltip, .popover, .dropdown-menu').length) {
+            return;
+        }
+
+        // Do not close if clicking any trigger button that launches the drawer
+        if ($(e.target).closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp').length) {
+            return;
+        }
+
+        // Clicked outside -> close Forward Resume drawer
+        mgr.close();
     });
 
 })(window, document, jQuery);
