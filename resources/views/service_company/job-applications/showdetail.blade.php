@@ -145,7 +145,7 @@
 /* ===== PROFILE OVERVIEW: heading 13px, body 12px ===== */
 /* Inline here (not candidates-details.css) so browser cache never blocks delivery. */
 #kt_activitiesApplication #personal_details .card-title{font-size:13px!important;font-weight:700!important;}
-#kt_activitiesApplication #personal_details .summary-text{font-size:12px!important;line-height:1.7!important;}
+#kt_activitiesApplication #personal_details .summary-text,#kt_activitiesApplication #personal_details .reason-summary-text{font-size:12px!important;line-height:1.7!important;}
 #kt_activitiesApplication #personal_details .skills-thead{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-name-cell{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-exp-cell{font-size:12px!important;}
@@ -517,14 +517,16 @@
 #kt_activitiesApplication .cdr-skill-plain{background:#f8fafc;color:#64748b;border-color:#e2e8f0;}
 /* "+N More" counter tag */
 #kt_activitiesApplication .cdr-skill-tag.cdr-skill-more{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;font-size:10.5px;}
-/* Recruiter Notes drawer */
-#jw-recruiter-note-drawer .rn-section{margin-bottom:16px;}
-#jw-recruiter-note-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
-#jw-recruiter-note-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
-#jw-recruiter-note-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
+/* Recruiter Notes & Reason for Job Change drawers */
+#jw-recruiter-note-drawer .rn-section, #jw-reason-drawer .rn-section{margin-bottom:16px;}
+#jw-recruiter-note-drawer .rn-label, #jw-reason-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+#jw-recruiter-note-drawer .rn-label span, #jw-reason-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
+#jw-recruiter-note-drawer .rn-select, #jw-reason-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
 #jw-recruiter-note-drawer .rn-editor{min-height:220px;max-height:400px;border:1.5px solid #e4e6ef;border-radius:8px;padding:12px 14px;font-size:12px;font-family:'Poppins',sans-serif;line-height:1.75;color:#181c32;background:#f8f9fb;outline:none;overflow-y:auto;word-break:break-word;}
 #jw-recruiter-note-drawer .rn-editor:focus{border-color:#3e97ff;background:#fff;}
 #jw-recruiter-note-drawer .rn-editor:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
+#jw-reason-drawer #jw_reason_for_change_editor{font-family:'Poppins',sans-serif;font-size:12px;color:#181c32;border:1.5px solid #e4e6ef;border-radius:8px;padding:10px 12px;line-height:1.6;background:#f8f9fb;}
+#jw-reason-drawer #jw_reason_for_change_editor:focus{border-color:#d97706;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(217,119,6,0.1);}
 /* Interview Slots empty state */
 #kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
 #kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
@@ -3414,6 +3416,30 @@
             <p class="summary-text">{{@$application->careersummary}}</p>
             {{-- <span class="word-count-badge">184 / 200 Words</span> --}}
           </section>
+
+          <!-- ===== REASON FOR JOB CHANGE CARD (Rule 14, Rule 17) ===== -->
+          <section class="cardshow" id="reason_for_job_change_card">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #fffbeb; color: #d97706;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a4.5 4.5 0 0 0 4.5-4.5v0a4.5 4.5 0 0 0-4.5-4.5H11"/><polyline points="14 6 11 10 14 14"/><circle cx="6" cy="5" r="3"/>
+                </svg>
+              </div>
+              <h3 class="card-title">Reason for Job Change</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editReasonForChange" id="btn_edit_reason_change" title="Edit Reason for Job Change">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
+            </div>
+            @if(!empty(@$application->reason_for_job_change))
+              <p class="reason-summary-text reason-change-display-text" id="drawer_reason_display_text" style="margin:0; color:#334155; line-height:1.65; word-break:break-word;">{{ @$application->reason_for_job_change }}</p>
+            @else
+              <p class="reason-summary-text reason-change-display-text text-muted" id="drawer_reason_display_text" style="margin:0; font-style:italic; color:#94a3b8; line-height:1.65;">No reason for job change specified.</p>
+            @endif
+          </section>
+
          @if($application->condidate_type !='other')
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -4353,19 +4379,6 @@
                   <span class="comp-label">Reference Name</span>
                   <span class="comp-value">{{ !empty(@$application->referencename) ? ucwords(@$application->referencename) : '—' }}</span>
                 </div>
-                <div class="comp-row" style="flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 6px;">
-                  <span class="comp-label" style="display:inline-flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-route" style="color:#2563eb; font-size:11px;"></i>
-                    <b style="color: #0f172a;">Reason For Job Change</b>
-                  </span>
-                  @if(!empty(@$application->reason_for_job_change))
-                    <div style="font-size:12px; color:#1e293b; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:7px 10px; width:100%; line-height:1.45; word-break:break-word;">
-                      {{ @$application->reason_for_job_change }}
-                    </div>
-                  @else
-                    <span class="comp-value text-muted" style="font-style:italic;">Not Specified</span>
-                  @endif
-                </div>
              </div>
           </section>
           @endif
@@ -4920,6 +4933,96 @@
           </div>
         </div>
       </div>{{-- /#jw-recruiter-note-drawer --}}
+
+      {{-- DRAWER 5: Reason for Job Change --}}
+      <div class="jw-side-drawer" id="jw-reason-drawer">
+        <div class="jw-drawer-backdrop editReasonCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#fffbeb;color:#d97706;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a4.5 4.5 0 0 0 4.5-4.5v0a4.5 4.5 0 0 0-4.5-4.5H11"/><polyline points="14 6 11 10 14 14"/><circle cx="6" cy="5" r="3"/>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Reason for Job Change</div>
+              <div class="jw-drawer-subtitle">Select a scenario template or enter a custom reason</div>
+            </div>
+            <button type="button" class="jw-drawer-close editReasonCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body reason-drawer-body d-none">
+            <input type="hidden" id="reason_app_id" value="{{ @$application->id }}">
+
+            {{-- Template Selector --}}
+            <div class="rn-section" id="reason-template-wrap">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="rn-label mb-0" for="reason_template_select_drawer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Select Reason Template <span>(Pre-fills reason)</span>
+                </label>
+                <button type="button" class="btn btn-sm btn-light-warning py-0 px-2" id="btn_save_custom_reason_drawer" title="Save current text as a custom reusable template" style="font-size:10.5px;height:22px;line-height:20px;border-radius:4px;font-weight:500;">
+                  <i class="fa-solid fa-plus me-1" style="font-size:9px;"></i> Save as Custom
+                </button>
+              </div>
+              <select class="rn-select" id="reason_template_select_drawer">
+                <option value="">-- Select Template (or type custom below) --</option>
+                <optgroup label="Growth & Role Progression">
+                  <option value="reason_growth">Career Growth</option>
+                  <option value="reason_better_opp">Better Career Opportunity</option>
+                  <option value="reason_higher_comp">Higher Compensation</option>
+                  <option value="reason_better_role_tech">Better Role / Technology</option>
+                  <option value="reason_higher_resp">Higher Responsibility</option>
+                </optgroup>
+                <optgroup label="Stability & Organizational Shifts">
+                  <option value="reason_seeking_stability">Seeking Stability</option>
+                  <option value="reason_proj_ending">Current Project/Contract Ending</option>
+                  <option value="reason_restructuring">Company Restructuring / Layoff</option>
+                  <option value="reason_org_changes">Organizational Changes</option>
+                  <option value="reason_mgmt_change">Management / Team Change</option>
+                </optgroup>
+                <optgroup label="Availability & Logistics">
+                  <option value="reason_immediate_joiner">Looking for Immediate Joiner Opportunity</option>
+                  <option value="reason_notice_constraints">Notice Period / Joining Constraints</option>
+                  <option value="reason_relocation">Relocation</option>
+                  <option value="reason_commute_issue">Work Location / Commute Issue</option>
+                  <option value="reason_wfh_hybrid">Work-from-Home / Hybrid Requirement</option>
+                  <option value="reason_international">International Opportunity</option>
+                </optgroup>
+                <optgroup label="Personal & Life Milestones">
+                  <option value="reason_medical">Medical Emergency</option>
+                  <option value="reason_personal">Personal Reasons</option>
+                  <option value="reason_career_break">Career Break</option>
+                  <option value="reason_role_misalign">Role Misalignment</option>
+                  <option value="reason_other">Other</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {{-- Textarea editor --}}
+            <div class="rn-section mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="rn-label mb-0" for="jw_reason_for_change_editor">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  Candidate Reason Details
+                </label>
+                <span class="text-muted" id="reason_drawer_char_counter" style="font-size:11px; font-weight:500;">
+                  {{ strlen(@$application->reason_for_job_change ?? '') }} / 250
+                </span>
+              </div>
+              <textarea id="jw_reason_for_change_editor" class="form-control" rows="4" maxlength="250" placeholder="Specify candidate's transition driver or pick from standard recruitment scenarios...">{{ @$application->reason_for_job_change }}</textarea>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="reason-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editReasonCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-reason-drawer --}}
 
     </div>{{-- /#personal_details tab-pane --}}
 
@@ -6014,6 +6117,199 @@ setTimeout(() => {
         });
     });
 
+    // ===== REASON FOR JOB CHANGE DRAWER LOGIC (Rule 14, Rule 17) =====
+    var jwReasonTemplates = {
+        'reason_growth': 'Looking for upward career growth and clear advancement pathways that are currently constrained in the current organizational setup.',
+        'reason_better_opp': 'Actively exploring better career opportunities with broader scope, progressive work culture, and advanced technical exposure.',
+        'reason_higher_comp': 'Seeking competitive compensation aligned with current market standards, proven capabilities, and overall industry experience.',
+        'reason_better_role_tech': 'Seeking transition to modern technology stacks, product architecture, and more hands-on technical challenges.',
+        'reason_higher_resp': 'Prepared to take on higher technical ownership, cross-functional project leadership, and larger team responsibilities.',
+        'reason_seeking_stability': 'Looking for long-term organizational stability, financial soundness, and sustainable project continuity.',
+        'reason_proj_ending': 'Current project/contract engagement is approaching successful completion, actively looking for the next long-term role.',
+        'reason_restructuring': 'Impacted by organizational restructuring and company-wide downsizing; actively available for immediate placement.',
+        'reason_org_changes': 'Recent strategic changes in company direction and organizational priorities have prompted seeking a better-aligned opportunity.',
+        'reason_mgmt_change': 'Recent internal team restructuring and leadership changes have resulted in realignment of roles and priorities.',
+        'reason_immediate_joiner': 'Available as an immediate joiner with zero notice period constraints, looking for immediate onboarding.',
+        'reason_notice_constraints': 'Currently serving notice period and actively seeking roles aligned with current availability and joining timeline.',
+        'reason_relocation': 'Relocating to the target location for personal/family reasons, seeking a local or remote opportunity.',
+        'reason_commute_issue': 'Looking for an opportunity closer to residence or with reduced commute time to enhance day-to-day productivity.',
+        'reason_wfh_hybrid': 'Seeking a structured hybrid or remote work arrangement to optimize productivity and achieve healthy work-life balance.',
+        'reason_international': 'Actively exploring international opportunities, cross-border projects, or roles offering visa sponsorship.',
+        'reason_medical': 'Took necessary time to attend to family medical priorities; the situation is fully resolved and ready for full-time commitment.',
+        'reason_personal': 'Seeking a career transition due to personal commitments while remaining dedicated to professional growth.',
+        'reason_career_break': 'Returning to the active workforce after a planned career break with refreshed skills and high enthusiasm.',
+        'reason_role_misalign': 'Current day-to-day responsibilities have diverged from the original job profile; looking for a role matching core strengths.',
+        'reason_other': 'Exploring new opportunities to better align personal career milestones with long-term professional aspirations.'
+    };
+
+    function loadCustomReasonTemplates() {
+        try {
+            var raw = localStorage.getItem('jero_custom_reason_templates');
+            if (raw) {
+                var customs = JSON.parse(raw);
+                if (Array.isArray(customs) && customs.length > 0) {
+                    $('#reason_template_select_drawer optgroup[data-custom="true"]').remove();
+                    var $optgroup = $('<optgroup label="Custom Saved Templates" data-custom="true"></optgroup>');
+                    customs.forEach(function(item, idx) {
+                        var valKey = 'custom_' + idx;
+                        jwReasonTemplates[valKey] = item.text;
+                        $optgroup.append($('<option>', { value: valKey, text: '★ ' + item.title }));
+                    });
+                    $('#reason_template_select_drawer').append($optgroup);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load custom reason templates from localStorage:', e);
+        }
+    }
+
+    $(document).on('click', '.editReasonForChange', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-reason-drawer').addClass('jw-drawer-open');
+        $('.reason-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
+        loadCustomReasonTemplates();
+
+        var currentText = $('#drawer_reason_display_text').hasClass('text-muted') ? '' : $('#drawer_reason_display_text').text().trim();
+        if (currentText && currentText !== 'No reason for job change specified.') {
+            $('#jw_reason_for_change_editor').val(currentText);
+        }
+        var count = ($('#jw_reason_for_change_editor').val() || '').length;
+        $('#reason_drawer_char_counter').text(count + ' / 250');
+    });
+
+    $(document).on('click', '.editReasonCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-reason-drawer').removeClass('jw-drawer-open');
+        $('.reason-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
+    });
+
+    $(document).on('change', '#reason_template_select_drawer', function() {
+        var key = $(this).val();
+        if (key && jwReasonTemplates[key]) {
+            var text = jwReasonTemplates[key];
+            if (text.length > 250) text = text.substring(0, 250);
+            $('#jw_reason_for_change_editor').val(text);
+            $('#reason_drawer_char_counter').text(text.length + ' / 250');
+        }
+    });
+
+    $(document).on('input keyup paste', '#jw_reason_for_change_editor', function() {
+        var len = $(this).val().length;
+        $('#reason_drawer_char_counter').text(len + ' / 250');
+    });
+
+    $(document).on('click', '#btn_save_custom_reason_drawer', function(e) {
+        e.preventDefault();
+        var currentVal = ($('#jw_reason_for_change_editor').val() || '').trim();
+        if (!currentVal) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Empty Reason', 'Please enter a reason before saving it as a custom template.', 'info');
+            } else {
+                alert('Please enter a reason before saving it as a custom template.');
+            }
+            return;
+        }
+
+        var templateName = prompt('Enter a short title for this custom reason template:', currentVal.substring(0, 30));
+        if (!templateName || !templateName.trim()) return;
+
+        try {
+            var customs = [];
+            var raw = localStorage.getItem('jero_custom_reason_templates');
+            if (raw) customs = JSON.parse(raw);
+            if (!Array.isArray(customs)) customs = [];
+
+            customs.unshift({ title: templateName.trim(), text: currentVal });
+            localStorage.setItem('jero_custom_reason_templates', JSON.stringify(customs.slice(0, 20)));
+            loadCustomReasonTemplates();
+            if (typeof toastr !== 'undefined') {
+                toastr.success('Custom template "' + templateName.trim() + '" saved successfully!');
+            }
+        } catch (err) {
+            console.error('Failed to save custom template:', err);
+        }
+    });
+
+    $(document).on('click', '#reason-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var reason = $('#jw_reason_for_change_editor').val();
+        var appId  = $('#reason_app_id').val();
+
+        $.ajax({
+            url: '{{ route('service_company.job-applications.reasonForChangeUpdate') }}?_token={{ csrf_token() }}',
+            type: 'POST',
+            data: { appId: appId, reason_for_job_change: reason },
+            success: function(response) {
+                if (response.status) {
+                    var trimmed = (reason || '').trim();
+                    if (trimmed) {
+                        $('#drawer_reason_display_text')
+                            .removeClass('text-muted')
+                            .css({ 'font-style': 'normal', 'color': '#334155' })
+                            .text(trimmed);
+                    } else {
+                        $('#drawer_reason_display_text')
+                            .addClass('text-muted')
+                            .css({ 'font-style': 'italic', 'color': '#94a3b8' })
+                            .text('No reason for job change specified.');
+                    }
+
+                    if (typeof drawerCandidateVars !== 'undefined') {
+                        drawerCandidateVars.jobChangeReason = trimmed || 'career advancement';
+                    }
+
+                    // Invalidate caches if available
+                    var wId = $('#job_wise_id').val() || null;
+                    var cId = appId;
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+
+                    $('#jw-reason-drawer').removeClass('jw-drawer-open');
+                    $('.reason-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
+                    if (document.activeElement) { document.activeElement.blur(); }
+
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Success', 'Reason for job change updated successfully!', 'success');
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.success('Reason for job change updated successfully!');
+                        }
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', response.message || 'Could not update reason.', 'warning');
+                    }
+                }
+            },
+            error: function(xhr) {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                var msg = 'Something went wrong. Please try again.';
+                try { var r = JSON.parse(xhr.responseText); if (r && r.message) msg = r.message; } catch(e) {}
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Warning', msg, 'warning');
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(msg);
+                }
+            }
+        });
+    });
 
 </script> 
 <!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
