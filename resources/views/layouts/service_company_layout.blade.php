@@ -3340,14 +3340,21 @@ $( document ).ready(function() {
       drawerId = drawerId || 'kt_activitiesApplication';
       if (drawerId === 'kt_activitiesApplication') {
           window.__activeCandidateDrawerId = null;
+          if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+              try { window.ForwardResumeManager.close(); } catch(e) {}
+          }
+          if (typeof window.closeTestFwdResumeDrawer === 'function') {
+              try { window.closeTestFwdResumeDrawer(); } catch(e) {}
+          }
       }
       var drawerEl = document.getElementById(drawerId);
       if (drawerEl) {
+          drawerEl.classList.remove('drawer-on');
+          drawerEl.style.removeProperty('transform');
+          drawerEl.style.removeProperty('z-index');
           var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
           if (drawer) {
               drawer.hide();
-          } else {
-              drawerEl.classList.remove('drawer-on');
           }
       }
       $('.custom-cand-drawer-overlay').remove();

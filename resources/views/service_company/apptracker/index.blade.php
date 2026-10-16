@@ -2114,15 +2114,27 @@
         });
 
         $(document).on('click', '#kt_test_fwd_resume_drawer_close_aptk', function() {
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+            if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+                window.ForwardResumeManager.close();
+            } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
+                window.closeTestFwdResumeDrawer();
+            } else {
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                    try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+                }
+                var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
+                if (drawerEl) {
+                    drawerEl.classList.remove('drawer-on');
+                    drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
+                    drawerEl.style.setProperty('display', 'none', 'important');
+                    drawerEl.style.removeProperty('z-index');
+                    if (typeof KTDrawer !== 'undefined') {
+                        var drawer = KTDrawer.getInstance(drawerEl);
+                        if (drawer) { drawer.hide(); }
+                    }
+                }
+                $('#application_test_fwd_resume_body_content').html('');
             }
-            var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) { drawer.hide(); }
-            }
-            $('#application_test_fwd_resume_body_content').html('');
         });
 
         $(document).on('click', '.mass_mail', function() {
