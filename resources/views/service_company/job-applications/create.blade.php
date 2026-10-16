@@ -3706,7 +3706,7 @@
                       </div>
                     </div>
                     <div class="candidate-offer-field">
-                      <strong>Offer in Hand</strong>
+                      <strong>Any Offer from other organization</strong>
                       <div class="rg">
                         <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
                         <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>

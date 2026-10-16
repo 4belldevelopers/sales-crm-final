@@ -398,13 +398,22 @@
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
                            document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (!drawer) {
-                    KTDrawer.createInstances();
-                    drawer = KTDrawer.getInstance(drawerEl);
+            if (drawerEl) {
+                if (!drawerEl.classList.contains('drawer')) {
+                    drawerEl.classList.add('drawer', 'drawer-end');
                 }
-                if (drawer) { drawer.show(); }
+                drawerEl.classList.add('drawer-on');
+                drawerEl.style.setProperty('transform', 'none', 'important');
+                drawerEl.style.setProperty('display', 'flex', 'important');
+                drawerEl.style.setProperty('z-index', '1000050', 'important');
+                if (typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (!drawer) {
+                        KTDrawer.createInstances();
+                        drawer = KTDrawer.getInstance(drawerEl);
+                    }
+                    if (drawer) { drawer.show(); }
+                }
             }
 
             var container = $('#application_test_fwd_resume_body_content');
@@ -2413,14 +2422,23 @@
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
                            document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) drawer.hide();
-            }
             if (drawerEl) {
                 drawerEl.classList.remove('drawer-on');
+                drawerEl.style.removeProperty('transform');
+                if (typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) drawer.hide();
+                }
             }
-            self.closeRecipientDrawer();
+            if (typeof self.closeFormatDropdown === 'function') {
+                self.closeFormatDropdown();
+            }
+            if (typeof self.closeRecipientDrawer === 'function') {
+                self.closeRecipientDrawer();
+            }
+            if (typeof self._resetDrawerForm === 'function') {
+                self._resetDrawerForm();
+            }
         }
     };
 
@@ -2436,7 +2454,7 @@
     }
 
     // Dismiss custom format dropdown when clicking outside
-    $(document).on('click', function (e) {
+    $(document).off('click.fwdResumeFormat').on('click.fwdResumeFormat', function (e) {
         if (!$(e.target).closest('#test_fwd_format_dropdown_wrap').length) {
             if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
                 window.ForwardResumeManager.closeFormatDropdown();
@@ -2445,12 +2463,12 @@
     });
 
     // Dismiss Forward Resume drawer when clicking anywhere outside
-    $(document).on('click', function (e) {
+    $(document).off('click.fwdResumeOutside').on('click.fwdResumeOutside', function (e) {
         var mgr = window.ForwardResumeManager;
         if (!mgr) return;
 
-        // Ignore clicks within 250ms of drawer opening to prevent closing from the trigger click
-        if (Date.now() - (mgr._lastOpenedTime || 0) < 250) {
+        // Ignore clicks within 300ms of drawer opening to prevent closing from the trigger click
+        if (Date.now() - (mgr._lastOpenedTime || 0) < 300) {
             return;
         }
 
@@ -2492,7 +2510,16 @@
         }
 
         // Do not close if clicking any trigger button that launches the drawer
-        if ($(e.target).closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp').length) {
+        var isTrigger = false;
+        try {
+            if (e.target && e.target.closest && e.target.closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp')) {
+                isTrigger = true;
+            }
+        } catch (ex) {}
+        if (!isTrigger && $(e.target).closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp').length) {
+            isTrigger = true;
+        }
+        if (isTrigger) {
             return;
         }
 
