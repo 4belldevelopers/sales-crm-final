@@ -778,7 +778,7 @@
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
         <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-          Edit Profile
+          Edit
         </a>
       @endif
 
@@ -802,7 +802,7 @@
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <polyline points="3 7 12 13 21 7"/>
           </svg>
-          Send Email
+          Email
         </a>
 
         @if(@$application->condidate_type=='other' && $notVisiableBench)
@@ -810,7 +810,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20.52 3.48A11.94 11.94 0 0 0 12 0C5.37 0 .05 5.32.05 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.7 1.45h.01c6.63 0 11.95-5.32 11.95-11.95 0-3.19-1.24-6.19-3.44-8.37z"/>
             </svg>
-            Send WhatsApp
+            WhatsApp
           </a>
         @endif
       @endif
