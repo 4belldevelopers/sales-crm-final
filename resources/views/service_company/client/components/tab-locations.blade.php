@@ -52,7 +52,7 @@
 ?>
 
 <div class="pb-5 client-address-step" data-wizard-type="step-content">
-  <div class="client-step-layout">
+  <div class="client-step-layout client-address-layout">
     <!-- LEFT MAIN COLUMN -->
     <div class="client-main-column">
       <!-- Header Banner Matching media_1792064818634.png -->
@@ -462,22 +462,6 @@
 <style>
   /* ==========================================================================
      EXACT DESIGN STYLES FOR ADDRESS DETAILS (media_1792064818634.png)
-     ========================================================================== */
-  .client-address-step .client-step-layout {
-    display: grid !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    grid-template-columns: minmax(0, 1fr) 340px !important;
-    gap: 20px !important;
-    align-items: stretch !important;
-  }
-  @media (max-width: 991px) {
-    .client-address-step .client-step-layout {
-      grid-template-columns: 1fr !important;
-    }
-  }
-
   /* Header Top & Info Banner */
   .client-addr-header-wrap {
     margin-bottom: 20px;
