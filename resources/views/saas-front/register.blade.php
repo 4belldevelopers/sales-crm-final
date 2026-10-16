@@ -1595,6 +1595,37 @@ body, html {
           </div>
         </div>
 
+        <!-- Section 4: Platform Default Currency -->
+        <div class="v2-step3-box fv-row smsForm mt-6">
+          <div class="v2-step3-head">
+            <div class="v2-step3-icon" style="background:#ecfdf5; color:#059669;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#059669" stroke-width="2"/><line x1="2" y1="10" x2="22" y2="10" stroke="#059669" stroke-width="2"/><circle cx="7" cy="15" r="1.5" fill="#059669"/><circle cx="17" cy="15" r="1.5" fill="#059669"/></svg>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-grow-1">
+              <div>
+                <div class="v2-step3-title d-flex align-items-center gap-2">
+                  Platform Default Currency <span class="text-danger">*</span>
+                  <span class="badge badge-light-success fs-8 py-1 px-2 fw-semibold" id="currency_auto_detected_badge">Auto-detected from location</span>
+                </div>
+                <div class="v2-step3-sub">Primary currency for your organization's jobs, candidate compensation, and talent marketplace workflows.</div>
+              </div>
+            </div>
+          </div>
+          <div class="position-relative mt-2">
+            @php
+              $allSystemCurrencies = \App\Services\CurrencyService::getAllCurrenciesWithMeta();
+            @endphp
+            <select class="form-select form-select-solid fw-bold" id="platform_currency" name="platform_currency" data-control="select2" data-placeholder="Select default platform currency" style="height: 48px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px;">
+              @foreach($allSystemCurrencies as $curr)
+                <option value="{{ $curr['code'] }}" data-key="{{ $curr['key'] }}" data-symbol="{{ $curr['symbol'] }}" data-flag="{{ $curr['flag'] }}" {{ $curr['code'] === 'USD' ? 'selected' : '' }}>
+                  {{ $curr['flag'] }} {{ $curr['code'] }} - {{ $curr['name'] }} ({{ $curr['symbol'] }})
+                </option>
+              @endforeach
+            </select>
+            <input type="hidden" name="currency" id="hidden_currency_input" value="USD" />
+          </div>
+        </div>
+
         <!-- Action Bar -->
         <div class="v2-acts">
           <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
@@ -1656,6 +1687,11 @@ body, html {
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6Z" stroke="#7c3aed" stroke-width="1.6"/><circle cx="10" cy="8" r="2" fill="#7c3aed"/></svg>
                 <strong class="text-dark fs-7">Headquarters</strong>
                 <span class="text-secondary fs-7" id="preview_city">-</span>
+              </div>
+              <div class="v2-review-meta-item">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" stroke="#059669" stroke-width="1.6"/><path d="M10 5v10M7.5 7.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#059669" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <strong class="text-dark fs-7">Platform Currency</strong>
+                <span class="text-success fw-bold fs-7" id="preview_currency">USD</span>
               </div>
             </div>
           </div>
@@ -1896,6 +1932,12 @@ function updatePreviewData() {
     $('#preview_contact_number').text(contact_number);
     $('#preview_city').text(city || 'N/A');
 
+    var $platformCurr = $('#platform_currency');
+    if ($platformCurr.length) {
+      var currText = $platformCurr.find('option:selected').text().trim() || $platformCurr.val() || 'USD';
+      $('#preview_currency').text(currText);
+    }
+
     const flagContainer = document.getElementById('phoneDisplay');
     if (flagContainer && iti__active) {
       $('#phoneDisplay').html('');
@@ -1940,12 +1982,19 @@ if (inputElement) {
     if (window.formValidators && window.formValidators[2]) {
       window.formValidators[2].revalidateField('kt_tagify_work_location');
     }
+    if (typeof autoDetectPlatformCurrency === 'function') {
+      autoDetectPlatformCurrency(e.detail.data.value, '');
+    }
     updatePreviewData();
   });
 
   tagifyInstance.on('change', function(e) {
     if (window.formValidators && window.formValidators[2]) {
       window.formValidators[2].revalidateField('kt_tagify_work_location');
+    }
+    if (typeof autoDetectPlatformCurrency === 'function') {
+      var val = $('#kt_tagify_work_location').val();
+      autoDetectPlatformCurrency(val, '');
     }
     updatePreviewData();
   });
@@ -2028,6 +2077,9 @@ phoneInputField.addEventListener("countrychange", function () {
   var data = window.phoneInput.getSelectedCountryData();
   var dialCode = data.dialCode ? ('+' + data.dialCode) : '';
   $('#contact_code').val(dialCode);
+  if (typeof autoDetectPlatformCurrency === 'function') {
+    autoDetectPlatformCurrency('', data.iso2 || '');
+  }
   updatePreviewData();
 });
 
@@ -2036,6 +2088,80 @@ $(document).ready(function () {
   var data = window.phoneInput.getSelectedCountryData();
   var dialCode = data.dialCode ? ('+' + data.dialCode) : '+91';
   $('#contact_code').val(dialCode);
+  if (typeof autoDetectPlatformCurrency === 'function') {
+    autoDetectPlatformCurrency('', data.iso2 || 'in');
+  }
+});
+
+// Currency Auto-Detection & Platform Currency Synchronization
+window.userManuallySelectedCurrency = false;
+var countryIsoToCurrencyMap = {
+  'in': 'INR', 'us': 'USD', 'gb': 'GBP', 'uk': 'GBP', 'ae': 'AED',
+  'ca': 'CAD', 'au': 'AUD', 'sg': 'SGD', 'ch': 'CHF', 'jp': 'JPY',
+  'cn': 'CNY', 'nz': 'NZD', 'za': 'ZAR', 'br': 'BRL', 'ph': 'PHP',
+  'my': 'MYR', 'th': 'THB', 'id': 'IDR', 'vn': 'VND', 'se': 'SEK',
+  'no': 'NOK', 'dk': 'DKK', 'pl': 'PLN', 'mx': 'MXN', 'hk': 'HKD',
+  'tw': 'TWD', 'kr': 'KRW', 'tr': 'TRY', 'sa': 'SAR', 'qa': 'QAR',
+  'kw': 'KWD', 'bh': 'BHD', 'om': 'OMR', 'eg': 'EGP', 'il': 'ILS',
+  'cz': 'CZK', 'hu': 'HUF', 'ro': 'RON', 'cl': 'CLP', 'co': 'COP',
+  'ar': 'ARS', 'ng': 'NGN', 'ke': 'KES', 'pk': 'PKR', 'bd': 'BDT',
+  'lk': 'LKR', 'np': 'NPR',
+  // Eurozone
+  'de': 'EUR', 'fr': 'EUR', 'it': 'EUR', 'es': 'EUR', 'nl': 'EUR',
+  'be': 'EUR', 'ie': 'EUR', 'at': 'EUR', 'pt': 'EUR', 'fi': 'EUR',
+  'gr': 'EUR', 'sk': 'EUR', 'si': 'EUR', 'lu': 'EUR', 'cy': 'EUR',
+  'ee': 'EUR', 'lv': 'EUR', 'lt': 'EUR', 'mt': 'EUR'
+};
+
+function autoDetectPlatformCurrency(locText, countryIso) {
+  if (window.userManuallySelectedCurrency) return;
+  var detected = null;
+
+  if (locText && typeof locText === 'string') {
+    var lower = locText.toLowerCase();
+    if (lower.indexOf('india') !== -1 || lower.indexOf('bharat') !== -1) detected = 'INR';
+    else if (lower.indexOf('united states') !== -1 || lower.indexOf('usa') !== -1 || lower.indexOf('america') !== -1) detected = 'USD';
+    else if (lower.indexOf('united kingdom') !== -1 || lower.indexOf('london') !== -1 || lower.indexOf('england') !== -1 || lower.indexOf('britain') !== -1) detected = 'GBP';
+    else if (lower.indexOf('emirates') !== -1 || lower.indexOf('dubai') !== -1 || lower.indexOf('uae') !== -1 || lower.indexOf('abu dhabi') !== -1) detected = 'AED';
+    else if (lower.indexOf('germany') !== -1 || lower.indexOf('france') !== -1 || lower.indexOf('spain') !== -1 || lower.indexOf('italy') !== -1 || lower.indexOf('netherlands') !== -1 || lower.indexOf('ireland') !== -1) detected = 'EUR';
+    else if (lower.indexOf('canada') !== -1) detected = 'CAD';
+    else if (lower.indexOf('australia') !== -1 || lower.indexOf('sydney') !== -1 || lower.indexOf('melbourne') !== -1) detected = 'AUD';
+    else if (lower.indexOf('singapore') !== -1) detected = 'SGD';
+    else if (lower.indexOf('japan') !== -1 || lower.indexOf('tokyo') !== -1) detected = 'JPY';
+  }
+
+  if (!detected && countryIso) {
+    var isoLower = countryIso.toLowerCase();
+    if (countryIsoToCurrencyMap[isoLower]) {
+      detected = countryIsoToCurrencyMap[isoLower];
+    }
+  }
+
+  if (detected) {
+    var $sel = $('#platform_currency');
+    if ($sel.length && $sel.val() !== detected) {
+      $sel.val(detected).trigger('change.select2');
+      $('#hidden_currency_input').val(detected);
+      $('#currency_auto_detected_badge')
+        .text('Auto-detected: ' + detected)
+        .removeClass('badge-light-primary')
+        .addClass('badge-light-success');
+      updatePreviewData();
+    }
+  }
+}
+
+$(document).on('change', '#platform_currency', function () {
+  var val = $(this).val();
+  $('#hidden_currency_input').val(val);
+  if ($(this).is(':focus') || $(this).data('select2-open')) {
+    window.userManuallySelectedCurrency = true;
+    $('#currency_auto_detected_badge')
+      .text('Custom selection: ' + val)
+      .removeClass('badge-light-success')
+      .addClass('badge-light-primary');
+  }
+  updatePreviewData();
 });
 
 // Original Stepper & FormValidation Integration

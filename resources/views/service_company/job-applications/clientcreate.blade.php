@@ -3078,26 +3078,40 @@
                   <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
                 </div>
                 <div class="candidate-salary-header-currency">
-                  <label for="current_ctc_cur">Currency</label>
+                  @php
+                      $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
+                      if (empty($companyId) && isset($jobDetail) && !empty($jobDetail->company_id)) {
+                          $companyId = $jobDetail->company_id;
+                      }
+                      $tenantDefaultCode = $tenant_currency ?? \App\Services\CurrencyService::getTenantCurrency($companyId);
+                      $tenantDefaultKey  = $tenant_currency_key ?? \App\Services\CurrencyService::getTenantCurrencyKey($companyId);
+
+                      $isJobSubmission = isset($jobDetail) && !empty($jobDetail->id);
+                      $jobCurrencyKey  = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyKey($jobDetail) : null;
+                      $jobCurrencyCode = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyCode($jobDetail) : null;
+
+                      // If editing an existing candidate with saved currency, honor original currency.
+                      // If submitting for a job (agency or direct), default to mandatory Job Currency.
+                      // Otherwise, default to tenant default currency.
+                      $selectedCurKey = null;
+                      if (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
+                          $selectedCurKey = (int) $application->current_ctc_cur;
+                      } elseif ($isJobSubmission && $jobCurrencyKey !== null) {
+                          $selectedCurKey = (int) $jobCurrencyKey;
+                      } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
+                          $selectedCurKey = (int) $current_ctc_cur;
+                      } else {
+                          $selectedCurKey = (int) $tenantDefaultKey;
+                      }
+                  @endphp
+                  <label for="current_ctc_cur" class="d-flex align-items-center gap-1">
+                    Currency
+                    @if($isJobSubmission && $jobCurrencyCode)
+                      <span class="badge badge-light-primary py-0 px-2 fs-9 fw-semibold text-uppercase" title="Primary hiring workflow currency inherited from Job">Job: {{ $jobCurrencyCode }}</span>
+                    @endif
+                  </label>
                   <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                     @php
-                        $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
-                        if (empty($companyId) && isset($jobDetail) && !empty($jobDetail->company_id)) {
-                            $companyId = $jobDetail->company_id;
-                        }
-                        $tenantDefaultCode = $tenant_currency ?? \App\Helper\GeneralMethod::defaultCurrency($companyId);
-                        $tenantDefaultKey  = $tenant_currency_key ?? \App\Helper\GeneralMethod::defaultCurrencyKey($companyId);
-
-                        // If editing an existing candidate with saved currency, honor it (RULE-TENANT-001).
-                        // Otherwise, default strictly to tenant's configured currency from settings page.
-                        $selectedCurKey = null;
-                        if (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
-                            $selectedCurKey = (int) $application->current_ctc_cur;
-                        } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
-                            $selectedCurKey = (int) $current_ctc_cur;
-                        } else {
-                            $selectedCurKey = (int) $tenantDefaultKey;
-                        }
 
                         $currencyFlags = [
                             'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',

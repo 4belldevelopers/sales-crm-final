@@ -5755,6 +5755,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->priority = GeneralMethod::priority();
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
+        $this->currency_code = \App\Services\CurrencyService::getTenantCurrency($companyId);
+        $this->default_currency_key = \App\Services\CurrencyService::getTenantCurrencyKey($companyId);
 
         // 7. Global reference data — cached 24 h; second pluck done in-memory (was 2 identical queries)
         $this->qualification = Cache::remember('global_qualification_master', 86400, function () {

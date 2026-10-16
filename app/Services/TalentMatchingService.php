@@ -212,29 +212,21 @@ class TalentMatchingService
 
     /**
      * Pillar 4: Compensation Alignment (15%)
+     * Unified cross-currency comparison normalized into the Job's Primary Currency.
      */
     protected function evaluateCompensation(object $job, object $candidate): array
     {
-        $budgetMax = (float) ($job->max_yearly ?? ($job->max_salary ?? 0));
-        $candEctc = (float) ($candidate->ectc_yearly ?? ($candidate->ectc ?? 0));
-
-        if ($budgetMax <= 0 || $candEctc <= 0) {
-            return ['score' => 0.8, 'details' => ['status' => 'not_specified']];
-        }
-
-        if ($candEctc <= $budgetMax) {
-            $score = 1.0;
-        } else {
-            $ratio = $candEctc / $budgetMax;
-            $score = max(0.0, 1.0 - (($ratio - 1.0) * 2.0));
-        }
+        $eval = \App\Services\CurrencyService::evaluateBudgetMatch($job, $candidate);
 
         return [
-            'score' => round($score, 3),
+            'score' => $eval['score'],
             'details' => [
-                'budget_max' => $budgetMax,
-                'candidate_ectc' => $candEctc
-            ]
+                'status' => $eval['status'],
+                'budget_max' => $eval['job_max'],
+                'candidate_ectc' => $eval['candidate_ectc_in_job_currency'],
+                'job_currency' => $eval['job_currency'] ?? 'USD',
+                'ratio' => $eval['ratio'],
+            ],
         ];
     }
 
