@@ -3086,54 +3086,56 @@
                       $tenantDefaultCode = $tenant_currency ?? \App\Services\CurrencyService::getTenantCurrency($companyId);
                       $tenantDefaultKey  = $tenant_currency_key ?? \App\Services\CurrencyService::getTenantCurrencyKey($companyId);
 
-                      $isJobSubmission = isset($jobDetail) && !empty($jobDetail->id);
-                      $jobCurrencyKey  = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyKey($jobDetail) : null;
-                      $jobCurrencyCode = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyCode($jobDetail) : null;
+                      $isJobSubmission = (isset($jobDetail) && !empty($jobDetail->id)) || (!empty($jobId));
+                      $jobCurrencyMeta = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyMeta($jobDetail ?? $jobId) : null;
+                      $jobCurrencyKey  = $jobCurrencyMeta['key'] ?? null;
+                      $jobCurrencyCode = $jobCurrencyMeta['code'] ?? null;
 
-                      // If editing an existing candidate with saved currency, honor original currency.
-                      // If submitting for a job (agency or direct), default to mandatory Job Currency.
-                      // Otherwise, default to tenant default currency.
                       $selectedCurKey = null;
-                      if (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
-                          $selectedCurKey = (int) $application->current_ctc_cur;
-                      } elseif ($isJobSubmission && $jobCurrencyKey !== null) {
+                      if ($isJobSubmission && $jobCurrencyKey !== null) {
                           $selectedCurKey = (int) $jobCurrencyKey;
+                      } elseif (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
+                          $selectedCurKey = (int) $application->current_ctc_cur;
                       } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
                           $selectedCurKey = (int) $current_ctc_cur;
                       } else {
                           $selectedCurKey = (int) $tenantDefaultKey;
                       }
+
+                      $currencyFlags = \App\Services\CurrencyService::CURRENCY_FLAGS;
                   @endphp
-                  <label for="current_ctc_cur" class="d-flex align-items-center gap-1">
-                    Currency
-                    @if($isJobSubmission && $jobCurrencyCode)
-                      <span class="badge badge-light-primary py-0 px-2 fs-9 fw-semibold text-uppercase" title="Primary hiring workflow currency inherited from Job">Job: {{ $jobCurrencyCode }}</span>
-                    @endif
-                  </label>
-                  <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
-                    @php
 
-                        $currencyFlags = [
-                            'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
-                            'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'NZD' => '🇳🇿', 'ZAR' => '🇿🇦',
-                            'BRL' => '🇧🇷', 'PHP' => '🇵🇭', 'MYR' => '🇲🇾', 'THB' => '🇹🇭', 'IDR' => '🇮🇩', 'VND' => '🇻🇳',
-                            'SEK' => '🇸🇪', 'NOK' => '🇳🇴', 'DKK' => '🇩🇰', 'PLN' => '🇵🇱', 'MXN' => '🇲🇽', 'HKD' => '🇭🇰',
-                            'TWD' => '🇹🇼', 'KRW' => '🇰🇷', 'TRY' => '🇹🇷', 'SAR' => '🇸🇦', 'QAR' => '🇶🇦', 'KWD' => '🇰🇼',
-                            'BHD' => '🇧🇭', 'OMR' => '🇴🇲', 'EGP' => '🇪🇬', 'ILS' => '🇮🇱', 'CZK' => '🇨🇿', 'HUF' => '🇭🇺',
-                            'RON' => '🇷🇴', 'CLP' => '🇨🇱', 'COP' => '🇨🇴', 'ARS' => '🇦🇷', 'NGN' => '🇳🇬', 'KES' => '🇰🇪',
-                            'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵'
-                        ];
-                        foreach($currency as $key=>$val){
-                            $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
-                            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                            $entLabel = $cMeta['label'];
-                            $keywords = $cMeta['keywords'];
-                            $flag = $currencyFlags[$val] ?? '🌐';
+                  @if($isJobSubmission && $jobCurrencyCode)
+                    {{-- Authoritative Job Currency Display Component (Display: Job Currency: USD 🔒) --}}
+                    <div class="candidate-currency-authoritative-badge d-flex align-items-center gap-2 px-3 py-2 bg-light-primary rounded border border-primary border-opacity-25" title="Currency is governed by the linked Job ({{ $jobCurrencyCode }}) and cannot be altered for this requisition.">
+                      <span class="fs-4">{{ $jobCurrencyMeta['flag'] ?? '🌐' }}</span>
+                      <div class="d-flex flex-column">
+                        <span class="text-gray-500 fs-9 fw-semibold text-uppercase tracking-wider">Job Currency</span>
+                        <span class="text-gray-900 fs-7 fw-bold d-flex align-items-center gap-1">
+                          {{ $jobCurrencyCode }} - {{ $jobCurrencyMeta['name'] ?? $jobCurrencyCode }}
+                          <i class="fa-solid fa-lock text-primary fs-8 ms-1"></i>
+                        </span>
+                      </div>
+                      <input type="hidden" name="current_ctc_cur" id="current_ctc_cur" value="{{ $jobCurrencyKey }}" data-code="{{ $jobCurrencyCode }}" data-symbol="{{ $jobCurrencyMeta['symbol'] ?? '$' }}">
+                    </div>
+                  @else
+                    <label for="current_ctc_cur" class="d-flex align-items-center gap-1">
+                      Currency
+                    </label>
+                    <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
+                              $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                              $entLabel = $cMeta['label'];
+                              $keywords = $cMeta['keywords'];
+                              $flag = $currencyFlags[$val] ?? '🌐';
 
-                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
-                        }
-                    @endphp
-                  </select>
+                              echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
+                          }
+                      @endphp
+                    </select>
+                  @endif
                   <div class="d-none">
                     <select name="current_ectc_cur" id="current_ectc_cur">
                       @php
@@ -7319,7 +7321,7 @@ var KTUPDATECandidate = {
         function numberToIndianWords(num, currCode) {
             num = Math.floor(Number(num));
             if (!num || isNaN(num) || num <= 0) return '';
-            var code = (currCode || $('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
+            var code = (currCode || $('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur').data('code') || $('#current_ctc_cur').attr('data-code') || 'INR').toString().toUpperCase();
 
             const ones = [
                 '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
@@ -7365,7 +7367,7 @@ var KTUPDATECandidate = {
             var ectcVal = parseFloat($("#ectc").val()) || 0;
             var billMonthly = parseFloat($("#bill_monthly").val()) || 0;
             var billAnnual = parseFloat($("#bill_annual").val()) || 0;
-            var code = ($('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
+            var code = ($('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur').data('code') || $('#current_ctc_cur').attr('data-code') || 'INR').toString().toUpperCase();
 
             if (payAnnual > 0) {
                 $(".payrateannual").text(numberToIndianWords(payAnnual, code));
@@ -8822,8 +8824,15 @@ $(document).ready(function() {
     }
 
     function getActiveCurrencyCode() {
-        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) return 'INR';
+        if (!salaryCurrencySelect) return 'INR';
+        if (salaryCurrencySelect.tagName === 'INPUT') {
+            return (salaryCurrencySelect.getAttribute('data-code') || salaryCurrencySelect.getAttribute('value') || 'INR').toUpperCase();
+        }
+        if (salaryCurrencySelect.selectedIndex < 0 || !salaryCurrencySelect.options) {
+            return (salaryCurrencySelect.getAttribute('data-code') || 'INR').toUpperCase();
+        }
         var opt = salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex];
+        if (!opt) return (salaryCurrencySelect.getAttribute('data-code') || 'INR').toUpperCase();
         var code = opt.getAttribute('data-code');
         if (!code) {
             code = opt.text.trim().split('—')[0].split('-')[0].replace(/[^\w]/g, '').trim();

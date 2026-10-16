@@ -4717,35 +4717,44 @@ END:VCALENDAR";
         $cacheKey = $version ? "fx_snapshot:{$version}" : 'fx_snapshot:active';
 
         return Cache::remember($cacheKey, 86400, function () use ($version) {
-            $query = DB::table('currency_snapshots');
-            if ($version) {
-                $query->where('version', $version);
-            } else {
-                $query->where('is_active', 1)->orderBy('effective_from', 'desc');
-            }
-            $snapshot = $query->first();
+            try {
+                $query = DB::table('currency_snapshots');
+                if ($version) {
+                    $query->where('version', $version);
+                } else {
+                    $query->where('is_active', 1)->orderBy('effective_from', 'desc');
+                }
+                $snapshot = $query->first();
 
-            if ($snapshot) {
-                $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
+                if ($snapshot) {
+                    $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
 
+                    return [
+                        'version' => $snapshot->version,
+                        'base_currency' => $snapshot->base_currency,
+                        'rates_json' => $rates,
+                        'effective_from' => $snapshot->effective_from,
+                    ];
+                }
+
+                // Self-healing: seed initial snapshot from currencies table
+                $currencies = DB::table('currencies')->get();
+                $rates = [];
+                foreach ($currencies as $curr) {
+                    $code = strtoupper(trim($curr->currency_code));
+                    $rates[$code] = (float) $curr->usd_based_rates;
+                }
+                $rates['USD'] = 1.0;
+                if (empty($rates)) {
+                    $rates = ['USD' => 1.0, 'INR' => 86.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.6725];
+                }
+            } catch (\Throwable $e) {
                 return [
-                    'version' => $snapshot->version,
-                    'base_currency' => $snapshot->base_currency,
-                    'rates_json' => $rates,
-                    'effective_from' => $snapshot->effective_from,
+                    'version' => 'fallback-v1',
+                    'base_currency' => 'USD',
+                    'rates_json' => ['USD' => 1.0, 'INR' => 86.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.6725],
+                    'effective_from' => now()->toIso8601String(),
                 ];
-            }
-
-            // Self-healing: seed initial snapshot from currencies table
-            $currencies = DB::table('currencies')->get();
-            $rates = [];
-            foreach ($currencies as $curr) {
-                $code = strtoupper(trim($curr->currency_code));
-                $rates[$code] = (float) $curr->usd_based_rates;
-            }
-            $rates['USD'] = 1.0;
-            if (empty($rates)) {
-                $rates = ['USD' => 1.0, 'INR' => 83.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.67];
             }
 
             $v = '202609-001';
@@ -4949,32 +4958,42 @@ END:VCALENDAR";
     public static function currencyConverter()
     {
         return cache()->remember('ref:currencies:all', 86400, function () {
-            $currencies = DB::table('currencies')->get();
+            try {
+                $currencies = DB::table('currencies')->get();
 
-            $exchangeRates = [];
-            $rates = [];
-            $symbolsValue = [];
-            $symbols = [];
-            $getKey = [];
+                $exchangeRates = [];
+                $rates = [];
+                $symbolsValue = [];
+                $symbols = [];
+                $getKey = [];
 
-            foreach ($currencies as $row) {
-                // INR based (your first array)
-                $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
+                foreach ($currencies as $row) {
+                    // INR based (your first array)
+                    $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
 
-                // Second rates (example: you can use another column or same)
-                $rates[$row->currency_code] = (float) $row->usd_based_rates;
-                $symbolsValue[$row->currency_code] = $row->getKey;
-                $symbols[$row->currency_code] = $row->currency_symbol;
-                $getKey[$row->getKey] = $row->currency_code;
+                    // Second rates (example: you can use another column or same)
+                    $rates[$row->currency_code] = (float) $row->usd_based_rates;
+                    $symbolsValue[$row->currency_code] = $row->getKey;
+                    $symbols[$row->currency_code] = $row->currency_symbol;
+                    $getKey[$row->getKey] = $row->currency_code;
+                }
+
+                return [
+                    'inr_based_rates' => $exchangeRates,
+                    'usd_based_rates' => $rates,
+                    'symbolsValue' => $symbolsValue,
+                    'symbols' => $symbols,
+                    'getKey' => $getKey,
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    'inr_based_rates' => ['INR' => 1.0, 'USD' => 0.0116, 'AED' => 0.042],
+                    'usd_based_rates' => ['USD' => 1.0, 'INR' => 86.5, 'AED' => 3.6725, 'EUR' => 0.92, 'GBP' => 0.79],
+                    'symbolsValue' => ['INR' => 0, 'EUR' => 1, 'JPY' => 2, 'GBP' => 3, 'USD' => 4, 'AED' => 5],
+                    'symbols' => ['INR' => '₹', 'USD' => '$', 'AED' => 'د.إ', 'EUR' => '€', 'GBP' => '£'],
+                    'getKey' => [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED'],
+                ];
             }
-
-            return [
-                'inr_based_rates' => $exchangeRates,
-                'usd_based_rates' => $rates,
-                'symbolsValue' => $symbolsValue,
-                'symbols' => $symbols,
-                'getKey' => $getKey,
-            ];
         });
 
     }
