@@ -269,6 +269,8 @@
         _routes: {
             shell: '/assets/modules/fwd-resume/shell.v4.html',
             engine: '/assets/modules/fwd-resume/engine.v4.js',
+            quillJs: '/assets/modules/fwd-resume/quill/quill.min.js',
+            quillCss: '/assets/modules/fwd-resume/quill/quill.snow.css',
             data: '/service_company/cvtracker/test_fwd_resume_data',
             recipients: '/service_company/cvtracker/fwd_recipients',
             intent: '/service_company/cvtracker/test_fwd_resume_intent',
@@ -282,6 +284,8 @@
         _shellHtml: '',
         _engineLoading: false,
         _engineLoaded: false,
+        _quill: null,
+        _quillLoading: false,
         _recipientsCache: null,
         _recipientsCacheTime: 0,
         _applicationData: [],
@@ -347,6 +351,7 @@
                         .catch(function (e) { console.warn('Prewarm shell error:', e); });
                 }
                 self._loadEngineScript();
+                self._loadQuill();
             });
         },
 
@@ -379,6 +384,47 @@
             script.onerror = function (e) {
                 self._engineLoading = false;
                 console.error('Failed to load WASM engine script:', e);
+            };
+            document.head.appendChild(script);
+        },
+
+        _loadQuill: function (callback) {
+            var self = this;
+            if (window.Quill) {
+                if (callback) callback();
+                return;
+            }
+            if (self._quillLoading) {
+                var checkInterval = setInterval(function () {
+                    if (window.Quill) {
+                        clearInterval(checkInterval);
+                        if (callback) callback();
+                    }
+                }, 30);
+                return;
+            }
+            self._quillLoading = true;
+
+            // 1. Inject Quill CSS if not present
+            if (!document.getElementById('jero_quill_css')) {
+                var link = document.createElement('link');
+                link.id = 'jero_quill_css';
+                link.rel = 'stylesheet';
+                link.href = self._routes.quillCss || '/assets/modules/fwd-resume/quill/quill.snow.css';
+                document.head.appendChild(link);
+            }
+
+            // 2. Inject Quill JS
+            var script = document.createElement('script');
+            script.src = self._routes.quillJs || '/assets/modules/fwd-resume/quill/quill.min.js';
+            script.async = true;
+            script.onload = function () {
+                self._quillLoading = false;
+                if (callback) callback();
+            };
+            script.onerror = function (e) {
+                self._quillLoading = false;
+                console.error('Failed to load Quill editor script:', e);
             };
             document.head.appendChild(script);
         },
@@ -512,7 +558,7 @@
 
         _afterShellInjected: function () {
             var self = this;
-            self._initCkEditor();
+            self._initEditor();
             self._setupTagInput('to');
             self._setupTagInput('cc');
             self._initRecipientDrawerEvents();
@@ -534,10 +580,7 @@
             $('#test_fwd_format_preview_card').hide();
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].setData(''); } catch (e) {}
-            }
-            $('#test_editor1').val('');
+            self.setEditorHtml('');
             self._emailTags = { to: [], cc: [] };
             self._renderTags('to');
             self._renderTags('cc');
@@ -553,6 +596,118 @@
                 $(btn).find('.indicator-progress').hide();
                 $(btn).find('.indicator-label').show();
             }
+        },
+
+        _initEditor: function () {
+            var self = this;
+            self._loadQuill(function () {
+                self._initQuillEditor();
+            });
+        },
+
+        _initQuillEditor: function () {
+            var self = this;
+            var quillContainer = document.getElementById('test_editor_quill');
+            if (!quillContainer) {
+                self._initCkEditor();
+                return;
+            }
+
+            if (self._quill && self._quill.root && quillContainer.contains(self._quill.root)) {
+                self._editorInitialized = true;
+                return;
+            }
+
+            try {
+                quillContainer.innerHTML = '';
+                self._quill = new Quill('#test_editor_quill', {
+                    theme: 'snow',
+                    placeholder: 'Compose executive email presentation...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['link', 'clean']
+                        ]
+                    }
+                });
+
+                self._quill.on('text-change', function () {
+                    var html = self.getEditorHtml();
+                    $('#test_editor1').val(html);
+                });
+
+                self._editorInitialized = true;
+                self.syncFirstRecipientSalutation();
+            } catch (err) {
+                console.warn('[ForwardResume] Quill initialization warning:', err);
+                self._initCkEditor();
+            }
+        },
+
+        getEditorHtml: function () {
+            var self = this;
+            if (self._quill && self._quill.root) {
+                var html = self._quill.root.innerHTML || '';
+                if (html === '<p><br></p>') return '';
+                return html;
+            }
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { return CKEDITOR.instances['test_editor1'].getData() || ''; } catch (e) {}
+            }
+            return $('#test_editor1').val() || '';
+        },
+
+        setEditorHtml: function (html, callback) {
+            var self = this;
+            var cleanHtml = (html === null || html === undefined) ? '' : String(html);
+            $('#test_editor1').val(cleanHtml);
+
+            if (self._quill && self._quill.root) {
+                self._quill.root.innerHTML = cleanHtml;
+                if (callback) callback();
+                return;
+            }
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try {
+                    CKEDITOR.instances['test_editor1'].setData(cleanHtml, callback);
+                    return;
+                } catch (e) {}
+            }
+
+            if (callback) callback();
+        },
+
+        insertHtmlToEditor: function (html) {
+            var self = this;
+            if (!html) return;
+
+            if (self._quill && self._quill.root) {
+                var range = self._quill.getSelection(true);
+                var index = range ? range.index : self._quill.getLength();
+                self._quill.clipboard.dangerouslyPasteHTML(index, html);
+                $('#test_editor1').val(self.getEditorHtml());
+                return;
+            }
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                var inst = CKEDITOR.instances['test_editor1'];
+                try {
+                    inst.insertHtml(html);
+                    $('#test_editor1').val(inst.getData());
+                    return;
+                } catch (e) {
+                    console.warn('CKEditor insertHtml notice:', e);
+                }
+            }
+
+            var currentVal = $('#test_editor1').val() || '';
+            var updatedVal = currentVal ? (currentVal + '<br>' + html) : html;
+            $('#test_editor1').val(updatedVal);
         },
 
         _initCkEditor: function () {
@@ -653,14 +808,9 @@
             // Populate Executive Presentation Body into Editor
             if (self._applicationData.length > 0) {
                 var initialBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
-                $('#test_editor1').val(initialBody);
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try {
-                        CKEDITOR.instances['test_editor1'].setData(initialBody, function () {
-                            self.syncFirstRecipientSalutation();
-                        });
-                    } catch (e) {}
-                }
+                self.setEditorHtml(initialBody, function () {
+                    self.syncFirstRecipientSalutation();
+                });
             }
 
             // Render Candidate Roster Cards
@@ -1404,23 +1554,7 @@
                 if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
                 return;
             }
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                var inst = CKEDITOR.instances['test_editor1'];
-                try {
-                    inst.insertHtml(tableHtml);
-                    $('#test_editor1').val(inst.getData());
-                    if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
-                    return;
-                } catch(e) {
-                    console.warn('CKEditor insertHtml notice:', e);
-                }
-            }
-            var currentVal = $('#test_editor1').val() || '';
-            var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
-            $('#test_editor1').val(updatedVal);
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
-            }
+            self.insertHtmlToEditor(tableHtml);
             if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
         },
 
@@ -1473,14 +1607,9 @@
                 .replace(/\[MATRIX_TABLE\]/gi, candidateSummaryHtml)
                 .replace(/\[\{DATE\}\]/gi, dateStr);
 
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try {
-                    CKEDITOR.instances['test_editor1'].setData(body, function () {
-                        self.syncFirstRecipientSalutation();
-                    });
-                } catch (e) {}
-            }
-            $('#test_editor1').val(body);
+            self.setEditorHtml(body, function () {
+                self.syncFirstRecipientSalutation();
+            });
             setTimeout(function () { self.syncFirstRecipientSalutation(); }, 50);
             return true;
         },
@@ -1488,10 +1617,7 @@
         onTemplateChange: function (templateId) {
             var self = this;
             if (!templateId) {
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try { CKEDITOR.instances['test_editor1'].setData(''); } catch (e) {}
-                }
-                $('#test_editor1').val('');
+                self.setEditorHtml('');
                 $('#test_subject').val('');
                 return;
             }
@@ -1503,14 +1629,9 @@
                     : ('Forwarded Candidate Profile: ' + (self._applicationData[0] ? (self._applicationData[0].full_name || 'Candidate') : 'Candidate') + ' - ' + (self._applicationData[0] ? (self._applicationData[0].designation || 'Specialist') : 'Specialist'));
                 $('#test_subject').val(subj);
                 var execBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try {
-                        CKEDITOR.instances['test_editor1'].setData(execBody, function () {
-                            self.syncFirstRecipientSalutation();
-                        });
-                    } catch (e) {}
-                }
-                $('#test_editor1').val(execBody);
+                self.setEditorHtml(execBody, function () {
+                    self.syncFirstRecipientSalutation();
+                });
                 return;
             }
 
@@ -1548,16 +1669,10 @@
                     if (res && res.status === 'success') {
                         var desc = res.template_description || res.template_body || '';
                         $('#test_subject').val(res.subject || '');
-                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                            try {
-                                CKEDITOR.instances['test_editor1'].setData(desc, function () {
-                                    self.syncFirstRecipientSalutation();
-                                });
-                            } catch (e) {}
-                        }
-                        $('#test_editor1').val(desc);
+                        self.setEditorHtml(desc, function () {
+                            self.syncFirstRecipientSalutation();
+                        });
                         setTimeout(function () { self.syncFirstRecipientSalutation(); }, 100);
-                    }
                 },
                 error: function (xhr) {
                     console.error('Failed to load email template:', xhr);
@@ -1767,26 +1882,23 @@
             // Strictly single greeting, NO quotes around the name (e.g. "Dear Shobha,")
             var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                var editor = CKEDITOR.instances['test_editor1'];
-                var data = editor.getData() || '';
+            var data = self.getEditorHtml() || '';
 
-                // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
-                var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
-                // Pattern 2: Plain-text or br-separated leading greeting
-                var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
+            // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
+            var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+            // Pattern 2: Plain-text or br-separated leading greeting
+            var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
 
-                if (greetingBlockRegex.test(data)) {
-                    var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
-                    if (updated !== data) editor.setData(updated);
-                } else if (plainGreetingRegex.test(data)) {
-                    var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
-                    if (updated !== data) editor.setData(updated);
-                } else if (data.trim() !== '') {
-                    editor.setData('<p>' + targetGreeting + '</p>\n' + data);
-                } else {
-                    editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
-                }
+            if (greetingBlockRegex.test(data)) {
+                var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
+                if (updated !== data) self.setEditorHtml(updated);
+            } else if (plainGreetingRegex.test(data)) {
+                var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
+                if (updated !== data) self.setEditorHtml(updated);
+            } else if (data.trim() !== '') {
+                self.setEditorHtml('<p>' + targetGreeting + '</p>\n' + data);
+            } else {
+                self.setEditorHtml('<p>' + targetGreeting + '</p><p><br></p>');
             }
         },
 
@@ -2123,9 +2235,7 @@
             $('#test_subject').css('border-color', '#E5E7EB');
 
             // Validate Body
-            var editorData = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1'])
-                ? CKEDITOR.instances['test_editor1'].getData()
-                : ($('#test_editor1').val() || '');
+            var editorData = self.getEditorHtml();
             var textOnly = $('<div>').html(editorData).text().trim().replace(/[\s\u00A0]+/g, '');
             if (!textOnly && editorData.indexOf('<img') === -1) {
                 Swal.fire({
@@ -2322,6 +2432,18 @@
                                     uploadedAttachmentUuids.push(res.value.attachment_id);
                                 }
                             });
+
+                            // SEC-01 Attestation Guard: Abort dispatch if any attachment upload failed
+                            if (filesToInitiate.length > 0 && uploadedAttachmentUuids.length < filesToInitiate.length) {
+                                restoreBtn();
+                                Swal.fire({
+                                    title: 'Attachment Upload Failed',
+                                    text: 'Failed to securely upload candidate attachments to cloud storage. Please check your network connection and try again.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#0D9488'
+                                });
+                                return;
+                            }
                         }
                     }
                 } catch (prepErr) {

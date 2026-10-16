@@ -6,55 +6,116 @@
 
 @include('service_company.cvtracker._forward_resume_engine') 
 
-<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/modules/fwd-resume/quill/quill.snow.css') }}">
+<script src="{{ asset('assets/modules/fwd-resume/quill/quill.min.js') }}"></script>
 <script>
-if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
-    CKEDITOR.tools.enableHtml5Elements(document);
-}
+window.testFwdQuill = null;
 
-function initTestFwdCkEditor() {
-    if (typeof CKEDITOR === 'undefined') {
-        setTimeout(initTestFwdCkEditor, 100);
+window.getTestFwdEditorHtml = function() {
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        var html = window.testFwdQuill.root.innerHTML || '';
+        return (html === '<p><br></p>') ? '' : html;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { return CKEDITOR.instances['test_editor1'].getData() || ''; } catch(e) {}
+    }
+    return $('#test_editor1').val() || '';
+};
+
+window.setTestFwdEditorHtml = function(html, callback) {
+    var cleanHtml = (html === null || html === undefined) ? '' : String(html);
+    $('#test_editor1').val(cleanHtml);
+
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        window.testFwdQuill.root.innerHTML = cleanHtml;
+        if (callback) callback();
         return;
     }
-    var editorElement = document.getElementById('test_editor1');
-    if (!editorElement) {
-        setTimeout(initTestFwdCkEditor, 100);
-        return;
-    }
-    if (CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
         try {
-            CKEDITOR.instances['test_editor1'].destroy(true);
-        } catch(destroyErr) {}
+            CKEDITOR.instances['test_editor1'].setData(cleanHtml, callback);
+            return;
+        } catch(e) {}
     }
+    if (callback) callback();
+};
+
+window.insertTestFwdEditorHtml = function(html) {
+    if (!html) return;
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        var range = window.testFwdQuill.getSelection(true);
+        var idx = range ? range.index : window.testFwdQuill.getLength();
+        window.testFwdQuill.clipboard.dangerouslyPasteHTML(idx, html);
+        $('#test_editor1').val(window.getTestFwdEditorHtml());
+        return;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try {
+            CKEDITOR.instances['test_editor1'].insertHtml(html);
+            $('#test_editor1').val(CKEDITOR.instances['test_editor1'].getData());
+            return;
+        } catch(e) {}
+    }
+    var current = $('#test_editor1').val() || '';
+    $('#test_editor1').val(current ? (current + '<br>' + html) : html);
+};
+
+function initTestFwdEditor() {
+    var quillContainer = document.getElementById('test_editor_quill');
+    if (!quillContainer) return;
+
+    if (window.testFwdQuill && window.testFwdQuill.root && quillContainer.contains(window.testFwdQuill.root)) {
+        return;
+    }
+
+    if (typeof Quill === 'undefined') {
+        setTimeout(initTestFwdEditor, 50);
+        return;
+    }
+
     try {
-        CKEDITOR.config.height = 300;
-        CKEDITOR.config.width = '100%';
-        CKEDITOR.replace('test_editor1', {
-            height: 300,
-            width: '100%',
-            on: {
-                instanceReady: function() {
-                    if (window.syncFirstRecipientSalutation) {
-                        window.syncFirstRecipientSalutation();
-                    }
-                }
+        var existingContent = $('#test_editor1').val() || '';
+        quillContainer.innerHTML = '';
+        window.testFwdQuill = new Quill('#test_editor_quill', {
+            theme: 'snow',
+            placeholder: 'Compose executive email presentation...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'clean']
+                ]
             }
         });
+
+        if (existingContent) {
+            window.testFwdQuill.root.innerHTML = existingContent;
+        }
+
+        window.testFwdQuill.on('text-change', function () {
+            var html = window.getTestFwdEditorHtml();
+            $('#test_editor1').val(html);
+        });
+
+        if (window.syncFirstRecipientSalutation) {
+            window.syncFirstRecipientSalutation();
+        }
     } catch(err) {
-        console.warn('CKEditor test init error:', err);
+        console.warn('[ForwardResume] Blade Quill init warning:', err);
     }
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initTestFwdCkEditor, 50);
+    setTimeout(initTestFwdEditor, 30);
 } else {
-    document.addEventListener('DOMContentLoaded', initTestFwdCkEditor);
+    document.addEventListener('DOMContentLoaded', initTestFwdEditor);
 }
 $(document).ready(function() {
-    setTimeout(initTestFwdCkEditor, 100);
+    setTimeout(initTestFwdEditor, 50);
 });
-setTimeout(initTestFwdCkEditor, 250);
 </script>
 
 <div class="main_container" id="test_main_container">
@@ -218,7 +279,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   border: 1px solid #CBD5E1;
   border-radius: 8px;
   box-shadow: 0 16px 36px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
-  max-height: min(850px, calc(100vh - 180px));
+  max-height: min(440px, calc(100vh - 220px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 8px;
@@ -368,6 +429,33 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
 .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+.mm-editor-wrap .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background: #F8FAFC;
+  padding: 8px 12px;
+  font-family: 'Poppins', sans-serif;
+}
+.mm-editor-wrap .ql-container.ql-snow {
+  border: none !important;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: #1E293B;
+  min-height: 220px;
+}
+.mm-editor-wrap .ql-editor {
+  min-height: 220px;
+  max-height: 480px;
+  overflow-y: auto;
+  line-height: 1.6;
+  padding: 12px 14px;
+}
+.mm-editor-wrap .ql-editor.ql-blank::before {
+  color: #94A3B8;
+  font-style: normal;
+  left: 14px;
+  right: 14px;
+}
 #test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
@@ -1185,7 +1273,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           </button>
         </div>
         <div class="mm-editor-wrap">
-          <textarea id="test_editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
+          <div id="test_editor_quill" style="min-height:220px;"></div>
+          <textarea id="test_editor1" name="editor1" rows="10" style="display:none;">{{ @$template_body }}</textarea>
         </div>
       </div>
     </div>
@@ -1894,23 +1983,7 @@ window.insertTestMatrixTableIntoEditor = function() {
         if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
         return;
     }
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        var inst = CKEDITOR.instances['test_editor1'];
-        try {
-            inst.insertHtml(tableHtml);
-            $('#test_editor1').val(inst.getData());
-            if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
-            return;
-        } catch(e) {
-            console.warn('CKEditor insertHtml notice:', e);
-        }
-    }
-    var currentVal = $('#test_editor1').val() || '';
-    var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
-    $('#test_editor1').val(updatedVal);
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
-    }
+    window.insertTestFwdEditorHtml(tableHtml);
     if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
 };
 
@@ -1929,14 +2002,9 @@ window.onTestTemplateChange = function(selectEl) {
         $('#test_subject').val(subj);
 
         var execBody = window.buildTestExecutivePresentation ? window.buildTestExecutivePresentation() : '';
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            try {
-                CKEDITOR.instances['test_editor1'].setData(execBody, function() {
-                    if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
-                });
-            } catch(e) {}
-        }
-        $('#test_editor1').val(execBody);
+        window.setTestFwdEditorHtml(execBody, function() {
+            if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+        });
         return;
     }
 
@@ -1983,14 +2051,9 @@ window.onTestTemplateChange = function(selectEl) {
                         .replace(/\[MATRIX_TABLE\]/gi, matrixTableHtml);
 
                     $('#test_subject').val(response.subject || '');
-                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                        try {
-                            CKEDITOR.instances['test_editor1'].setData(desc, function() {
-                                if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
-                            });
-                        } catch(e) {}
-                    }
-                    $('#test_editor1').val(desc);
+                    window.setTestFwdEditorHtml(desc, function() {
+                        if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+                    });
                     setTimeout(function() {
                         if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
                     }, 100);
@@ -2003,10 +2066,7 @@ window.onTestTemplateChange = function(selectEl) {
             }
         });
     } else {
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            try { CKEDITOR.instances['test_editor1'].setData(''); } catch(e) {}
-        }
-        $('#test_editor1').val('');
+        window.setTestFwdEditorHtml('');
         $('#test_subject').val('');
     }
 };
@@ -2127,7 +2187,7 @@ window.onTestFwdSubmitClick = async function (e) {
     $('#test_subject').css('border-color', '#E5E7EB');
 
     // Validate Email Body (Mandatory)
-    var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) ? CKEDITOR.instances.test_editor1.getData() : ($('#test_editor1').val() || '');
+    var editor1 = window.getTestFwdEditorHtml();
     var textOnly = $('<div>').html(editor1).text().trim().replace(/[\s\u00A0]+/g, '');
     if (!textOnly && editor1.indexOf('<img') === -1) {
         Swal.fire({
@@ -2430,15 +2490,12 @@ window.syncFirstRecipientSalutation = function() {
     var toList = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to : [];
 
     if (!toList || toList.length === 0) {
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            var editor = CKEDITOR.instances['test_editor1'];
-            var data = editor.getData() || '';
-            var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
-            if (quotedGreeting.test(data)) {
-                editor.setData(data.replace(quotedGreeting, function(m, p1, p2) {
-                    return p1 + 'Client' + p2;
-                }));
-            }
+        var data = window.getTestFwdEditorHtml();
+        var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
+        if (quotedGreeting.test(data)) {
+            window.setTestFwdEditorHtml(data.replace(quotedGreeting, function(m, p1, p2) {
+                return p1 + 'Client' + p2;
+            }));
         }
         return;
     }
@@ -2449,40 +2506,26 @@ window.syncFirstRecipientSalutation = function() {
     var personName = window._testRecipientNameMap[firstEmail];
     if (!personName) return;
 
-    // Format requested by user: Dear "Shobha"
-    var targetGreeting = 'Dear "' + personName + '",';
+    // Format requested by user: Dear Shobha,
+    var cleanName = String(personName || '').replace(/&quot;|&#039;|["']/g, '').trim();
+    var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        var editor = CKEDITOR.instances['test_editor1'];
-        var data = editor.getData() || '';
+    var data = window.getTestFwdEditorHtml();
+    var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
 
-        var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
-
-        if (greetingPattern.test(data)) {
-            var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
-                var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
-                var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
-                return pOpen + targetGreeting + pClose;
-            });
-            if (updated !== data) {
-                editor.setData(updated);
-            }
-        } else if (data.trim() !== '') {
-            editor.setData('<p>' + targetGreeting + '</p>' + data);
-        } else {
-            editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
+    if (greetingPattern.test(data)) {
+        var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
+            var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
+            var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
+            return pOpen + targetGreeting + pClose;
+        });
+        if (updated !== data) {
+            window.setTestFwdEditorHtml(updated);
         }
+    } else if (data.trim() !== '') {
+        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p>' + data);
     } else {
-        var $ta = $('#test_editor1');
-        var val = $ta.val() || '';
-        var rawPattern = /(^(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Client|[A-Za-z0-9\s.'-]+?)([,:]?)/im;
-        if (rawPattern.test(val)) {
-            $ta.val(val.replace(rawPattern, targetGreeting));
-        } else if (val.trim()) {
-            $ta.val(targetGreeting + '\n\n' + val);
-        } else {
-            $ta.val(targetGreeting + '\n\n');
-        }
+        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p><p><br></p>');
     }
 };
 

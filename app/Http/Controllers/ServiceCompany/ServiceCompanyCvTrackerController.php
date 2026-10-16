@@ -4504,16 +4504,41 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $candidates = $dbCandidates;
         }
 
-        // Fetch Skill Experience
-        $appIds = collect($candidates)->pluck('id')->toArray();
+        // Fetch Skill Experience with Dragonfly L2 Multi-Tenant Caching (CQRS-01 Compliance)
+        // Intent: Prevent redundant MySQL joins on candidate_job_skill_exp during repeated warm drawer opens.
+        // Tenancy: Keys are strictly isolated by company_id (fwd_cand_skills:{companyId}:{candidateId}) with 300s TTL.
+        $appIds = collect($candidates)->pluck('id')->filter()->unique()->values()->toArray();
         $cjseSkills = collect();
         if (! empty($appIds)) {
-            $cjseSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
-                ->select('candidate_job_skill_exp.candidate_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                ->get()
-                ->groupBy('candidate_id');
+            $cachedSkills = [];
+            $missingIds = [];
+
+            foreach ($appIds as $aId) {
+                $cacheKey = "fwd_cand_skills:{$companyId}:{$aId}";
+                $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                if ($cached !== null) {
+                    $cachedSkills[$aId] = collect($cached)->map(fn ($r) => (object) $r);
+                } else {
+                    $missingIds[] = $aId;
+                }
+            }
+
+            if (! empty($missingIds)) {
+                $freshSkills = DB::table('candidate_job_skill_exp')
+                    ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                    ->whereIn('candidate_job_skill_exp.candidate_id', $missingIds)
+                    ->select('candidate_job_skill_exp.candidate_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+                    ->get()
+                    ->groupBy('candidate_id');
+
+                foreach ($missingIds as $mId) {
+                    $candSkills = $freshSkills->get($mId, collect())->toArray();
+                    \Illuminate\Support\Facades\Cache::put("fwd_cand_skills:{$companyId}:{$mId}", $candSkills, 300);
+                    $cachedSkills[$mId] = collect($candSkills)->map(fn ($r) => (object) $r);
+                }
+            }
+
+            $cjseSkills = collect($cachedSkills);
         }
 
         $formattedCandidates = [];
