@@ -4473,6 +4473,18 @@
                   ],
                 ],
               ];
+
+              $defaultReasonId = 'reason_growth';
+              $defaultReasonTitle = 'Career Growth';
+              $defaultReasonIcon = 'fa-solid fa-chart-line';
+              $defaultReasonText = 'Looking for upward career growth and clear advancement pathways that are currently constrained in the current organizational setup.';
+
+              $existingReason = old('reason_for_job_change', @$application->reason_for_job_change);
+              $hasExplicitReason = !is_null($existingReason) && $existingReason !== '';
+              $hasCustomExistingReason = $hasExplicitReason && ($existingReason !== $defaultReasonText);
+              $selectedReasonTitle = $hasCustomExistingReason ? 'Custom / Existing Reason Populated' : $defaultReasonTitle;
+              $selectedReasonIcon = $hasCustomExistingReason ? 'fa-solid fa-route' : $defaultReasonIcon;
+              $initialReasonValue = $hasExplicitReason ? $existingReason : $defaultReasonText;
             @endphp
 
             <!-- Reason for Job Change Card (Dedicated Career Transition Component) -->
@@ -4501,14 +4513,8 @@
                   <div class="reason-template-dropdown" id="reason_template_dropdown">
                     <div class="reason-template-trigger" id="reason_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="window.toggleReasonTemplateDropdown(event);">
                       <div class="reason-trigger-left">
-                        <i class="fa-solid fa-route reason-trigger-icon" id="reason_trigger_icon"></i>
-                        <span class="reason-trigger-label" id="selected_reason_template_label">
-                          @if(!empty(@$application->reason_for_job_change))
-                            Custom / Existing Reason Populated
-                          @else
-                            Select or Pick Predefined Reason...
-                          @endif
-                        </span>
+                        <i class="{{ $selectedReasonIcon }} reason-trigger-icon" id="reason_trigger_icon"></i>
+                        <span class="reason-trigger-label" id="selected_reason_template_label">{{ $selectedReasonTitle }}</span>
                       </div>
                       <i class="fa-solid fa-chevron-down reason-trigger-arrow"></i>
                     </div>
@@ -4540,7 +4546,13 @@
                           <span>{{ $category['label'] }}</span>
                         </div>
                         @foreach($category['items'] as $item)
-                        <div class="reason-card-item" data-reason-id="{{ $item['id'] }}" data-reason-title="{{ $item['title'] }}" data-reason-text="{{ $item['text'] }}" role="option" tabindex="0" onclick="window.selectReasonTemplate(this, event);">
+                        @php
+                          $isItemDefault = ($item['id'] === $defaultReasonId);
+                          $isItemSelected = $hasExplicitReason
+                            ? ($existingReason === $item['text'])
+                            : $isItemDefault;
+                        @endphp
+                        <div class="reason-card-item {{ $isItemSelected ? 'is-selected' : '' }}" data-reason-id="{{ $item['id'] }}" data-reason-title="{{ $item['title'] }}" data-reason-text="{{ $item['text'] }}" role="option" tabindex="0" onclick="window.selectReasonTemplate(this, event);">
                           <div class="reason-card-left">
                             <span class="reason-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="reason-card-text">
@@ -4570,7 +4582,7 @@
                   <label class="form-label fw-semibold text-gray-800 fs-7 mb-1 d-flex align-items-center justify-content-between">
                     <span>Reason for Job Change <span class="candidate-optional-label text-muted fw-normal fs-8">(Optional &mdash; edit or refine text before saving)</span></span>
                   </label>
-                  <textarea id="reason_for_job_change" name="reason_for_job_change" rows="3" maxlength="250" class="reason-textarea" placeholder="Enter reason for job change or select a template above...">{{ @$application->reason_for_job_change }}</textarea>
+                  <textarea id="reason_for_job_change" name="reason_for_job_change" rows="3" maxlength="250" class="reason-textarea" placeholder="Enter reason for job change or select a template above...">{{ $initialReasonValue }}</textarea>
                   
                   <div class="reason-footer">
                     <div class="reason-context-tag">
