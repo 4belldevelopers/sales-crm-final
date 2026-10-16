@@ -3159,7 +3159,7 @@
     font-size: 12px;
     color: #0f172a;
     font-weight: 600;
-    padding-left: 17px;
+    padding-left: 0;
   }
   /* Interview Slot view in drawer-closed state */
   #kt_activitiesApplication .slots-grid .slot-day {
