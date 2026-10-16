@@ -867,6 +867,8 @@
   font-family: 'Poppins', sans-serif;
   line-height: 1.35;
   word-break: break-word;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 #kt_activitiesApplication #personal_details .own-datetime-pill {
@@ -997,6 +999,38 @@
   font-weight: 600;
   color: #0f172a;
   font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-flag-box {
+  display: inline-flex;
+  align-items: center;
+  width: 20px;
+  height: 15px;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-dial-code {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-digits {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  font-family: 'Poppins', sans-serif !important;
 }
 
 #kt_activitiesApplication #personal_details .cnt-copy-btn {
@@ -4314,12 +4348,18 @@
                 <div class="cnt-item-body">
                   <div class="cnt-label">Contact Number-1</div>
                   <div class="cnt-phone-val">
-                    <span id="firstPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
-                    <span>{{ @$application->phone ?: '-' }}</span>
+                    @if(!empty(@$application->phone))
+                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone) !!}
+                    @else
+                      -
+                    @endif
                   </div>
                 </div>
                 @if(!empty(@$application->phone))
-                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->phone) }}', this)" title="Copy Phone Number">
+                  @php
+                    $copyPhone1 = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                  @endphp
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone1) }}', this)" title="Copy Phone Number">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -4338,12 +4378,18 @@
                 <div class="cnt-item-body">
                   <div class="cnt-label">Contact Number-2</div>
                   <div class="cnt-phone-val">
-                    <span id="secondPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
-                    <span>{{ !empty(@$application->secondary_mobile) ? @$application->secondary_mobile : '-' }}</span>
+                    @if(!empty(@$application->secondary_mobile))
+                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile) !!}
+                    @else
+                      -
+                    @endif
                   </div>
                 </div>
                 @if(!empty(@$application->secondary_mobile))
-                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondary_mobile) }}', this)" title="Copy Secondary Phone">
+                  @php
+                    $copyPhone2 = GeneralMethod::formatContactPhoneForTel(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile);
+                  @endphp
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone2) }}', this)" title="Copy Secondary Phone">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -4355,7 +4401,11 @@
 
             {{-- 5. WhatsApp & LinkedIn Actions --}}
             @if(!empty(@$application->phone))
-              <a href="https://api.whatsapp.com/send?phone=91{{ @$application->phone }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
+              @php
+                $waPhone = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                $waDigits = ltrim($waPhone, '+');
+              @endphp
+              <a href="https://api.whatsapp.com/send?phone={{ $waDigits }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
                 <div class="cnt-wa-left">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -4469,55 +4519,6 @@
             <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
           @endif
 
-
-          @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <h3 class="card-title">Other Details</h3>
-            </div>
-             <div class="comp-list">
-                @if(!empty(@$application->dob))
-                <div class="comp-row">
-                  <span class="comp-label">Date of Birth</span>
-                  <span class="comp-value">{{ date('d M Y', strtotime(@$application->dob)) }}</span>
-                </div>
-                @endif
-                <div class="comp-row">
-                  <span class="comp-label">Offer Amount</span>
-                   @php
-                        $offerAmont = "Confidential";
-                          $allow =  GeneralMethod::confidentialAmontShow($jobId);
-                        @endphp
-
-                        @if($allow)
-                          @if(@$application->offer_amount > 0)
-                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
-                          @endif
-                        @else
-                          <span class="comp-value">{{ $offerAmont }}</span>
-                        @endif
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Joining Date</span>
-                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Reference Name</span>
-                  <span class="comp-value">{{ !empty(@$application->referencename) ? ucwords(@$application->referencename) : '—' }}</span>
-                </div>
-             </div>
-          </section>
-          @endif
 
           @if(@$application->condidate_type=='bench_condidate')
 
@@ -5427,55 +5428,24 @@ setTimeout(() => {
    $( document ).ready(function() {
 
      
-      const firstSavedCountryCode  = @json($application->phone_code ?? 'in');
-      const secondSavedCountryCode = @json($application->second_phone_code ?? 'in');
-      const firstPhoneDisplayDiv = document.getElementById("firstPhoneDisplay");
-      const secondPhoneDisplayDiv = document.getElementById("secondPhoneDisplay");
-
-        const flagDiv = document.createElement("div");
-        flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
-
-        const secondflagDiv = document.createElement("div");
-        secondflagDiv.className = `iti__flag iti__${secondSavedCountryCode}`;
-        // Get the dial code for the selected country code
-        const dialCode = countryDialCodes[firstSavedCountryCode] || ""; // Default to empty string if not found
-        const seconddialCode = countryDialCodes[secondSavedCountryCode] || ""; // Default to empty string if not found
-
-        // Create a span to display the dial code
-        const dialCodeSpan = document.createElement("span");
-        dialCodeSpan.textContent = dialCode;
-
-        const seconddialCodeSpan = document.createElement("span");
-        seconddialCodeSpan.textContent = seconddialCode;
-
-        // Append the flag and the dial code to the display div
-        firstPhoneDisplayDiv.appendChild(flagDiv);
-        firstPhoneDisplayDiv.appendChild(dialCodeSpan);
-
-        // Append the flag and the dial code to the display div
-        secondPhoneDisplayDiv.appendChild(secondflagDiv);
-        secondPhoneDisplayDiv.appendChild(seconddialCodeSpan);
-
-
-
         setTimeout(() => {
-        // alert("k");
-        $('.iti__flag-container').each(function(index) {
-            var cnt = $(this).attr('data-row');
-            const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
-            var calling_code = $(this).attr('data-code');
-            
-            const flagDiv = document.createElement("div");
-            flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
+            $('.iti__flag-container').each(function(index) {
+                var cnt = $(this).attr('data-row');
+                const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
+                if (!flagContainer) return;
+                var calling_code = $(this).attr('data-code');
+                
+                const flagDiv = document.createElement("div");
+                flagDiv.className = `iti__flag iti__${calling_code}`;
 
-            const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
-            const dialCodeSpan = document.createElement("span");
-            dialCodeSpan.textContent = dialCode;
-            // Append the flag and dial code
-            flagContainer.appendChild(flagDiv);
-            flagContainer.appendChild(dialCodeSpan);
-        });
-    }, 2000);
+                const dialCode = (typeof countryDialCodes !== 'undefined' && countryDialCodes[calling_code]) ? countryDialCodes[calling_code] : (calling_code ? (calling_code.startsWith('+') ? calling_code : '+' + calling_code) : "");
+                const dialCodeSpan = document.createElement("span");
+                dialCodeSpan.textContent = dialCode;
+                // Append the flag and dial code
+                flagContainer.appendChild(flagDiv);
+                flagContainer.appendChild(dialCodeSpan);
+            });
+        }, 2000);
 
     // Intent: Phase 2 Lazy loading Notes tab on click
     var _notesTabLoaded = false;
