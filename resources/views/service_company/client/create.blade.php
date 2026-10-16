@@ -49,12 +49,8 @@
 }
 
 body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
-#kt_content {background: var(--client-page);}
-#kt_toolbar {background: var(--client-page); padding-top: 14px;}
-#kt_toolbar .page-title {align-items: flex-start !important;}
-#kt_toolbar .page-title h1,
-#kt_toolbar .page-title h1 a {font-size: 16px !important; line-height: 1.25; color: var(--client-ink) !important;}
-#kt_subheader_total {font-size: 12px; color: var(--client-muted) !important; border: 0 !important; margin: 2px 0 0 !important; font-weight: 400 !important;}
+#kt_content {background: var(--client-page); padding-top: 0 !important;}
+#kt_toolbar {display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important;}
 .form-label{ margin-bottom: 0.5rem!important; font-size: 12px!important; font-weight: 600!important; color: var(--client-ink)!important;}
 .last-input-border-radius{border-radius	: 5px 0px 0px 5px!important;}
 .tagify .tagify__tag div .tagify__tag-text {
@@ -668,18 +664,324 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     .client-review-layout {grid-template-columns: 1fr;}
     .client-review-grid, .client-review-addresses, .client-services-grid {grid-template-columns: 1fr;}
   }
-  /* Button Visibility: Submit Client & Header Back button ONLY show on Step 5 */
-  #submitBtn, .submitfrm, .updatefrm, #client_top_back_btn {
+  /* ==========================================================================
+     EXACT 5PX VERTICAL GAPS ARCHITECTURE & HEADER STABILIZATION
+     Upper Gap: Exactly 5px between fixed Top Navigation (#kt_header) & Wizard Header
+     Lower Gap: Exactly 5px between Wizard Header & Main Form Content
+     Strictly isolated to Client Wizard page (Edit / Add Client)
+     ========================================================================== */
+
+  /* Override Metronic body toolbar CSS variable for this page */
+  #kt_body {
+    --kt-toolbar-height: 5px !important;
+    --kt-toolbar-height-tablet-and-mobile: 5px !important;
+  }
+
+  /* Fixed Top Header is 65px on desktop (>=992px) and 55px on tablet/mobile (<992px).
+     Wrapper padding-top = Header Height + 5px upper gap */
+  .header-fixed.toolbar-fixed #kt_wrapper,
+  .header-fixed #kt_wrapper,
+  #kt_wrapper {
+    padding-top: calc(65px + 5px) !important;
+  }
+
+  @media (max-width: 991.98px) {
+    .header-tablet-and-mobile-fixed.toolbar-tablet-and-mobile-fixed #kt_wrapper,
+    .header-tablet-and-mobile-fixed #kt_wrapper,
+    #kt_wrapper {
+      padding-top: calc(55px + 5px) !important;
+    }
+  }
+
+  /* Eliminate any redundant padding/margins between #kt_wrapper and #client_top_nav_card */
+  #kt_content,
+  .content {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  #kt_content > .d-flex,
+  #kt_content .container-fluid {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Wizard Header Card: 0px top margin, exactly 5px bottom margin */
+  .client-top-nav-card {
+    background: #fffdf2 !important;
+    border: 1.5px solid #ffd428 !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    box-sizing: border-box !important;
+    height: 68px !important;
+    min-height: 68px !important;
+    max-height: 68px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    z-index: 5 !important;
+  }
+
+  /* Main Form Shell: 0px top margin/padding to preserve exact 5px lower gap */
+  .client-wizard-shell,
+  .client-wizard-shell.card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .client-wizard-shell .card-body,
+  #kt_wizard,
+  #kt_form {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .client-header-grid {
+    display: grid !important;
+    grid-template-columns: 240px 1fr 140px !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .client-header-identity {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 240px !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .client-header-back-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #fde047 !important;
+    background: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    color: #0a1647 !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-header-back-btn:hover {
+    background: #fef08a !important;
+    border-color: #ffd428 !important;
+    color: #0a1647 !important;
+  }
+
+  .client-header-titles {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .client-header-title {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #0a1647 !important;
+    margin: 0 0 2px 0 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .client-header-subtitle {
+    font-size: 11px !important;
+    color: #5b6b8b !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .client-header-stepper-col {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .client-stepper-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    min-width: 0 !important;
+  }
+
+  .client-step-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    user-select: none !important;
+    padding: 2px 0 !important;
+  }
+
+  .client-step-circle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-sizing: border-box !important;
+  }
+
+  .client-step-circle.is-completed {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .client-step-circle.is-active {
+    background: #ffd428 !important;
+    color: #0a1647 !important;
+    border: none !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428 !important;
+  }
+
+  .client-step-circle.is-upcoming {
+    background: #ffffff !important;
+    color: #0a1647 !important;
+    border: 1.5px solid #fde047 !important;
+    box-shadow: none !important;
+  }
+
+  .client-step-text {
+    display: block !important;
+    line-height: 1.15 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .client-step-name {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #0a1647 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .client-step-sub {
+    font-size: 9.5px !important;
+    color: #5b6b8b !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  .client-step-line {
+    width: 20px !important;
+    height: 2px !important;
+    min-width: 12px !important;
+    background: #ffd428 !important;
+    margin: 0 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .client-header-actions {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .client-top-next-btn {
+    background: #ffd428 !important;
+    border: none !important;
+    color: #0a1647 !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-top-next-btn:hover {
+    background: #f5c400 !important;
+    color: #0a1647 !important;
+    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
+  }
+
+  .client-top-submit-btn {
+    background: #ffd428 !important;
+    border: none !important;
+    color: #0a1647 !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-top-submit-btn:hover {
+    background: #f5c400 !important;
+    color: #0a1647 !important;
+    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
+  }
+
+  /* Step 5 vs Steps 1-4 Action Visibility Rules */
+  #submitBtn, .submitfrm, .updatefrm {
     display: none !important;
   }
   body.on-review-step #submitBtn,
   body.on-review-step .submitfrm,
   body.on-review-step .updatefrm,
-  body.on-review-step #client_top_back_btn,
   [data-wizard-state="last"] #submitBtn,
   [data-wizard-state="last"] .submitfrm,
-  [data-wizard-state="last"] .updatefrm,
-  [data-wizard-state="last"] #client_top_back_btn {
+  [data-wizard-state="last"] .updatefrm {
     display: inline-flex !important;
   }
   body.on-review-step #client_top_next_btn,
@@ -689,6 +991,65 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   [data-wizard-state="last"] #continueButton,
   [data-wizard-state="last"] [data-wizard-type="action-next"] {
     display: none !important;
+  }
+
+  /* Responsive Behavior: 1366px (15.6-inch), 1200px, 991px */
+  @media (max-width: 1399.98px) and (min-width: 992px) {
+    .client-header-grid {
+      grid-template-columns: 210px 1fr 135px !important;
+      gap: 8px !important;
+    }
+    .client-header-identity {
+      width: 210px !important;
+      min-width: 210px !important;
+      max-width: 210px !important;
+    }
+    .client-header-actions {
+      width: 135px !important;
+      min-width: 135px !important;
+      max-width: 135px !important;
+    }
+    .client-step-line {
+      width: 14px !important;
+      min-width: 8px !important;
+      margin: 0 4px !important;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .client-top-nav-card {
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      padding: 12px 14px !important;
+    }
+    .client-header-grid {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .client-header-identity {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      justify-content: space-between !important;
+    }
+    .client-header-stepper-col {
+      width: 100% !important;
+      overflow-x: auto !important;
+      justify-content: flex-start !important;
+      padding-bottom: 4px !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    .client-stepper-wrap {
+      justify-content: flex-start !important;
+    }
+    .client-header-actions {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      justify-content: flex-end !important;
+    }
   }
 
   /* ==========================================================================
@@ -1598,7 +1959,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      
 ?>
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-3 pb-5" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0 pb-5" id="kt_content">
   <!--begin::Entry-->
   <div class="d-flex flex-column-fluid">
     <!--begin::Container-->
@@ -1612,107 +1973,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
            - Center: 5-Step horizontal stepper (concentric active halo, gold dividers)
            - Right: Contextual Next Page / Submit action button
            ========================================================================= -->
-      <div class="card client-top-nav-card mb-4" style="background:#fffdf2; border:1.5px solid #ffd428; border-radius:12px; padding:12px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-          
-          <!-- LEFT: Circular Back Arrow + Title Block -->
-          <div class="d-flex align-items-center gap-3">
-            <button type="button" class="btn client-header-back-btn client-nav-back" id="client_header_back_btn" aria-label="Go Back" style="width:42px; height:42px; border-radius:50%; border:1.5px solid #fde047; background:#ffffff; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; color:#0a1647; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.03); transition:all 0.15s ease;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a1647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-            </button>
-            <div>
-              <h2 class="client-header-title" id="client_header_title" style="font-size:18px; font-weight:800; color:#0a1647; margin:0 0 2px 0; line-height:1.2; letter-spacing:-0.2px;"><?php echo $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client'; ?></h2>
-              <p class="client-header-subtitle" id="client_header_subtitle" style="font-size:11.5px; color:#5b6b8b; margin:0; line-height:1.3; font-weight:500;">Create and configure a client profile for jobs, contacts and recruitment operations.</p>
-            </div>
-          </div>
-
-          <!-- CENTER: 5-Step Horizontal Stepper -->
-          <div class="client-stepper-wrap d-flex align-items-center gap-1" id="client_wizard_stepper">
-            
-            <!-- Step 1 -->
-            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="1">
-              <div class="client-step-circle client-step-circle-1" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; background:#ffd428; color:#0a1647; flex-shrink:0; box-shadow:0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428;">1</div>
-              <div class="client-step-text d-none d-xl-block">
-                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Client Information</div>
-                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Basic details</div>
-              </div>
-            </div>
-
-            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
-
-            <!-- Step 2 -->
-            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="2">
-              <div class="client-step-circle client-step-circle-2" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">2</div>
-              <div class="client-step-text d-none d-xl-block">
-                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Client Description</div>
-                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">About the client</div>
-              </div>
-            </div>
-
-            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
-
-            <!-- Step 3 -->
-            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="3">
-              <div class="client-step-circle client-step-circle-3" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">3</div>
-              <div class="client-step-text d-none d-xl-block">
-                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Address Details</div>
-                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Location & address</div>
-              </div>
-            </div>
-
-            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
-
-            <!-- Step 4 -->
-            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="4">
-              <div class="client-step-circle client-step-circle-4" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">4</div>
-              <div class="client-step-text d-none d-xl-block">
-                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Contact Person</div>
-                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Key contacts</div>
-              </div>
-            </div>
-
-            <div class="client-step-line" style="width:28px; height:2px; background:#ffd428; margin:0 8px; flex-shrink:0;"></div>
-
-            <!-- Step 5 -->
-            <div class="client-step-item d-flex align-items-center gap-2 cursor-pointer" data-step="5">
-              <div class="client-step-circle client-step-circle-5" style="width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; background:#ffffff; border:1.5px solid #fde047; color:#0a1647; flex-shrink:0;">5</div>
-              <div class="client-step-text d-none d-xl-block">
-                <div class="client-step-name" style="font-size:11.5px; font-weight:700; color:#0a1647; line-height:1.2;">Review & Submit</div>
-                <div class="client-step-sub" style="font-size:10px; color:#5b6b8b; line-height:1.1;">Confirm & save</div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- RIGHT: Action Buttons (Matches media_1792068852883.png) -->
-          <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            <!-- Steps 1-4: Next Page Button -->
-            <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn" style="background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 22px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
-              <span>Next Page</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a1647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </button>
-
-            <!-- Step 5: Back & Submit Client buttons -->
-            <button type="button" class="btn client-top-back-btn client-nav-back" id="client_top_back_btn" style="display:none !important; background:#ffffff !important; border:1px solid #cbd5e1 !important; color:#0a1647 !important; font-weight:600 !important; font-size:13.5px !important; padding:9px 20px !important; border-radius:8px !important; align-items:center; gap:8px; cursor:pointer;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-              <span>Back</span>
-            </button>
-
-            <?php if ($page_event == 'EDIT'): ?>
-              <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important; background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 24px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; align-items:center; gap:8px; cursor:pointer;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Update Client</span>
-              </button>
-            <?php else: ?>
-              <button type="button" class="btn client-top-submit-btn submitfrm" id="submitBtn" style="display:none !important; background:#ffd428 !important; border:none !important; color:#0a1647 !important; font-weight:800 !important; font-size:13.5px !important; padding:10px 24px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.4) !important; align-items:center; gap:8px; cursor:pointer;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Submit Client</span>
-              </button>
-            <?php endif; ?>
-          </div>
-
-        </div>
-      </div>
+      @include('service_company.client.components.wizard-header', ['page_event' => $page_event])
 
       <!--Card-->
       <div class="card card-custom client-wizard-shell" style="background:transparent; border:none; box-shadow:none;">
@@ -4533,11 +4794,10 @@ $('.remove_address').click(function(){
       activeStep = (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1;
     }
 
-    // Header Back button is always visible as in media_1792068852883.png; Text back button is Step 5 only
+    // Circular Header Back button is always visible across all steps
     if (activeStep <= 1) {
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_header_back_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
     } else {
       $('body').removeClass('on-step-1').addClass('on-step-' + activeStep);
       $('#client_header_back_btn').attr('style', 'display: inline-flex !important;').show();
@@ -4551,21 +4811,22 @@ $('.remove_address').click(function(){
       4: 'Add key contacts for this client organization.',
       5: 'Review all the information before submitting.'
     };
-    $('#client_header_subtitle').text(subtitles[activeStep] || subtitles[1]);
+    var currentSub = subtitles[activeStep] || subtitles[1];
+    $('#client_header_subtitle').text(currentSub).attr('title', currentSub);
 
-    // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4
+    // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4:
+    // Right action container holds only one primary action (Next Page on 1-4, Update/Submit on 5)
     if (activeStep >= 5) {
       $('body').addClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
       $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
-      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
       if (typeof populateReviewSummaries === 'function') {
         populateReviewSummaries();
       }
     } else {
       $('body').removeClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
-      $('#submitBtn, .submitfrm, .updatefrm, #client_top_back_btn').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     }
 
     // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
@@ -4577,7 +4838,8 @@ $('.remove_address').click(function(){
       var $nextDivider = $(this).next('.client-step-line');
 
       if (s < activeStep) {
-        $circle.css({
+        $(this).attr('aria-current', 'false');
+        $circle.removeClass('is-active is-upcoming').addClass('is-completed').css({
           'background': '#10b981',
           'color': '#ffffff',
           'border': 'none',
@@ -4587,7 +4849,8 @@ $('.remove_address').click(function(){
         $sub.css({ 'color': '#5b6b8b' });
         if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
       } else if (s === activeStep) {
-        $circle.css({
+        $(this).attr('aria-current', 'step');
+        $circle.removeClass('is-completed is-upcoming').addClass('is-active').css({
           'background': '#ffd428',
           'color': '#0a1647',
           'border': 'none',
@@ -4597,7 +4860,8 @@ $('.remove_address').click(function(){
         $sub.css({ 'color': '#5b6b8b' });
         if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
       } else {
-        $circle.css({
+        $(this).attr('aria-current', 'false');
+        $circle.removeClass('is-completed is-active').addClass('is-upcoming').css({
           'background': '#ffffff',
           'color': '#0a1647',
           'border': '1.5px solid #fde047',
@@ -4859,7 +5123,7 @@ $('.remove_address').click(function(){
     });
 
     // Intercept Back button clicks — navigate back and sync navigation state
-    $(document).on('click', '#client_btn_back, .client-nav-back, #client_header_back_btn, .client-top-back-btn', function (e) {
+    $(document).on('click', '#client_btn_back, .client-nav-back, #client_header_back_btn', function (e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -4873,6 +5137,12 @@ $('.remove_address').click(function(){
           goToWizardStep(currentStep - 1);
         } catch (err) {
           console.error('goToWizardStep back error:', err);
+        }
+      } else {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = "{{ route('service_company.clients.index') }}";
         }
       }
     });
