@@ -25,7 +25,7 @@ $hasContacts = count($contactsList) > 0;
               <p style="font-size:12px; color:#64748b; margin:0;">Add key contacts for this client organization.</p>
             </div>
           </div>
-          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" onclick="window.openContactDrawer ? window.openContactDrawer(null) : false;" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
+          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
             <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person
           </button>
         </div>
@@ -158,10 +158,10 @@ if ($page_event == 'EDIT' && $hasContacts) {
                   <td style="padding:14px 10px;"><?php echo $typeBadge; ?></td>
                   <td style="padding:14px 18px; text-align:right;">
                     <div class="d-inline-flex align-items-center gap-1 justify-content-end">
-                      <button type="button" class="btn btn-icon client-edit-contact" data-index="<?php echo $idx; ?>" onclick="window.openContactDrawer ? window.openContactDrawer(<?php echo $idx; ?>) : false;" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0;">
+                      <button type="button" class="btn btn-icon client-edit-contact" data-index="<?php echo $idx; ?>" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0;">
                         <i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>
                       </button>
-                      <button type="button" class="btn btn-icon client-delete-contact" data-index="<?php echo $idx; ?>" onclick="window.deleteContactRow ? window.deleteContactRow(<?php echo $idx; ?>) : false;" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0;">
+                      <button type="button" class="btn btn-icon client-delete-contact" data-index="<?php echo $idx; ?>" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0;">
                         <i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>
                       </button>
                     </div>
@@ -179,7 +179,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
                     </div>
                     <h5 style="font-size:15px; font-weight:700; color:#1e293b; margin-bottom:4px;">No contact person added yet.</h5>
                     <p style="font-size:12.5px; color:#64748b; margin-bottom:16px;">Click "Add Contact Person" to begin adding key contacts for this client.</p>
-                    <button type="button" class="btn btn-warning" onclick="window.openContactDrawer ? window.openContactDrawer(null) : false;" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; display:inline-flex; align-items:center; gap:6px;">
+                    <button type="button" class="btn btn-warning client-open-contact-drawer-btn" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; display:inline-flex; align-items:center; gap:6px;">
                       <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person
                     </button>
                   </td>
@@ -372,7 +372,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
 <!-- =====================================================================
      Add / Edit Contact Person Drawer with Global Mobile Number Component
      ===================================================================== -->
-<div class="client-contact-drawer-backdrop" id="client_contact_drawer_backdrop" onclick="window.closeContactDrawer ? window.closeContactDrawer() : false;"></div>
+<div class="client-contact-drawer-backdrop" id="client_contact_drawer_backdrop"></div>
 <div class="client-contact-drawer" id="client_contact_drawer" aria-hidden="true">
   <!-- Header -->
   <div class="client-drawer-head">
@@ -380,7 +380,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
       <h4 id="client_contact_drawer_title">Add Contact Person</h4>
       <p class="client-drawer-head-subtitle" id="client_contact_drawer_subtitle">Add the primary or secondary contact details for this client.</p>
     </div>
-    <button type="button" class="client-drawer-close-btn" id="client_close_contact_drawer" title="Close" aria-label="Close drawer" onclick="window.closeContactDrawer ? window.closeContactDrawer() : false;">
+    <button type="button" class="client-drawer-close-btn" id="client_close_contact_drawer" title="Close" aria-label="Close drawer">
       <i class="la la-times" aria-hidden="true"></i>
     </button>
   </div>
@@ -434,9 +434,9 @@ if ($page_event == 'EDIT' && $hasContacts) {
 
   <!-- Footer -->
   <div class="client-drawer-foot">
-    <button type="button" class="cdf-cancel-btn" id="client_cancel_contact_drawer" onclick="window.closeContactDrawer ? window.closeContactDrawer() : false;">Cancel</button>
-    <button type="button" class="btn btn-warning cdf-save-btn" id="client_save_contact_drawer" onclick="window.saveContactDrawer ? window.saveContactDrawer() : false;" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:10px 22px !important; border-radius:8px !important;">
-      <span class="cdf-spinner"></span>
+    <button type="button" class="cdf-cancel-btn" id="client_cancel_contact_drawer">Cancel</button>
+    <button type="button" class="btn btn-warning cdf-save-btn" id="client_save_contact_drawer" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:10px 22px !important; border-radius:8px !important;">
+      <span class="cdf-spinner" style="display:none; width:14px; height:14px; border:2px solid #1e293b; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:6px;"></span>
       <i class="la la-user-plus cdf-btn-icon" aria-hidden="true" style="color:#1e293b; font-size:15px; margin-right:4px;"></i>
       <span class="cdf-btn-text">Add Contact Person</span>
     </button>

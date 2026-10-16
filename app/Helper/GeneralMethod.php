@@ -3863,14 +3863,15 @@ END:VCALENDAR";
 
     public static function baseCompany()
     {
-        $smtp = EmailSetting::where('status', '=', 0)->where('id', 11)->orderByDesc('id')->first();
-        $data = [
-            'companyName' => $smtp->mail_from_name ?? 'JERO.WORKS',
-            'companyEmail' => $smtp->email_id,
-        ];
+        return cache()->remember('sys_base_company_smtp', 86400, function () {
+            $smtp = EmailSetting::where('status', '=', 0)->where('id', 11)->orderByDesc('id')->first();
+            $data = [
+                'companyName' => $smtp->mail_from_name ?? 'JERO.WORKS',
+                'companyEmail' => $smtp->email_id ?? 'support@jero.works',
+            ];
 
-        return (object) $data;
-
+            return (object) $data;
+        });
     }
 
     public static function googleSheetId($companyId)
@@ -5298,6 +5299,9 @@ END:VCALENDAR";
 
     public static function allCitiesSelected($cityID)
     {
+        if (empty($cityID) || (is_array($cityID) && count(array_filter($cityID)) === 0)) {
+            return '';
+        }
 
         $citylistSelect = DB::table('city_list')
             ->join('state_list', 'state_list.id', '=', 'city_list.state_id')

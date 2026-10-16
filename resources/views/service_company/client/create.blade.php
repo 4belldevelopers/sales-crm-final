@@ -2731,7 +2731,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                 <!--begin::Wizard Form-->
                 <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form" style="margin:0 !important; padding:0 !important;">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
-                  <input type="hidden" name="idempotency_key" id="kt_form_idempotency_key" value="" />
+                  <input type="hidden" name="idempotency_key" id="kt_form_idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}" />
                   <!--begin::Client Information-->
                   @include('service_company.client.components.tab-basic-info')
 
@@ -4217,66 +4217,94 @@ $('.remove_address').click(function(){
        					});
    
    });   
-   
-   $(document).on('click', '.submitfrm', function() {
-        var $btn = $(this);
+    var isClientSubmitting = false;
 
-   	var data 			=	new FormData();
-   	var form_data 		=	$('#kt_form').serializeArray();
+    $(document).on('click', '.submitfrm', function(e) {
+        if (e && e.preventDefault) { e.preventDefault(); }
+        if (isClientSubmitting) {
+            return false;
+        }
+        var $btn = $(this);
+        isClientSubmitting = true;
+
+    	var data 			=	new FormData();
+    	var form_data 		=	$('#kt_form').serializeArray();
 
       $btn.prop("disabled", true);
       $btn.html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
       );
 
+      var idempotencyKey = $('#kt_form_idempotency_key').val();
+      if (!idempotencyKey) {
+          idempotencyKey = 'sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11);
+          $('#kt_form_idempotency_key').val(idempotencyKey);
+      }
 
-   	$.each(form_data, function (key, input) {
-       		data.append(input.name, input.value);
-   	});
+    	$.each(form_data, function (key, input) {
+        		data.append(input.name, input.value);
+    	});
 
-   	var file_data 		= $('input[name="logo"]')[0].files;
-   	for (var i = 0; i < file_data.length; i++) {
-       		data.append("logo", file_data[i]);
-   	}
+    	var file_data 		= $('input[name="logo"]')[0].files;
+    	for (var i = 0; i < file_data.length; i++) {
+        		data.append("logo", file_data[i]);
+    	}
 
-	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
-    data.append("description", kt_docs_tinymce_hidden);
+ 	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
+     data.append("description", kt_docs_tinymce_hidden);
 
-   	data.append('key', 'value');
+    	data.append('key', 'value');
 
-    if (!navigator.onLine) {
-        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-        $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-        return;
-    }
+     if (!navigator.onLine) {
+         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+         isClientSubmitting = false;
+         $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+         return;
+     }
 
-   	$.ajax({
-       			url					: '{{route('service_company.clients.store')}}',
-   				headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-       			method				: "POST",
-       			processData			: false,
-       			contentType			: false,
-      		 	data				: data,
-   				  redirect			: true,
-       			success				: function (data)
-                {
-                  if(data.status == 'success')
-                  {
-                     window.location = '{{ route('service_company.clients.index') }}'
-                  }
-       			},
-       			error				: function (xhr) {
-                    $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-                    if (xhr.status === 0 || !navigator.onLine) {
-                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                    } else {
-                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                    }
-       			}
-   			});
+    	$.ajax({
+        			url					: '{{route('service_company.clients.store')}}',
+    				headers				: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Idempotency-Key': idempotencyKey
+                    },
+        			method				: "POST",
+        			processData			: false,
+        			contentType			: false,
+       		 	data				: data,
+    				  redirect			: true,
+        			success				: function (data)
+                 {
+                   if(data.status == 'success')
+                   {
+                      window.location = data.url || '{{ route('service_company.clients.index') }}';
+                   } else if (data.status === 'processing') {
+                      setTimeout(function() {
+                          window.location = data.url || '{{ route('service_company.clients.index') }}';
+                      }, 1000);
+                   } else {
+                      isClientSubmitting = false;
+                      $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
+                      $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+                      Swal.fire("Notice", data.message || "Operation failed", "warning");
+                   }
+        			},
+        			error				: function (xhr) {
+                     isClientSubmitting = false;
+                     $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
+                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+                     if (xhr.status === 0 || !navigator.onLine) {
+                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                     } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                         Swal.fire("Error", xhr.responseJSON.message, "error");
+                     } else {
+                         Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                     }
+        			}
+    			});
 
-   });
-         
+    });
+          
 </script>
 <?php 
    if($page_event == 'EDIT')
@@ -4284,13 +4312,24 @@ $('.remove_address').click(function(){
 ?>
 <script>
 
-   $(document).on('click', '.updatefrm', function() {
+   $(document).on('click', '.updatefrm', function(e) {
+        if (e && e.preventDefault) { e.preventDefault(); }
+        if (isClientSubmitting) {
+            return false;
+        }
         var $btn = $(this);
+        isClientSubmitting = true;
 
     $btn.prop("disabled", true);
     $btn.html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
       );
+
+    var idempotencyKey = $('#kt_form_idempotency_key').val();
+    if (!idempotencyKey) {
+        idempotencyKey = 'sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11);
+        $('#kt_form_idempotency_key').val(idempotencyKey);
+    }
 
    	var data 			=	new FormData();
    	var form_data 		=	$('#kt_form').serializeArray();
@@ -4302,37 +4341,54 @@ $('.remove_address').click(function(){
        		data.append("logo", file_data[i]);
    	}
 
-	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
-	data.append("description", kt_docs_tinymce_hidden);
+ 	var kt_docs_tinymce_hidden = (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || '');
+ 	data.append("description", kt_docs_tinymce_hidden);
 
-	data.append('key', 'value');
+ 	data.append('key', 'value');
   // data.append('_method', 'PUT');
 
     if (!navigator.onLine) {
         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+        isClientSubmitting = false;
         $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
         return;
     }
 
    	$.ajax({
    				url					: '{{route('service_company.clients.update', @$client->id)}}',
-   				headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+   				headers				: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': idempotencyKey
+                },
        			method				: "POST",
        			processData			: false,
        			contentType			: false,
       		 	data				: data,
    				redirect			: true,
-       			success				: function (data)
+        			success				: function (data)
                {
                   if(data.status == 'success')
                   {
-                     window.location = '{{ route('service_company.clients.index') }}'
+                     window.location = data.url || '{{ route('service_company.clients.index') }}';
+                  } else if (data.status === 'processing') {
+                     setTimeout(function() {
+                         window.location = data.url || '{{ route('service_company.clients.index') }}';
+                     }, 1000);
+                  } else {
+                     isClientSubmitting = false;
+                     $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
+                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
+                     Swal.fire("Notice", data.message || "Operation failed", "warning");
                   }
        			},
        			error				: function (xhr) {
+                    isClientSubmitting = false;
+                    $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
                     if (xhr.status === 0 || !navigator.onLine) {
                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        Swal.fire("Error", xhr.responseJSON.message, "error");
                     } else {
                         Swal.fire("Error", "Something went wrong. Please try again.", "error");
                     }
@@ -4784,7 +4840,7 @@ $('.remove_address').click(function(){
               '</div>' +
               '<h5 style="font-size:15px; font-weight:700; color:#1e293b; margin-bottom:4px;">No contact person added yet.</h5>' +
               '<p style="font-size:12.5px; color:#64748b; margin-bottom:16px;">Click "Add Contact Person" to begin adding key contacts for this client.</p>' +
-              '<button type="button" class="btn btn-warning" onclick="window.openContactDrawer ? window.openContactDrawer(null) : false;" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; display:inline-flex; align-items:center; gap:6px;">' +
+              '<button type="button" class="btn btn-warning client-open-contact-drawer-btn" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; display:inline-flex; align-items:center; gap:6px;">' +
                 '<i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person' +
               '</button>' +
             '</td>' +
@@ -4835,10 +4891,10 @@ $('.remove_address').click(function(){
           '<td style="padding:14px 10px;">' + typeBadge + '</td>' +
           '<td style="padding:14px 18px; text-align:right;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
-              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
+              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
                 '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
               '</button>' +
-              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
+              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0;">' +
                 '<i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>' +
               '</button>' +
             '</div>' +
@@ -4856,6 +4912,14 @@ $('.remove_address').click(function(){
     } else {
       $rows.eq(0).find('input').val('');
     }
+    $('.client-cperson-container').each(function (i) {
+      $(this).attr('data-contact-index', i);
+      $(this).find('input[name="cp_name[]"]').attr('id', 'cp_name_' + i);
+      $(this).find('input[name="cp_email[]"]').attr('id', 'cp_email_' + i);
+      $(this).find('input[name="cp_number[]"]').attr('id', 'cp_number_' + i);
+      $(this).find('input[name="calling_code[]"]').attr('id', 'calling_code_' + i);
+      $(this).find('input[name="cp_desigination[]"]').attr('id', 'cp_desigination_' + i);
+    });
     $('#contactPersonId').val(Math.max(0, $('.client-cperson-container').length - 1));
     renderContactTable();
     updateCompletion();
@@ -4930,15 +4994,41 @@ $('.remove_address').click(function(){
     setTimeout(function () { $('#client_drawer_name').focus(); }, 120);
   }
 
+  window.isSavingContactPerson = false;
+
   function closeContactDrawer() {
     $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
     _cdfClearErrors();
+    $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('').removeClass('is-invalid');
+    $('#client_drawer_edit_index').val('');
+    if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+      window.JeroPhoneBox.setPhone('client_drawer_phone', '');
+      window.JeroPhoneBox.setCountry('client_drawer_phone', '+91');
+    } else {
+      $('#client_drawer_phone').val('').removeClass('is-invalid');
+      $('#client_drawer_calling_code').val('+91');
+    }
     if (window.JeroPhoneBox && typeof window.JeroPhoneBox.closeAllDropdowns === 'function') {
       window.JeroPhoneBox.closeAllDropdowns();
     }
+    window.isSavingContactPerson = false;
+    var $saveBtn = $('#client_save_contact_drawer');
+    $saveBtn.prop('disabled', false).removeClass('loading');
+    $saveBtn.find('.cdf-spinner').hide();
+    $saveBtn.find('.cdf-btn-icon').show();
   }
 
   function saveContactDrawer() {
+    if (window.isSavingContactPerson) {
+      return false;
+    }
+    window.isSavingContactPerson = true;
+
+    var $saveBtn = $('#client_save_contact_drawer');
+    $saveBtn.prop('disabled', true).addClass('loading');
+    $saveBtn.find('.cdf-spinner').show();
+    $saveBtn.find('.cdf-btn-icon').hide();
+
     _cdfClearErrors();
     var name        = $('#client_drawer_name').val().trim();
     var designation = $('#client_drawer_designation').val().trim();
@@ -4975,16 +5065,45 @@ $('.remove_address').click(function(){
       $firstBad = $firstBad || $('#client_drawer_phone');
       valid = false;
     }
+
     if (!valid) {
+      window.isSavingContactPerson = false;
+      $saveBtn.prop('disabled', false).removeClass('loading');
+      $saveBtn.find('.cdf-spinner').hide();
+      $saveBtn.find('.cdf-btn-icon').show();
       if ($firstBad) { $firstBad.focus(); }
       return;
     }
 
     var editIndexStr = $('#client_drawer_edit_index').val();
     var isEdit = (editIndexStr !== '' && !isNaN(parseInt(editIndexStr, 10)));
+    var editIdx = isEdit ? parseInt(editIndexStr, 10) : null;
+
+    // Check for duplicate contact email within this client (excluding current row if editing)
+    var isDuplicateEmail = false;
+    $('.client-cperson-container').each(function (idx) {
+      if (isEdit && idx === editIdx) {
+        return;
+      }
+      var existingEmail = ($(this).find('input[name="cp_email[]"]').val() || '').trim().toLowerCase();
+      if (existingEmail && existingEmail === email.toLowerCase()) {
+        isDuplicateEmail = true;
+        return false;
+      }
+    });
+
+    if (isDuplicateEmail) {
+      $('#client_drawer_email').addClass('is-invalid');
+      $('#cdf_err_email').text('A contact person with this email is already added for this client.').addClass('visible');
+      $('#client_drawer_email').focus();
+      window.isSavingContactPerson = false;
+      $saveBtn.prop('disabled', false).removeClass('loading');
+      $saveBtn.find('.cdf-spinner').hide();
+      $saveBtn.find('.cdf-btn-icon').show();
+      return;
+    }
 
     if (isEdit) {
-      var editIdx = parseInt(editIndexStr, 10);
       var $container = $('.client-cperson-container').eq(editIdx);
       if ($container.length) {
         $container.find('input[name="cp_name[]"]').val(name);
@@ -5276,10 +5395,10 @@ $('.remove_address').click(function(){
           '<td style="padding:12px 12px;">' + typeBadge + '</td>' +
           '<td style="padding:12px 16px; text-align:right;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
-              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" onclick="window.openContactDrawer ? window.openContactDrawer(' + row.index + ') : false;" title="Edit" style="width:32px; height:32px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
+              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + row.index + '" title="Edit" style="width:32px; height:32px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
                 '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
               '</button>' +
-              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" onclick="window.deleteContactRow ? window.deleteContactRow(' + row.index + ') : false;" title="Delete" style="width:32px; height:32px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:6px;">' +
+              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + row.index + '" title="Delete" style="width:32px; height:32px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:6px;">' +
                 '<i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>' +
               '</button>' +
             '</div>' +
@@ -6186,31 +6305,41 @@ $('.remove_address').click(function(){
       $('#tags').focus();
     });
 
-    $(document).on('click', '#client_open_contact_drawer', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    $(document).off('click', '#client_open_contact_drawer, .client-open-contact-drawer-btn').on('click', '#client_open_contact_drawer, .client-open-contact-drawer-btn', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
       openContactDrawer(null);
     });
-    $(document).on('click', '#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop', function (e) {
-      e.preventDefault();
+    $(document).off('click', '#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop').on('click', '#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
       closeContactDrawer();
     });
-    $(document).on('click', '#client_save_contact_drawer', function (e) {
-      e.preventDefault();
+    $(document).off('click', '#client_save_contact_drawer').on('click', '#client_save_contact_drawer', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
       saveContactDrawer();
     });
-    $(document).on('click', '.client-edit-contact', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    $(document).off('click', '.client-edit-contact').on('click', '.client-edit-contact', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
       var index = $(this).attr('data-index');
       openContactDrawer(index);
     });
 
-    $(document).on('click', '.client-delete-contact', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    $(document).off('click', '.client-delete-contact').on('click', '.client-delete-contact', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
       var index = parseInt($(this).attr('data-index'), 10);
       deleteContactRow(index);
+    });
+
+    $(document).off('keydown', '#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').on('keydown', '#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone', function (e) {
+      if (e.key === 'Enter') {
+        if (e && e.preventDefault) e.preventDefault();
+        if (e && e.stopPropagation) e.stopPropagation();
+        saveContactDrawer();
+      }
     });
 
     $(document).on('click', '.remove_address_single, .client-remove-address-btn', function (e) {
