@@ -866,6 +866,219 @@
   font-size: 13px;
   user-select: none;
 }
+
+/* ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .cnt-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .cnt-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .cnt-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .cnt-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .cnt-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .cnt-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+#kt_activitiesApplication .cnt-item-row:last-child {
+  border-bottom: none;
+}
+#kt_activitiesApplication .cnt-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .cnt-row-icon svg {
+  width: 19px;
+  height: 19px;
+}
+#kt_activitiesApplication .cnt-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .cnt-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .cnt-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .cnt-icon-amber {
+  background: #FFF7ED;
+  color: #EA580C;
+}
+#kt_activitiesApplication .cnt-item-body {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .cnt-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 3px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+}
+#kt_activitiesApplication .cnt-value {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.3;
+  word-break: break-all;
+}
+#kt_activitiesApplication .cnt-val-link {
+  color: #0F172A;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+#kt_activitiesApplication .cnt-val-link:hover {
+  color: #2563EB;
+}
+#kt_activitiesApplication .cnt-phone-val {
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-copy-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #ffffff;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all .15s ease;
+}
+#kt_activitiesApplication .cnt-copy-btn:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+#kt_activitiesApplication .cnt-whatsapp-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-top: 14px;
+  text-decoration: none;
+  transition: all .18s ease;
+  cursor: pointer;
+}
+#kt_activitiesApplication .cnt-whatsapp-banner:hover {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+}
+#kt_activitiesApplication .cnt-wa-left {
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-wa-sep {
+  width: 1px;
+  height: 18px;
+  background: #86EFAC;
+  margin: 0 12px;
+}
+#kt_activitiesApplication .cnt-wa-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #15803D;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-wa-arrow {
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-linkedin-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-top: 8px;
+  text-decoration: none;
+  transition: all .18s ease;
+  cursor: pointer;
+}
+#kt_activitiesApplication .cnt-linkedin-banner:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+}
+#kt_activitiesApplication .cnt-li-left {
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-li-sep {
+  width: 1px;
+  height: 18px;
+  background: #93C5FD;
+  margin: 0 12px;
+}
+#kt_activitiesApplication .cnt-li-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1D4ED8;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-li-arrow {
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+}
 </style>
 
 <script>
@@ -3921,109 +4134,173 @@
           </section>
 
 
+          <!-- ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== -->
           @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-primary-50); color: var(--color-primary-600);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
+          <section class="cardshow cnt-card">
+            <div class="cnt-header">
+              <div class="cnt-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <h3 class="card-title">Contact Details</h3>
+              <h3 class="cnt-hdr-title">Contact Details</h3>
             </div>
-            <div class="contact-list">
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email ID-1
-                </span>
-                <a href="mailto:{{ @$application->email }}" class="contact-value">{{ @$application->email }}</a>
-              </div>
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email ID-2
-                </span>
-                <a href="mailto:{{ @$application->secondrary_email }}" class="contact-value">{{ @$application->secondrary_email }}</a>
-              </div>
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
-                  Contact Number-1
-                </span>
-                <a href="javascript:;" class="contact-value" style="display: flex;">
-                  <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
-                  <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 4px;">{{ @$application->phone }}</span>
-                </a>
-              </div>
-            </div>
-            <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
-                  Contact Number-2
-                </span>
-                <a href="javascript:;" class="contact-value" style="display: flex;">
-                  <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
-                  <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 4px;">{{ @$application->secondary_mobile }}</span>
-                </a>
-            </div>
-            <div class="contact-actions">
-              <button type="button" class="btn btn-sm btn-whatsapp">
-                  <a href="https://api.whatsapp.com/send?phone=91{{@$application->phone}}" target="_blank" class="contact-value" style="display: flex;">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path
-                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
-                      </path>
-                    </svg>
-                    Chat on WhatsApp
-                  </a>
-              </button>
-              @php
-                $linkedin = @$application->linkedin;
 
-                if (!empty($linkedin) && !preg_match('/^(https?:\/\/|www\.)/i', $linkedin)) {
-                    $linkedin = 'https://' . $linkedin;
-                }
-              @endphp
-              @if(!empty(@$application->linkedin))
-              <button type="button" class="btn btn-sm btn-linkedin">
-                <a href="{{ $linkedin ?? 'javascript:;' }}" target="{{ $linkedin ? '_blank' :'_self' }}" class="contact-value" style="display: flex;color: #fff;">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <div class="cnt-items-list">
+              {{-- 1. Email ID-1 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-blue" title="Email ID-1">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Email ID-1</div>
+                  <div class="cnt-value">
+                    @if(!empty(@$application->email))
+                      <a href="mailto:{{ @$application->email }}" class="cnt-val-link">{{ @$application->email }}</a>
+                    @else
+                      -
+                    @endif
+                  </div>
+                </div>
+                @if(!empty(@$application->email))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->email) }}', this)" title="Copy Email">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 2. Email ID-2 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-purple" title="Email ID-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Email ID-2</div>
+                  <div class="cnt-value">
+                    @if(!empty(@$application->secondrary_email))
+                      <a href="mailto:{{ @$application->secondrary_email }}" class="cnt-val-link">{{ @$application->secondrary_email }}</a>
+                    @else
+                      -
+                    @endif
+                  </div>
+                </div>
+                @if(!empty(@$application->secondrary_email))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondrary_email) }}', this)" title="Copy Secondary Email">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 3. Contact Number-1 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-green" title="Contact Number-1">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Contact Number-1</div>
+                  <div class="cnt-phone-val">
+                    <span id="firstPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
+                    <span>{{ @$application->phone ?: '-' }}</span>
+                  </div>
+                </div>
+                @if(!empty(@$application->phone))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->phone) }}', this)" title="Copy Phone Number">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 4. Contact Number-2 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-amber" title="Contact Number-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Contact Number-2</div>
+                  <div class="cnt-phone-val">
+                    <span id="secondPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
+                    <span>{{ !empty(@$application->secondary_mobile) ? @$application->secondary_mobile : '-' }}</span>
+                  </div>
+                </div>
+                @if(!empty(@$application->secondary_mobile))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondary_mobile) }}', this)" title="Copy Secondary Phone">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+            </div>
+
+            {{-- 5. WhatsApp & LinkedIn Actions --}}
+            @if(!empty(@$application->phone))
+              <a href="https://api.whatsapp.com/send?phone=91{{ @$application->phone }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
+                <div class="cnt-wa-left">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                  <div class="cnt-wa-sep"></div>
+                  <span class="cnt-wa-text">Chat on WhatsApp</span>
+                </div>
+                <div class="cnt-wa-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </a>
+            @endif
+
+            @php
+              $linkedin = @$application->linkedin;
+              if (!empty($linkedin) && !preg_match('/^(https?:\/\/|www\.)/i', $linkedin)) {
+                  $linkedin = 'https://' . $linkedin;
+              }
+            @endphp
+            @if(!empty(@$application->linkedin))
+              <a href="{{ $linkedin }}" target="_blank" class="cnt-linkedin-banner" title="Connect on LinkedIn">
+                <div class="cnt-li-left">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                     <rect x="2" y="9" width="4" height="12"></rect>
                     <circle cx="4" cy="4" r="2"></circle>
                   </svg>
-                  Connect on LinkedIn
-                </a>
-              </button>
-              @endif
-            </div>
+                  <div class="cnt-li-sep"></div>
+                  <span class="cnt-li-text">Connect on LinkedIn</span>
+                </div>
+                <div class="cnt-li-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </a>
+            @endif
           </section>
           @else
-                <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
-                <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+            <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+            <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
           @endif
 
 
@@ -8164,5 +8441,39 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }
   });
+
+  window.copyContactText = function(text, btnEl) {
+    if (!text || text === '-') return;
+    function showCopied(btn) {
+      if (!btn) return;
+      var originalHtml = btn.innerHTML;
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      btn.style.borderColor = '#86EFAC';
+      btn.style.background = '#F0FDF4';
+      setTimeout(function() {
+        btn.innerHTML = originalHtml;
+        btn.style.borderColor = '';
+        btn.style.background = '';
+      }, 1500);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function() { showCopied(btnEl); }).catch(function() {
+        fallbackCopy(text, btnEl);
+      });
+    } else {
+      fallbackCopy(text, btnEl);
+    }
+    function fallbackCopy(val, btn) {
+      var t = document.createElement('textarea');
+      t.value = val;
+      t.style.position = 'fixed';
+      t.style.opacity = '0';
+      document.body.appendChild(t);
+      t.focus();
+      t.select();
+      try { document.execCommand('copy'); showCopied(btn); } catch(e){}
+      document.body.removeChild(t);
+    }
+  };
 })();
 </script>
