@@ -342,8 +342,10 @@
           .cd-contacts .contact-primary-badge i { font-size:8px; }
           .cd-contacts .email-cell { color:#3f4254; font-size:13px; }
           .cd-contacts .email-cell:hover { color:#009ef7; }
-          .cd-contacts .phone-cell { display:flex; align-items:center; gap:8px; font-size:13px; color:#3f4254; }
-          .cd-contacts .phone-digits { font-size:13px; color:#3f4254; font-weight:500; }
+          .cd-contacts .phone-cell { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#3f4254; white-space:nowrap; }
+          .cd-contacts .phone-flag-box { width:20px; height:15px; border-radius:2px; overflow:hidden; box-shadow:0 0 0 1px rgba(0,0,0,0.08); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .cd-contacts .phone-dial-code { font-weight:600; color:#1e293b; font-size:13px; margin-right:2px; }
+          .cd-contacts .phone-digits { font-size:13px; color:#334155; font-weight:500; }
           .cd-contacts .status-badge-table { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 12px; border-radius:50px; }
           .cd-contacts .status-badge-table.active { background:#e8fff3; color:#47be7d; }
           .cd-contacts .status-badge-table.inactive { background:#f5f8fa; color:#a1a5b7; }
@@ -516,13 +518,12 @@
                                 <table class="data-table" id="dcontactList">
                                     <thead>
                                         <tr>
-                                            <th><input type="checkbox" class="table-checkbox" /></th>
-                                            <th>Contact <i class="fas fa-sort"></i></th>
-                                            <th>Designation <i class="fas fa-sort"></i></th>
-                                            <th>Email <i class="fas fa-sort"></i></th>
-                                            <th>Phone <i class="fas fa-sort"></i></th>
-                                            <th>Status <i class="fas fa-sort"></i></th>
-                                            <th>Actions</th>
+                                            <th style="width:40px;"><input type="checkbox" class="table-checkbox" /></th>
+                                            <th style="width:28%;">Contact <i class="fas fa-sort"></i></th>
+                                            <th style="width:18%;">Designation <i class="fas fa-sort"></i></th>
+                                            <th style="width:24%;">Email <i class="fas fa-sort"></i></th>
+                                            <th style="width:20%;">Phone <i class="fas fa-sort"></i></th>
+                                            <th style="width:10%;">Status <i class="fas fa-sort"></i></th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -1796,33 +1797,15 @@
                 }
             ],
             columns: [
-                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false },
+                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false, width: '40px' },
                 { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
                 { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
                 { data: 'Email', name: 'Email', searchable: false, orderable: false },
                 { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
-                { data: 'Status', name: 'Status', searchable: false, orderable: false },
-                { data: 'Actions', name: 'Actions', searchable: false, orderable: false }
+                { data: 'Status', name: 'Status', searchable: false, orderable: false, width: '90px' }
             ]
         });
         new $.fn.dataTable.FixedHeader(dcontactList);
-        setTimeout(() => {
-            $('.iti__flag-container').each(function(index) {
-                var cnt = $(this).attr('data-row');
-                const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
-                if (!flagContainer) return;
-                var calling_code = $(this).attr('data-code');
-                
-                const flagDiv = document.createElement("div");
-                flagDiv.className = `iti__flag iti__${calling_code}`;
-                const dialCode = countryDialCodes[calling_code] || "";
-                const dialCodeSpan = document.createElement("span");
-                dialCodeSpan.textContent = dialCode;
-
-                flagContainer.appendChild(flagDiv);
-                flagContainer.appendChild(dialCodeSpan);
-            });
-        }, 1000);
     }
 
     $(document).ready(function() {
