@@ -536,6 +536,549 @@
 /* "Select Date" button shown instead of Book Now when slot has no date */
 .book-btn-addslot{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#64748b;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .18s;}
 .book-btn-addslot:hover{background:#eff6ff;border-color:#3e97ff;color:#3e97ff;}
+
+/* ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .comp-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .comp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .comp-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #FFF4E5;
+  color: #EA580C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .comp-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .comp-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #F1F5F9;
+  min-height: 48px;
+}
+#kt_activitiesApplication .comp-item-row:last-child {
+  border-bottom: none;
+}
+#kt_activitiesApplication .comp-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+#kt_activitiesApplication .comp-row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-row-icon svg {
+  width: 17px;
+  height: 17px;
+}
+#kt_activitiesApplication .comp-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .comp-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .comp-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .comp-icon-amber {
+  background: #FEF3C7;
+  color: #D97706;
+}
+#kt_activitiesApplication .comp-icon-red {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+#kt_activitiesApplication .comp-icon-mint {
+  background: #DCFCE7;
+  color: #059669;
+}
+#kt_activitiesApplication .comp-label {
+  font-size: 13.5px;
+  color: #64748B;
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: right;
+  white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-curr-symbol {
+  font-weight: 700 !important;
+  color: #0F172A;
+  margin-right: 2px;
+  display: inline-block;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+#kt_activitiesApplication .comp-badge-purple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #EDE9FE;
+  color: #6D28D9;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-badge-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #DCFCE7;
+  color: #16A34A;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-badge-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #F1F5F9;
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-comments-box {
+  background: #F4F8FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+#kt_activitiesApplication .comp-comments-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #DBEAFE;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-comments-content {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .comp-comments-label {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 2px;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-comments-text {
+  font-size: 13.5px;
+  color: #0F172A;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .own-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .own-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .own-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #F5F3FF;
+  color: #7C3AED;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .own-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .own-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+#kt_activitiesApplication .own-item-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+#kt_activitiesApplication .own-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-row-icon svg {
+  width: 19px;
+  height: 19px;
+}
+#kt_activitiesApplication .own-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .own-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .own-icon-amber {
+  background: #FEF3C7;
+  color: #D97706;
+}
+#kt_activitiesApplication .own-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .own-item-body {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .own-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 3px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+}
+#kt_activitiesApplication .own-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.3;
+  word-break: break-word;
+}
+#kt_activitiesApplication .own-datetime-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #F4F8FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-top: 4px;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+#kt_activitiesApplication .own-dt-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .own-dt-item svg {
+  color: #64748B;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-dt-sep {
+  color: #CBD5E1;
+  font-weight: 400;
+  font-size: 13px;
+  user-select: none;
+}
+
+/* ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .cnt-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .cnt-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .cnt-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .cnt-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .cnt-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .cnt-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+#kt_activitiesApplication .cnt-item-row:last-child {
+  border-bottom: none;
+}
+#kt_activitiesApplication .cnt-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .cnt-row-icon svg {
+  width: 19px;
+  height: 19px;
+}
+#kt_activitiesApplication .cnt-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .cnt-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .cnt-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .cnt-icon-amber {
+  background: #FFF7ED;
+  color: #EA580C;
+}
+#kt_activitiesApplication .cnt-item-body {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .cnt-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 3px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+}
+#kt_activitiesApplication .cnt-value {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.3;
+  word-break: break-all;
+}
+#kt_activitiesApplication .cnt-val-link {
+  color: #0F172A;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+#kt_activitiesApplication .cnt-val-link:hover {
+  color: #2563EB;
+}
+#kt_activitiesApplication .cnt-phone-val {
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-copy-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #ffffff;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all .15s ease;
+}
+#kt_activitiesApplication .cnt-copy-btn:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+#kt_activitiesApplication .cnt-whatsapp-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-top: 14px;
+  text-decoration: none;
+  transition: all .18s ease;
+  cursor: pointer;
+}
+#kt_activitiesApplication .cnt-whatsapp-banner:hover {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+}
+#kt_activitiesApplication .cnt-wa-left {
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-wa-sep {
+  width: 1px;
+  height: 18px;
+  background: #86EFAC;
+  margin: 0 12px;
+}
+#kt_activitiesApplication .cnt-wa-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #15803D;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-wa-arrow {
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-linkedin-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-top: 8px;
+  text-decoration: none;
+  transition: all .18s ease;
+  cursor: pointer;
+}
+#kt_activitiesApplication .cnt-linkedin-banner:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+}
+#kt_activitiesApplication .cnt-li-left {
+  display: flex;
+  align-items: center;
+}
+#kt_activitiesApplication .cnt-li-sep {
+  width: 1px;
+  height: 18px;
+  background: #93C5FD;
+  margin: 0 12px;
+}
+#kt_activitiesApplication .cnt-li-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1D4ED8;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .cnt-li-arrow {
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+}
 </style>
 
 <script>
@@ -778,7 +1321,7 @@
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
         <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-          Edit Profile
+          Edit
         </a>
       @endif
 
@@ -802,7 +1345,7 @@
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <polyline points="3 7 12 13 21 7"/>
           </svg>
-          Send Email
+          Email
         </a>
 
         @if(@$application->condidate_type=='other' && $notVisiableBench)
@@ -810,7 +1353,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20.52 3.48A11.94 11.94 0 0 0 12 0C5.37 0 .05 5.32.05 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.7 1.45h.01c6.63 0 11.95-5.32 11.95-11.95 0-3.19-1.24-6.19-3.44-8.37z"/>
             </svg>
-            Send WhatsApp
+            WhatsApp
           </a>
         @endif
       @endif
@@ -823,6 +1366,15 @@
         Move Stage
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
       </a>
+
+      {{-- Forward Resume Header Action (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17) --}}
+      <button type="button" class="cdr-action-btn cdr-btn-secondary {{ $dnone }}" id="hdr_fwd_resume_btn" onclick="openCandidateForwardResume({{ (int)$application->id }}, {{ !empty($jobId) ? (int)$jobId : 'null' }})" title="Forward candidate resume to client or hiring team">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        Forward Resume
+      </button>
 
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
 
@@ -3292,290 +3844,463 @@
             @endif
           </section>
 
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-warning-50); color: var(--color-warning-600);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                  <line x1="1" y1="10" x2="23" y2="10"></line>
+          <!-- ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== -->
+          @php
+            // Authoritative Currency & Symbol Resolution
+            $jobCurrencyKey = $isDirectCandidate ? (@$application->current_ctc_cur ?? 0) : ($jobData->jobCurrency ?? @$application->current_ctc_cur ?? 0);
+            $currCode = \App\Services\CurrencyService::resolveCurrencyCode($jobCurrencyKey);
+            $currencySymbolsMap = \App\Services\CurrencyService::getCurrencySymbols();
+            $currSymbol = $currencySymbolsMap[$currCode] ?? ($currCode === 'INR' ? '₹' : ($currCode === 'USD' ? '$' : ($currCode === 'EUR' ? '€' : ($currCode === 'GBP' ? '£' : ($currCode === 'AED' ? 'د.إ' : $currCode)))));
+            
+            $ectcJobCurrencyKey = $isDirectCandidate ? (@$application->current_ectc_cur ?? $jobCurrencyKey) : ($jobData->jobCurrency ?? @$application->current_ectc_cur ?? $jobCurrencyKey);
+            $ectcCurrCode = \App\Services\CurrencyService::resolveCurrencyCode($ectcJobCurrencyKey);
+            $ectcCurrSymbol = $currencySymbolsMap[$ectcCurrCode] ?? ($currencySymbolsMap[$currCode] ?? $currSymbol);
+
+            $payFormatViewSalary = GeneralMethod::formatViewSalary($application->ctc_yearly, $symbols, $jobMode);
+            $billFormatViewSalary = GeneralMethod::formatViewSalary($application->ectc_yearly, $symbols, $jobMode);
+            $ctc = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
+            $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
+
+            $current_ctc_mode = ($application->condidate_type == 'bench_condidate') ? @$application->pay_rate_mode : @$jobMode;
+            if ($application->condidate_type == 'bench_condidate') {
+                $ctc = '*******';
+            }
+            $current_ectc_mode = @$jobMode;
+            $hasOfferInHand = strtolower(trim((string)@$application->oh)) === 'yes';
+          @endphp
+
+          <section class="cardshow comp-card">
+            <div class="comp-header">
+              <div class="comp-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="card-title">Compensation Details</h3>
+              <h3 class="comp-hdr-title">Compensation Details</h3>
             </div>
-            <div class="comp-list">
-              @php
-                $payFormatViewSalary = GeneralMethod::formatViewSalary($application->ctc_yearly,$symbols,$jobMode);
-                $billFormatViewSalary = GeneralMethod::formatViewSalary($application->ectc_yearly,$symbols,$jobMode);
-                $ctc = '';
-                $ctc = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
-                $ectc = '';
-                $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
-              @endphp
 
-               @if($application->condidate_type=='other')
-                <div class="comp-row">
-
-                  @if($application->condidate_type=='other')
-                        @php 
-                            $current_ctc_mode	=	"";
-                            $current_ctc_mode	=	@$jobMode;	
-                            
-                              
-                        @endphp
-                        @elseif((@$application->condidate_type=='bench_condidate'))
-                        @php 
-                            $current_ctc_mode	=	"";
-                            $current_ctc_mode	=	@$application->pay_rate_mode;		
-                            $ctc =  '*******';
-                        @endphp
+            <div class="comp-items-list">
+              {{-- 1. Current Salary / Pay Rate --}}
+              @if($application->condidate_type=='other' || $application->condidate_type=='bench_condidate')
+                <div class="comp-item-row">
+                  <div class="comp-item-left">
+                    <div class="comp-row-icon comp-icon-green" title="Current Salary">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 7a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V19a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-8.5c1.2-.7 2-2 2-3.5z"></path>
+                        <line x1="12" y1="10" x2="12" y2="16"></line>
+                        <path d="M10 12h4"></path>
+                      </svg>
+                    </div>
+                    <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
+                  </div>
+                  <span class="comp-value">
+                    @if($ctc !== '*******')
+                      <span class="comp-curr-symbol">{{ $currSymbol }}</span>{{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] ?? 'Annual' }}
+                    @else
+                      {{ $ctc }}
                     @endif
-                  <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
-                  <span class="comp-value">{!! @$current_ctc_cur !!} {{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] }}</span>
+                  </span>
                 </div>
               @endif
 
-              <div class="comp-row">
-                            @if($application->condidate_type=='other')
-                            @php 
-                                $current_ectc_mode	=	"";
-                                $current_ectc_mode	=	@$jobMode;		
-                            @endphp
-                            @else
-                            @php 
-                                $current_ectc_mode	=	"";
-                                $current_ectc_mode	=	@$jobMode;		
-                            @endphp
-                          @endif
-                <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
-                <span class="comp-value">{!! @$current_ectc_cur !!} {{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
+              {{-- 2. Expected Salary / Bill Rate --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-blue" title="Expected Salary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                  </div>
+                  <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
+                </div>
+                <span class="comp-value">
+                  <span class="comp-curr-symbol">{{ $ectcCurrSymbol }}</span>{{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] ?? 'Annual' }}
+                </span>
               </div>
-              <div class="comp-row">
-                <span class="comp-label">Compensation Type</span>
-                <span class="comp-badge">{{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
-              </div>
-              <div class="comp-row">
-                <span class="comp-label">Salary Type</span>
-                <span class="comp-value">Fixed</span>
-              </div>
-              {{-- <div class="comp-row">
-                <span class="comp-label">Currency</span>
-                <span class="comp-value">INR</span>
-              </div>
-              <div class="comp-row">
-                <span class="comp-label">Paid Service / Free Service</span>
-                <span class="comp-value">Paid Service</span>
-              </div> --}}
-              <div class="comp-row">
 
-                <span class="comp-label">Employment Type</span>
-                <span class="comp-value">{{ @$application->employmentType }}</span>
+              {{-- 3. Compensation Type --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-purple" title="Compensation Type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Compensation Type</span>
+                </div>
+                <span class="comp-badge-purple">{{ $salaryMode[$current_ectc_mode ?? 0] ?? 'Annual' }}</span>
               </div>
+
+              {{-- 4. Currency (Replaces "Salary Type" with Currency) --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-amber" title="Currency">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <ellipse cx="12" cy="7" rx="9" ry="3"></ellipse>
+                      <path d="M3 7v6c0 1.66 4.03 3 9 3s9-1.34 9-3V7"></path>
+                      <path d="M3 13v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"></path>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Currency</span>
+                </div>
+                <span class="comp-value">
+                  {{ $currCode }}{{ (!empty($currSymbol) && $currSymbol !== $currCode) ? ' (' . $currSymbol . ')' : '' }}
+                </span>
+              </div>
+
+              {{-- 5. Employment Type --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-red" title="Employment Type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Employment Type</span>
+                </div>
+                <span class="comp-value">{{ @$application->employmentType ?: 'Full Time' }}</span>
+              </div>
+
+              {{-- 6. Offer in Hand (if condidate_type == 'other') --}}
               @if($application->condidate_type=='other')
-                <div class="comp-row">
-                  <span class="comp-label">Offer in Hand</span>
-                  <span class="comp-value">{{ ucwords(@$application->oh) }}</span>
+                <div class="comp-item-row">
+                  <div class="comp-item-left">
+                    <div class="comp-row-icon comp-icon-mint" title="Offer in Hand">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <path d="m9 15 2 2 4-4"></path>
+                      </svg>
+                    </div>
+                    <span class="comp-label">Offer in Hand</span>
+                  </div>
+                  <span class="{{ $hasOfferInHand ? 'comp-badge-green' : 'comp-badge-gray' }}">{{ ucwords(@$application->oh ?: 'No') }}</span>
                 </div>
-
-                <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Salary Details Comments: </b> {{ ucwords(@$application->comment) }}</span>
-                </div>
-
               @endif
             </div>
+
+            {{-- 7. Salary Details Comments --}}
+            @if($application->condidate_type=='other')
+              <div class="comp-comments-box">
+                <div class="comp-comments-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <line x1="8" y1="9" x2="16" y2="9"></line>
+                    <line x1="8" y1="13" x2="14" y2="13"></line>
+                  </svg>
+                </div>
+                <div class="comp-comments-content">
+                  <div class="comp-comments-label">Salary Details Comments</div>
+                  <div class="comp-comments-text">{{ !empty(trim((string)@$application->comment)) ? ucwords(@$application->comment) : 'In Progress' }}</div>
+                </div>
+              </div>
+            @endif
           </section>
 
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <!-- ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== -->
+          @php
+              $hiringHrName = '';
+              if(@$clientjobAssignListCaptain){
+                  $hiringHrName = ucwords(strtolower(@$clientjobAssignListCaptain));
+              } else if(!empty($client_contuser_arr)){
+                  $names = [];
+                  foreach($client_contuser_arr as $cpn){
+                      $cpn = (object) $cpn;
+                      if(!empty($cpn->contact_person_name)){
+                          $names[] = ucwords(strtolower($cpn->contact_person_name));
+                      }
+                  }
+                  $hiringHrName = implode(', ', $names);
+              }
+
+              $targetJobId = $jobId ?? @$application->job_id ?? @$application->jobId ?? 0;
+              $hdrCompanyOrClient = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : '';
+              if (empty($hdrCompanyOrClient)) {
+                  $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
+                  $hdrCompanyOrClient = @$companies->company_name ?? '';
+              }
+
+              $originalDate = @$application->created_at;
+              $ownerDate    = !empty($originalDate) ? date("d-M-Y", strtotime($originalDate)) : '—';
+              $ownerTime    = !empty($originalDate) ? date("h:i A", strtotime($originalDate)) : '—';
+          @endphp
+
+          <section class="cardshow own-card">
+            <div class="own-header">
+              <div class="own-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
-              <h3 class="card-title">Ownership</h3>
+              <h3 class="own-hdr-title">Ownership</h3>
             </div>
-            <div class="ownership-list">
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+            <div class="own-items-list">
+              {{-- 1. Hiring HR --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-blue" title="Hiring HR">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  Hiring HR
-                </span>
-                <span class="own-value">
-                  @php
-                      if(@$clientjobAssignListCaptain){
-                          echo ucwords(strtolower(@$clientjobAssignListCaptain));
-                      }else{
-                        if(!empty($client_contuser_arr)){
-
-                          foreach($client_contuser_arr as $key=> $cpn){
-                            $cpn = (object) $cpn;
-                            if($key==0){
-                                echo ucwords(strtolower(@$cpn->contact_person_name)) .'';
-                            }else{
-                                echo ', '.ucwords(strtolower(@$cpn->contact_person_name));
-                            }
-
-                          }
-                        }
-                      }
-                  @endphp
-                </span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Hiring HR</div>
+                  <div class="own-value">{{ !empty($hiringHrName) ? $hiringHrName : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+              {{-- 2. Recruiter Name --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-green" title="Recruiter Name">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
                   </svg>
-                  Recruiter Name
-                </span>
-                <span class="own-value">{{ ucwords(@$posted_by) }}</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Recruiter Name</div>
+                  <div class="own-value">{{ !empty(@$posted_by) ? ucwords(@$posted_by) : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+
+              {{-- 3. Company Name --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-amber" title="Company Name">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <path d="M9 22v-4h6v4"></path>
+                    <path d="M8 6h.01"></path><path d="M16 6h.01"></path>
+                    <path d="M8 10h.01"></path><path d="M16 10h.01"></path>
+                    <path d="M8 14h.01"></path><path d="M16 14h.01"></path>
                   </svg>
-                  Company Name 
-                </span>
-                @php
-                $targetJobId = $jobId ?? @$application->job_id ?? @$application->jobId ?? 0;
-                $hdrCompanyOrClient = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : '';
-                if (empty($hdrCompanyOrClient)) {
-                    $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
-                    $hdrCompanyOrClient = @$companies->company_name ?? '';
-                }
-                @endphp
-                <span class="own-value">{{ ucwords(@$hdrCompanyOrClient) }}</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Company Name</div>
+                  <div class="own-value">{{ !empty($hdrCompanyOrClient) ? ucwords(@$hdrCompanyOrClient) : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+              {{-- 4. Upload Date & Time --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-purple" title="Upload Date & Time">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                   </svg>
-                  Upload Date &amp; Time
-                </span>
-                  @php
-                      $originalDate    = @$application->created_at;
-                      $ownerDate       = date("d-M-Y", strtotime($originalDate));
-                      $ownerTime       = date("h:i A", strtotime($originalDate));
-                  @endphp
-                <span class="own-value">{{ @$ownerDate }} <span class="meta-sep">|</span> {{ @$ownerTime }} <span class="meta-sep">|</span> IST</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Upload Date &amp; Time</div>
+                  <div class="own-datetime-pill">
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      {{ @$ownerDate }}
+                    </span>
+                    <span class="own-dt-sep">|</span>
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      {{ @$ownerTime }}
+                    </span>
+                    <span class="own-dt-sep">|</span>
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                      IST
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
 
+          <!-- ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== -->
           @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-primary-50); color: var(--color-primary-600);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
+          <section class="cardshow cnt-card">
+            <div class="cnt-header">
+              <div class="cnt-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <h3 class="card-title">Contact Details</h3>
+              <h3 class="cnt-hdr-title">Contact Details</h3>
             </div>
-            <div class="contact-list">
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email ID-1
-                </span>
-                <a href="mailto:{{ @$application->email }}" class="contact-value">{{ @$application->email }}</a>
-              </div>
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Email ID-2
-                </span>
-                <a href="mailto:{{ @$application->secondrary_email }}" class="contact-value">{{ @$application->secondrary_email }}</a>
-              </div>
-              <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
-                  Contact Number-1
-                </span>
-                <a href="javascript:;" class="contact-value" style="display: flex;">
-                  <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
-                  <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 4px;">{{ @$application->phone }}</span>
-                </a>
-              </div>
-            </div>
-            <div class="contact-row">
-                <span class="contact-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
-                  Contact Number-2
-                </span>
-                <a href="javascript:;" class="contact-value" style="display: flex;">
-                  <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
-                  <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 4px;">{{ @$application->secondary_mobile }}</span>
-                </a>
-            </div>
-            <div class="contact-actions">
-              <button type="button" class="btn btn-sm btn-whatsapp">
-                  <a href="https://api.whatsapp.com/send?phone=91{{@$application->phone}}" target="_blank" class="contact-value" style="display: flex;">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path
-                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
-                      </path>
-                    </svg>
-                    Chat on WhatsApp
-                  </a>
-              </button>
-              @php
-                $linkedin = @$application->linkedin;
 
-                if (!empty($linkedin) && !preg_match('/^(https?:\/\/|www\.)/i', $linkedin)) {
-                    $linkedin = 'https://' . $linkedin;
-                }
-              @endphp
-              @if(!empty(@$application->linkedin))
-              <button type="button" class="btn btn-sm btn-linkedin">
-                <a href="{{ $linkedin ?? 'javascript:;' }}" target="{{ $linkedin ? '_blank' :'_self' }}" class="contact-value" style="display: flex;color: #fff;">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <div class="cnt-items-list">
+              {{-- 1. Email ID-1 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-blue" title="Email ID-1">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Email ID-1</div>
+                  <div class="cnt-value">
+                    @if(!empty(@$application->email))
+                      <a href="mailto:{{ @$application->email }}" class="cnt-val-link">{{ @$application->email }}</a>
+                    @else
+                      -
+                    @endif
+                  </div>
+                </div>
+                @if(!empty(@$application->email))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->email) }}', this)" title="Copy Email">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 2. Email ID-2 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-purple" title="Email ID-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Email ID-2</div>
+                  <div class="cnt-value">
+                    @if(!empty(@$application->secondrary_email))
+                      <a href="mailto:{{ @$application->secondrary_email }}" class="cnt-val-link">{{ @$application->secondrary_email }}</a>
+                    @else
+                      -
+                    @endif
+                  </div>
+                </div>
+                @if(!empty(@$application->secondrary_email))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondrary_email) }}', this)" title="Copy Secondary Email">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 3. Contact Number-1 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-green" title="Contact Number-1">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Contact Number-1</div>
+                  <div class="cnt-phone-val">
+                    <span id="firstPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
+                    <span>{{ @$application->phone ?: '-' }}</span>
+                  </div>
+                </div>
+                @if(!empty(@$application->phone))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->phone) }}', this)" title="Copy Phone Number">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+
+              {{-- 4. Contact Number-2 --}}
+              <div class="cnt-item-row">
+                <div class="cnt-row-icon cnt-icon-amber" title="Contact Number-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </div>
+                <div class="cnt-item-body">
+                  <div class="cnt-label">Contact Number-2</div>
+                  <div class="cnt-phone-val">
+                    <span id="secondPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
+                    <span>{{ !empty(@$application->secondary_mobile) ? @$application->secondary_mobile : '-' }}</span>
+                  </div>
+                </div>
+                @if(!empty(@$application->secondary_mobile))
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondary_mobile) }}', this)" title="Copy Secondary Phone">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                @endif
+              </div>
+            </div>
+
+            {{-- 5. WhatsApp & LinkedIn Actions --}}
+            @if(!empty(@$application->phone))
+              <a href="https://api.whatsapp.com/send?phone=91{{ @$application->phone }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
+                <div class="cnt-wa-left">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                  <div class="cnt-wa-sep"></div>
+                  <span class="cnt-wa-text">Chat on WhatsApp</span>
+                </div>
+                <div class="cnt-wa-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </a>
+            @endif
+
+            @php
+              $linkedin = @$application->linkedin;
+              if (!empty($linkedin) && !preg_match('/^(https?:\/\/|www\.)/i', $linkedin)) {
+                  $linkedin = 'https://' . $linkedin;
+              }
+            @endphp
+            @if(!empty(@$application->linkedin))
+              <a href="{{ $linkedin }}" target="_blank" class="cnt-linkedin-banner" title="Connect on LinkedIn">
+                <div class="cnt-li-left">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                     <rect x="2" y="9" width="4" height="12"></rect>
                     <circle cx="4" cy="4" r="2"></circle>
                   </svg>
-                  Connect on LinkedIn
-                </a>
-              </button>
-              @endif
-            </div>
+                  <div class="cnt-li-sep"></div>
+                  <span class="cnt-li-text">Connect on LinkedIn</span>
+                </div>
+                <div class="cnt-li-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </a>
+            @endif
           </section>
           @else
-                <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
-                <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+            <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+            <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
           @endif
 
 
@@ -7540,5 +8265,215 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   });
 };
 
+})();
+</script>
+
+<style>
+  /* Ensure Forward Resume drawer always displays above Candidate Drawer (z-index: 999999) */
+  #kt_test_fwd_resume_drawer,
+  #kt_test_fwd_resume_drawer_aptk,
+  #kt_test_fwd_resume_drawer_clientapp {
+    z-index: 1000050 !important;
+  }
+  /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
+  #kt_activitiesApplication .cdr-topbar-group {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+/**
+ * Forward Resume Launcher for Candidate Drawer (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17)
+ * Authoritative Client-First execution: auto-selects ONLY the currently open candidate
+ * and launches the existing Forward Resume workflow (ForwardResumeManager V4.1 with circuit-breaker fallback).
+ */
+(function() {
+  function ensureForwardResumeDrawerShell() {
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (!drawerEl) {
+      var shellMarkup = 
+        '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
+        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
+        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
+        '    data-kt-drawer-width="{default:\'90%\', \'lg\': \'80%\'}" data-kt-drawer-direction="end"' +
+        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
+        '    style="z-index: 1000050 !important;">' +
+        '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
+        '    <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">' +
+        '      <div class="d-flex align-items-center py-1"><h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3></div>' +
+        '      <div class="card-toolbar">' +
+        '        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_test_fwd_resume_drawer_close">' +
+        '          <span class="svg-icon svg-icon-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>' +
+        '        </button>' +
+        '      </div>' +
+        '    </div>' +
+        '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>' +
+        '  </div>' +
+        '</div>';
+      $('body').append(shellMarkup);
+      drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
+      if (typeof KTDrawer !== 'undefined') {
+        KTDrawer.createInstances();
+      }
+    }
+    if (drawerEl) {
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+    }
+    return drawerEl;
+  }
+
+  function ensureForwardResumeManager() {
+    if (window.ForwardResumeManager) {
+      return Promise.resolve(window.ForwardResumeManager);
+    }
+    return new Promise(function(resolve, reject) {
+      var existing = document.getElementById('fwd_resume_manager_script');
+      if (existing) {
+        if (window.ForwardResumeManager) return resolve(window.ForwardResumeManager);
+        existing.addEventListener('load', function() { resolve(window.ForwardResumeManager); });
+        existing.addEventListener('error', function(e) { reject(e); });
+        return;
+      }
+      var s = document.createElement('script');
+      s.id = 'fwd_resume_manager_script';
+      s.src = "{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}";
+      s.onload = function() { resolve(window.ForwardResumeManager); };
+      s.onerror = function(err) { reject(err); };
+      document.body.appendChild(s);
+    });
+  }
+
+  window.openCandidateForwardResume = function(candidateId, jobId) {
+    if (!candidateId) {
+      console.warn('[CDR-FWD] Candidate ID is missing.');
+      return;
+    }
+
+    var candArr = [parseInt(candidateId, 10)];
+    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
+
+    var drawerEl = ensureForwardResumeDrawerShell();
+
+    ensureForwardResumeManager().then(function(mgr) {
+      if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
+        mgr.initRoutes({
+          shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
+          engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
+          data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
+          recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
+          intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+          send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+          quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+          emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
+          legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
+        });
+      }
+
+      // Enforce clean state: isolate strictly to current candidate
+      if (mgr) {
+        mgr._currentCandidateIds = candArr;
+        mgr._currentJobIdArr = jobArr;
+        mgr._compiledAttachments = {};
+        mgr._recipientsCache = null;
+        mgr.open(candArr, jobArr, {});
+      }
+    }).catch(function(err) {
+      console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
+      if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) { drawer.show(); } else { $(drawerEl).addClass('drawer-on'); }
+      } else if (drawerEl) {
+        $(drawerEl).addClass('drawer-on');
+      }
+
+      var bodyContainer = $('#application_test_fwd_resume_body_content');
+      if (bodyContainer.length) {
+        bodyContainer.html(
+          '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
+          '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
+        );
+
+        var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
+        var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
+
+        $.ajax({
+          type: 'POST',
+          url: url,
+          data: {
+            '_token': "{{ csrf_token() }}",
+            'arr': candArr,
+            'jobIdArr': jobArr,
+            'matchMap': {}
+          },
+          cache: false,
+          success: function(response) {
+            if (response && response.status === 'success' && response.view) {
+              bodyContainer.html(response.view);
+            } else {
+              bodyContainer.html('<div class="p-8 text-center text-danger">' + ((response && response.message) || 'Failed to initialize Forward Resume') + '</div>');
+            }
+          },
+          error: function() {
+            bodyContainer.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
+          }
+        });
+      }
+    });
+  };
+
+  $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+      window.ForwardResumeManager.close();
+    } else {
+      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
+      if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) drawer.hide();
+      }
+      if (drawerEl) {
+        $(drawerEl).removeClass('drawer-on');
+      }
+    }
+  });
+
+  window.copyContactText = function(text, btnEl) {
+    if (!text || text === '-') return;
+    function showCopied(btn) {
+      if (!btn) return;
+      var originalHtml = btn.innerHTML;
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      btn.style.borderColor = '#86EFAC';
+      btn.style.background = '#F0FDF4';
+      setTimeout(function() {
+        btn.innerHTML = originalHtml;
+        btn.style.borderColor = '';
+        btn.style.background = '';
+      }, 1500);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function() { showCopied(btnEl); }).catch(function() {
+        fallbackCopy(text, btnEl);
+      });
+    } else {
+      fallbackCopy(text, btnEl);
+    }
+    function fallbackCopy(val, btn) {
+      var t = document.createElement('textarea');
+      t.value = val;
+      t.style.position = 'fixed';
+      t.style.opacity = '0';
+      document.body.appendChild(t);
+      t.focus();
+      t.select();
+      try { document.execCommand('copy'); showCopied(btn); } catch(e){}
+      document.body.removeChild(t);
+    }
+  };
 })();
 </script>
