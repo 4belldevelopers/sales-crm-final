@@ -4351,10 +4351,20 @@
                 </div>
                 <div class="comp-row">
                   <span class="comp-label">Reference Name</span>
-                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
+                  <span class="comp-value">{{ !empty(@$application->referencename) ? ucwords(@$application->referencename) : '—' }}</span>
                 </div>
-                 <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
+                <div class="comp-row" style="flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 6px;">
+                  <span class="comp-label" style="display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-route" style="color:#2563eb; font-size:11px;"></i>
+                    <b style="color: #0f172a;">Reason For Job Change</b>
+                  </span>
+                  @if(!empty(@$application->reason_for_job_change))
+                    <div style="font-size:12px; color:#1e293b; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:7px 10px; width:100%; line-height:1.45; word-break:break-word;">
+                      {{ @$application->reason_for_job_change }}
+                    </div>
+                  @else
+                    <span class="comp-value text-muted" style="font-style:italic;">Not Specified</span>
+                  @endif
                 </div>
              </div>
           </section>
