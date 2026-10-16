@@ -4508,6 +4508,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 </div>
                             </div>
                             {{-- Preserved backend select elements for full backward compatibility --}}
+                            @php
+                                $currency_code = $currency_code ?? \App\Services\CurrencyService::getTenantCurrency(auth()->user()->company_id ?? null);
+                            @endphp
                             <select name="min_salary_currency" id="min_salary_currency" class="d-none">
                                 <?php
         foreach ($currency as $key => $val) {

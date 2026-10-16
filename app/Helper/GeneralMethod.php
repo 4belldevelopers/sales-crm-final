@@ -4717,35 +4717,44 @@ END:VCALENDAR";
         $cacheKey = $version ? "fx_snapshot:{$version}" : 'fx_snapshot:active';
 
         return Cache::remember($cacheKey, 86400, function () use ($version) {
-            $query = DB::table('currency_snapshots');
-            if ($version) {
-                $query->where('version', $version);
-            } else {
-                $query->where('is_active', 1)->orderBy('effective_from', 'desc');
-            }
-            $snapshot = $query->first();
+            try {
+                $query = DB::table('currency_snapshots');
+                if ($version) {
+                    $query->where('version', $version);
+                } else {
+                    $query->where('is_active', 1)->orderBy('effective_from', 'desc');
+                }
+                $snapshot = $query->first();
 
-            if ($snapshot) {
-                $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
+                if ($snapshot) {
+                    $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
 
+                    return [
+                        'version' => $snapshot->version,
+                        'base_currency' => $snapshot->base_currency,
+                        'rates_json' => $rates,
+                        'effective_from' => $snapshot->effective_from,
+                    ];
+                }
+
+                // Self-healing: seed initial snapshot from currencies table
+                $currencies = DB::table('currencies')->get();
+                $rates = [];
+                foreach ($currencies as $curr) {
+                    $code = strtoupper(trim($curr->currency_code));
+                    $rates[$code] = (float) $curr->usd_based_rates;
+                }
+                $rates['USD'] = 1.0;
+                if (empty($rates)) {
+                    $rates = ['USD' => 1.0, 'INR' => 86.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.6725];
+                }
+            } catch (\Throwable $e) {
                 return [
-                    'version' => $snapshot->version,
-                    'base_currency' => $snapshot->base_currency,
-                    'rates_json' => $rates,
-                    'effective_from' => $snapshot->effective_from,
+                    'version' => 'fallback-v1',
+                    'base_currency' => 'USD',
+                    'rates_json' => ['USD' => 1.0, 'INR' => 86.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.6725],
+                    'effective_from' => now()->toIso8601String(),
                 ];
-            }
-
-            // Self-healing: seed initial snapshot from currencies table
-            $currencies = DB::table('currencies')->get();
-            $rates = [];
-            foreach ($currencies as $curr) {
-                $code = strtoupper(trim($curr->currency_code));
-                $rates[$code] = (float) $curr->usd_based_rates;
-            }
-            $rates['USD'] = 1.0;
-            if (empty($rates)) {
-                $rates = ['USD' => 1.0, 'INR' => 83.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.67];
             }
 
             $v = '202609-001';
@@ -4779,45 +4788,11 @@ END:VCALENDAR";
 
     /**
      * Intent: Universal, high-precision cross-currency conversion using USD as the base pivot.
-     * Formula: Converted = (Amount / RateFromUSD) * RateToUSD
+     * Delegates to centralized CurrencyService.
      */
     public static function convertCurrency($amount, $fromCurrency, $toCurrency = 'USD', ?string $version = null): float
     {
-        if ($amount === null || ! is_numeric($amount)) {
-            return 0.0;
-        }
-        $amount = (float) $amount;
-        if ($amount == 0.0) {
-            return 0.0;
-        }
-
-        $allCurrencies = self::currency();
-        $from = is_numeric($fromCurrency) ? ($allCurrencies[(int) $fromCurrency] ?? 'INR') : strtoupper(trim($fromCurrency));
-        $to = is_numeric($toCurrency) ? ($allCurrencies[(int) $toCurrency] ?? 'USD') : strtoupper(trim($toCurrency));
-
-        if ($from === $to) {
-            return $amount;
-        }
-
-        $snapshot = self::getLatestFxSnapshot($version);
-        $rates = $snapshot['rates_json'] ?? [];
-
-        $rateFrom = isset($rates[$from]) ? (float) $rates[$from] : null;
-        $rateTo = isset($rates[$to]) ? (float) $rates[$to] : null;
-
-        if ($rateFrom && $rateTo && $rateFrom > 0 && $rateTo > 0) {
-            return ($amount / $rateFrom) * $rateTo;
-        }
-
-        // Fallback: check currencies table rates directly
-        $ratesFallback = self::currencyConverter()['usd_based_rates'] ?? [];
-        $rfFrom = isset($ratesFallback[$from]) ? (float) $ratesFallback[$from] : 1.0;
-        $rfTo = isset($ratesFallback[$to]) ? (float) $ratesFallback[$to] : 1.0;
-        if ($rfFrom > 0 && $rfTo > 0) {
-            return ($amount / $rfFrom) * $rfTo;
-        }
-
-        return $amount;
+        return \App\Services\CurrencyService::convert($amount, $fromCurrency, $toCurrency, $version);
     }
 
     /**
@@ -4971,122 +4946,54 @@ END:VCALENDAR";
 
     }
 
-    public static function formatViewSalary($amountINR, $currency, $mode)
+    /**
+     * Intent: High-precision salary view formatter.
+     * Delegates to centralized CurrencyService.
+     */
+    public static function formatViewSalary($amountINR, $currency, $mode = 0)
     {
-        // constants
-        $HOURS_PER_MONTH = 160;
-        $MONTHS_PER_YEAR = 12;
-
-        // currency rates (INR base)
-        $rates = self::currencyConverter()['inr_based_rates'] ?? [];
-        $rates = ! empty($rates) ? $rates : [
-            'INR' => 1,
-            'EUR' => 88.50,
-            'JPY' => 0.68,
-            'GBP' => 103.70,
-            'USD' => 83,
-            'AED' => 20.38,
-        ];
-
-        // currency symbols
-        $symbols = self::currencyConverter()['symbols'] ?? [];
-        $symbols = ! empty($symbols) ? $symbols : [
-            'INR' => '₹',
-            'USD' => '$',
-            'EUR' => '€',
-            'JPY' => '¥',
-            'GBP' => '£',
-            'AED' => 'د.إ',
-        ];
-
-        $symbolsValue = self::currencyConverter()['symbolsValue'] ?? [];
-        $symbolsValue = ! empty($symbolsValue) ? $symbolsValue : [
-            'INR' => 0,
-            'EUR' => 1,
-            'JPY' => 2,
-            'GBP' => 3,
-            'USD' => 4,
-            'AED' => 5,
-        ];
-
-        // ================= STEP 1: INR → SELECTED CURRENCY =================
-        $rate = $rates[$currency] ?? 1;
-
-        $amount = $amountINR / $rate;
-
-        $yearly = $amount;
-        $monthly = $yearly / $MONTHS_PER_YEAR;
-        $hourly = $monthly / $HOURS_PER_MONTH;
-        if ($mode == 0) {
-            // yearly
-            $value = $yearly;
-        } elseif ($mode == 1) {
-            // monthly
-            $value = $monthly;
-        } else {
-            // hourly
-            $value = $hourly;
-        }
-
-        return (object) [
-            'amount' => number_format($value, 2, '.', ''),
-            'symbol' => $symbols[$currency] ?? '₹',
-            'currency' => $symbolsValue[$currency] ?? 0,
-            'mode' => $mode,
-        ];
-
-        // ///
-
-        // ================= STEP 2: MODE =================
-        if ($mode == 0) {
-            // yearly
-            $value = $hourly * $HOURS_PER_MONTH * $MONTHS_PER_YEAR;
-        } elseif ($mode == 1) {
-            // monthly
-            $value = $hourly * $HOURS_PER_MONTH;
-        } else {
-            // hourly
-            $value = $hourly;
-        }
-
-        // ================= STEP 3: FORMAT =================
-        return (object) [
-            'amount' => number_format($value, 2, '.', ''),
-            'symbol' => $symbols[$currency] ?? '₹',
-            'currency' => $symbolsValue[$currency] ?? 0,
-            'mode' => $mode,
-        ];
+        return \App\Services\CurrencyService::formatViewSalary($amountINR, $currency, (int) $mode);
     }
 
     public static function currencyConverter()
     {
         return cache()->remember('ref:currencies:all', 86400, function () {
-            $currencies = DB::table('currencies')->get();
+            try {
+                $currencies = DB::table('currencies')->get();
 
-            $exchangeRates = [];
-            $rates = [];
-            $symbolsValue = [];
-            $symbols = [];
-            $getKey = [];
+                $exchangeRates = [];
+                $rates = [];
+                $symbolsValue = [];
+                $symbols = [];
+                $getKey = [];
 
-            foreach ($currencies as $row) {
-                // INR based (your first array)
-                $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
+                foreach ($currencies as $row) {
+                    // INR based (your first array)
+                    $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
 
-                // Second rates (example: you can use another column or same)
-                $rates[$row->currency_code] = (float) $row->usd_based_rates;
-                $symbolsValue[$row->currency_code] = $row->getKey;
-                $symbols[$row->currency_code] = $row->currency_symbol;
-                $getKey[$row->getKey] = $row->currency_code;
+                    // Second rates (example: you can use another column or same)
+                    $rates[$row->currency_code] = (float) $row->usd_based_rates;
+                    $symbolsValue[$row->currency_code] = $row->getKey;
+                    $symbols[$row->currency_code] = $row->currency_symbol;
+                    $getKey[$row->getKey] = $row->currency_code;
+                }
+
+                return [
+                    'inr_based_rates' => $exchangeRates,
+                    'usd_based_rates' => $rates,
+                    'symbolsValue' => $symbolsValue,
+                    'symbols' => $symbols,
+                    'getKey' => $getKey,
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    'inr_based_rates' => ['INR' => 1.0, 'USD' => 0.0116, 'AED' => 0.042],
+                    'usd_based_rates' => ['USD' => 1.0, 'INR' => 86.5, 'AED' => 3.6725, 'EUR' => 0.92, 'GBP' => 0.79],
+                    'symbolsValue' => ['INR' => 0, 'EUR' => 1, 'JPY' => 2, 'GBP' => 3, 'USD' => 4, 'AED' => 5],
+                    'symbols' => ['INR' => '₹', 'USD' => '$', 'AED' => 'د.إ', 'EUR' => '€', 'GBP' => '£'],
+                    'getKey' => [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED'],
+                ];
             }
-
-            return [
-                'inr_based_rates' => $exchangeRates,
-                'usd_based_rates' => $rates,
-                'symbolsValue' => $symbolsValue,
-                'symbols' => $symbols,
-                'getKey' => $getKey,
-            ];
         });
 
     }
@@ -7319,100 +7226,17 @@ END:VCALENDAR";
 
     public static function defaultCurrency($company_id = null)
     {
-        if (empty($company_id)) {
-            if (auth()->check()) {
-                $company_id = auth()->user()->company_id;
-            }
-        }
-        if (empty($company_id)) {
-            return 'USD';
-        }
-
-        return Cache::remember("tenant_default_currency:{$company_id}", 3600, function () use ($company_id) {
-            $company = DB::table('companies')
-                ->select('currency', 'calling_code')
-                ->where('id', $company_id)
-                ->first();
-
-            if ($company && ! empty($company->currency)) {
-                if (is_numeric($company->currency)) {
-                    $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                    $code = DB::table('currencies')->where('getKey', (int) $company->currency)->value('currency_code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                    $code = DB::table('currencies')->where('id', (int) $company->currency)->value('currency_code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                } else {
-                    return strtoupper(trim($company->currency));
-                }
-            }
-
-            // Check company_career_settings table as fallback
-            $careerCurrency = DB::table('company_career_settings')->where('company_id', $company_id)->value('currency');
-            if (! empty($careerCurrency)) {
-                return strtoupper(trim($careerCurrency));
-            }
-
-            // HQ / Country Auto-Detection from calling code
-            if ($company && ! empty($company->calling_code)) {
-                $code = (string) $company->calling_code;
-                if ($code === '91' || $code === '+91') {
-                    return 'INR';
-                }
-                if ($code === '44' || $code === '+44') {
-                    return 'GBP';
-                }
-                if ($code === '971' || $code === '+971') {
-                    return 'AED';
-                }
-                if (in_array($code, ['33', '+33', '49', '+49', '34', '+34', '39', '+39', '31', '+31', '32', '+32'], true)) {
-                    return 'EUR';
-                }
-            }
-
-            return 'USD'; // Safe global default for all other international accounts
-        });
+        return \App\Services\CurrencyService::getTenantCurrency($company_id);
     }
 
     public static function defaultCurrencyKey($company_id = null): int
     {
-        $code = self::defaultCurrency($company_id);
-        $currencies = self::currency();
-        $key = array_search($code, $currencies, true);
-        if ($key !== false) {
-            return (int) $key;
-        }
-        foreach ($currencies as $k => $c) {
-            if (strcasecmp($c, $code) === 0) {
-                return (int) $k;
-            }
-        }
-
-        return 0; // Default to 0 (INR) if not found in list
+        return \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
     }
 
     public static function defaultCurrencySymbol($company_id = null): string
     {
-        $code = self::defaultCurrency($company_id);
-        $symbols = [
-            'INR' => '₹',
-            'USD' => '$',
-            'EUR' => '€',
-            'GBP' => '£',
-            'AED' => 'AED',
-            'JPY' => '¥',
-            'CAD' => 'C$',
-            'AUD' => 'A$',
-            'SGD' => 'S$',
-        ];
-
-        return $symbols[strtoupper($code)] ?? $code;
+        return \App\Services\CurrencyService::getTenantCurrencySymbol($company_id);
     }
 
     public static function defaultTimeZone($company_id = null)
