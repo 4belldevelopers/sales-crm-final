@@ -540,459 +540,472 @@
 .book-btn-addslot{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#64748b;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .18s;}
 .book-btn-addslot:hover{background:#eff6ff;border-color:#3e97ff;color:#3e97ff;}
 
-/* ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .comp-card {
+/* ===== STANDARDIZED PROFILE OVERVIEW CARDS (Master Standard: Recruiter Comments) ===== */
+#kt_activitiesApplication #personal_details .cardshow {
   background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  padding: 24px;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
+  margin-bottom: 0 !important;
 }
-#kt_activitiesApplication .comp-header {
+
+#kt_activitiesApplication #personal_details .card-header-sidebar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin: -24px -24px 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #f0f4f8;
+  background: #fff;
+  position: relative;
 }
-#kt_activitiesApplication .comp-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #FFF4E5;
-  color: #EA580C;
+
+#kt_activitiesApplication #personal_details .card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
+
+#kt_activitiesApplication #personal_details .card-icon svg {
+  width: 18px;
+  height: 18px;
 }
-#kt_activitiesApplication .comp-items-list {
+
+#kt_activitiesApplication #personal_details .card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+}
+
+/* Master Recruiter Comments text & empty note style */
+#kt_activitiesApplication #personal_details .po-recruiter-note-text {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #334155;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .po-no-notes {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== COMPENSATION DETAILS ===== */
+#kt_activitiesApplication #personal_details .comp-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .comp-item-row {
+
+#kt_activitiesApplication #personal_details .comp-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 11px 0;
-  border-bottom: 1px solid #F1F5F9;
-  min-height: 48px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  min-height: 42px;
 }
-#kt_activitiesApplication .comp-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .comp-item-row:last-child {
   border-bottom: none;
 }
-#kt_activitiesApplication .comp-item-left {
+
+#kt_activitiesApplication #personal_details .comp-item-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
-#kt_activitiesApplication .comp-row-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+
+#kt_activitiesApplication #personal_details .comp-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-row-icon svg {
-  width: 17px;
-  height: 17px;
+
+#kt_activitiesApplication #personal_details .comp-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .comp-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .comp-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .comp-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .comp-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .comp-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .comp-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .comp-icon-amber {
-  background: #FEF3C7;
-  color: #D97706;
+
+#kt_activitiesApplication #personal_details .comp-icon-amber {
+  background: #fef3c7;
+  color: #d97706;
 }
-#kt_activitiesApplication .comp-icon-red {
-  background: #FEE2E2;
-  color: #DC2626;
+
+#kt_activitiesApplication #personal_details .comp-icon-red {
+  background: #fee2e2;
+  color: #dc2626;
 }
-#kt_activitiesApplication .comp-icon-mint {
-  background: #DCFCE7;
+
+#kt_activitiesApplication #personal_details .comp-icon-mint {
+  background: #dcfce7;
   color: #059669;
 }
-#kt_activitiesApplication .comp-label {
-  font-size: 13.5px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .comp-label {
+  font-size: 12px;
+  color: #64748b;
   font-weight: 500;
   white-space: nowrap;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .comp-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   text-align: right;
   white-space: nowrap;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-curr-symbol {
-  font-weight: 700 !important;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .comp-curr-symbol {
+  font-weight: 600 !important;
+  color: #0f172a;
   margin-right: 2px;
   display: inline-block;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
-#kt_activitiesApplication .comp-badge-purple {
+
+#kt_activitiesApplication #personal_details .comp-badge-purple {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 14px;
-  background: #EDE9FE;
-  color: #6D28D9;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-badge-green {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px;
-  background: #DCFCE7;
-  color: #16A34A;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-badge-gray {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px;
-  background: #F1F5F9;
-  color: #64748B;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-comments-box {
-  background: #F4F8FC;
-  border: 1px solid #E2E8F0;
+  padding: 3px 10px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 12px;
-  padding: 14px 16px;
-  margin-top: 14px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-badge-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-badge-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-comments-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
-#kt_activitiesApplication .comp-comments-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #DBEAFE;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .comp-comments-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #dbeafe;
+  color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-comments-content {
+
+#kt_activitiesApplication #personal_details .comp-comments-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+#kt_activitiesApplication #personal_details .comp-comments-content {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .comp-comments-label {
-  font-size: 12px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .comp-comments-label {
+  font-size: 11px;
+  color: #64748b;
   font-weight: 500;
   margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-comments-text {
-  font-size: 13.5px;
-  color: #0F172A;
-  font-weight: 700;
-  line-height: 1.3;
+
+#kt_activitiesApplication #personal_details .comp-comments-text {
+  font-size: 12px;
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1.35;
   word-break: break-word;
   font-family: 'Poppins', sans-serif;
 }
 
-/* ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .own-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
-  overflow: hidden;
-  font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
-}
-#kt_activitiesApplication .own-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-#kt_activitiesApplication .own-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #F5F3FF;
-  color: #7C3AED;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-#kt_activitiesApplication .own-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
-}
-#kt_activitiesApplication .own-items-list {
+/* ===== OWNERSHIP SECTION ===== */
+#kt_activitiesApplication #personal_details .own-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .own-item-row {
+
+#kt_activitiesApplication #personal_details .own-item-row {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 13px 0;
-  border-bottom: 1px solid #F1F5F9;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
-#kt_activitiesApplication .own-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .own-item-row:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
-#kt_activitiesApplication .own-row-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+
+#kt_activitiesApplication #personal_details .own-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
-#kt_activitiesApplication .own-row-icon svg {
-  width: 19px;
-  height: 19px;
+
+#kt_activitiesApplication #personal_details .own-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .own-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .own-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .own-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .own-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .own-icon-amber {
-  background: #FEF3C7;
-  color: #D97706;
+
+#kt_activitiesApplication #personal_details .own-icon-amber {
+  background: #fef3c7;
+  color: #d97706;
 }
-#kt_activitiesApplication .own-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .own-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .own-item-body {
+
+#kt_activitiesApplication #personal_details .own-item-body {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .own-label {
-  font-size: 13px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .own-label {
+  font-size: 11.5px;
+  color: #64748b;
   font-weight: 500;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
 }
-#kt_activitiesApplication .own-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .own-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
-  line-height: 1.3;
+  line-height: 1.35;
   word-break: break-word;
 }
-#kt_activitiesApplication .own-datetime-pill {
+
+#kt_activitiesApplication #personal_details .own-datetime-pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: #F4F8FC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 8px 14px;
-  margin-top: 4px;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  margin-top: 3px;
   max-width: 100%;
   flex-wrap: wrap;
 }
-#kt_activitiesApplication .own-dt-item {
+
+#kt_activitiesApplication #personal_details .own-dt-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #0F172A;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .own-dt-item svg {
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .own-dt-item svg {
+  color: #64748b;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .own-dt-sep {
-  color: #CBD5E1;
+
+#kt_activitiesApplication #personal_details .own-dt-sep {
+  color: #cbd5e1;
   font-weight: 400;
-  font-size: 13px;
+  font-size: 11.5px;
   user-select: none;
 }
 
-/* ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .cnt-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
-  overflow: hidden;
-  font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
-}
-#kt_activitiesApplication .cnt-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-#kt_activitiesApplication .cnt-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #EFF6FF;
-  color: #2563EB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-#kt_activitiesApplication .cnt-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
-}
-#kt_activitiesApplication .cnt-items-list {
+/* ===== CONTACT DETAILS SECTION ===== */
+#kt_activitiesApplication #personal_details .cnt-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .cnt-item-row {
+
+#kt_activitiesApplication #personal_details .cnt-item-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 13px 0;
-  border-bottom: 1px solid #F1F5F9;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
-#kt_activitiesApplication .cnt-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .cnt-item-row:last-child {
   border-bottom: none;
 }
-#kt_activitiesApplication .cnt-row-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+
+#kt_activitiesApplication #personal_details .cnt-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .cnt-row-icon svg {
-  width: 19px;
-  height: 19px;
+
+#kt_activitiesApplication #personal_details .cnt-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .cnt-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .cnt-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .cnt-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .cnt-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .cnt-icon-amber {
-  background: #FFF7ED;
-  color: #EA580C;
+
+#kt_activitiesApplication #personal_details .cnt-icon-amber {
+  background: #fff7ed;
+  color: #ea580c;
 }
-#kt_activitiesApplication .cnt-item-body {
+
+#kt_activitiesApplication #personal_details .cnt-item-body {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .cnt-label {
-  font-size: 13px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .cnt-label {
+  font-size: 11.5px;
+  color: #64748b;
   font-weight: 500;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
 }
-#kt_activitiesApplication .cnt-value {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
-  line-height: 1.3;
+  line-height: 1.35;
   word-break: break-all;
 }
-#kt_activitiesApplication .cnt-val-link {
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-val-link {
+  color: #0f172a;
   text-decoration: none;
   transition: color .15s ease;
 }
-#kt_activitiesApplication .cnt-val-link:hover {
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-val-link:hover {
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-phone-val {
+
+#kt_activitiesApplication #personal_details .cnt-phone-val {
   display: inline-flex;
   align-items: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F172A;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-copy-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
+
+#kt_activitiesApplication #personal_details .cnt-copy-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
-  color: #64748B;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1001,86 +1014,143 @@
   padding: 0;
   transition: all .15s ease;
 }
-#kt_activitiesApplication .cnt-copy-btn:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-copy-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-whatsapp-banner {
+
+#kt_activitiesApplication #personal_details .cnt-whatsapp-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin-top: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
   text-decoration: none;
   transition: all .18s ease;
   cursor: pointer;
 }
-#kt_activitiesApplication .cnt-whatsapp-banner:hover {
-  background: #DCFCE7;
-  border-color: #86EFAC;
+
+#kt_activitiesApplication #personal_details .cnt-whatsapp-banner:hover {
+  background: #dcfce7;
+  border-color: #86efac;
 }
-#kt_activitiesApplication .cnt-wa-left {
+
+#kt_activitiesApplication #personal_details .cnt-wa-left {
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-wa-sep {
+
+#kt_activitiesApplication #personal_details .cnt-wa-sep {
   width: 1px;
-  height: 18px;
-  background: #86EFAC;
-  margin: 0 12px;
+  height: 14px;
+  background: #86efac;
+  margin: 0 10px;
 }
-#kt_activitiesApplication .cnt-wa-text {
-  font-size: 14px;
+
+#kt_activitiesApplication #personal_details .cnt-wa-text {
+  font-size: 12px;
   font-weight: 600;
-  color: #15803D;
+  color: #15803d;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-wa-arrow {
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .cnt-wa-arrow {
+  color: #16a34a;
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-linkedin-banner {
+
+#kt_activitiesApplication #personal_details .cnt-linkedin-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  border-radius: 12px;
-  padding: 12px 18px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 8px 12px;
   margin-top: 8px;
   text-decoration: none;
   transition: all .18s ease;
   cursor: pointer;
 }
-#kt_activitiesApplication .cnt-linkedin-banner:hover {
-  background: #DBEAFE;
-  border-color: #93C5FD;
+
+#kt_activitiesApplication #personal_details .cnt-linkedin-banner:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
-#kt_activitiesApplication .cnt-li-left {
+
+#kt_activitiesApplication #personal_details .cnt-li-left {
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-li-sep {
+
+#kt_activitiesApplication #personal_details .cnt-li-sep {
   width: 1px;
-  height: 18px;
-  background: #93C5FD;
-  margin: 0 12px;
+  height: 14px;
+  background: #93c5fd;
+  margin: 0 10px;
 }
-#kt_activitiesApplication .cnt-li-text {
-  font-size: 14px;
+
+#kt_activitiesApplication #personal_details .cnt-li-text {
+  font-size: 12px;
   font-weight: 600;
-  color: #1D4ED8;
+  color: #1d4ed8;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-li-arrow {
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-li-arrow {
+  color: #2563eb;
   display: flex;
   align-items: center;
+}
+
+/* ===== OTHER DETAILS & AGENCY / RM DETAILS STANDARDIZATION ===== */
+#kt_activitiesApplication #personal_details .agency-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 16px;
+}
+
+#kt_activitiesApplication #personal_details .agency-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .agency-value {
+  font-size: 12px;
+  color: #0f172a;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .agency-value a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+#kt_activitiesApplication #personal_details .agency-value a:hover {
+  text-decoration: underline;
+}
+
+#kt_activitiesApplication #personal_details .rm-details h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .rm-contact-item {
+  font-size: 12px;
+  color: #475569;
+  font-family: 'Poppins', sans-serif;
 }
 </style>
 
@@ -3414,8 +3484,11 @@
               </div>
               <h3 class="card-title">Professional Summary</h3>
             </div>
-            <p class="summary-text">{{@$application->careersummary}}</p>
-            {{-- <span class="word-count-badge">184 / 200 Words</span> --}}
+            @if(!empty(trim((string)@$application->careersummary)))
+              <p class="summary-text" style="font-size:12px; line-height:1.65; color:#334155; margin:0;">{{@$application->careersummary}}</p>
+            @else
+              <p class="po-no-notes" style="font-size:12px; font-style:italic; color:#94a3b8; margin:0;">No professional summary provided.</p>
+            @endif
           </section>
 
           <!-- ===== REASON FOR JOB CHANGE CARD (Rule 14, Rule 17) ===== -->
@@ -3845,7 +3918,7 @@
 
         <aside class="content-sidebar">
 
-          <section class="cardshow" style="margin-bottom:16px;">
+          <section class="cardshow">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-primary-50, #eef2ff); color: var(--color-primary-600, #4f46e5);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -3897,14 +3970,14 @@
           @endphp
 
           <section class="cardshow comp-card">
-            <div class="comp-header">
-              <div class="comp-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #fff7ed; color: #ea580c;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="comp-hdr-title">Compensation Details</h3>
+              <h3 class="card-title">Compensation Details</h3>
             </div>
 
             <div class="comp-items-list">
@@ -4059,13 +4132,13 @@
           @endphp
 
           <section class="cardshow own-card">
-            <div class="own-header">
-              <div class="own-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #f5f3ff; color: #7c3aed;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
-              <h3 class="own-hdr-title">Ownership</h3>
+              <h3 class="card-title">Ownership</h3>
             </div>
 
             <div class="own-items-list">
@@ -4164,14 +4237,14 @@
           <!-- ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== -->
           @if($application->condidate_type=='other')
           <section class="cardshow cnt-card">
-            <div class="cnt-header">
-              <div class="cnt-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <h3 class="cnt-hdr-title">Contact Details</h3>
+              <h3 class="card-title">Contact Details</h3>
             </div>
 
             <div class="cnt-items-list">
@@ -4331,7 +4404,7 @@
             $rawVisa = trim((string) @$application->visastatu);
             $visaMeta = \App\Services\VisaResolutionService::resolve($rawVisa);
           @endphp
-          <section class="cardshow" id="visa_status_card" style="margin-bottom:16px;">
+          <section class="cardshow" id="visa_status_card">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
