@@ -184,10 +184,11 @@
     <!-- IN-PLACE POPUP DROPDOWN (Direct Child of Wrapper, Scoped & 100% Collision Safe) -->
     <div class="jero-country-dropdown card shadow-lg border"
          id="{{ $id }}_dropdown"
-         style="display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 1060; width: 340px; max-height: 360px; overflow: hidden; border-radius: 0.625rem; box-shadow: 0 10px 30px rgba(0,0,0,0.18); background: #ffffff; border: 1px solid #dce3ee;">
+         style="display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 1060; width: 340px; max-height: 360px; overflow: hidden; border-radius: 0.625rem; box-shadow: 0 10px 30px rgba(0,0,0,0.18); background: #ffffff; border: 1px solid #dce3ee; flex-direction: column;">
 
         <!-- Search Header -->
-        <div class="p-2 border-bottom bg-light d-flex align-items-center position-relative" style="border-top-left-radius: 0.625rem; border-top-right-radius: 0.625rem;">
+        <div class="p-2 border-bottom bg-light d-flex align-items-center position-relative jero-search-header"
+             style="border-top-left-radius: 0.625rem; border-top-right-radius: 0.625rem; position: sticky; top: 0; z-index: 10; background: #f8f9fa; flex-shrink: 0;">
             <i class="fa fa-search text-gray-500 ms-2 me-2 fs-7" aria-hidden="true"></i>
             <input type="text"
                    class="form-control form-control-sm form-control-solid fs-7 border-0 bg-white jero-search-input pe-6"
@@ -206,7 +207,7 @@
         <!-- Country List -->
         <div class="jero-country-list py-1"
              id="{{ $id }}_list"
-             style="max-height: 290px; overflow-y: auto; scrollbar-width: thin;"
+             style="max-height: 290px; overflow-y: auto; scrollbar-width: thin; flex: 1 1 auto; min-height: 0;"
              role="listbox">
         </div>
     </div>
@@ -1167,63 +1168,86 @@
     }
 
     function openDropdown() {
-      // Close other dropdowns across DOM
-      document.querySelectorAll('.jero-country-dropdown').forEach(d => {
-        if (d !== dropdown) d.style.display = 'none';
-      });
-
-      // Viewport collision flip check and modal/drawer clipping detection
-      const btnRect = btn.getBoundingClientRect();
-      const dropdownHeight = 350;
-      const spaceBelow = window.innerHeight - btnRect.bottom;
-      const isInModalOrDrawer = !!wrapper.closest('.modal, .offcanvas, .drawer, [data-kt-drawer="true"], .modal-dialog');
-
-      if (spaceBelow < 340 && btnRect.top > 340) {
-        if (isInModalOrDrawer) {
-          dropdown.style.position = 'fixed';
-          dropdown.style.top = Math.max(8, btnRect.top - dropdownHeight - 4) + 'px';
-          dropdown.style.bottom = 'auto';
-          dropdown.style.left = Math.max(8, Math.min(btnRect.left, window.innerWidth - 348)) + 'px';
-        } else {
-          dropdown.style.position = 'absolute';
-          dropdown.style.top = 'auto';
-          dropdown.style.bottom = 'calc(100% + 4px)';
-          dropdown.style.left = '0';
-        }
+      // Close any other open dropdowns across DOM
+      if (window.JeroPhoneBox && typeof window.JeroPhoneBox.closeAllDropdowns === 'function') {
+        window.JeroPhoneBox.closeAllDropdowns();
       } else {
-        if (isInModalOrDrawer) {
-          dropdown.style.position = 'fixed';
-          dropdown.style.top = (btnRect.bottom + 4) + 'px';
-          dropdown.style.bottom = 'auto';
-          dropdown.style.left = Math.max(8, Math.min(btnRect.left, window.innerWidth - 348)) + 'px';
-        } else {
-          dropdown.style.position = 'absolute';
-          dropdown.style.bottom = 'auto';
-          dropdown.style.top = 'calc(100% + 4px)';
-          dropdown.style.left = '0';
-        }
+        document.querySelectorAll('.jero-country-dropdown').forEach(d => {
+          if (d !== dropdown) d.style.display = 'none';
+        });
       }
 
-      dropdown.style.zIndex = '1080';
-      wrapper.style.zIndex = '1060';
-      dropdown.style.display = 'block';
+      // Check whether dropdown is rendered inside a drawer, modal, offcanvas, or scroll container
+      // Note: Moving the dropdown to document.body while open ensures complete immunity from any
+      // clipping parents, overflow-y:auto containers (e.g. .client-drawer-body), transforms, or z-index traps.
+      if (dropdown.parentElement !== document.body) {
+        document.body.appendChild(dropdown);
+      }
+
+      const btnRect = btn.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      const spaceAbove = btnRect.top;
+
+      const dropdownWidth = 340;
+      let left = btnRect.left;
+      if (left + dropdownWidth > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - dropdownWidth - 8);
+      }
+
+      // Determine drop-up vs drop-down based on available vertical viewport space
+      const preferUp = (spaceBelow < 320 && spaceAbove > spaceBelow);
+      const availableHeight = preferUp ? spaceAbove : spaceBelow;
+      // Reserve at least 20px breathing space from viewport top/bottom
+      const maxDropdownHeight = Math.max(180, Math.min(360, availableHeight - 20));
+      const searchHeaderHeight = 48;
+
+      dropdown.style.maxHeight = maxDropdownHeight + 'px';
+      countryList.style.maxHeight = Math.max(120, maxDropdownHeight - searchHeaderHeight) + 'px';
+      dropdown.style.width = Math.min(dropdownWidth, window.innerWidth - 16) + 'px';
+      dropdown.style.position = 'fixed';
+      dropdown.style.left = Math.max(8, left) + 'px';
+      dropdown.style.zIndex = '100005';
+
+      if (preferUp) {
+        // Drop-up: bottom aligns 4px above the top of the trigger button
+        dropdown.style.bottom = (window.innerHeight - btnRect.top + 4) + 'px';
+        dropdown.style.top = 'auto';
+      } else {
+        // Drop-down: top aligns 4px below the bottom of the trigger button
+        dropdown.style.top = (btnRect.bottom + 4) + 'px';
+        dropdown.style.bottom = 'auto';
+      }
+
+      dropdown.style.display = 'flex';
+      dropdown.style.flexDirection = 'column';
       btn.setAttribute('aria-expanded', 'true');
+      wrapper.style.zIndex = '1060';
       searchInput.value = '';
       if (searchClear) searchClear.style.display = 'none';
       selectedIndex = -1;
       renderList('');
-      setTimeout(() => searchInput.focus(), 30);
+      setTimeout(() => {
+        try { searchInput.focus(); } catch (e) {}
+      }, 40);
     }
 
     function closeDropdown() {
+      if (dropdown.style.display === 'none' && dropdown.parentElement === wrapper) return;
       dropdown.style.display = 'none';
       btn.setAttribute('aria-expanded', 'false');
       wrapper.style.zIndex = '1';
+      // Return dropdown back to wrapper to preserve DOM cleanliness and lifecycle encapsulation
+      if (dropdown.parentElement !== wrapper) {
+        wrapper.appendChild(dropdown);
+      }
     }
 
-    // Dismiss open fixed/portal dropdown on window/drawer scroll
-    window.addEventListener('scroll', function() {
-      if (dropdown.style.display === 'block') {
+    // Dismiss open fixed/portal dropdown on window/drawer scroll (except when scrolling the country options list)
+    window.addEventListener('scroll', function(e) {
+      if (e && e.target && (e.target === dropdown || dropdown.contains(e.target))) {
+        return; // Allow smooth scrolling through country list
+      }
+      if (dropdown.style.display === 'block' || dropdown.style.display === 'flex') {
         closeDropdown();
       }
     }, true);
@@ -1232,16 +1256,16 @@
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      if (dropdown.style.display === 'block') {
+      if (dropdown.style.display === 'block' || dropdown.style.display === 'flex') {
         closeDropdown();
       } else {
         openDropdown();
       }
     });
 
-    // Close on click outside
+    // Close on click outside both wrapper and the portalled dropdown
     document.addEventListener('click', function(e) {
-      if (!wrapper.contains(e.target)) {
+      if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
         closeDropdown();
       }
     });
@@ -1481,6 +1505,18 @@
     },
     initAll() {
       document.querySelectorAll('.jero-phone-box-wrapper').forEach(w => window.setupJeroPhoneBox(w));
+    },
+    closeAllDropdowns() {
+      document.querySelectorAll('.jero-country-dropdown').forEach(d => {
+        d.style.display = 'none';
+        const wrapper = d.closest('.jero-phone-box-wrapper') || (d.id ? document.getElementById(d.id.replace('_dropdown', '_wrapper')) : null);
+        if (wrapper && d.parentElement !== wrapper) {
+          wrapper.appendChild(d);
+        }
+      });
+      document.querySelectorAll('.jero-country-picker-btn[aria-expanded="true"]').forEach(b => {
+        b.setAttribute('aria-expanded', 'false');
+      });
     },
     setCountry(fieldId, dialOrIso) {
       const el = document.getElementById(fieldId);

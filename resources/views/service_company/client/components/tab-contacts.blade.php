@@ -10,7 +10,7 @@ $hasContacts = count($contactsList) > 0;
 ?>
 <!--begin::Contact Person Step (God-Level Design Aligned with media_1792065553406.png & media_1792065655079.png)-->
 <div class="pb-5 client-contact-step" data-wizard-type="step-content">
-  <div class="client-step-layout">
+  <div class="client-step-layout client-contact-layout">
     <div class="client-main-column">
       <!-- Contact Person Card -->
       <div class="card client-contact-main-card mb-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;">
@@ -47,6 +47,44 @@ $hasContacts = count($contactsList) > 0;
               <tbody id="client_contact_table_body">
 <?php
 $renderedTableRows = 0;
+$cIsoToDial = [
+    'IN' => '+91', 'US' => '+1', 'GB' => '+44', 'AE' => '+971', 'CA' => '+1',
+    'AU' => '+61', 'SG' => '+65', 'SA' => '+966', 'DE' => '+49', 'FR' => '+33',
+    'QA' => '+974', 'KW' => '+965', 'OM' => '+968', 'BH' => '+973', 'MY' => '+60',
+    'PH' => '+63', 'ID' => '+62', 'NZ' => '+64', 'ZA' => '+27', 'IE' => '+353',
+    'NL' => '+31', 'SE' => '+46', 'CH' => '+41', 'ES' => '+34', 'IT' => '+39',
+    'BR' => '+55', 'MX' => '+52', 'JP' => '+81', 'KR' => '+82', 'PK' => '+92',
+    'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
+    'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
+    'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972',
+    'RU' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98'
+];
+$cDialToIso = [
+    '+91' => 'IN', '+1' => 'US', '+44' => 'GB', '+971' => 'AE',
+    '+61' => 'AU', '+65' => 'SG', '+966' => 'SA', '+49' => 'DE',
+    '+33' => 'FR', '+974' => 'QA', '+965' => 'KW', '+968' => 'OM',
+    '+973' => 'BH', '+60' => 'MY', '+63' => 'PH', '+62' => 'ID',
+    '+64' => 'NZ', '+27' => 'ZA', '+353' => 'IE', '+31' => 'NL',
+    '+46' => 'SE', '+41' => 'CH', '+34' => 'ES', '+39' => 'IT',
+    '+55' => 'BR', '+52' => 'MX', '+81' => 'JP', '+82' => 'KR',
+    '+92' => 'PK', '+880' => 'BD', '+94' => 'LK', '+977' => 'NP',
+    '+234' => 'NG', '+254' => 'KE', '+20' => 'EG', '+90' => 'TR',
+    '+48' => 'PL', '+40' => 'RO', '+380' => 'UA', '+84' => 'VN',
+    '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL',
+    '+7' => 'RU', '+960' => 'MV', '+967' => 'YE', '+963' => 'SY', '+98' => 'IR'
+];
+$cSsrFlags = [
+    'IN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+    'US' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+    'GB' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="js_gb_tab_ssr"><rect width="640" height="480"/></clipPath><g clip-path="url(#js_gb_tab_ssr)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+    'AE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+    'CA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+    'AU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+    'SG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+    'SA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+    'DE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+    'FR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>'
+];
 if ($page_event == 'EDIT' && $hasContacts) {
     foreach ($contactsList as $idx => $ccArr) {
         $cName = is_object($ccArr) ? ($ccArr->contact_person_name ?? '') : ($ccArr['contact_person_name'] ?? '');
@@ -71,6 +109,41 @@ if ($page_event == 'EDIT' && $hasContacts) {
             ['bg' => '#dcfce7', 'text' => '#166534']
         ];
         $pal = $palettes[($renderedTableRows - 1) % count($palettes)];
+
+        // SSR Phone resolution with country flag and calling code
+        $cCallingClean = trim((string)($cCalling ?: ''));
+        $cIso = 'IN';
+        $cDial = '+91';
+        if (!empty($cCallingClean)) {
+            $cUpper = strtoupper($cCallingClean);
+            if (isset($cIsoToDial[$cUpper])) {
+                $cIso = $cUpper;
+                $cDial = $cIsoToDial[$cUpper];
+            } else {
+                $cCandidate = str_starts_with($cCallingClean, '+') ? $cCallingClean : ('+' . $cCallingClean);
+                if (isset($cDialToIso[$cCandidate])) {
+                    $cDial = $cCandidate;
+                    $cIso = $cDialToIso[$cCandidate];
+                }
+            }
+        }
+        $cRawPhone = trim((string)($cNumber ?: ''));
+        if (empty($cRawPhone)) {
+            $cPhoneHtml = '<span style="color:#94a3b8;">—</span>';
+        } else {
+            $cCleanPhone = $cRawPhone;
+            if (str_starts_with($cCleanPhone, $cDial)) {
+                $cCleanPhone = trim(substr($cCleanPhone, strlen($cDial)));
+            } elseif (str_starts_with($cCleanPhone, '+' . ltrim($cDial, '+'))) {
+                $cCleanPhone = trim(substr($cCleanPhone, strlen('+' . ltrim($cDial, '+'))));
+            }
+            $cFlagSvg = $cSsrFlags[$cIso] ?? ('<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#1e3c72" rx="60"/><text x="320" y="320" fill="#ffffff" font-size="240" font-family=\'Poppins\', sans-serif font-weight="700" text-anchor="middle">' . htmlspecialchars($cIso) . '</text></svg>');
+            $cPhoneHtml = '<span class="d-inline-flex align-items-center text-nowrap" style="gap:6px;">'
+                . '<span class="d-inline-flex align-items-center flex-shrink-0" style="width:20px; height:15px; border-radius:2px; overflow:hidden; box-shadow:0 0 0 1px rgba(0,0,0,0.08);">' . $cFlagSvg . '</span>'
+                . '<span style="font-weight:600; color:#1e293b; font-size:13px;">' . htmlspecialchars($cDial) . '</span>'
+                . '<span style="color:#334155; font-size:13px; font-weight:500;">' . htmlspecialchars($cCleanPhone) . '</span>'
+                . '</span>';
+        }
 ?>
                 <tr data-contact-index="<?php echo $idx; ?>" style="border-bottom:1px solid #f1f5f9;">
                   <td style="padding:14px 18px;">
@@ -81,7 +154,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
                   </td>
                   <td style="padding:14px 14px; color:#334155; font-size:13px;"><?php echo htmlspecialchars($cDesig ?: '—'); ?></td>
                   <td style="padding:14px 14px; color:#334155; font-size:13px;"><?php echo htmlspecialchars($cEmail ?: '—'); ?></td>
-                  <td style="padding:14px 14px; color:#334155; font-size:13px; font-weight:500;"><?php echo htmlspecialchars($cNumber ?: '—'); ?></td>
+                  <td style="padding:14px 14px; color:#334155; font-size:13px; font-weight:500;"><?php echo $cPhoneHtml; ?></td>
                   <td style="padding:14px 10px;"><?php echo $typeBadge; ?></td>
                   <td style="padding:14px 18px; text-align:right;">
                     <div class="d-inline-flex align-items-center gap-1 justify-content-end">
