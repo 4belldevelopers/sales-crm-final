@@ -536,6 +536,203 @@
 /* "Select Date" button shown instead of Book Now when slot has no date */
 .book-btn-addslot{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#64748b;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .18s;}
 .book-btn-addslot:hover{background:#eff6ff;border-color:#3e97ff;color:#3e97ff;}
+
+/* ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .comp-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .comp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .comp-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #FFF4E5;
+  color: #EA580C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .comp-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .comp-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #F1F5F9;
+  min-height: 48px;
+}
+#kt_activitiesApplication .comp-item-row:last-child {
+  border-bottom: none;
+}
+#kt_activitiesApplication .comp-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+#kt_activitiesApplication .comp-row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-row-icon svg {
+  width: 17px;
+  height: 17px;
+}
+#kt_activitiesApplication .comp-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .comp-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .comp-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .comp-icon-amber {
+  background: #FEF3C7;
+  color: #D97706;
+}
+#kt_activitiesApplication .comp-icon-red {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+#kt_activitiesApplication .comp-icon-mint {
+  background: #DCFCE7;
+  color: #059669;
+}
+#kt_activitiesApplication .comp-label {
+  font-size: 13.5px;
+  color: #64748B;
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: right;
+  white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-curr-symbol {
+  font-weight: 700 !important;
+  color: #0F172A;
+  margin-right: 2px;
+  display: inline-block;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+#kt_activitiesApplication .comp-badge-purple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #EDE9FE;
+  color: #6D28D9;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-badge-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #DCFCE7;
+  color: #16A34A;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-badge-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  background: #F1F5F9;
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-comments-box {
+  background: #F4F8FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+#kt_activitiesApplication .comp-comments-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #DBEAFE;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .comp-comments-content {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .comp-comments-label {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 2px;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .comp-comments-text {
+  font-size: 13.5px;
+  color: #0F172A;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+  font-family: 'Poppins', sans-serif;
+}
 </style>
 
 <script>
@@ -3301,97 +3498,163 @@
             @endif
           </section>
 
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-warning-50); color: var(--color-warning-600);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                  <line x1="1" y1="10" x2="23" y2="10"></line>
+          <!-- ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== -->
+          @php
+            // Authoritative Currency & Symbol Resolution
+            $jobCurrencyKey = $isDirectCandidate ? (@$application->current_ctc_cur ?? 0) : ($jobData->jobCurrency ?? @$application->current_ctc_cur ?? 0);
+            $currCode = \App\Services\CurrencyService::resolveCurrencyCode($jobCurrencyKey);
+            $currencySymbolsMap = \App\Services\CurrencyService::getCurrencySymbols();
+            $currSymbol = $currencySymbolsMap[$currCode] ?? ($currCode === 'INR' ? '₹' : ($currCode === 'USD' ? '$' : ($currCode === 'EUR' ? '€' : ($currCode === 'GBP' ? '£' : ($currCode === 'AED' ? 'د.إ' : $currCode)))));
+            
+            $ectcJobCurrencyKey = $isDirectCandidate ? (@$application->current_ectc_cur ?? $jobCurrencyKey) : ($jobData->jobCurrency ?? @$application->current_ectc_cur ?? $jobCurrencyKey);
+            $ectcCurrCode = \App\Services\CurrencyService::resolveCurrencyCode($ectcJobCurrencyKey);
+            $ectcCurrSymbol = $currencySymbolsMap[$ectcCurrCode] ?? ($currencySymbolsMap[$currCode] ?? $currSymbol);
+
+            $payFormatViewSalary = GeneralMethod::formatViewSalary($application->ctc_yearly, $symbols, $jobMode);
+            $billFormatViewSalary = GeneralMethod::formatViewSalary($application->ectc_yearly, $symbols, $jobMode);
+            $ctc = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
+            $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
+
+            $current_ctc_mode = ($application->condidate_type == 'bench_condidate') ? @$application->pay_rate_mode : @$jobMode;
+            if ($application->condidate_type == 'bench_condidate') {
+                $ctc = '*******';
+            }
+            $current_ectc_mode = @$jobMode;
+            $hasOfferInHand = strtolower(trim((string)@$application->oh)) === 'yes';
+          @endphp
+
+          <section class="cardshow comp-card">
+            <div class="comp-header">
+              <div class="comp-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="card-title">Compensation Details</h3>
+              <h3 class="comp-hdr-title">Compensation Details</h3>
             </div>
-            <div class="comp-list">
-              @php
-                $payFormatViewSalary = GeneralMethod::formatViewSalary($application->ctc_yearly,$symbols,$jobMode);
-                $billFormatViewSalary = GeneralMethod::formatViewSalary($application->ectc_yearly,$symbols,$jobMode);
-                $ctc = '';
-                $ctc = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
-                $ectc = '';
-                $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
-              @endphp
 
-               @if($application->condidate_type=='other')
-                <div class="comp-row">
-
-                  @if($application->condidate_type=='other')
-                        @php 
-                            $current_ctc_mode	=	"";
-                            $current_ctc_mode	=	@$jobMode;	
-                            
-                              
-                        @endphp
-                        @elseif((@$application->condidate_type=='bench_condidate'))
-                        @php 
-                            $current_ctc_mode	=	"";
-                            $current_ctc_mode	=	@$application->pay_rate_mode;		
-                            $ctc =  '*******';
-                        @endphp
+            <div class="comp-items-list">
+              {{-- 1. Current Salary / Pay Rate --}}
+              @if($application->condidate_type=='other' || $application->condidate_type=='bench_condidate')
+                <div class="comp-item-row">
+                  <div class="comp-item-left">
+                    <div class="comp-row-icon comp-icon-green" title="Current Salary">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 7a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V19a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-8.5c1.2-.7 2-2 2-3.5z"></path>
+                        <line x1="12" y1="10" x2="12" y2="16"></line>
+                        <path d="M10 12h4"></path>
+                      </svg>
+                    </div>
+                    <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
+                  </div>
+                  <span class="comp-value">
+                    @if($ctc !== '*******')
+                      <span class="comp-curr-symbol">{{ $currSymbol }}</span>{{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] ?? 'Annual' }}
+                    @else
+                      {{ $ctc }}
                     @endif
-                  <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
-                  <span class="comp-value">{!! @$current_ctc_cur !!} {{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] }}</span>
+                  </span>
                 </div>
               @endif
 
-              <div class="comp-row">
-                            @if($application->condidate_type=='other')
-                            @php 
-                                $current_ectc_mode	=	"";
-                                $current_ectc_mode	=	@$jobMode;		
-                            @endphp
-                            @else
-                            @php 
-                                $current_ectc_mode	=	"";
-                                $current_ectc_mode	=	@$jobMode;		
-                            @endphp
-                          @endif
-                <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
-                <span class="comp-value">{!! @$current_ectc_cur !!} {{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
+              {{-- 2. Expected Salary / Bill Rate --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-blue" title="Expected Salary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                  </div>
+                  <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
+                </div>
+                <span class="comp-value">
+                  <span class="comp-curr-symbol">{{ $ectcCurrSymbol }}</span>{{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] ?? 'Annual' }}
+                </span>
               </div>
-              <div class="comp-row">
-                <span class="comp-label">Compensation Type</span>
-                <span class="comp-badge">{{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
-              </div>
-              <div class="comp-row">
-                <span class="comp-label">Salary Type</span>
-                <span class="comp-value">Fixed</span>
-              </div>
-              {{-- <div class="comp-row">
-                <span class="comp-label">Currency</span>
-                <span class="comp-value">INR</span>
-              </div>
-              <div class="comp-row">
-                <span class="comp-label">Paid Service / Free Service</span>
-                <span class="comp-value">Paid Service</span>
-              </div> --}}
-              <div class="comp-row">
 
-                <span class="comp-label">Employment Type</span>
-                <span class="comp-value">{{ @$application->employmentType }}</span>
+              {{-- 3. Compensation Type --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-purple" title="Compensation Type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Compensation Type</span>
+                </div>
+                <span class="comp-badge-purple">{{ $salaryMode[$current_ectc_mode ?? 0] ?? 'Annual' }}</span>
               </div>
+
+              {{-- 4. Currency (Replaces "Salary Type" with Currency) --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-amber" title="Currency">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <ellipse cx="12" cy="7" rx="9" ry="3"></ellipse>
+                      <path d="M3 7v6c0 1.66 4.03 3 9 3s9-1.34 9-3V7"></path>
+                      <path d="M3 13v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"></path>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Currency</span>
+                </div>
+                <span class="comp-value">
+                  {{ $currCode }}{{ (!empty($currSymbol) && $currSymbol !== $currCode) ? ' (' . $currSymbol . ')' : '' }}
+                </span>
+              </div>
+
+              {{-- 5. Employment Type --}}
+              <div class="comp-item-row">
+                <div class="comp-item-left">
+                  <div class="comp-row-icon comp-icon-red" title="Employment Type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                  </div>
+                  <span class="comp-label">Employment Type</span>
+                </div>
+                <span class="comp-value">{{ @$application->employmentType ?: 'Full Time' }}</span>
+              </div>
+
+              {{-- 6. Offer in Hand (if condidate_type == 'other') --}}
               @if($application->condidate_type=='other')
-                <div class="comp-row">
-                  <span class="comp-label">Offer in Hand</span>
-                  <span class="comp-value">{{ ucwords(@$application->oh) }}</span>
+                <div class="comp-item-row">
+                  <div class="comp-item-left">
+                    <div class="comp-row-icon comp-icon-mint" title="Offer in Hand">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <path d="m9 15 2 2 4-4"></path>
+                      </svg>
+                    </div>
+                    <span class="comp-label">Offer in Hand</span>
+                  </div>
+                  <span class="{{ $hasOfferInHand ? 'comp-badge-green' : 'comp-badge-gray' }}">{{ ucwords(@$application->oh ?: 'No') }}</span>
                 </div>
-
-                <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Salary Details Comments: </b> {{ ucwords(@$application->comment) }}</span>
-                </div>
-
               @endif
             </div>
+
+            {{-- 7. Salary Details Comments --}}
+            @if($application->condidate_type=='other')
+              <div class="comp-comments-box">
+                <div class="comp-comments-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <line x1="8" y1="9" x2="16" y2="9"></line>
+                    <line x1="8" y1="13" x2="14" y2="13"></line>
+                  </svg>
+                </div>
+                <div class="comp-comments-content">
+                  <div class="comp-comments-label">Salary Details Comments</div>
+                  <div class="comp-comments-text">{{ !empty(trim((string)@$application->comment)) ? ucwords(@$application->comment) : 'In Progress' }}</div>
+                </div>
+              </div>
+            @endif
           </section>
 
           <section class="cardshow">
