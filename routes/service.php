@@ -240,6 +240,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('recruiter-note-templates', [ServiceCompanyJobApplicationController::class, 'recruiterNoteTemplates'])->name('job-applications.recruiterNoteTemplates');
                 Route::post('recruiter-note-update', [ServiceCompanyJobApplicationController::class, 'recruiterNoteUpdate'])->name('job-applications.recruiterNoteUpdate');
                 Route::post('reason-for-change-update', [ServiceCompanyJobApplicationController::class, 'reasonForChangeUpdate'])->name('job-applications.reasonForChangeUpdate');
+                Route::post('visa-status-update', [ServiceCompanyJobApplicationController::class, 'visaStatusUpdate'])->name('job-applications.visaStatusUpdate');
                 Route::post('job-applications/stage_submit', [ServiceCompanyJobApplicationController::class, 'stage_submit'])->name('job-applications.stage_submit');
                 Route::post('job-applications/client_stage_submit', [ServiceCompanyJobApplicationController::class, 'client_stage_submit'])->name('job-applications.client_stage_submit');
                 Route::post('job-applications/resume_delete', [ServiceCompanyJobApplicationController::class, 'resume_delete'])->name('job-applications.resume_delete');
