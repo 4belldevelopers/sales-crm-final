@@ -3168,20 +3168,33 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // $jobApplication->passport				=	$request->passport;
         $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
         $jobApplication->ctc = $request->ctc;
-        $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         $jobApplication->current_ctc_mode = $salaryMode;
-
         $jobApplication->ectc = $request->ectc;
-        $jobApplication->current_ectc_cur = $request->current_ectc_cur;
         $jobApplication->current_ectc_mode = $salaryMode;
+
+        // Authoritative Job Currency Enforcement (RULE-CURRENCY-JOB-AUTHORITATIVE-001)
+        // If candidate is linked to a job, the Job Currency is the single authoritative source of truth.
+        // The server normalizes/overwrites candidate salary currency to match the Job's configured currency.
+        $targetJobId = $jobApplication->job_id ?: ($request->input('job_id') ?: $request->input('job'));
+        $targetJobId = is_numeric($targetJobId) ? (int) $targetJobId : null;
+        if ($targetJobId) {
+            $candidateCurKey = \App\Services\CurrencyService::getJobCurrencyKey($targetJobId);
+        } else {
+            $candidateCurKey = $request->filled('current_ctc_cur')
+                ? (int) $request->current_ctc_cur
+                : \App\Services\CurrencyService::getTenantCurrencyKey($jobApplication->company_id);
+        }
+
+        $jobApplication->current_ctc_cur = $candidateCurKey;
+        $jobApplication->current_ectc_cur = $candidateCurKey;
         $jobApplication->gender = $request->gender;
         $jobApplication->notice_comments = @$request->notice_comments;
 
         $currency = GeneralMethod::currency();  // Currency code
 
-        $ecurrency = $currency[$request->current_ectc_cur];
-        $econvertedAmount = $request->bill_annual;
-        if ($request->current_ectc_cur > 0) {
+        $ecurrency = $currency[$candidateCurKey] ?? 'INR';
+        $econvertedAmount = $request->bill_annual ?: $request->ectc;
+        if ($candidateCurKey > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
 
@@ -3190,10 +3203,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ectc_monthly = @$ectcdivided->monthly;
         $jobApplication->ectc_hourly = @$ectcdivided->hourly;
 
-        $currency = $currency[$request->current_ctc_cur];
-        $convertedAmount = $request->pay_annual;
-        if ($request->current_ctc_cur > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+        $currencyCode = $currency[$candidateCurKey] ?? 'INR';
+        $convertedAmount = $request->pay_annual ?: $request->ctc;
+        if ($candidateCurKey > 0) {
+            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currencyCode);
         }
 
         $ctcdivided = GeneralMethod::salaryDividedByMode(0, $convertedAmount);
@@ -7559,22 +7572,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
         $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
-        $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         if (! empty($request->ctc)) {
             $jobApplication->ctc = @$request->ctc;
         }
         $jobApplication->current_ctc_mode = $salaryMode;
-        $jobApplication->current_ectc_cur = $request->current_ectc_cur;
         if (! empty($request->ectc)) {
             $jobApplication->ectc = @$request->ectc;
         }
         $jobApplication->current_ectc_mode = $salaryMode;
 
+        // Authoritative Job Currency Enforcement (RULE-CURRENCY-JOB-AUTHORITATIVE-001)
+        $targetJobId = $jobApplication->job_id ?: ($request->input('job_id') ?: $request->input('job'));
+        $targetJobId = is_numeric($targetJobId) ? (int) $targetJobId : null;
+        if ($targetJobId) {
+            $candidateCurKey = \App\Services\CurrencyService::getJobCurrencyKey($targetJobId);
+        } else {
+            $candidateCurKey = $request->filled('current_ctc_cur')
+                ? (int) $request->current_ctc_cur
+                : ($jobApplication->current_ctc_cur ?: \App\Services\CurrencyService::getTenantCurrencyKey($jobApplication->company_id));
+        }
+
+        $jobApplication->current_ctc_cur = $candidateCurKey;
+        $jobApplication->current_ectc_cur = $candidateCurKey;
+
         $currency = GeneralMethod::currency();  // Currency code
 
-        $ecurrency = $currency[$request->current_ectc_cur];
-        $econvertedAmount = $request->bill_annual;
-        if ($request->current_ectc_cur > 0) {
+        $ecurrency = $currency[$candidateCurKey] ?? 'INR';
+        $econvertedAmount = $request->bill_annual ?: $jobApplication->ectc;
+        if ($candidateCurKey > 0) {
             $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
         }
 
@@ -7583,11 +7608,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ectc_monthly = @$ectcdivided->monthly;
         $jobApplication->ectc_hourly = @$ectcdivided->hourly;
 
-        $currency = $currency[$request->current_ctc_cur];
-        // dd($currency);
-        $convertedAmount = $request->pay_annual;
-        if ($request->current_ctc_cur > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+        $currencyCode = $currency[$candidateCurKey] ?? 'INR';
+        $convertedAmount = $request->pay_annual ?: $jobApplication->ctc;
+        if ($candidateCurKey > 0) {
+            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currencyCode);
         }
 
         $ctcdivided = GeneralMethod::salaryDividedByMode(0, $convertedAmount);

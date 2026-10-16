@@ -722,18 +722,14 @@
           }
       }
 
-      // Salary under budget — comparison of already-loaded ES numeric fields.
-      $__hdrMaxSal = (float) (@$job->max_salary ?? 0);
-      $__hdrEctcY  = (float) (@$application->ectc_yearly ?? 0);
-      $__hdrUnderBudget = ($__hdrMaxSal > 0) && ($__hdrEctcY > 0) && ($__hdrEctcY <= $__hdrMaxSal);
+      // Salary under budget & currency conversion — centralized CurrencyService
+      $__budgetEval = \App\Services\CurrencyService::evaluateBudgetMatch(@$job, @$application);
+      $__hdrUnderBudget = $__budgetEval['under_budget'];
 
-      // Salary formatter (re-uses the exact helper the bottom strip already used further down).
-      $__hdrPay  = GeneralMethod::formatViewSalary(@$application->ctc_yearly,  $symbols, $jobMode);
-      $__hdrBill = GeneralMethod::formatViewSalary(@$application->ectc_yearly, $symbols, $jobMode);
-      $__hdrCur1 = html_entity_decode(strip_tags((string) @$current_ctc_cur),  ENT_QUOTES, 'UTF-8');
-      $__hdrCur2 = html_entity_decode(strip_tags((string) @$current_ectc_cur), ENT_QUOTES, 'UTF-8');
-      $__hdrCtcText  = trim($__hdrCur1 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__hdrPay->amount));
-      $__hdrEctcText = trim($__hdrCur2 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__hdrBill->amount));
+      // Dual-currency converted compensation (Candidate original preserved; converted to Job Currency)
+      $__candJobComp = \App\Services\CurrencyService::convertCandidateToJobCurrency(@$application, @$job);
+      $__hdrCtcText  = $__candJobComp['formatted_ctc'];
+      $__hdrEctcText = $__candJobComp['formatted_ectc'];
       if ($__hdrCtcText === '')  { $__hdrCtcText = '—'; }
       if ($__hdrEctcText === '') { $__hdrEctcText = '—'; }
 
@@ -1315,14 +1311,8 @@
         $rcvBLoc = trim(@$city_name, ', ');
         if($rcvBLoc === '') $rcvBLoc = trim(ucwords((string) @$country_name), ', ');
         if($rcvBLoc === '') $rcvBLoc = '--';
-        $__pay  = GeneralMethod::formatViewSalary(@$application->ctc_yearly, $symbols, $jobMode);
-        $__bill = GeneralMethod::formatViewSalary(@$application->ectc_yearly, $symbols, $jobMode);
-        $__cur1 = html_entity_decode(strip_tags((string) @$current_ctc_cur), ENT_QUOTES, 'UTF-8');
-        $__cur2 = html_entity_decode(strip_tags((string) @$current_ectc_cur), ENT_QUOTES, 'UTF-8');
-        $rcvBCctc = trim($__cur1 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__pay->amount));
-        $rcvBEctc = trim($__cur2 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__bill->amount));
-        if($rcvBCctc === '') $rcvBCctc = '--';
-        if($rcvBEctc === '') $rcvBEctc = '--';
+        $rcvBCctc = (!empty($__candJobComp['formatted_ctc']) && $__candJobComp['formatted_ctc'] !== '—') ? $__candJobComp['formatted_ctc'] : '--';
+        $rcvBEctc = (!empty($__candJobComp['formatted_ectc']) && $__candJobComp['formatted_ectc'] !== '—') ? $__candJobComp['formatted_ectc'] : '--';
         $rcvBPresented = ucwords((string) (auth()->user()->name ?? ''));
         if($rcvBPresented === '') $rcvBPresented = '--';
     @endphp

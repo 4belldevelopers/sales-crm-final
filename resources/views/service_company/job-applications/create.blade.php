@@ -20,7 +20,15 @@
 .job-candidate-create .candidate-salary-header-currency {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
+    margin-left: auto;
+}
+.job-candidate-create .candidate-salary-header-currency.candidate-salary-header-currency--locked {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+.job-candidate-create .candidate-salary-header-currency:not(.candidate-salary-header-currency--locked) {
     min-width: 290px;
     max-width: 380px;
 }
@@ -30,6 +38,73 @@
     font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
+}
+.job-candidate-create .candidate-currency-authoritative-badge {
+    display: inline-flex;
+    align-items: center;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-pill:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-sub {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-main {
+    font-size: 13px;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-main strong {
+    font-weight: 700;
+    color: #0f172a;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-symbol {
+    color: #334155;
+    font-weight: 600;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-sep {
+    color: #94a3b8;
+    font-size: 11px;
+}
+.job-candidate-create .candidate-currency-authoritative-badge .cur-lock-name {
+    color: #475569;
+    font-weight: 500;
 }
 .job-candidate-create .candidate-salary-header-currency .select2-container {
     flex: 1 1 auto;
@@ -2983,49 +3058,73 @@
                   <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
                   <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
                 </div>
-                <div class="candidate-salary-header-currency">
-                  <label for="current_ctc_cur">Currency</label>
-                  <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
-                    @php
-                        $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
-                        if (empty($companyId) && isset($jobDetail) && !empty($jobDetail->company_id)) {
-                            $companyId = $jobDetail->company_id;
-                        }
-                        $tenantDefaultCode = $tenant_currency ?? \App\Helper\GeneralMethod::defaultCurrency($companyId);
-                        $tenantDefaultKey  = $tenant_currency_key ?? \App\Helper\GeneralMethod::defaultCurrencyKey($companyId);
+                @php
+                    $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
+                    if (empty($companyId) && isset($jobDetail) && !empty($jobDetail->company_id)) {
+                        $companyId = $jobDetail->company_id;
+                    }
+                    $tenantDefaultCode = $tenant_currency ?? \App\Services\CurrencyService::getTenantCurrency($companyId);
+                    $tenantDefaultKey  = $tenant_currency_key ?? \App\Services\CurrencyService::getTenantCurrencyKey($companyId);
 
-                        // If editing an existing candidate with saved currency, honor it (RULE-TENANT-001).
-                        // Otherwise, default strictly to tenant's configured currency from settings page.
-                        $selectedCurKey = null;
-                        if (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
-                            $selectedCurKey = (int) $application->current_ctc_cur;
-                        } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
-                            $selectedCurKey = (int) $current_ctc_cur;
-                        } else {
-                            $selectedCurKey = (int) $tenantDefaultKey;
-                        }
+                    // Priority 1: Job Currency is the single authoritative source of truth whenever a job context exists
+                    $isJobSubmission = (isset($jobDetail) && !empty($jobDetail->id)) || (!empty($jobId));
+                    $jobCurrencyMeta = $isJobSubmission ? \App\Services\CurrencyService::getJobCurrencyMeta($jobDetail ?? $jobId) : null;
+                    $jobCurrencyKey  = $jobCurrencyMeta['key'] ?? null;
+                    $jobCurrencyCode = $jobCurrencyMeta['code'] ?? null;
 
-                        $currencyFlags = [
-                            'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
-                            'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'NZD' => '🇳🇿', 'ZAR' => '🇿🇦',
-                            'BRL' => '🇧🇷', 'PHP' => '🇵🇭', 'MYR' => '🇲🇾', 'THB' => '🇹🇭', 'IDR' => '🇮🇩', 'VND' => '🇻🇳',
-                            'SEK' => '🇸🇪', 'NOK' => '🇳🇴', 'DKK' => '🇩🇰', 'PLN' => '🇵🇱', 'MXN' => '🇲🇽', 'HKD' => '🇭🇰',
-                            'TWD' => '🇹🇼', 'KRW' => '🇰🇷', 'TRY' => '🇹🇷', 'SAR' => '🇸🇦', 'QAR' => '🇶🇦', 'KWD' => '🇰🇼',
-                            'BHD' => '🇧🇭', 'OMR' => '🇴🇲', 'EGP' => '🇪🇬', 'ILS' => '🇮🇱', 'CZK' => '🇨🇿', 'HUF' => '🇭🇺',
-                            'RON' => '🇷🇴', 'CLP' => '🇨🇱', 'COP' => '🇨🇴', 'ARS' => '🇦🇷', 'NGN' => '🇳🇬', 'KES' => '🇰🇪',
-                            'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵'
-                        ];
-                        foreach($currency as $key=>$val){
-                            $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
-                            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
-                            $entLabel = $cMeta['label'];
-                            $keywords = $cMeta['keywords'];
-                            $flag = $currencyFlags[$val] ?? '🌐';
+                    $selectedCurKey = null;
+                    if ($isJobSubmission && $jobCurrencyKey !== null) {
+                        $selectedCurKey = (int) $jobCurrencyKey;
+                    } elseif (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
+                        $selectedCurKey = (int) $application->current_ctc_cur;
+                    } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
+                        $selectedCurKey = (int) $current_ctc_cur;
+                    } else {
+                        $selectedCurKey = (int) $tenantDefaultKey;
+                    }
 
-                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
-                        }
-                    @endphp
-                  </select>
+                    $currencyFlags = \App\Services\CurrencyService::CURRENCY_FLAGS;
+                    $activeCurCode = $isJobSubmission && $jobCurrencyCode ? $jobCurrencyCode : ($currency[$selectedCurKey] ?? $tenantDefaultCode ?? 'INR');
+                @endphp
+                <div class="candidate-salary-header-currency {{ $isJobSubmission && $jobCurrencyCode ? 'candidate-salary-header-currency--locked' : '' }}">
+
+                    @if($isJobSubmission && $jobCurrencyCode)
+                      {{-- Authoritative Job Currency Display Component (Display: Job Currency: AED (د.إ) — UAE Dirham 🔒) --}}
+                      <div class="candidate-currency-authoritative-badge" title="Currency is governed by the linked Job ({{ $jobCurrencyCode }}) and cannot be altered for this requisition.">
+                        <div class="cur-lock-pill">
+                          <span class="cur-lock-icon"><i class="fa-solid fa-lock text-primary"></i></span>
+                          <div class="cur-lock-info">
+                            <span class="cur-lock-sub">Job Currency</span>
+                            <span class="cur-lock-main">
+                              <strong>{{ $jobCurrencyCode }}</strong>
+                              @if(!empty($jobCurrencyMeta['symbol']))
+                                <span class="cur-lock-symbol">({{ $jobCurrencyMeta['symbol'] }})</span>
+                              @endif
+                              @if(!empty($jobCurrencyMeta['name']) && $jobCurrencyMeta['name'] !== $jobCurrencyCode)
+                                <span class="cur-lock-sep">•</span>
+                                <span class="cur-lock-name">{{ $jobCurrencyMeta['name'] }}</span>
+                              @endif
+                            </span>
+                          </div>
+                        </div>
+                        <input type="hidden" name="current_ctc_cur" id="current_ctc_cur" value="{{ $jobCurrencyKey }}" data-code="{{ $jobCurrencyCode }}" data-symbol="{{ $jobCurrencyMeta['symbol'] ?? '$' }}">
+                      </div>
+                    @else
+                      <label for="current_ctc_cur">Currency</label>
+                      <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
+                        @php
+                            foreach($currency as $key=>$val){
+                                $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
+                                $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                $entLabel = $cMeta['label'];
+                                $keywords = $cMeta['keywords'];
+                                $flag = $currencyFlags[$val] ?? '🌐';
+
+                                echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
+                            }
+                        @endphp
+                      </select>
+                    @endif
                   <div class="d-none">
                     <select name="current_ectc_cur" id="current_ectc_cur">
                       @php
@@ -3088,13 +3187,13 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -3112,13 +3211,13 @@
                       <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
-                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">{{ $activeCurCode }}</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -7211,7 +7310,7 @@ var KTUPDATECandidate = {
         function numberToIndianWords(num, currCode) {
             num = Math.floor(Number(num));
             if (!num || isNaN(num) || num <= 0) return '';
-            var code = (currCode || $('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
+            var code = (currCode || $('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur').data('code') || $('#current_ctc_cur').attr('data-code') || 'INR').toString().toUpperCase();
 
             const ones = [
                 '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
@@ -7257,7 +7356,7 @@ var KTUPDATECandidate = {
             var ectcVal = parseFloat($("#ectc").val()) || 0;
             var billMonthly = parseFloat($("#bill_monthly").val()) || 0;
             var billAnnual = parseFloat($("#bill_annual").val()) || 0;
-            var code = ($('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
+            var code = ($('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur').data('code') || $('#current_ctc_cur').attr('data-code') || 'INR').toString().toUpperCase();
 
             if (payAnnual > 0) {
                 $(".payrateannual").text(numberToIndianWords(payAnnual, code));
@@ -8716,8 +8815,15 @@ $(document).ready(function() {
     }
 
     function getActiveCurrencyCode() {
-        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) return 'INR';
+        if (!salaryCurrencySelect) return 'INR';
+        if (salaryCurrencySelect.tagName === 'INPUT') {
+            return (salaryCurrencySelect.getAttribute('data-code') || salaryCurrencySelect.getAttribute('value') || 'INR').toUpperCase();
+        }
+        if (salaryCurrencySelect.selectedIndex < 0 || !salaryCurrencySelect.options) {
+            return (salaryCurrencySelect.getAttribute('data-code') || 'INR').toUpperCase();
+        }
         var opt = salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex];
+        if (!opt) return (salaryCurrencySelect.getAttribute('data-code') || 'INR').toUpperCase();
         var code = opt.getAttribute('data-code');
         if (!code) {
             code = opt.text.trim().split('—')[0].split('-')[0].replace(/[^\w]/g, '').trim();
@@ -9096,7 +9202,7 @@ $(document).ready(function() {
     if (salaryCurrencySelect) {
         salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
 
-        if (window.jQuery && $.fn.select2) {
+        if (salaryCurrencySelect.tagName === 'SELECT' && window.jQuery && $.fn.select2) {
             var $curSelect = $(salaryCurrencySelect);
             if ($curSelect.hasClass('select2-hidden-accessible')) {
                 $curSelect.select2('destroy');
@@ -9145,7 +9251,7 @@ $(document).ready(function() {
     $(document).on('click', '.candidate-salary-panel .changeTextCurrency, .candidate-salary-panel .ig-a', function () {
         if (window.jQuery && $.fn.select2 && $('#current_ctc_cur').hasClass('select2-hidden-accessible')) {
             $('#current_ctc_cur').select2('open');
-        } else if (salaryCurrencySelect) {
+        } else if (salaryCurrencySelect && salaryCurrencySelect.tagName === 'SELECT') {
             salaryCurrencySelect.focus();
         }
     });
