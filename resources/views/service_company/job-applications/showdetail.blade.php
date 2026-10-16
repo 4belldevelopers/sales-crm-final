@@ -8999,6 +8999,12 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   #kt_test_fwd_resume_drawer_clientapp {
     z-index: 1000050 !important;
   }
+  #kt_test_fwd_resume_drawer:not(.drawer-on),
+  #kt_test_fwd_resume_drawer_aptk:not(.drawer-on),
+  #kt_test_fwd_resume_drawer_clientapp:not(.drawer-on) {
+    display: none !important;
+    transform: translateX(100%) !important;
+  }
   /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
   #kt_activitiesApplication .cdr-topbar-group {
     scrollbar-width: none;
@@ -9178,22 +9184,29 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     });
   };
 
-  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close', function() {
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function() {
     if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
       window.ForwardResumeManager.close();
-    } else {
-      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                     document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                     document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    }
+    if (typeof window.closeTestFwdResumeDrawer === 'function') {
+      try { window.closeTestFwdResumeDrawer(); } catch (e) {}
+    }
+    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+    drawerIds.forEach(function(id) {
+      var drawerEl = document.getElementById(id);
       if (drawerEl) {
         drawerEl.classList.remove('drawer-on');
-        drawerEl.style.removeProperty('transform');
+        drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
+        drawerEl.style.setProperty('display', 'none', 'important');
+        drawerEl.style.removeProperty('z-index');
         if (typeof KTDrawer !== 'undefined') {
           var drawer = KTDrawer.getInstance(drawerEl);
-          if (drawer) drawer.hide();
+          if (drawer) {
+            try { drawer.hide(); } catch (e) {}
+          }
         }
       }
-    }
+    });
   });
 
   window.copyContactText = function(text, btnEl) {

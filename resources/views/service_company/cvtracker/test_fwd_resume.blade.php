@@ -1510,22 +1510,25 @@ window.closeTestFwdResumeDrawer = function() {
     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
         try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
     }
-    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.hide(); }
+    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+    drawerIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('drawer-on');
+            el.style.setProperty('transform', 'translateX(100%)', 'important');
+            el.style.setProperty('display', 'none', 'important');
+            el.style.removeProperty('z-index');
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(el);
+                if (drawer) {
+                    try { drawer.hide(); } catch(e) {}
+                }
+            }
+        }
+    });
+    if (typeof closeTestEmailRecipientDrawer === 'function') {
+        closeTestEmailRecipientDrawer();
     }
-    var drawerAptkEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
-    if (drawerAptkEl && typeof KTDrawer !== 'undefined') {
-        var drawerAptk = KTDrawer.getInstance(drawerAptkEl);
-        if (drawerAptk) { drawerAptk.hide(); }
-    }
-    var drawerClientAppEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-    if (drawerClientAppEl && typeof KTDrawer !== 'undefined') {
-        var drawerClientApp = KTDrawer.getInstance(drawerClientAppEl);
-        if (drawerClientApp) { drawerClientApp.hide(); }
-    }
-    closeTestEmailRecipientDrawer();
     $('#application_test_fwd_resume_body_content').html('');
 };
 

@@ -2541,17 +2541,26 @@
             var self = this;
             self._compileToken++;
             self._isCompiling = false;
-            var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                           document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                           document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-            if (drawerEl) {
-                drawerEl.classList.remove('drawer-on');
-                drawerEl.style.removeProperty('transform');
-                if (typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (drawer) drawer.hide();
+            var drawerIds = [
+                'kt_test_fwd_resume_drawer',
+                'kt_test_fwd_resume_drawer_aptk',
+                'kt_test_fwd_resume_drawer_clientapp'
+            ];
+            drawerIds.forEach(function (id) {
+                var drawerEl = document.getElementById(id);
+                if (drawerEl) {
+                    drawerEl.classList.remove('drawer-on');
+                    drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
+                    drawerEl.style.setProperty('display', 'none', 'important');
+                    drawerEl.style.removeProperty('z-index');
+                    if (typeof KTDrawer !== 'undefined') {
+                        var drawer = KTDrawer.getInstance(drawerEl);
+                        if (drawer) {
+                            try { drawer.hide(); } catch (e) {}
+                        }
+                    }
                 }
-            }
+            });
             if (typeof self.closeFormatDropdown === 'function') {
                 self.closeFormatDropdown();
             }
