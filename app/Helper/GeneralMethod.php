@@ -4206,6 +4206,7 @@ END:VCALENDAR";
     public static function canGgdFilterData($CandId)
     {
         $cacheKey = "ats:bench_filter_data:{$CandId}";
+
         return cache()->remember($cacheKey, 300, function () use ($CandId) {
             $company_id = auth()->user()->company_id ?? 0;
             $candidateDetaiks = JobApplication::withoutGlobalScopes()->findOrFail($CandId);
@@ -12999,8 +13000,6 @@ END:VCALENDAR";
      * Used by Similar Candidates recommendation logic to exclude candidates across all duplicate/variant profiles.
      * Tenancy Note: Tenant-scoped through getJobAssignedCandidateIds() ($companyId).
      *
-     * @param  int  $jobId
-     * @param  int|null  $companyId
      * @param  int[]  $candidateIds  Optional precomputed candidate IDs
      * @return string[]
      */
@@ -16366,9 +16365,6 @@ END:VCALENDAR";
     /**
      * RFC 9110 compliant entity-tag normalization.
      * Safely strips W/ weak prefix and surrounding quotes without character-mask trimming.
-     *
-     * @param string|null $tag
-     * @return string
      */
     public static function normalizeEntityTag(?string $tag): string
     {
@@ -16393,10 +16389,6 @@ END:VCALENDAR";
     /**
      * RFC 9110 weak comparison for If-None-Match header against server ETag.
      * Supports comma-delimited lists of ETags and wildcard '*'.
-     *
-     * @param string|null $ifNoneMatch
-     * @param string|null $serverEtag
-     * @return bool
      */
     public static function matchesIfNoneMatch(?string $ifNoneMatch, ?string $serverEtag): bool
     {
@@ -16429,8 +16421,7 @@ END:VCALENDAR";
      * Collision-resistant canonical SHA-256 hash generator for payloads.
      * Recursively sorts keys and serializes to JSON before hashing.
      *
-     * @param mixed $payload
-     * @return string
+     * @param  mixed  $payload
      */
     public static function canonicalHash($payload): string
     {
@@ -16440,13 +16431,184 @@ END:VCALENDAR";
                 foreach ($data as $k => $v) {
                     $data[$k] = $normalize($v);
                 }
+
                 return $data;
             }
+
             return $data;
         };
 
         $normalized = $normalize($payload);
+
         return hash('sha256', json_encode($normalized, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
-}
 
+    /**
+     * Standardized phone number formatter with country flag and calling code.
+     * Formats contact person phone numbers across Client Details drawers and tables.
+     *
+     * @param  string|null  $callingCode  ISO country code ('in', 'US') or dial code ('+91', '1')
+     * @param  string|null  $phoneNumber  Raw phone number
+     * @return string Safe HTML rendering flag, dial code, and clean phone number
+     */
+    public static function formatContactPhoneHtml(?string $callingCode, ?string $phoneNumber): string
+    {
+        $rawPhone = trim((string) ($phoneNumber ?: ''));
+        if ($rawPhone === '') {
+            return '<span class="text-muted" style="color:#94a3b8;">—</span>';
+        }
+
+        static $isoToDial = [
+            'IN' => '+91', 'US' => '+1', 'GB' => '+44', 'AE' => '+971', 'CA' => '+1',
+            'AU' => '+61', 'SG' => '+65', 'SA' => '+966', 'DE' => '+49', 'FR' => '+33',
+            'QA' => '+974', 'KW' => '+965', 'OM' => '+968', 'BH' => '+973', 'MY' => '+60',
+            'PH' => '+63', 'ID' => '+62', 'NZ' => '+64', 'ZA' => '+27', 'IE' => '+353',
+            'NL' => '+31', 'SE' => '+46', 'CH' => '+41', 'ES' => '+34', 'IT' => '+39',
+            'BR' => '+55', 'MX' => '+52', 'JP' => '+81', 'KR' => '+82', 'PK' => '+92',
+            'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
+            'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
+            'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972',
+            'RU' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98',
+        ];
+
+        static $dialToIso = [
+            '+91' => 'IN', '+1' => 'US', '+44' => 'GB', '+971' => 'AE',
+            '+61' => 'AU', '+65' => 'SG', '+966' => 'SA', '+49' => 'DE',
+            '+33' => 'FR', '+974' => 'QA', '+965' => 'KW', '+968' => 'OM',
+            '+973' => 'BH', '+60' => 'MY', '+63' => 'PH', '+62' => 'ID',
+            '+64' => 'NZ', '+27' => 'ZA', '+353' => 'IE', '+31' => 'NL',
+            '+46' => 'SE', '+41' => 'CH', '+34' => 'ES', '+39' => 'IT',
+            '+55' => 'BR', '+52' => 'MX', '+81' => 'JP', '+82' => 'KR',
+            '+92' => 'PK', '+880' => 'BD', '+94' => 'LK', '+977' => 'NP',
+            '+234' => 'NG', '+254' => 'KE', '+20' => 'EG', '+90' => 'TR',
+            '+48' => 'PL', '+40' => 'RO', '+380' => 'UA', '+84' => 'VN',
+            '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL',
+            '+7' => 'RU', '+960' => 'MV', '+967' => 'YE', '+963' => 'SY', '+98' => 'IR',
+        ];
+
+        static $svgFlags = [
+            'IN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+            'US' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+            'GB' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="js_gb_ph"><rect width="640" height="480"/></clipPath><g clip-path="url(#js_gb_ph)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+            'AE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+            'CA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+            'AU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+            'SG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+            'SA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+            'DE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+            'FR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>',
+            'JP' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><circle cx="320" cy="240" r="120" fill="#bc002d"/></svg>',
+            'IT' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#009246"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ce2b37"/></svg>',
+            'ES' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="120" fill="#aa151b"/><rect y="120" width="640" height="240" fill="#f1bf00"/><rect y="360" width="640" height="120" fill="#aa151b"/></svg>',
+            'NL' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ae1c28"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#21468b"/></svg>',
+            'CH' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#d52b1e"/><rect x="270" y="100" width="100" height="280" fill="#ffffff"/><rect x="180" y="190" width="280" height="100" fill="#ffffff"/></svg>',
+        ];
+
+        $cleanCalling = trim((string) ($callingCode ?: ''));
+        $iso = null;
+        $dial = null;
+
+        if ($cleanCalling !== '') {
+            $upper = strtoupper($cleanCalling);
+            if (isset($isoToDial[$upper])) {
+                $iso = $upper;
+                $dial = $isoToDial[$upper];
+            } else {
+                $candidate = str_starts_with($cleanCalling, '+') ? $cleanCalling : ('+'.$cleanCalling);
+                if (isset($dialToIso[$candidate])) {
+                    $dial = $candidate;
+                    $iso = $dialToIso[$candidate];
+                }
+            }
+        }
+
+        // If calling code is absent, detect embedded international prefix from phone number
+        if ($dial === null && str_starts_with($rawPhone, '+')) {
+            static $sortedDials = null;
+            if ($sortedDials === null) {
+                $sortedDials = array_keys($dialToIso);
+                usort($sortedDials, fn ($a, $b) => strlen($b) <=> strlen($a));
+            }
+            foreach ($sortedDials as $testDial) {
+                if (str_starts_with($rawPhone, $testDial)) {
+                    $dial = $testDial;
+                    $iso = $dialToIso[$testDial] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $cleanPhone = $rawPhone;
+        if ($dial !== null) {
+            // Strip leading dial code from phone number to prevent duplicate display
+            if (str_starts_with($cleanPhone, $dial)) {
+                $cleanPhone = trim(substr($cleanPhone, strlen($dial)));
+            } elseif (str_starts_with($cleanPhone, '+'.ltrim($dial, '+'))) {
+                $cleanPhone = trim(substr($cleanPhone, strlen('+'.ltrim($dial, '+'))));
+            } elseif (str_starts_with($cleanPhone, ltrim($dial, '+')) && strlen(substr($cleanPhone, strlen(ltrim($dial, '+')))) >= 7) {
+                $cleanPhone = trim(substr($cleanPhone, strlen(ltrim($dial, '+'))));
+            }
+        }
+
+        // Graceful fallback for missing country metadata: display clean number without fake flag
+        if ($dial === null && $iso === null) {
+            return '<div class="phone-cell d-inline-flex align-items-center text-nowrap" style="gap:6px;">'
+                .'<i class="fas fa-phone-alt" style="font-size:11px; color:#94a3b8;" title="Phone"></i>'
+                .'<span class="phone-digits" style="color:#334155; font-size:13px; font-weight:500;">'.htmlspecialchars($cleanPhone).'</span>'
+                .'</div>';
+        }
+
+        $flagSvg = $iso && isset($svgFlags[$iso])
+            ? $svgFlags[$iso]
+            : ($iso
+                ? ('<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#1e3c72" rx="60"/><text x="320" y="320" fill="#ffffff" font-size="240" font-family=\'Poppins\', sans-serif font-weight="700" text-anchor="middle">'.htmlspecialchars($iso).'</text></svg>')
+                : '<i class="fas fa-globe text-muted" style="font-size:12px;"></i>');
+
+        return '<div class="phone-cell d-inline-flex align-items-center text-nowrap" style="gap:6px;">'
+            .'<span class="phone-flag-box d-inline-flex align-items-center flex-shrink-0" style="width:20px; height:15px; border-radius:2px; overflow:hidden; box-shadow:0 0 0 1px rgba(0,0,0,0.08);">'.$flagSvg.'</span>'
+            .'<span class="phone-dial-code" style="font-weight:600; color:#1e293b; font-size:13px;">'.htmlspecialchars($dial ?: '').'</span>'
+            .'<span class="phone-digits" style="color:#334155; font-size:13px; font-weight:500;">'.htmlspecialchars($cleanPhone).'</span>'
+            .'</div>';
+    }
+
+    /**
+     * Standardized international telephone URI generator for tel: links.
+     *
+     * @return string E.164 compliant phone string or digits
+     */
+    public static function formatContactPhoneForTel(?string $callingCode, ?string $phoneNumber): string
+    {
+        $rawPhone = trim((string) ($phoneNumber ?: ''));
+        if ($rawPhone === '') {
+            return '';
+        }
+
+        static $isoToDial = [
+            'IN' => '+91', 'US' => '+1', 'GB' => '+44', 'AE' => '+971', 'CA' => '+1',
+            'AU' => '+61', 'SG' => '+65', 'SA' => '+966', 'DE' => '+49', 'FR' => '+33',
+        ];
+
+        $cleanCalling = trim((string) ($callingCode ?: ''));
+        $dial = '';
+        if ($cleanCalling !== '') {
+            $upper = strtoupper($cleanCalling);
+            if (isset($isoToDial[$upper])) {
+                $dial = $isoToDial[$upper];
+            } else {
+                $dial = str_starts_with($cleanCalling, '+') ? $cleanCalling : ('+'.$cleanCalling);
+            }
+        }
+
+        $cleanDigits = preg_replace('/[^\d]/', '', $rawPhone);
+        if ($dial !== '') {
+            $cleanDialDigits = ltrim($dial, '+');
+            if (str_starts_with($cleanDigits, $cleanDialDigits)) {
+                $cleanDigits = substr($cleanDigits, strlen($cleanDialDigits));
+            }
+
+            return '+'.$cleanDialDigits.$cleanDigits;
+        }
+
+        return str_starts_with($rawPhone, '+') ? ('+'.$cleanDigits) : $cleanDigits;
+    }
+}

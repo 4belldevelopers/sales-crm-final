@@ -1295,21 +1295,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $startTime = microtime(true);
         abort_if(Gate::denies('view_clients'), 403);
 
+        $userId = auth()->id() ?? ($this->user->id ?? 0);
         $cachePayload = [
             'client_id' => $id,
-            'user_id' => $this->user->id,
+            'user_id' => $userId,
         ];
 
-        $versionKey = 'clientsviewmore_version_user_'.$this->user->id;
+        $versionKey = 'clientsviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsviewmore:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             \Log::info('CLIENT_DETAILS_APM: viewMore cache hit', [
                 'client_id' => $id,
-                'user_id' => $this->user->id,
+                'user_id' => $userId,
                 'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
             ]);
 
@@ -1430,7 +1431,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         \Log::info('CLIENT_DETAILS_APM: viewMore shell load completed', [
             'client_id' => $id,
-            'user_id' => $this->user->id,
+            'user_id' => $userId,
             'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
         ]);
 
@@ -2042,19 +2043,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 return '<span class="email-cell">'.@$row->contact_person_email.'</span>';
             })
             ->editColumn('Phone', function ($row) {
-                return '<div class="phone-cell">
-							<div class="iti__flag-container" data-code="'.$row->calling_code.'" data-row="'.$row->id.'" id="phoneDisplay_'.$row->id.'" style="display:flex;position:relative;"></div>
-							<span class="phone-digits">'.@$row->contact_person_number.'</span>
-						</div>';
+                return GeneralMethod::formatContactPhoneHtml($row->calling_code, $row->contact_person_number);
             })
             ->editColumn('Status', function ($row) {
                 return '<span class="status-badge-table active"><i class="fas fa-circle"></i>Active</span>';
             })
             ->editColumn('Actions', function ($row) {
-                $call = $row->calling_code.' '.$row->contact_person_number;
+                $call = GeneralMethod::formatContactPhoneForTel($row->calling_code, $row->contact_person_number);
 
                 return '<div class="action-btns">
-							<a href="tel:'.trim($call).'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
+							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
 							<a href="mailto:'.$row->contact_person_email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
             })
@@ -2076,14 +2074,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_clients'), 403);
         $company_id = auth()->user()->company_id;
 
+        $userId = auth()->id() ?? ($this->user->id ?? 0);
         $cachePayload = [
             'client_id' => $id,
-            'user_id' => $this->user->id,
+            'user_id' => $userId,
         ];
 
-        $versionKey = 'clientsdviewmore_version_user_'.$this->user->id;
+        $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v4:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v4:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -2460,10 +2459,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 return '<span class="email-cell">'.@$row->email.'</span>';
             })
             ->editColumn('Phone', function ($row) {
-                return '<div class="phone-cell">
-							<div class="iti__flag-container" data-code="'.$row->calling_code.'" data-row="'.$row->userId.'" id="phoneDisplay_'.$row->userId.'" style="display:flex;position:relative;"></div>
-							<span class="phone-digits">'.@$row->mobile.'</span>
-						</div>';
+                return GeneralMethod::formatContactPhoneHtml($row->calling_code, $row->mobile);
             })
             ->editColumn('Status', function ($row) {
                 $cls = ($row->status == 'active') ? 'active' : 'inactive';
@@ -2471,10 +2467,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 return '<span class="status-badge-table '.$cls.'"><i class="fas fa-circle"></i>'.ucwords($row->status).'</span>';
             })
             ->editColumn('Actions', function ($row) {
-                $call = $row->calling_code.' '.$row->mobile;
+                $call = GeneralMethod::formatContactPhoneForTel($row->calling_code, $row->mobile);
 
                 return '<div class="action-btns">
-							<a href="tel:'.trim($call).'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
+							<a href="tel:'.$call.'" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
 							<a href="mailto:'.$row->email.'" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
 						</div>';
             })
