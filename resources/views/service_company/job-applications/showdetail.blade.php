@@ -733,6 +733,139 @@
   word-break: break-word;
   font-family: 'Poppins', sans-serif;
 }
+
+/* ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== */
+#kt_activitiesApplication .own-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+  padding: 20px 22px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 16px;
+}
+#kt_activitiesApplication .own-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#kt_activitiesApplication .own-hdr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #F5F3FF;
+  color: #7C3AED;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-hdr-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+}
+#kt_activitiesApplication .own-items-list {
+  display: flex;
+  flex-direction: column;
+}
+#kt_activitiesApplication .own-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+#kt_activitiesApplication .own-item-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+#kt_activitiesApplication .own-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-row-icon svg {
+  width: 19px;
+  height: 19px;
+}
+#kt_activitiesApplication .own-icon-blue {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+#kt_activitiesApplication .own-icon-green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+#kt_activitiesApplication .own-icon-amber {
+  background: #FEF3C7;
+  color: #D97706;
+}
+#kt_activitiesApplication .own-icon-purple {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+#kt_activitiesApplication .own-item-body {
+  flex: 1;
+  min-width: 0;
+}
+#kt_activitiesApplication .own-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+  margin-bottom: 3px;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+}
+#kt_activitiesApplication .own-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.3;
+  word-break: break-word;
+}
+#kt_activitiesApplication .own-datetime-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #F4F8FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-top: 4px;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+#kt_activitiesApplication .own-dt-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesApplication .own-dt-item svg {
+  color: #64748B;
+  flex-shrink: 0;
+}
+#kt_activitiesApplication .own-dt-sep {
+  color: #CBD5E1;
+  font-weight: 400;
+  font-size: 13px;
+  user-select: none;
+}
 </style>
 
 <script>
@@ -3657,89 +3790,132 @@
             @endif
           </section>
 
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <!-- ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== -->
+          @php
+              $hiringHrName = '';
+              if(@$clientjobAssignListCaptain){
+                  $hiringHrName = ucwords(strtolower(@$clientjobAssignListCaptain));
+              } else if(!empty($client_contuser_arr)){
+                  $names = [];
+                  foreach($client_contuser_arr as $cpn){
+                      $cpn = (object) $cpn;
+                      if(!empty($cpn->contact_person_name)){
+                          $names[] = ucwords(strtolower($cpn->contact_person_name));
+                      }
+                  }
+                  $hiringHrName = implode(', ', $names);
+              }
+
+              $targetJobId = $jobId ?? @$application->job_id ?? @$application->jobId ?? 0;
+              $hdrCompanyOrClient = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : '';
+              if (empty($hdrCompanyOrClient)) {
+                  $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
+                  $hdrCompanyOrClient = @$companies->company_name ?? '';
+              }
+
+              $originalDate = @$application->created_at;
+              $ownerDate    = !empty($originalDate) ? date("d-M-Y", strtotime($originalDate)) : '—';
+              $ownerTime    = !empty($originalDate) ? date("h:i A", strtotime($originalDate)) : '—';
+          @endphp
+
+          <section class="cardshow own-card">
+            <div class="own-header">
+              <div class="own-hdr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
-              <h3 class="card-title">Ownership</h3>
+              <h3 class="own-hdr-title">Ownership</h3>
             </div>
-            <div class="ownership-list">
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+            <div class="own-items-list">
+              {{-- 1. Hiring HR --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-blue" title="Hiring HR">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  Hiring HR
-                </span>
-                <span class="own-value">
-                  @php
-                      if(@$clientjobAssignListCaptain){
-                          echo ucwords(strtolower(@$clientjobAssignListCaptain));
-                      }else{
-                        if(!empty($client_contuser_arr)){
-
-                          foreach($client_contuser_arr as $key=> $cpn){
-                            $cpn = (object) $cpn;
-                            if($key==0){
-                                echo ucwords(strtolower(@$cpn->contact_person_name)) .'';
-                            }else{
-                                echo ', '.ucwords(strtolower(@$cpn->contact_person_name));
-                            }
-
-                          }
-                        }
-                      }
-                  @endphp
-                </span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Hiring HR</div>
+                  <div class="own-value">{{ !empty($hiringHrName) ? $hiringHrName : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+              {{-- 2. Recruiter Name --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-green" title="Recruiter Name">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
                   </svg>
-                  Recruiter Name
-                </span>
-                <span class="own-value">{{ ucwords(@$posted_by) }}</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Recruiter Name</div>
+                  <div class="own-value">{{ !empty(@$posted_by) ? ucwords(@$posted_by) : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+
+              {{-- 3. Company Name --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-amber" title="Company Name">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <path d="M9 22v-4h6v4"></path>
+                    <path d="M8 6h.01"></path><path d="M16 6h.01"></path>
+                    <path d="M8 10h.01"></path><path d="M16 10h.01"></path>
+                    <path d="M8 14h.01"></path><path d="M16 14h.01"></path>
                   </svg>
-                  Company Name 
-                </span>
-                @php
-                $targetJobId = $jobId ?? @$application->job_id ?? @$application->jobId ?? 0;
-                $hdrCompanyOrClient = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : '';
-                if (empty($hdrCompanyOrClient)) {
-                    $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
-                    $hdrCompanyOrClient = @$companies->company_name ?? '';
-                }
-                @endphp
-                <span class="own-value">{{ ucwords(@$hdrCompanyOrClient) }}</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Company Name</div>
+                  <div class="own-value">{{ !empty($hdrCompanyOrClient) ? ucwords(@$hdrCompanyOrClient) : '—' }}</div>
+                </div>
               </div>
-              <div class="ownership-row">
-                <span class="own-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+              {{-- 4. Upload Date & Time --}}
+              <div class="own-item-row">
+                <div class="own-row-icon own-icon-purple" title="Upload Date & Time">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                   </svg>
-                  Upload Date &amp; Time
-                </span>
-                  @php
-                      $originalDate    = @$application->created_at;
-                      $ownerDate       = date("d-M-Y", strtotime($originalDate));
-                      $ownerTime       = date("h:i A", strtotime($originalDate));
-                  @endphp
-                <span class="own-value">{{ @$ownerDate }} <span class="meta-sep">|</span> {{ @$ownerTime }} <span class="meta-sep">|</span> IST</span>
+                </div>
+                <div class="own-item-body">
+                  <div class="own-label">Upload Date &amp; Time</div>
+                  <div class="own-datetime-pill">
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      {{ @$ownerDate }}
+                    </span>
+                    <span class="own-dt-sep">|</span>
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      {{ @$ownerTime }}
+                    </span>
+                    <span class="own-dt-sep">|</span>
+                    <span class="own-dt-item">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                      IST
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
