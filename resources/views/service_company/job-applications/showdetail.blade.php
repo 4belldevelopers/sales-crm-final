@@ -517,16 +517,17 @@
 #kt_activitiesApplication .cdr-skill-plain{background:#f8fafc;color:#64748b;border-color:#e2e8f0;}
 /* "+N More" counter tag */
 #kt_activitiesApplication .cdr-skill-tag.cdr-skill-more{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;font-size:10.5px;}
-/* Recruiter Notes & Reason for Job Change drawers */
-#jw-recruiter-note-drawer .rn-section, #jw-reason-drawer .rn-section{margin-bottom:16px;}
-#jw-recruiter-note-drawer .rn-label, #jw-reason-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
-#jw-recruiter-note-drawer .rn-label span, #jw-reason-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
-#jw-recruiter-note-drawer .rn-select, #jw-reason-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
+/* Recruiter Notes, Reason for Job Change & Visa drawers */
+#jw-recruiter-note-drawer .rn-section, #jw-reason-drawer .rn-section, #jw-visa-drawer .rn-section{margin-bottom:16px;}
+#jw-recruiter-note-drawer .rn-label, #jw-reason-drawer .rn-label, #jw-visa-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+#jw-recruiter-note-drawer .rn-label span, #jw-reason-drawer .rn-label span, #jw-visa-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
+#jw-recruiter-note-drawer .rn-select, #jw-reason-drawer .rn-select, #jw-visa-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
 #jw-recruiter-note-drawer .rn-editor{min-height:220px;max-height:400px;border:1.5px solid #e4e6ef;border-radius:8px;padding:12px 14px;font-size:12px;font-family:'Poppins',sans-serif;line-height:1.75;color:#181c32;background:#f8f9fb;outline:none;overflow-y:auto;word-break:break-word;}
 #jw-recruiter-note-drawer .rn-editor:focus{border-color:#3e97ff;background:#fff;}
 #jw-recruiter-note-drawer .rn-editor:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
 #jw-reason-drawer #jw_reason_for_change_editor{font-family:'Poppins',sans-serif;font-size:12px;color:#181c32;border:1.5px solid #e4e6ef;border-radius:8px;padding:10px 12px;line-height:1.6;background:#f8f9fb;}
 #jw-reason-drawer #jw_reason_for_change_editor:focus{border-color:#d97706;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(217,119,6,0.1);}
+#jw-visa-drawer .visa-chip-btn.active{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important;}
 /* Interview Slots empty state */
 #kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
 #kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
@@ -4324,6 +4325,72 @@
               </a>
             @endif
           </section>
+
+          <!-- ===== VISA STATUS & WORK AUTHORIZATION CARD (Rule 14, Rule 17) ===== -->
+          @php
+            $rawVisa = trim((string) @$application->visastatu);
+            $visaMeta = \App\Services\VisaResolutionService::resolve($rawVisa);
+          @endphp
+          <section class="cardshow" id="visa_status_card" style="margin-bottom:16px;">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="3"/>
+                  <circle cx="9" cy="10" r="2"/>
+                  <line x1="15" y1="8" x2="17" y2="8"/>
+                  <line x1="15" y1="12" x2="17" y2="12"/>
+                  <line x1="7" y1="16" x2="17" y2="16"/>
+                </svg>
+              </div>
+              <h3 class="card-title">Visa Status &amp; Work Authorization</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editVisaStatus" id="btn_edit_visa_status" title="Edit Visa Status & Work Authorization">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
+            </div>
+
+            <div id="visa_card_populated" class="{{ $visaMeta['has_visa'] ? '' : 'd-none' }}" style="margin-top: 10px;">
+              <div class="comp-list" style="display:flex; flex-direction:column; gap:8px;">
+                {{-- Work Authorization / Status --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa / Work Status</span>
+                  <span class="badge fw-bold" id="visa_display_badge" style="{{ $visaMeta['badge_style'] }} font-size:11.5px; padding:4px 9px; border-radius:6px;">
+                    {{ $visaMeta['name'] }}
+                  </span>
+                </div>
+
+                {{-- Visa Country --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa Country</span>
+                  <span class="comp-value fw-semibold" id="visa_display_country" style="font-size:12px; color:#1e293b;">
+                    {{ $visaMeta['country_display'] }}
+                  </span>
+                </div>
+
+                {{-- Visa Type / Category --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa Type</span>
+                  <span class="comp-value" id="visa_display_type" style="font-size:12px; color:#334155; max-width:65%; text-align:right;">
+                    {{ $visaMeta['type'] }}
+                  </span>
+                </div>
+
+                {{-- Work Authorization Eligibility --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Work Authorization</span>
+                  <span class="comp-value fw-medium" id="visa_display_eligibility" style="font-size:12px; color:#0f766e;">
+                    <i class="fa-solid fa-shield-check me-1" style="color:#0d9488; font-size:11px;"></i>{{ $visaMeta['eligibility'] }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p class="po-no-notes text-muted {{ $visaMeta['has_visa'] ? 'd-none' : '' }}" id="visa_empty_display" style="font-size:12px; font-style:italic; color:#94a3b8; margin:8px 0 0;">
+              No visa or work authorization details recorded yet.
+            </p>
+          </section>
           @else
             <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
             <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
@@ -4370,10 +4437,6 @@
                 <div class="comp-row">
                   <span class="comp-label">Joining Date</span>
                   <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Visa Status</span>
-                  <span class="comp-value">{{@$application->visastatu}}</span>
                 </div>
                 <div class="comp-row">
                   <span class="comp-label">Reference Name</span>
@@ -5023,6 +5086,160 @@
           </div>
         </div>
       </div>{{-- /#jw-reason-drawer --}}
+
+      {{-- DRAWER 6: Visa Status & Work Authorization --}}
+      <div class="jw-side-drawer" id="jw-visa-drawer">
+        <div class="jw-drawer-backdrop editVisaCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#eff6ff;color:#2563eb;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="3"/>
+                <circle cx="9" cy="10" r="2"/>
+                <line x1="15" y1="8" x2="17" y2="8"/>
+                <line x1="15" y1="12" x2="17" y2="12"/>
+                <line x1="7" y1="16" x2="17" y2="16"/>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Visa Status &amp; Work Authorization</div>
+              <div class="jw-drawer-subtitle">Update legal right-to-work status and visa categorization</div>
+            </div>
+            <button type="button" class="jw-drawer-close editVisaCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body visa-drawer-body d-none">
+            <input type="hidden" id="visa_app_id" value="{{ @$application->id }}">
+
+            {{-- Quick Filter Chips --}}
+            <div class="rn-section" style="margin-bottom:14px;">
+              <label class="rn-label mb-2">
+                <i class="fa-solid fa-bolt text-warning me-1"></i> Quick Filter Region
+              </label>
+              <div class="d-flex flex-wrap gap-1" id="visa_region_chips">
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn active" data-region="all" style="font-size:11px; font-weight:600; border-radius:6px;">🌐 All</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United States" style="font-size:11px; font-weight:600; border-radius:6px;">🇺🇸 US</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Canada" style="font-size:11px; font-weight:600; border-radius:6px;">🇨🇦 Canada</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="India" style="font-size:11px; font-weight:600; border-radius:6px;">🇮🇳 India</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United Kingdom" style="font-size:11px; font-weight:600; border-radius:6px;">🇬🇧 UK</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United Arab Emirates" style="font-size:11px; font-weight:600; border-radius:6px;">🇦🇪 UAE</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Singapore" style="font-size:11px; font-weight:600; border-radius:6px;">🇸🇬 SG</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Australia" style="font-size:11px; font-weight:600; border-radius:6px;">🇦🇺 AU</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="European Union" style="font-size:11px; font-weight:600; border-radius:6px;">🇪🇺 EU</button>
+              </div>
+            </div>
+
+            {{-- Work Authorization Select --}}
+            <div class="rn-section" style="margin-bottom:16px;">
+              <label class="rn-label" for="visa_select_drawer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Select Work Authorization / Visa
+              </label>
+              <select class="rn-select" id="visa_select_drawer" style="width:100%; border-radius:8px; border:1.5px solid #e4e6ef; font-size:12px; color:#181c32; padding:8px 10px; background:#f8f9fb;">
+                <option value="">-- None / Clear Visa Status --</option>
+                <optgroup label="United States (US)" data-region="United States">
+                  <option value="US Citizen" {{ in_array($rawVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']) ? 'selected' : '' }}>US Citizen (USC)</option>
+                  <option value="Green Card" {{ in_array($rawVisa, ['Green Card', 'Permanent Resident (Green Card)']) ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                  <option value="GC-EAD" {{ in_array($rawVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']) ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                  <option value="H1B" {{ in_array($rawVisa, ['H1B', 'H-1B', 'H1-B']) ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                  <option value="H-4 EAD" {{ in_array($rawVisa, ['H-4 EAD', 'H4-EAD', 'H4 EAD']) ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                  <option value="L-2 EAD" {{ in_array($rawVisa, ['L-2 EAD', 'L2-EAD', 'L2 EAD']) ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                  <option value="TN Permit" {{ in_array($rawVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']) ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                  <option value="OPT-EAD" {{ in_array($rawVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']) ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                  <option value="CPT" {{ $rawVisa === 'CPT' ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                  <option value="E-3" {{ in_array($rawVisa, ['E-3', 'E3']) ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                  <option value="O-1" {{ in_array($rawVisa, ['O-1', 'O1']) ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                  <option value="L1" {{ in_array($rawVisa, ['L1', 'L-1']) ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                  <option value="Other US EAD" {{ in_array($rawVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']) ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                </optgroup>
+                <optgroup label="Canada (CA)" data-region="Canada">
+                  <option value="Canadian Citizen" {{ $rawVisa === 'Canadian Citizen' ? 'selected' : '' }}>Canadian Citizen</option>
+                  <option value="Canada PR" {{ in_array($rawVisa, ['Canada PR', 'Canadian Permanent Resident']) ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                  <option value="Canada Open Work Permit" {{ in_array($rawVisa, ['Canada Open Work Permit', 'PGWP']) ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                  <option value="Canada Closed Work Permit" {{ in_array($rawVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']) ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                </optgroup>
+                <optgroup label="India (IN)" data-region="India">
+                  <option value="Indian Citizen" {{ $rawVisa === 'Indian Citizen' ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                  <option value="OCI / PIO" {{ in_array($rawVisa, ['OCI / PIO', 'OCI', 'PIO']) ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                  <option value="India Work Visa" {{ in_array($rawVisa, ['India Work Visa', 'Employment Visa (India)']) ? 'selected' : '' }}>India Employment Visa</option>
+                </optgroup>
+                <optgroup label="United Kingdom (UK)" data-region="United Kingdom">
+                  <option value="UK Citizen" {{ in_array($rawVisa, ['UK Citizen', 'British Citizen']) ? 'selected' : '' }}>British Citizen</option>
+                  <option value="UK ILR" {{ in_array($rawVisa, ['UK ILR', 'Indefinite Leave to Remain']) ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                  <option value="UK Skilled Worker" {{ in_array($rawVisa, ['UK Skilled Worker', 'Tier 2']) ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                  <option value="UK Graduate Visa" {{ $rawVisa === 'UK Graduate Visa' ? 'selected' : '' }}>UK Graduate Visa</option>
+                </optgroup>
+                <optgroup label="United Arab Emirates (Dubai / UAE)" data-region="United Arab Emirates">
+                  <option value="UAE Golden Visa" {{ in_array($rawVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']) ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                  <option value="UAE Green Visa" {{ in_array($rawVisa, ['UAE Green Visa', 'Green Visa']) ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                  <option value="UAE Employment Visa" {{ in_array($rawVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']) ? 'selected' : '' }}>UAE Employment Residence Visa</option>
+                  <option value="UAE Freelance Visa" {{ in_array($rawVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']) ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                  <option value="UAE National" {{ in_array($rawVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']) ? 'selected' : '' }}>UAE / GCC National</option>
+                  <option value="GCC Iqama" {{ in_array($rawVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']) ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                </optgroup>
+                <optgroup label="Singapore (SG)" data-region="Singapore">
+                  <option value="Singapore Citizen" {{ $rawVisa === 'Singapore Citizen' ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                  <option value="Singapore PR" {{ in_array($rawVisa, ['Singapore PR', 'Singapore Permanent Resident']) ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                  <option value="Singapore EP" {{ in_array($rawVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']) ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                  <option value="Singapore S Pass" {{ in_array($rawVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']) ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                  <option value="Singapore ONE Pass" {{ in_array($rawVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']) ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                  <option value="Singapore LOC / DP" {{ in_array($rawVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']) ? 'selected' : '' }}>Singapore LOC / Dependant Pass</option>
+                </optgroup>
+                <optgroup label="Australia & New Zealand" data-region="Australia">
+                  <option value="Australia Citizen / PR" {{ in_array($rawVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']) ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                  <option value="Australia TSS 482" {{ in_array($rawVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']) ? 'selected' : '' }}>Australia TSS Visa (Subclass 482)</option>
+                  <option value="Australia Skilled 189/190" {{ in_array($rawVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']) ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189/190)</option>
+                  <option value="Australia Graduate 485" {{ in_array($rawVisa, ['Australia Graduate 485', 'Subclass 485']) ? 'selected' : '' }}>Australia Graduate Visa (Subclass 485)</option>
+                  <option value="New Zealand Citizen / PR" {{ in_array($rawVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']) ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                </optgroup>
+                <optgroup label="European Union (EU)" data-region="European Union">
+                  <option value="EU Citizen" {{ in_array($rawVisa, ['EU Citizen', 'EU / EEA Citizen']) ? 'selected' : '' }}>EU / EEA Citizen</option>
+                  <option value="EU Blue Card" {{ $rawVisa === 'EU Blue Card' ? 'selected' : '' }}>EU Blue Card</option>
+                  <option value="Germany - Opportunity Card / Work Visa" {{ $rawVisa === 'Germany - Opportunity Card / Work Visa' ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                  <option value="Netherlands - Highly Skilled Migrant" {{ $rawVisa === 'Netherlands - Highly Skilled Migrant' ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                  <option value="Ireland - Critical Skills Employment Permit" {{ $rawVisa === 'Ireland - Critical Skills Employment Permit' ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
+                  <option value="Authorized Work Permit" {{ in_array($rawVisa, ['Authorized Work Permit']) ? 'selected' : '' }}>Authorized Work Permit</option>
+                  <option value="Requires Sponsorship" {{ in_array($rawVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']) ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {{-- Custom Override Input --}}
+            <div class="rn-section">
+              <label class="rn-label" for="visa_custom_input">
+                <i class="fa-solid fa-pen-to-square me-1" style="font-size:11px;color:#a1a5b7;"></i>
+                Custom / Unlisted Visa Status <span>(Optional)</span>
+              </label>
+              <input type="text" id="visa_custom_input" class="form-control" maxlength="100" placeholder="e.g. France Talent Passport, Japan Engineer Visa, etc." style="font-size:12px; border-radius:8px; border:1.5px solid #e4e6ef; background:#f8f9fb; padding:8px 12px; color:#181c32;">
+            </div>
+
+            {{-- Live Preview Box --}}
+            <div class="p-3 mt-3 rounded border" style="background:#f8fafc; border-color:#e2e8f0;">
+              <div class="fw-bold text-gray-700 mb-1" style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Resolved Card Preview</div>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-muted" style="font-size:11px;">Status:</span>
+                <span id="preview_visa_name" class="fw-bold" style="font-size:11.5px; color:#2563eb;">{{ $visaMeta['name'] }}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-muted" style="font-size:11px;">Country:</span>
+                <span id="preview_visa_country" class="fw-semibold" style="font-size:11.5px; color:#1e293b;">{{ $visaMeta['country_display'] }}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted" style="font-size:11px;">Type:</span>
+                <span id="preview_visa_type" style="font-size:11px; color:#64748b;">{{ $visaMeta['type'] }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="visa-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editVisaCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-visa-drawer --}}
 
     </div>{{-- /#personal_details tab-pane --}}
 
@@ -6302,6 +6519,164 @@ setTimeout(() => {
                 $btn.prop('disabled', false);
                 var msg = 'Something went wrong. Please try again.';
                 try { var r = JSON.parse(xhr.responseText); if (r && r.message) msg = r.message; } catch(e) {}
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Warning', msg, 'warning');
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(msg);
+                }
+            }
+        });
+    });
+
+    // ===== VISA STATUS & WORK AUTHORIZATION DRAWER LOGIC (Rule 14, Rule 17) =====
+    $(document).on('click', '.editVisaStatus', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-visa-drawer').addClass('jw-drawer-open');
+        $('.visa-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
+    });
+
+    $(document).on('click', '.editVisaCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-visa-drawer').removeClass('jw-drawer-open');
+        $('.visa-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
+    });
+
+    // Quick filter chips for regions
+    $(document).on('click', '.visa-chip-btn', function(e) {
+        e.preventDefault();
+        var region = $(this).data('region');
+        $('.visa-chip-btn').removeClass('active');
+        $(this).addClass('active');
+
+        if (region === 'all') {
+            $('#visa_select_drawer optgroup').show();
+        } else {
+            $('#visa_select_drawer optgroup').each(function() {
+                var grpRegion = $(this).data('region');
+                if (grpRegion === region) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    });
+
+    // Live preview update
+    function updateVisaDrawerPreview() {
+        var selectedVal = $('#visa_custom_input').val().trim() || $('#visa_select_drawer').val() || '';
+        if (!selectedVal) {
+            $('#preview_visa_name').text('Not Specified').css('color', '#94a3b8');
+            $('#preview_visa_country').text('Not Specified');
+            $('#preview_visa_type').text('Not Specified');
+            return;
+        }
+
+        // Basic client-side resolution for preview
+        var country = 'Global 🌐';
+        var selOpt = $('#visa_select_drawer option:selected');
+        var optGroup = selOpt.closest('optgroup').attr('label') || '';
+
+        if (optGroup.indexOf('United States') !== -1) country = 'United States 🇺🇸';
+        else if (optGroup.indexOf('Canada') !== -1) country = 'Canada 🇨🇦';
+        else if (optGroup.indexOf('India') !== -1) country = 'India 🇮🇳';
+        else if (optGroup.indexOf('United Kingdom') !== -1) country = 'United Kingdom 🇬🇧';
+        else if (optGroup.indexOf('Emirates') !== -1) country = 'United Arab Emirates 🇦🇪';
+        else if (optGroup.indexOf('Singapore') !== -1) country = 'Singapore 🇸🇬';
+        else if (optGroup.indexOf('Australia') !== -1) country = 'Australia 🇦🇺';
+        else if (optGroup.indexOf('European') !== -1) country = 'European Union 🇪🇺';
+
+        $('#preview_visa_name').text(selectedVal).css('color', '#2563eb');
+        $('#preview_visa_country').text(country);
+        $('#preview_visa_type').text(selOpt.text() || selectedVal);
+    }
+
+    $(document).on('change', '#visa_select_drawer', function() {
+        if ($(this).val()) {
+            $('#visa_custom_input').val('');
+        }
+        updateVisaDrawerPreview();
+    });
+
+    $(document).on('input keyup paste', '#visa_custom_input', function() {
+        if ($(this).val().trim()) {
+            $('#visa_select_drawer').val('');
+        }
+        updateVisaDrawerPreview();
+    });
+
+    // Save Visa Status via AJAX
+    $(document).on('click', '#visa-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var visaVal = ($('#visa_custom_input').val() || '').trim() || $('#visa_select_drawer').val() || '';
+        var appId   = $('#visa_app_id').val();
+
+        $.ajax({
+            url: '{{ route('service_company.job-applications.visaStatusUpdate') }}?_token={{ csrf_token() }}',
+            type: 'POST',
+            data: { appId: appId, visastatu: visaVal },
+            success: function(response) {
+                if (response.status) {
+                    var r = response.resolved || {};
+                    if (r.has_visa) {
+                        $('#visa_card_populated').removeClass('d-none');
+                        $('#visa_empty_display').addClass('d-none');
+
+                        $('#visa_display_badge')
+                            .text(r.name || visaVal)
+                            .attr('style', (r.badge_style || 'background:#eff6ff; color:#1d4ed8;') + ' font-size:11.5px; padding:4px 9px; border-radius:6px;');
+                        $('#visa_display_country').text(r.country_display || r.country || '—');
+                        $('#visa_display_type').text(r.type || '—');
+                        $('#visa_display_eligibility').html('<i class="fa-solid fa-shield-check me-1" style="color:#0d9488; font-size:11px;"></i>' + (r.eligibility || 'Authorized to Work'));
+                    } else {
+                        $('#visa_card_populated').addClass('d-none');
+                        $('#visa_empty_display').removeClass('d-none');
+                    }
+
+                    // Invalidate caches if available
+                    var wId = $('#job_wise_id').val() || null;
+                    var cId = appId;
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+
+                    $('#jw-visa-drawer').removeClass('jw-drawer-open');
+                    $('.visa-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
+                    if (document.activeElement) { document.activeElement.blur(); }
+
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Success', 'Visa Status & Work Authorization updated successfully!', 'success');
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.success('Visa Status & Work Authorization updated successfully!');
+                        }
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', response.message || 'Could not update visa status.', 'warning');
+                    }
+                }
+            },
+            error: function(xhr) {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                var msg = 'Something went wrong. Please try again.';
+                try { var res = JSON.parse(xhr.responseText); if (res && res.message) msg = res.message; } catch(e) {}
                 if (typeof Swal !== 'undefined') {
                     Swal.fire('Warning', msg, 'warning');
                 } else if (typeof toastr !== 'undefined') {

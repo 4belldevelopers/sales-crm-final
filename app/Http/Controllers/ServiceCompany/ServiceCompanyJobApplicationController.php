@@ -1125,6 +1125,155 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ]);
     }
 
+    /** Updates visastatu in both MySQL (write store) and Elasticsearch (read store). */
+    public function visaStatusUpdate(Request $request)
+    {
+        $appId = (int) $request->appId;
+        $visaStatus = mb_substr(trim($request->visastatu ?? ''), 0, 255);
+        $companyId = (int) auth()->user()->company_id;
+
+        // Verify candidate exists
+        $app = DB::table('job_applications')->where('id', $appId)->first();
+        if (! $app) {
+            return response()->json(['status' => false, 'message' => 'Candidate application not found.'], 404);
+        }
+
+        // Authorize: candidate belongs to tenant, or tenant is thirdparty, or has active pipeline record, or admin
+        $isAuthorized = auth()->user()->hasRole('admin')
+            || (int) $app->company_id === $companyId
+            || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+            || DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                })->exists();
+
+        if (! $isAuthorized) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized candidate update.'], 403);
+        }
+
+        // 1. Single Source of Truth: Update MySQL transactional write store
+        DB::table('job_applications')
+            ->where('id', $appId)
+            ->update([
+                'visastatu' => $visaStatus,
+                'updated_at' => now(),
+            ]);
+
+        // 2. Synchronize Elasticsearch read store (ELASTIC_CANDIDATES via updateByQuery)
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $this->elasticService->getClient()->updateByQuery([
+                    'index' => ELASTIC_CANDIDATES,
+                    'conflicts' => 'proceed',
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['candidate_id' => (int) $appId]],
+                                    ['term' => ['id' => (int) $appId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        'script' => [
+                            'source' => 'ctx._source.visastatu = params.visa',
+                            'lang' => 'painless',
+                            'params' => ['visa' => $visaStatus],
+                        ],
+                    ],
+                ]);
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CANDIDATES update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CANDIDATES_BENCH if present
+        try {
+            if (defined('ELASTIC_CANDIDATES_BENCH') && $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CANDIDATES_BENCH, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES_BENCH,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['visastatu' => $visaStatus],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES_BENCH]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CANDIDATES_BENCH update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CAREER_APPLY if present (Career Page candidates)
+        try {
+            if (defined('ELASTIC_CAREER_APPLY') && $this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CAREER_APPLY,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['visastatu' => $visaStatus],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CAREER_APPLY]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CAREER_APPLY update failed: '.$e->getMessage());
+        }
+
+        // 3. Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([$appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
+        $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $appId,
+                time(),
+                'visa_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ['visastatu' => $visaStatus]
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+        }
+
+        $resolved = \App\Services\VisaResolutionService::resolve($visaStatus);
+
+        return response()->json([
+            'status' => true,
+            'candidate_id' => (int) $appId,
+            'wise_ids' => array_map('intval', $wiseIds),
+            'visastatu' => $visaStatus,
+            'resolved' => $resolved,
+        ]);
+    }
+
     public function clientCandidateList(Request $request)
     {
         $startTime = microtime(true);
