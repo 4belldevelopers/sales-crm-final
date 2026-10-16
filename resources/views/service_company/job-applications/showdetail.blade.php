@@ -7710,5 +7710,20 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     });
   };
+
+  $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+      window.ForwardResumeManager.close();
+    } else {
+      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
+      if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) drawer.hide();
+      }
+      if (drawerEl) {
+        $(drawerEl).removeClass('drawer-on');
+      }
+    }
+  });
 })();
 </script>
