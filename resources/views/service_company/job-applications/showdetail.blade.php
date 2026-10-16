@@ -4101,18 +4101,18 @@
                 <span class="comp-value">{{ @$application->employmentType ?: 'Full Time' }}</span>
               </div>
 
-              {{-- 6. Offer in Hand (if condidate_type == 'other') --}}
+              {{-- 6. Any Offer from other organization (if condidate_type == 'other') --}}
               @if($application->condidate_type=='other')
                 <div class="comp-item-row">
                   <div class="comp-item-left">
-                    <div class="comp-row-icon comp-icon-mint" title="Offer in Hand">
+                    <div class="comp-row-icon comp-icon-mint" title="Any Offer from other organization">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <path d="m9 15 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <span class="comp-label">Offer in Hand</span>
+                    <span class="comp-label">Any Offer from other organization</span>
                   </div>
                   <span class="{{ $hasOfferInHand ? 'comp-badge-green' : 'comp-badge-gray' }}">{{ ucwords(@$application->oh ?: 'No') }}</span>
                 </div>
@@ -9023,7 +9023,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     if (!drawerEl) {
       var shellMarkup = 
         '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
-        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
+        '<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
         '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
         '    data-kt-drawer-width="{default:\'90%\', \'lg\': \'80%\'}" data-kt-drawer-direction="end"' +
         '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
@@ -9047,6 +9047,9 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }
     if (drawerEl) {
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
       drawerEl.style.setProperty('z-index', '1000050', 'important');
     }
     return drawerEl;
@@ -9084,6 +9087,29 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
     var drawerEl = ensureForwardResumeDrawerShell();
 
+    // Synchronously activate DOM display immediately (< 1ms)
+    if (drawerEl) {
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.setProperty('transform', 'none', 'important');
+      drawerEl.style.setProperty('display', 'flex', 'important');
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (!drawer) {
+          KTDrawer.createInstances();
+          drawer = KTDrawer.getInstance(drawerEl);
+        }
+        if (drawer) { drawer.show(); }
+      }
+    }
+
+    if (window.ForwardResumeManager) {
+      window.ForwardResumeManager._lastOpenedTime = Date.now();
+    }
+
     ensureForwardResumeManager().then(function(mgr) {
       if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
         mgr.initRoutes({
@@ -9101,6 +9127,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
       // Enforce clean state: isolate strictly to current candidate
       if (mgr) {
+        mgr._lastOpenedTime = Date.now();
         mgr._currentCandidateIds = candArr;
         mgr._currentJobIdArr = jobArr;
         mgr._compiledAttachments = {};
@@ -9151,17 +9178,20 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     });
   };
 
-  $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close', function() {
     if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
       window.ForwardResumeManager.close();
     } else {
-      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-      if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) drawer.hide();
-      }
+      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_clientapp');
       if (drawerEl) {
-        $(drawerEl).removeClass('drawer-on');
+        drawerEl.classList.remove('drawer-on');
+        drawerEl.style.removeProperty('transform');
+        if (typeof KTDrawer !== 'undefined') {
+          var drawer = KTDrawer.getInstance(drawerEl);
+          if (drawer) drawer.hide();
+        }
       }
     }
   });
