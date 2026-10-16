@@ -54,14 +54,6 @@
 
             <!-- Client Name & Website Fields -->
             <div class="client-brand-fields d-flex flex-column gap-3">
-              <!-- Client Name Field -->
-              <div class="client-field fv-plugins-icon-container">
-                <label class="form-label required" for="client_id" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Client Name <span class="text-danger">*</span></label>
-                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
-                  <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-user" style="font-size:16px;"></i></span>
-                  <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name" style="border:none; height:42px; font-size:13px; color:#1e293b;">
-                </div>
-              </div>
 
               <!-- Company Website Field with Fetch Button -->
               <div class="client-field fv-plugins-icon-container">
@@ -78,6 +70,14 @@
                 <div class="client-info-banner mt-2 mb-0" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:6px; padding:8px 12px; display:flex; align-items:center; gap:8px; color:#1e40af; font-size:11.5px;">
                   <i class="la la-info-circle" style="color:#3b82f6; font-size:14px;"></i>
                   <span>We will fetch and suggest company information from the website.</span>
+                </div>
+              </div>
+              <!-- Client Name Field -->
+              <div class="client-field fv-plugins-icon-container">
+                <label class="form-label required" for="client_id" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Client Name</label>
+                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
+                  <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-user" style="font-size:16px;"></i></span>
+                  <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name" style="border:none; height:42px; font-size:13px; color:#1e293b;">
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@
             
             <!-- Industry Field (God-Level Combobox) -->
             <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="industry_display" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Industry <span class="text-danger">*</span></label>
+              <label class="form-label required" for="industry_display" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Industry</label>
               <!-- Native select kept synchronized for form POST & validation -->
               <select name="industry" id="industry" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
                 <option value="">Select industry</option>
@@ -181,7 +181,7 @@
 
             <!-- Company Size Field -->
             <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="company_sizes" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Size <span class="text-danger">*</span></label>
+              <label class="form-label required" for="company_sizes" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Size </label>
               <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
                 <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-users" style="font-size:16px;"></i></span>
                 <select name="company_sizes" class="form-select form-select-solid" id="company_sizes" style="border:none; height:42px; font-size:13px; color:#1e293b;">
@@ -200,7 +200,7 @@
 
             <!-- Company Type Field -->
             <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="company_type" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Type <span class="text-danger">*</span></label>
+              <label class="form-label required" for="company_type" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Company Type</label>
               <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
                 <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-city" style="font-size:16px;"></i></span>
                 <select class="form-select form-select-solid" name="company_type" id="company_type" style="border:none; height:42px; font-size:13px; color:#1e293b;">
@@ -215,7 +215,7 @@
 
             <!-- Founded Year Field -->
             <div class="client-field fv-plugins-icon-container">
-              <label class="form-label required" for="founded" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Founded Year <span class="text-danger">*</span></label>
+              <label class="form-label required" for="founded" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Founded Year </label>
               <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden;">
                 <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-calendar" style="font-size:16px;"></i></span>
                 <input type="number" class="form-control form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="Select year" style="border:none; height:42px; font-size:13px; color:#1e293b;">

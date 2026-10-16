@@ -298,10 +298,10 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
-        // Market Jobs transactional outbox & real-time delta relay supervisor
+        // Market Jobs & Clients transactional outbox & real-time delta relay supervisor
         'supervisor-outbox' => [
             'connection' => 'redis',
-            'queue' => ['market-outbox', 'outbox'],
+            'queue' => ['market-outbox', 'client-outbox', 'outbox'],
             'balance' => 'simple',
             'maxProcesses' => 6,
             'minProcesses' => 2,
