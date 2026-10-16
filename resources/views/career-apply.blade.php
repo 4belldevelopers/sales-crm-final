@@ -2299,10 +2299,10 @@ textarea.has-validation-error:focus,
     overflow: visible !important;
     position: relative;
     z-index: 25;
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     background: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05) !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
     margin-bottom: 20px;
 }
 .reason-change-card.has-open-dropdown,
@@ -2316,10 +2316,10 @@ textarea.has-validation-error:focus,
 #reason_job_change_section .candidate-card-header {
     min-height: 58px !important;
     padding: 12px 18px !important;
-    border-bottom: 1px solid #dbeafe !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     border-top-left-radius: 7px !important;
     border-top-right-radius: 7px !important;
-    background: linear-gradient(90deg, #eff6ff 0%, #ffffff 82%) !important;
+    background: #ffffff !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2332,18 +2332,18 @@ textarea.has-validation-error:focus,
 }
 .reason-change-card .candidate-card-icon--reason,
 #reason_job_change_section .candidate-card-icon--reason {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    flex-basis: 38px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex-basis: 40px !important;
     border-radius: 8px !important;
     border: 0 !important;
     color: #ffffff !important;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    background: linear-gradient(135deg, #F59E0B, #D97706) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28) !important;
 }
 .reason-change-card .candidate-card-icon--reason i {
     font-size: 16px !important;
@@ -2390,9 +2390,9 @@ textarea.has-validation-error:focus,
 }
 .reason-template-trigger:hover,
 .reason-template-dropdown.is-open .reason-template-trigger {
-    border-color: #2563eb;
+    border-color: #f59e0b;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
 }
 .reason-trigger-left {
     display: flex;
@@ -2402,7 +2402,7 @@ textarea.has-validation-error:focus,
 }
 .reason-trigger-icon {
     font-size: 14px;
-    color: #2563eb;
+    color: #d97706;
     flex-shrink: 0;
 }
 .reason-trigger-label {
@@ -2421,7 +2421,7 @@ textarea.has-validation-error:focus,
 }
 .reason-template-dropdown.is-open .reason-trigger-arrow {
     transform: rotate(180deg);
-    color: #2563eb;
+    color: #d97706;
 }
 .reason-template-menu {
     display: none;
@@ -2431,9 +2431,9 @@ textarea.has-validation-error:focus,
     right: 0;
     z-index: 2000;
     background: #ffffff;
-    border: 1px solid #bfdbfe;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14), 0 4px 12px rgba(15, 23, 42, 0.06);
     padding: 10px 12px;
     max-height: 420px;
     overflow-y: auto;
@@ -2491,18 +2491,18 @@ textarea.has-validation-error:focus,
     transition: all 0.15s ease;
 }
 .reason-search-input:focus {
-    border-color: #2563eb;
+    border-color: #f59e0b;
     background: #ffffff;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
 }
 .btn-new-custom-reason {
     height: 34px;
     padding: 0 10px;
     font-size: 11.5px;
     font-weight: 600;
-    color: #2563eb;
-    background: #eff6ff;
-    border: 1px dashed #bfdbfe;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px dashed #fcd34d;
     border-radius: 6px;
     cursor: pointer;
     white-space: nowrap;
@@ -2511,9 +2511,9 @@ textarea.has-validation-error:focus,
     transition: all 0.15s ease;
 }
 .btn-new-custom-reason:hover {
-    background: #dbeafe;
-    border-color: #2563eb;
-    color: #1d4ed8;
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
 }
 .reason-category-section {
     margin-bottom: 12px;
@@ -2575,8 +2575,8 @@ textarea.has-validation-error:focus,
     transform: translateY(-1px);
 }
 .reason-card-item.is-selected {
-    background: #eff6ff !important;
-    border-color: #93c5fd !important;
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
 }
 .reason-card-left {
     display: flex;
@@ -2631,7 +2631,7 @@ textarea.has-validation-error:focus,
     transition: color 0.15s ease;
 }
 .reason-card-item.is-selected .reason-card-check {
-    color: #2563eb;
+    color: #d97706;
 }
 .btn-delete-custom-reason {
     color: #ef4444;
@@ -2661,8 +2661,8 @@ textarea.has-validation-error:focus,
     transition: all 0.15s ease;
 }
 .reason-textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
 }
 .reason-footer {
     display: flex;
@@ -4228,8 +4228,8 @@ textarea.has-validation-error:focus,
                   </div>
                 </div>
                 <div class="d-none d-sm-flex align-items-center">
-                  <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-weight:600; font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid #bfdbfe;">
-                    <i class="fa-solid fa-compass me-1" style="font-size:10px;"></i> Career Transition
+                  <span class="badge" style="background:#fffbeb; color:#b45309; font-weight:600; font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid #fde68a;">
+                    <i class="fa-solid fa-compass me-1" style="font-size:10px; color:#d97706;"></i> Career Transition
                   </span>
                 </div>
               </div>
@@ -4316,7 +4316,7 @@ textarea.has-validation-error:focus,
                   
                   <div class="reason-footer">
                     <div class="reason-context-tag">
-                      <i class="fa-solid fa-circle-info me-1" style="color:#2563eb;"></i>
+                      <i class="fa-solid fa-circle-info me-1" style="color:#d97706;"></i>
                       <span>Candidate transition details shared with hiring managers &amp; interviewers.</span>
                     </div>
                     <div class="reason-footer-actions">
@@ -4334,7 +4334,7 @@ textarea.has-validation-error:focus,
             <div class="custom-reason-modal-backdrop" id="custom_reason_modal_backdrop" onclick="window.handleCustomReasonModalBackdrop(event);">
               <div class="custom-reason-modal" onclick="event.stopPropagation();">
                 <div class="custom-reason-modal-header">
-                  <h5><i class="fa-solid fa-pen-to-square me-2" style="color:#2563eb;"></i>Create Custom Reason Template</h5>
+                  <h5><i class="fa-solid fa-pen-to-square me-2" style="color:#d97706;"></i>Create Custom Reason Template</h5>
                   <button type="button" class="btn-close" style="font-size:12px;" onclick="window.closeCustomReasonModal(event);" aria-label="Close"></button>
                 </div>
                 <div class="custom-reason-modal-body">
