@@ -675,7 +675,8 @@ class CurrencyService
             'key' => $key,
             'symbol' => $symbol,
             'flag' => $flag,
-            'name' => $meta['label'] ?? $code,
+            'name' => $meta['name'] ?? $code,
+            'label' => $meta['label'] ?? "$code ($symbol)",
         ];
     }
 
