@@ -786,11 +786,16 @@ class JobService
             'description' => $metaDesc,
         ];
 
-        $job->min_salary_currency = $requestData['min_salary_currency'] ?? null;
+        $tenantDefaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($job->company_id);
+        $job->min_salary_currency = (!isset($requestData['min_salary_currency']) || $requestData['min_salary_currency'] === '' || $requestData['min_salary_currency'] === null)
+            ? $tenantDefaultCurrencyKey
+            : (int) $requestData['min_salary_currency'];
         $job->min_salary = (! empty($requestData['minimum_salary']) && is_numeric($requestData['minimum_salary'])) ? (int) $requestData['minimum_salary'] : 0;
         $job->min_sal_mode = $requestData['min_sal_mode'] ?? null;
 
-        $job->max_salary_currency = $requestData['max_salary_currency'] ?? null;
+        $job->max_salary_currency = (!isset($requestData['max_salary_currency']) || $requestData['max_salary_currency'] === '' || $requestData['max_salary_currency'] === null)
+            ? $job->min_salary_currency
+            : (int) $requestData['max_salary_currency'];
         $job->max_salary = (! empty($requestData['maximum_salary']) && is_numeric($requestData['maximum_salary'])) ? (int) $requestData['maximum_salary'] : 0;
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
         if (isset($requestData['salary_visibility'])) {

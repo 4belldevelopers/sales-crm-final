@@ -405,6 +405,13 @@ class SaasFrontController extends SaasFrontBaseController
                 $company->industries = 131;
             }
 
+            $selectedCurrency = $request->input('platform_currency', $request->input('currency'));
+            if (empty($selectedCurrency)) {
+                $selectedCurrency = \App\Services\CurrencyService::getDefaultCurrencyForCountry($request->kt_tagify_work_location ?: $request->contact_code);
+            }
+            $companyCurrencyCode = \App\Services\CurrencyService::resolveCurrencyCode($selectedCurrency);
+            $company->currency = $companyCurrencyCode;
+
             if (module_enabled('Subdomain')) {
                 $company->sub_domain = $request->sub_domain;
             }
@@ -1405,7 +1412,8 @@ class SaasFrontController extends SaasFrontBaseController
                         $status = 0; // Product Company
                     }
 
-                    $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 2, 'salary_currency' => 4, 'status' => $status];
+                    $companyCurrencyKey = \App\Services\CurrencyService::resolveCurrencyKey($company->currency);
+                    $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 2, 'salary_currency' => $companyCurrencyKey, 'status' => $status];
 
                     $commericialId = DB::table('commericials')->insertGetId($value);
                     $rate = @$default_rates->rates_fixed;
@@ -1528,7 +1536,13 @@ class SaasFrontController extends SaasFrontBaseController
 
             GeneralMethod::userIndexingupload($user->id);
 
-            $view = view('saas-front.registration_success', $this->data)->render();
+            try {
+                DB::table('company_career_settings')->updateOrInsert(
+                    ['company_id' => $company->id],
+                    ['currency' => $company->currency, 'updated_at' => now()]
+                );
+            } catch (\Throwable $e) {}
+            \App\Services\CurrencyService::invalidateTenantCache($company->id);
 
             DB::commit();
 
@@ -2314,6 +2328,13 @@ class SaasFrontController extends SaasFrontBaseController
             $company->job_opening_text = 'Welcome!';
             $company->job_opening_title = 'We want people to thrive. We believe you do your best work when you feel your best.';
             $company->timezone = 'Asia/Kolkata';
+
+            $selectedCurrency = $request->input('platform_currency', $request->input('currency'));
+            if (empty($selectedCurrency)) {
+                $selectedCurrency = \App\Services\CurrencyService::getDefaultCurrencyForCountry($request->kt_tagify_work_location ?: $request->contact_code);
+            }
+            $companyCurrencyCode = \App\Services\CurrencyService::resolveCurrencyCode($selectedCurrency);
+            $company->currency = $companyCurrencyCode;
 
             if (module_enabled('Subdomain')) {
                 $company->sub_domain = $request->sub_domain;
@@ -3278,7 +3299,8 @@ class SaasFrontController extends SaasFrontBaseController
                         $status = 0; // Product Company
                     }
 
-                    $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 2, 'salary_currency' => 4, 'status' => $status];
+                    $companyCurrencyKey = \App\Services\CurrencyService::resolveCurrencyKey($company->currency);
+                    $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 2, 'salary_currency' => $companyCurrencyKey, 'status' => $status];
 
                     $commericialId = DB::table('commericials')->insertGetId($value);
                     $rate = @$default_rates->rates_fixed;
@@ -3396,6 +3418,14 @@ class SaasFrontController extends SaasFrontBaseController
             if ($client_id > 0) {
                 GeneralMethod::clientStaffingPartner($client_id);
             }
+
+            try {
+                DB::table('company_career_settings')->updateOrInsert(
+                    ['company_id' => $company->id],
+                    ['currency' => $company->currency, 'updated_at' => now()]
+                );
+            } catch (\Throwable $e) {}
+            \App\Services\CurrencyService::invalidateTenantCache($company->id);
 
             return Reply::dataOnly(['status' => 'success', 'view' => $view, 'emailenabled' => $emailenabled]);
 
