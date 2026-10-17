@@ -670,7 +670,7 @@
   #interview_schedule_drawer .isd-shell-btn-primary {
     border: none;
     background: #F59E0B;
-    color: #0F172A;
+    color: #ffffff !important;
     border-radius: 8px;
     padding: 8px 18px;
     font-family: 'Poppins', sans-serif;
@@ -682,16 +682,40 @@
     gap: 8px;
     transition: all .15s ease;
   }
+  #interview_schedule_drawer .isd-shell-btn-primary,
+  #interview_schedule_drawer .isd-shell-btn-primary span,
+  #interview_schedule_drawer .isd-shell-btn-primary i,
+  #interview_schedule_drawer .isd-shell-btn-primary .indicator-label,
+  #interview_schedule_drawer .isd-shell-btn-primary .indicator-progress {
+    color: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary svg {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+  }
   #interview_schedule_drawer .isd-shell-btn-primary:hover {
     background: #D97706;
-    color: #000;
+    color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(245, 158, 11, .28);
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover span,
+  #interview_schedule_drawer .isd-shell-btn-primary:hover i {
+    color: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover svg {
+    stroke: #ffffff !important;
   }
   #interview_schedule_drawer .isd-shell-btn-primary:disabled {
     background: #c2c9d6 !important;
-    color: #64748b !important;
+    color: #ffffff !important;
     cursor: not-allowed;
     box-shadow: none !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled span,
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled i,
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
   }
   #interview_schedule_drawer .isd-shell-close {
     width: 34px;
@@ -728,10 +752,24 @@
      it — that clamping broke the Select-Interviewer picker drawer nested
      inside this one, since both had "huge" but effectively-equal z-indices). */
   #interview_schedule_drawer { z-index: 1000000 !important; }
-  /* Full viewport drawer ceiling with clean internal scroll */
-  #interview_schedule_drawer { height: 100vh !important; max-height: 100vh !important; }
-  #interview_schedule_drawer > .d-flex.flex-column { height: 100% !important; max-height: 100vh !important; }
-  #interview_schedule_drawer #app_interview_schedule_content { flex: 1 1 auto !important; overflow-y: auto !important; min-height: 0 !important; }
+  /* Content-capped drawer ceiling with clean internal scroll — prevents blank white void at footer */
+  #interview_schedule_drawer {
+    height: auto !important;
+    max-height: 100vh !important;
+    bottom: auto !important;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12) !important;
+  }
+  #interview_schedule_drawer > .d-flex.flex-column {
+    height: auto !important;
+    max-height: 100vh !important;
+  }
+  #interview_schedule_drawer #app_interview_schedule_content {
+    flex-grow: 0 !important;
+    max-height: calc(100vh - 76px) !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+    background: #fbfbfd !important;
+  }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
@@ -759,15 +797,15 @@
         <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;"><i class="ti ti-arrow-left me-1"></i> Back</button>
         <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
         <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
-          <span class="indicator-label d-inline-flex align-items-center gap-2">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);">
+          <span class="indicator-label d-inline-flex align-items-center gap-2" style="color:#ffffff !important;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
-            <span>Schedule Interview</span>
-            <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;"></i>
+            <span style="color:#ffffff !important;">Schedule Interview</span>
+            <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;color:#ffffff !important;"></i>
           </span>
-          <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+          <span class="indicator-progress" style="display:none;color:#ffffff !important;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2" style="border-color:#ffffff;border-right-color:transparent;"></span></span>
         </button>
         <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
       </div>
@@ -785,12 +823,12 @@
       $('#interview_schedule_drawer_title').text('Interview Schedule Email');
       $('#interview_schedule_drawer_subtitle').text('Review and customize the email invitation');
       $('#interview_schedule_drawer_back').show();
-      $('#interview_schedule_drawer_primary .indicator-label').html('<i class="ti ti-mail" style="font-size:15px;"></i> <span>Send Email</span> <i class="ti ti-arrow-right" style="font-size:15px;margin-left:2px;"></i>');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<i class="ti ti-mail" style="font-size:15px;color:#ffffff !important;"></i> <span style="color:#ffffff !important;">Send Email</span> <i class="ti ti-arrow-right" style="font-size:15px;margin-left:2px;color:#ffffff !important;"></i>');
     } else {
       $('#interview_schedule_drawer_title').text('Schedule Interview');
       $('#interview_schedule_drawer_subtitle').text('Schedule and invite candidates to the interview panel');
       $('#interview_schedule_drawer_back').hide();
-      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span>Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;"></i>');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span style="color:#ffffff !important;">Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;color:#ffffff !important;"></i>');
     }
   };
   $(document).on('click', '#interview_schedule_drawer_back', function(){
