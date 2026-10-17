@@ -9112,6 +9112,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }
 
+    window.authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
+
     if (window.ForwardResumeManager) {
       window.ForwardResumeManager._lastOpenedTime = Date.now();
     }
@@ -9187,8 +9189,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function() {
     if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
       window.ForwardResumeManager.close();
-    }
-    if (typeof window.closeTestFwdResumeDrawer === 'function') {
+    } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
       try { window.closeTestFwdResumeDrawer(); } catch (e) {}
     }
     var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];

@@ -146,9 +146,17 @@
             if (!Array.isArray(ids) || ids.length === 0) return [];
             var db = await self.init();
             if (!db) return [];
-            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curTenant = parseInt(
+                window.companyId ||
+                window.authCompanyId ||
+                (window.PlacedListingStore && window.PlacedListingStore.companyId) ||
+                $('meta[name="company-id"]').attr('content') ||
+                $('body').attr('data-company-id') ||
+                0,
+                10
+            );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
-            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
 
             return new Promise(function (resolve) {
                 try {
@@ -189,9 +197,17 @@
             if (!Array.isArray(candidates) || candidates.length === 0) return;
             var db = await self.init();
             if (!db) return;
-            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curTenant = parseInt(
+                window.companyId ||
+                window.authCompanyId ||
+                (window.PlacedListingStore && window.PlacedListingStore.companyId) ||
+                $('meta[name="company-id"]').attr('content') ||
+                $('body').attr('data-company-id') ||
+                0,
+                10
+            );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
-            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
 
             try {
                 var tx = db.transaction(['candidates'], 'readwrite');
@@ -467,6 +483,8 @@
 
             // 2. Client Shell Injection (< 5ms)
             if (!container.find('#test_form1').length) {
+                self._quill = null;
+                self._editorInitialized = false;
                 if (self._shellHtml) {
                     container.html(self._shellHtml);
                     self._afterShellInjected();
@@ -479,6 +497,8 @@
                         .then(function (res) { return res.text(); })
                         .then(function (html) {
                             self._shellHtml = html;
+                            self._quill = null;
+                            self._editorInitialized = false;
                             container.html(html);
                             self._afterShellInjected();
                         })
@@ -566,18 +586,14 @@
 
         _resetDrawerForm: function () {
             var self = this;
-            $('#test_fwd_resume_format').val('0');
-            $('#test_fwd_format_trigger_title').text('Select Resume Format...');
-            $('#test_fwd_format_trigger_desc').text('Choose how resumes should be formatted and presented to the client');
-            $('.test-fwd-format-card').removeClass('is-active').css({
-                'border-color': '#E5E7EB',
-                'background': '#FFFFFF'
-            });
-            $('.test-fwd-format-card .test-fwd-format-radio-dot').css({
-                'border-color': '#D1D5DB',
-                'background': '#FFFFFF'
-            }).html('');
-            $('#test_fwd_format_preview_card').hide();
+            $('#test_fwd_resume_format').val('1');
+            $('#test_fwd_trigger_title').text('1.a Original Resume (Default)');
+            $('#test_fwd_trigger_desc').text("Download candidate's uploaded resume with no edits or formatting changes.");
+            $('.mm-fwd-opt-row').removeClass('is-selected');
+            $('.mm-fwd-opt-row[data-opt-id="1"]').addClass('is-selected');
+            $('.mf-radio').removeClass('is-checked');
+            $('.mm-fwd-opt-row[data-opt-id="1"] .mf-radio').addClass('is-checked');
+            $('#test_fwd_format_preview_card').show();
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
             self.setEditorHtml('');
@@ -617,6 +633,9 @@
                 self._editorInitialized = true;
                 return;
             }
+
+            self._quill = null;
+            self._editorInitialized = false;
 
             try {
                 quillContainer.innerHTML = '';
@@ -908,6 +927,7 @@
                 missingBanner.hide();
             }
 
+            $('#test_fwd_format_preview_card').show();
             self.updateCumulativeSize();
         },
 

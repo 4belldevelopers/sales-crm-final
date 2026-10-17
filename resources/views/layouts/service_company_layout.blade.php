@@ -3342,8 +3342,7 @@ $( document ).ready(function() {
           window.__activeCandidateDrawerId = null;
           if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
               try { window.ForwardResumeManager.close(); } catch(e) {}
-          }
-          if (typeof window.closeTestFwdResumeDrawer === 'function') {
+          } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
               try { window.closeTestFwdResumeDrawer(); } catch(e) {}
           }
       }
