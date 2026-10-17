@@ -1547,38 +1547,7 @@
 
 
 
-    <!--begin::Test Fwd Resume - Drawer-->
-    <div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close">
-        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-            <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
-                </div>
-                <div class="card-toolbar">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
-                        id="kt_test_fwd_resume_drawer_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="currentColor">
-                                    <rect x="0" y="7" width="16" height="2" rx="1"/>
-                                    <rect opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1"/>
-                                </g>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
-        </div>
-    </div>
-    <!--end::Test Fwd Resume - Drawer-->
+    <!-- Note: Candidate Forward Resume Drawer is centrally defined at layout root in service_company_layout.blade.php -->
 
     <!--begin::Mass Mail - Drawer-->
     <div id="kt_mass_mail_drawer_toggle_hidden" style="display:none;"></div>

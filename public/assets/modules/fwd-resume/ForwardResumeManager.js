@@ -448,6 +448,10 @@
         open: function (candidateIds, jobIdArr, matchMap) {
             var startTime = performance.now();
             var self = this;
+            if (self._isOpening) return;
+            self._isOpening = true;
+            setTimeout(function () { self._isOpening = false; }, 250);
+
             self._currentCandidateIds = candidateIds || [];
             self._currentJobIdArr = jobIdArr || [];
             self._currentMatchMap = matchMap || {};
@@ -461,7 +465,12 @@
                            document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
             if (drawerEl) {
+                drawerEl.style.removeProperty('display');
+                drawerEl.style.removeProperty('transform');
                 drawerEl.style.setProperty('z-index', '1000050', 'important');
+                if (!drawerEl.classList.contains('drawer')) {
+                    drawerEl.classList.add('drawer', 'drawer-end');
+                }
                 if (typeof KTDrawer !== 'undefined') {
                     var drawer = KTDrawer.getInstance(drawerEl);
                     if (!drawer) {
@@ -469,7 +478,9 @@
                         drawer = KTDrawer.getInstance(drawerEl);
                     }
                     if (drawer) {
-                        drawer.show();
+                        if (!drawer.isShown()) {
+                            drawer.show();
+                        }
                     } else {
                         drawerEl.classList.add('drawer-on');
                     }
@@ -2565,6 +2576,10 @@
 
         close: function () {
             var self = this;
+            if (self._isClosing) return;
+            self._isClosing = true;
+            setTimeout(function () { self._isClosing = false; }, 250);
+
             self._compileToken++;
             self._isCompiling = false;
             var drawerIds = [
@@ -2577,7 +2592,7 @@
                 if (drawerEl) {
                     if (typeof KTDrawer !== 'undefined') {
                         var drawer = KTDrawer.getInstance(drawerEl);
-                        if (drawer) {
+                        if (drawer && drawer.isShown()) {
                             try { drawer.hide(); } catch (e) {}
                         } else {
                             drawerEl.classList.remove('drawer-on');
@@ -2585,23 +2600,22 @@
                     } else {
                         drawerEl.classList.remove('drawer-on');
                     }
+                    drawerEl.style.removeProperty('transform');
+                    drawerEl.style.removeProperty('display');
                 }
             });
 
-            // Protect Candidate Drawer overlay: only remove Forward Resume overlay
-            var overlays = $('.drawer-overlay');
-            if (overlays.length > 1) {
-                overlays.last().remove();
-            } else if (!$('#kt_activitiesApplication').hasClass('drawer-on') && !$('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
-                overlays.remove();
-            }
-
-            // Restore body attributes for Candidate Drawer if Candidate Drawer is still open
+            // If Candidate Drawer is still open, maintain its body attributes
             if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
                 document.body.setAttribute('data-kt-drawer', 'on');
                 document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
-                document.body.classList.add('drawer-on');
+            } else if ($('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
+                document.body.setAttribute('data-kt-drawer', 'on');
+                document.body.setAttribute('data-kt-drawer-activitiesBenchApplication', 'on');
+            } else {
+                $('.drawer-overlay').remove();
             }
+            document.body.classList.remove('drawer-on');
 
             if (typeof self.closeFormatDropdown === 'function') {
                 self.closeFormatDropdown();
@@ -2636,7 +2650,7 @@
     });
 
     // Listen for drawer hidden event (whether closed via close button, backdrop click, or ESC key)
-    $(document).on('kt.drawer.hidden hidden.kt.drawer', '#kt_test_fwd_resume_drawer, #kt_test_fwd_resume_drawer_aptk, #kt_test_fwd_resume_drawer_clientapp', function () {
+    $(document).on('kt.drawer.hidden hidden.kt.drawer kt.drawer.after.hidden', '#kt_test_fwd_resume_drawer, #kt_test_fwd_resume_drawer_aptk, #kt_test_fwd_resume_drawer_clientapp', function () {
         if (window.ForwardResumeManager) {
             if (typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
                 window.ForwardResumeManager.closeFormatDropdown();
@@ -2652,8 +2666,11 @@
         if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
             document.body.setAttribute('data-kt-drawer', 'on');
             document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
-            document.body.classList.add('drawer-on');
+        } else if ($('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
+            document.body.setAttribute('data-kt-drawer', 'on');
+            document.body.setAttribute('data-kt-drawer-activitiesBenchApplication', 'on');
         }
+        document.body.classList.remove('drawer-on');
     });
 
 })(window, document, jQuery);
