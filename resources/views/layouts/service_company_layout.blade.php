@@ -587,23 +587,132 @@
 
 <style>
   /* Interview Schedule drawer shell — scoped so it never collides with page-local styles. */
-  #interview_schedule_drawer .isd-shell-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid #eef0f4; flex-wrap:wrap; flex-shrink:0; font-family:'Poppins',sans-serif; }
-  #interview_schedule_drawer .isd-shell-topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
-  #interview_schedule_drawer .isd-shell-topbar-ico { width:48px; height:48px; border-radius:12px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:22px; }
-  #interview_schedule_drawer .isd-shell-topbar-title { font-size:16px; font-weight:700; color:#181c32; line-height:1.3; }
-  #interview_schedule_drawer .isd-shell-topbar-sub { font-size:11.5px; font-weight:400; color:#7e8299; margin-top:1px; }
-  #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }
-  #interview_schedule_drawer .isd-shell-btn-cancel { border:1px solid #e4e6ef; background:#fff; color:#3f4254; border-radius:8px; padding:9px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:500; cursor:pointer; }
-  #interview_schedule_drawer .isd-shell-btn-cancel:hover { background:#f8f9fb; }
-  #interview_schedule_drawer .isd-shell-btn-back { border:1px solid #e4e6ef; background:#fff; color:#3e97ff; border-radius:8px; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; }
-  #interview_schedule_drawer .isd-shell-btn-back:hover { background:#f5f9ff; }
-  #interview_schedule_drawer .isd-shell-btn-primary { border:none; background:#3e97ff; color:#fff; border-radius:8px; padding:8px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; text-align:left; line-height:1.3; }
-  #interview_schedule_drawer .isd-shell-btn-primary small { display:block; font-size:10px; font-weight:400; opacity:.85; }
-  #interview_schedule_drawer .isd-shell-btn-primary:hover { filter:brightness(.94); }
-  #interview_schedule_drawer .isd-shell-btn-primary:disabled { background:#c2c9d6 !important; cursor:not-allowed; }
-  #interview_schedule_drawer .isd-shell-divider { width:1px; height:22px; background:#e4e6ef; }
-  #interview_schedule_drawer .isd-shell-close { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#7e8299; cursor:pointer; flex-shrink:0; }
-  #interview_schedule_drawer .isd-shell-close:hover { background:#f8f9fb; color:#f64e60; }
+  #interview_schedule_drawer .isd-shell-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid #eef0f4;
+    background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 60%, #FEF9C3 100%);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #FEF3C7;
+    border: 1.5px solid #FDE68A;
+    color: #181C32;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #181c32;
+    line-height: 1.25;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-sub {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: #7e8299;
+    margin-top: 2px;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #interview_schedule_drawer .isd-shell-btn-cancel {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-cancel:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+  }
+  #interview_schedule_drawer .isd-shell-btn-back {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #3e97ff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-back:hover {
+    background: #f5f9ff;
+    border-color: #3e97ff;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary {
+    border: none;
+    background: #F59E0B;
+    color: #0F172A;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover {
+    background: #D97706;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, .28);
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled {
+    background: #c2c9d6 !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+  }
+  #interview_schedule_drawer .isd-shell-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 15px;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+  }
 
   /* This drawer is opened from *inside* the already-open Job Details drawer
      (#kt_activitiesApplication, z-index 999999) — it must render above it,
@@ -619,37 +728,47 @@
      it — that clamping broke the Select-Interviewer picker drawer nested
      inside this one, since both had "huge" but effectively-equal z-indices). */
   #interview_schedule_drawer { z-index: 1000000 !important; }
-  /* KTDrawer sets height via inline style at runtime (full viewport height,
-     same as every other drawer in the app). That's fine when content is long,
-     but this drawer's content is often shorter than the screen, leaving a
-     large blank white gap below it. Cap it to content height instead, with
-     the viewport as a ceiling so it still scrolls normally for long content. */
-  #interview_schedule_drawer { height: auto !important; max-height: 100vh !important; bottom: auto !important; }
-  #interview_schedule_drawer > .d-flex.flex-column { height: auto !important; max-height: 100vh !important; }
-  #interview_schedule_drawer #app_interview_schedule_content { flex-grow: 0 !important; max-height: calc(100vh - 76px) !important; }
+  /* Full viewport drawer ceiling with clean internal scroll */
+  #interview_schedule_drawer { height: 100vh !important; max-height: 100vh !important; }
+  #interview_schedule_drawer > .d-flex.flex-column { height: 100% !important; max-height: 100vh !important; }
+  #interview_schedule_drawer #app_interview_schedule_content { flex: 1 1 auto !important; overflow-y: auto !important; min-height: 0 !important; }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
     data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'85%', 'xl':'80%'}" data-kt-drawer-direction="end"
     data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
-        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar-clock"></i></span>
+        <span class="isd-shell-topbar-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181C32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <polygon points="12 12 10 16 13 16 12 20 16 15 13 15 14 12" fill="#181C32"></polygon>
+          </svg>
+        </span>
         <div>
-          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
-          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
+          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Schedule Interview</div>
+          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidates to the interview panel</div>
         </div>
       </div>
       <div class="isd-shell-topbar-right">
-        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
+        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;"><i class="ti ti-arrow-left me-1"></i> Back</button>
         <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
         <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
-          <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
+          <span class="indicator-label d-inline-flex align-items-center gap-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <span>Schedule Interview</span>
+            <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;"></i>
+          </span>
           <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
         </button>
-        <span class="isd-shell-divider"></span>
         <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
       </div>
     </div>
@@ -664,12 +783,14 @@
   window.isdShellSetStep = function(step){
     if (step === 'email') {
       $('#interview_schedule_drawer_title').text('Interview Schedule Email');
+      $('#interview_schedule_drawer_subtitle').text('Review and customize the email invitation');
       $('#interview_schedule_drawer_back').show();
-      $('#interview_schedule_drawer_primary .indicator-label').html('Send Email');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<i class="ti ti-mail" style="font-size:15px;"></i> <span>Send Email</span> <i class="ti ti-arrow-right" style="font-size:15px;margin-left:2px;"></i>');
     } else {
-      $('#interview_schedule_drawer_title').text('Interview Schedule');
+      $('#interview_schedule_drawer_title').text('Schedule Interview');
+      $('#interview_schedule_drawer_subtitle').text('Schedule and invite candidates to the interview panel');
       $('#interview_schedule_drawer_back').hide();
-      $('#interview_schedule_drawer_primary .indicator-label').html('Schedule Interview<small>Confirm &amp; send invitations</small>');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span>Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;"></i>');
     }
   };
   $(document).on('click', '#interview_schedule_drawer_back', function(){
