@@ -1505,8 +1505,8 @@ $(document).off('click.fwdFormatDismiss').on('click.fwdFormatDismiss', function(
 });
 
 window.closeTestFwdResumeDrawer = function() {
-    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
-        window.ForwardResumeManager.close();
+    if (typeof window.closeCandidateForwardResume === 'function') {
+        window.closeCandidateForwardResume();
         return;
     }
     _testFwdGlobalToken++;
@@ -1533,7 +1533,6 @@ window.closeTestFwdResumeDrawer = function() {
     if (typeof closeTestEmailRecipientDrawer === 'function') {
         closeTestEmailRecipientDrawer();
     }
-    $('#application_test_fwd_resume_body_content').html('');
 };
 
 function formatBytes(bytes) {
@@ -2427,7 +2426,12 @@ window.onTestFwdSubmitClick = async function (e) {
             if (response.status === 'success') {
                 window._testFwdCompiledAttachments = {};
                 window._testFwdR2UploadedUuids = [];
-                if (typeof window.closeTestFwdResumeDrawer === 'function') {
+                if (window.CandidateForwardResumeRamStore && typeof window.CandidateForwardResumeRamStore.clear === 'function') {
+                    window.CandidateForwardResumeRamStore.clear();
+                }
+                if (typeof window.closeCandidateForwardResume === 'function') {
+                    try { window.closeCandidateForwardResume(); } catch(e) {}
+                } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
                     try { window.closeTestFwdResumeDrawer(); } catch(e) {}
                 }
                 if (typeof window.resetCvTrackerSelection === 'function') {

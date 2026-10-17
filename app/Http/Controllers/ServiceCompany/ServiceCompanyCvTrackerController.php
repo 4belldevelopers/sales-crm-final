@@ -2775,13 +2775,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     // If candidate's current currency differs from target job currency, convert CTC and ECTC.
                     // If identical, preserve exact values without conversion drift.
                     $targetJobCurKey = \App\Services\CurrencyService::getJobCurrencyKey($jobRow);
-                    $candCurKey      = $applicationRow->current_ctc_cur ?? null;
-                    $sourceCtc       = (float) ($applicationRow->ctc ?? 0);
-                    $sourceEctc      = (float) ($applicationRow->ectc ?? 0);
+                    $candCurKey = $applicationRow->current_ctc_cur ?? null;
+                    $sourceCtc = (float) ($applicationRow->ctc ?? 0);
+                    $sourceEctc = (float) ($applicationRow->ectc ?? 0);
 
-                    $finalCtc        = $sourceCtc;
-                    $finalEctc       = $sourceEctc;
-                    $finalCurKey     = $candCurKey;
+                    $finalCtc = $sourceCtc;
+                    $finalEctc = $sourceEctc;
+                    $finalCurKey = $candCurKey;
 
                     if ($targetJobCurKey !== null) {
                         $finalCurKey = (int) $targetJobCurKey;
@@ -4336,9 +4336,39 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->client_contacts_data = $assignDataclient;
         $this->cc_email_assignData = (object) $assignData;
 
+        // Authoritative Fingerprint for SWR Zero-Stale-Data (Rule 3, Rule 5, Rule 6)
+        $fingerprintComponents = [];
+        foreach ($this->applicationData as $candItem) {
+            $fingerprintComponents[] = implode(':', [
+                $candItem->id ?? '',
+                $candItem->full_name ?? '',
+                $candItem->skills ?? '',
+                $candItem->resume ?? '',
+                $candItem->rating ?? '',
+                $candItem->ctc ?? '',
+                $candItem->ectc ?? '',
+                $candItem->np_id ?? '',
+            ]);
+        }
+        $fingerprintComponents[] = $companyId.':'.($this->to_email_from_count ?? 0);
+        $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
+
+        $clientFingerprint = trim((string) $request->input('fingerprint', ''));
+        if ($clientFingerprint !== '' && $clientFingerprint === $authoritativeFingerprint) {
+            return Reply::dataOnly([
+                'status' => 'unmodified',
+                'fingerprint' => $authoritativeFingerprint,
+                'message' => 'Candidate data is current and authoritative.',
+            ]);
+        }
+
         $view = view('service_company.cvtracker.test_fwd_resume', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'fingerprint' => $authoritativeFingerprint,
+        ]);
     }
 
     /**
