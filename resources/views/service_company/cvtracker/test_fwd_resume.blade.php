@@ -1523,12 +1523,13 @@ window.closeTestFwdResumeDrawer = function() {
             el.style.removeProperty('display');
             if (typeof KTDrawer !== 'undefined') {
                 var drawer = KTDrawer.getInstance(el);
-                if (drawer && drawer.isShown()) {
-                    try { drawer.hide(); } catch(e) {}
+                if (drawer) {
+                    drawer.shown = false;
                 }
             }
         }
     });
+    $('.fwd-resume-overlay').remove();
     if (typeof closeTestEmailRecipientDrawer === 'function') {
         closeTestEmailRecipientDrawer();
     }

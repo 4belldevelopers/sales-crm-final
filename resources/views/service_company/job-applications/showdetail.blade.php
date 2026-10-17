@@ -8999,10 +8999,12 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   #kt_test_fwd_resume_drawer_clientapp {
     z-index: 1000050 !important;
   }
-  body[data-kt-drawer-test-fwd-resume="on"] .drawer-overlay:last-of-type,
-  body[data-kt-drawer-test-fwd-resume-aptk="on"] .drawer-overlay:last-of-type,
-  body[data-kt-drawer-test-fwd-resume-clientapp="on"] .drawer-overlay:last-of-type {
+  .fwd-resume-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
     z-index: 1000045 !important;
+    cursor: pointer;
   }
   /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
   #kt_activitiesApplication .cdr-topbar-group {
@@ -9028,8 +9030,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     if (!drawerEl) {
       var shellMarkup = 
         '<div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>' +
-        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
-        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"' +
+        '<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
+        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
         '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
         '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
         '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
@@ -9048,6 +9050,45 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     }
     return drawerEl;
   }
+
+  function showFwdResumeOverlay() {
+    if ($('.fwd-resume-overlay').length > 0) return;
+    $('<div class="fwd-resume-overlay"></div>').css({
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 1000045,
+      cursor: 'pointer'
+    }).appendTo('body').on('click', function(e) {
+      e.preventDefault();
+      closeCandidateForwardResume();
+    });
+  }
+
+  function hideFwdResumeOverlay() {
+    $('.fwd-resume-overlay').remove();
+  }
+
+  window.closeCandidateForwardResume = function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+      window.ForwardResumeManager.close();
+    } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
+      try { window.closeTestFwdResumeDrawer(); } catch (e) {}
+    } else {
+      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (drawerEl) {
+        drawerEl.classList.remove('drawer-on');
+        drawerEl.style.removeProperty('transform');
+        if (typeof KTDrawer !== 'undefined') {
+          var drawer = KTDrawer.getInstance(drawerEl);
+          if (drawer) drawer.shown = false;
+        }
+      }
+      hideFwdResumeOverlay();
+    }
+  };
 
   function ensureForwardResumeManager() {
     if (window.ForwardResumeManager) {
@@ -9079,9 +9120,38 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var candArr = [parseInt(candidateId, 10)];
     var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-    ensureForwardResumeDrawerShell();
+    // 1. Immediately ensure drawer element and open synchronously (0ms perceived latency)
+    var drawerEl = ensureForwardResumeDrawerShell();
+    if (drawerEl) {
+      drawerEl.style.removeProperty('display');
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.transform = 'none';
+
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) {
+          drawer.shown = true;
+        }
+      }
+
+      showFwdResumeOverlay();
+    }
+
+    var bodyContainer = $('#application_test_fwd_resume_body_content');
+    if (bodyContainer.length && !bodyContainer.find('#test_form1').length) {
+      bodyContainer.html(
+        '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
+        '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading Forward Resume Engine...</div>'
+      );
+    }
+
     window.authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
 
+    // 2. Hydrate data and initialize UI via ForwardResumeManager
     ensureForwardResumeManager().then(function(mgr) {
       if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
         mgr.initRoutes({
@@ -9097,7 +9167,6 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
         });
       }
 
-      // Enforce clean state: isolate strictly to current candidate
       if (mgr) {
         mgr._lastOpenedTime = Date.now();
         mgr._currentCandidateIds = candArr;
@@ -9108,13 +9177,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }).catch(function(err) {
       console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
-      var bodyContainer = $('#application_test_fwd_resume_body_content');
       if (bodyContainer.length) {
-        bodyContainer.html(
-          '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
-          '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
-        );
-
         var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
         var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
 
@@ -9145,10 +9208,19 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
   $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
-      window.ForwardResumeManager.close();
-    } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
-      try { window.closeTestFwdResumeDrawer(); } catch (e) {}
+    closeCandidateForwardResume();
+  });
+
+  $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      var el = document.getElementById('kt_test_fwd_resume_drawer') ||
+               document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+               document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCandidateForwardResume();
+      }
     }
   });
 
