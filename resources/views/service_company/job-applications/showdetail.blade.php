@@ -9019,196 +9019,108 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 <script>
 /**
  * Forward Resume Launcher for Candidate Drawer (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17)
- * Authoritative Client-First execution: auto-selects ONLY the currently open candidate
- * and launches the existing Forward Resume workflow (ForwardResumeManager V4.1 with circuit-breaker fallback).
+ * Authoritative Client-First execution: delegates directly to layout's window.openCandidateForwardResume.
+ * Preserves complete lifecycle isolation between Candidate Drawer and Forward Resume Drawer.
  */
 (function() {
-  function ensureForwardResumeDrawerShell() {
-    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-    if (!drawerEl) {
-      var shellMarkup = 
-        '<div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>' +
-        '<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
-        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
-        '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
-        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
-        '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
-        '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
-        '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>' +
-        '  </div>' +
-        '</div>';
-      $('body').append(shellMarkup);
-      drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-      if (typeof KTDrawer !== 'undefined') {
-        KTDrawer.createInstances();
+  if (typeof window.openCandidateForwardResume !== 'function' || !window.CandidateForwardResumeRamStore) {
+    window.openCandidateForwardResume = function(candidateId, jobId) {
+      if (typeof parent !== 'undefined' && typeof parent.openCandidateForwardResume === 'function') {
+        parent.openCandidateForwardResume(candidateId, jobId);
+        return;
       }
-    }
-    if (drawerEl) {
-      drawerEl.style.setProperty('z-index', '1000050', 'important');
-    }
-    return drawerEl;
-  }
+      if (!candidateId) return;
+      var candArr = [parseInt(candidateId, 10)];
+      var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-  function showFwdResumeOverlay() {
-    if ($('.fwd-resume-overlay').length > 0) return;
-    $('<div class="fwd-resume-overlay"></div>').css({
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.4)',
-      zIndex: 1000045,
-      cursor: 'pointer'
-    }).appendTo('body').on('click', function(e) {
-      e.preventDefault();
-      closeCandidateForwardResume();
-    });
-  }
-
-  function hideFwdResumeOverlay() {
-    $('.fwd-resume-overlay').remove();
-  }
-
-  window.closeCandidateForwardResume = function() {
-    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
-      window.ForwardResumeManager.close();
-    } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
-      try { window.closeTestFwdResumeDrawer(); } catch (e) {}
-    } else {
       var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
                      document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                      document.getElementById('kt_test_fwd_resume_drawer_clientapp');
       if (drawerEl) {
-        drawerEl.classList.remove('drawer-on');
-        drawerEl.style.removeProperty('transform');
+        drawerEl.style.removeProperty('display');
+        drawerEl.style.setProperty('z-index', '1000050', 'important');
+        if (!drawerEl.classList.contains('drawer')) {
+          drawerEl.classList.add('drawer', 'drawer-end');
+        }
+        drawerEl.classList.add('drawer-on');
+        drawerEl.style.transform = 'none';
+
         if (typeof KTDrawer !== 'undefined') {
           var drawer = KTDrawer.getInstance(drawerEl);
-          if (drawer) drawer.shown = false;
-        }
-      }
-      hideFwdResumeOverlay();
-    }
-  };
-
-  function ensureForwardResumeManager() {
-    if (window.ForwardResumeManager) {
-      return Promise.resolve(window.ForwardResumeManager);
-    }
-    return new Promise(function(resolve, reject) {
-      var existing = document.getElementById('fwd_resume_manager_script');
-      if (existing) {
-        if (window.ForwardResumeManager) return resolve(window.ForwardResumeManager);
-        existing.addEventListener('load', function() { resolve(window.ForwardResumeManager); });
-        existing.addEventListener('error', function(e) { reject(e); });
-        return;
-      }
-      var s = document.createElement('script');
-      s.id = 'fwd_resume_manager_script';
-      s.src = "{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}";
-      s.onload = function() { resolve(window.ForwardResumeManager); };
-      s.onerror = function(err) { reject(err); };
-      document.body.appendChild(s);
-    });
-  }
-
-  window.openCandidateForwardResume = function(candidateId, jobId) {
-    if (!candidateId) {
-      console.warn('[CDR-FWD] Candidate ID is missing.');
-      return;
-    }
-
-    var candArr = [parseInt(candidateId, 10)];
-    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
-
-    // 1. Immediately ensure drawer element and open synchronously (0ms perceived latency)
-    var drawerEl = ensureForwardResumeDrawerShell();
-    if (drawerEl) {
-      drawerEl.style.removeProperty('display');
-      drawerEl.style.setProperty('z-index', '1000050', 'important');
-      if (!drawerEl.classList.contains('drawer')) {
-        drawerEl.classList.add('drawer', 'drawer-end');
-      }
-      drawerEl.classList.add('drawer-on');
-      drawerEl.style.transform = 'none';
-
-      if (typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) {
-          drawer.shown = true;
+          if (drawer) {
+            drawer.shown = true;
+          }
         }
       }
 
-      showFwdResumeOverlay();
-    }
-
-    var bodyContainer = $('#application_test_fwd_resume_body_content');
-    if (bodyContainer.length && !bodyContainer.find('#test_form1').length) {
-      bodyContainer.html(
-        '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
-        '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading Forward Resume Engine...</div>'
-      );
-    }
-
-    window.authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
-
-    // 2. Hydrate data and initialize UI via ForwardResumeManager
-    ensureForwardResumeManager().then(function(mgr) {
-      if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
-        mgr.initRoutes({
-          shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
-          engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
-          data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
-          recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
-          intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
-          send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
-          quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
-          emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
-          legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
-        });
-      }
-
-      if (mgr) {
-        mgr._lastOpenedTime = Date.now();
-        mgr._currentCandidateIds = candArr;
-        mgr._currentJobIdArr = jobArr;
-        mgr._compiledAttachments = {};
-        mgr._recipientsCache = null;
-        mgr.open(candArr, jobArr, {});
-      }
-    }).catch(function(err) {
-      console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
-      if (bodyContainer.length) {
+      var $body = $('#application_test_fwd_resume_body_content');
+      if ($body.length) {
+        $body.html(
+          '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+          '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
+          '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+          '</div>'
+        );
         var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
         var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
 
         $.ajax({
           type: 'POST',
           url: url,
-          data: {
-            '_token': "{{ csrf_token() }}",
-            'arr': candArr,
-            'jobIdArr': jobArr,
-            'matchMap': {}
-          },
           cache: false,
+          data: {
+            _token: "{{ csrf_token() }}",
+            arr: candArr,
+            jobIdArr: jobArr,
+            matchMap: {}
+          },
           success: function(response) {
             if (response && response.status === 'success' && response.view) {
-              bodyContainer.html(response.view);
+              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+              }
+              $body.html(response.view);
             } else {
-              bodyContainer.html('<div class="p-8 text-center text-danger">' + ((response && response.message) || 'Failed to initialize Forward Resume') + '</div>');
+              var errMsg = (response && response.message) ? response.message : 'Failed to initialize Forward Resume';
+              $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
             }
           },
           error: function() {
-            bodyContainer.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
+            $body.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
           }
         });
       }
-    });
-  };
+    };
+  }
+
+  if (typeof window.closeCandidateForwardResume !== 'function') {
+    window.closeCandidateForwardResume = function() {
+      if (typeof parent !== 'undefined' && typeof parent.closeCandidateForwardResume === 'function') {
+        parent.closeCandidateForwardResume();
+        return;
+      }
+      var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+      drawerIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('drawer-on');
+          el.style.removeProperty('transform');
+          el.style.removeProperty('display');
+          if (typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(el);
+            if (drawer) drawer.shown = false;
+          }
+        }
+      });
+      $('.fwd-resume-overlay').remove();
+    };
+  }
 
   $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    closeCandidateForwardResume();
+    if (typeof window.closeCandidateForwardResume === 'function') {
+      window.closeCandidateForwardResume();
+    }
   });
 
   $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
@@ -9219,11 +9131,13 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       if (el && el.classList.contains('drawer-on')) {
         e.preventDefault();
         e.stopPropagation();
-        closeCandidateForwardResume();
+        if (typeof window.closeCandidateForwardResume === 'function') {
+          window.closeCandidateForwardResume();
+        }
       }
     }
   });
-
+})();
   window.copyContactText = function(text, btnEl) {
     if (!text || text === '-') return;
     function showCopied(btn) {

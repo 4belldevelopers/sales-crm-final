@@ -3115,6 +3115,247 @@ $( document ).ready(function() {
     });
   };
 
+  // Client-First In-Memory RAM Store for Standard Candidate Forward Resume (Rule 3, Rule 5, Rule 6, Rule 15, Rule 17)
+  // Mirroring BenchForwardResumeRamStore: Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
+  var CandidateForwardResumeRamStore = (function() {
+    var _store = {};
+    var _ttl = 15 * 60 * 1000; // 15 minute local memory ceiling
+
+    function buildKey(candArr, jobIdArr) {
+      var cArr = (Array.isArray(candArr) ? candArr : [candArr]).map(Number).filter(Boolean);
+      cArr.sort(function(a, b) { return a - b; });
+      var jArr = (Array.isArray(jobIdArr) ? jobIdArr : (jobIdArr ? [jobIdArr] : [])).map(Number).filter(Boolean);
+      jArr.sort(function(a, b) { return a - b; });
+      return 'cdr_fwd_' + cArr.join('_') + (jArr.length ? ('_j' + jArr.join('_')) : '');
+    }
+
+    return {
+      buildKey: buildKey,
+      get: function(key) {
+        var item = _store[key];
+        if (!item) return null;
+        if (Date.now() - item.ts > _ttl) {
+          delete _store[key];
+          return null;
+        }
+        return item;
+      },
+      set: function(key, viewHtml, fingerprint) {
+        _store[key] = {
+          view: viewHtml,
+          fingerprint: fingerprint || '',
+          ts: Date.now()
+        };
+      },
+      invalidate: function(candidateId) {
+        if (!candidateId) {
+          _store = {};
+          return;
+        }
+        var needle = String(candidateId);
+        for (var k in _store) {
+          if (k.indexOf(needle) !== -1) {
+            delete _store[k];
+          }
+        }
+      },
+      clear: function() {
+        _store = {};
+      }
+    };
+  })();
+  window.CandidateForwardResumeRamStore = CandidateForwardResumeRamStore;
+
+  function showCandidateFwdResumeOverlay() {
+    if ($('.fwd-resume-overlay').length > 0) return;
+    $('<div class="fwd-resume-overlay"></div>').css({
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 1000045,
+      cursor: 'pointer'
+    }).appendTo('body').on('click', function(e) {
+      e.preventDefault();
+      closeCandidateForwardResume();
+    });
+  }
+
+  function hideCandidateFwdResumeOverlay() {
+    $('.fwd-resume-overlay').remove();
+  }
+
+  window.closeCandidateForwardResume = function() {
+    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+    drawerIds.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('drawer-on');
+        el.style.removeProperty('transform');
+        el.style.removeProperty('display');
+        if (typeof KTDrawer !== 'undefined') {
+          var drawer = KTDrawer.getInstance(el);
+          if (drawer) drawer.shown = false;
+        }
+      }
+    });
+    hideCandidateFwdResumeOverlay();
+    if (typeof _testFwdGlobalToken !== 'undefined') {
+      _testFwdGlobalToken++;
+    }
+    if (typeof _testFwdIsCompiling !== 'undefined') {
+      _testFwdIsCompiling = false;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+      try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+    }
+    if (typeof closeTestEmailRecipientDrawer === 'function') {
+      try { closeTestEmailRecipientDrawer(); } catch (e) {}
+    }
+    if (typeof window.closeTestFwdFormatDropdown === 'function') {
+      try { window.closeTestFwdFormatDropdown(); } catch (e) {}
+    }
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+      try { window.ForwardResumeManager.closeFormatDropdown(); } catch (e) {}
+    }
+  };
+
+  window.openCandidateForwardResume = function(candidateId, jobId) {
+    if (!candidateId) return;
+
+    var candArr = Array.isArray(candidateId) ? candidateId : [candidateId];
+    if (candArr.length === 0) return;
+    var primaryCandId = candArr[0];
+    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
+
+    // 1. Immediately ensure drawer element and open synchronously (0ms perceived latency)
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (drawerEl) {
+      drawerEl.style.removeProperty('display');
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.transform = 'none';
+
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) {
+          drawer.shown = true;
+        }
+      }
+
+      showCandidateFwdResumeOverlay();
+    }
+
+    var $body = $('#application_test_fwd_resume_body_content');
+    if (!$body.length) return;
+
+    var firstJobId = jobArr.length > 0 ? jobArr[0] : (primaryCandId || 0);
+    var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
+
+    // 2. Fast-path: Check Client-First RAM Store (0ms perceived time, 0 server strain)
+    var cacheKey = CandidateForwardResumeRamStore.buildKey(candArr, jobArr);
+    var cached = CandidateForwardResumeRamStore.get(cacheKey);
+
+    if (cached && cached.view) {
+      if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+      }
+      // 0ms Instant Hydration from Browser RAM
+      $body.html(cached.view);
+
+      // SWR (Stale-While-Revalidate): Fire background verification with fingerprint
+      $.ajax({
+        type: 'POST',
+        url: url,
+        cache: false,
+        data: {
+          _token: "{{ csrf_token() }}",
+          arr: candArr,
+          jobIdArr: jobArr,
+          fingerprint: cached.fingerprint || '',
+          matchMap: {}
+        },
+        success: function (res) {
+          if (res && res.status === 'success' && res.view && res.fingerprint && res.fingerprint !== cached.fingerprint) {
+            CandidateForwardResumeRamStore.set(cacheKey, res.view, res.fingerprint);
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+              try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+            }
+            $body.html(res.view);
+          }
+        },
+        error: function() {
+          // Silent fallback: cached view remains active
+        }
+      });
+      return;
+    }
+
+    // 3. Cache Miss: Show loading spinner and fetch authoritative view from server
+    $body.html(
+      '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+      '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
+      '    <span class="visually-hidden">Loading...</span>' +
+      '  </div>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+      '</div>'
+    );
+
+    $.ajax({
+      type: 'POST',
+      url: url,
+      cache: false,
+      data: {
+        _token: "{{ csrf_token() }}",
+        arr: candArr,
+        jobIdArr: jobArr,
+        matchMap: {}
+      },
+      success: function(response) {
+        if (response && response.status === 'success' && response.view) {
+          CandidateForwardResumeRamStore.set(cacheKey, response.view, response.fingerprint || '');
+          if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+            try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+          }
+          $body.html(response.view);
+        } else {
+          var errMsg = (response && response.message) ? response.message : 'Failed to load forward resume drawer.';
+          $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+        }
+      },
+      error: function(xhr) {
+        var errMsg = 'Failed to load candidate forward resume details. Please try again.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errMsg = xhr.responseJSON.message;
+        }
+        $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+      }
+    });
+  };
+
+  // Close event delegation
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    closeCandidateForwardResume();
+  });
+
+  $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      var el = document.getElementById('kt_test_fwd_resume_drawer') ||
+               document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+               document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCandidateForwardResume();
+      }
+    }
+  });
+
   // Client-First In-Memory RAM Store for In-House Talent Download Resume Center (Rule 3, Rule 5, Rule 6, Rule 15, Rule 17)
   // Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
   var BenchDownloadResumeRamStore = (function() {
