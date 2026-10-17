@@ -752,22 +752,39 @@
      it — that clamping broke the Select-Interviewer picker drawer nested
      inside this one, since both had "huge" but effectively-equal z-indices). */
   #interview_schedule_drawer { z-index: 1000000 !important; }
-  /* Content-capped drawer ceiling with clean internal scroll — prevents blank white void at footer */
-  #interview_schedule_drawer {
-    height: auto !important;
+  /* Enforce single internal scrollbar and zero footer blank void */
+  #interview_schedule_drawer,
+  #interview_schedule_drawer.drawer,
+  #interview_schedule_drawer.drawer-on {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    height: 100vh !important;
     max-height: 100vh !important;
-    bottom: auto !important;
+    overflow: hidden !important;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12) !important;
   }
   #interview_schedule_drawer > .d-flex.flex-column {
-    height: auto !important;
+    height: 100vh !important;
     max-height: 100vh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  #interview_schedule_drawer .isd-shell-topbar {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    height: 65px !important;
+    min-height: 65px !important;
+    max-height: 65px !important;
   }
   #interview_schedule_drawer #app_interview_schedule_content {
-    flex-grow: 0 !important;
-    max-height: calc(100vh - 76px) !important;
-    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
     min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     background: #fbfbfd !important;
   }
 </style>
@@ -775,7 +792,8 @@
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
     data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
     data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'85%', 'xl':'80%'}" data-kt-drawer-direction="end"
-    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
+    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close"
+    style="overflow: hidden !important;">
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
@@ -856,6 +874,7 @@
     if (!el.classList.contains('drawer')) el.classList.add('drawer', 'drawer-end');
     el.classList.add('drawer-on');
     el.style.transform = 'none';
+    el.style.overflow = 'hidden';
   };
 </script>
 <!--end::Interview Schedule drawer-->
@@ -2582,7 +2601,7 @@ $(document).ready(function(){
                   url += '?' + query.join('&');
               }
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
@@ -4616,7 +4635,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -4640,7 +4659,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
