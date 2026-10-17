@@ -461,12 +461,6 @@
                            document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
             if (drawerEl) {
-                if (!drawerEl.classList.contains('drawer')) {
-                    drawerEl.classList.add('drawer', 'drawer-end');
-                }
-                drawerEl.classList.add('drawer-on');
-                drawerEl.style.setProperty('transform', 'none', 'important');
-                drawerEl.style.setProperty('display', 'flex', 'important');
                 drawerEl.style.setProperty('z-index', '1000050', 'important');
                 if (typeof KTDrawer !== 'undefined') {
                     var drawer = KTDrawer.getInstance(drawerEl);
@@ -474,8 +468,20 @@
                         KTDrawer.createInstances();
                         drawer = KTDrawer.getInstance(drawerEl);
                     }
-                    if (drawer) { drawer.show(); }
+                    if (drawer) {
+                        drawer.show();
+                    } else {
+                        drawerEl.classList.add('drawer-on');
+                    }
+                } else {
+                    drawerEl.classList.add('drawer-on');
                 }
+                setTimeout(function () {
+                    var overlays = $('.drawer-overlay');
+                    if (overlays.length > 0) {
+                        overlays.last().css('z-index', '1000045');
+                    }
+                }, 50);
             }
 
             var container = $('#application_test_fwd_resume_body_content');
@@ -2569,18 +2575,34 @@
             drawerIds.forEach(function (id) {
                 var drawerEl = document.getElementById(id);
                 if (drawerEl) {
-                    drawerEl.classList.remove('drawer-on');
-                    drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
-                    drawerEl.style.setProperty('display', 'none', 'important');
-                    drawerEl.style.removeProperty('z-index');
                     if (typeof KTDrawer !== 'undefined') {
                         var drawer = KTDrawer.getInstance(drawerEl);
                         if (drawer) {
                             try { drawer.hide(); } catch (e) {}
+                        } else {
+                            drawerEl.classList.remove('drawer-on');
                         }
+                    } else {
+                        drawerEl.classList.remove('drawer-on');
                     }
                 }
             });
+
+            // Protect Candidate Drawer overlay: only remove Forward Resume overlay
+            var overlays = $('.drawer-overlay');
+            if (overlays.length > 1) {
+                overlays.last().remove();
+            } else if (!$('#kt_activitiesApplication').hasClass('drawer-on') && !$('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
+                overlays.remove();
+            }
+
+            // Restore body attributes for Candidate Drawer if Candidate Drawer is still open
+            if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
+                document.body.setAttribute('data-kt-drawer', 'on');
+                document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
+                document.body.classList.add('drawer-on');
+            }
+
             if (typeof self.closeFormatDropdown === 'function') {
                 self.closeFormatDropdown();
             }
@@ -2613,69 +2635,25 @@
         }
     });
 
-    // Dismiss Forward Resume drawer when clicking anywhere outside
-    $(document).off('click.fwdResumeOutside').on('click.fwdResumeOutside', function (e) {
-        var mgr = window.ForwardResumeManager;
-        if (!mgr) return;
-
-        // Ignore clicks within 300ms of drawer opening to prevent closing from the trigger click
-        if (Date.now() - (mgr._lastOpenedTime || 0) < 300) {
-            return;
-        }
-
-        var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                       document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                       document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-        if (!drawerEl || !drawerEl.classList.contains('drawer-on')) {
-            return;
-        }
-
-        var rcpEl = document.getElementById('kt_test_recipient_drawer');
-
-        // Check if event originated inside the main drawer or recipient drawer using composedPath if available
-        var path = (e.originalEvent && typeof e.originalEvent.composedPath === 'function') ? e.originalEvent.composedPath() : null;
-        if (path && Array.isArray(path)) {
-            if (path.includes(drawerEl) || (rcpEl && path.includes(rcpEl))) {
-                return;
+    // Listen for drawer hidden event (whether closed via close button, backdrop click, or ESC key)
+    $(document).on('kt.drawer.hidden hidden.kt.drawer', '#kt_test_fwd_resume_drawer, #kt_test_fwd_resume_drawer_aptk, #kt_test_fwd_resume_drawer_clientapp', function () {
+        if (window.ForwardResumeManager) {
+            if (typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+                window.ForwardResumeManager.closeFormatDropdown();
+            }
+            if (typeof window.ForwardResumeManager.closeRecipientDrawer === 'function') {
+                window.ForwardResumeManager.closeRecipientDrawer();
+            }
+            if (typeof window.ForwardResumeManager._resetDrawerForm === 'function') {
+                window.ForwardResumeManager._resetDrawerForm();
             }
         }
-
-        // Direct DOM ancestry check
-        if (drawerEl.contains(e.target) || $(e.target).closest(drawerEl).length) {
-            return;
+        // Maintain body attributes for parent Candidate Drawer if it is still active
+        if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
+            document.body.setAttribute('data-kt-drawer', 'on');
+            document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
+            document.body.classList.add('drawer-on');
         }
-
-        // Recipient drawer ancestry check
-        if (rcpEl && (rcpEl.contains(e.target) || $(e.target).closest(rcpEl).length)) {
-            return;
-        }
-
-        // If node was removed/detached from DOM during click handling (e.g., tag removal, DOM re-render)
-        if (!document.body.contains(e.target) && (!path || !path.includes(document.body))) {
-            return;
-        }
-
-        // Do not close if interacting with floating dialogs, dropdowns, popups attached to body
-        if ($(e.target).closest('.swal2-container, .swal2-popup, .select2-container, .select2-dropdown, .flatpickr-calendar, .tagify__dropdown, .cke_dialog, .cke, .modal, .modal-backdrop, .tooltip, .popover, .dropdown-menu').length) {
-            return;
-        }
-
-        // Do not close if clicking any trigger button that launches the drawer
-        var isTrigger = false;
-        try {
-            if (e.target && e.target.closest && e.target.closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp')) {
-                isTrigger = true;
-            }
-        } catch (ex) {}
-        if (!isTrigger && $(e.target).closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp').length) {
-            isTrigger = true;
-        }
-        if (isTrigger) {
-            return;
-        }
-
-        // Clicked outside -> close Forward Resume drawer
-        mgr.close();
     });
 
 })(window, document, jQuery);

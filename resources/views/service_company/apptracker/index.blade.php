@@ -1168,7 +1168,7 @@
 
     <!--begin::Test Fwd Resume Drawer - Apptracker-->
     <div id="kt_test_fwd_resume_drawer_aptk" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume-aptk"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
         data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close_aptk">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
@@ -2124,16 +2124,13 @@
                 }
                 var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
                 if (drawerEl) {
-                    drawerEl.classList.remove('drawer-on');
-                    drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
-                    drawerEl.style.setProperty('display', 'none', 'important');
-                    drawerEl.style.removeProperty('z-index');
                     if (typeof KTDrawer !== 'undefined') {
                         var drawer = KTDrawer.getInstance(drawerEl);
-                        if (drawer) { drawer.hide(); }
+                        if (drawer) { drawer.hide(); } else { drawerEl.classList.remove('drawer-on'); }
+                    } else {
+                        drawerEl.classList.remove('drawer-on');
                     }
                 }
-                $('#application_test_fwd_resume_body_content').html('');
             }
         });
 

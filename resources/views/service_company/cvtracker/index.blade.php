@@ -1477,10 +1477,6 @@
     <style>
       /* Must render above #kt_activitiesApplication when opened from showdetail */
       #csd_drawer { z-index: 1000000 !important; }
-      #kt_test_fwd_resume_drawer:not(.drawer-on) {
-        display: none !important;
-        transform: translateX(100%) !important;
-      }
       #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
       #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
       #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
@@ -1553,7 +1549,7 @@
 
     <!--begin::Test Fwd Resume - Drawer-->
     <div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
         data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
@@ -1864,14 +1860,15 @@
                 } else {
                     var el = document.getElementById('kt_test_fwd_resume_drawer');
                     if (el) {
-                        el.classList.remove('drawer-on');
-                        el.style.setProperty('transform', 'translateX(100%)', 'important');
-                        el.style.setProperty('display', 'none', 'important');
                         if (typeof KTDrawer !== 'undefined') {
                             var drawer = KTDrawer.getInstance(el);
                             if (drawer) {
                                 try { drawer.hide(); } catch(e) {}
+                            } else {
+                                el.classList.remove('drawer-on');
                             }
+                        } else {
+                            el.classList.remove('drawer-on');
                         }
                     }
                 }

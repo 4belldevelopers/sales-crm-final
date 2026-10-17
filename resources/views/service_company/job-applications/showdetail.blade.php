@@ -8999,11 +8999,10 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   #kt_test_fwd_resume_drawer_clientapp {
     z-index: 1000050 !important;
   }
-  #kt_test_fwd_resume_drawer:not(.drawer-on),
-  #kt_test_fwd_resume_drawer_aptk:not(.drawer-on),
-  #kt_test_fwd_resume_drawer_clientapp:not(.drawer-on) {
-    display: none !important;
-    transform: translateX(100%) !important;
+  body[data-kt-drawer-test-fwd-resume="on"] .drawer-overlay:last-of-type,
+  body[data-kt-drawer-test-fwd-resume-aptk="on"] .drawer-overlay:last-of-type,
+  body[data-kt-drawer-test-fwd-resume-clientapp="on"] .drawer-overlay:last-of-type {
+    z-index: 1000045 !important;
   }
   /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
   #kt_activitiesApplication .cdr-topbar-group {
@@ -9029,11 +9028,11 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     if (!drawerEl) {
       var shellMarkup = 
         '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
-        '<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
-        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
-        '    data-kt-drawer-width="{default:\'90%\', \'lg\': \'80%\'}" data-kt-drawer-direction="end"' +
+        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
+        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"' +
+        '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
         '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
-        '    style="z-index: 1000050 !important;">' +
+        '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
         '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
         '    <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">' +
         '      <div class="d-flex align-items-center py-1"><h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3></div>' +
@@ -9053,9 +9052,6 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }
     if (drawerEl) {
-      if (!drawerEl.classList.contains('drawer')) {
-        drawerEl.classList.add('drawer', 'drawer-end');
-      }
       drawerEl.style.setProperty('z-index', '1000050', 'important');
     }
     return drawerEl;
@@ -9092,25 +9088,30 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
     var drawerEl = ensureForwardResumeDrawerShell();
+    if (!drawerEl) return;
 
-    // Synchronously activate DOM display immediately (< 1ms)
-    if (drawerEl) {
-      if (!drawerEl.classList.contains('drawer')) {
-        drawerEl.classList.add('drawer', 'drawer-end');
+    if (typeof KTDrawer !== 'undefined') {
+      var drawer = KTDrawer.getInstance(drawerEl);
+      if (!drawer) {
+        KTDrawer.createInstances();
+        drawer = KTDrawer.getInstance(drawerEl);
       }
+      if (drawer) {
+        drawer.show();
+      } else {
+        var toggleId = drawerEl.getAttribute('data-kt-drawer-toggle') || '#kt_test_fwd_resume_drawer_toggle';
+        $(toggleId).trigger('click');
+      }
+    } else {
       drawerEl.classList.add('drawer-on');
-      drawerEl.style.setProperty('transform', 'none', 'important');
-      drawerEl.style.setProperty('display', 'flex', 'important');
-      drawerEl.style.setProperty('z-index', '1000050', 'important');
-      if (typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (!drawer) {
-          KTDrawer.createInstances();
-          drawer = KTDrawer.getInstance(drawerEl);
-        }
-        if (drawer) { drawer.show(); }
-      }
     }
+
+    setTimeout(function() {
+      var overlays = $('.drawer-overlay');
+      if (overlays.length > 0) {
+        overlays.last().css('z-index', '1000045');
+      }
+    }, 50);
 
     window.authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
 
@@ -9144,13 +9145,6 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       }
     }).catch(function(err) {
       console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
-      if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.show(); } else { $(drawerEl).addClass('drawer-on'); }
-      } else if (drawerEl) {
-        $(drawerEl).addClass('drawer-on');
-      }
-
       var bodyContainer = $('#application_test_fwd_resume_body_content');
       if (bodyContainer.length) {
         bodyContainer.html(
@@ -9192,22 +9186,6 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
       try { window.closeTestFwdResumeDrawer(); } catch (e) {}
     }
-    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
-    drawerIds.forEach(function(id) {
-      var drawerEl = document.getElementById(id);
-      if (drawerEl) {
-        drawerEl.classList.remove('drawer-on');
-        drawerEl.style.setProperty('transform', 'translateX(100%)', 'important');
-        drawerEl.style.setProperty('display', 'none', 'important');
-        drawerEl.style.removeProperty('z-index');
-        if (typeof KTDrawer !== 'undefined') {
-          var drawer = KTDrawer.getInstance(drawerEl);
-          if (drawer) {
-            try { drawer.hide(); } catch (e) {}
-          }
-        }
-      }
-    });
   });
 
   window.copyContactText = function(text, btnEl) {
