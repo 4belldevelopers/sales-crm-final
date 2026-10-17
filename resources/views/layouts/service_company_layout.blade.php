@@ -3249,6 +3249,8 @@ $( document ).ready(function() {
     if (typeof closeTestEmailRecipientDrawer === 'function') {
       try { closeTestEmailRecipientDrawer(); } catch (e) {}
     }
+    $('#kt_test_recipient_drawer').css('display', 'none');
+    $('#kt_test_recipient_drawer_overlay').css('display', 'none');
     if (typeof window.closeTestFwdFormatDropdown === 'function') {
       try { window.closeTestFwdFormatDropdown(); } catch (e) {}
     }
@@ -3383,6 +3385,14 @@ $( document ).ready(function() {
 
   $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
     if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_test_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof closeTestEmailRecipientDrawer === 'function') {
+          closeTestEmailRecipientDrawer();
+        }
+        return;
+      }
       var el = document.getElementById('kt_test_fwd_resume_drawer') ||
                document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                document.getElementById('kt_test_fwd_resume_drawer_clientapp');

@@ -1954,29 +1954,16 @@
 
             var drawerEl = document.getElementById('kt_test_recipient_drawer');
             if (drawerEl) {
-                if (drawerEl.parentElement !== document.body) {
-                    $('body > #kt_test_recipient_drawer').not(drawerEl).remove();
-                    document.body.appendChild(drawerEl);
-                }
-                if (typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (!drawer) {
-                        KTDrawer.createInstances();
-                        drawer = KTDrawer.getInstance(drawerEl);
-                    }
-                    if (drawer) drawer.show();
-                }
+                $('#kt_test_recipient_drawer_overlay').css('display', 'block');
+                $(drawerEl).css('display', 'block');
             }
 
             self._loadRecipients();
         },
 
         closeRecipientDrawer: function () {
-            var drawerEl = document.getElementById('kt_test_recipient_drawer');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) drawer.hide();
-            }
+            $('#kt_test_recipient_drawer').css('display', 'none');
+            $('#kt_test_recipient_drawer_overlay').css('display', 'none');
         },
 
         _loadRecipients: function () {

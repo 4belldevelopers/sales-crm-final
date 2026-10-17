@@ -645,6 +645,30 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 }
 
 /* Recipient Drawer Styles */
+#kt_test_recipient_drawer {
+  width: 490px;
+  max-width: 100vw;
+  height: 100vh;
+  background: #FFFFFF !important;
+  font-family: 'Poppins', sans-serif;
+  z-index: 1000060 !important;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  display: none;
+}
+@media (max-width: 576px) {
+  #kt_test_recipient_drawer { width: 100vw !important; }
+}
+.test-rcp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1000055 !important;
+  cursor: pointer;
+  display: none;
+}
 .rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
 .rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
 .rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
@@ -758,7 +782,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
           <div class="mm-tag-list" id="test_to_email_tags"></div>
           <input type="text" class="mm-tag-input" id="test_to_email_input" placeholder="Type recipient email and press Enter...">
-          <a href="javascript:;" class="mm-add-email-btn test_to_email_panel">+ Add Email</a>
+          <a href="javascript:;" class="mm-add-email-btn test_to_email_panel" onclick="openTestEmailRecipientDrawer('to'); return false;">+ Add Email</a>
         </div>
         <input type="hidden" name="to_email" id="test_to_email" value="">
         <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
@@ -780,7 +804,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
           <div class="mm-tag-list" id="test_cc_email_tags"></div>
           <input type="text" class="mm-tag-input" id="test_cc_email_input" placeholder="Type CC email and press Enter...">
-          <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel">+ Add Email</a>
+          <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel" onclick="openTestEmailRecipientDrawer('cc'); return false;">+ Add Email</a>
         </div>
         <input type="hidden" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}">
         <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
@@ -1284,8 +1308,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 </div>
 
 {{-- Enterprise Add Email Recipient Drawer --}}
-<div id="kt_test_recipient_drawer_toggle" style="display:none;"></div>
-<div id="kt_test_recipient_drawer" class="bg-white shadow" data-kt-drawer="true" data-kt-drawer-name="recipient-drawer-test" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '490px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_test_recipient_drawer_toggle" data-kt-drawer-close="#kt_test_recipient_drawer_close">
+<div class="test-rcp-overlay" id="kt_test_recipient_drawer_overlay" onclick="closeTestEmailRecipientDrawer()"></div>
+<div id="kt_test_recipient_drawer" class="bg-white shadow">
   <div class="rcp-container">
     <div class="rcp-header">
       <div class="rcp-header-left">
@@ -2747,29 +2771,23 @@ window.openTestEmailRecipientDrawer = function(target) {
     $('#test_rcp_search_input').val('');
     applyTestRcpSearch();
 
-    var drawerEl = document.getElementById('kt_test_recipient_drawer');
-    if (drawerEl) {
-        if (drawerEl.parentElement !== document.body) {
-            $('body > #kt_test_recipient_drawer').not(drawerEl).remove();
-            document.body.appendChild(drawerEl);
-        }
-        if (typeof KTDrawer !== 'undefined') {
-            var drawer = KTDrawer.getInstance(drawerEl);
-            if (!drawer) {
-                KTDrawer.createInstances();
-                drawer = KTDrawer.getInstance(drawerEl);
-            }
-            if (drawer) { drawer.show(); }
-        }
+    // Automatically switch to client contacts for 'to' field and internal team for 'cc' field
+    if (_testCurrentRcpTarget === 'to') {
+        $('#test_rcp_tab_client').trigger('click');
+    } else {
+        $('#test_rcp_tab_internal').trigger('click');
     }
+
+    // Clean up any stale orphaned recipient drawers appended to body by legacy scripts
+    $('body > #kt_test_recipient_drawer').not('#application_test_fwd_resume_body_content #kt_test_recipient_drawer').remove();
+
+    $('#kt_test_recipient_drawer_overlay').css('display', 'block');
+    $('#kt_test_recipient_drawer').css('display', 'block');
 };
 
 window.closeTestEmailRecipientDrawer = function() {
-    var drawerEl = document.getElementById('kt_test_recipient_drawer');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.hide(); }
-    }
+    $('#kt_test_recipient_drawer').css('display', 'none');
+    $('#kt_test_recipient_drawer_overlay').css('display', 'none');
 };
 
 $(document).off('click', '.test_to_email_panel').on('click', '.test_to_email_panel', function(e) {
