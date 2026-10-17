@@ -95,68 +95,116 @@ if (empty($isdCompanyAddress)) {
     .isd-cal-btn:hover { border-color: #3e97ff; color: #3e97ff; background: #f5f9ff; }
 
     /* Section 2: Mode Cards */
-    .isd-mode-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 0; }
+    .isd-mode-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 0;
+    }
     .isd-mode-card {
-        display: flex; align-items: center; gap: 14px; padding: 14px 16px; min-height: 72px;
-        border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fff;
-        cursor: pointer; position: relative; transition: all .15s ease; min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 10px;
+        min-height: 60px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        position: relative;
+        transition: all .15s ease;
+        min-width: 0;
     }
     .isd-mode-card:hover { border-color: #cbd5e1; }
     .isd-mode-card.is-active {
-        border-color: #10b981; background: #f0fdf4;
+        border-color: #10b981;
+        background: #f0fdf4;
     }
     .isd-mode-ic {
-        width: 44px; height: 44px; border-radius: 50%; display: flex;
-        align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .isd-mode-ic svg {
+        width: 18px;
+        height: 18px;
     }
     .isd-mode-ic-phone { background: #eff6ff; color: #0284c7; }
     .isd-mode-card.is-active .isd-mode-ic-phone { background: #dcfce7; color: #0284c7; }
     .isd-mode-ic-video { background: #dcfce7; color: #16a34a; }
     .isd-mode-ic-f2f   { background: #fee2e2; color: #dc2626; }
-    .isd-mode-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .isd-mode-card-info {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
     .isd-mode-title {
-        font-size: 13.5px; font-weight: 700; color: #111827; line-height: 1.25;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        font-size: clamp(11.5px, 0.95vw, 13px);
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+        white-space: nowrap;
+        letter-spacing: -0.1px;
     }
     .isd-mode-card.is-active .isd-mode-title { color: #047857; }
     .isd-mode-sub {
-        font-size: 11px; color: #6b7280; margin-top: 2px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        font-size: clamp(9.5px, 0.76vw, 10.5px);
+        color: #6b7280;
+        margin-top: 2px;
+        line-height: 1.2;
+        white-space: nowrap;
     }
     .isd-mode-radio {
-        width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1;
-        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        margin-left: auto; background: #fff; transition: all .15s ease;
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-left: auto;
+        background: #fff;
+        transition: all .15s ease;
     }
     .isd-mode-card.is-active .isd-mode-radio { border-color: #10b981; background: #10b981; }
     .isd-mode-card.is-active .isd-mode-radio::after {
-        content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; display: block;
+        content: ''; width: 5px; height: 5px; border-radius: 50%; background: #fff; display: block;
     }
 
     /* Sub modes / Leaf section */
-    .isd-leaf-section { margin-top: 18px; padding-top: 18px; border-top: 1px dashed #e5e7eb; }
-    .isd-leaf-head { margin-bottom: 14px; }
-    .isd-leaf-title { font-size: 14px; font-weight: 700; color: #111827; line-height: 1.3; }
-    .isd-leaf-sub { font-size: 11.5px; color: #6b7280; margin-top: 2px; }
+    .isd-leaf-section { margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e5e7eb; }
+    .isd-leaf-head { margin-bottom: 12px; }
+    .isd-leaf-title { font-size: 13.5px; font-weight: 700; color: #111827; line-height: 1.3; }
+    .isd-leaf-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
 
     /* Modern Sub-Cards (Used for Telephone, Video, and Face to Face) */
-    .isd-sub-cards, .isd-loc-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .isd-sub-cards.cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .isd-sub-cards.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .isd-sub-cards, .isd-loc-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .isd-sub-cards.cols-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .isd-sub-cards.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .isd-sub-card, .isd-loc-card {
-        display: flex; align-items: center; gap: 14px; padding: 14px 18px; min-height: 72px;
+        display: flex; align-items: center; gap: 10px; padding: 10px 14px; min-height: 64px;
         border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fff;
         cursor: pointer; position: relative; transition: all .15s ease; min-width: 0;
     }
-    .isd-sub-cards.cols-4 .isd-sub-card { padding: 10px 10px; gap: 9px; min-height: 64px; }
+    .isd-sub-cards.cols-4 .isd-sub-card { padding: 9px 12px; gap: 8px; min-height: 60px; }
     .isd-sub-card:hover, .isd-loc-card:hover { border-color: #cbd5e1; }
     .isd-sub-card.is-selected, .isd-loc-card.is-selected {
         border-color: #10b981; background: #f0fdf4;
     }
     .isd-sub-ic, .isd-loc-ic {
-        width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        width: 38px; height: 38px; min-width: 38px; border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .isd-sub-cards.cols-4 .isd-sub-ic { width: 38px; height: 38px; }
+    .isd-sub-cards.cols-4 .isd-sub-ic { width: 34px; height: 34px; min-width: 34px; }
     .isd-sub-ic-pin, .isd-loc-ic-pin { background: #ede9fe; color: #7c3aed; border-radius: 12px; }
     .isd-sub-ic-link, .isd-loc-ic-link { background: #eff6ff; color: #2563eb; border-radius: 50%; }
     .isd-sub-ic-phonecall { background: #10b981; color: #fff; border-radius: 12px; }
@@ -166,50 +214,48 @@ if (empty($isdCompanyAddress)) {
 
     .isd-sub-info, .isd-loc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
     .isd-sub-line1, .isd-loc-line1 {
-        font-size: 12.5px; font-weight: 700; color: #111827; line-height: 1.35;
+        font-size: 12px; font-weight: 700; color: #111827; line-height: 1.35;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .isd-sub-line2, .isd-loc-line2 {
-        font-size: 11.5px; font-weight: 700; color: #111827; line-height: 1.35;
+        font-size: 11px; font-weight: 600; color: #4b5563; line-height: 1.35;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
     }
     .isd-sub-title, .isd-loc-title {
-        font-size: 13.5px; font-weight: 700; color: #111827; line-height: 1.3;
+        font-size: clamp(12px, 0.9vw, 13.5px); font-weight: 700; color: #111827; line-height: 1.3;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .isd-sub-cards.cols-4 .isd-sub-title { font-size: 12px; }
     .isd-sub-card.is-selected .isd-sub-title, .isd-loc-card.is-selected .isd-loc-title { color: #047857; }
     .isd-sub-sub, .isd-loc-sub {
-        font-size: 11.5px; color: #6b7280; margin-top: 2px;
+        font-size: clamp(10px, 0.78vw, 11px); color: #6b7280; margin-top: 2px;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .isd-sub-cards.cols-4 .isd-sub-sub { font-size: 10px; }
 
     .isd-sub-radio, .isd-loc-radio {
-        width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1;
+        width: 18px; height: 18px; min-width: 18px; border-radius: 50%; border: 2px solid #cbd5e1;
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         margin-left: auto; background: #fff; transition: all .15s ease;
     }
-    .isd-sub-cards.cols-4 .isd-sub-radio { width: 16px; height: 16px; }
+    .isd-sub-cards.cols-4 .isd-sub-radio { width: 16px; height: 16px; min-width: 16px; }
     .isd-sub-card.is-selected .isd-sub-radio, .isd-loc-card.is-selected .isd-loc-radio {
         border-color: #10b981; background: #10b981;
     }
     .isd-sub-card.is-selected .isd-sub-radio::after, .isd-loc-card.is-selected .isd-loc-radio::after {
-        content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; display: block;
+        content: ''; width: 5px; height: 5px; border-radius: 50%; background: #fff; display: block;
     }
-    .isd-sub-cards.cols-4 .isd-sub-card.is-selected .isd-sub-radio::after { width: 5px; height: 5px; }
+    .isd-sub-cards.cols-4 .isd-sub-card.is-selected .isd-sub-radio::after { width: 4px; height: 4px; }
 
-    /* Provider Result Area: Auto generation banner (Google Meet / Teams / Zoom) */
+    /* Auto generation banner (kept hidden in favor of meeting link box) */
     .isd-auto-gen-banner {
-        margin-top: 14px; background: #ffffff; border: 1.5px solid #e5e7eb; border-radius: 10px;
-        padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 12px;
-        color: #4b5563; font-weight: 500;
+        display: none !important;
     }
 
-    /* Provider Result Area: Other Address Custom Input Card */
+    /* Provider Result Area: Meeting Link Card */
     .isd-custom-address-card {
         margin-top: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0;
-        border-radius: 12px; padding: 14px 16px; position: relative; transition: all 0.2s ease;
+        border-radius: 12px; padding: 12px 14px; position: relative; transition: all 0.2s ease;
     }
     .isd-custom-address-head {
         display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
@@ -219,7 +265,8 @@ if (empty($isdCompanyAddress)) {
     }
     .isd-custom-address-badge {
         font-size: 10.5px; font-weight: 600; background: #eff6ff; color: #2563eb;
-        padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;
+        border: 1px solid #dbeafe;
     }
     .isd-custom-input-group {
         position: relative; display: flex; align-items: center; background: #ffffff;
@@ -234,7 +281,10 @@ if (empty($isdCompanyAddress)) {
     }
     .isd-custom-input {
         width: 100%; border: none; background: transparent; font-size: 12.5px;
-        font-family: 'Poppins', sans-serif; color: #0f172a; padding: 10px 84px 10px 38px; outline: none;
+        font-family: 'Poppins', sans-serif; color: #0f172a; padding: 9px 84px 9px 36px; outline: none;
+    }
+    .isd-custom-input[readonly] {
+        cursor: default; color: #1e293b; font-weight: 500;
     }
     .isd-custom-input-actions {
         position: absolute; right: 6px; display: flex; align-items: center; gap: 4px;
@@ -250,11 +300,22 @@ if (empty($isdCompanyAddress)) {
     }
     .isd-custom-address-help i { font-size: 13px; color: #94a3b8; }
 
-    @media (max-width: 1400px) {
-        .isd-sub-cards.cols-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    #url_div { display: none !important; }
+
+    @media (max-width: 1366px) {
+        .isd-mode-cards { gap: 8px; }
+        .isd-mode-card { padding: 8px 8px; gap: 6px; min-height: 56px; }
+        .isd-mode-ic { width: 32px; height: 32px; min-width: 32px; }
+        .isd-mode-ic svg { width: 16px; height: 16px; }
+        .isd-mode-title { font-size: 11.5px; }
+        .isd-mode-sub { font-size: 9.5px; }
+        .isd-sub-card, .isd-loc-card { padding: 8px 10px; min-height: 58px; gap: 8px; }
+        .isd-sub-ic, .isd-loc-ic { width: 34px; height: 34px; min-width: 34px; }
+        .isd-sub-title, .isd-loc-title { font-size: 12px; }
+        .isd-sub-sub, .isd-loc-sub { font-size: 10px; }
     }
-    @media (max-width: 900px) {
-        .isd-mode-cards { grid-template-columns: 1fr; }
+    @media (max-width: 1050px) {
+        .isd-mode-cards { grid-template-columns: 1fr; gap: 8px; }
         .isd-sub-cards, .isd-loc-cards, .isd-sub-cards.cols-4, .isd-sub-cards.cols-3 { grid-template-columns: 1fr !important; }
     }
 
@@ -672,7 +733,7 @@ if (empty($isdCompanyAddress)) {
                             </div>
                             <div class="isd-mode-card-info">
                                 <div class="isd-mode-title">Video</div>
-                                <div class="isd-mode-sub">Online meeting (Google Meet, Zoom, etc.)</div>
+                                <div class="isd-mode-sub">Online meeting</div>
                             </div>
                             <span class="isd-mode-radio"></span>
                         </div>
@@ -1882,6 +1943,14 @@ if (empty($isdCompanyAddress)) {
             $leafSec.show();
 
             isdSyncMeetingLinkDisplay();
+
+            if (curVal == '2' || curVal == '5' || curVal == '3') {
+                var curUrl = ($('#url').val() || '').trim();
+                var jobId = $('#jobId').val();
+                if (!curUrl && jobId) {
+                    getVideoMeetingUrl(curVal, 2, jobId);
+                }
+            }
             return;
         }
     }
@@ -1906,6 +1975,20 @@ if (empty($isdCompanyAddress)) {
         $('.isd-sub-card, .isd-loc-card').removeClass('is-selected');
         $(this).addClass('is-selected');
         $('#interview_mode_lavels').val(val).trigger('change');
+
+        var mode = $('#interview_mode').val();
+        if (mode == '2') {
+            var jobId = $('#jobId').val();
+            if (val == '6') {
+                var cur = ($('#url').val() || '').trim();
+                if (cur.indexOf('meet.google.com') !== -1 || cur.indexOf('teams.microsoft.com') !== -1 || cur.indexOf('zoom.us') !== -1) {
+                    $('#url').val('');
+                }
+            } else if (val == '2' || val == '5' || val == '3') {
+                getVideoMeetingUrl(val, 2, jobId);
+            }
+            isdSyncMeetingLinkDisplay();
+        }
     });
 
     $(document).on('change', '#interview_mode_lavels', function(){
@@ -1918,16 +2001,19 @@ if (empty($isdCompanyAddress)) {
     function isdSyncMeetingLinkDisplay(){
         var mode = $('#interview_mode').val();
         var childVal = $('#interview_mode_lavels').val();
+        var currentUrl = ($('#url').val() || '').trim();
+
+        $('#isdAutoGenBanner').hide();
 
         if (mode == '3') { // Face to Face
-            $('#isdAutoGenBanner').hide();
             if (childVal !== '0') {
                 $('#isdMeetingLinkWrap').hide();
             } else {
                 $('#isdMeetingLinkLabel').text('Enter the Interview Address');
                 $('#isdCustomAddressBadge').html('<i class="ti ti-map-pin"></i> Custom Location');
                 $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Enter the in-person meeting address, building, or room number.</span>');
-                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'Enter custom interview address...').val($('#url').val());
+                $('#isdLinkRefresh').hide();
+                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'Enter custom interview address...').val(currentUrl);
                 $('#isdMeetingLinkWrap').show();
             }
             isdUpdateSummary();
@@ -1935,43 +2021,63 @@ if (empty($isdCompanyAddress)) {
         }
 
         if (mode == '2') { // Video
-            if (childVal == '6') { // Other Address
-                $('#isdAutoGenBanner').hide();
+            $('#isdMeetingLinkWrap').show();
+            if (childVal == '2') { // Google Meet
+                $('#isdMeetingLinkLabel').text('Google Meet Link');
+                $('#isdCustomAddressBadge').html('<i class="ti ti-brand-google"></i> Google Meet');
+                $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Google Meet link is generated automatically. You can refresh or copy the link.</span>');
+                $('#isdLinkRefresh').show();
+                $('#isdMeetingLinkDisplay').prop('readonly', true).attr('placeholder', 'Generating Google Meet link...').val(currentUrl);
+            } else if (childVal == '5') { // Microsoft Teams
+                $('#isdMeetingLinkLabel').text('Microsoft Teams Meeting Link');
+                $('#isdCustomAddressBadge').html('<i class="ti ti-brand-windows"></i> Microsoft Teams');
+                $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Microsoft Teams link is generated automatically. You can refresh or copy the link.</span>');
+                $('#isdLinkRefresh').show();
+                $('#isdMeetingLinkDisplay').prop('readonly', true).attr('placeholder', 'Generating Microsoft Teams link...').val(currentUrl);
+            } else if (childVal == '3') { // Zoom
+                $('#isdMeetingLinkLabel').text('Zoom Meeting Link');
+                $('#isdCustomAddressBadge').html('<i class="ti ti-video"></i> Zoom');
+                $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Zoom meeting link is generated automatically. You can refresh or copy the link.</span>');
+                $('#isdLinkRefresh').show();
+                $('#isdMeetingLinkDisplay').prop('readonly', true).attr('placeholder', 'Generating Zoom link...').val(currentUrl);
+            } else if (childVal == '6') { // Other Address
                 $('#isdMeetingLinkLabel').text('Meeting URL / Address');
                 $('#isdCustomAddressBadge').html('<i class="ti ti-link"></i> Custom Link');
                 $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Enter the meeting link, location, or custom meeting address.</span>');
-                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'https://...').val($('#url').val());
-                $('#isdMeetingLinkWrap').show();
-            } else { // Google Meet, Teams, Zoom
-                $('#isdMeetingLinkWrap').hide();
-                $('#isdAutoGenBanner').show();
+                $('#isdLinkRefresh').hide();
+                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'https://...').val(currentUrl);
+            } else {
+                $('#isdMeetingLinkLabel').text('Meeting URL / Address');
+                $('#isdCustomAddressBadge').html('<i class="ti ti-video"></i> Online Meeting');
+                $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Meeting link will be generated automatically.</span>');
+                $('#isdLinkRefresh').show();
+                $('#isdMeetingLinkDisplay').prop('readonly', true).attr('placeholder', 'Generating meeting link...').val(currentUrl);
             }
             isdUpdateSummary();
             return;
         }
 
         if (mode == '1') { // Telephone
-            $('#isdAutoGenBanner').hide();
             if (childVal == '1') { // Phone Call
                 $('#isdMeetingLinkWrap').hide();
             } else { // Other Telecon
                 $('#isdMeetingLinkLabel').text('Telecon Mode / Dial-in Details');
                 $('#isdCustomAddressBadge').html('<i class="ti ti-phone"></i> Custom Telecon');
                 $('#isdCustomAddressHelp').html('<i class="ti ti-info-circle"></i> <span>Enter the dial-in details or conference bridge.</span>');
-                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'e.g. dial-in number, passcode, or SIP URI').val($('#url').val());
+                $('#isdLinkRefresh').hide();
+                $('#isdMeetingLinkDisplay').prop('readonly', false).attr('placeholder', 'e.g. dial-in number, passcode, or SIP URI').val(currentUrl);
                 $('#isdMeetingLinkWrap').show();
             }
             isdUpdateSummary();
             return;
         }
 
-        $('#isdAutoGenBanner').hide();
         $('#isdMeetingLinkWrap').hide();
         isdUpdateSummary();
     }
     function isdSetLinkLoading(){
         $('#isdMeetingLinkWrap').show();
-        $('#isdMeetingLinkDisplay').val('Generating link...');
+        $('#isdMeetingLinkDisplay').val('').attr('placeholder', 'Generating link...');
     }
     $(document).on('click', '#isdLinkRefresh', function(){
         var parentVal = $('#interview_mode').val();
