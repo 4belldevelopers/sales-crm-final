@@ -9027,21 +9027,13 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
                    document.getElementById('kt_test_fwd_resume_drawer_clientapp');
     if (!drawerEl) {
       var shellMarkup = 
-        '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
+        '<div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>' +
         '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
         '    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"' +
         '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
-        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
+        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
         '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
         '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
-        '    <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">' +
-        '      <div class="d-flex align-items-center py-1"><h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3></div>' +
-        '      <div class="card-toolbar">' +
-        '        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_test_fwd_resume_drawer_close">' +
-        '          <span class="svg-icon svg-icon-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>' +
-        '        </button>' +
-        '      </div>' +
-        '    </div>' +
         '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>' +
         '  </div>' +
         '</div>';
@@ -9087,37 +9079,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var candArr = [parseInt(candidateId, 10)];
     var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-    var drawerEl = ensureForwardResumeDrawerShell();
-    if (!drawerEl) return;
-
-    if (typeof KTDrawer !== 'undefined') {
-      var drawer = KTDrawer.getInstance(drawerEl);
-      if (!drawer) {
-        KTDrawer.createInstances();
-        drawer = KTDrawer.getInstance(drawerEl);
-      }
-      if (drawer) {
-        drawer.show();
-      } else {
-        var toggleId = drawerEl.getAttribute('data-kt-drawer-toggle') || '#kt_test_fwd_resume_drawer_toggle';
-        $(toggleId).trigger('click');
-      }
-    } else {
-      drawerEl.classList.add('drawer-on');
-    }
-
-    setTimeout(function() {
-      var overlays = $('.drawer-overlay');
-      if (overlays.length > 0) {
-        overlays.last().css('z-index', '1000045');
-      }
-    }, 50);
-
+    ensureForwardResumeDrawerShell();
     window.authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
-
-    if (window.ForwardResumeManager) {
-      window.ForwardResumeManager._lastOpenedTime = Date.now();
-    }
 
     ensureForwardResumeManager().then(function(mgr) {
       if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
@@ -9180,7 +9143,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     });
   };
 
-  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function() {
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
       window.ForwardResumeManager.close();
     } else if (typeof window.closeTestFwdResumeDrawer === 'function') {

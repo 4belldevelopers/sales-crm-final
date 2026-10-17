@@ -735,6 +735,17 @@
     <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="bench_fwd_resume_body_content"></div>
   </div>
 </div>
+<!-- Candidate Forward Resume Drawer (Engine 2) -->
+<div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>
+<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"
+    style="z-index: 1000050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
+  </div>
+</div>
 <!-- Bench Candidate Download Resume Center Drawer (Engine 1-B) -->
 <div id="kt_bench_download_resume_drawer_toggle" style="display:none;"></div>
 <div id="kt_bench_download_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-download-resume"

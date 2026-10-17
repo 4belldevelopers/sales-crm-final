@@ -1505,6 +1505,10 @@ $(document).off('click.fwdFormatDismiss').on('click.fwdFormatDismiss', function(
 });
 
 window.closeTestFwdResumeDrawer = function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+        window.ForwardResumeManager.close();
+        return;
+    }
     _testFwdGlobalToken++;
     _testFwdIsCompiling = false;
     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
@@ -1515,12 +1519,11 @@ window.closeTestFwdResumeDrawer = function() {
         var el = document.getElementById(id);
         if (el) {
             el.classList.remove('drawer-on');
-            el.style.setProperty('transform', 'translateX(100%)', 'important');
-            el.style.setProperty('display', 'none', 'important');
-            el.style.removeProperty('z-index');
+            el.style.removeProperty('transform');
+            el.style.removeProperty('display');
             if (typeof KTDrawer !== 'undefined') {
                 var drawer = KTDrawer.getInstance(el);
-                if (drawer) {
+                if (drawer && drawer.isShown()) {
                     try { drawer.hide(); } catch(e) {}
                 }
             }
