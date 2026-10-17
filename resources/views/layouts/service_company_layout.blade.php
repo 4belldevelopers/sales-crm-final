@@ -858,8 +858,8 @@
 </div>
 <!-- Candidate Forward Resume Drawer (Engine 2) -->
 <div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>
-<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
     data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
     data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"
     style="z-index: 1000050 !important; scrollbar-gutter: stable;">

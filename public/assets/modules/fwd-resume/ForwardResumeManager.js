@@ -448,9 +448,6 @@
         open: function (candidateIds, jobIdArr, matchMap) {
             var startTime = performance.now();
             var self = this;
-            if (self._isOpening) return;
-            self._isOpening = true;
-            setTimeout(function () { self._isOpening = false; }, 250);
 
             self._currentCandidateIds = candidateIds || [];
             self._currentJobIdArr = jobIdArr || [];
@@ -466,33 +463,33 @@
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
             if (drawerEl) {
                 drawerEl.style.removeProperty('display');
-                drawerEl.style.removeProperty('transform');
                 drawerEl.style.setProperty('z-index', '1000050', 'important');
                 if (!drawerEl.classList.contains('drawer')) {
                     drawerEl.classList.add('drawer', 'drawer-end');
                 }
+                drawerEl.classList.add('drawer-on');
+                drawerEl.style.transform = 'none';
+
                 if (typeof KTDrawer !== 'undefined') {
                     var drawer = KTDrawer.getInstance(drawerEl);
-                    if (!drawer) {
-                        KTDrawer.createInstances();
-                        drawer = KTDrawer.getInstance(drawerEl);
-                    }
                     if (drawer) {
-                        if (!drawer.isShown()) {
-                            drawer.show();
-                        }
-                    } else {
-                        drawerEl.classList.add('drawer-on');
+                        drawer.shown = true;
                     }
-                } else {
-                    drawerEl.classList.add('drawer-on');
                 }
-                setTimeout(function () {
-                    var overlays = $('.drawer-overlay');
-                    if (overlays.length > 0) {
-                        overlays.last().css('z-index', '1000045');
-                    }
-                }, 50);
+
+                // Show dedicated Forward Resume overlay (isolated from parent Candidate Drawer)
+                if ($('.fwd-resume-overlay').length === 0) {
+                    $('<div class="fwd-resume-overlay"></div>').css({
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.4)',
+                        zIndex: 1000045,
+                        cursor: 'pointer'
+                    }).appendTo('body').on('click', function (e) {
+                        e.preventDefault();
+                        self.close();
+                    });
+                }
             }
 
             var container = $('#application_test_fwd_resume_body_content');
@@ -2576,10 +2573,6 @@
 
         close: function () {
             var self = this;
-            if (self._isClosing) return;
-            self._isClosing = true;
-            setTimeout(function () { self._isClosing = false; }, 250);
-
             self._compileToken++;
             self._isCompiling = false;
             var drawerIds = [
@@ -2590,32 +2583,20 @@
             drawerIds.forEach(function (id) {
                 var drawerEl = document.getElementById(id);
                 if (drawerEl) {
-                    if (typeof KTDrawer !== 'undefined') {
-                        var drawer = KTDrawer.getInstance(drawerEl);
-                        if (drawer && drawer.isShown()) {
-                            try { drawer.hide(); } catch (e) {}
-                        } else {
-                            drawerEl.classList.remove('drawer-on');
-                        }
-                    } else {
-                        drawerEl.classList.remove('drawer-on');
-                    }
+                    drawerEl.classList.remove('drawer-on');
                     drawerEl.style.removeProperty('transform');
                     drawerEl.style.removeProperty('display');
+                    if (typeof KTDrawer !== 'undefined') {
+                        var drawer = KTDrawer.getInstance(drawerEl);
+                        if (drawer) {
+                            drawer.shown = false;
+                        }
+                    }
                 }
             });
 
-            // If Candidate Drawer is still open, maintain its body attributes
-            if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
-                document.body.setAttribute('data-kt-drawer', 'on');
-                document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
-            } else if ($('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
-                document.body.setAttribute('data-kt-drawer', 'on');
-                document.body.setAttribute('data-kt-drawer-activitiesBenchApplication', 'on');
-            } else {
-                $('.drawer-overlay').remove();
-            }
-            document.body.classList.remove('drawer-on');
+            // Cleanly remove dedicated Forward Resume overlay — leaves Candidate Drawer overlay 100% intact
+            $('.fwd-resume-overlay').remove();
 
             if (typeof self.closeFormatDropdown === 'function') {
                 self.closeFormatDropdown();
