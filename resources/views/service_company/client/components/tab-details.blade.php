@@ -8,13 +8,15 @@
     <div class="client-main-column">
       <section class="card client-section-card client-desc-card" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden;">
         <!-- Header bar matching screenshots -->
-        <div class="card-header border-0 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:16px 20px !important;">
-          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
-            <i class="la la-file-text-o" style="font-size:20px; color:#ca8a04;"></i>
-          </div>
-          <div>
-            <h3 class="client-section-heading" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0;">About the Company</h3>
-            <p class="client-section-copy" style="font-size:12px; color:#5C6F9F; margin:0;">Describe the client's business, mission and background.</p>
+        <div class="card-header border-0 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:16px 20px !important; justify-content:flex-start !important;">
+          <div class="d-flex align-items-center" style="gap:12px; text-align:left !important;">
+            <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; flex-shrink:0;">
+              <i class="la la-file-text-o" style="font-size:20px; color:#ca8a04;"></i>
+            </div>
+            <div style="text-align:left !important;">
+              <h3 class="client-section-heading" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0; text-align:left !important;">About the Company</h3>
+              <p class="client-section-copy" style="font-size:12px; color:#5C6F9F; margin:0; text-align:left !important;">Describe the client's business, mission and background.</p>
+            </div>
           </div>
         </div>
 
@@ -53,13 +55,15 @@
       
       <!-- Card 1: Service Offerings -->
       <div class="card client-helper-card client-service-offerings-card mb-4" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden; margin-bottom:16px !important;">
-        <div class="card-header border-0 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:14px 18px !important;">
-          <div style="width:32px; height:32px; border-radius:8px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:10px; flex-shrink:0;">
-            <i class="la la-layer-group" style="font-size:18px; color:#ca8a04;"></i>
-          </div>
-          <div>
-            <h4 style="font-size:14px; font-weight:700; color:#101A46; margin:0 0 1px 0;">Service Offerings</h4>
-            <p style="font-size:11.5px; color:#5C6F9F; margin:0;">Add the services that this client provides or is known for.</p>
+        <div class="card-header border-0 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:14px 18px !important; justify-content:flex-start !important;">
+          <div class="d-flex align-items-center" style="gap:10px; text-align:left !important;">
+            <div style="width:32px; height:32px; border-radius:8px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; flex-shrink:0;">
+              <i class="la la-layer-group" style="font-size:18px; color:#ca8a04;"></i>
+            </div>
+            <div style="text-align:left !important;">
+              <h4 style="font-size:14px; font-weight:700; color:#101A46; margin:0 0 1px 0; text-align:left !important;">Service Offerings</h4>
+              <p style="font-size:11.5px; color:#5C6F9F; margin:0; text-align:left !important;">Add the services that this client provides or is known for.</p>
+            </div>
           </div>
         </div>
 

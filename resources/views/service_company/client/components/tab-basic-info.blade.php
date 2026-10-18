@@ -6,19 +6,19 @@
       <!-- ==========================================
            SECTION 1: Company Identity
            ========================================== -->
-      <section class="card client-section-card client-identity-card company-identity-card mb-4" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden;" aria-labelledby="client-identity-title">
-        <div class="card-header border-0 py-4 px-6 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important;">
-          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+      <section class="card client-section-card client-identity-card company-identity-card mb-4" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); padding:20px 22px !important;" aria-labelledby="client-identity-title">
+        <!-- Section Title Row: Icon + Heading locked together at left -->
+        <div class="d-flex align-items-center mb-5" style="gap:12px; justify-content:flex-start !important; text-align:left !important;">
+          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; flex-shrink:0;">
             <i class="la la-user" style="font-size:20px; color:#ca8a04;"></i>
           </div>
-          <div>
-            <h3 class="client-section-heading" id="client-identity-title" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0;">Company Identity</h3>
-            <p class="client-section-copy" style="font-size:12px; color:#5C6F9F; margin:0;">Upload logo and enter basic details for this client.</p>
+          <div style="text-align:left !important;">
+            <h3 class="client-section-heading" id="client-identity-title" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0; text-align:left !important;">Company Identity</h3>
+            <p class="client-section-copy" style="font-size:11.5px; color:#5C6F9F; margin:0; text-align:left !important;">Upload logo and enter basic details for this client.</p>
           </div>
         </div>
 
-        <div class="card-body p-6">
-          <div class="client-branding-grid" style="display:grid; grid-template-columns:180px 140px minmax(0, 1fr); gap:16px; align-items:stretch;">
+        <div class="client-branding-grid" style="display:grid; grid-template-columns:180px 140px minmax(0, 1fr); gap:16px; align-items:stretch;">
             
             <!-- Logo Upload Dashed Area -->
             <label class="client-logo-upload" for="client_logo_input" style="border:1.5px dashed #93c5fd; border-radius:10px; padding:16px 12px; text-align:center; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:148px; height:100%; box-sizing:border-box; transition:border-color 0.15s ease;">
@@ -91,19 +91,19 @@
       <!-- ==========================================
            SECTION 2: Organization Profile
            ========================================== -->
-      <section class="card client-section-card client-profile-card organization-profile-card" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden;" aria-labelledby="client-details-title">
-        <div class="card-header border-0 py-4 px-6 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important;">
-          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+      <section class="card client-section-card client-profile-card organization-profile-card" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); padding:20px 22px !important;" aria-labelledby="client-details-title">
+        <!-- Section Title Row: Icon + Heading locked together at left -->
+        <div class="d-flex align-items-center mb-5" style="gap:12px; justify-content:flex-start !important; text-align:left !important;">
+          <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; flex-shrink:0;">
             <i class="la la-building" style="font-size:20px; color:#ca8a04;"></i>
           </div>
-          <div>
-            <h3 class="client-section-heading" id="client-details-title" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0;">Organization Profile</h3>
-            <p class="client-section-copy" style="font-size:12px; color:#5C6F9F; margin:0;">Tell us a little about the organization.</p>
+          <div style="text-align:left !important;">
+            <h3 class="client-section-heading" id="client-details-title" style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0; text-align:left !important;">Organization Profile</h3>
+            <p class="client-section-copy" style="font-size:11.5px; color:#5C6F9F; margin:0; text-align:left !important;">Tell us a little about the organization.</p>
           </div>
         </div>
 
-        <div class="card-body p-6">
-          <div class="client-details-grid" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px;">
+        <div class="client-details-grid" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px;">
             
             <!-- Industry Field (God-Level Combobox) -->
             <div class="client-field fv-plugins-icon-container">
@@ -230,7 +230,6 @@
             <i class="la la-info-circle" style="color:#3b82f6; font-size:16px;"></i>
             <span><strong>Tip:</strong> You can update these details anytime from the client profile.</span>
           </div>
-        </div>
       </section>
 
     </div>
