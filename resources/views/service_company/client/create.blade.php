@@ -4791,7 +4791,7 @@ $('.remove_address').click(function(){
       return;
     }
 
-    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || 'http://127.0.0.1:8787';
+    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || '{{ config('services.company_intelligence.url', 'http://127.0.0.1:8787') }}';
     var targetUrl = workerEndpoint.replace(/\/+$/, '') + '/?domain=' + encodeURIComponent(cleanDomain);
 
     $.ajax({
