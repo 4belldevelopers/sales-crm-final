@@ -2683,15 +2683,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->tags = $tags;
         }
 
-        // Extended Enterprise CRM Intelligence & Commercial Terms
-        $client->detail = $this->buildClientExtendedDetail($request, $client->detail);
-        if (! empty($request->commission_model)) {
-            $client->commission = (string) $request->commission_model;
-        }
-        if (! empty($request->payment_terms)) {
-            $client->payout = (string) $request->payment_terms;
-        }
-
         // Handle logo upload outside database transaction
         $timeStamp = time();
         if ($request->hasFile('logo')) {
@@ -3346,15 +3337,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $tags = array_column($tags, 'value');
             $tags = implode(',', $tags);
             $client->tags = $tags;
-        }
-
-        // Extended Enterprise CRM Intelligence & Commercial Terms
-        $client->detail = $this->buildClientExtendedDetail($request, null);
-        if (! empty($request->commission_model)) {
-            $client->commission = (string) $request->commission_model;
-        }
-        if (! empty($request->payment_terms)) {
-            $client->payout = (string) $request->payment_terms;
         }
 
         // Handle logo upload outside database transaction
@@ -4173,41 +4155,5 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'last_error' => substr($error, 0, 1000),
                 'updated_at' => now(),
             ]);
-    }
-
-    /**
-     * Build extended enterprise CRM attributes payload.
-     * Intent: Encapsulates all extended intelligence and commercial fields into client->detail JSON.
-     * Tenancy Note: Tenant safe, client-scoped.
-     */
-    private function buildClientExtendedDetail(Request $request, $existingJson = null): string
-    {
-        $existing = [];
-        if (!empty($existingJson)) {
-            $decoded = json_decode($existingJson, true);
-            if (is_array($decoded)) {
-                $existing = $decoded;
-            }
-        }
-
-        $fields = [
-            'legal_name', 'brand_color', 'ats_provider', 'career_page_url', 'stock_ticker',
-            'timezone', 'required_hours_overlap', 'work_model', 'notice_period_tolerance',
-            'notice_buyout_support', 'compensation_philosophy', 'ap_email', 'vms_portal_url',
-            'linkedin_url', 'twitter_url', 'github_url', 'youtube_url', 'facebook_url',
-            'commission_model', 'replacement_guarantee_days', 'payment_trigger', 'payment_terms',
-            'po_required', 'tax_id', 'candidate_ownership_months', 'msa_status',
-            'marketplace_sharing', 'bounty_split_percentage'
-        ];
-
-        $incoming = [];
-        foreach ($fields as $field) {
-            if ($request->has($field) && $request->input($field) !== null) {
-                $incoming[$field] = $request->input($field);
-            }
-        }
-
-        $merged = array_merge($existing, $incoming);
-        return json_encode($merged);
     }
 }
