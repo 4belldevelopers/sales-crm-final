@@ -1,1022 +1,1243 @@
 @extends('layouts.superadmin_layout')
 
-
-
 @push('head-script')
-    <link rel="stylesheet" href="//cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.bootstrap.min.css">
-    <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-    <!--<link rel="stylesheet" href="{{ asset('assets/node_modules/dropify/dist/css/dropify.min.css') }}">-->
-
-
     <style>
         body {
             overflow-x: hidden;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #F8FAFC;
         }
 
-        .company-logo {
-            max-height: 50px;
-            max-width: 120px;
-        }
-
-        .company-logo-div {
-            border-radius: 2px;
-            padding: 2px 2px 2px 2px;
-            margin-bottom: 2px;
-        }
-
-        .symbol.symbol-circle,
-        .symbol.symbol-circle .symbol-label,
-        .symbol.symbol-circle>img {
-            border-radius: 10%;
-        }
-
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesDefaultPackage {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesDefaultPackage {
-                width: 1200px;
-            }
-        }
-
-        /* Dynamic Template Variables Helper */
-        .var-helper-card {
+        /* Top Action Bar */
+        .template-header-bar {
             background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        .var-helper-header {
-            background: #F8FAFC;
-            border-bottom: 1px solid #EDF2F7;
-            padding: 12px 18px;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 16px 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 16px;
         }
-        .var-search-box {
-            position: relative;
-            min-width: 220px;
+
+        .header-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #D97706;
+            flex-shrink: 0;
         }
-        .var-search-box input {
-            height: 34px;
-            border-radius: 6px;
-            font-size: 12px;
-            border: 1px solid #CBD5E1;
-            padding-left: 32px;
-            padding-right: 12px;
+
+        .btn-save-yellow {
+            background-color: #F59E0B !important;
+            border-color: #F59E0B !important;
+            color: #111827 !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            padding: 9px 22px !important;
+            border-radius: 8px !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25);
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn-save-yellow:hover {
+            background-color: #D97706 !important;
+            border-color: #D97706 !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+        }
+
+        .btn-cancel-light {
+            background: #FFFFFF !important;
+            border: 1px solid #D1D5DB !important;
+            color: #374151 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            padding: 9px 20px !important;
+            border-radius: 8px !important;
+            transition: all 0.15s ease-in-out;
+            text-decoration: none !important;
+        }
+
+        .btn-cancel-light:hover {
+            background: #F3F4F6 !important;
+            color: #111827 !important;
+        }
+
+        /* Section Cards */
+        .section-card {
             background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            position: relative;
         }
-        .var-search-box .search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94A3B8;
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #F1F5F9;
         }
-        .var-cat-tabs {
+
+        .section-header-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .icon-purple {
+            background: #F5F3FF;
+            color: #7C3AED;
+            border: 1px solid #EDE9FE;
+        }
+
+        .icon-blue {
+            background: #EFF6FF;
+            color: #2563EB;
+            border: 1px solid #DBEAFE;
+        }
+
+        .icon-gray {
+            background: #F8FAFC;
+            color: #475569;
+            border: 1px solid #E2E8F0;
+        }
+
+        .icon-amber {
+            background: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FDE68A;
+        }
+
+        .section-title {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: #0F172A;
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: #64748B;
+            margin: 2px 0 0 0;
+        }
+
+        /* Form Inputs */
+        .form-label-custom {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 4px;
-            padding: 8px 14px;
-            background: #FFFFFF;
-            border-bottom: 1px solid #EDF2F7;
-            overflow-x: auto;
-            white-space: nowrap;
         }
-        .var-cat-btn {
+
+        .form-label-custom .req {
+            color: #EF4444;
+        }
+
+        .form-control-custom,
+        .form-select-custom {
+            height: 42px;
+            border-radius: 8px;
+            border: 1px solid #CBD5E1;
+            font-size: 13px;
+            color: #0F172A;
+            padding: 8px 14px;
+            background-color: #FFFFFF;
+            transition: all 0.15s ease-in-out;
+            width: 100%;
+        }
+
+        .form-control-custom:focus,
+        .form-select-custom:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+            outline: none;
+            background-color: #FFFFFF;
+        }
+
+        .form-hint {
+            font-size: 11.5px;
+            color: #64748B;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Custom Editor Toolbar Strip */
+        .editor-custom-toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 8px 12px;
+            background: #F8FAFC;
+            border: 1px solid #CBD5E1;
+            border-bottom: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .ed-tool-btn {
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 6px;
-            padding: 5px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748B;
-            cursor: pointer;
-            transition: all 0.15s ease-in-out;
-        }
-        .var-cat-btn:hover {
-            color: #1E40AF;
-            background: #F1F5F9;
-        }
-        .var-cat-btn.active {
-            background: #EFF6FF;
-            color: #1D4ED8;
-            border-color: #BFDBFE;
-        }
-        .var-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 10px;
-            max-height: 280px;
-            overflow-y: auto;
-            padding: 14px 16px;
-            background: #FAFAFB;
-        }
-        .var-card {
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            padding: 9px 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 5px;
-            transition: all 0.15s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-        .var-card:hover {
-            border-color: #93C5FD;
-            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.08);
-            transform: translateY(-1px);
-        }
-        .var-card-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-        .var-token-pill {
-            font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-            font-size: 11.5px;
-            font-weight: 700;
-            color: #1E40AF;
-            background: #EFF6FF;
-            border: 1px solid #DBEAFE;
             border-radius: 5px;
-            padding: 2px 7px;
-            letter-spacing: -0.2px;
-        }
-        .var-card-desc {
-            font-size: 11.5px;
+            padding: 5px 8px;
+            font-size: 13px;
             color: #475569;
-            line-height: 1.35;
-        }
-        .var-card-actions {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 2px;
-        }
-        .var-act-btn {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid transparent;
             cursor: pointer;
-            transition: all 0.12s ease-in-out;
-            line-height: 1.35;
-            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.1s ease;
         }
-        .var-act-btn-body {
-            background: #EFF6FF;
-            color: #1D4ED8;
-            border-color: #BFDBFE;
-        }
-        .var-act-btn-body:hover {
-            background: #DBEAFE;
-            color: #1E3A8A;
-        }
-        .var-act-btn-sub {
-            background: #FEF3C7;
-            color: #92400E;
-            border-color: #FDE68A;
-        }
-        .var-act-btn-sub:hover {
-            background: #FDE68A;
-            color: #78350F;
-        }
-        .var-act-btn-copy {
-            background: #F1F5F9;
-            color: #475569;
-            border-color: #E2E8F0;
-            margin-left: auto;
-        }
-        .var-act-btn-copy:hover {
+
+        .ed-tool-btn:hover {
             background: #E2E8F0;
             color: #0F172A;
         }
-        .var-target-toggle {
+
+        .ed-tool-btn.active {
+            background: #E2E8F0;
+            color: #1E293B;
+            font-weight: 700;
+        }
+
+        .ed-tool-sep {
+            width: 1px;
+            height: 18px;
+            background: #CBD5E1;
+            margin: 0 4px;
+        }
+
+        .ed-select-style {
+            height: 28px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #CBD5E1;
+            background: #FFFFFF;
+            padding: 2px 8px;
+            color: #334155;
+            cursor: pointer;
+        }
+
+        .ed-personalize-btn {
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
-            background: #F1F5F9;
+            gap: 4px;
+            margin-left: auto;
+            transition: all 0.15s ease;
+        }
+
+        .ed-personalize-btn:hover {
+            background: #DBEAFE;
+            color: #1E3A8A;
+        }
+
+        /* Editor Container wrapper */
+        .editor-wrapper {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            overflow: hidden;
             border: 1px solid #CBD5E1;
-            border-radius: 6px;
-            padding: 2px;
-            gap: 2px;
         }
-        .var-target-choice {
-            padding: 3px 10px;
+
+        .cke_chrome {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .editor-footer-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: #F8FAFC;
+            border-top: 1px solid #E2E8F0;
+            font-size: 11.5px;
+            color: #64748B;
+        }
+
+        /* Right Panel: Available Variables */
+        .variables-panel {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            position: sticky;
+            top: 20px;
+        }
+
+        .var-search-input {
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #CBD5E1;
+            font-size: 12.5px;
+            padding: 6px 12px 6px 34px;
+            width: 100%;
+            background: #FFFFFF;
+            transition: all 0.15s ease;
+        }
+
+        .var-search-input:focus {
+            border-color: #F59E0B;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+        }
+
+        .var-search-wrap {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .var-search-wrap .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 13px;
+        }
+
+        /* Category Pill Tabs */
+        .var-pill-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #F1F5F9;
+            scrollbar-width: thin;
+        }
+
+        .var-pill-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .var-pill-tabs::-webkit-scrollbar-thumb {
+            background: #E2E8F0;
             border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #475569;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            transition: all 0.15s;
         }
-        .var-target-choice.active {
+
+        .var-pill-btn {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+        }
+
+        .var-pill-btn:hover {
+            background: #F1F5F9;
+            color: #0F172A;
+        }
+
+        .var-pill-btn.active {
+            background: #FEF3C7;
+            border-color: #FDE68A;
+            color: #92400E;
+            font-weight: 700;
+        }
+
+        /* Variables List */
+        .var-cards-list {
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scrollbar-width: thin;
+        }
+
+        .var-cards-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .var-cards-list::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+        .var-item-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+            user-select: none;
+        }
+
+        .var-item-card:hover {
+            border-color: #93C5FD;
+            background: #F8FAFC;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .var-item-left {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .var-token-badge {
+            font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #2563EB;
+            background: #EFF6FF;
+            border: 1px solid #DBEAFE;
+            border-radius: 6px;
+            padding: 2px 8px;
+            display: inline-block;
+            letter-spacing: -0.2px;
+            width: fit-content;
+        }
+
+        .var-item-desc {
+            font-size: 12px;
+            color: #64748B;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .var-copy-btn {
+            background: #F1F5F9;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748B;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            flex-shrink: 0;
+        }
+
+        .var-copy-btn:hover {
             background: #2563EB;
+            border-color: #2563EB;
             color: #FFFFFF;
-            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Target Insertion Indicator */
+        .var-target-bar {
+            background: #F1F5F9;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11.5px;
+            color: #475569;
+        }
+
+        .target-pill {
+            background: #FFFFFF;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-weight: 600;
+            color: #2563EB;
+        }
+
+        /* Toast notification */
+        .token-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0F172A;
+            color: #FFFFFF;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 99999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+        }
+
+        .token-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .emoji-picker-menu {
+            position: absolute;
+            right: 0;
+            top: 48px;
+            background: #FFFFFF;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            z-index: 1050;
+            font-size: 18px;
+            display: none;
+        }
+
+        .emoji-picker-menu span {
+            cursor: pointer;
+            padding: 4px;
+            text-align: center;
+            border-radius: 4px;
+            transition: background 0.1s;
+        }
+
+        .emoji-picker-menu span:hover {
+            background: #F1F5F9;
         }
     </style>
 @endpush
 
-@php 
-		use App\Helper\GeneralMethod;
-		$salaryMode 					=	GeneralMethod::salaryMode();
-		$currencySymbole 				=	GeneralMethod::currencySymbole();
-			
-@endphp 
-
-
-
-
 @section('content')
-    <!--begin::toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">E-mail Template <span
-                        class="h-20px border-gray-200 border-start ms-3 mx-2 d-none"></span> <small
-                        class="text-muted fs-7 fw-bold my-1 ms-1 d-none">#XRS-45670</small> </h1>
+    <!-- Top Action Bar matching Image 1 -->
+    <div class="template-header-bar mb-6">
+        <div class="d-flex align-items-center">
+            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn btn-sm btn-icon btn-white border border-gray-300 rounded-circle me-3 hover-elevate-up" title="Back to Templates">
+                <i class="bi bi-arrow-left fs-4 text-gray-700"></i>
+            </a>
+            <div class="header-icon-box me-3">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
             </div>
+            <div>
+                <h1 class="fs-4 fw-bolder text-gray-900 m-0">
+                    {{ @$th_email_template->e_temp_id ? 'Edit Email Template' : 'Add Email Template' }}
+                </h1>
+                <p class="fs-7 text-muted m-0">Create a new email template for recruitment communication.</p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn-cancel-light me-3">Cancel</a>
+            <button type="button" id="save-form" class="btn-save-yellow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Template
+            </button>
         </div>
     </div>
 
+    <!-- Main Content Container: 2 Columns -->
+    <div class="container-fluid px-6 pb-10">
+        <form id="editSettings" class="ajax-form">
+            @csrf
+            <input type="hidden" name="tokenId" id="tokenId" value="{{ (@$th_email_template->e_temp_id) ? @$th_email_template->e_temp_id : 0 }}">
 
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
-        <!--begin::Post-->
-        <div class="post d-flex flex-column-fluid" id="kt_post">
-            <!--begin::Container-->
-            <div id="kt_content_container" class="container-fluid px-3">
-                <!--begin::Card-->
-                <div class="card">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5">
+            <div class="row g-6">
+                <!-- Left Column: Form & Editor (Col 7 / 8) -->
+                <div class="col-xl-8 col-lg-7">
 
-                        <table>
-                            <tbody>
-                            </tbody>
-                        </table>
-                        <div class="table-responsive">
-                            
-                        </div>
-                        <form id="editSettings" class="ajax-form">
-                            @csrf
-
-                            <div class="form-group row mb-4">
-                                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template name</label>
-                                <div class="col-lg-10 col-xl-10">
-                                  <input class="form-control form-control-solid" name="template" id="template" placeholder="Enter Template name" value="{{( @$th_email_template->display_name) ?  @$th_email_template->display_name : '' }}" >
-                                  <input type="hidden" name="tokenId" id="tokenId" value="{{ (@$th_email_template->e_temp_id) ? @$th_email_template->e_temp_id : 0 }}" >
-                                  <span class="form-text text-muted">Please enter Template name</span> </div>
-                              </div>
-
-
-                        <div class="form-group row mb-4">
-                            <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
-                            <div class="col-lg-10 col-xl-10">
-                              <input class="form-control form-control-solid" name="subject" id="subject" placeholder="Enter subject" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" >
-                              <span class="form-text text-muted">Please enter subject</span> </div>
-                          </div>
-                          <div class="form-group row mb-4">
-                            <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Status </label>
-                            <div class="col-lg-10 col-xl-10">
-                          <select name="status_is" id="status_is" class="form-select form-select-solid" aria-label="Select status_is">
-                            <option value="1" {{ @$th_email_template->status ? ($th_email_template->status==1) ? 'selected' : '' : '' }}>Active</option>
-                            <option value="0" {{ @$th_email_template->status ? ($th_email_template->status==0) ? 'selected' : '' : '' }}>Inactive</option>    				
-                          </select>
-                        </div>
-                       </div>
-                       <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template Types </label>
-                        <div class="col-lg-10 col-xl-10">
-                      <select name="temptype_is" id="temptype_is" class="form-select form-select-solid" aria-label="Select temptype_is">
-                        <option value="1" {{ @$th_email_template->temptype ? ($th_email_template->temptype==1) ? 'selected' : '' : '' }}>Fwd Resume</option>
-                        <option value="2" {{ @$th_email_template->temptype ? ($th_email_template->temptype==2) ? 'selected' : '' : '' }}>Mass Mail</option>  
-                        <option value="3" {{ @$th_email_template->temptype ? ($th_email_template->temptype==3) ? 'selected' : '' : '' }}>Interview Mail</option>  
-                        <option value="4" {{ @$th_email_template->temptype ? ($th_email_template->temptype==4) ? 'selected' : '' : '' }}>Send Mail</option> 
-                        <option value="5" {{ @$th_email_template->temptype ? ($th_email_template->temptype==5) ? 'selected' : '' : '' }}>Bench Reject Mail</option> 
-                        <option value="6" {{ @$th_email_template->temptype ? ($th_email_template->temptype==6) ? 'selected' : '' : '' }}>Job Reject Mail Marketplace</option> 
-                        <option value="7" {{ @$th_email_template->temptype ? ($th_email_template->temptype==7) ? 'selected' : '' : '' }}>Candidate Send Offer Letter</option> 
-                        <option value="8" {{ @$th_email_template->temptype ? ($th_email_template->temptype==8) ? 'selected' : '' : '' }}>Management Offer Letter Approval</option>
-                        <option value="9" {{ @$th_email_template->temptype ? ($th_email_template->temptype==9) ? 'selected' : '' : '' }}>Whatsapp Template</option> 
-                      </select>
-                    </div>
-                   </div>
-
-                        <div class="form-group row mb-4" id="row_temp_for_interview" style="{{ (@$th_email_template->temptype == 4 || empty($th_email_template->temptype)) ? '' : 'display:none;' }}">
-                          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Audience Variation</label>
-                          <div class="col-lg-10 col-xl-10">
-                            <select name="tempForInterview_is" id="tempForInterview_is" class="form-select form-select-solid" aria-label="Select Audience Variation">
-                              <option value="1" {{ @$th_email_template->tempForInterview == 1 ? 'selected' : '' }}>1 - Company Opportunity (Internal / Direct Hiring)</option>
-                              <option value="2" {{ @$th_email_template->tempForInterview == 2 ? 'selected' : '' }}>2 - Client Opportunity (Staffing / Client Job)</option>
-                              <option value="3" {{ @$th_email_template->tempForInterview == 3 ? 'selected' : '' }}>3 - Client Opportunity with Company Payroll</option>
-                              <option value="4" {{ @$th_email_template->tempForInterview == 4 ? 'selected' : '' }}>4 - Documents Required</option>
-                            </select>
-                            <span class="form-text text-muted">Controls whether this template applies to internal jobs, client staffing jobs, or required document requests</span>
-                          </div>
-                        </div>
-
-                        <!-- Dynamic Template Variables Helper Panel -->
-                        <div class="form-group row mb-4">
-                          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">
-                            Dynamic Variables
-                            <span class="d-block text-muted fs-8 fw-normal mt-1">1-Click Insert into Subject or Body</span>
-                          </label>
-                          <div class="col-lg-10 col-xl-10">
-                            <div class="var-helper-card">
-                              <!-- Header: Search + Target Toggle -->
-                              <div class="var-helper-header">
-                                <div class="d-flex align-items-center gap-2">
-                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Card 1: Template Details -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-header-icon icon-purple">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
                                     <line x1="16" y1="17" x2="8" y2="17"></line>
                                     <polyline points="10 9 9 9 8 9"></polyline>
-                                  </svg>
-                                  <span class="fw-bolder fs-6 text-gray-800">Smart Template Variables</span>
-                                  <span class="badge badge-light-primary fw-bold fs-8">Click Any Pill To Insert</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                  <!-- Quick Search -->
-                                  <div class="var-search-box">
-                                    <span class="search-icon">
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    </span>
-                                    <input type="text" id="varSearchInput" class="form-control" placeholder="Search variables (e.g. name, hr, salary)...">
-                                  </div>
-                                  <!-- Target Field Toggle -->
-                                  <div class="d-flex align-items-center gap-1">
-                                    <span class="fs-8 text-gray-500 fw-semibold">Insert into:</span>
-                                    <div class="var-target-toggle">
-                                      <button type="button" class="var-target-choice active" data-target="body">Body</button>
-                                      <button type="button" class="var-target-choice" data-target="subject">Subject</button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <!-- Category Filter Tabs -->
-                              <div class="var-cat-tabs">
-                                <button type="button" class="var-cat-btn active" data-cat="all">All Variables</button>
-                                <button type="button" class="var-cat-btn" data-cat="candidate">👤 Candidate</button>
-                                <button type="button" class="var-cat-btn" data-cat="company">🏢 Company & Client</button>
-                                <button type="button" class="var-cat-btn" data-cat="job">💼 Job & Position</button>
-                                <button type="button" class="var-cat-btn" data-cat="recruiter">👨‍💼 Recruiter</button>
-                                <button type="button" class="var-cat-btn" data-cat="offer">📅 Offer & Interview</button>
-                              </div>
-
-                              <!-- Variables Grid Container -->
-                              <div class="var-grid" id="varGridContainer">
-
-                                <!-- Candidate Category -->
-                                <div class="var-card" data-cat="candidate" data-token="[{CANDIDATE_NAME}]" data-desc="Full name of candidate">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CANDIDATE_NAME}]</span>
-                                    <span class="badge badge-light-success fs-9 py-0 px-2">Candidate</span>
-                                  </div>
-                                  <div class="var-card-desc">Candidate's full name (e.g. Rahul Sharma)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CANDIDATE_NAME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CANDIDATE_NAME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CANDIDATE_NAME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="candidate" data-token="[{CANDIDATE_ID}]" data-desc="Unique candidate ID">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CANDIDATE_ID}]</span>
-                                    <span class="badge badge-light-success fs-9 py-0 px-2">Candidate</span>
-                                  </div>
-                                  <div class="var-card-desc">Unique candidate application ID number</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CANDIDATE_ID}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CANDIDATE_ID}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CANDIDATE_ID}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <!-- Company & Client Category -->
-                                <div class="var-card" data-cat="company" data-token="[{COMPANY_NAME}]" data-desc="Recruiter or hiring company name">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{COMPANY_NAME}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Hiring company or recruiter organization name</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{COMPANY_NAME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{COMPANY_NAME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{COMPANY_NAME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{CLIENT_NAME}]" data-desc="Client organization name">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CLIENT_NAME}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Client company name (auto-falls back if internal)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CLIENT_NAME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CLIENT_NAME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CLIENT_NAME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{COMPANY_WEBSITE}]" data-desc="Recruiter company website URL">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{COMPANY_WEBSITE}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Company official website URL (e.g. www.jero.works)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{COMPANY_WEBSITE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{COMPANY_WEBSITE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{COMPANY_WEBSITE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{CLIENT_WEBSITE}]" data-desc="Client organization website URL">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CLIENT_WEBSITE}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Client company official website URL</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CLIENT_WEBSITE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CLIENT_WEBSITE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CLIENT_WEBSITE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{COMPANY_DESCRIPTION}]" data-desc="About company overview">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{COMPANY_DESCRIPTION}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">About the company profile & background</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{COMPANY_DESCRIPTION}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{COMPANY_DESCRIPTION}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{COMPANY_DESCRIPTION}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{CLIENT_DESCRIPTION}]" data-desc="About client overview">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CLIENT_DESCRIPTION}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">About the client company profile & background</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CLIENT_DESCRIPTION}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CLIENT_DESCRIPTION}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CLIENT_DESCRIPTION}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{COMPANY_ADDRESS}]" data-desc="Company registered address">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{COMPANY_ADDRESS}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Registered company office / job location address</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{COMPANY_ADDRESS}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{COMPANY_ADDRESS}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{COMPANY_ADDRESS}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="company" data-token="[{NO_OF_EMP}]" data-desc="Employee size range">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{NO_OF_EMP}]</span>
-                                    <span class="badge badge-light-primary fs-9 py-0 px-2">Company</span>
-                                  </div>
-                                  <div class="var-card-desc">Company employee count (e.g. 50-200+ employees)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{NO_OF_EMP}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{NO_OF_EMP}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{NO_OF_EMP}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <!-- Job Category -->
-                                <div class="var-card" data-cat="job" data-token="[{JOB_TITLE}]" data-desc="Designation or job title">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOB_TITLE}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">Position / designation title (e.g. Junior Java Developer)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOB_TITLE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOB_TITLE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOB_TITLE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="job" data-token="[{JOB_LOCATION}]" data-desc="Job location city and state">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOB_LOCATION}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">City, state, and country location of the job</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOB_LOCATION}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOB_LOCATION}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOB_LOCATION}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="job" data-token="[{JOB_DESCRIPTION}]" data-desc="Full job description">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOB_DESCRIPTION}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">Complete job responsibilities and requirements</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOB_DESCRIPTION}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOB_DESCRIPTION}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOB_DESCRIPTION}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="job" data-token="[{WORK_SHIFT}]" data-desc="Work shift timing">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{WORK_SHIFT}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">Shift hours (e.g. Day Shift, 9:00 AM - 6:00 PM)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{WORK_SHIFT}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{WORK_SHIFT}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{WORK_SHIFT}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="job" data-token="[{JOB_TYPE}]" data-desc="Employment type">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOB_TYPE}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">Employment type (Full-Time, Contract, Part-Time)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOB_TYPE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOB_TYPE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOB_TYPE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="job" data-token="[{JOB_ID}]" data-desc="Job reference ID">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOB_ID}]</span>
-                                    <span class="badge badge-light-warning fs-9 py-0 px-2">Job</span>
-                                  </div>
-                                  <div class="var-card-desc">System job reference / requisition number</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOB_ID}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOB_ID}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOB_ID}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <!-- Recruiter Category -->
-                                <div class="var-card" data-cat="recruiter" data-token="[{HR_NAME}]" data-desc="Recruiter person name">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{HR_NAME}]</span>
-                                    <span class="badge badge-light-info fs-9 py-0 px-2">Recruiter</span>
-                                  </div>
-                                  <div class="var-card-desc">Logged-in recruiter / HR executive name</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{HR_NAME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{HR_NAME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{HR_NAME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="recruiter" data-token="[{HR_EMAIL}]" data-desc="Recruiter email address">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{HR_EMAIL}]</span>
-                                    <span class="badge badge-light-info fs-9 py-0 px-2">Recruiter</span>
-                                  </div>
-                                  <div class="var-card-desc">Official email address of the recruiter</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{HR_EMAIL}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{HR_EMAIL}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{HR_EMAIL}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="recruiter" data-token="[{HR_PHONE}]" data-desc="Recruiter contact number">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{HR_PHONE}]</span>
-                                    <span class="badge badge-light-info fs-9 py-0 px-2">Recruiter</span>
-                                  </div>
-                                  <div class="var-card-desc">Direct mobile / contact phone number of the recruiter</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{HR_PHONE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{HR_PHONE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{HR_PHONE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="recruiter" data-token="[{WHAT_LINK}]" data-desc="Clickable WhatsApp link">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{WHAT_LINK}]</span>
-                                    <span class="badge badge-light-info fs-9 py-0 px-2">Recruiter</span>
-                                  </div>
-                                  <div class="var-card-desc">Clickable "Connect on WhatsApp" link button</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{WHAT_LINK}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{WHAT_LINK}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{WHAT_LINK}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="recruiter" data-token="[{MANAGER_NAME}]" data-desc="Hiring manager name">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{MANAGER_NAME}]</span>
-                                    <span class="badge badge-light-info fs-9 py-0 px-2">Recruiter</span>
-                                  </div>
-                                  <div class="var-card-desc">Assigned hiring manager / contact person name</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{MANAGER_NAME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{MANAGER_NAME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{MANAGER_NAME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <!-- Offer & Interview Category -->
-                                <div class="var-card" data-cat="offer" data-token="[{INTERVIEW_DATE_TIME}]" data-desc="Scheduled interview time">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{INTERVIEW_DATE_TIME}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Interview</span>
-                                  </div>
-                                  <div class="var-card-desc">Scheduled interview date and time</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{INTERVIEW_DATE_TIME}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{INTERVIEW_DATE_TIME}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{INTERVIEW_DATE_TIME}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{INTERVIEW_LINK}]" data-desc="Meeting link (Google Meet/Zoom)">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{INTERVIEW_LINK}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Interview</span>
-                                  </div>
-                                  <div class="var-card-desc">Video call interview URL (Google Meet / Zoom / Teams)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{INTERVIEW_LINK}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{INTERVIEW_LINK}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{INTERVIEW_LINK}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{INTERVIEW_MODE}]" data-desc="Mode of interview">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{INTERVIEW_MODE}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Interview</span>
-                                  </div>
-                                  <div class="var-card-desc">Interview format (Online Video / In-Person / Telephonic)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{INTERVIEW_MODE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{INTERVIEW_MODE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{INTERVIEW_MODE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{JOINING_DATE}]" data-desc="Proposed joining date">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{JOINING_DATE}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Offer</span>
-                                  </div>
-                                  <div class="var-card-desc">Expected joining date (e.g. 01 Nov 2026)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{JOINING_DATE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{JOINING_DATE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{JOINING_DATE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{SALARY_AMOUNT}]" data-desc="Offered salary or CTC">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{SALARY_AMOUNT}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Offer</span>
-                                  </div>
-                                  <div class="var-card-desc">Offered salary or compensation package amount</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{SALARY_AMOUNT}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{SALARY_AMOUNT}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{SALARY_AMOUNT}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{SALARY_MODE}]" data-desc="Salary period">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{SALARY_MODE}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Offer</span>
-                                  </div>
-                                  <div class="var-card-desc">Salary frequency (Per Annum, Per Month, Per Hour)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{SALARY_MODE}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{SALARY_MODE}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{SALARY_MODE}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{CURRENCY}]" data-desc="Currency symbol">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{CURRENCY}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Offer</span>
-                                  </div>
-                                  <div class="var-card-desc">Currency code / symbol (e.g. ₹, $, €)</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{CURRENCY}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{CURRENCY}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{CURRENCY}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                                <div class="var-card" data-cat="offer" data-token="[{OFFER_LETTER_LINK}]" data-desc="Online offer acceptance URL">
-                                  <div class="var-card-top">
-                                    <span class="var-token-pill">[{OFFER_LETTER_LINK}]</span>
-                                    <span class="badge badge-light-danger fs-9 py-0 px-2">Offer</span>
-                                  </div>
-                                  <div class="var-card-desc">Candidate online offer letter review & acceptance link</div>
-                                  <div class="var-card-actions">
-                                    <button type="button" class="var-act-btn var-act-btn-body" onclick="insertVariableToken('[{OFFER_LETTER_LINK}]', 'body')">+ Body</button>
-                                    <button type="button" class="var-act-btn var-act-btn-sub" onclick="insertVariableToken('[{OFFER_LETTER_LINK}]', 'subject')">+ Subject</button>
-                                    <button type="button" class="var-act-btn var-act-btn-copy" onclick="insertVariableToken('[{OFFER_LETTER_LINK}]', 'copy')" title="Copy to clipboard">📋 Copy</button>
-                                  </div>
-                                </div>
-
-                              </div>
-
-                              <!-- No Results Notice -->
-                              <div id="varNoResults" class="p-6 text-center text-muted fs-7" style="display:none;">
-                                No variables match your search filter.
-                              </div>
-
-                              <!-- Card Footer Info -->
-                              <div class="d-flex align-items-center justify-content-between py-2 px-4 bg-light border-top border-gray-200 fs-8 text-muted">
-                                <div>
-                                  💡 <strong>1-Click Action:</strong> Click any variable or <strong>+ Body</strong> to insert into CKEditor, or <strong>+ Subject</strong> for email title.
-                                </div>
-                                <div id="varFeedbackMsg" class="text-success fw-bold" style="display:none;"></div>
-                              </div>
+                                </svg>
                             </div>
-                          </div>
+                            <div>
+                                <h2 class="section-title">Template Details</h2>
+                                <p class="section-subtitle">Provide basic information for your email template.</p>
+                            </div>
                         </div>
 
-                          <!--begin::Body-->
-                          <div class="form-group row mb-4">
-                            <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
-                            <div class="col-lg-10 col-xl-10">
-                              <textarea  id="editor1" name="editor1" row="10" >{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
-                              <span class="form-text text-muted"> Please enter email template body content </span> </div>
-                          </div>
+                        <div class="row g-4">
+                            <!-- Template Name -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Template Name <span class="req">*</span></label>
+                                <input type="text" class="form-control-custom" name="template" id="template" placeholder="Job Openings | Apply Now" value="{{ (@$th_email_template->display_name) ? @$th_email_template->display_name : (@$th_email_template->template_name ?: '') }}" required>
+                                <span class="form-hint">Give a descriptive name for easy identification.</span>
+                            </div>
 
-                          <div class="form-row row fv-row">
-                            <div class="col-12 text-center py-10">
+                            <!-- Template Type -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Template Type <span class="req">*</span></label>
+                                <div class="position-relative">
+                                    <select name="temptype_is" id="temptype_is" class="form-select-custom" required>
+                                        <option value="4" {{ (@$th_email_template->temptype == 4 || empty($th_email_template->temptype)) ? 'selected' : '' }}>Send Mail</option>
+                                        <option value="3" {{ (@$th_email_template->temptype == 3) ? 'selected' : '' }}>Interview Mail</option>
+                                        <option value="2" {{ (@$th_email_template->temptype == 2) ? 'selected' : '' }}>Mass Mail</option>
+                                        <option value="1" {{ (@$th_email_template->temptype == 1) ? 'selected' : '' }}>Fwd Resume</option>
+                                        <option value="5" {{ (@$th_email_template->temptype == 5) ? 'selected' : '' }}>Bench Reject Mail</option>
+                                        <option value="6" {{ (@$th_email_template->temptype == 6) ? 'selected' : '' }}>Job Reject Mail Marketplace</option>
+                                        <option value="7" {{ (@$th_email_template->temptype == 7) ? 'selected' : '' }}>Candidate Send Offer Letter</option>
+                                        <option value="8" {{ (@$th_email_template->temptype == 8) ? 'selected' : '' }}>Management Offer Letter Approval</option>
+                                    </select>
+                                </div>
+                                <span class="form-hint">Select the type of email template.</span>
+                            </div>
 
-                            <button type="button" id="save-form" class="btn btn-success waves-effect waves-light m-r-10">
-                                @lang('app.save')
-                            </button>
+                            <!-- Subject Line -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Subject <span class="req">*</span></label>
+                                <div class="position-relative">
+                                    <input type="text" class="form-control-custom pe-10" name="subject" id="subject" placeholder="Job Openings | [{COMPANY_NAME}] | Apply Now" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" required>
+                                    <button type="button" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-1" id="btnToggleEmoji" title="Insert Emoji">
+                                        <i class="bi bi-emoji-smile fs-5 text-gray-500"></i>
+                                    </button>
+                                    <div class="emoji-picker-menu" id="emojiPickerMenu">
+                                        <span>👋</span><span>🤝</span><span>🎉</span><span>💼</span><span>🚀</span><span>📢</span>
+                                        <span>📅</span><span>✨</span><span>🔥</span><span>💡</span><span>✅</span><span>📧</span>
+                                    </div>
+                                </div>
+                                <span class="form-hint">Email subject line. Use variables for dynamic content.</span>
+                            </div>
 
+                            <!-- Status -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Status</label>
+                                <select name="status_is" id="status_is" class="form-select-custom">
+                                    <option value="1" {{ (@$th_email_template && @$th_email_template->status == 1) || !isset($th_email_template->status) ? 'selected' : '' }}>● Active</option>
+                                    <option value="0" {{ (@$th_email_template && @$th_email_template->status == 0) ? 'selected' : '' }}>● Inactive</option>
+                                </select>
+                                <span class="form-hint">Enable or disable this template.</span>
+                            </div>
                         </div>
                     </div>
-                    </form>
 
+                    <!-- Card 2: Email Body -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-header-icon icon-blue">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="section-title">Email Body</h2>
+                                <p class="section-subtitle">Create your email content using the rich text editor. Insert variables to personalize the email.</p>
+                            </div>
+                        </div>
+
+                        <!-- Editor Wrapper matching the reference toolbar design -->
+                        <div class="editor-wrapper">
+                            <div class="editor-custom-toolbar">
+                                <select class="ed-select-style" id="edStyleSelect" onchange="applyEditorFormat(this.value)">
+                                    <option value="p">Normal</option>
+                                    <option value="h1">Heading 1</option>
+                                    <option value="h2">Heading 2</option>
+                                    <option value="h3">Heading 3</option>
+                                </select>
+
+                                <div class="ed-tool-sep"></div>
+
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+
+                                <div class="ed-tool-sep"></div>
+
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('bulletedList')" title="Bulleted List"><i class="bi bi-list-ul"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('numberedList')" title="Numbered List"><i class="bi bi-list-ol"></i></button>
+
+                                <div class="ed-tool-sep"></div>
+
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('link')" title="Insert Link"><i class="bi bi-link-45deg fs-6"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('image')" title="Insert Image"><i class="bi bi-image fs-6"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('table')" title="Insert Table"><i class="bi bi-table fs-6"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('source')" title="View HTML Source"><i class="bi bi-code-slash fs-6"></i></button>
+
+                                <div class="ed-tool-sep"></div>
+
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('justifyleft')" title="Align Left"><i class="bi bi-text-left"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('justifycenter')" title="Align Center"><i class="bi bi-text-center"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('justifyright')" title="Align Right"><i class="bi bi-text-right"></i></button>
+
+                                <div class="ed-personalize-btn dropdown-toggle" id="btnPersonalizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-magic fs-7"></i>
+                                    Personalize
+                                </div>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="btnPersonalizeDropdown" style="font-size: 12px; max-height: 280px; overflow-y: auto;">
+                                    <li><h6 class="dropdown-header text-uppercase text-muted fw-bold fs-9">Candidate Tokens</h6></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_NAME}]')"><code>[{CANDIDATE_NAME}]</code> &middot; Candidate Name</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_EMAIL}]')"><code>[{CANDIDATE_EMAIL}]</code> &middot; Candidate Email</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_PHONE}]')"><code>[{CANDIDATE_PHONE}]</code> &middot; Phone Number</a></li>
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                    <li><h6 class="dropdown-header text-uppercase text-muted fw-bold fs-9">Job & Company Tokens</h6></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{JOB_TITLE}]')"><code>[{JOB_TITLE}]</code> &middot; Job Title</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{COMPANY_NAME}]')"><code>[{COMPANY_NAME}]</code> &middot; Company Name</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CLIENT_NAME}]')"><code>[{CLIENT_NAME}]</code> &middot; Client Name</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{WORK_LOCATION}]')"><code>[{WORK_LOCATION}]</code> &middot; Work Location</a></li>
+                                </ul>
+                            </div>
+
+                            <textarea name="editor1" id="editor1" rows="12" class="form-control" style="min-height: 350px;">{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
+
+                            <div class="editor-footer-info">
+                                <span>Rich Text Editor &middot; Use variables from the right panel to dynamically populate fields</span>
+                                <div>
+                                    <span id="charCount">0</span>/5000 characters
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!--end::Card body-->
+
+                    <!-- Card 3: Additional Options -->
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div class="section-header-icon icon-gray">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="section-title">Additional Options</h2>
+                                <p class="section-subtitle">Configure optional settings for this template.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Audience Validation -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Audience Validation</label>
+                                <select name="tempForInterview_is" id="tempForInterview_is" class="form-select-custom">
+                                    <option value="1" {{ @$th_email_template->tempForInterview == 1 ? 'selected' : '' }}>1 - Company Opportunity (Internal / Direct Hiring)</option>
+                                    <option value="2" {{ @$th_email_template->tempForInterview == 2 ? 'selected' : '' }}>2 - Client Opportunity (Staffing / Client Job)</option>
+                                    <option value="3" {{ @$th_email_template->tempForInterview == 3 ? 'selected' : '' }}>3 - Client Opportunity with Company Payroll</option>
+                                    <option value="4" {{ @$th_email_template->tempForInterview == 4 ? 'selected' : '' }}>4 - Documents Required</option>
+                                </select>
+                                <span class="form-hint">Select when this template can be used.</span>
+                            </div>
+
+                            <!-- Dynamic Variables Option -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Dynamic Variables</label>
+                                <select name="enable_dynamic_vars" id="enable_dynamic_vars" class="form-select-custom">
+                                    <option value="1" selected>Enable dynamic variables</option>
+                                    <option value="0">Disable dynamic variables</option>
+                                </select>
+                                <span class="form-hint">Allow users to use dynamic variables while sending emails.</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <!--end::Card-->
+
+                <!-- Right Column: Available Variables Panel (Col 5 / 4) -->
+                <div class="col-xl-4 col-lg-5">
+                    <div class="variables-panel">
+                        <!-- Header -->
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="section-header-icon icon-amber">
+                                    <span class="fs-5 fw-bolder font-monospace">{ }</span>
+                                </div>
+                                <div>
+                                    <h2 class="section-title">Available Variables</h2>
+                                    <p class="section-subtitle">Use these variables to personalize your email.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div class="var-search-wrap">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" class="var-search-input" id="varSearchInput" placeholder="Search variables...">
+                        </div>
+
+                        <!-- Active Target Bar -->
+                        <div class="var-target-bar">
+                            <span>Clicking a card inserts into:</span>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetBodyBtn" onclick="setInsertTarget('body')">Email Body</button>
+                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetSubjectBtn" onclick="setInsertTarget('subject')">Subject</button>
+                            </div>
+                        </div>
+
+                        <!-- Category Tabs matching Image 1 -->
+                        <div class="var-pill-tabs" id="varCategoryTabs">
+                            <button type="button" class="var-pill-btn active" data-cat="candidate">Candidate</button>
+                            <button type="button" class="var-pill-btn" data-cat="job">Job</button>
+                            <button type="button" class="var-pill-btn" data-cat="company">Company</button>
+                            <button type="button" class="var-pill-btn" data-cat="client">Client / End Customer</button>
+                            <button type="button" class="var-pill-btn" data-cat="recruiter">Recruiter</button>
+                            <button type="button" class="var-pill-btn" data-cat="other">Other</button>
+                        </div>
+
+                        <!-- Variables List -->
+                        <div class="var-cards-list" id="varCardsList">
+
+                            <!-- CANDIDATE CATEGORY -->
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_NAME}]" data-desc="Candidate full name" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_NAME&#125;&#125;</span>
+                                    <p class="var-item-desc">Candidate full name</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_NAME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_EMAIL}]" data-desc="Candidate email address" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_EMAIL&#125;&#125;</span>
+                                    <p class="var-item-desc">Candidate email address</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_EMAIL}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_PHONE}]" data-desc="Candidate phone number" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_PHONE&#125;&#125;</span>
+                                    <p class="var-item-desc">Candidate phone number</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_PHONE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CURRENT_LOCATION}]" data-desc="Current location" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CURRENT_LOCATION&#125;&#125;</span>
+                                    <p class="var-item-desc">Current location</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CURRENT_LOCATION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{TOTAL_EXPERIENCE}]" data-desc="Total years of experience" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;TOTAL_EXPERIENCE&#125;&#125;</span>
+                                    <p class="var-item-desc">Total years of experience</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{TOTAL_EXPERIENCE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{HIGHEST_QUALIFICATION}]" data-desc="Highest qualification" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;HIGHEST_QUALIFICATION&#125;&#125;</span>
+                                    <p class="var-item-desc">Highest qualification</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HIGHEST_QUALIFICATION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{PRIMARY_SKILLS}]" data-desc="Primary skills" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;PRIMARY_SKILLS&#125;&#125;</span>
+                                    <p class="var-item-desc">Primary skills</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{PRIMARY_SKILLS}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{NOTICE_PERIOD}]" data-desc="Notice period" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;NOTICE_PERIOD&#125;&#125;</span>
+                                    <p class="var-item-desc">Notice period</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{NOTICE_PERIOD}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{EXPECTED_CTC}]" data-desc="Expected CTC" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;EXPECTED_CTC&#125;&#125;</span>
+                                    <p class="var-item-desc">Expected CTC</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{EXPECTED_CTC}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CURRENT_CTC}]" data-desc="Current CTC" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CURRENT_CTC&#125;&#125;</span>
+                                    <p class="var-item-desc">Current CTC</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CURRENT_CTC}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- JOB CATEGORY -->
+                            <div class="var-item-card" data-cat="job" data-token="[{JOB_TITLE}]" data-desc="Job opportunity designation / title" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;JOB_TITLE&#125;&#125;</span>
+                                    <p class="var-item-desc">Job opportunity designation / title</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_TITLE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{WORK_LOCATION}]" data-desc="Job location / city" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;WORK_LOCATION&#125;&#125;</span>
+                                    <p class="var-item-desc">Job location / city</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{WORK_LOCATION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{JOB_DESCRIPTION}]" data-desc="Complete job description text" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;JOB_DESCRIPTION&#125;&#125;</span>
+                                    <p class="var-item-desc">Complete job description text</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_DESCRIPTION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{SALARY_AMOUNT}]" data-desc="Offered salary or package" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;SALARY_AMOUNT&#125;&#125;</span>
+                                    <p class="var-item-desc">Offered salary or package</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{SALARY_AMOUNT}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{JOB_TYPE}]" data-desc="Job type (Full-time, Contract, Remote)" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;JOB_TYPE&#125;&#125;</span>
+                                    <p class="var-item-desc">Job type (Full-time, Contract, Remote)</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_TYPE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- COMPANY CATEGORY -->
+                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_NAME}]" data-desc="Hiring company or recruiter organization" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;COMPANY_NAME&#125;&#125;</span>
+                                    <p class="var-item-desc">Hiring company or recruiter organization</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_NAME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_WEBSITE}]" data-desc="Organization website URL" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;COMPANY_WEBSITE&#125;&#125;</span>
+                                    <p class="var-item-desc">Organization website URL</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_WEBSITE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_DESCRIPTION}]" data-desc="About the company overview" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;COMPANY_DESCRIPTION&#125;&#125;</span>
+                                    <p class="var-item-desc">About the company overview</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_DESCRIPTION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_ADDRESS}]" data-desc="Company registered address" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;COMPANY_ADDRESS&#125;&#125;</span>
+                                    <p class="var-item-desc">Company registered address</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_ADDRESS}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- CLIENT CATEGORY -->
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_NAME}]" data-desc="End client / hiring partner name" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CLIENT_NAME&#125;&#125;</span>
+                                    <p class="var-item-desc">End client / hiring partner name</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_NAME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_WEBSITE}]" data-desc="End client official website URL" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CLIENT_WEBSITE&#125;&#125;</span>
+                                    <p class="var-item-desc">End client official website URL</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_WEBSITE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_DESCRIPTION}]" data-desc="Client organization description" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;CLIENT_DESCRIPTION&#125;&#125;</span>
+                                    <p class="var-item-desc">Client organization description</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_DESCRIPTION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- RECRUITER CATEGORY -->
+                            <div class="var-item-card" data-cat="recruiter" data-token="[{HR_NAME}]" data-desc="Sender recruiter / HR contact name" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;HR_NAME&#125;&#125;</span>
+                                    <p class="var-item-desc">Sender recruiter / HR contact name</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_NAME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="recruiter" data-token="[{HR_EMAIL}]" data-desc="Recruiter contact email address" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;HR_EMAIL&#125;&#125;</span>
+                                    <p class="var-item-desc">Recruiter contact email address</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_EMAIL}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="recruiter" data-token="[{HR_PHONE}]" data-desc="Recruiter phone number" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;HR_PHONE&#125;&#125;</span>
+                                    <p class="var-item-desc">Recruiter phone number</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_PHONE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- OTHER CATEGORY -->
+                            <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_DATE_TIME}]" data-desc="Scheduled interview date and time" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;INTERVIEW_DATE_TIME&#125;&#125;</span>
+                                    <p class="var-item-desc">Scheduled interview date and time</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_DATE_TIME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_LINK}]" data-desc="Virtual interview video meeting link" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;INTERVIEW_LINK&#125;&#125;</span>
+                                    <p class="var-item-desc">Virtual interview video meeting link</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_LINK}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="other" data-token="[{OFFER_LETTER_LINK}]" data-desc="Offer letter download or view link" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">&#123;&#123;OFFER_LETTER_LINK&#125;&#125;</span>
+                                    <p class="var-item-desc">Offer letter download or view link</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{OFFER_LETTER_LINK}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div id="noVariablesFound" class="text-center py-6 text-muted fs-7" style="display: none;">
+                                <i class="bi bi-search fs-3 text-gray-400 d-block mb-2"></i>
+                                No variables match your search.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <!--end::Container-->
-        </div>
-        <!--end::Post-->
-
-
-
-
-
+        </form>
     </div>
-    <!--end::Content-->
 
-
+    <!-- Toast Notification for Token Insert/Copy -->
+    <div id="tokenToast" class="token-toast">
+        <i class="bi bi-check2-circle text-success fs-5"></i>
+        <span id="tokenToastText">Token copied to clipboard</span>
+    </div>
 @endsection
 
 @push('footer-script')
-    <script src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
-    <script src="//cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
-    <script src="//cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap.min.js"></script>
-    <script src="//cdn.datatables.net/colreorder/1.5.2/js/dataTables.colReorder.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.6.1/js/buttons.colVis.min.js"></script>
-    <script src="{{ asset('demo/v7/js/pages/crud/forms/widgets/select2.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}<?php echo TM_VERSION; ?>"></script>
-
     <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
     <script>
-									
-        if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
-            
-        CKEDITOR.tools.enableHtml5Elements( document );
-        CKEDITOR.config.height 		=	350;
-        CKEDITOR.config.width 		=	'auto';
-        
-        var initSample 				= ( function() 
-        {
-                var wysiwygareaAvailable 	= isWysiwygareaAvailable(),
-                isBBCodeBuiltIn 			= !!CKEDITOR.plugins.get( 'bbcode' );
-        
-            return function() {
-                                        var editorElement = CKEDITOR.document.getById( 'editor1' );
-                                
-                                        if ( isBBCodeBuiltIn ) {
-                                            editorElement.setHtml(
-                                                'Hello world!\n\n' +
-                                                'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
-                                            );
-                                        }
-                                        if ( wysiwygareaAvailable ) {
-                                            CKEDITOR.replace( 'editor1' );
-                                        } else {
-                                            editorElement.setAttribute( 'contenteditable', 'true' );   
-                                            CKEDITOR.inline( 'editor1' );
-                                        }							
-                            };
-            function isWysiwygareaAvailable() 
-            {
-                if ( CKEDITOR.revision == ( '%RE' + 'V%' ) ) {
-                    return true;
-                }
-                return !!CKEDITOR.plugins.get( 'wysiwygarea' );
-            }
-            
-        } )();
-        
-        
-        initSample();
-        
-    </script>
+        var activeInsertTarget = 'body'; // 'body' or 'subject'
 
-    <script>
-        // 1-Click Variable Helper Engine
-        var currentVarTarget = 'body';
+        $(document).ready(function() {
+            // Update Active Target Visual State
+            updateTargetButtons();
 
-        $('.var-target-choice').on('click', function(e) {
-            e.preventDefault();
-            $('.var-target-choice').removeClass('active');
-            $(this).addClass('active');
-            currentVarTarget = $(this).data('target') || 'body';
-        });
+            // Init CKEditor 4
+            if (typeof CKEDITOR !== 'undefined') {
+                CKEDITOR.config.height = 360;
+                CKEDITOR.config.width = 'auto';
+                CKEDITOR.config.removePlugins = 'elementspath';
+                CKEDITOR.config.resize_enabled = false;
 
-        // Switch target automatically when Subject input receives focus
-        $('#subject').on('focus', function() {
-            currentVarTarget = 'subject';
-            $('.var-target-choice').removeClass('active');
-            $('.var-target-choice[data-target="subject"]').addClass('active');
-        });
+                CKEDITOR.replace('editor1', {
+                    toolbar: [
+                        { name: 'document', items: ['Source'] },
+                        { name: 'clipboard', items: ['Undo', 'Redo'] },
+                        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+                        { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+                        { name: 'links', items: ['Link', 'Unlink'] },
+                        { name: 'insert', items: ['Image', 'Table', 'HorizontalRule'] },
+                        { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+                        { name: 'colors', items: ['TextColor', 'BGColor'] }
+                    ]
+                });
 
-        // Switch target to Body when CKEditor receives focus
-        if (typeof CKEDITOR !== 'undefined') {
-            CKEDITOR.on('instanceReady', function(evt) {
-                if (evt.editor && evt.editor.name === 'editor1') {
-                    evt.editor.on('focus', function() {
-                        currentVarTarget = 'body';
-                        $('.var-target-choice').removeClass('active');
-                        $('.var-target-choice[data-target="body"]').addClass('active');
-                    });
-                }
-            });
-        }
-
-        // Toggle Audience Variation row based on Template Type (Send Mail = 4)
-        $('#temptype_is').on('change', function() {
-            if ($(this).val() == '4') {
-                $('#row_temp_for_interview').slideDown(150);
-            } else {
-                $('#row_temp_for_interview').slideUp(150);
-            }
-        });
-
-        function copyVariableToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text);
-            } else {
-                var temp = document.createElement('textarea');
-                temp.value = text;
-                document.body.appendChild(temp);
-                temp.select();
-                document.execCommand('copy');
-                document.body.removeChild(temp);
-            }
-        }
-
-        window.insertVariableToken = function(token, explicitTarget, event) {
-            if (event) {
-                event.stopPropagation();
-            }
-
-            var target = explicitTarget || currentVarTarget;
-            copyVariableToClipboard(token);
-
-            if (target === 'copy') {
-                var $fb = $('#varFeedbackMsg');
-                $fb.html('✓ Copied <strong>' + token + '</strong> to clipboard!').stop(true, true).fadeIn(150).delay(2500).fadeOut(400);
-                if (typeof toastr !== 'undefined') {
-                    toastr.info(token + ' copied to clipboard', 'Copied', { timeOut: 1800, positionClass: 'toast-bottom-right' });
-                }
-                return;
-            }
-
-            if (target === 'subject') {
-                var subjectInput = document.getElementById('subject');
-                if (subjectInput) {
-                    var start = subjectInput.selectionStart || subjectInput.value.length;
-                    var end = subjectInput.selectionEnd || subjectInput.value.length;
-                    var val = subjectInput.value;
-                    subjectInput.value = val.substring(0, start) + token + val.substring(end);
-                    subjectInput.focus();
-                    var nextPos = start + token.length;
-                    subjectInput.setSelectionRange(nextPos, nextPos);
-                }
-            } else {
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
-                    CKEDITOR.instances.editor1.insertHtml(token);
-                    CKEDITOR.instances.editor1.focus();
-                } else {
-                    var bodyTextarea = document.getElementById('editor1');
-                    if (bodyTextarea) {
-                        bodyTextarea.value += token;
+                CKEDITOR.on('instanceReady', function(evt) {
+                    if (evt.editor && evt.editor.name === 'editor1') {
+                        evt.editor.on('focus', function() {
+                            setInsertTarget('body');
+                        });
+                        evt.editor.on('change', function() {
+                            updateCharCount();
+                        });
+                        evt.editor.on('key', function() {
+                            setTimeout(updateCharCount, 50);
+                        });
+                        updateCharCount();
                     }
-                }
+                });
             }
 
-            var targetLabel = (target === 'subject') ? 'Subject' : 'Email Body';
-            var $fb = $('#varFeedbackMsg');
-            $fb.html('✓ <strong>' + token + '</strong> inserted into ' + targetLabel + ' and copied!').stop(true, true).fadeIn(150).delay(2500).fadeOut(400);
+            // Subject focus sets target to subject
+            $('#subject').on('focus', function() {
+                setInsertTarget('subject');
+            });
 
-            if (typeof toastr !== 'undefined') {
-                toastr.success(token + ' inserted into ' + targetLabel, 'Variable Added', { timeOut: 2000, positionClass: 'toast-bottom-right' });
-            }
-        };
+            // Emoji Picker Toggle
+            $('#btnToggleEmoji').on('click', function(e) {
+                e.stopPropagation();
+                $('#emojiPickerMenu').toggle();
+            });
 
-        // Make card click trigger default target insertion
-        $(document).on('click', '.var-card', function(e) {
-            // Prevent double triggering if clicked directly on a button inside the card
-            if ($(e.target).closest('.var-act-btn').length > 0) {
-                return;
-            }
-            var token = $(this).data('token');
-            if (token) {
-                window.insertVariableToken(token);
-            }
+            $('#emojiPickerMenu span').on('click', function(e) {
+                e.stopPropagation();
+                var emoji = $(this).text();
+                var subjectVal = $('#subject').val();
+                $('#subject').val(subjectVal + ' ' + emoji).focus();
+                $('#emojiPickerMenu').hide();
+            });
+
+            $(document).on('click', function() {
+                $('#emojiPickerMenu').hide();
+            });
+
+            // Category Tab Switching
+            $('.var-pill-btn').on('click', function() {
+                $('.var-pill-btn').removeClass('active');
+                $(this).addClass('active');
+                filterVariables();
+            });
+
+            // Live Search
+            $('#varSearchInput').on('input keyup', function() {
+                filterVariables();
+            });
         });
 
-        // Filter by category
-        $('.var-cat-btn').on('click', function(e) {
-            e.preventDefault();
-            $('.var-cat-btn').removeClass('active');
-            $(this).addClass('active');
-            applyVariableFilters();
-        });
+        function setInsertTarget(target) {
+            activeInsertTarget = target;
+            updateTargetButtons();
+        }
 
-        // Real-time search filter
-        $('#varSearchInput').on('keyup input', function() {
-            applyVariableFilters();
-        });
+        function updateTargetButtons() {
+            if (activeInsertTarget === 'body') {
+                $('#targetBodyBtn').removeClass('btn-light').addClass('btn-primary fw-bold text-white').css({'background':'#2563EB','color':'#FFF'});
+                $('#targetSubjectBtn').removeClass('btn-primary fw-bold text-white').addClass('btn-light text-muted').css({'background':'#FFF','color':'#64748B'});
+            } else {
+                $('#targetSubjectBtn').removeClass('btn-light').addClass('btn-primary fw-bold text-white').css({'background':'#2563EB','color':'#FFF'});
+                $('#targetBodyBtn').removeClass('btn-primary fw-bold text-white').addClass('btn-light text-muted').css({'background':'#FFF','color':'#64748B'});
+            }
+        }
 
-        function applyVariableFilters() {
-            var activeCat = $('.var-cat-btn.active').data('cat') || 'all';
+        function filterVariables() {
+            var activeCat = $('.var-pill-btn.active').data('cat') || 'all';
             var query = ($('#varSearchInput').val() || '').toLowerCase().trim();
-
             var visibleCount = 0;
-            $('.var-card').each(function() {
+
+            $('.var-item-card').each(function() {
                 var cardCat = $(this).data('cat') || '';
-                var cardToken = ($(this).data('token') || '').toLowerCase();
-                var cardDesc = ($(this).data('desc') || '').toLowerCase();
+                var token = ($(this).data('token') || '').toLowerCase();
+                var altToken = ($(this).data('alt-token') || '').toLowerCase();
+                var desc = ($(this).data('desc') || '').toLowerCase();
 
                 var matchesCat = (activeCat === 'all' || cardCat === activeCat);
-                var matchesQuery = (!query || cardToken.indexOf(query) !== -1 || cardDesc.indexOf(query) !== -1);
+                var matchesQuery = (!query || token.indexOf(query) !== -1 || altToken.indexOf(query) !== -1 || desc.indexOf(query) !== -1);
 
                 if (matchesCat && matchesQuery) {
                     $(this).show();
@@ -1027,93 +1248,194 @@
             });
 
             if (visibleCount === 0) {
-                $('#varNoResults').show();
+                $('#noVariablesFound').show();
             } else {
-                $('#varNoResults').hide();
+                $('#noVariablesFound').hide();
             }
         }
 
-        // Form Submission
-        $('#save-form').click(function() {
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            });
+        function handleCardClick(cardElement) {
+            var token = $(cardElement).data('token');
+            insertVariableToken(token, activeInsertTarget);
+        }
 
-            var id = $('#tokenId').val();
-            var url = "{{ route('superadmin.company.addEditemailThemesupdate', ':id') }}";
-            url = url.replace(':id', id);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            var token = "{{ csrf_token() }}";
+        function insertVariableToken(token, target) {
+            var useTarget = target || activeInsertTarget;
 
-            var template = $('#template').val();
-            var subject = $('#subject').val();
-            var status_is = $('#status_is').val();
+            if (useTarget === 'subject') {
+                var subjectInput = document.getElementById('subject');
+                if (subjectInput) {
+                    var startPos = subjectInput.selectionStart;
+                    var endPos = subjectInput.selectionEnd;
+                    var val = subjectInput.value;
+                    subjectInput.value = val.substring(0, startPos) + ' ' + token + ' ' + val.substring(endPos, val.length);
+                    subjectInput.focus();
+                    subjectInput.selectionStart = subjectInput.selectionEnd = startPos + token.length + 2;
+                }
+                showToast('Inserted ' + token + ' into Subject line');
+            } else {
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                    CKEDITOR.instances.editor1.insertHtml(' ' + token + ' ');
+                    CKEDITOR.instances.editor1.focus();
+                } else {
+                    var textarea = document.getElementById('editor1');
+                    if (textarea) {
+                        textarea.value += ' ' + token + ' ';
+                    }
+                }
+                updateCharCount();
+                showToast('Inserted ' + token + ' into Email Body');
+            }
+        }
+
+        function copyTokenDirect(event, token) {
+            event.stopPropagation();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(token).then(function() {
+                    showToast('Copied ' + token + ' to clipboard');
+                });
+            } else {
+                var tempInput = document.createElement("input");
+                tempInput.value = token;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                showToast('Copied ' + token + ' to clipboard');
+            }
+        }
+
+        function showToast(message) {
+            $('#tokenToastText').text(message);
+            $('#tokenToast').addClass('show');
+            setTimeout(function() {
+                $('#tokenToast').removeClass('show');
+            }, 2500);
+        }
+
+        function updateCharCount() {
+            var text = '';
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                text = CKEDITOR.instances.editor1.getData().replace(/<[^>]*>/g, '').trim();
+            } else {
+                text = ($('#editor1').val() || '').trim();
+            }
+            $('#charCount').text(text.length);
+        }
+
+        // Custom Toolbar Proxy Actions
+        function execEditorCmd(cmd) {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                var editor = CKEDITOR.instances.editor1;
+                editor.focus();
+                if (editor.commands[cmd]) {
+                    editor.execCommand(cmd);
+                }
+            }
+        }
+
+        function applyEditorFormat(tag) {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                var editor = CKEDITOR.instances.editor1;
+                editor.focus();
+                var style = new CKEDITOR.style({ element: tag });
+                editor.applyStyle(style);
+            }
+        }
+
+        // Save Template Form Submission
+        $('#save-form').on('click', function(e) {
+            e.preventDefault();
+
+            var template = $('#template').val().trim();
+            var subject = $('#subject').val().trim();
             var temptype_is = $('#temptype_is').val();
-            var tempForInterview_is = $('#tempForInterview_is').val() || 1;
-            var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1)
-                ? CKEDITOR.instances.editor1.getData()
-                : ($('#editor1').val() || '');
+            var status_is = $('#status_is').val();
+            var tempForInterview_is = $('#tempForInterview_is').val();
+            var tokenId = $('#tokenId').val();
 
-            var urlredirect = "{{ route('superadmin.company.emailthemes') }}";
+            var editor1 = '';
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                editor1 = CKEDITOR.instances.editor1.getData();
+            } else {
+                editor1 = $('#editor1').val();
+            }
+
+            if (!template) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Template Name Required',
+                    text: 'Please provide a descriptive name for your email template.',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'btn btn-primary' }
+                });
+                $('#template').focus();
+                return;
+            }
+
+            if (!subject) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Subject Line Required',
+                    text: 'Please enter a subject line for your email template.',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'btn btn-primary' }
+                });
+                $('#subject').focus();
+                return;
+            }
+
+            var saveBtn = $('#save-form');
+            var originalBtnHtml = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
 
             $.ajax({
                 type: 'POST',
-                url: url,
+                url: "{{ route('superadmin.company.addEditemailThemesupdate') }}",
                 data: {
-                    '_token': token,
-                    '_method': 'POST',
+                    '_token': "{{ csrf_token() }}",
+                    'tokenId': tokenId,
                     'template': template,
                     'subject': subject,
                     'editor1': editor1,
-                    'tokenId': id,
                     'status_is': status_is,
                     'temptype_is': temptype_is,
                     'tempForInterview_is': tempForInterview_is
                 },
-                beforeSend: function() {
-                    $('#main_container').html('<img src="' + baseurl + '" height="35px" width="100%">');
-                },
                 success: function(response) {
-                    if (response.status == "success") {
-                        swalWithBootstrapButtons.fire(
-                            'Success!',
-                            'Email template saved successfully.',
-                            'success'
-                        );
-                        window.location.href = urlredirect;
+                    saveBtn.prop('disabled', false).html(originalBtnHtml);
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Email template saved successfully.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(function() {
+                            window.location.href = "{{ route('superadmin.company.emailthemes') }}";
+                        }, 1200);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to save email template.',
+                            confirmButtonText: 'OK'
+                        });
                     }
-                }
-            });
-        });
-
-
-    
-    $('#ck-editor__editable_inline').html("testing");
-
-        $('body').on('click', '#editDefaultPackage', function() {
-
-            $('#kt_activitiesDefaultPackage_toggle').trigger('click');
-            var url = "{{ route('superadmin.defaultpackages.editDefaultPackage') }}";
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            $.ajax({
-                type: 'GET',
-                url: url,
-                beforeSend: function() {
-                    $('#kt_activitiesDefaultPackage_body').html('<img src="' + baseurl +
-                        '" height="35px" width="100%">');
                 },
-                success: function(response) {
-                    setTimeout(
-                        () => {
-                            if (response.status == "success") {
-                                $('#kt_activitiesDefaultPackage_body').html(response.view);
-                            }
-                        }, 500);
-
+                error: function(xhr) {
+                    saveBtn.prop('disabled', false).html(originalBtnHtml);
+                    var msg = 'An unexpected error occurred while saving.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Save Failed',
+                        text: msg,
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         });
