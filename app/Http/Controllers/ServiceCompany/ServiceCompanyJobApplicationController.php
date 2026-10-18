@@ -8657,8 +8657,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->whereIn('clients.id', $clientId)->get()->toArray() : [];
 
         $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null);
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
 
         // $assignDataFinal = array_udiff($mergedData, $assignDataclient, function ($a, $b) {
@@ -8979,7 +8979,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job = Job::withoutGlobalScopes()->find($request->jobId);
 
         $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
-        $cliName = $companyOrClientName->client ?: $compName;
+        $cliName = $companyOrClientName->client ?: '';
+        $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
         $jobTitleClean = $job_applications->title ?? ($job->title ?? '');
 
         $InterviewMode = '';
@@ -9052,6 +9053,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $templateContext = [
             'company_name' => $compName,
             'client_name' => $cliName,
+            'self_company' => $isSelf ? 1 : 0,
+            'position' => auth()->user()->designation ?? 'Recruitment Department',
             'job_title' => $jobTitleClean,
             'job_id' => $job_id,
             'job_location' => $location,

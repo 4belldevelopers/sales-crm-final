@@ -508,7 +508,8 @@
                     if (isset($tdata->status) && (int) $tdata->status !== 1) continue;
 
                     $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
-                    $clName = !empty($clientTemp) ? $clientTemp : $cName;
+                    $clName = !empty($clientTemp) ? $clientTemp : '';
+                    $isSelf = !empty($selfCompany) || empty($clName);
                     $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
                     $jLoc = !empty($location) ? $location : '';
 
@@ -517,6 +518,7 @@
                       [
                         'company_name' => $cName,
                         'client_name' => $clName,
+                        'self_company' => $isSelf ? 1 : 0,
                         'job_location' => $jLoc,
                         'work_location' => $jLoc,
                         'job_title' => $jTitle,

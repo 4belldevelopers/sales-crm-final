@@ -6443,7 +6443,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
 
             $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
-            $cliName = $companyOrClientName->client ?: $compName;
+            $cliName = $companyOrClientName->client ?: '';
+            $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
             $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
             $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
@@ -6466,6 +6467,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $templateContext = [
                 'company_name' => $compName,
                 'client_name' => $cliName,
+                'self_company' => $isSelf ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
                 'job_title' => $jobs->title ?? 'Candidate Application',
                 'job_location' => $location,
                 'work_location' => $location,

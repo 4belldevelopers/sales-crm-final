@@ -5973,14 +5973,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         if ($jobs && ! empty($jobs->client_id)) {
             $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-            $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-            $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+            $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+            $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
             $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
             $this->job_title = ($jobs->title) ? $jobs->title : '';
         } else {
             $currentCompany = auth()->user()->company ?? null;
             $this->selfCompany = 1;
-            $this->companyTemp = $currentCompany->company_name ?? '';
+            $this->companyTemp = $currentCompany->company_name ?? (auth()->user()->company->company_name ?? 'Our Company');
             $this->clientTemp = '';
             $this->job_title = $jobs->title ?? 'Candidate Application';
         }
@@ -6266,8 +6266,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $location = $city.' | '.$country_name;
 
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
         $this->location = ($location) ? $location : '';
         $this->job_title = ($jobs->title) ? $jobs->title : '';
@@ -7114,7 +7114,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
 
             $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
-            $cliName = $companyOrClientName->client ?: $compName;
+            $cliName = $companyOrClientName->client ?: '';
+            $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
             $jobTitle = $jobs->title ?? 'Candidate Application';
 
             $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
@@ -7155,6 +7156,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $templateContext = [
                 'company_name' => $compName,
                 'client_name' => $cliName,
+                'self_company' => $isSelf ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
                 'job_title' => $jobTitle,
                 'job_location' => $location,
                 'work_location' => $location,
@@ -7467,9 +7470,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $location = ucwords(@$addressName).' | '.ucwords(@$city).' | '.ucwords(@$country_name);
 
+            $compName9 = $companyDetails->company_name ?? (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName9 = $companyOrClientName->client ?: '';
+            $isSelf9 = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName9);
+
             $templateContext9 = [
-                'company_name' => $companyDetails->company_name ?? 'Our Company',
-                'client_name' => $companyOrClientName->client ?: ($companyDetails->company_name ?? 'Our Company'),
+                'company_name' => $compName9,
+                'client_name' => $cliName9,
+                'self_company' => $isSelf9 ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
                 'candidate_name' => @$job_applications->full_name,
                 'job_title' => @$designation,
                 'offer_letter_link' => @$Url,
