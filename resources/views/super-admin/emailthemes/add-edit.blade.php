@@ -701,6 +701,7 @@
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_NAME}]')"><code>[{CANDIDATE_NAME}]</code> &middot; Candidate Name</a></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_EMAIL}]')"><code>[{CANDIDATE_EMAIL}]</code> &middot; Candidate Email</a></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_PHONE}]')"><code>[{CANDIDATE_PHONE}]</code> &middot; Phone Number</a></li>
+                                    <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{EMAIL_TRACKER}]')"><code>[{EMAIL_TRACKER}]</code> &middot; Excel Tracker Table</a></li>
                                     <li><hr class="dropdown-divider my-1"></li>
                                     <li><h6 class="dropdown-header text-uppercase text-muted fw-bold fs-9">Job & Company Tokens</h6></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{JOB_TITLE}]')"><code>[{JOB_TITLE}]</code> &middot; Job Title</a></li>
@@ -912,6 +913,16 @@
                                     <p class="var-item-desc">Candidate remarks & notes</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_COMMENT}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="candidate" data-token="[{EMAIL_TRACKER}]" data-desc="Excel-style candidate skills, Q&A and interview availability tracker table" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{EMAIL_TRACKER}]</span>
+                                    <p class="var-item-desc">Excel-style Candidate & Skills matrix tracker table</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{EMAIL_TRACKER}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             </div>
@@ -1197,6 +1208,16 @@
                                     <p class="var-item-desc">Current date</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{DATE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="other" data-token="[{EMAIL_TRACKER}]" data-desc="Excel-style candidate skills, Q&A and interview availability tracker table" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{EMAIL_TRACKER}]</span>
+                                    <p class="var-item-desc">Excel-style Candidate & Skills matrix tracker table</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{EMAIL_TRACKER}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             </div>
