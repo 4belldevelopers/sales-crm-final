@@ -4,15 +4,17 @@
     $currencySymbole = GeneralMethod::currencySymbole();
 
 @endphp
-<link rel="stylesheet" href="{{ asset('assets/modules/fwd-resume/quill/quill.snow.css') }}">
-<script src="{{ asset('assets/modules/fwd-resume/quill/quill.min.js') }}"></script>
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
-    window.candidateEmailQuill = null;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
+        CKEDITOR.tools.enableHtml5Elements(document);
+    }
 
     window.getCandidateEmailBodyHtml = function() {
-        if (window.candidateEmailQuill && window.candidateEmailQuill.root) {
-            var html = window.candidateEmailQuill.root.innerHTML || '';
-            return (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) {
+            try {
+                return CKEDITOR.instances.editor1mass.getData() || '';
+            } catch(e) {}
         }
         return $('#editor1mass').val() || '';
     };
@@ -20,72 +22,69 @@
     window.setCandidateEmailBodyHtml = function(html) {
         var cleanHtml = (html === null || html === undefined) ? '' : String(html);
         $('#editor1mass').val(cleanHtml);
-        if (window.candidateEmailQuill) {
-            if (window.candidateEmailQuill.clipboard && typeof window.candidateEmailQuill.clipboard.dangerouslyPasteHTML === 'function') {
-                window.candidateEmailQuill.clipboard.dangerouslyPasteHTML(cleanHtml);
-            } else if (window.candidateEmailQuill.root) {
-                window.candidateEmailQuill.root.innerHTML = cleanHtml;
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) {
+            var inst = CKEDITOR.instances.editor1mass;
+            if (inst.status === 'ready' || inst.instanceReady) {
+                try {
+                    inst.setData(cleanHtml);
+                } catch(e) {
+                    console.warn('[CandidateEmail] CKEditor setData error:', e);
+                }
+            } else {
+                inst.on('instanceReady', function() {
+                    try {
+                        inst.setData(cleanHtml);
+                    } catch(e) {}
+                });
             }
         }
     };
 
     window.initCandidateEmailEditor = function() {
-        var quillContainer = document.getElementById('candidate_email_quill');
-        if (!quillContainer) return;
-
-        // If Quill instance already exists and container is still attached, don't recreate
-        if (window.candidateEmailQuill && window.candidateEmailQuill.root && quillContainer.contains(window.candidateEmailQuill.root)) {
+        if (typeof CKEDITOR === 'undefined') {
+            setTimeout(window.initCandidateEmailEditor, 60);
+            return;
+        }
+        var editorElement = document.getElementById('editor1mass');
+        if (!editorElement) {
+            setTimeout(window.initCandidateEmailEditor, 60);
             return;
         }
 
-        if (typeof Quill === 'undefined') {
-            setTimeout(window.initCandidateEmailEditor, 50);
-            return;
+        if (CKEDITOR.instances && CKEDITOR.instances.editor1mass) {
+            try {
+                CKEDITOR.instances.editor1mass.destroy(true);
+            } catch(destroyErr) {}
         }
 
         try {
-            var existingContent = $('#editor1mass').val() || '';
-            quillContainer.innerHTML = '';
-            window.candidateEmailQuill = new Quill('#candidate_email_quill', {
-                theme: 'snow',
-                placeholder: 'Compose email message...',
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        [{ 'align': [] }],
-                        ['link', 'clean']
-                    ]
-                }
+            var editorInstance = CKEDITOR.replace('editor1mass', {
+                height: 260,
+                width: '100%',
+                allowedContent: true,
+                removePlugins: 'elementspath',
+                resize_enabled: false
             });
 
-            if (existingContent) {
-                if (window.candidateEmailQuill.clipboard && typeof window.candidateEmailQuill.clipboard.dangerouslyPasteHTML === 'function') {
-                    window.candidateEmailQuill.clipboard.dangerouslyPasteHTML(existingContent);
-                } else if (window.candidateEmailQuill.root) {
-                    window.candidateEmailQuill.root.innerHTML = existingContent;
-                }
-            }
-
-            window.candidateEmailQuill.on('text-change', function() {
-                var html = window.getCandidateEmailBodyHtml();
-                $('#editor1mass').val(html);
+            editorInstance.on('change', function() {
+                try {
+                    $('#editor1mass').val(editorInstance.getData());
+                } catch(e) {}
             });
         } catch(err) {
-            console.warn('[CandidateEmail] Quill init warning:', err);
+            console.warn('[CandidateEmail] CKEditor init error:', err);
         }
     };
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(window.initCandidateEmailEditor, 30);
+        setTimeout(window.initCandidateEmailEditor, 40);
     } else {
         document.addEventListener('DOMContentLoaded', window.initCandidateEmailEditor);
     }
     $(document).ready(function() {
-        setTimeout(window.initCandidateEmailEditor, 50);
+        setTimeout(window.initCandidateEmailEditor, 60);
     });
+    setTimeout(window.initCandidateEmailEditor, 250);
 </script>
 
 <div class="main_container" id="main_container">
@@ -342,35 +341,8 @@
     .rcp-btn-done { padding: 8px 20px; border: none; background: #2563EB; border-radius: 7px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
 
     .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
-    .mm-editor-wrap .ql-toolbar.ql-snow {
-      border: none !important;
-      border-bottom: 1px solid #E5E7EB !important;
-      background: #F8FAFC;
-      padding: 8px 12px;
-      font-family: 'Poppins', sans-serif;
-    }
-    .mm-editor-wrap .ql-container.ql-snow {
-      border: none !important;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      color: #1E293B;
-      min-height: 220px;
-    }
-    .mm-editor-wrap .ql-editor {
-      min-height: 220px;
-      max-height: 380px;
-      overflow-y: auto;
-      line-height: 1.6;
-      padding: 12px 14px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-    }
-    .mm-editor-wrap .ql-editor.ql-blank::before {
-      color: #94A3B8;
-      font-style: normal;
-      left: 14px;
-      right: 14px;
-    }
+    .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+    #editor1mass { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
     .mm-row-body { align-items: flex-start; }
     </style>
 
@@ -582,8 +554,7 @@
           </div>
           <div class="mm-field-col">
             <div class="mm-editor-wrap">
-              <div id="candidate_email_quill"></div>
-              <textarea id="editor1mass" name="editor1mass" class="d-none" rows="10">{{ @$template_body }}</textarea>
+              <textarea id="editor1mass" name="editor1mass" rows="10">{{ @$template_body }}</textarea>
             </div>
           </div>
         </div>

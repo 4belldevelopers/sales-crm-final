@@ -3298,6 +3298,9 @@ $( document ).ready(function() {
       }
     }
     window.hideCandidateSendMailOverlay();
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+      try { CKEDITOR.instances['editor1mass'].destroy(true); } catch (e) {}
+    }
     if (typeof window.closeCandidateEmailRecipientDrawer === 'function') {
       try { window.closeCandidateEmailRecipientDrawer(); } catch (e) {}
     }
