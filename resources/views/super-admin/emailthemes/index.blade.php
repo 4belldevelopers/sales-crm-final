@@ -1053,7 +1053,8 @@
                         $tStatus = (int) ($template->status ?? 0);
                         $descSnippet = trim(strip_tags($template->template_description ?? ''));
                     @endphp
-                    <div class="template-grid-card template-row-item"
+                    <div class="template-grid-card"
+                         id="gridCard-{{ $tId }}"
                          data-id="{{ $tId }}"
                          data-type="{{ $tType }}"
                          data-status="{{ $tStatus }}"
@@ -1064,9 +1065,11 @@
                             <span class="badge-type-pill {{ $tType == 3 ? 'badge-type-interview' : ($tType == 4 ? 'badge-type-send' : ($tType == 2 ? 'badge-type-mass' : 'badge-type-system')) }}">
                                 {{ $tType == 3 ? 'Interview Mail' : ($tType == 4 ? 'Send Mail' : ($tType == 2 ? 'Mass Mail' : 'Template')) }}
                             </span>
-                            <span class="badge-status-pill {{ $tStatus == 1 ? 'badge-status-active' : 'badge-status-inactive' }}" onclick="toggleTemplateStatus({{ $tId }}, {{ $tStatus == 1 ? 0 : 1 }})">
-                                <span class="status-dot {{ $tStatus == 1 ? 'dot-active' : 'dot-inactive' }}"></span>
-                                {{ $tStatus == 1 ? 'Active' : 'Inactive' }}
+                            <span class="badge-status-pill {{ $tStatus == 1 ? 'badge-status-active' : 'badge-status-inactive' }}" 
+                                  id="gridStatusPill-{{ $tId }}"
+                                  onclick="toggleTemplateStatus({{ $tId }}, {{ $tStatus == 1 ? 0 : 1 }})">
+                                <span class="status-dot {{ $tStatus == 1 ? 'dot-active' : 'dot-inactive' }}" id="gridStatusDot-{{ $tId }}"></span>
+                                <span id="gridStatusText-{{ $tId }}">{{ $tStatus == 1 ? 'Active' : 'Inactive' }}</span>
                             </span>
                         </div>
 
@@ -1251,12 +1254,14 @@
 
             filteredRows = [];
 
+            // Iterate strictly over table rows (exactly 1 row per template)
             $('.template-row-item').each(function() {
                 var row = $(this);
                 var rowType = String(row.data('type'));
                 var rowStatus = String(row.data('status'));
                 var rowName = (row.data('name') || '').toLowerCase();
                 var rowSubject = (row.data('subject') || '').toLowerCase();
+                var tId = row.data('id');
 
                 var matchesSearch = (!searchQuery || rowName.indexOf(searchQuery) !== -1 || rowSubject.indexOf(searchQuery) !== -1);
                 
@@ -1273,6 +1278,7 @@
                     filteredRows.push(row);
                 } else {
                     row.hide();
+                    $('.template-grid-card[data-id="' + tId + '"]').hide();
                 }
             });
 
@@ -1295,7 +1301,12 @@
                     return parseInt(b.data('id')) - parseInt(a.data('id'));
                 }
                 // default: updated / curr_date
-                return parseInt(b.data('id')) - parseInt(a.data('id'));
+                var dateA = a.data('date') ? new Date(a.data('date')).getTime() : 0;
+                var dateB = b.data('date') ? new Date(b.data('date')).getTime() : 0;
+                if (dateB !== dateA) {
+                    return dateB - dateA;
+                }
+                return parseInt(a.data('id')) - parseInt(b.data('id'));
             });
         }
 
@@ -1309,12 +1320,16 @@
             var startIndex = (currentPage - 1) * rowsPerPage;
             var endIndex = Math.min(startIndex + rowsPerPage, total);
 
-            // Hide all rows first
+            // Hide all table rows and grid cards first
             $('.template-row-item').hide();
+            $('.template-grid-card').hide();
 
-            // Show current page items
+            // Show current page items for both table and grid views
             for (var i = startIndex; i < endIndex; i++) {
-                filteredRows[i].show();
+                var row = filteredRows[i];
+                var tId = row.data('id');
+                row.show().appendTo('#templateTableBody');
+                $('.template-grid-card[data-id="' + tId + '"]').show().appendTo('#gridViewContainer');
             }
 
             // Update range text
@@ -1349,7 +1364,12 @@
             var dot = $('#statusDot-' + templateId);
             var text = $('#statusText-' + templateId);
 
+            var gridPill = $('#gridStatusPill-' + templateId);
+            var gridDot = $('#gridStatusDot-' + templateId);
+            var gridText = $('#gridStatusText-' + templateId);
+
             pill.css('opacity', '0.5');
+            gridPill.css('opacity', '0.5');
 
             $.ajax({
                 type: 'POST',
@@ -1361,23 +1381,35 @@
                 },
                 success: function(response) {
                     pill.css('opacity', '1');
+                    gridPill.css('opacity', '1');
                     if (response.status === 'success') {
                         var isNowActive = (newStatus === 1);
 
-                        // Update Row Data
+                        // Update Row & Card Data attributes
                         $('.template-row-item[data-id="' + templateId + '"]').data('status', newStatus);
+                        $('.template-grid-card[data-id="' + templateId + '"]').data('status', newStatus);
 
-                        // Update Pill Classes
+                        // Update Pill Classes (Table View)
                         if (isNowActive) {
                             pill.removeClass('badge-status-inactive').addClass('badge-status-active');
                             dot.removeClass('dot-inactive').addClass('dot-active');
                             text.text('Active');
                             pill.attr('onclick', 'toggleTemplateStatus(' + templateId + ', 0)');
+
+                            gridPill.removeClass('badge-status-inactive').addClass('badge-status-active');
+                            gridDot.removeClass('dot-inactive').addClass('dot-active');
+                            gridText.text('Active');
+                            gridPill.attr('onclick', 'toggleTemplateStatus(' + templateId + ', 0)');
                         } else {
                             pill.removeClass('badge-status-active').addClass('badge-status-inactive');
                             dot.removeClass('dot-active').addClass('dot-inactive');
                             text.text('Inactive');
                             pill.attr('onclick', 'toggleTemplateStatus(' + templateId + ', 1)');
+
+                            gridPill.removeClass('badge-status-active').addClass('badge-status-inactive');
+                            gridDot.removeClass('dot-active').addClass('dot-inactive');
+                            gridText.text('Inactive');
+                            gridPill.attr('onclick', 'toggleTemplateStatus(' + templateId + ', 1)');
                         }
 
                         // Update in-memory map
@@ -1401,6 +1433,7 @@
                 },
                 error: function() {
                     pill.css('opacity', '1');
+                    gridPill.css('opacity', '1');
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -1465,18 +1498,33 @@
                             var dot = $('#statusDot-' + id);
                             var text = $('#statusText-' + id);
 
+                            var gridPill = $('#gridStatusPill-' + id);
+                            var gridDot = $('#gridStatusDot-' + id);
+                            var gridText = $('#gridStatusText-' + id);
+
                             $('.template-row-item[data-id="' + id + '"]').data('status', newStatus);
+                            $('.template-grid-card[data-id="' + id + '"]').data('status', newStatus);
 
                             if (newStatus === 1) {
                                 pill.removeClass('badge-status-inactive').addClass('badge-status-active');
                                 dot.removeClass('dot-inactive').addClass('dot-active');
                                 text.text('Active');
                                 pill.attr('onclick', 'toggleTemplateStatus(' + id + ', 0)');
+
+                                gridPill.removeClass('badge-status-inactive').addClass('badge-status-active');
+                                gridDot.removeClass('dot-inactive').addClass('dot-active');
+                                gridText.text('Active');
+                                gridPill.attr('onclick', 'toggleTemplateStatus(' + id + ', 0)');
                             } else {
                                 pill.removeClass('badge-status-active').addClass('badge-status-inactive');
                                 dot.removeClass('dot-active').addClass('dot-inactive');
                                 text.text('Inactive');
                                 pill.attr('onclick', 'toggleTemplateStatus(' + id + ', 1)');
+
+                                gridPill.removeClass('badge-status-active').addClass('badge-status-inactive');
+                                gridDot.removeClass('dot-active').addClass('dot-inactive');
+                                gridText.text('Inactive');
+                                gridPill.attr('onclick', 'toggleTemplateStatus(' + id + ', 1)');
                             }
                         });
 
