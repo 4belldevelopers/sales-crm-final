@@ -8,22 +8,22 @@
             background-color: #F8FAFC;
         }
 
-        /* Top Bar */
+        /* Top Action Bar - Compact 15.6" Saas Header */
         .template-top-bar {
             background: #FFFFFF;
             border-bottom: 1px solid #E2E8F0;
-            padding: 18px 28px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
 
         .header-icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
             background: #FFFBEB;
             border: 1px solid #FDE68A;
             display: flex;
@@ -38,13 +38,13 @@
             border-color: #F59E0B !important;
             color: #111827 !important;
             font-weight: 700 !important;
-            font-size: 13.5px !important;
-            padding: 10px 22px !important;
-            border-radius: 8px !important;
+            font-size: 12px !important;
+            padding: 7px 16px !important;
+            border-radius: 7px !important;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25);
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
             transition: all 0.15s ease-in-out;
             text-decoration: none !important;
         }
@@ -54,17 +54,17 @@
             border-color: #D97706 !important;
             color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 3px 8px rgba(217, 119, 6, 0.28);
         }
 
-        /* Top 8 KPI Metrics Cards Container */
+        /* Top 8 KPI Metrics Cards Container - Fully Responsive on 1366x768 & smaller */
         .kpi-metrics-container {
             display: grid;
             grid-template-columns: repeat(8, minmax(0, 1fr));
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            margin-bottom: 14px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             overflow-x: auto;
         }
@@ -81,10 +81,10 @@
         }
 
         .kpi-metric-card {
-            padding: 16px 14px;
+            padding: 10px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             border-right: 1px solid #F1F5F9;
             transition: background 0.12s ease;
         }
@@ -98,14 +98,14 @@
         }
 
         .kpi-metric-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 16px;
+            font-size: 13.5px;
         }
 
         .kpi-icon-blue { background: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; }
@@ -121,7 +121,7 @@
         }
 
         .kpi-metric-title {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 500;
             color: #64748B;
             margin: 0;
@@ -129,42 +129,42 @@
         }
 
         .kpi-metric-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #0F172A;
-            line-height: 1.2;
-            margin: 2px 0 0 0;
+            line-height: 1.15;
+            margin: 1px 0 0 0;
         }
 
         .kpi-metric-sub {
-            font-size: 10.5px;
+            font-size: 9.5px;
             color: #94A3B8;
             margin: 0;
             white-space: nowrap;
         }
 
-        /* Category Filter Tabs Bar matching Image 2 */
+        /* Category Filter Tabs Bar */
         .category-filter-bar {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
-            margin-bottom: 16px;
-            padding-bottom: 4px;
+            margin-bottom: 12px;
+            padding-bottom: 3px;
             scrollbar-width: thin;
         }
 
         .cat-tab-btn {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 8px 16px;
-            font-size: 12.5px;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11.5px;
             font-weight: 600;
             color: #475569;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             cursor: pointer;
             transition: all 0.12s ease-in-out;
             white-space: nowrap;
@@ -186,9 +186,9 @@
 
         .cat-tab-badge {
             background: rgba(0, 0, 0, 0.06);
-            border-radius: 12px;
-            padding: 2px 7px;
-            font-size: 11px;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 10px;
             font-weight: 700;
         }
 
@@ -203,24 +203,24 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .search-input-box {
             position: relative;
             flex: 1;
-            min-width: 280px;
-            max-width: 480px;
+            min-width: 240px;
+            max-width: 440px;
         }
 
         .search-input-box input {
-            height: 40px;
-            border-radius: 8px;
+            height: 34px;
+            border-radius: 7px;
             border: 1px solid #CBD5E1;
-            padding-left: 38px;
-            padding-right: 14px;
-            font-size: 13px;
+            padding-left: 34px;
+            padding-right: 12px;
+            font-size: 12px;
             width: 100%;
             background: #FFFFFF;
             transition: all 0.15s ease;
@@ -229,25 +229,25 @@
         .search-input-box input:focus {
             border-color: #F59E0B;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
         }
 
         .search-input-box .search-icon {
             position: absolute;
-            left: 12px;
+            left: 11px;
             top: 50%;
             transform: translateY(-50%);
             color: #94A3B8;
-            font-size: 14px;
+            font-size: 12.5px;
         }
 
         .filter-dropdown-select {
-            height: 40px;
-            border-radius: 8px;
+            height: 34px;
+            border-radius: 7px;
             border: 1px solid #CBD5E1;
             background: #FFFFFF;
-            padding: 0 14px;
-            font-size: 12.5px;
+            padding: 0 10px;
+            font-size: 11.5px;
             font-weight: 500;
             color: #334155;
             cursor: pointer;
@@ -263,7 +263,7 @@
         .view-toggle-wrap {
             display: inline-flex;
             border: 1px solid #CBD5E1;
-            border-radius: 8px;
+            border-radius: 7px;
             overflow: hidden;
             background: #FFFFFF;
         }
@@ -271,7 +271,7 @@
         .view-toggle-btn {
             background: transparent;
             border: none;
-            padding: 8px 12px;
+            padding: 6px 10px;
             cursor: pointer;
             color: #64748B;
             transition: all 0.12s;
@@ -289,17 +289,17 @@
         .table-card-container {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 12px;
+            border-radius: 10px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .enterprise-template-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .enterprise-template-table thead tr {
@@ -308,9 +308,9 @@
         }
 
         .enterprise-template-table th {
-            padding: 14px 16px;
+            padding: 10px 12px;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 11px;
             color: #64748B;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -319,7 +319,7 @@
         }
 
         .enterprise-template-table td {
-            padding: 16px;
+            padding: 10px 12px;
             border-bottom: 1px solid #F1F5F9;
             vertical-align: middle;
             color: #1E293B;
@@ -337,22 +337,22 @@
 
         /* Table Components */
         .template-cell-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 16px;
+            font-size: 13.5px;
         }
 
         .template-name-title {
-            font-size: 13.5px;
+            font-size: 12.5px;
             font-weight: 700;
             color: #0F172A;
             margin: 0;
-            line-height: 1.3;
+            line-height: 1.25;
             text-decoration: none;
             display: inline-block;
             transition: color 0.15s;
@@ -363,16 +363,16 @@
         }
 
         .template-meta-line {
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #64748B;
-            margin: 2px 0 0 0;
+            margin: 1px 0 0 0;
         }
 
         .template-desc-snippet {
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #94A3B8;
-            margin: 2px 0 0 0;
-            max-width: 320px;
+            margin: 1px 0 0 0;
+            max-width: 260px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -380,10 +380,10 @@
 
         /* Pastel Type Badges */
         .badge-type-pill {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 5px;
             display: inline-block;
             white-space: nowrap;
         }
@@ -396,23 +396,23 @@
 
         /* Subject Dynamic Token Pills */
         .subject-container {
-            max-width: 380px;
-            font-size: 12.5px;
+            max-width: 320px;
+            font-size: 11.5px;
             color: #334155;
-            line-height: 1.45;
+            line-height: 1.4;
         }
 
         .token-highlight-pill {
             font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 700;
             color: #2563EB;
             background: #EFF6FF;
             border: 1px solid #DBEAFE;
             border-radius: 4px;
-            padding: 1px 6px;
+            padding: 1px 5px;
             display: inline-block;
-            margin: 0 2px;
+            margin: 0 1px;
             letter-spacing: -0.2px;
             white-space: nowrap;
         }
@@ -421,10 +421,10 @@
         .badge-status-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11.5px;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 16px;
+            font-size: 11px;
             font-weight: 600;
             white-space: nowrap;
             cursor: pointer;
@@ -452,8 +452,8 @@
         }
 
         .status-dot {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -463,8 +463,8 @@
 
         /* Action Buttons */
         .action-icon-btn {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             border: 1px solid #E2E8F0;
             background: #FFFFFF;
@@ -472,7 +472,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.12s;
             text-decoration: none !important;
@@ -489,29 +489,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 20px;
+            padding: 10px 16px;
             background: #FFFFFF;
             border-top: 1px solid #E2E8F0;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
         }
 
         .pagination-range-text {
-            font-size: 12.5px;
+            font-size: 11.5px;
             color: #64748B;
         }
 
         .page-num-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
             border: 1px solid #E2E8F0;
             background: #FFFFFF;
             color: #475569;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 12.5px;
+            font-size: 11.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.12s;
@@ -530,43 +530,43 @@
         /* Grid View Cards Container */
         .grid-cards-container {
             display: none;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .template-grid-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 18px;
+            border-radius: 10px;
+            padding: 14px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
             transition: transform 0.12s, box-shadow 0.12s;
         }
 
         .template-grid-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
         }
 
         /* Bulk Selection Floating Bar */
         .bulk-action-bar {
             position: fixed;
-            bottom: 24px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
             background: #0F172A;
             color: #FFFFFF;
-            padding: 10px 22px;
-            border-radius: 10px;
+            padding: 8px 18px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            gap: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
             z-index: 1050;
             transition: transform 0.25s ease;
         }
@@ -579,21 +579,21 @@
 
 @section('content')
     <!-- Top Bar matching Image 2 -->
-    <div class="template-top-bar mb-6">
+    <div class="template-top-bar mb-4">
         <div class="d-flex align-items-center">
             <div class="header-icon-box me-3">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                 </svg>
             </div>
             <div>
-                <h1 class="fs-3 fw-bolder text-gray-900 m-0">Email Templates</h1>
-                <p class="fs-7 text-muted m-0">Create, manage and reuse email communication templates across Jero.</p>
+                <h1 class="fs-4 fw-bolder text-gray-900 m-0">Email Templates</h1>
+                <p class="fs-8 text-muted m-0">Create, manage and reuse email communication templates across Jero.</p>
             </div>
         </div>
         <a href="{{ route('superadmin.company.emailThemesupdate', 0) }}" class="btn-create-template">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -601,8 +601,8 @@
         </a>
     </div>
 
-    <!-- Main Container -->
-    <div class="container-fluid px-6 pb-10">
+    <!-- Main Container - Compact 15.6" Padding -->
+    <div class="container-fluid px-4 pb-8">
 
         <!-- Top 8 KPI Metric Cards Container -->
         <div class="kpi-metrics-container">
@@ -746,10 +746,10 @@
             </div>
 
             <!-- Filters Group -->
-            <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- Type Filter -->
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fs-8 text-muted fw-bold text-uppercase">Type</span>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="fs-9 text-muted fw-bold text-uppercase">Type</span>
                     <select class="filter-dropdown-select" id="filterTypeSelect">
                         <option value="all">All Types</option>
                         <option value="4">Send Mail</option>
@@ -762,8 +762,8 @@
                 </div>
 
                 <!-- Status Filter -->
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fs-8 text-muted fw-bold text-uppercase">Status</span>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="fs-9 text-muted fw-bold text-uppercase">Status</span>
                     <select class="filter-dropdown-select" id="filterStatusSelect">
                         <option value="all">All Status</option>
                         <option value="1">Active</option>
@@ -772,8 +772,8 @@
                 </div>
 
                 <!-- Sort By -->
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fs-8 text-muted fw-bold text-uppercase">Sort By</span>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="fs-9 text-muted fw-bold text-uppercase">Sort By</span>
                     <select class="filter-dropdown-select" id="sortBySelect">
                         <option value="updated">Last Updated</option>
                         <option value="name_asc">Template Name (A-Z)</option>
@@ -784,12 +784,12 @@
                 </div>
 
                 <!-- View Toggle Buttons -->
-                <div class="view-toggle-wrap">
+                <div class="view-toggle-wrap ms-1">
                     <button type="button" class="view-toggle-btn active" id="btnListView" title="List View">
-                        <i class="bi bi-list fs-5"></i>
+                        <i class="bi bi-list fs-6"></i>
                     </button>
                     <button type="button" class="view-toggle-btn" id="btnGridView" title="Grid View">
-                        <i class="bi bi-grid fs-6"></i>
+                        <i class="bi bi-grid fs-7"></i>
                     </button>
                 </div>
             </div>
@@ -801,16 +801,16 @@
                 <table class="enterprise-template-table" id="templatesTable">
                     <thead>
                         <tr>
-                            <th style="width: 40px;">
+                            <th style="width: 36px;">
                                 <input type="checkbox" class="form-check-input" id="checkAllTemplates">
                             </th>
-                            <th style="min-width: 250px;">Template</th>
-                            <th style="min-width: 120px;">Type</th>
-                            <th style="min-width: 260px;">Subject</th>
-                            <th style="min-width: 100px;">Status</th>
-                            <th style="min-width: 90px;">Usage</th>
-                            <th style="min-width: 140px;">Last Updated</th>
-                            <th style="min-width: 110px; text-align: center;">Action</th>
+                            <th style="min-width: 220px;">Template</th>
+                            <th style="min-width: 110px;">Type</th>
+                            <th style="min-width: 240px;">Subject</th>
+                            <th style="min-width: 90px;">Status</th>
+                            <th style="min-width: 80px;">Usage</th>
+                            <th style="min-width: 125px;">Last Updated</th>
+                            <th style="min-width: 100px; text-align: center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="templateTableBody">
@@ -901,7 +901,7 @@
 
                                     <!-- Template Info -->
                                     <td>
-                                        <div class="d-flex align-items-center gap-3">
+                                        <div class="d-flex align-items-center gap-2">
                                             <div class="template-cell-icon" style="{{ $typeIconBg }}">
                                                 <i class="bi {{ $typeIcon }}"></i>
                                             </div>
@@ -913,7 +913,7 @@
                                                     TEMPLATE-{{ $tId }} &middot; {{ ($tType == 3 || $tType == 4) ? 'System Template' : 'Custom Template' }}
                                                 </p>
                                                 <p class="template-desc-snippet" title="{{ $descSnippet }}">
-                                                    {{ substr($descSnippet, 0, 55) }}{{ strlen($descSnippet) > 55 ? '...' : '' }}
+                                                    {{ substr($descSnippet, 0, 48) }}{{ strlen($descSnippet) > 48 ? '...' : '' }}
                                                 </p>
                                             </div>
                                         </div>
@@ -944,14 +944,14 @@
 
                                     <!-- Usage -->
                                     <td>
-                                        <span class="text-muted fw-bold fs-8">{{ $usageCount }} uses</span>
+                                        <span class="text-muted fw-bold fs-9">{{ $usageCount }} uses</span>
                                     </td>
 
                                     <!-- Last Updated -->
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bold fs-8">{{ $formattedDate }}</span>
-                                            <span class="text-muted fs-9">by Super Admin</span>
+                                            <span class="text-dark fw-bold fs-9">{{ $formattedDate }}</span>
+                                            <span class="text-muted fs-10">by Super Admin</span>
                                         </div>
                                     </td>
 
@@ -973,19 +973,19 @@
                                                 <button type="button" class="action-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="More Options">
                                                     <i class="bi bi-three-dots-vertical"></i>
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 fs-7">
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 fs-8">
                                                     <li>
-                                                        <a class="dropdown-item py-2 px-4" href="javascript:void(0);" onclick="openPreviewModal({{ $tId }})">
+                                                        <a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="openPreviewModal({{ $tId }})">
                                                             <i class="bi bi-eye me-2 text-primary"></i> Preview Template
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item py-2 px-4" href="{{ route('superadmin.company.emailThemesupdate', $tId) }}">
+                                                        <a class="dropdown-item py-1 px-3" href="{{ route('superadmin.company.emailThemesupdate', $tId) }}">
                                                             <i class="bi bi-pencil me-2 text-warning"></i> Edit Details
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item py-2 px-4" href="javascript:void(0);" onclick="toggleTemplateStatus({{ $tId }}, {{ $tStatus == 1 ? 0 : 1 }})">
+                                                        <a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="toggleTemplateStatus({{ $tId }}, {{ $tStatus == 1 ? 0 : 1 }})">
                                                             <i class="bi bi-toggle2-on me-2 text-success"></i> Toggle Active/Inactive
                                                         </a>
                                                     </li>
@@ -997,10 +997,10 @@
                             @endforeach
                         @else
                             <tr id="emptyTemplatesRow">
-                                <td colspan="8" class="text-center py-10 text-muted">
-                                    <i class="bi bi-envelope-open fs-1 text-gray-400 d-block mb-3"></i>
-                                    <h5>No Email Templates Found</h5>
-                                    <p class="fs-7 text-muted">Create your first recruitment template by clicking "+ Create Template" above.</p>
+                                <td colspan="8" class="text-center py-8 text-muted">
+                                    <i class="bi bi-envelope-open fs-2 text-gray-400 d-block mb-2"></i>
+                                    <h6>No Email Templates Found</h6>
+                                    <p class="fs-8 text-muted">Create your first recruitment template by clicking "+ Create Template" above.</p>
                                 </td>
                             </tr>
                         @endif
@@ -1011,12 +1011,12 @@
             <!-- Pagination Footer matching Image 2 -->
             <div class="pagination-footer">
                 <div class="pagination-range-text">
-                    Showing <span id="pagRangeStart">1</span> - <span id="pagRangeEnd">8</span> of <span id="pagTotalCount">{{ count($th_email_template ?? []) }}</span> templates
+                    Showing <span id="pagRangeStart">1</span> - <span id="pagRangeEnd">10</span> of <span id="pagTotalCount">{{ count($th_email_template ?? []) }}</span> templates
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <select class="filter-dropdown-select" id="rowsPerPageSelect" style="height: 32px; padding: 0 10px; font-size: 12px;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-1">
+                        <select class="filter-dropdown-select" id="rowsPerPageSelect" style="height: 28px; padding: 0 8px; font-size: 11px;">
                             <option value="10" selected>10 per page</option>
                             <option value="25">25 per page</option>
                             <option value="50">50 per page</option>
@@ -1065,17 +1065,17 @@
                         </div>
 
                         <div>
-                            <h5 class="fw-bolder fs-6 text-gray-900 mb-1">
+                            <h6 class="fw-bolder fs-7 text-gray-900 mb-1">
                                 {{ $template->display_name ?: ($template->template_name ?: 'Template #' . $tId) }}
-                            </h5>
-                            <p class="fs-8 text-muted mb-2">Subject: {{ $template->template_subject }}</p>
-                            <p class="fs-8 text-gray-500 mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            </h6>
+                            <p class="fs-9 text-muted mb-1">Subject: {{ $template->template_subject }}</p>
+                            <p class="fs-9 text-gray-500 mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                 {{ $descSnippet }}
                             </p>
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between pt-2 border-top border-gray-200">
-                            <span class="fs-9 text-muted">{{ !empty($template->curr_date) ? \Carbon\Carbon::parse($template->curr_date)->format('M d, Y') : date('M d, Y') }}</span>
+                            <span class="fs-10 text-muted">{{ !empty($template->curr_date) ? \Carbon\Carbon::parse($template->curr_date)->format('M d, Y') : date('M d, Y') }}</span>
                             <div class="d-flex gap-1">
                                 <button type="button" class="action-icon-btn" onclick="openPreviewModal({{ $tId }})"><i class="bi bi-eye"></i></button>
                                 <a href="{{ route('superadmin.company.emailThemesupdate', $tId) }}" class="action-icon-btn"><i class="bi bi-pencil"></i></a>
@@ -1090,15 +1090,15 @@
 
     <!-- Bulk Action Floating Bar -->
     <div class="bulk-action-bar" id="bulkActionBar">
-        <span class="fs-7 fw-bold"><span id="bulkSelectedCount">0</span> templates selected</span>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-success fw-bold py-1 px-3" onclick="submitBulkStatus(1)">
+        <span class="fs-8 fw-bold"><span id="bulkSelectedCount">0</span> selected</span>
+        <div class="d-flex gap-1">
+            <button type="button" class="btn btn-xs btn-success fw-bold py-1 px-2" onclick="submitBulkStatus(1)">
                 <i class="bi bi-check2-circle me-1"></i> Activate
             </button>
-            <button type="button" class="btn btn-sm btn-danger fw-bold py-1 px-3" onclick="submitBulkStatus(0)">
+            <button type="button" class="btn btn-xs btn-danger fw-bold py-1 px-2" onclick="submitBulkStatus(0)">
                 <i class="bi bi-x-circle me-1"></i> Deactivate
             </button>
-            <button type="button" class="btn btn-sm btn-light-dark fw-bold py-1 px-3" onclick="clearBulkSelection()">
+            <button type="button" class="btn btn-xs btn-light-dark fw-bold py-1 px-2" onclick="clearBulkSelection()">
                 Cancel
             </button>
         </div>
@@ -1108,34 +1108,34 @@
     <div class="modal fade" id="previewTemplateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-3">
-                <div class="modal-header px-6 py-4 border-bottom border-gray-200 bg-light">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="header-icon-box" style="width: 38px; height: 38px;">
-                            <i class="bi bi-envelope-open text-warning fs-5"></i>
+                <div class="modal-header px-5 py-3 border-bottom border-gray-200 bg-light">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="header-icon-box" style="width: 32px; height: 32px;">
+                            <i class="bi bi-envelope-open text-warning fs-6"></i>
                         </div>
                         <div>
-                            <h4 class="modal-title fw-bolder fs-5 text-gray-900 m-0" id="previewModalTitle">Template Preview</h4>
-                            <span class="fs-8 text-muted" id="previewModalMeta">Template ID &middot; System</span>
+                            <h5 class="modal-title fw-bolder fs-6 text-gray-900 m-0" id="previewModalTitle">Template Preview</h5>
+                            <span class="fs-9 text-muted" id="previewModalMeta">Template ID &middot; System</span>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-6">
+                <div class="modal-body p-5">
                     <!-- Subject Box -->
-                    <div class="mb-4 p-3 bg-light rounded border border-gray-200">
-                        <div class="fs-8 text-muted fw-bold text-uppercase mb-1">Subject</div>
-                        <div class="fs-6 fw-bold text-gray-900" id="previewModalSubject">-</div>
+                    <div class="mb-3 p-2 bg-light rounded border border-gray-200">
+                        <div class="fs-9 text-muted fw-bold text-uppercase mb-1">Subject</div>
+                        <div class="fs-7 fw-bold text-gray-900" id="previewModalSubject">-</div>
                     </div>
 
                     <!-- Email Body Container -->
-                    <div class="fs-8 text-muted fw-bold text-uppercase mb-1">Email Body Content</div>
-                    <div class="p-4 bg-white rounded border border-gray-300" id="previewModalBody" style="min-height: 220px; max-height: 400px; overflow-y: auto; line-height: 1.6;">
+                    <div class="fs-9 text-muted fw-bold text-uppercase mb-1">Email Body Content</div>
+                    <div class="p-3 bg-white rounded border border-gray-300" id="previewModalBody" style="min-height: 180px; max-height: 340px; overflow-y: auto; line-height: 1.5; font-size: 12.5px;">
                         -
                     </div>
                 </div>
-                <div class="modal-footer px-6 py-3 border-top border-gray-200 bg-light">
-                    <button type="button" class="btn btn-sm btn-light fw-bold" data-bs-dismiss="modal">Close</button>
-                    <a href="javascript:void(0);" id="previewModalEditLink" class="btn btn-sm btn-warning text-dark fw-bold" style="background: #F59E0B; border: none;">
+                <div class="modal-footer px-5 py-2 border-top border-gray-200 bg-light">
+                    <button type="button" class="btn btn-xs btn-light fw-bold" data-bs-dismiss="modal">Close</button>
+                    <a href="javascript:void(0);" id="previewModalEditLink" class="btn btn-xs btn-warning text-dark fw-bold" style="background: #F59E0B; border: none;">
                         <i class="bi bi-pencil me-1"></i> Edit Template
                     </a>
                 </div>
@@ -1356,7 +1356,6 @@
                 success: function(response) {
                     pill.css('opacity', '1');
                     if (response.status === 'success') {
-                        // Update UI state
                         var isNowActive = (newStatus === 1);
 
                         // Update Row Data
