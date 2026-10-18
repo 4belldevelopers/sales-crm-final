@@ -303,6 +303,7 @@
         _quill: null,
         _quillLoading: false,
         _recipientsCache: null,
+        _recipientsCacheKey: null,
         _recipientsCacheTime: 0,
         _applicationData: [],
         _companyData: { companyName: 'Hiring Partner', companyLogo: '' },
@@ -454,6 +455,10 @@
             self._currentMatchMap = matchMap || {};
             self._confirmedMissing = false;
             self._compiledAttachments = {};
+            // Invalidate recipient directory cache on drawer open to guarantee fresh, job-isolated contacts
+            self._recipientsCache = null;
+            self._recipientsCacheKey = null;
+            self._recipientsCacheTime = 0;
             self._draftState = 'HYDRATING';
             self._lastOpenedTime = Date.now();
 
@@ -1944,9 +1949,9 @@
             $('#test_rcp_search_input').val('');
             self.filterRecipients('');
 
-            // Automatically switch to client contacts for 'to' field (forward resume goes to clients)
-            // and internal team for 'cc' field.
-            if (self._currentRcpTarget === 'to') {
+            // Automatically switch to client contacts for 'to' field only if client contacts exist
+            var hasClientTab = $('#test_rcp_tab_client').length > 0 && $('#test_rcp_tab_client').is(':visible');
+            if (self._currentRcpTarget === 'to' && hasClientTab) {
                 self.switchRecipientTab('client');
             } else {
                 self.switchRecipientTab('internal');
@@ -1968,8 +1973,11 @@
 
         _loadRecipients: function () {
             var self = this;
+            var targetJobId = (self._currentJobIdArr && self._currentJobIdArr.length) ? self._currentJobIdArr[0] : 0;
+            var cacheKey = 'job_' + targetJobId;
             var now = Date.now();
-            if (self._recipientsCache && (now - self._recipientsCacheTime < 15 * 60 * 1000)) {
+
+            if (self._recipientsCache && self._recipientsCacheKey === cacheKey && (now - self._recipientsCacheTime < 5 * 60 * 1000)) {
                 self._renderRecipientsList(self._recipientsCache);
                 return;
             }
@@ -1978,11 +1986,17 @@
             $.ajax({
                 url: self._routes.recipients,
                 type: 'POST',
-                data: { '_token': token },
+                data: {
+                    '_token': token,
+                    'jobIdArr': self._currentJobIdArr || [],
+                    'job_id': targetJobId,
+                    'arr': self._currentCandidateIds || []
+                },
                 dataType: 'json',
                 success: function (res) {
                     if (res && res.status === 'success') {
                         self._recipientsCache = res;
+                        self._recipientsCacheKey = cacheKey;
                         self._recipientsCacheTime = Date.now();
                         self._renderRecipientsList(res);
                     }
@@ -1997,13 +2011,15 @@
             var self = this;
             var internalWrap = $('#test_rcp_section_internal');
             var clientWrap = $('#test_rcp_section_client');
+            var clientTab = $('#test_rcp_tab_client');
+            var internalTab = $('#test_rcp_tab_internal');
 
             var payload = (data && data.data) ? data.data : (data || {});
             var internalTeam = payload.internal_team || payload.internal_team_data || [];
             var clientContacts = payload.client_contacts || payload.client_contacts_data || [];
 
-            $('#test_rcp_internal_count').text(internalTeam.length + ' active members');
-            $('#test_rcp_client_count').text(clientContacts.length + ' available contacts');
+            $('#test_rcp_internal_count').text(internalTeam.length + ' active');
+            $('#test_rcp_client_count').text(clientContacts.length + ' available');
 
             internalWrap.empty();
             clientWrap.empty();
@@ -2029,8 +2045,21 @@
             }
 
             if (clientContacts.length === 0) {
-                clientWrap.html('<div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No client contacts found.</div>');
+                // If job has NO client contacts (e.g. My Organization job), hide the Client Contacts tab completely!
+                if (clientTab.length) {
+                    clientTab.hide();
+                }
+                if (internalTab.length) {
+                    internalTab.show();
+                    self.switchRecipientTab('internal');
+                }
+                clientWrap.hide();
+                $('.rcp-header-subtitle').text('Choose a contact from your organization.');
             } else {
+                if (clientTab.length) {
+                    clientTab.show();
+                }
+                $('.rcp-header-subtitle').text('Choose a contact from your organization or client company.');
                 clientContacts.forEach(function (user) {
                     clientWrap.append(self._buildContactItemHtml(user, 'client'));
                 });
@@ -2048,9 +2077,20 @@
             var name = user.name || (type === 'internal' ? 'Team Member' : 'Client Contact');
             var email = user.email || '';
             var role = user.display_name || user.role_name || user.company_name || '';
+            var roleTag = user.role_tag || (type === 'internal' ? 'Active' : '');
             var initial = (name.charAt(0) || 'U').toUpperCase();
             var avatarBg = type === 'internal' ? '#EFF6FF' : '#DCFCE7';
             var avatarColor = type === 'internal' ? '#2563EB' : '#15803D';
+
+            var badgeBg = '#DCFCE7';
+            var badgeColor = '#15803D';
+            if (roleTag === 'Hiring Manager') {
+                badgeBg = '#EEF2FF';
+                badgeColor = '#4F46E5';
+            } else if (roleTag.indexOf('Agency Added By') !== -1) {
+                badgeBg = '#FEF3C7';
+                badgeColor = '#D97706';
+            }
 
             return (
                 '<div class="rcp-contact-item" data-name="' + escapeHtml(name.toLowerCase()) + '" data-display-name="' + escapeHtml(name) + '" data-email="' + escapeHtml(email.toLowerCase()) + '" data-role="' + escapeHtml(role.toLowerCase()) + '">' +
@@ -2062,7 +2102,7 @@
                     '<div class="rcp-info">' +
                       '<div style="display:flex;align-items:center;gap:6px;">' +
                         '<span class="rcp-name">' + escapeHtml(name) + '</span>' +
-                        (type === 'internal' ? '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D;font-weight:600;">Active</span>' : '') +
+                        (roleTag ? '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:600;">' + escapeHtml(roleTag) + '</span>' : '') +
                       '</div>' +
                       '<div class="rcp-email">' + escapeHtml(email) + '</div>' +
                       '<div class="rcp-role">' + escapeHtml(role) + '</div>' +
@@ -2077,6 +2117,9 @@
         },
 
         switchRecipientTab: function (tab) {
+            if (tab === 'client' && (!($('#test_rcp_tab_client').is(':visible')) || $('#test_rcp_tab_client').length === 0)) {
+                tab = 'internal';
+            }
             $('#test_rcp_tab_internal, #test_rcp_tab_client').removeClass('active');
             $('#test_rcp_tab_' + tab).addClass('active');
             if (tab === 'internal') {
@@ -2086,7 +2129,7 @@
                 $('#test_rcp_section_internal').hide();
                 $('#test_rcp_section_client').show();
             }
-            this.filterRecipients($('#test_rcp_search_input').val());
+            this.filterRecipients($('#test_rcp_search_input').val() || '');
         },
 
         filterRecipients: function (query) {

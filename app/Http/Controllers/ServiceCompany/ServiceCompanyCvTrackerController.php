@@ -3606,74 +3606,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        $companyId = auth()->user()->company_id;
+        $companyId = (int) auth()->user()->company_id;
 
-        // 1. Internal Team Contacts (Users of the company)
-        $assignDataone = DB::table('users')
-            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->where('users.company_id', '=', $companyId)
-            ->where('users.status', '=', 'active')
-            ->where('users.working_status', '=', 1)
-            ->select(
-                'users.id',
-                'users.email',
-                'users.name',
-                'users.image',
-                'users_profile.designation as display_name',
-                'roles.display_name as role_name',
-                'users.working_status',
-                'companies.company_name'
-            )->groupBy('users.id')->get()->toArray();
-
-        // 2. Client Contacts
-        $clientId = [];
-        if (! empty($this->jobIdArr)) {
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('clients.self_company', 0)
-                ->pluck('jobs.client_id')->toArray();
-        }
-        if (empty($clientId) && ! empty($request->id)) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row && ! empty($client_row->client_id)) {
-                $clientId[] = $client_row->client_id;
-            }
-        }
-        if (empty($clientId)) {
-            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-        }
-
-        $assignDataclient = [];
-        if (! empty($clientId)) {
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select(
-                    'client_contact_info.id',
-                    'client_contact_info.contact_person_email as email',
-                    'client_contact_info.contact_person_name as name',
-                    'client_contact_info.contact_person_designation as display_name',
-                    'clients.name as company_name'
-                )
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-        }
-
-        if ($request->id >= 1) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row) {
-                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-                $this->to_email_from_count = count($ccInfo);
-                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+        // Resolve Job Context and Authorized Recipients strictly scoped to Job Posting Type
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
             }
         }
 
-        $assignData = array_merge($assignDataclient, $assignDataone);
-        $this->internal_team_data = $assignDataone;
-        $this->client_contacts_data = $assignDataclient;
-        $this->cc_email_assignData = (object) $assignData;
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->to_email_from_data = $recipientsData['default_to_emails'];
+        $this->to_email_from_count = count($recipientsData['default_to_emails']);
+        $this->cc_email_assignData = (object) array_merge($this->client_contacts_data, $this->internal_team_data);
 
         $view = view('service_company.cvtracker.test_fwd_resume', $this->data)->render();
 
@@ -4269,72 +4225,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->to_email_from_data = [];
         $this->cc_email_data = [];
 
-        $companyId = auth()->user()->company_id;
+        $companyId = (int) auth()->user()->company_id;
 
-        $assignDataone = DB::table('users')
-            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->where('users.company_id', '=', $companyId)
-            ->where('users.status', '=', 'active')
-            ->where('users.working_status', '=', 1)
-            ->select(
-                'users.id',
-                'users.email',
-                'users.name',
-                'users.image',
-                'users_profile.designation as display_name',
-                'roles.display_name as role_name',
-                'users.working_status',
-                'companies.company_name'
-            )->groupBy('users.id')->get()->toArray();
-
-        $clientId = [];
-        if (! empty($this->jobIdArr)) {
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('clients.self_company', 0)
-                ->pluck('jobs.client_id')->toArray();
-        }
-        if (empty($clientId) && ! empty($request->id)) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row && ! empty($client_row->client_id)) {
-                $clientId[] = $client_row->client_id;
-            }
-        }
-        if (empty($clientId)) {
-            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-        }
-
-        $assignDataclient = [];
-        if (! empty($clientId)) {
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select(
-                    'client_contact_info.id',
-                    'client_contact_info.contact_person_email as email',
-                    'client_contact_info.contact_person_name as name',
-                    'client_contact_info.contact_person_designation as display_name',
-                    'clients.name as company_name'
-                )
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-        }
-
-        if ($request->id >= 1) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row) {
-                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-                $this->to_email_from_count = count($ccInfo);
-                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+        // Resolve Job Context and Authorized Recipients strictly scoped to Job Posting Type
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
             }
         }
 
-        $assignData = array_merge($assignDataclient, $assignDataone);
-        $this->internal_team_data = $assignDataone;
-        $this->client_contacts_data = $assignDataclient;
-        $this->cc_email_assignData = (object) $assignData;
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->to_email_from_data = $recipientsData['default_to_emails'];
+        $this->to_email_from_count = count($recipientsData['default_to_emails']);
+        $this->cc_email_assignData = (object) array_merge($this->client_contacts_data, $this->internal_team_data);
 
         // Authoritative Fingerprint for SWR Zero-Stale-Data (Rule 3, Rule 5, Rule 6)
         $fingerprintComponents = [];
@@ -4350,7 +4264,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $candItem->np_id ?? '',
             ]);
         }
-        $fingerprintComponents[] = $companyId.':'.($this->to_email_from_count ?? 0);
+        $fingerprintComponents[] = $companyId.':'.($targetJobId ?? 0).':'.($this->job_type ?? '').':'.count($this->client_contacts_data).':'.count($this->internal_team_data);
         $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
 
         $clientFingerprint = trim((string) $request->input('fingerprint', ''));
@@ -4800,71 +4714,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     }
 
     /**
-     * V4.1 Lazy-Loaded Recipient Directory Endpoint with 15-minute Redis Cache
+     * V4.1 Job-Context-Aware Recipient Directory Endpoint
      *
-     * Intent: Serves internal team and client contacts on demand when recruiter clicks
-     * "+ Add Recipient". Completely decouples 4-table SQL joins from drawer open.
+     * Intent: Serves dynamically filtered internal team and client contacts strictly scoped
+     * to the job posting type (My Organization, Internal Client, or Direct Client).
+     * Tenancy & Isolation: Strictly prevents any cross-job or cross-tenant contact leakage.
      */
     public function fwd_recipients(Request $request)
     {
-        $companyId = (int) auth()->user()->company_id;
+        $user = auth()->user();
+        $companyId = (int) $user->company_id;
         $jobIdArr = is_array($request->jobIdArr) ? $request->jobIdArr : [];
+        $targetJobId = ! empty($jobIdArr) ? (int) $jobIdArr[0] : (int) ($request->job_id ?: $request->id);
+        $candidateIds = is_array($request->arr) ? $request->arr : [];
 
-        $cacheKey = "tenant:{$companyId}:fwd_recipients_dir";
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 900, function () use ($companyId, $jobIdArr) {
-            // Internal Team
-            $team = DB::table('users')
-                ->leftJoin('role_user', 'role_user.user_id', '=', 'users.id')
-                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-                ->leftJoin('roles', 'roles.id', '=', 'role_user.role_id')
-                ->where('users.company_id', '=', $companyId)
-                ->where('users.status', '=', 'active')
-                ->where('users.working_status', '=', 1)
-                ->select(
-                    'users.id',
-                    'users.email',
-                    'users.name',
-                    'users_profile.designation as display_name',
-                    'roles.display_name as role_name'
-                )
-                ->groupBy('users.id')
-                ->get()
-                ->toArray();
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
 
-            // Client Contacts
-            $clientId = [];
-            if (! empty($jobIdArr)) {
-                $clientId = DB::table('jobs')
-                    ->whereIn('jobs.id', $jobIdArr)
-                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                    ->where('clients.self_company', 0)
-                    ->pluck('jobs.client_id')
-                    ->toArray();
-            }
-            if (empty($clientId)) {
-                $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-            }
-
-            $clients = [];
-            if (! empty($clientId)) {
-                $clients = DB::table('clients')
-                    ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                    ->select(
-                        'client_contact_info.id',
-                        'client_contact_info.contact_person_email as email',
-                        'client_contact_info.contact_person_name as name',
-                        'client_contact_info.contact_person_designation as display_name',
-                        'clients.name as company_name'
-                    )
-                    ->whereIn('clients.id', $clientId)
-                    ->get()
-                    ->toArray();
-            }
-
-            return [
-                'internal_team' => $team,
-                'client_contacts' => $clients,
-            ];
+        // Redis cache strictly scoped per job ID (60s TTL) to eliminate redundant queries while ensuring zero stale data across jobs
+        $cacheKey = "tenant:{$companyId}:job:".($targetJobId ?: 'none').':fwd_recipients_dir';
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($recipientAuth, $user, $targetJobId, $candidateIds) {
+            return $recipientAuth->resolveAuthorizedRecipients($user, $targetJobId, $candidateIds);
         });
 
         return response()->json(['status' => 'success', 'data' => $data]);
