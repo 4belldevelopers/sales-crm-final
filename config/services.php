@@ -86,4 +86,8 @@ return [
         'enable_worker_parser' => env('BENCH_ENABLE_WORKER_PARSER', true),
     ],
 
+    'company_intelligence' => [
+        'url' => env('COMPANY_INTELLIGENCE_URL', 'http://127.0.0.1:8787'),
+    ],
+
 ];
