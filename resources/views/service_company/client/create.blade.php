@@ -3840,15 +3840,26 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      	$('[data-toggle="tooltip"]').tooltip()
    })
    
-   var loadFile 	=	function(event) {
-      if (event.target && event.target.files && event.target.files[0]) {
-         var output 		=	URL.createObjectURL(event.target.files[0]);
-         $('.client-logo-preview .image-input-wrapper').css('background-image', 'url(' + output + ')').empty();
+   var loadFile = function(event) {
+      var input = (event && event.target) ? event.target : document.getElementById('client_logo_input');
+      if (input && input.files && input.files[0]) {
+         var output = URL.createObjectURL(input.files[0]);
+         $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+            .css({
+               'background-image': 'url(' + output + ')',
+               'background-size': 'cover',
+               'background-position': 'center'
+            })
+            .empty();
          $('#client_avatar_remove').val('0');
          $('#client_preview_remove_btn').show();
          if (typeof updateCompletion === 'function') updateCompletion();
       }
    };
+   window.loadFile = loadFile;
+   $(document).on('change', '#client_logo_input', function(e) {
+      loadFile(e);
+   });
    
 </script>
 <script>

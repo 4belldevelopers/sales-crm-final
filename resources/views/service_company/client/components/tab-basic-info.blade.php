@@ -20,9 +20,13 @@
 
         <!-- 1. Interactive Unified Logo Upload Banner -->
         <div class="client-identity-logo-row mb-4 p-3" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; display:flex; align-items:center; gap:16px;">
-          <!-- Interactive Logo Avatar / Dropzone -->
+          <!-- Hidden Native File & Avatar Remove Inputs (Direct DOM Siblings, No display:none Ancestor) -->
+          <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg, .webp" onchange="loadFile(event)" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; opacity:0; pointer-events:none;" />
+          <input type="hidden" name="avatar_remove" id="client_avatar_remove" value="0" />
+
+          <!-- Interactive Logo Avatar / Dropzone (Native label for client_logo_input) -->
           <div class="client-logo-preview" style="position:relative; flex-shrink:0;">
-            <div class="image-input image-input-outline" id="client_logo_preview" style="width:76px; height:76px; border-radius:10px; border:1.5px dashed #cbd5e1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#ffffff; cursor:pointer; transition:all 0.2s ease;" onclick="$('#client_logo_input').click();" title="Click to upload logo">
+            <label for="client_logo_input" class="image-input image-input-outline client-logo-avatar-box" id="client_logo_preview" style="width:76px; height:76px; border-radius:10px; border:1.5px dashed #cbd5e1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#ffffff; cursor:pointer; transition:all 0.2s ease; margin:0;" title="Click to upload logo">
               <div class="image-input-wrapper" style="width:100%; height:100%; background-size:cover; background-position:center; <?php echo !empty(@$background_image) ? 'background-image: url('.@$background_image.');' : ''; ?> display:flex; align-items:center; justify-content:center;">
                 <?php if(empty(@$background_image)): ?>
                   <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;">
@@ -31,11 +35,7 @@
                   </div>
                 <?php endif; ?>
               </div>
-              <label data-kt-image-input-action="change" title="Change company logo" style="display:none;">
-                <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg, .webp" onchange="loadFile(event)"/>
-                <input type="hidden" name="avatar_remove" id="client_avatar_remove" value="0" />
-              </label>
-            </div>
+            </label>
           </div>
 
           <!-- Action & Info Block beside logo -->
@@ -46,11 +46,11 @@
             </div>
             <p style="font-size:11.5px; color:#64748b; margin:0 0 8px 0; line-height:1.35;">PNG, JPG or WEBP up to 2MB. Used on client job postings, candidate submissions, and client portals.</p>
             <div class="d-flex align-items-center gap-2">
-              <button type="button" class="btn btn-sm" onclick="$('#client_logo_input').click();" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11.5px; font-weight:600; padding:4px 12px; border-radius:6px; display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
-                <i class="la la-upload" style="font-size:13px;"></i>
+              <label for="client_logo_input" class="btn btn-sm client-upload-logo-btn" id="client_upload_logo_btn" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11.5px; font-weight:600; padding:5px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; user-select:none; margin:0;">
+                <i class="la la-upload" style="font-size:14px; color:#2563eb;"></i>
                 <span>Upload Logo</span>
-              </button>
-              <button type="button" class="btn btn-sm client-preview-remove" id="client_preview_remove_btn" data-kt-image-input-action="cancel" style="border:1px solid #fecdd3; background:#fff1f2; color:#e11d48; border-radius:6px; font-size:11.5px; font-weight:600; padding:4px 12px; display:inline-flex; align-items:center; gap:4px; <?php echo empty(@$background_image) ? 'display:none;' : ''; ?>">
+              </label>
+              <button type="button" class="btn btn-sm client-preview-remove" id="client_preview_remove_btn" data-kt-image-input-action="cancel" style="border:1px solid #fecdd3; background:#fff1f2; color:#e11d48; border-radius:6px; font-size:11.5px; font-weight:600; padding:5px 12px; display:inline-flex; align-items:center; gap:4px; margin:0; <?php echo empty(@$background_image) ? 'display:none;' : ''; ?>">
                 <i class="la la-trash" style="font-size:13px;"></i>
                 <span>Remove</span>
               </button>
