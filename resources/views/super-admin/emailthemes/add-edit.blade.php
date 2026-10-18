@@ -8,22 +8,22 @@
             background-color: #F8FAFC;
         }
 
-        /* Top Action Bar */
+        /* Top Action Bar - Compact 15.6" Header */
         .template-header-bar {
             background: #FFFFFF;
             border-bottom: 1px solid #E2E8F0;
-            padding: 16px 28px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
 
         .header-icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
             background: #FFFBEB;
             border: 1px solid #FDE68A;
             display: flex;
@@ -38,13 +38,13 @@
             border-color: #F59E0B !important;
             color: #111827 !important;
             font-weight: 700 !important;
-            font-size: 13.5px !important;
-            padding: 9px 22px !important;
-            border-radius: 8px !important;
+            font-size: 12px !important;
+            padding: 7px 18px !important;
+            border-radius: 7px !important;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25);
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
             transition: all 0.15s ease-in-out;
         }
 
@@ -53,7 +53,7 @@
             border-color: #D97706 !important;
             color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 3px 8px rgba(217, 119, 6, 0.28);
         }
 
         .btn-cancel-light {
@@ -61,9 +61,9 @@
             border: 1px solid #D1D5DB !important;
             color: #374151 !important;
             font-weight: 600 !important;
-            font-size: 13.5px !important;
-            padding: 9px 20px !important;
-            border-radius: 8px !important;
+            font-size: 12px !important;
+            padding: 7px 16px !important;
+            border-radius: 7px !important;
             transition: all 0.15s ease-in-out;
             text-decoration: none !important;
         }
@@ -73,13 +73,13 @@
             color: #111827 !important;
         }
 
-        /* Section Cards */
+        /* Section Cards - Compact Spacing */
         .section-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 22px 24px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             position: relative;
         }
@@ -87,16 +87,16 @@
         .section-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #F1F5F9;
         }
 
         .section-header-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -128,7 +128,7 @@
         }
 
         .section-title {
-            font-size: 15.5px;
+            font-size: 14px;
             font-weight: 700;
             color: #0F172A;
             margin: 0;
@@ -136,17 +136,17 @@
         }
 
         .section-subtitle {
-            font-size: 12px;
+            font-size: 11px;
             color: #64748B;
-            margin: 2px 0 0 0;
+            margin: 1px 0 0 0;
         }
 
         /* Form Inputs */
         .form-label-custom {
-            font-size: 12.5px;
+            font-size: 11.5px;
             font-weight: 600;
             color: #1E293B;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -158,12 +158,12 @@
 
         .form-control-custom,
         .form-select-custom {
-            height: 42px;
-            border-radius: 8px;
+            height: 34px;
+            border-radius: 7px;
             border: 1px solid #CBD5E1;
-            font-size: 13px;
+            font-size: 12px;
             color: #0F172A;
-            padding: 8px 14px;
+            padding: 5px 11px;
             background-color: #FFFFFF;
             transition: all 0.15s ease-in-out;
             width: 100%;
@@ -172,15 +172,15 @@
         .form-control-custom:focus,
         .form-select-custom:focus {
             border-color: #F59E0B;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
             outline: none;
             background-color: #FFFFFF;
         }
 
         .form-hint {
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #64748B;
-            margin-top: 5px;
+            margin-top: 3px;
             display: block;
         }
 
@@ -189,21 +189,21 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 4px;
-            padding: 8px 12px;
+            gap: 3px;
+            padding: 6px 10px;
             background: #F8FAFC;
             border: 1px solid #CBD5E1;
             border-bottom: none;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
         }
 
         .ed-tool-btn {
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 5px;
-            padding: 5px 8px;
-            font-size: 13px;
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 12px;
             color: #475569;
             cursor: pointer;
             display: inline-flex;
@@ -218,26 +218,20 @@
             color: #0F172A;
         }
 
-        .ed-tool-btn.active {
-            background: #E2E8F0;
-            color: #1E293B;
-            font-weight: 700;
-        }
-
         .ed-tool-sep {
             width: 1px;
-            height: 18px;
+            height: 16px;
             background: #CBD5E1;
-            margin: 0 4px;
+            margin: 0 3px;
         }
 
         .ed-select-style {
-            height: 28px;
-            font-size: 12px;
+            height: 25px;
+            font-size: 11px;
             border-radius: 4px;
             border: 1px solid #CBD5E1;
             background: #FFFFFF;
-            padding: 2px 8px;
+            padding: 1px 6px;
             color: #334155;
             cursor: pointer;
         }
@@ -246,10 +240,10 @@
             background: #EFF6FF;
             color: #1D4ED8;
             border: 1px solid #BFDBFE;
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 5px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -265,8 +259,8 @@
 
         /* Editor Container wrapper */
         .editor-wrapper {
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
+            border-bottom-left-radius: 7px;
+            border-bottom-right-radius: 7px;
             overflow: hidden;
             border: 1px solid #CBD5E1;
         }
@@ -280,10 +274,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
+            padding: 5px 10px;
             background: #F8FAFC;
             border-top: 1px solid #E2E8F0;
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #64748B;
         }
 
@@ -291,19 +285,22 @@
         .variables-panel {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 22px;
+            border-radius: 10px;
+            padding: 16px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             position: sticky;
-            top: 20px;
+            top: 16px;
+            max-height: calc(100vh - 110px);
+            display: flex;
+            flex-direction: column;
         }
 
         .var-search-input {
-            height: 36px;
-            border-radius: 8px;
+            height: 32px;
+            border-radius: 7px;
             border: 1px solid #CBD5E1;
-            font-size: 12.5px;
-            padding: 6px 12px 6px 34px;
+            font-size: 11.5px;
+            padding: 4px 10px 4px 30px;
             width: 100%;
             background: #FFFFFF;
             transition: all 0.15s ease;
@@ -312,37 +309,37 @@
         .var-search-input:focus {
             border-color: #F59E0B;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
         }
 
         .var-search-wrap {
             position: relative;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
 
         .var-search-wrap .search-icon {
             position: absolute;
-            left: 11px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #94A3B8;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         /* Category Pill Tabs */
         .var-pill-tabs {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #F1F5F9;
             scrollbar-width: thin;
         }
 
         .var-pill-tabs::-webkit-scrollbar {
-            height: 4px;
+            height: 3px;
         }
 
         .var-pill-tabs::-webkit-scrollbar-thumb {
@@ -353,9 +350,9 @@
         .var-pill-btn {
             background: #F8FAFC;
             border: 1px solid #E2E8F0;
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 12px;
+            border-radius: 16px;
+            padding: 3px 10px;
+            font-size: 11px;
             font-weight: 500;
             color: #475569;
             white-space: nowrap;
@@ -377,17 +374,17 @@
 
         /* Variables List */
         .var-cards-list {
-            max-height: 520px;
+            max-height: calc(100vh - 290px);
             overflow-y: auto;
-            padding-right: 4px;
+            padding-right: 3px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             scrollbar-width: thin;
         }
 
         .var-cards-list::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
 
         .var-cards-list::-webkit-scrollbar-thumb {
@@ -398,12 +395,12 @@
         .var-item-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            padding: 10px 14px;
+            border-radius: 7px;
+            padding: 8px 10px;
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 12px;
+            gap: 8px;
             cursor: pointer;
             transition: all 0.12s ease-in-out;
             user-select: none;
@@ -412,48 +409,52 @@
         .var-item-card:hover {
             border-color: #93C5FD;
             background: #F8FAFC;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.05);
             transform: translateY(-1px);
         }
 
         .var-item-left {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
+            min-width: 0;
         }
 
         .var-token-badge {
             font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: #2563EB;
             background: #EFF6FF;
             border: 1px solid #DBEAFE;
-            border-radius: 6px;
-            padding: 2px 8px;
+            border-radius: 5px;
+            padding: 1px 6px;
             display: inline-block;
             letter-spacing: -0.2px;
             width: fit-content;
         }
 
         .var-item-desc {
-            font-size: 12px;
+            font-size: 11px;
             color: #64748B;
-            line-height: 1.35;
+            line-height: 1.3;
             margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .var-copy-btn {
             background: #F1F5F9;
             border: 1px solid #E2E8F0;
-            border-radius: 6px;
-            width: 28px;
-            height: 28px;
+            border-radius: 5px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #64748B;
-            font-size: 13px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.1s ease;
             flex-shrink: 0;
@@ -469,44 +470,35 @@
         .var-target-bar {
             background: #F1F5F9;
             border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            padding: 6px 10px;
-            margin-bottom: 12px;
+            border-radius: 7px;
+            padding: 4px 8px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 11.5px;
+            font-size: 10.5px;
             color: #475569;
-        }
-
-        .target-pill {
-            background: #FFFFFF;
-            border: 1px solid #CBD5E1;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-weight: 600;
-            color: #2563EB;
         }
 
         /* Toast notification */
         .token-toast {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            bottom: 20px;
+            right: 20px;
             background: #0F172A;
             color: #FFFFFF;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 8px 15px;
+            border-radius: 7px;
+            font-size: 12px;
             font-weight: 500;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             z-index: 99999;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.25s ease;
+            transform: translateY(15px);
+            transition: all 0.22s ease;
             pointer-events: none;
         }
 
@@ -518,23 +510,23 @@
         .emoji-picker-menu {
             position: absolute;
             right: 0;
-            top: 48px;
+            top: 40px;
             background: #FFFFFF;
             border: 1px solid #CBD5E1;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            padding: 10px;
+            border-radius: 7px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            padding: 8px;
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
+            gap: 4px;
             z-index: 1050;
-            font-size: 18px;
+            font-size: 16px;
             display: none;
         }
 
         .emoji-picker-menu span {
             cursor: pointer;
-            padding: 4px;
+            padding: 3px;
             text-align: center;
             border-radius: 4px;
             transition: background 0.1s;
@@ -548,13 +540,13 @@
 
 @section('content')
     <!-- Top Action Bar matching Image 1 -->
-    <div class="template-header-bar mb-6">
+    <div class="template-header-bar mb-4">
         <div class="d-flex align-items-center">
-            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn btn-sm btn-icon btn-white border border-gray-300 rounded-circle me-3 hover-elevate-up" title="Back to Templates">
-                <i class="bi bi-arrow-left fs-4 text-gray-700"></i>
+            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn btn-sm btn-icon btn-white border border-gray-300 rounded-circle me-3 hover-elevate-up" style="width: 32px; height: 32px;" title="Back to Templates">
+                <i class="bi bi-arrow-left fs-5 text-gray-700"></i>
             </a>
             <div class="header-icon-box me-3">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                 </svg>
@@ -563,13 +555,13 @@
                 <h1 class="fs-4 fw-bolder text-gray-900 m-0">
                     {{ @$th_email_template->e_temp_id ? 'Edit Email Template' : 'Add Email Template' }}
                 </h1>
-                <p class="fs-7 text-muted m-0">Create a new email template for recruitment communication.</p>
+                <p class="fs-8 text-muted m-0">Create a new email template for recruitment communication.</p>
             </div>
         </div>
         <div class="d-flex align-items-center">
-            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn-cancel-light me-3">Cancel</a>
+            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn-cancel-light me-2">Cancel</a>
             <button type="button" id="save-form" class="btn-save-yellow">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                     <polyline points="17 21 17 13 7 13 7 21"></polyline>
                     <polyline points="7 3 7 8 15 8"></polyline>
@@ -579,13 +571,13 @@
         </div>
     </div>
 
-    <!-- Main Content Container: 2 Columns -->
-    <div class="container-fluid px-6 pb-10">
+    <!-- Main Content Container: 2 Columns - Responsive for 1366x768 and smaller -->
+    <div class="container-fluid px-4 pb-8">
         <form id="editSettings" class="ajax-form">
             @csrf
             <input type="hidden" name="tokenId" id="tokenId" value="{{ (@$th_email_template->e_temp_id) ? @$th_email_template->e_temp_id : 0 }}">
 
-            <div class="row g-6">
+            <div class="row g-4">
                 <!-- Left Column: Form & Editor (Col 7 / 8) -->
                 <div class="col-xl-8 col-lg-7">
 
@@ -593,7 +585,7 @@
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-purple">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -607,7 +599,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-4">
+                        <div class="row g-3">
                             <!-- Template Name -->
                             <div class="col-md-6">
                                 <label class="form-label-custom">Template Name <span class="req">*</span></label>
@@ -637,9 +629,9 @@
                             <div class="col-md-6">
                                 <label class="form-label-custom">Subject <span class="req">*</span></label>
                                 <div class="position-relative">
-                                    <input type="text" class="form-control-custom pe-10" name="subject" id="subject" placeholder="Job Openings | [{COMPANY_NAME}] | Apply Now" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" required>
+                                    <input type="text" class="form-control-custom pe-8" name="subject" id="subject" placeholder="Job Openings | [{COMPANY_NAME}] | Apply Now" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" required>
                                     <button type="button" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-1" id="btnToggleEmoji" title="Insert Emoji">
-                                        <i class="bi bi-emoji-smile fs-5 text-gray-500"></i>
+                                        <i class="bi bi-emoji-smile fs-6 text-gray-500"></i>
                                     </button>
                                     <div class="emoji-picker-menu" id="emojiPickerMenu">
                                         <span>👋</span><span>🤝</span><span>🎉</span><span>💼</span><span>🚀</span><span>📢</span>
@@ -665,7 +657,7 @@
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-blue">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                 </svg>
                             </div>
@@ -698,10 +690,10 @@
 
                                 <div class="ed-tool-sep"></div>
 
-                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('link')" title="Insert Link"><i class="bi bi-link-45deg fs-6"></i></button>
-                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('image')" title="Insert Image"><i class="bi bi-image fs-6"></i></button>
-                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('table')" title="Insert Table"><i class="bi bi-table fs-6"></i></button>
-                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('source')" title="View HTML Source"><i class="bi bi-code-slash fs-6"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('link')" title="Insert Link"><i class="bi bi-link-45deg fs-7"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('image')" title="Insert Image"><i class="bi bi-image fs-7"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('table')" title="Insert Table"><i class="bi bi-table fs-7"></i></button>
+                                <button type="button" class="ed-tool-btn" onclick="execEditorCmd('source')" title="View HTML Source"><i class="bi bi-code-slash fs-7"></i></button>
 
                                 <div class="ed-tool-sep"></div>
 
@@ -710,10 +702,10 @@
                                 <button type="button" class="ed-tool-btn" onclick="execEditorCmd('justifyright')" title="Align Right"><i class="bi bi-text-right"></i></button>
 
                                 <div class="ed-personalize-btn dropdown-toggle" id="btnPersonalizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-magic fs-7"></i>
+                                    <i class="bi bi-magic fs-8"></i>
                                     Personalize
                                 </div>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="btnPersonalizeDropdown" style="font-size: 12px; max-height: 280px; overflow-y: auto;">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="btnPersonalizeDropdown" style="font-size: 11.5px; max-height: 240px; overflow-y: auto;">
                                     <li><h6 class="dropdown-header text-uppercase text-muted fw-bold fs-9">Candidate Tokens</h6></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_NAME}]')"><code>[{CANDIDATE_NAME}]</code> &middot; Candidate Name</a></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_EMAIL}]')"><code>[{CANDIDATE_EMAIL}]</code> &middot; Candidate Email</a></li>
@@ -727,7 +719,7 @@
                                 </ul>
                             </div>
 
-                            <textarea name="editor1" id="editor1" rows="12" class="form-control" style="min-height: 350px;">{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
+                            <textarea name="editor1" id="editor1" rows="9" class="form-control" style="min-height: 260px;">{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
 
                             <div class="editor-footer-info">
                                 <span>Rich Text Editor &middot; Use variables from the right panel to dynamically populate fields</span>
@@ -742,7 +734,7 @@
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-gray">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="3"></circle>
                                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                                 </svg>
@@ -753,7 +745,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-4">
+                        <div class="row g-3">
                             <!-- Audience Validation -->
                             <div class="col-md-6">
                                 <label class="form-label-custom">Audience Validation</label>
@@ -784,10 +776,10 @@
                 <div class="col-xl-4 col-lg-5">
                     <div class="variables-panel">
                         <!-- Header -->
-                        <div class="d-flex align-items-center justify-content-between mb-4">
-                            <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center gap-2">
                                 <div class="section-header-icon icon-amber">
-                                    <span class="fs-5 fw-bolder font-monospace">{ }</span>
+                                    <span class="fs-6 fw-bolder font-monospace">{ }</span>
                                 </div>
                                 <div>
                                     <h2 class="section-title">Available Variables</h2>
@@ -804,9 +796,9 @@
 
                         <!-- Active Target Bar -->
                         <div class="var-target-bar">
-                            <span>Clicking a card inserts into:</span>
+                            <span>Inserts into:</span>
                             <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetBodyBtn" onclick="setInsertTarget('body')">Email Body</button>
+                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetBodyBtn" onclick="setInsertTarget('body')">Body</button>
                                 <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetSubjectBtn" onclick="setInsertTarget('subject')">Subject</button>
                             </div>
                         </div>
@@ -816,7 +808,7 @@
                             <button type="button" class="var-pill-btn active" data-cat="candidate">Candidate</button>
                             <button type="button" class="var-pill-btn" data-cat="job">Job</button>
                             <button type="button" class="var-pill-btn" data-cat="company">Company</button>
-                            <button type="button" class="var-pill-btn" data-cat="client">Client / End Customer</button>
+                            <button type="button" class="var-pill-btn" data-cat="client">Client</button>
                             <button type="button" class="var-pill-btn" data-cat="recruiter">Recruiter</button>
                             <button type="button" class="var-pill-btn" data-cat="other">Other</button>
                         </div>
@@ -1110,8 +1102,8 @@
                                 </button>
                             </div>
 
-                            <div id="noVariablesFound" class="text-center py-6 text-muted fs-7" style="display: none;">
-                                <i class="bi bi-search fs-3 text-gray-400 d-block mb-2"></i>
+                            <div id="noVariablesFound" class="text-center py-4 text-muted fs-8" style="display: none;">
+                                <i class="bi bi-search fs-4 text-gray-400 d-block mb-1"></i>
                                 No variables match your search.
                             </div>
                         </div>
@@ -1124,7 +1116,7 @@
 
     <!-- Toast Notification for Token Insert/Copy -->
     <div id="tokenToast" class="token-toast">
-        <i class="bi bi-check2-circle text-success fs-5"></i>
+        <i class="bi bi-check2-circle text-success fs-6"></i>
         <span id="tokenToastText">Token copied to clipboard</span>
     </div>
 @endsection
@@ -1138,9 +1130,9 @@
             // Update Active Target Visual State
             updateTargetButtons();
 
-            // Init CKEditor 4
+            // Init CKEditor 4 with compact 15.6" height (260px)
             if (typeof CKEDITOR !== 'undefined') {
-                CKEDITOR.config.height = 360;
+                CKEDITOR.config.height = 260;
                 CKEDITOR.config.width = 'auto';
                 CKEDITOR.config.removePlugins = 'elementspath';
                 CKEDITOR.config.resize_enabled = false;
@@ -1233,11 +1225,10 @@
             $('.var-item-card').each(function() {
                 var cardCat = $(this).data('cat') || '';
                 var token = ($(this).data('token') || '').toLowerCase();
-                var altToken = ($(this).data('alt-token') || '').toLowerCase();
                 var desc = ($(this).data('desc') || '').toLowerCase();
 
                 var matchesCat = (activeCat === 'all' || cardCat === activeCat);
-                var matchesQuery = (!query || token.indexOf(query) !== -1 || altToken.indexOf(query) !== -1 || desc.indexOf(query) !== -1);
+                var matchesQuery = (!query || token.indexOf(query) !== -1 || desc.indexOf(query) !== -1);
 
                 if (matchesCat && matchesQuery) {
                     $(this).show();
@@ -1272,7 +1263,7 @@
                     subjectInput.focus();
                     subjectInput.selectionStart = subjectInput.selectionEnd = startPos + token.length + 2;
                 }
-                showToast('Inserted ' + token + ' into Subject line');
+                showToast('Inserted ' + token + ' into Subject');
             } else {
                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
                     CKEDITOR.instances.editor1.insertHtml(' ' + token + ' ');
@@ -1284,7 +1275,7 @@
                     }
                 }
                 updateCharCount();
-                showToast('Inserted ' + token + ' into Email Body');
+                showToast('Inserted ' + token + ' into Body');
             }
         }
 
@@ -1310,7 +1301,7 @@
             $('#tokenToast').addClass('show');
             setTimeout(function() {
                 $('#tokenToast').removeClass('show');
-            }, 2500);
+            }, 2200);
         }
 
         function updateCharCount() {
