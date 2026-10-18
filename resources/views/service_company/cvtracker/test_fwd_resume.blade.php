@@ -16,9 +16,6 @@ window.getTestFwdEditorHtml = function() {
         var html = window.testFwdQuill.root.innerHTML || '';
         return (html === '<p><br></p>') ? '' : html;
     }
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try { return CKEDITOR.instances['test_editor1'].getData() || ''; } catch(e) {}
-    }
     return $('#test_editor1').val() || '';
 };
 
@@ -31,12 +28,6 @@ window.setTestFwdEditorHtml = function(html, callback) {
         if (callback) callback();
         return;
     }
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try {
-            CKEDITOR.instances['test_editor1'].setData(cleanHtml, callback);
-            return;
-        } catch(e) {}
-    }
     if (callback) callback();
 };
 
@@ -48,13 +39,6 @@ window.insertTestFwdEditorHtml = function(html) {
         window.testFwdQuill.clipboard.dangerouslyPasteHTML(idx, html);
         $('#test_editor1').val(window.getTestFwdEditorHtml());
         return;
-    }
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try {
-            CKEDITOR.instances['test_editor1'].insertHtml(html);
-            $('#test_editor1').val(CKEDITOR.instances['test_editor1'].getData());
-            return;
-        } catch(e) {}
     }
     var current = $('#test_editor1').val() || '';
     $('#test_editor1').val(current ? (current + '<br>' + html) : html);

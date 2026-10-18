@@ -129,6 +129,85 @@
     .mm-addfrom { font-size: 12px; font-weight: 600; color: #9CA3AF; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
     .mm-addfrom a { color: #2563EB; text-decoration: none; font-weight: 600; }
     .mm-addfrom a:hover { text-decoration: underline; }
+
+    /* CC Tag-Box styles */
+    .mm-tag-box {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 5px 105px 5px 8px;
+      font-size: 13px;
+      font-family: 'Poppins', sans-serif;
+      background: #F9FAFB;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      cursor: text;
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+      box-sizing: border-box;
+    }
+    .mm-tag-box.is-focused { border-color: #93C5FD; background-color: #FFFFFF; box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25); }
+    .mm-tag-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .mm-email-tag { display: inline-flex; align-items: center; gap: 5px; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 6px; line-height: 1.35; user-select: none; }
+    .mm-email-tag.is-invalid { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+    .mm-email-tag-text { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mm-email-tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; color: #6B7280; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; margin-left: 2px; }
+    .mm-email-tag-remove:hover { background: #DBEAFE; color: #1E3A8A; }
+    .mm-tag-input { border: none !important; background: transparent !important; padding: 4px 6px !important; font-size: 13px !important; font-family: 'Poppins', sans-serif !important; color: #374151 !important; outline: none !important; box-shadow: none !important; flex: 1; min-width: 140px; margin: 0; }
+    .mm-add-email-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #2563EB; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 6px; padding: 4px 10px; cursor: pointer; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+    .mm-add-email-btn:hover { background: #DBEAFE; text-decoration: none; }
+
+    /* Recipient Slide-Over Drawer Styles (Isolated to Send Email) */
+    #kt_sendmail_recipient_drawer {
+      width: 490px;
+      max-width: 100vw;
+      height: 100vh;
+      background: #FFFFFF !important;
+      font-family: 'Poppins', sans-serif;
+      z-index: 1000060 !important;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      display: none;
+    }
+    @media (max-width: 576px) { #kt_sendmail_recipient_drawer { width: 100vw !important; } }
+    .sendmail-rcp-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 1000055 !important; cursor: pointer; display: none; }
+    .rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
+    .rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
+    .rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
+    .rcp-header-subtitle { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+    .rcp-close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; border-radius: 6px; }
+    .rcp-close-btn:hover { color: #374151; background: #F3F4F6; }
+    .rcp-tabs-wrap { display: flex; gap: 10px; padding: 12px 20px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; }
+    .rcp-tab-card { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .rcp-tab-card.active { border-color: #2563EB; background: #EFF6FF; }
+    .rcp-tab-icon { color: #6B7280; }
+    .rcp-tab-card.active .rcp-tab-icon { color: #2563EB; }
+    .rcp-tab-title { font-size: 13px; font-weight: 600; color: #111827; }
+    .rcp-tab-card.active .rcp-tab-title { color: #1D4ED8; }
+    .rcp-tab-sub { font-size: 11px; color: #6B7280; }
+    .rcp-search-wrap { padding: 12px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; display: flex; gap: 8px; }
+    .rcp-search-box { flex: 1; position: relative; }
+    .rcp-search-box input { width: 100%; padding: 8px 30px 8px 34px; font-size: 12.5px; border: 1px solid #E5E7EB; border-radius: 7px; background: #F9FAFB; outline: none; }
+    .rcp-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9CA3AF; pointer-events: none; }
+    .rcp-body-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
+    .rcp-contact-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #F3F4F6; border-radius: 8px; margin-bottom: 8px; background: #fff; transition: all 0.15s; }
+    .rcp-contact-item:hover { border-color: #E5E7EB; background: #F9FAFB; }
+    .rcp-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+    .rcp-info { margin-left: 10px; min-width: 0; flex: 1; }
+    .rcp-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rcp-email { font-size: 11.5px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rcp-role { font-size: 11px; color: #9CA3AF; }
+    .rcp-toggle-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #DBEAFE; background: #EFF6FF; color: #2563EB; transition: all 0.15s; }
+    .rcp-toggle-btn.is-added { border-color: #DCFCE7; background: #DCFCE7; color: #16A34A; }
+    .rcp-footer { padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .rcp-btn-cancel { padding: 8px 16px; border: 1px solid #E5E7EB; background: #fff; border-radius: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; }
+    .rcp-btn-done { padding: 8px 20px; border: none; background: #2563EB; border-radius: 7px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+
     .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
     .mm-editor-wrap .ql-toolbar.ql-snow {
       border: none !important;
@@ -254,11 +333,16 @@
             CC Email ID
           </div>
           <div class="mm-field-col">
-            <div style="position:relative;">
-              <input class="mm-input mm-input-with-btn" name="sendmail_panel" id="sendmail_panel" value="" placeholder="Type an email...">
-              <a href="javascript:;" class="mm-add-email-btn sendmail_panel">+ Add Email</a>
+            <div class="mm-tag-box" id="sendmail_cc_email_box" onclick="$('#sendmail_cc_email_input').focus()">
+              <div class="mm-tag-list" id="sendmail_cc_email_tags"></div>
+              <input type="text" class="mm-tag-input" id="sendmail_cc_email_input" placeholder="Type CC email and press Enter...">
+              <a href="javascript:;" class="mm-add-email-btn" onclick="openSendMailRecipientDrawer(); return false;">+ Add Email</a>
             </div>
-            <div class="mm-hint">Add email addresses separated by commas</div>
+            <input type="hidden" name="sendmail_panel" id="sendmail_panel" value="">
+            <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Type CC address and press Enter or comma, or click "+ Add Email"</span>
+              <span style="color:#2563EB;font-weight:600;font-size:11px;">Deliverability Safeguard: Max 5 Total (1 To + up to 4 CC)</span>
+            </div>
           </div>
         </div>
 
@@ -348,152 +432,138 @@
     </div>
 
 
-<div id="kt_activitiesIntTeam_toggle_sendmail"></div>
-<div id="kt_activitiesIntTeam_sendmail" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
-    data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle_sendmail"
-    data-kt-drawer-close="#kt_activitiesIntTeam_close_sendmail">
-    <div class="card-body position-relative px-0 py-0" id="kt__to_body">
-        <div id="kt_sendmail_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true"
-            data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__sendmail_body"
-            data-kt-scroll-dependencies="#kt__sendmail_header, #kt__sendmail_footer" data-kt-scroll-offset="5px"
-            style="">
-            <!--begin::Team card-->
-            <div class="card card-custom mx-2">
-                <!--begin::Team header-->
-                <div class="card-header px-5 py-0" id="kt_to_header">
-                    <div class="d-flex align-items-center py-1">
-                        <div class=" d-flex align-items-center">
-                            <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                    class="text-dark fw-bolder fs-6" id="light_to_name">Assign Members</a> </div>
-                        </div>
-                        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                    </div>
-                    <div class="card-toolbar">
-                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
-                            id="kt_activitiesIntTeam_close_sendmail"> <span class="svg-icon svg-icon-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                    <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                        fill="currentColor">
-                                        <rect x="0" y="7" width="16" height="2"
-                                            rx="1" />
-                                        <rect opacity="0.5"
-                                            transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                            x="0" y="7" width="16" height="2" rx="1" />
-                                    </g>
-                                </svg>
-                            </span> </button>
-                    </div>
-                </div>
-                <!--end::Team header-->
-                <!--begin::Team Content-->
-                <div class="card-body py-7">
-                    <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_to">
-                        <!--begin::Table head-->
-                        <thead>
-                            <!--begin::Table row-->
-                            <tr class="fw-bolder text-muted">
-                                <th class="min-w-250px">Name</th>
-                                <th class="min-w-250px">Contact</th>
-                                <th class="min-w-250px">Company</th>
-                                <th class="min-w-100px">Action</th>
-                            </tr>
-                            <!--end::Table row-->
-                        </thead>
-                        <!--end::Table head-->
-                        <!--begin::Table body-->
-                        <tbody class="text-gray-600 fw-bold">
-                            @if (!empty($cc_email_assignData))
-
-                                @foreach ($cc_email_assignData as $teamVal)
-                                    @php
-                                        $bgTextDecore = $strVal = '';
-                                        $str = trim(@$teamVal->name);
-                                        $str = $strVal = strtolower($str[0]);
-                                        $str = ord($str);
-                                        if ($str >= 97 && $str <= 101) {
-                                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                        } elseif ($str >= 102 && $str <= 106) {
-                                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                        } elseif ($str >= 107 && $str <= 111) {
-                                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                        } elseif ($str >= 112 && $str <= 116) {
-                                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                        } elseif ($str >= 117 && $str <= 121) {
-                                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                        } else {
-                                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                        }
-
-                                        $working_status = $working_status_style = '';
-                                        $working_status = @$teamVal->working_status == 1 ? 'Enable' : 'Disable';
-                                        $working_status_style =
-                                            @$teamVal->working_status == 1 ? 'text-success' : 'text-danger';
-                                    @endphp
-
-                                    <tr>
-                                        <!--begin::Name-->
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <!--begin::Avatar-->
-                                                <div
-                                                    class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                                                    <a href="javascript:void(0);" class="">
-                                                        <div
-                                                            class="symbol-label {{ @$bgTextDecore }} border-radius-5">
-                                                            {{ strtoupper(@$strVal) }}</div>
-                                                    </a> </div>
-                                                <!--end::Avatar-->
-                                                <!--begin::Name details-->
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 15)) }}</span>
-                                                    <span
-                                                        class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 15)) }}</span>
-                                                </div>
-                                                <!--end::Name details-->
-                                            </div>
-                                        </td>
-                                        <!--end::Name-->
-                                        <!--begin::Role-->
-                                        <td>
-                                            <div class="d-flex flex-column"> <span
-                                                    class="text-dark fw-bolder fs-6"></span> {{ @$teamVal->email }}
-                                            </div>
-                                        </td>
-                                        <!--begin::Role-->
-                                        <td>
-                                            <div class="d-flex flex-column"> <span
-                                                    class="text-dark fw-bolder fs-6"></span>
-                                                {{ @$teamVal->company_name }}</div>
-                                        </td>
-                                        <!--begin::Action-->
-                                        <td>
-                                            <div class="d-flex flex-column"> <a
-                                                    id="sendmail_team_select_{{ @$teamVal->id }}"
-                                                    href="javascript:void(0);"
-                                                    class="sendmail_select btn btn-sm btn-light-primary w-130"
-                                                    rel="{{ @$teamVal->id }}" data-assign="0"
-                                                    data-title="{{ @$teamVal->name }}"
-                                                    data-email="{{ @$teamVal->email }}">Add</a> </div>
-                                        </td>
-                                        <!--end::Action-->
-                                    </tr>
-                                @endforeach
-                            @endif
-
-
-                        </tbody>
-                        <!--end::Table body-->
-                    </table>
-                    <!--end::Table-->
-                </div>
-                <!--end::Team Content-->
-            </div>
-            <!--end::Team card-->
-        </div>
+{{-- Isolated Enterprise Add Email Recipient Drawer for Send Email --}}
+<div class="sendmail-rcp-overlay" id="kt_sendmail_recipient_overlay" onclick="closeSendMailRecipientDrawer()"></div>
+<div id="kt_sendmail_recipient_drawer" class="bg-white shadow">
+  <div class="rcp-container">
+    <div class="rcp-header">
+      <div class="rcp-header-left">
+        <h3 class="rcp-header-title">Add Email Recipient</h3>
+        <p class="rcp-header-subtitle">
+          @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
+            Choose a contact from your organization or client company to CC.
+          @else
+            Choose a contact from your organization to CC.
+          @endif
+        </p>
+      </div>
+      <button type="button" class="rcp-close-btn" onclick="closeSendMailRecipientDrawer()" title="Close drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
+
+    <div class="rcp-tabs-wrap" id="sendmail_rcp_tabs_wrap">
+      <div class="rcp-tab-card active" id="sendmail_rcp_tab_internal" data-tab="internal">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">My Organization</div>
+          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} active</div>
+        </div>
+      </div>
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
+      <div class="rcp-tab-card" id="sendmail_rcp_tab_client" data-tab="client">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Client Contacts</div>
+          <div class="rcp-tab-sub">{{ count($client_contacts_data) }} available</div>
+        </div>
+      </div>
+      @endif
+    </div>
+
+    <div class="rcp-search-wrap">
+      <div class="rcp-search-box">
+        <span class="rcp-search-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="sendmail_rcp_search_input" placeholder="Search by name, email, or role...">
+      </div>
+    </div>
+
+    <div class="rcp-body-list">
+      <div id="sendmail_rcp_section_internal">
+        @if(!empty($internal_team_data) && count($internal_team_data) > 0)
+          @foreach($internal_team_data as $itUser)
+            <div class="rcp-contact-item sendmail-contact-item" data-name="{{ strtolower($itUser->name ?? '') }}" data-display-name="{{ $itUser->name ?? '' }}" data-email="{{ strtolower($itUser->email ?? '') }}" data-role="{{ strtolower($itUser->display_name ?? ($itUser->role_name ?? '')) }}">
+              <div style="display:flex;align-items:center;min-width:0;flex:1;">
+                <div style="position:relative;margin-right:10px;flex-shrink:0;">
+                  <div class="rcp-avatar" style="background:#EFF6FF;color:#2563EB;margin-right:0;">{{ strtoupper(substr($itUser->name ?? 'U', 0, 1)) }}</div>
+                  <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#10B981;border:1.5px solid #fff;" title="Currently Active"></span>
+                </div>
+                <div class="rcp-info">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="rcp-name">{{ $itUser->name ?? 'Team Member' }}</span>
+                    <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D;font-weight:600;">Active</span>
+                  </div>
+                  <div class="rcp-email">{{ $itUser->email }}</div>
+                  <div class="rcp-role">{{ $itUser->display_name ?? ($itUser->role_name ?? 'Team Member') }}</div>
+                </div>
+              </div>
+              <button type="button" class="rcp-toggle-btn sendmail-rcp-toggle-btn" data-email="{{ $itUser->email }}">
+                <span class="rcp-btn-label-add">+ Add</span>
+                <span class="rcp-btn-label-added" style="display:none;">✓ Added</span>
+              </button>
+            </div>
+          @endforeach
+        @else
+          <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No active internal team members found.</div>
+        @endif
+      </div>
+
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
+      <div id="sendmail_rcp_section_client" style="display:none;">
+        @foreach($client_contacts_data as $ccUser)
+          @php
+            $roleTag = $ccUser->role_tag ?? '';
+            $badgeBg = '#DCFCE7';
+            $badgeColor = '#15803D';
+            if ($roleTag === 'Hiring Manager') {
+                $badgeBg = '#EEF2FF';
+                $badgeColor = '#4F46E5';
+            } elseif (str_contains($roleTag, 'Agency Added By')) {
+                $badgeBg = '#FEF3C7';
+                $badgeColor = '#D97706';
+            }
+          @endphp
+          <div class="rcp-contact-item sendmail-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? ($ccUser->company_name ?? '')) }}">
+            <div style="display:flex;align-items:center;min-width:0;flex:1;">
+              <div class="rcp-avatar" style="background:#DCFCE7;color:#15803D;">{{ strtoupper(substr($ccUser->name ?? 'C', 0, 1)) }}</div>
+              <div class="rcp-info">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</span>
+                  @if(!empty($roleTag))
+                    <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:{{ $badgeBg }};color:{{ $badgeColor }};font-weight:600;">{{ $roleTag }}</span>
+                  @endif
+                </div>
+                <div class="rcp-email">{{ $ccUser->email }}</div>
+                <div class="rcp-role">{{ $ccUser->display_name ?: ($ccUser->company_name ?? 'Client') }}</div>
+              </div>
+            </div>
+            <button type="button" class="rcp-toggle-btn sendmail-rcp-toggle-btn" data-email="{{ $ccUser->email }}">
+              <span class="rcp-btn-label-add">+ Add</span>
+              <span class="rcp-btn-label-added" style="display:none;">✓ Added</span>
+            </button>
+          </div>
+        @endforeach
+      </div>
+      @endif
+    </div>
+
+    <div class="rcp-footer">
+      <span id="sendmail_rcp_footer_count_text" style="font-size:12px;color:#6B7280;">0 recipients selected</span>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="rcp-btn-cancel" onclick="closeSendMailRecipientDrawer()">Close</button>
+        <button type="button" class="rcp-btn-done" onclick="closeSendMailRecipientDrawer()">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -697,60 +767,148 @@
         });
     })();
 
-    $(document).on('click','.sendmail_select', function(e){
+    window._sendMailCcTags = [];
+    var MAX_SENDMAIL_TOTAL_RECIPIENTS = 5;
 
-        var rel = $(this).attr('rel');
-        var assign = $('#sendmail_team_select_' + rel).attr("data-assign");
-        var title = $('#sendmail_team_select_' + rel).attr("data-title");
-        var email = $('#sendmail_team_select_' + rel).attr("data-email");
+    window.getSendMailTotalRecipientsCount = function() {
+        var toCount = ($('#to_email_mass_mail').val() || '').trim() ? 1 : 0;
+        return toCount + window._sendMailCcTags.length;
+    };
 
-        if (assign == 0) {
-            $(this).addClass("btn-light-danger");
-            $(this).removeClass("btn-light-primary");
-            $(this).text('Remove');
-            $(this).attr("data-assign", 1);
-            AddEventSend(title, email);
-        } else if (assign == 1) {
-            $(this).addClass("btn-light-primary");
-            $(this).removeClass("btn-light-danger");
-            $(this).text('Add');
-            $(this).attr("data-assign", 0);
-            DeleteEventTo(title, email);
+    window.openSendMailRecipientDrawer = function() {
+        $('body > #kt_sendmail_recipient_drawer').not('#application_send_mail_body_content #kt_sendmail_recipient_drawer').remove();
+        $('#kt_sendmail_recipient_overlay').show();
+        $('#kt_sendmail_recipient_drawer').show();
+        syncSendMailRecipientDrawerState();
+    };
+
+    window.closeSendMailRecipientDrawer = function() {
+        $('#kt_sendmail_recipient_drawer').hide();
+        $('#kt_sendmail_recipient_overlay').hide();
+    };
+
+    // Tab switching (Internal vs Client)
+    $(document).off('click', '#sendmail_rcp_tab_internal, #sendmail_rcp_tab_client').on('click', '#sendmail_rcp_tab_internal, #sendmail_rcp_tab_client', function() {
+        var tab = $(this).attr('data-tab');
+        $('#sendmail_rcp_tab_internal, #sendmail_rcp_tab_client').removeClass('active');
+        $(this).addClass('active');
+        if (tab === 'internal') {
+            $('#sendmail_rcp_section_internal').show();
+            $('#sendmail_rcp_section_client').hide();
+        } else {
+            $('#sendmail_rcp_section_internal').hide();
+            $('#sendmail_rcp_section_client').show();
         }
-
+        applySendMailRcpSearch();
     });
 
-    function AddEventSend(name, email) {
-        var cleanEmail = (email || '').trim();
-        if (!cleanEmail) return;
-        var to_email = ($('#sendmail_panel').val() || '').trim();
-        if (to_email !== '') {
-            var emailArr = to_email.split(',').map(function(e){ return e.trim(); }).filter(Boolean);
-            if (!emailArr.includes(cleanEmail)) {
-                emailArr.push(cleanEmail);
-                $('#sendmail_panel').val(emailArr.join(', '));
+    // Real-time in-memory search
+    function applySendMailRcpSearch() {
+        var q = ($('#sendmail_rcp_search_input').val() || '').toLowerCase().trim();
+        var isInternal = $('#sendmail_rcp_tab_internal').hasClass('active');
+        var $sec = isInternal ? $('#sendmail_rcp_section_internal') : $('#sendmail_rcp_section_client');
+        $sec.find('.sendmail-contact-item').each(function() {
+            var name = $(this).attr('data-name') || '';
+            var email = $(this).attr('data-email') || '';
+            var role = $(this).attr('data-role') || '';
+            var match = !q || name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || role.indexOf(q) !== -1;
+            $(this).toggle(match);
+        });
+    }
+    $(document).off('input', '#sendmail_rcp_search_input').on('input', '#sendmail_rcp_search_input', applySendMailRcpSearch);
+
+    // Toggle button click in drawer
+    $(document).off('click', '.sendmail-rcp-toggle-btn').on('click', '.sendmail-rcp-toggle-btn', function(e) {
+        e.preventDefault();
+        var email = ($(this).attr('data-email') || '').trim().toLowerCase();
+        if (!email) return;
+        var idx = window._sendMailCcTags.indexOf(email);
+        if (idx === -1) {
+            if (getSendMailTotalRecipientsCount() >= MAX_SENDMAIL_TOTAL_RECIPIENTS) {
+                Swal.fire({
+                    title: 'Recipient Limit Reached',
+                    text: 'Maximum ' + MAX_SENDMAIL_TOTAL_RECIPIENTS + ' total recipients (1 Candidate + up to 4 CC) allowed to maintain high email deliverability. Please remove an existing CC recipient first.',
+                    icon: 'warning',
+                    confirmButtonColor: '#2563EB'
+                });
+                return;
             }
+            window._sendMailCcTags.push(email);
         } else {
-            $('#sendmail_panel').val(cleanEmail);
+            window._sendMailCcTags.splice(idx, 1);
         }
+        renderSendMailCcTags();
+        syncSendMailRecipientDrawerState();
+    });
+
+    function renderSendMailCcTags() {
+        var html = '';
+        window._sendMailCcTags.forEach(function(email) {
+            html += '<span class="mm-email-tag">' +
+                '<span class="mm-email-tag-text">' + email + '</span>' +
+                '<span class="mm-email-tag-remove" onclick="removeSendMailCcTag(\'' + email + '\')">&times;</span>' +
+                '</span>';
+        });
+        $('#sendmail_cc_email_tags').html(html);
+        $('#sendmail_panel').val(window._sendMailCcTags.join(','));
+        $('#sendmail_rcp_footer_count_text').text(window._sendMailCcTags.length + ' CC recipient(s) selected');
     }
 
-    function DeleteEventTo(contact_person_name, email) {
-        var cleanEmail = (email || '').trim().toLowerCase();
-        var to_email = ($('#sendmail_panel').val() || '').trim();
-        if (to_email !== '') {
-            var emailArr = to_email.split(',').map(function(e){ return e.trim(); }).filter(Boolean);
-            var filtered = emailArr.filter(function(e) {
-                return e.toLowerCase() !== cleanEmail;
-            });
-            $('#sendmail_panel').val(filtered.join(', '));
+    window.removeSendMailCcTag = function(email) {
+        var idx = window._sendMailCcTags.indexOf(email.toLowerCase());
+        if (idx !== -1) {
+            window._sendMailCcTags.splice(idx, 1);
+            renderSendMailCcTags();
+            syncSendMailRecipientDrawerState();
         }
-    }
-</script>
-<script>
-    // from_email_mass_mail is a <select> — no Tagify needed
-    // to_email_mass_mail is readonly (hidden input) — no Tagify
+    };
 
-    // var cc_email	=	document.querySelector('#cc_email');
-    // new Tagify(cc_email);
+    function syncSendMailRecipientDrawerState() {
+        $('.sendmail-rcp-toggle-btn').each(function() {
+            var email = ($(this).attr('data-email') || '').trim().toLowerCase();
+            var isAdded = window._sendMailCcTags.indexOf(email) !== -1;
+            $(this).toggleClass('is-added', isAdded);
+            $(this).find('.rcp-btn-label-add').toggle(!isAdded);
+            $(this).find('.rcp-btn-label-added').toggle(isAdded);
+        });
+    }
+
+    // Tag input key handling (Enter, comma, Backspace)
+    $(document).off('keydown', '#sendmail_cc_email_input').on('keydown', '#sendmail_cc_email_input', function(e) {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            var val = $(this).val().replace(/,/g, '').trim().toLowerCase();
+            if (val) {
+                if (getSendMailTotalRecipientsCount() >= MAX_SENDMAIL_TOTAL_RECIPIENTS) {
+                    Swal.fire({
+                        title: 'Recipient Limit Reached',
+                        text: 'Maximum ' + MAX_SENDMAIL_TOTAL_RECIPIENTS + ' total recipients allowed.',
+                        icon: 'warning',
+                        confirmButtonColor: '#2563EB'
+                    });
+                    return;
+                }
+                if (window._sendMailCcTags.indexOf(val) === -1) {
+                    window._sendMailCcTags.push(val);
+                    renderSendMailCcTags();
+                    syncSendMailRecipientDrawerState();
+                }
+                $(this).val('');
+            }
+        } else if (e.key === 'Backspace' && !$(this).val() && window._sendMailCcTags.length > 0) {
+            window._sendMailCcTags.pop();
+            renderSendMailCcTags();
+            syncSendMailRecipientDrawerState();
+        }
+    });
+
+    // Initialize existing CC tags if present in #sendmail_panel on load
+    (function initSendMailCcTags() {
+        var initCc = ($('#sendmail_panel').val() || '').trim();
+        if (initCc) {
+            var arr = initCc.split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+            window._sendMailCcTags = arr.slice(0, 4); // max 4 CC
+            renderSendMailCcTags();
+        }
+    })();
 </script>

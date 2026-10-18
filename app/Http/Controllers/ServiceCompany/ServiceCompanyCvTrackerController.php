@@ -5882,99 +5882,49 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        if (! empty($request->id) && (int) $request->id >= 1) {
-            // dd($request->id );
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', (int) $request->id)->first();
-            $clientIdVal = $client_row ? $client_row->client_id : null;
-            $ccInfoCount = 0;
-            $ccInfo = collect([]);
-            if ($clientIdVal) {
-                // CLIENT CONTACT INFO
-                $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $clientIdVal)->count();
-                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $clientIdVal)->get();
-            }
-            if ($ccInfoCount > 0) {
-                $i = 0;
-                foreach ($ccInfo as $ccVal) {
-                    $commonFromArr[$i] = $ccVal->contact_person_email;
+        $i = 0;
+        foreach ($this->applicationData as $aval) {
+            if ($aval->condidate_type == 'bench_condidate') {
+                $bench_assign = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->select('users.id', 'users.email', 'users.name')
+                    ->where('bench_assign.bench_applications_id', $aval->id)
+                    ->get()->toArray();
+                foreach ($bench_assign as $assign) {
+                    $commonCcArr[$i] = $assign->email;
                     $i++;
                 }
+            } else {
+                $commonCcArr[$i] = $aval->email;
+                $i++;
             }
-            $this->to_email_from_count = $ccInfoCount;
-            $this->to_email_from_data = $commonFromArr;
-
-            // HR ASSIGN JOB
-            $assignCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.email')->whereIn('job_assign.job_id', $this->jobIdArr)->count();
-
-            // $company_id 			=	auth()->user()->company_id;
-            // dd($applicationDataSection->company_id , auth()->user()->company_id);
-
-            $assignDataone = DB::table('users')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'users.company_id')
-                ->where('users.company_id', '=', auth()->user()->company_id)
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->groupBy('users.id')->get()->toArray();
-
-            $assignDatatwo = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->whereIn('job_assign.job_id', $this->jobIdArr)->get()->toArray();
-
-            $mergedData = array_udiff($assignDataone, $assignDatatwo, function ($a, $b) {
-                return $a->id <=> $b->id; // Compare by 'id' field
-            });
-
-            $i = 0;
-
-            foreach ($this->applicationData as $aval) {
-
-                // dd($aval);
-                if ($aval->condidate_type == 'bench_condidate') {
-
-                    $bench_assign = DB::table(table: 'bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.id', 'users.email', 'users.name')
-                        ->where('bench_assign.bench_applications_id', $aval->id)
-                        ->get()->toArray();
-                    foreach ($bench_assign as $assign) {
-                        $commonCcArr[$i] = $assign->email;
-                        $i++;
-                    }
-                    // dd($aval->candidate_id,$commonCcArr);
-                } else {
-                    $commonCcArr[$i] = $aval->email;
-                    $i++;
-                }
-
-            }
-
-            // foreach ($this->applicationData as $aval) {
-            // 	$commonCcArr[$i] = $aval->email;
-            // 	$i++;
-            // }
-
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->whereIn('jobs.id', $this->jobIdArr)
-                ->where('clients.self_company', 0)->pluck('jobs.client_id')->toArray();
-
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-            $assignData = array_merge($assignDataclient, $assignDataone);
-            $this->cc_email_count = count($commonCcArr);
-            $this->cc_email_data = $commonCcArr;
-            $this->cc_email_assignData = (object) $assignData;
         }
+        $this->cc_email_count = count($commonCcArr);
+        $this->cc_email_data = $commonCcArr;
+
+        // Authoritative Job-Context-Aware Recipient Resolution (My Organization vs Internal Client vs Direct Client)
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
+            }
+        }
+
+        $recipientAuth = app(ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->cc_email_assignData = (object) $recipientsData['internal_team'];
 
         $country_id = $country_name = '';
         $city = '';
-        $jobid = ! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0;
+        $jobid = $targetJobId ?: (! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0);
 
         if ($jobid > 0) {
             $client_loc = DB::table('client_city_jobs')
@@ -6022,9 +5972,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $this->location = ($location) ? $location : '';
 
+        $fingerprint = md5(json_encode([
+            'job_id' => $targetJobId,
+            'cand_ids' => $this->arr,
+            'job_type' => $this->job_type,
+            'internal_count' => count($this->internal_team_data),
+            'client_count' => count($this->client_contacts_data),
+        ]));
+
         $view = view('service_company.cvtracker.send_mail', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly(['status' => 'success', 'view' => $view, 'fingerprint' => $fingerprint]);
 
     }
 
@@ -7695,6 +7653,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         if (empty($mailto)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'No valid candidate recipient email provided.']);
+        }
+
+        // Strict deliverability cap & format validation (max 5 recipients combined: candidate To + CCs)
+        $totalRecipients = count($mailto) + count($cc);
+        if ($totalRecipients > 5) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included.',
+            ]);
+        }
+        foreach (array_merge($mailto, $cc) as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid email address format: {$email}"]);
+            }
         }
 
         $attachments = [];
