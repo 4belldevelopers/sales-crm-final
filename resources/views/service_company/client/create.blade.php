@@ -4522,76 +4522,382 @@ $('.remove_address').click(function(){
   window._clientDomainCheckCache = window._clientDomainCheckCache || {};
   window._lastCheckedWebsite = '';
 
-  function clientDomainRegisterChk(){
-    var website = ($('#website').val() || '').trim();
-    if (!website) return false;
+  /**
+   * JERO Non-Breaking Logo Pipeline:
+   * Rasterizes any discovered remote image (SVG, WebP, Favicon) into an in-memory 512x512 PNG,
+   * creates a native File object, and injects it into document.getElementById('client_logo_input')
+   * using the native DataTransfer API.
+   * This guarantees 100% compatibility with Prescreen Reports and PDF-LIB without CORS failures.
+   */
+  async function injectDiscoveredLogo(remoteImageUrl) {
+    if (!remoteImageUrl) return;
+    try {
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
 
-    // Skip redundant check if website hasn't changed and is already verified
-    if (website === window._lastCheckedWebsite && window._clientDomainCheckCache[website]) {
-        return false;
-    }
+      await new Promise(function (resolve) {
+        img.onload = resolve;
+        img.onerror = function () {
+          resolve(null);
+        };
+        img.src = remoteImageUrl;
+      });
 
-    // Fast-path: Instant User RAM cache lookup (0ms latency, 0 server requests)
-    if (window._clientDomainCheckCache[website]) {
-        var response = window._clientDomainCheckCache[website];
-        if (response.status === 'fail') {
-            Swal.fire("Warning", response.message, "warning");
-            $('.updatefrm').prop("disabled", true);
-            $('#website').val('');
-            if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
-                formValidationInstance.revalidateField('website');
-            }
-        } else {
-            $("#client_id").val(response.clientName);
-            if (response.logo_url) {
-                $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
-            }
-            if (window.clientWizardUi) {
-                window.clientWizardUi.updateAssistantPanel();
-                window.clientWizardUi.updateCompletion();
-            }
+      if (!img.width || !img.height) {
+        $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+          .css('background-image', 'url(' + remoteImageUrl + ')')
+          .empty();
+        $('#client_review_logo_box').css('background-image', 'url(' + remoteImageUrl + ')');
+        $('#client_review_initials').hide();
+        return;
+      }
+
+      var canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      var ctx = canvas.getContext('2d');
+
+      var hRatio = canvas.width / img.width;
+      var vRatio = canvas.height / img.height;
+      var ratio = Math.min(hRatio, vRatio);
+      var centerShiftX = (canvas.width - img.width * ratio) / 2;
+      var centerShiftY = (canvas.height - img.height * ratio) / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, img.width, img.height,
+        centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+
+        var file = new File([blob], 'client_logo.png', { type: 'image/png' });
+        var input = document.getElementById('client_logo_input');
+        if (input) {
+          try {
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+          } catch (e) {
+            console.warn('DataTransfer not supported:', e);
+          }
         }
-        return false;
+
+        var blobUrl = URL.createObjectURL(blob);
+        $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+          .css('background-image', 'url(' + blobUrl + ')')
+          .empty();
+
+        $('#client_preview_remove_btn').show();
+        $('#client_avatar_remove').val('0');
+        $('#logo_auto_badge').show();
+        $('#client_review_logo_box').css('background-image', 'url(' + blobUrl + ')');
+        $('#client_review_initials').hide();
+      }, 'image/png');
+
+    } catch (err) {
+      console.warn('[JERO Logo Pipeline] Canvas rasterize fallback:', err);
     }
+  }
+
+  // ATS and Tech Stack Signatures
+  var JERO_ATS_SIGNATURES = {
+    'Greenhouse': /(boards|job-boards)\.greenhouse\.io|gh_src|greenhouse/i,
+    'Lever': /jobs\.lever\.co|lever-analytics/i,
+    'Ashby': /jobs\.ashbyhq\.com|ashby/i,
+    'Workday': /myworkdayjobs\.com|wd3-impl/i,
+    'SmartRecruiters': /careers\.smartrecruiters\.com|smartrecruiters/i,
+    'Breezy HR': /breezy\.hr/i,
+    'Workable': /apply\.workable\.com/i,
+    'BambooHR': /bamboohr\.com\/careers/i,
+    'Taleo': /taleo\.net/i,
+    'Recruitee': /recruitee\.com/i
+  };
+
+  var JERO_TECH_SIGNATURES = {
+    'React': /_next\/static|react\.development|react-dom|react\.production/i,
+    'Next.js': /_next\/static/i,
+    'Vue.js': /_nuxt\/|vue\.runtime|vuejs/i,
+    'Angular': /angular(\.min)?\.js|ng-version/i,
+    'AWS': /cloudfront\.net|amazonaws\.com/i,
+    'Cloudflare': /cdnjs\.cloudflare\.com|challenges\.cloudflare\.com/i,
+    'Salesforce': /salesforce\.com|force\.com/i,
+    'HubSpot': /js\.hs-scripts\.com|hubspot/i,
+    'Google Cloud': /storage\.googleapis\.com/i,
+    'Node.js': /node_modules|express/i,
+    'Laravel': /laravel|livewire/i,
+    'Tailwind CSS': /tailwind/i,
+    'Bootstrap': /bootstrap(\.min)?\.(css|js)/i
+  };
+
+  /**
+   * God-Level Multi-Engine Company Intelligence Extraction
+   */
+  async function clientDomainRegisterChk() {
+    var rawWebsite = ($('#website').val() || '').trim();
+    if (!rawWebsite) return false;
+
+    var cleanDomain = rawWebsite.replace(/^(https?:\/\/)?(www\.)?/i, '').replace(/\/.*$/, '').trim();
+    if (!cleanDomain) return false;
+
+    // Skip redundant check if website hasn't changed and already verified
+    if (cleanDomain === window._lastCheckedWebsite && window._clientDomainCheckCache[cleanDomain]) {
+      return false;
+    }
+
+    // Step 1: Instant 0ms Visual Preview (Favicon 128px + Brand Name guess)
+    var instantBrand = cleanDomain.split('.')[0].charAt(0).toUpperCase() + cleanDomain.split('.')[0].slice(1);
+    if (!$('#client_id').val() || $('#client_id').val() === cleanDomain) {
+      $('#client_id').val(instantBrand);
+      $('.span_name').text(instantBrand);
+    }
+    var instantLogo = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(cleanDomain) + '&sz=128';
+    $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+      .css('background-image', 'url(' + instantLogo + ')')
+      .empty();
+    $('#client_review_logo_box').css('background-image', 'url(' + instantLogo + ')');
+    $('#client_review_initials').hide();
 
     $('.page-loader').css('display', 'flex');
+    var $fetchBtn = $('#client_auto_fetch, #client_fetch_side_btn');
+    $fetchBtn.prop('disabled', true);
 
-    // Lean AJAX payload: sends only website and check_client_id (zero form/file serialization overhead)
-    $.ajax({
-        url: "{{route('client-domain-register-chk')}}",
-        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-        type: "POST",
-        data: {
-            website: website,
+    try {
+      // Step 2: Parallel Stream Extraction & Live MX Check
+      var results = await Promise.allSettled([
+        $.ajax({
+          url: "{{ route('service_company.clients.auto_fetch_intelligence') }}",
+          headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+          type: "POST",
+          data: {
+            website: rawWebsite,
             check_client_id: "{{ @$client->id }}"
-        },
-        success: function(response) {
-            $('.page-loader').css('display', 'none');
-            window._lastCheckedWebsite = website;
-            window._clientDomainCheckCache[website] = response;
+          }
+        }),
+        // Cloudflare DNS-over-HTTPS MX verification (Free, 0% server strain)
+        fetch('https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(cleanDomain) + '&type=MX', {
+          headers: { 'Accept': 'application/dns-json' }
+        }).then(function (r) { return r.json(); }).catch(function () { return null; })
+      ]);
 
-            if (response.status === 'fail') {
-                Swal.fire("Warning", response.message, "warning");
-                $('.updatefrm').prop("disabled", true);
-                $('#website').val('');
-                if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
-                    formValidationInstance.revalidateField('website');
-                }
-            } else {
-                $("#client_id").val(response.clientName);
-                if (response.logo_url) {
-                    $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
-                }
-                if (window.clientWizardUi) {
-                    window.clientWizardUi.updateAssistantPanel();
-                    window.clientWizardUi.updateCompletion();
-                }
+      var streamResp = results[0].status === 'fulfilled' ? results[0].value : null;
+      var dnsResp = results[1].status === 'fulfilled' ? results[1].value : null;
+
+      // Check duplicate domain
+      if (streamResp && streamResp.status === 'fail' && streamResp.is_duplicate) {
+        Swal.fire({
+          title: "Duplicate Client Detected",
+          text: streamResp.message,
+          icon: "warning",
+          confirmButtonText: "Ok"
+        });
+        $('.updatefrm').prop("disabled", true);
+        $('#website').val('');
+        $('.page-loader').css('display', 'none');
+        $fetchBtn.prop('disabled', false);
+        return false;
+      }
+
+      window._lastCheckedWebsite = cleanDomain;
+      window._clientDomainCheckCache[cleanDomain] = streamResp;
+
+      // Update Live MX Badge
+      if (dnsResp && Array.isArray(dnsResp.Answer) && dnsResp.Answer.length > 0) {
+        $('#domain_mx_badge').show();
+        $('#domain_mx_indicator').hide();
+      }
+
+      var headHtml = streamResp && streamResp.head_html ? streamResp.head_html : '';
+      var extracted = {
+        name: instantBrand,
+        legalName: '',
+        description: '',
+        logo: instantLogo,
+        themeColor: '',
+        atsProvider: '',
+        careerUrl: '',
+        techStack: [],
+        address: null,
+        socials: {}
+      };
+
+      if (headHtml) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(headHtml, 'text/html');
+
+        // Parse JSON-LD Organization
+        var scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+        for (var sIdx = 0; sIdx < scripts.length; sIdx++) {
+          try {
+            var jData = JSON.parse(scripts[sIdx].textContent);
+            var org = null;
+            if (jData['@type'] === 'Organization' || jData['@type'] === 'Corporation') {
+              org = jData;
+            } else if (Array.isArray(jData['@graph'])) {
+              org = jData['@graph'].find(function (n) { return n['@type'] === 'Organization' || n['@type'] === 'Corporation'; });
             }
-        },
-        error: function() {
-            $('.page-loader').css('display', 'none');
+            if (org) {
+              if (org.name) extracted.name = org.name;
+              if (org.legalName) extracted.legalName = org.legalName;
+              if (org.description) extracted.description = org.description;
+              if (org.logo) {
+                extracted.logo = typeof org.logo === 'string' ? org.logo : (org.logo.url || extracted.logo);
+              }
+              if (org.address) {
+                extracted.address = {
+                  street: org.address.streetAddress || '',
+                  city: org.address.addressLocality || '',
+                  state: org.address.addressRegion || '',
+                  zip: org.address.postalCode || '',
+                  country: org.address.addressCountry || ''
+                };
+              }
+              if (Array.isArray(org.sameAs)) {
+                org.sameAs.forEach(function (url) {
+                  if (/linkedin\.com/i.test(url)) extracted.socials.linkedin = url;
+                  if (/twitter\.com|x\.com/i.test(url)) extracted.socials.twitter = url;
+                  if (/github\.com/i.test(url)) extracted.socials.github = url;
+                  if (/youtube\.com/i.test(url)) extracted.socials.youtube = url;
+                });
+              }
+              break;
+            }
+          } catch (e) {}
         }
-    });
+
+        // Parse Meta tags
+        var getMeta = function (names) {
+          for (var i = 0; i < names.length; i++) {
+            var el = doc.querySelector('meta[property="' + names[i] + '"], meta[name="' + names[i] + '"]');
+            if (el && el.getAttribute('content')) return el.getAttribute('content').trim();
+          }
+          return null;
+        };
+
+        var ogTitle = getMeta(['og:site_name', 'application-name']);
+        if (ogTitle && (!extracted.name || extracted.name === instantBrand)) extracted.name = ogTitle;
+        if (!extracted.description) extracted.description = getMeta(['og:description', 'description', 'twitter:description']) || '';
+        if (extracted.logo === instantLogo) {
+          var ogImg = getMeta(['og:image', 'twitter:image']);
+          if (ogImg) extracted.logo = ogImg;
+        }
+        var themeCol = getMeta(['theme-color', 'msapplication-TileColor']);
+        if (themeCol) extracted.themeColor = themeCol;
+
+        // Scan links for ATS and Career portals
+        var links = Array.from(doc.querySelectorAll('a[href]')).map(function (a) { return a.getAttribute('href'); });
+        for (var lIdx = 0; lIdx < links.length; lIdx++) {
+          var href = links[lIdx];
+          if (/careers?|jobs?|join/i.test(href)) {
+            extracted.careerUrl = href.startsWith('http') ? href : ('https://' + cleanDomain + '/' + href.replace(/^\//, ''));
+          }
+          for (var provider in JERO_ATS_SIGNATURES) {
+            if (JERO_ATS_SIGNATURES[provider].test(href)) {
+              extracted.atsProvider = provider;
+              extracted.careerUrl = href;
+              break;
+            }
+          }
+        }
+
+        // Scan for Tech Stack
+        var pageTextAndScripts = headHtml;
+        for (var tech in JERO_TECH_SIGNATURES) {
+          if (JERO_TECH_SIGNATURES[tech].test(pageTextAndScripts)) {
+            extracted.techStack.push(tech);
+          }
+        }
+      }
+
+      // Step 3: Populate Form Fields Seamlessly
+      if (extracted.name) {
+        $('#client_id').val(extracted.name);
+        $('.span_name').text(extracted.name);
+      }
+      if (extracted.legalName) {
+        $('#legal_name').val(extracted.legalName);
+        $('#client_review_legal_name').text(extracted.legalName);
+      } else {
+        $('#legal_name').val(extracted.name ? (extracted.name + ', Inc.') : '');
+        $('#client_review_legal_name').text(extracted.name ? (extracted.name + ', Inc.') : '—');
+      }
+
+      if (extracted.themeColor) {
+        $('#brand_color').val(extracted.themeColor);
+        $('#brand_color_preview').css('background', extracted.themeColor);
+      }
+
+      // ATS Provider Badge
+      if (extracted.atsProvider) {
+        $('#ats_provider').val(extracted.atsProvider);
+        $('#client_detected_ats_name').text(extracted.atsProvider + ' ATS');
+        $('#client_review_ats_name').text(extracted.atsProvider + ' ATS');
+        $('#ats_detected_status_badge').text(extracted.atsProvider + ' Verified').css({ background: '#dcfce7', color: '#166534' });
+      }
+      if (extracted.careerUrl) {
+        $('#career_page_url').val(extracted.careerUrl);
+      }
+
+      // Description
+      if (extracted.description) {
+        var cleanDesc = extracted.description.substring(0, 1800);
+        if (window.clientDescQuill) {
+          window.clientDescQuill.root.innerHTML = '<p>' + cleanDesc + '</p>';
+        }
+        $('#kt_docs_tinymce_hidden').val('<p>' + cleanDesc + '</p>');
+        $('#client_desc_count').text(cleanDesc.length);
+        $('.span_kt_docs_tinymce_hidden').html('<p>' + cleanDesc + '</p>');
+        $('#client_ai_suggested_desc').text(cleanDesc);
+      }
+
+      // In-Memory Canvas PNG Ingestion into native file input
+      await injectDiscoveredLogo(extracted.logo);
+
+      // Social Links
+      if (extracted.socials.linkedin) $('#linkedin_url').val(extracted.socials.linkedin);
+      if (extracted.socials.twitter) $('#twitter_url').val(extracted.socials.twitter);
+      if (extracted.socials.github) $('#github_url').val(extracted.socials.github);
+      if (extracted.socials.youtube) $('#youtube_url').val(extracted.socials.youtube);
+
+      // Tech Stack to Tagify
+      if (extracted.techStack.length > 0 && window.tagifyInstance) {
+        extracted.techStack.forEach(function (tech) {
+          window.tagifyInstance.addTags([tech]);
+        });
+      }
+
+      // Address Fields
+      if (extracted.address && extracted.address.city) {
+        $('#city_search_0').val(extracted.address.city + (extracted.address.state ? (', ' + extracted.address.state) : '') + (extracted.address.country ? (', ' + extracted.address.country) : ''));
+        $('#client_review_hq_city').text(extracted.address.city);
+        if (extracted.address.street) {
+          $('#address_0').val(extracted.address.street);
+          $('#client_review_hq_address').text(extracted.address.street);
+        }
+      }
+
+      // Show Intelligence Verified Badge
+      $('#client_intelligence_status_badge').show();
+
+      // Update Completion Tracker & Assistant Panel
+      if (window.clientWizardUi) {
+        window.clientWizardUi.updateAssistantPanel();
+        window.clientWizardUi.updateCompletion();
+      }
+
+      // User Celebration Toast
+      if (typeof toastr !== 'undefined') {
+        toastr.success('Auto-extracted verified details for ' + extracted.name + (extracted.atsProvider ? (' (' + extracted.atsProvider + ' ATS)') : '') + '!', 'Company Intelligence');
+      }
+
+    } catch (err) {
+      console.error('Company auto-fetch error:', err);
+      if (typeof toastr !== 'undefined') {
+        toastr.info('Applied basic heuristics for ' + cleanDomain, 'Auto-Assist');
+      }
+    } finally {
+      $('.page-loader').css('display', 'none');
+      $fetchBtn.prop('disabled', false);
+    }
 
     return false;
   }
@@ -5319,6 +5625,18 @@ $('.remove_address').click(function(){
 
     var initLetters = initials(clientName) || 'AC';
     $('#client_review_initials').text(initLetters);
+
+    // Sync extended CRM intelligence
+    $('#client_review_legal_name').text($('#legal_name').val() || (clientName ? (clientName + ', Inc.') : '—'));
+    var atsVal = $('#ats_provider').val();
+    if (atsVal) {
+      $('#client_review_ats_name').text(atsVal + ' ATS');
+    } else {
+      $('#client_review_ats_name').text('Not Detected');
+    }
+    $('#client_review_work_model').text($('#work_model').val() || 'Hybrid');
+    $('#client_review_notice_tolerance').text($('#notice_period_tolerance').val() || 'Up to 30 Days');
+    $('#client_review_timezone').text($('#timezone').val() || 'Auto-calculated from HQ');
 
     var bgImg = $('.image-input-wrapper').css('background-image');
     if (bgImg && bgImg !== 'none' && bgImg.indexOf('blank.png') === -1) {

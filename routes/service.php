@@ -112,6 +112,7 @@ Route::group(['middleware' => 'auth'], function () {
                 });
 
                 // #############       	START CLIENT MANAGEMENT
+                Route::post('clients/auto-fetch-intelligence', [\App\Http\Controllers\Api\V1\Utils\CompanyIntelligenceController::class, 'extract'])->name('clients.auto_fetch_intelligence');
                 Route::get('clients/industries-bundle', [ServiceCompanyClientController::class, 'industriesBundle'])->name('clients.industriesBundle');
                 Route::get('clients/dcontactList', [ServiceCompanyClientController::class, 'dcontactList'])->name('clients.dcontactList');
                 Route::get('clients/data', [ServiceCompanyClientController::class, 'data'])->name('clients.data');

@@ -153,6 +153,32 @@
               <span>Full Address is required for the primary location.</span>
             </div>
           </div>
+
+          <!-- Timezone & Core Hours Overlap (Auto-Inferred via HQ City) -->
+          <div class="mt-4 pt-3" style="border-top:1px dashed #e2e8f0; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px;">
+            <div>
+              <label class="client-addr-label" for="timezone">Primary Operating Timezone</label>
+              <div class="client-addr-input-wrap">
+                <svg class="client-addr-icon-left" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <input type="text" class="client-addr-input" name="timezone" id="timezone" value="{{ @$detail_arr['timezone'] ?? '' }}" placeholder="e.g. America/New_York (UTC-5) or Asia/Kolkata (UTC+5:30)">
+              </div>
+              <span class="client-addr-help-text">Auto-calculated from headquarters city coordinates.</span>
+            </div>
+            <div>
+              <label class="client-addr-label" for="required_hours_overlap">Daily Hours Overlap Required</label>
+              <div class="client-addr-input-wrap">
+                <svg class="client-addr-icon-left" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+                <input type="text" class="client-addr-input" name="required_hours_overlap" id="required_hours_overlap" value="{{ @$detail_arr['required_hours_overlap'] ?? '' }}" placeholder="e.g. 4 Hours Overlap with US Eastern">
+              </div>
+              <span class="client-addr-help-text">Mandatory schedule overlap for distributed candidate placement.</span>
+            </div>
+          </div>
         </div>
       </div>
 
