@@ -5755,6 +5755,37 @@ setTimeout(() => {
 
    });
   
+  // Client-First In-Memory RAM Store for Candidate Send Mail Drawer
+  var CandidateSendMailRamStore = (function() {
+      var _store = {};
+      var _ttl = 15 * 60 * 1000; // 15-minute memory ceiling
+
+      return {
+          buildKey: function(candidateId, jobId) {
+              return 'send_mail_' + (candidateId || 0) + '_' + (jobId || 0);
+          },
+          get: function(key) {
+              var item = _store[key];
+              if (!item) return null;
+              if (Date.now() - item.timestamp > _ttl) {
+                  delete _store[key];
+                  return null;
+              }
+              return item;
+          },
+          set: function(key, viewHtml, fingerprint) {
+              _store[key] = {
+                  view: viewHtml,
+                  fingerprint: fingerprint || '',
+                  timestamp: Date.now()
+              };
+          },
+          clear: function() {
+              _store = {};
+          }
+      };
+  })();
+
   $(document).off('click.sendMailDrawer').on('click.sendMailDrawer', '.sendmaimodal', function(e){
         e.preventDefault();
 
@@ -5766,6 +5797,18 @@ setTimeout(() => {
 
         // Trigger hidden toggle — KTDrawer binds to this on createInstances()
         $('#kt_send_mail_sd_toggle').trigger('click');
+
+        // Fast-path: Check Client-First RAM Store (0ms perceived time, 0 server strain)
+        var cacheKey = CandidateSendMailRamStore.buildKey(sid, jid);
+        var cached = CandidateSendMailRamStore.get(cacheKey);
+        if (cached && cached.view) {
+            $('#application_send_mail_body_content').html(cached.view);
+            $('#kt_activities_scroll').removeAttr('style');
+            if (typeof window.initCandidateEmailEditor === 'function') {
+                setTimeout(window.initCandidateEmailEditor, 50);
+            }
+            return;
+        }
 
         $('#application_send_mail_body_content').html(
             '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
@@ -5785,6 +5828,7 @@ setTimeout(() => {
             cache: false,
             success: function (response) {
                 if (response && response.status == "success") {
+                    CandidateSendMailRamStore.set(cacheKey, response.view, response.fingerprint || '');
                     $('#application_send_mail_body_content').html(response.view);
                     $('#kt_activities_scroll').removeAttr('style');
                     if (typeof window.initCandidateEmailEditor === 'function') {
