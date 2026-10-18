@@ -4727,6 +4727,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         // dd($request->tokenId);
         if ($request->tokenId == 0) {
             //  dd($request->all());
+            $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
             $values = [
                 'template_name' => $request->template,
                 'display_name' => $request->template,
@@ -4734,6 +4735,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'template_description' => $request->editor1,
                 'status' => $request->status_is,
                 'temptype' => $request->temptype_is,
+                'tempForInterview' => $tempForInterviewVal,
                 'curr_date' => date('Y-m-d'),
             ];
             $e_temp_id = DB::table('th_email_template')->insertGetId($values);
@@ -4751,7 +4753,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                         'template_subject' => $request->subject,
                         'template_description' => $request->editor1,
                         'status' => $request->status_is,
-                        'tempForInterview' => 1,
+                        'tempForInterview' => $tempForInterviewVal,
                         'temptype' => $request->temptype_is,
                         'curr_date' => now()->toIso8601String(),
                     ],
@@ -4761,6 +4763,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ]);
 
         } else {
+            $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
             $values = [
                 'template_name' => $request->template,
                 'display_name' => $request->template,
@@ -4768,6 +4771,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'template_description' => $request->editor1,
                 'status' => $request->status_is,
                 'temptype' => $request->temptype_is,
+                'tempForInterview' => $tempForInterviewVal,
             ];
             DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
             $response = $this->elasticService->getClient()->update([
@@ -4784,6 +4788,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                         'template_description' => $request->editor1,
                         'status' => $request->status_is,
                         'temptype' => $request->temptype_is,
+                        'tempForInterview' => $tempForInterviewVal,
                     ],
                     'doc_as_upsert' => true,
                     'detect_noop' => false,
