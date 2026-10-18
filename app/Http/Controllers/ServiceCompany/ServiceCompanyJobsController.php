@@ -14947,7 +14947,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $Company = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id ?? null, $job->id ?? @$job_id);
 
         $subject = "Status Change | $jobStatus to $status  | $job->title | $companyOrClientName->companyOrclientName | $job->id ";
 

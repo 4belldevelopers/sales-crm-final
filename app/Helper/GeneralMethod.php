@@ -3815,30 +3815,89 @@ END:VCALENDAR";
         }
     }
 
-    public static function companyOrClientName($id = '')
+    public static function companyOrClientName($id = '', $jobId = null)
     {
-        $company_id = auth()->check() ? (auth()->user()->company_id ?? null) : null;
-
-        $strAdded = null;
-        if (! empty($id)) {
-            $strAdded = DB::table('clients')
-                ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
-                ->join('companies', 'companies.id', '=', 'clients.company_id')
-                ->where('clients.id', $id)
-                ->first();
-        }
+        $company_id = auth()->check() ? (int) (auth()->user()->company_id ?? 0) : 0;
 
         $tenantCompany = (auth()->check() && ! empty(auth()->user()->company->company_name))
             ? auth()->user()->company->company_name
-            : ($strAdded->company_name ?? 'Our Company');
+            : 'Our Company';
+
+        // 1. Direct Client Job Detection via Job ID or Recommendation Relation
+        $jobRow = null;
+        if (! empty($jobId)) {
+            $jobRow = DB::table('jobs')->where('id', $jobId)->first();
+        }
+
+        if ($jobRow && $company_id > 0) {
+            $recRel = DB::table('recommendation_relation')
+                ->where('job_id', $jobRow->id)
+                ->where('to_company_id', $company_id)
+                ->where(function ($q) {
+                    $q->whereNull('final_status')
+                        ->orWhereNotIn('final_status', [2, 3]);
+                })
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $isDirectClientJob = ($recRel !== null) || ((int) $jobRow->company_id !== $company_id);
+
+            if ($isDirectClientJob) {
+                $directCompanyId = $recRel ? (int) $recRel->from_company_id : (int) $jobRow->company_id;
+                $directCompany = DB::table('companies')->where('id', $directCompanyId)->first();
+
+                if ($directCompany) {
+                    return (object) [
+                        'companyOrclientName' => $directCompany->company_name,
+                        'selfCompany' => 0,
+                        'is_direct_client' => 1,
+                        'company' => $tenantCompany,
+                        'client' => $directCompany->company_name,
+                        'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+                        'client_website' => $directCompany->website ?? '',
+                        'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+                        'client_description' => $directCompany->description ?? '',
+                        'company_size' => $directCompany->company_size ?? '50-200',
+                    ];
+                }
+            }
+        }
+
+        // 2. Client Record Lookup (Internal Client vs My Organization)
+        $clientId = ! empty($id) ? $id : ($jobRow->client_id ?? null);
+        $strAdded = null;
+        if (! empty($clientId)) {
+            $strAdded = DB::table('clients')
+                ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
+                ->join('companies', 'companies.id', '=', 'clients.company_id')
+                ->where('clients.id', $clientId)
+                ->first();
+        }
 
         if ($strAdded) {
+            // Direct client company check if client record was created by another company
+            if ($company_id > 0 && (int) $strAdded->company_id !== $company_id) {
+                return (object) [
+                    'companyOrclientName' => $strAdded->company_name,
+                    'selfCompany' => 0,
+                    'is_direct_client' => 1,
+                    'company' => $tenantCompany,
+                    'client' => $strAdded->company_name,
+                    'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+                    'client_website' => $strAdded->company_website ?? '',
+                    'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+                    'client_description' => $strAdded->company_description ?? '',
+                    'company_size' => $strAdded->company_sizes ?: $strAdded->company_size,
+                ];
+            }
+
             $isSelf = ((int) $strAdded->self_company === 1);
             $clientName = $isSelf ? '' : ($strAdded->name ?? '');
 
-            $data = [
+            return (object) [
                 'companyOrclientName' => $isSelf ? $tenantCompany : ($clientName ?: $tenantCompany),
                 'selfCompany' => $isSelf ? 1 : 0,
+                'is_direct_client' => 0,
                 'company' => $tenantCompany,
                 'client' => $clientName,
                 'company_website' => ($strAdded->company_website) ? @$strAdded->company_website : '',
@@ -3847,13 +3906,12 @@ END:VCALENDAR";
                 'client_description' => $isSelf ? '' : (($strAdded->client_description) ? @$strAdded->client_description : ''),
                 'company_size' => ($strAdded->company_sizes) ? @$strAdded->company_sizes : $strAdded->company_size,
             ];
-
-            return (object) $data;
         }
 
         return (object) [
             'companyOrclientName' => $tenantCompany,
             'selfCompany' => 1,
+            'is_direct_client' => 0,
             'company' => $tenantCompany,
             'client' => '',
             'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
@@ -3895,29 +3953,13 @@ END:VCALENDAR";
             || (strcasecmp($clientName, $companyName) === 0)
             || ($clientName === '[Client Name]');
 
-        // 1b. Composite phrase resolution (Pre-pass before token substitution)
-        // Handles patterns like [{CLIENT_NAME}] PAYROLL with [{COMPANY_NAME}] or on the payroll
-        $payrollRegexes = [
-            '/(?:\[\{|\{\{|\[)\s*CLIENT_NAME\s*(?:\}\}|\}\]|\])\s+PAYROLL\s+with\s+(?:\[\{|\{\{|\[)\s*COMPANY_NAME\s*(?:\}\}|\}\]|\])/i',
-            '/(?:\[\{|\{\{|\[)\s*CLIENT_NAME\s*(?:\}\}|\}\]|\])\s+on\s+the\s+payroll\s+(?:\[\{|\{\{|\[)\s*COMPANY_NAME\s*(?:\}\}|\}\]|\])/i',
-        ];
-
         if ($isSelfCompany) {
-            foreach ($payrollRegexes as $rgx) {
-                $text = preg_replace($rgx, $companyName, $text);
-            }
             $clientDisplay = '[Client Name]';
             $clientCompanyName = '[Client Name]';
             $clientNameCompanyName = $companyName;
             $clientWebsite = '';
             $clientDescription = '';
         } else {
-            foreach ($payrollRegexes as $idx => $rgx) {
-                $replacement = ($idx === 0)
-                    ? "{$clientName} PAYROLL with {$companyName}"
-                    : "{$clientName} on the payroll {$companyName}";
-                $text = preg_replace($rgx, $replacement, $text);
-            }
             $clientDisplay = $clientName;
             $clientCompanyName = $clientName;
             $clientNameCompanyName = "{$clientName} ({$companyName})";

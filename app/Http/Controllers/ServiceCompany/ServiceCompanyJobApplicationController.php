@@ -8656,7 +8656,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
             ->whereIn('clients.id', $clientId)->get()->toArray() : [];
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null);
+        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null, $jobId);
         $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
         $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
@@ -8977,6 +8977,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $job_id)->get();
 
         $job = Job::withoutGlobalScopes()->find($request->jobId);
+        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id ?? null, $job->id ?? $request->jobId);
 
         $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
         $cliName = $companyOrClientName->client ?: '';
@@ -9081,8 +9082,27 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'current_date' => date('d M Y'),
         ];
 
-        // Universal Authoritative Substitution (Resolves [{TOKEN}], {{TOKEN}}, [TOKEN])
-        $template_subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $dataRow->template_subject ?? ''), $templateContext);
+        // Clean subject location & sanitize subject
+        $cleanSubjectLoc = strip_tags(str_replace(['<br>', '<br/>', '<br />'], ' ', $location));
+        $cleanSubjectLoc = preg_replace('/^\s*1\)\s*/', '', $cleanSubjectLoc);
+
+        $templateSubjectContext = $templateContext;
+        $templateSubjectContext['job_location'] = $cleanSubjectLoc;
+        $templateSubjectContext['work_location'] = $cleanSubjectLoc;
+        $templateSubjectContext['location'] = $cleanSubjectLoc;
+
+        $template_subject = GeneralMethod::replaceTemplateVariables($dataRow->template_subject ?? '', $templateSubjectContext);
+        $template_subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $template_subject);
+        $template_subject = preg_replace('/<br\s*\/?>/i', ' ', $template_subject);
+        $template_subject = strip_tags($template_subject);
+        $template_subject = html_entity_decode($template_subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $template_subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $template_subject);
+        $template_subject = preg_replace('/\|\s*1\)\s*/u', '| ', $template_subject);
+        $template_subject = preg_replace('/^\s*1\)\s*/u', '', $template_subject);
+        $template_subject = preg_replace('/\s+/u', ' ', $template_subject);
+        $template_subject = preg_replace('/\|\s*\|+/u', '|', $template_subject);
+        $template_subject = trim($template_subject, " \t\n\r\0\x0B|\xc2\xa0");
+
         $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
         $template_description = str_replace('[{VIDEOURL}]', $videoUrl, $template_description);
 
@@ -9977,7 +9997,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($request->all());
 
         $job = Job::withoutGlobalScopes()->find($request->jobId);
-        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id ?? null, $job->id ?? $request->jobId);
         $subject = @$request->subject;
 
         $cc = (@$request->cc_email) ? @$request->cc_email : '';
@@ -11408,7 +11428,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // dd($recommendedDataList);
 
-            $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id);
+            $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id ?? null, $wise_c->job_id ?? null);
 
             // dd($companyOrClientName);
 
