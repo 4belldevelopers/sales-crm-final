@@ -454,8 +454,8 @@
 
         <!-- Box 8 -->
         <div class="field-group" style="margin-bottom:14px;">
-          <label class="field-label">[Box 8] Company Description (Quill Editor)</label>
-          <div class="field-box field-textarea" id="box_description">—</div>
+          <label class="field-label">[Box 8] Company Description (Quill Editor) <span id="box_desc_stats" style="font-size:11px; color:#2563eb; font-weight:600; margin-left:8px;"></span></label>
+          <div class="field-box field-textarea" id="box_description" style="line-height:1.6; white-space:pre-wrap;">—</div>
         </div>
 
         <!-- Box 9 -->
@@ -712,6 +712,15 @@ function renderData(d) {
 
   // Box 8: Description
   filledCount += setField('box_description', d.description);
+  const descStats = document.getElementById('box_desc_stats');
+  if (descStats) {
+    if (d.description) {
+      const words = d.description.trim().split(/\s+/).length;
+      descStats.textContent = `(${d.description.length} chars, ${words} words)`;
+    } else {
+      descStats.textContent = '';
+    }
+  }
 
   // Box 9: Tags
   const tagsEl = document.getElementById('box_tags');
