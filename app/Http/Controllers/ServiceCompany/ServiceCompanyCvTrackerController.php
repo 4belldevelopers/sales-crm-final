@@ -5859,20 +5859,35 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'query' => [
                     'bool' => [
                         'must' => [
-                            ['term' => ['status' => 1]], // OK
-                            ['match' => ['temptype' => 4]],    // TEXT field
+                            ['term' => ['status' => 1]],
+                            ['match' => ['temptype' => 4]],
                         ],
                     ],
                 ],
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $this->templateData = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+        } catch (\Throwable $e) {
+            $this->templateData = collect();
+        }
 
-        $this->templateData = collect(value: $response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
+        if ($this->templateData->isEmpty()) {
+            $this->templateData = DB::table('th_email_template')
+                ->where('status', 1)
+                ->where('temptype', 4)
+                ->get();
+        }
+
+        // Sort naturally by template ID so templates appear in clean ascending order
+        $this->templateData = $this->templateData->sortBy(function ($item) {
+            return (int) ($item->e_temp_id ?? ($item->id ?? 0));
+        })->values();
 
         $this->userdata = $this->user ?: auth()->user();
 
