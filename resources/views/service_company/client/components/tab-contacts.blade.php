@@ -13,20 +13,20 @@ $hasContacts = count($contactsList) > 0;
   <div class="client-step-layout client-contact-layout">
     <div class="client-main-column">
       <!-- Contact Person Card -->
-      <div class="card client-contact-main-card mb-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;">
+      <div class="card client-contact-main-card mb-4" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden;">
         <!-- Header bar matching screenshots -->
-        <div class="card-header border-0 py-4 px-6 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f1f5f9 !important;">
+        <div class="card-header border-0 py-4 px-6 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f8fafc !important;">
           <div class="d-flex align-items-center">
-            <div style="width:40px; height:40px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
-              <i class="la la-users" style="font-size:22px; color:#ca8a04;"></i>
+            <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+              <i class="la la-users" style="font-size:20px; color:#ca8a04;"></i>
             </div>
             <div>
-              <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Contact Person</h3>
-              <p style="font-size:12px; color:#64748b; margin:0;">Add key contacts for this client organization.</p>
+              <h3 style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0;">Contact Person</h3>
+              <p style="font-size:12px; color:#5C6F9F; margin:0;">Add key contacts for this client organization.</p>
             </div>
           </div>
-          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
-            <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person
+          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" style="background:#FFD21F !important; border:none !important; color:#101A46 !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,210,31,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
+            <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#101A46;"></i> Add Contact Person
           </button>
         </div>
 
