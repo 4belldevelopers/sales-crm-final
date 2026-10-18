@@ -6425,22 +6425,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
             $jobs = Job::withoutGlobalScopes()->find($jobid);
 
-            $companyOrClientName = null;
-            if ($jobs && ! empty($jobs->client_id)) {
-                $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-            }
-            if (! $companyOrClientName) {
-                $curComp = auth()->user()->company ?? DB::table('companies')->where('id', auth()->user()->company_id)->first();
-                $companyOrClientName = (object) [
-                    'company' => $curComp->company_name ?? 'Our Company',
-                    'client' => '',
-                    'company_website' => $curComp->website ?? '',
-                    'client_website' => '',
-                    'company_description' => $curComp->description ?? '',
-                    'client_description' => '',
-                    'company_size' => $curComp->company_size ?? '50-200',
-                ];
-            }
+            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
             $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
             $cliName = $companyOrClientName->client ?: '';
@@ -6491,8 +6476,27 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'current_date' => date('d M Y'),
             ];
 
-            // Universal Authoritative Substitution (Resolves [{TOKEN}], {{TOKEN}}, [TOKEN])
-            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext);
+            // Dedicated Subject context prevents HTML tags and list numbering from leaking into subject line
+            $cleanSubjectLoc = strip_tags(str_replace(['<br>', '<br/>', '<br />'], ' ', $location));
+            $cleanSubjectLoc = preg_replace('/^\s*1\)\s*/', '', $cleanSubjectLoc);
+
+            $templateSubjectContext = $templateContext;
+            $templateSubjectContext['job_location'] = $cleanSubjectLoc;
+            $templateSubjectContext['work_location'] = $cleanSubjectLoc;
+            $templateSubjectContext['location'] = $cleanSubjectLoc;
+
+            $subject = GeneralMethod::replaceTemplateVariables($templateData->template_subject ?? '', $templateSubjectContext);
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+
             $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
 
         }

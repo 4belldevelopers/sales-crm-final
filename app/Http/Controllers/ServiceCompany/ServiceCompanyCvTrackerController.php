@@ -5971,19 +5971,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
-        if ($jobs && ! empty($jobs->client_id)) {
-            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-            $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
-            $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
-            $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
-            $this->job_title = ($jobs->title) ? $jobs->title : '';
-        } else {
-            $currentCompany = auth()->user()->company ?? null;
-            $this->selfCompany = 1;
-            $this->companyTemp = $currentCompany->company_name ?? (auth()->user()->company->company_name ?? 'Our Company');
-            $this->clientTemp = '';
-            $this->job_title = $jobs->title ?? 'Candidate Application';
-        }
+        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
+        $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
+        $this->job_title = ($jobs && $jobs->title) ? $jobs->title : 'Candidate Application';
 
         $this->location = ($location) ? $location : '';
 
@@ -6262,7 +6254,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         //  dd( $jobs);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
         $location = $city.' | '.$country_name;
 
@@ -7068,26 +7060,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
 
             $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
-            $companyOrClientName = null;
-            if ($jobs && ! empty($jobs->client_id)) {
-                $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-            }
-            if (! $companyOrClientName) {
-                $curComp = auth()->user()->company ?? DB::table('companies')->where('id', auth()->user()->company_id)->first();
-                $companyOrClientName = (object) [
-                    'company' => $curComp->company_name ?? 'Our Company',
-                    'client' => '',
-                    'company_website' => $curComp->website ?? '',
-                    'client_website' => '',
-                    'company_description' => $curComp->description ?? '',
-                    'client_description' => '',
-                    'company_size' => $curComp->company_size ?? '50-200',
-                ];
-            }
+            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
             $country_id = $country_name = '';
             $address = '';
             $location = '';
+            $subjectLocation = '';
 
             if ($jobid > 0) {
                 $client_loc_addr = DB::table('client_location_jobs')
@@ -7106,10 +7084,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('client_city_jobs.job_id', $jobid)
                     ->get();
 
-                if ($client_loc_cities->count() > 0) {
+                if ($client_loc_cities->count() === 1) {
+                    $cval = $client_loc_cities->first();
+                    $location = $cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name;
+                    $subjectLocation = $location;
+                } elseif ($client_loc_cities->count() > 1) {
                     foreach ($client_loc_cities as $key => $cval) {
                         $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
                     }
+                    $subjectLocation = $client_loc_cities->pluck('city_name')->implode(', ');
+                } elseif (! empty($client_loc_addr->city_name)) {
+                    $location = $client_loc_addr->city_name;
+                    $subjectLocation = $location;
                 }
             }
 
@@ -7184,8 +7170,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'current_date' => date('d M Y'),
             ];
 
-            // Universal Subject and Body Replacement (Handles [{TOKEN}], {{TOKEN}}, [TOKEN])
-            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext);
+            // Dedicated Subject context prevents HTML tags and list numbering from leaking into subject line
+            $templateSubjectContext = $templateContext;
+            $templateSubjectContext['job_location'] = $subjectLocation ?: $location;
+            $templateSubjectContext['work_location'] = $subjectLocation ?: $location;
+            $templateSubjectContext['location'] = $subjectLocation ?: $location;
+
+            $subject = GeneralMethod::replaceTemplateVariables($templateData->template_subject ?? '', $templateSubjectContext);
+
+            // GOD-Level Subject Sanitization
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+
             $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
 
             $interested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(1).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
@@ -7389,7 +7393,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $template_description = str_replace([], [], $template_description);
             // dd($job_applications);
-            $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id);
+            $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id ?? null, $job_applications->jobId ?? (int) @$request->jobID);
             $InterviewMode = '';
             $dateTime = '';
             $videoUrl = '';
@@ -7515,6 +7519,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         }
 
+        if (! empty($subject)) {
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+        }
+
         return Reply::dataOnly([
             'status' => 'success',
             'template_description' => $template_description,
@@ -7536,6 +7553,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $cc = $request->cc_email;
 
         $subject = $request->subject;
+        if (! empty($subject)) {
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+        }
         $attached_cv = $request->attached_cv;
         $message = $request->editor1;
         $arr = $request->arr;
