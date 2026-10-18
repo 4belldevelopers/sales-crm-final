@@ -510,6 +510,19 @@
                     $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
                     $clName = !empty($clientTemp) ? $clientTemp : '';
                     $isSelf = !empty($selfCompany) || empty($clName);
+
+                    // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
+                    // Hide Template 2, Template 3, and Template 5
+                    $rawName = $tdata->display_name ?? ($tdata->template_name ?? '');
+                    $rawSubj = $tdata->template_subject ?? '';
+                    $isClientOnlyTemplate = in_array((int) $tId, [9, 10, 16], true)
+                      || preg_match('/\[TEMPLATE-[235]\]/i', $rawName)
+                      || preg_match('/\[TEMPLATE-[235]\]/i', $rawSubj);
+
+                    if ($isSelf && $isClientOnlyTemplate) {
+                      continue;
+                    }
+
                     $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
                     $jLoc = !empty($location) ? $location : '';
 
@@ -529,7 +542,11 @@
                 @endforeach
               @endif
             </select>
-            <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
+            @if (!empty($selfCompany) || empty($clientTemp))
+              <div class="mm-hint">Showing templates for My Organization (Templates 2, 3, and 5 are hidden for internal positions)</div>
+            @else
+              <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
+            @endif
           </div>
         </div>
 
