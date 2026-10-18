@@ -4773,6 +4773,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
         $statusVal = (int) ($request->status_is ?? 1);
         $temptypeVal = (int) ($request->temptype_is ?? 1);
+        $clientRequiredVal = (int) ($request->client_required_is ?? ($request->client_required ?? 0));
 
         if ((int) $request->tokenId == 0) {
             $values = [
@@ -4783,6 +4784,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'status' => $statusVal,
                 'temptype' => $temptypeVal,
                 'tempForInterview' => $tempForInterviewVal,
+                'client_required' => $clientRequiredVal,
                 'curr_date' => now(),
             ];
             $e_temp_id = DB::table('th_email_template')->insertGetId($values);
@@ -4803,6 +4805,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                             'template_description' => $request->editor1,
                             'status' => $statusVal,
                             'tempForInterview' => $tempForInterviewVal,
+                            'client_required' => $clientRequiredVal,
                             'temptype' => $temptypeVal,
                             'curr_date' => now()->toIso8601String(),
                         ],
@@ -4823,6 +4826,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'status' => $statusVal,
                 'temptype' => $temptypeVal,
                 'tempForInterview' => $tempForInterviewVal,
+                'client_required' => $clientRequiredVal,
                 'curr_date' => now(),
             ];
             DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
@@ -4844,6 +4848,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                             'status' => $statusVal,
                             'temptype' => $temptypeVal,
                             'tempForInterview' => $tempForInterviewVal,
+                            'client_required' => $clientRequiredVal,
                             'curr_date' => now()->toIso8601String(),
                         ],
                         'doc_as_upsert' => true,
@@ -4899,6 +4904,45 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'id' => $id,
             'template_status' => $status,
             'status_text' => $status == 1 ? 'Active' : 'Inactive',
+        ]);
+    }
+
+    public function toggleEmailTemplateClientRequired(Request $request)
+    {
+        $id = (int) $request->id;
+        $clientRequired = (int) $request->client_required;
+
+        if (! $id) {
+            return Reply::error('Invalid template ID.');
+        }
+
+        DB::table('th_email_template')->where('e_temp_id', $id)->update([
+            'client_required' => $clientRequired,
+            'curr_date' => now(),
+        ]);
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'id' => (string) $id,
+                'retry_on_conflict' => 5,
+                'refresh' => true,
+                'body' => [
+                    'doc' => [
+                        'client_required' => $clientRequired,
+                        'curr_date' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ES toggle client_required error: '.$e->getMessage());
+        }
+
+        return Reply::successWithData('Template client requirement updated successfully.', [
+            'id' => $id,
+            'client_required' => $clientRequired,
+            'status_text' => $clientRequired == 1 ? 'Client Required' : 'All Positions',
         ]);
     }
 

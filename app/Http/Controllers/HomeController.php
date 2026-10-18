@@ -9847,6 +9847,7 @@ class HomeController extends Controller
                             'status' => ['type' => 'long'],
                             'curr_date' => ['type' => 'date'],
                             'temptype' => ['type' => 'long'], // 1- fwd_resume, 2- mass-mail, 3- interview, 4-send mail , 5-bench reject
+                            'client_required' => ['type' => 'integer'],
                             'tempForInterview' => ['type' => 'long'],
                         ],
                     ],
@@ -9911,6 +9912,7 @@ class HomeController extends Controller
                         'status' => $row->status,
                         'curr_date' => ($row->curr_date) ? Carbon::parse($row->curr_date)->toIso8601String() : null,
                         'temptype' => $row->temptype,
+                        'client_required' => (int) ($row->client_required ?? 0),
                         'tempForInterview' => $row->tempForInterview,
                     ],
                     'doc_as_upsert' => true,
