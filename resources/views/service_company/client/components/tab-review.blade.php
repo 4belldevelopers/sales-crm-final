@@ -44,7 +44,12 @@
               </div>
 
               <div style="font-size:11px; color:#5C6F9F; font-weight:500; margin-bottom:2px;">Company Type</div>
-              <div class="span_company_type" style="font-size:13.5px; font-weight:700; color:#101A46;">—</div>
+              <div class="span_company_type" style="font-size:13.5px; font-weight:700; color:#101A46; margin-bottom:14px;">—</div>
+
+              <div class="span_career_page_row" style="margin-bottom:0;">
+                <div style="font-size:11px; color:#5C6F9F; font-weight:500; margin-bottom:2px;">Career Page</div>
+                <div style="font-size:12.5px; font-weight:600; color:#2563eb; word-break:break-all;"><a href="javascript:void(0);" target="_blank" class="span_career_page_url" style="color:#2563eb; text-decoration:none;">—</a></div>
+              </div>
             </div>
 
             <div class="col-6" style="padding-left:18px;">
@@ -61,9 +66,14 @@
               </div>
 
               <div style="font-size:11px; color:#5C6F9F; font-weight:500; margin-bottom:2px;">Founded Year</div>
-              <div style="font-size:13.5px; font-weight:700; color:#101A46; display:flex; align-items:center; gap:8px;">
+              <div style="font-size:13.5px; font-weight:700; color:#101A46; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
                 <i class="la la-calendar" style="font-size:17px; color:#64748b;"></i>
                 <span class="span_founded">—</span>
+              </div>
+
+              <div class="span_tax_id_row" style="margin-bottom:0;">
+                <div style="font-size:11px; color:#5C6F9F; font-weight:500; margin-bottom:2px;">Tax ID / Business Reg No</div>
+                <div class="span_tax_id" style="font-size:13px; font-weight:700; color:#101A46;">—</div>
               </div>
             </div>
           </div>
@@ -181,6 +191,18 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Official Channels & Billing Summary Strip -->
+        <div class="px-6 py-4 border-top" id="client_review_channels_wrap" style="background:#fcfdfe; border-color:#f1f5f9 !important;">
+          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Official Channels &amp; Accounts</div>
+          <div class="d-flex flex-wrap align-items-center gap-2" id="client_review_channels_list">
+            <span class="badge" id="rev_linkedin_badge" style="display:none; background:#eff6ff; color:#0a66c2; border:1px solid #bfdbfe; font-size:11px; padding:5px 10px; border-radius:6px; font-weight:600;"><i class="la la-linkedin" style="margin-right:4px;"></i> LinkedIn</span>
+            <span class="badge" id="rev_twitter_badge" style="display:none; background:#f8fafc; color:#0f172a; border:1px solid #e2e8f0; font-size:11px; padding:5px 10px; border-radius:6px; font-weight:600;"><i class="la la-twitter" style="margin-right:4px;"></i> Twitter/X</span>
+            <span class="badge" id="rev_github_badge" style="display:none; background:#f8fafc; color:#24292f; border:1px solid #e2e8f0; font-size:11px; padding:5px 10px; border-radius:6px; font-weight:600;"><i class="la la-github" style="margin-right:4px;"></i> GitHub</span>
+            <span class="badge" id="rev_ap_email_badge" style="display:none; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; padding:5px 10px; border-radius:6px; font-weight:600;"><i class="la la-envelope" style="margin-right:4px;"></i> <span id="rev_ap_email_val">AP Email</span></span>
+            <span class="text-muted" id="rev_channels_empty" style="font-size:12px;">No social profiles or billing email configured.</span>
+          </div>
         </div>
       </div>
     </div>

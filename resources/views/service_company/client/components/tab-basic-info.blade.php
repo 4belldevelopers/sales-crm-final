@@ -230,6 +230,24 @@
               </div>
             </div>
 
+            <!-- Career Page URL Field -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label" for="career_page_url" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">Career / Jobs Page URL</label>
+              <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+                <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-external-link-square" style="font-size:16px;"></i></span>
+                <input type="url" class="form-control form-control-solid" name="career_page_url" id="career_page_url" value="<?php echo @$career_page_url ?? ''; ?>" placeholder="https://example.com/careers" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+              </div>
+            </div>
+
+            <!-- Tax ID / Business Registration Field -->
+            <div class="client-field fv-plugins-icon-container">
+              <label class="form-label" for="tax_id" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">Tax ID / Business Reg No</label>
+              <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+                <span class="input-group-text" style="background:#fff; border:none; color:#94a3b8; padding-left:12px; padding-right:8px;"><i class="la la-id-card" style="font-size:16px;"></i></span>
+                <input type="text" class="form-control form-control-solid" name="tax_id" id="tax_id" value="<?php echo @$tax_id ?? ''; ?>" placeholder="e.g. EIN, CIN, VAT, LEI" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+              </div>
+            </div>
+
           </div>
 
           <div class="client-tip mt-4" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:8px; color:#166534; font-size:11.5px;">

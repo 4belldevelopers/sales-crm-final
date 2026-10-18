@@ -18,6 +18,7 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
 use App\Models\JobCategory;
+use App\Services\CompanyIntelligenceService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\IndustryTaxonomyService;
@@ -2683,6 +2684,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->tags = $tags;
         }
 
+        $detailData = [
+            'career_page_url' => $request->career_page_url ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'ap_email' => $request->ap_email ?? null,
+            'tax_id' => $request->tax_id ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+        ];
+        $filteredDetail = array_filter($detailData);
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
+        }
+
         // Handle logo upload outside database transaction
         $timeStamp = time();
         if ($request->hasFile('logo')) {
@@ -3337,6 +3354,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $tags = array_column($tags, 'value');
             $tags = implode(',', $tags);
             $client->tags = $tags;
+        }
+
+        $detailData = [
+            'career_page_url' => $request->career_page_url ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'ap_email' => $request->ap_email ?? null,
+            'tax_id' => $request->tax_id ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+        ];
+        $filteredDetail = array_filter($detailData);
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
         }
 
         // Handle logo upload outside database transaction
@@ -4155,5 +4188,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'last_error' => substr($error, 0, 1000),
                 'updated_at' => now(),
             ]);
+    }
+
+    /**
+     * Auto-enrich company firmographics from website domain for Add Client wizard.
+     * Intent: 100% free, zero-cost 21-box enrichment with anti-SSRF protection and 30-day Redis caching.
+     * Tenancy Note: Tenant-scoped access check.
+     */
+    public function fetchCompanyIntelligence(Request $request, CompanyIntelligenceService $intelligenceService)
+    {
+        $website = $request->input('website') ?: $request->input('domain');
+        if (empty($website)) {
+            return response()->json(['error' => 'Website URL or domain is required.'], 400);
+        }
+
+        $data = $intelligenceService->enrich($website);
+        if (! empty($data['error'])) {
+            return response()->json($data, 400);
+        }
+
+        return response()->json($data);
     }
 }
