@@ -1447,7 +1447,7 @@
       @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
 
       @else
-        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal {{ $dnone }}" title="Send email to candidate">
+        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal" title="Send email to candidate">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <polyline points="3 7 12 13 21 7"/>
@@ -5755,7 +5755,14 @@ setTimeout(() => {
 
    });
   
-  $('.sendmaimodal').click(function(){
+  $(document).off('click.sendMailDrawer').on('click.sendMailDrawer', '.sendmaimodal', function(e){
+        e.preventDefault();
+
+        // Safe extraction of current candidate identity & job context (Immutable Candidate Context)
+        var sid = parseInt('{{ (int)@$application->id }}', 10);
+        var jid = parseInt('{{ (int)@$jobId }}', 10) || 0;
+        var arr = [sid];
+        var jobIdArr = [jid];
 
         // Trigger hidden toggle — KTDrawer binds to this on createInstances()
         $('#kt_send_mail_sd_toggle').trigger('click');
@@ -5766,40 +5773,31 @@ setTimeout(() => {
         );
         $('#application_mass_mail_body_content').html('');
         $('#application_fwd_resume_body_content').html('');
-        var id        	=	{{ @$jobId }};
-        var sid        	=	{{ @$application->id }};
-        var arr 		=	[sid];
-        var jobIdArr = [id];
-        $('.chk_list_item:checked').each(function () {
-            
-            var jobId = $(this).attr('data-jobId');
-            arr.push($(this).val());
-            jobIdArr.push(jobId);
+
+        var url = "{{ route('service_company.cvtracker.send_mail', ':id') }}";
+        url = url.replace(':id', jid > 0 ? jid : 0);
+        var token = "{{ csrf_token() }}";
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {'_token': token, '_method': 'POST', 'arr': arr, 'jobIdArr': jobIdArr},
+            cache: false,
+            success: function (response) {
+                if (response && response.status == "success") {
+                    $('#application_send_mail_body_content').html(response.view);
+                    $('#kt_activities_scroll').removeAttr('style');
+                    if (typeof window.initCandidateEmailEditor === 'function') {
+                        setTimeout(window.initCandidateEmailEditor, 50);
+                    }
+                }
+            },
+            error: function() {
+                $('#application_send_mail_body_content').html(
+                    '<div class="p-8 text-center text-danger">Failed to load email compose form. Please try again.</div>'
+                );
+            }
         });
-
-        console.log(jobIdArr);
-
-        var id        	=	jobIdArr[0];
-        var url       	=	"{{ route('service_company.cvtracker.send_mail',':id') }}";
-        url         	=	url.replace(':id', id);
-        var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-        var token       =	"{{ csrf_token() }}";
-
-      
-          $.ajax({
-                type		: 'POST',
-                url			: url,
-                data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr},
-                cache		: false,
-                success 	: function (response) {
-                                    if (response.status == "success") {
-                                        $('#application_send_mail_body_content').html(response.view);
-                                        
-                                        $('#kt_activities_scroll').removeAttr('style');
-                                    }
-                        }
-          });
-              
   });
 
 
@@ -6765,21 +6763,28 @@ setTimeout(() => {
 
     function showSendMailOverlay() {
         if ($overlay) return;
-        $overlay = $('<div class="sd-mail-overlay"></div>').css({
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            zIndex: 109, cursor: 'pointer'
-        }).appendTo('body');
+        $overlay = $('<div class="sd-mail-overlay"></div>').appendTo('body');
         $overlay.on('click', hideSendMailDrawer);
+        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+        if (drawerEl) {
+            drawerEl.style.setProperty('z-index', '1000050', 'important');
+        }
     }
 
     function hideSendMailDrawer() {
         if ($overlay) { $overlay.remove(); $overlay = null; }
+        $('.sd-mail-overlay').remove();
         var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
-        if (drawerEl && typeof KTDrawer !== 'undefined') {
-            var drawer = KTDrawer.getInstance(drawerEl);
-            if (drawer) { drawer.hide(); }
+        if (drawerEl) {
+            drawerEl.classList.remove('drawer-on');
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) { drawer.hide(); }
+            }
         }
     }
+
+    window.hideCandidateSendMailDrawer = hideSendMailDrawer;
 
     $(document).off('click.sdMailModal').on('click.sdMailModal', '.sendmaimodal', function() {
         showSendMailOverlay();
@@ -9005,6 +9010,43 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     background: rgba(0, 0, 0, 0.4);
     z-index: 1000045 !important;
     cursor: pointer;
+  }
+  #kt_send_mail_showdetail_drawer {
+    z-index: 1000050 !important;
+  }
+  .sd-mail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000045 !important;
+    cursor: pointer;
+  }
+  /* Metronic Communication Action Button Styling for Candidate Drawer Header */
+  .cdr-btn-email {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1E40AF !important;
+    background: #EFF6FF !important;
+    border: 1px solid #DBEAFE !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease-in-out !important;
+  }
+  .cdr-btn-email:hover {
+    background: #DBEAFE !important;
+    color: #1D4ED8 !important;
+    border-color: #BFDBFE !important;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
+  }
+  .cdr-btn-email svg {
+    width: 15px !important;
+    height: 15px !important;
+    stroke: currentColor !important;
   }
   /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
   #kt_activitiesApplication .cdr-topbar-group {

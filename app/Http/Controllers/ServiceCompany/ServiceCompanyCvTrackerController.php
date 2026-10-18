@@ -5842,8 +5842,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'clients.name as client_name'
             )
             // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('jobs', function ($join) {
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+            ->leftJoin('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
             })
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
@@ -5882,12 +5882,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        if ($request->id >= 1) {
+        if (! empty($request->id) && (int) $request->id >= 1) {
             // dd($request->id );
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            // CLIENT CONTACT INFO
-            $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-            $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', (int) $request->id)->first();
+            $clientIdVal = $client_row ? $client_row->client_id : null;
+            $ccInfoCount = 0;
+            $ccInfo = collect([]);
+            if ($clientIdVal) {
+                // CLIENT CONTACT INFO
+                $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $clientIdVal)->count();
+                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $clientIdVal)->get();
+            }
             if ($ccInfoCount > 0) {
                 $i = 0;
                 foreach ($ccInfo as $ccVal) {
@@ -5968,49 +5973,54 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $country_id = $country_name = '';
-        $jobid = (int) $request->jobIdArr[0];
-        $client_loc = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-            ->where('client_location_jobs.job_id', $jobid)
-            ->first();
+        $city = '';
+        $jobid = ! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0;
 
-        $client_loc = DB::table('client_city_jobs')
-            ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-            ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)
-            ->first();
+        if ($jobid > 0) {
+            $client_loc = DB::table('client_city_jobs')
+                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
+                ->where('client_city_jobs.job_id', $jobid)
+                ->first();
 
-        $country_id = @$client_loc->country_id;
-        if (@$country_id > 0) {
-            $country_name = GeneralMethod::getCountryName($country_id);
-            foreach ($country_name as $cval) {
-                $country_name = ucwords($cval['sortname']);
+            $country_id = @$client_loc->country_id;
+            if (@$country_id > 0) {
+                $country_name_data = GeneralMethod::getCountryName($country_id);
+                if (! empty($country_name_data)) {
+                    foreach ($country_name_data as $cval) {
+                        $country_name = ucwords($cval['sortname'] ?? '');
+                    }
+                }
+            }
+
+            $city = @$client_loc->city;
+            if (@$client_loc->country_id == 101) {
+                $city = @$client_loc->city_name;
             }
         }
 
-        $city = @$client_loc->city;
-        if (@$client_loc->country_id == 101) {
-            $city = @$client_loc->city_name;
-        }
-        $jobs = Job::withoutGlobalScopes()->find($jobid);
-
+        $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
         $this->jobid = $jobid;
 
-        //  dd( $jobs);
+        $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+        if ($jobs && ! empty($jobs->client_id)) {
+            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+            $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
+            $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+            $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
+            $this->job_title = ($jobs->title) ? $jobs->title : '';
+        } else {
+            $currentCompany = auth()->user()->company ?? null;
+            $this->selfCompany = 1;
+            $this->companyTemp = $currentCompany->company_name ?? '';
+            $this->clientTemp = '';
+            $this->job_title = $jobs->title ?? 'Candidate Application';
+        }
 
-        $location = $city.' | '.$country_name;
-
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
-        $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
         $this->location = ($location) ? $location : '';
-        $this->job_title = ($jobs->title) ? $jobs->title : '';
 
         $view = view('service_company.cvtracker.send_mail', $this->data)->render();
 
@@ -7704,14 +7714,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $company_id = (int) auth()->user()->company_id;
         $company_name = DB::table('companies')->select('companies.company_name')->where('id', '=', $company_id)->first();
 
-        /* Intent: Idempotency lock & deduplication guard to prevent duplicate emails, coin deductions, and queue dispatches from concurrent or repeated requests */
+        /* Intent: Idempotency lock & deduplication guard supporting client-generated UUID keys */
         /* Tenancy: Scoped by company_id, application_id, job_id, recipient, and subject */
         $appId = ! empty($applicationDataId) ? (int) $applicationDataId : (! empty($arr) && is_array($arr) ? (int) $arr[0] : 0);
         $jobIdVal = ! empty($jobid) ? (int) $jobid : 0;
+        $clientKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
         $toHash = md5(implode(',', $mailto));
         $subjectHash = md5(trim((string) $subject));
-        $idempotencyKey = "send_candidate_mail_lock:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
-        $recentSendKey = "send_candidate_mail_recent:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+        $idempotencyKey = $clientKey ? "send_candidate_mail_lock:{$company_id}:{$clientKey}" : "send_candidate_mail_lock:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+        $recentSendKey = $clientKey ? "send_candidate_mail_recent:{$company_id}:{$clientKey}" : "send_candidate_mail_recent:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
 
         if (Cache::has($recentSendKey)) {
             \Log::info('Idempotency guard: skipped recent duplicate candidate email request', [
@@ -7752,11 +7763,29 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         if (count($mailto) > 0) {
+            $jobRecord = ($jobIdVal > 0) ? Job::withoutGlobalScopes()->find($jobIdVal) : null;
+            $consultantName = auth()->user()->name ?: ($company_name->company_name ?? 'Hiring Team');
+            $tenantCompanyName = $company_name->company_name ?? auth()->user()->company->company_name ?? 'Company';
+
+            // Server-side dual-stage HTML sanitization: allow standard rich text tags, strip scripts/iframes/event handlers
+            $cleanMessage = strip_tags((string) $message, '<p><br><strong><b><em><i><u><ul><ol><li><a><table><tr><td><th><span><div><h1><h2><h3><h4><h5><h6>');
+            $cleanMessage = preg_replace('/<([a-z][a-z0-9]*)[^>]*?(\bon\w+\s*=[^>]*?)(>|$)/i', '<$1$3', $cleanMessage);
+            $cleanMessage = preg_replace('/href\s*=\s*["\']\s*javascript:[^"\']*["\']/i', 'href="#"', $cleanMessage);
+
             foreach ($mailto as $email) {
                 $eventId = 7;
-                $condi = JobApplication::where('job_applications.email', '=', $email)->first();
+                $condi = ($appId > 0) ? JobApplication::find($appId) : JobApplication::where('email', $email)->first();
                 $name = ($condi) ? $condi->full_name : '';
-                $data = ['message' => $message, 'subject' => $subject, 'company_name' => $company_name->company_name ?? '', 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'condidate_name' => $name];
+                $position = $jobRecord->title ?? ($condi->current_designation ?? 'Candidate Application');
+
+                $data = [
+                    'message' => $cleanMessage,
+                    'subject' => $subject,
+                    'company_name' => $tenantCompanyName,
+                    'consultant_name' => $consultantName,
+                    'position' => $position,
+                    'condidate_name' => $name,
+                ];
 
                 $validMail = true;
 
