@@ -5822,6 +5822,9 @@ setTimeout(() => {
         var cacheKey = CandidateSendMailRamStore.buildKey(sid, jid);
         var cached = CandidateSendMailRamStore.get(cacheKey);
         if (cached && cached.view) {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+                try { CKEDITOR.instances['editor1mass'].destroy(true); } catch(e) {}
+            }
             $('#application_send_mail_body_content').html(cached.view);
             $('#kt_activities_scroll').removeAttr('style');
             if (typeof window.initCandidateEmailEditor === 'function') {
@@ -5849,6 +5852,9 @@ setTimeout(() => {
             success: function (response) {
                 if (response && response.status == "success") {
                     CandidateSendMailRamStore.set(cacheKey, response.view, response.fingerprint || '');
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+                        try { CKEDITOR.instances['editor1mass'].destroy(true); } catch(e) {}
+                    }
                     $('#application_send_mail_body_content').html(response.view);
                     $('#kt_activities_scroll').removeAttr('style');
                     if (typeof window.initCandidateEmailEditor === 'function') {

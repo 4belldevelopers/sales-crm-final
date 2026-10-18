@@ -7893,7 +7893,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $tenantCompanyName = $company_name->company_name ?? auth()->user()->company->company_name ?? 'Company';
 
             // Server-side dual-stage HTML sanitization: allow standard rich text tags, strip scripts/iframes/event handlers
-            $cleanMessage = strip_tags((string) $message, '<p><br><strong><b><em><i><u><ul><ol><li><a><table><tr><td><th><span><div><h1><h2><h3><h4><h5><h6>');
+            $cleanMessage = strip_tags((string) $message, '<p><br><hr><strong><b><em><i><u><ul><ol><li><a><table><thead><tbody><tfoot><tr><td><th><caption><colgroup><col><span><div><h1><h2><h3><h4><h5><h6>');
             $cleanMessage = preg_replace('/<([a-z][a-z0-9]*)[^>]*?(\bon\w+\s*=[^>]*?)(>|$)/i', '<$1$3', $cleanMessage);
             $cleanMessage = preg_replace('/href\s*=\s*["\']\s*javascript:[^"\']*["\']/i', 'href="#"', $cleanMessage);
 
