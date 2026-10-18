@@ -532,32 +532,21 @@
                   @php
                     $tId = $tdata->e_temp_id ?? ($tdata->id ?? '');
                     if (empty($tId)) continue;
-                    $tFor = (int) ($tdata->tempForInterview ?? 1);
-                    $showOption = false;
+                    // Render all active templates configured in Superadmin
+                    if (isset($tdata->status) && (int) $tdata->status !== 1) continue;
 
-                    if ($selfCompany == 1) {
-                      if ($tFor == 1 || $tFor == 4) {
-                        $showOption = true;
-                      }
-                    } else {
-                      $showOption = true;
-                    }
+                    $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
+                    $clName = !empty($clientTemp) ? $clientTemp : $cName;
+                    $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
+                    $jLoc = !empty($location) ? $location : '';
+
+                    $displayName = str_replace(
+                      ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_LOCATION}]', '[{JOB_TITLE}]'],
+                      [$cName, $clName, $jLoc, $jTitle],
+                      $tdata->display_name ?? ''
+                    );
                   @endphp
-                  @if ($showOption)
-                    @php
-                      $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
-                      $clName = !empty($clientTemp) ? $clientTemp : $cName;
-                      $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
-                      $jLoc = !empty($location) ? $location : '';
-
-                      $displayName = str_replace(
-                        ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_LOCATION}]', '[{JOB_TITLE}]'],
-                        [$cName, $clName, $jLoc, $jTitle],
-                        $tdata->display_name ?? ''
-                      );
-                    @endphp
-                    <option value="{{ $tId }}">{{ $displayName }}</option>
-                  @endif
+                  <option value="{{ $tId }}">{{ $displayName }}</option>
                 @endforeach
               @endif
             </select>
