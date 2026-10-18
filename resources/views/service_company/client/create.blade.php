@@ -1417,9 +1417,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-top-nav-card {
     background: #ffffff !important;
     border: 1.5px solid #F6DF83 !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
-    padding: 12px 20px !important;
+    padding: 8px 16px !important;
     margin-bottom: 16px !important;
     box-sizing: border-box !important;
     width: 100% !important;
@@ -1430,23 +1430,23 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    gap: 16px !important;
+    gap: 8px !important;
     box-sizing: border-box !important;
   }
 
   .client-header-identity {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
     flex: 0 0 auto !important;
-    max-width: 380px !important;
+    max-width: 240px !important;
   }
 
   .client-header-back-btn {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    min-height: 38px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
     border-radius: 50% !important;
     border: 1.5px solid #E2E8F0 !important;
     background: #ffffff !important;
@@ -1475,22 +1475,23 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-header-title {
-    font-size: 17px !important;
+    font-size: 14.5px !important;
     font-weight: 700 !important;
     color: #101A46 !important;
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 1px 0 !important;
     line-height: 1.2 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
   }
 
   .client-header-subtitle {
-    font-size: 11.5px !important;
+    font-size: 10px !important;
     color: #5C6F9F !important;
     margin: 0 !important;
     line-height: 1.25 !important;
     font-weight: 400 !important;
-    white-space: nowrap !important;
+    max-width: 195px !important;
+    white-space: normal !important;
   }
 
   .client-header-stepper-col {
@@ -1499,7 +1500,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     justify-content: center !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .client-stepper-wrap {
@@ -1507,14 +1508,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    max-width: 720px !important;
-    width: 100% !important;
+    width: auto !important;
+    max-width: 100% !important;
   }
 
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 5px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
@@ -1522,15 +1523,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-circle {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 13px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1549,6 +1550,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     color: #101A46 !important;
     border: none !important;
     font-weight: 700 !important;
+    box-shadow: 0 0 0 2.5px #fffdf0, 0 0 0 4px #FFD21F !important;
   }
 
   .client-step-circle.is-upcoming {
@@ -1559,32 +1561,35 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-text {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
     line-height: 1.15 !important;
     flex-shrink: 0 !important;
   }
 
   .client-step-name {
-    font-size: 12px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     color: #101A46 !important;
-    line-height: 1.2 !important;
+    line-height: 1.15 !important;
     white-space: nowrap !important;
   }
 
   .client-step-sub {
-    font-size: 10.5px !important;
+    font-size: 9px !important;
     color: #5C6F9F !important;
-    line-height: 1.1 !important;
+    line-height: 1 !important;
     white-space: nowrap !important;
+    margin-top: 1px !important;
   }
 
   .client-step-line {
-    width: 24px !important;
-    height: 2px !important;
-    min-width: 12px !important;
+    width: 14px !important;
+    height: 1.5px !important;
+    min-width: 8px !important;
     background: #F6DF83 !important;
-    margin: 0 8px !important;
+    margin: 0 4px !important;
     flex-shrink: 0 !important;
   }
 
@@ -1601,15 +1606,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: none !important;
     color: #101A46 !important;
     font-weight: 700 !important;
-    font-size: 13px !important;
-    height: 40px !important;
-    padding: 0 20px !important;
+    font-size: 12.5px !important;
+    height: 36px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(255, 210, 31, 0.4) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1642,32 +1647,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: none !important;
   }
 
-  /* ===== Bottom Docked Action Navigation Bar ===== */
-  .client-wizard-sticky-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
-    background: #ffffff;
-    border-top: 1px solid #e2e8f0;
-    padding: 12px 20px;
-    margin-top: 20px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    box-sizing: border-box;
-    border-radius: 0 0 12px 12px;
-  }
-  .client-action-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .client-action-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  /* Static Bottom Actions Row (Matches Reference media_1792307385461_c2bbe593.png) */
+  .client-bottom-actions-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 16px !important;
+    padding: 16px 0 24px 0 !important;
+    width: 100% !important;
   }
   .client-cancel-btn {
     background: transparent !important;
@@ -1675,7 +1662,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     color: #475569 !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    padding: 8px 12px !important;
+    padding: 6px 10px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -1705,53 +1692,38 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border-color: #1d4ed8 !important;
     color: #1d4ed8 !important;
   }
-  .client-bottom-back-btn {
-    background: #ffffff !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #101A46 !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 16px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-  }
-  .client-bottom-next-btn,
-  .client-bottom-submit-btn {
-    background: #FFD21F !important;
-    border: none !important;
-    color: #101A46 !important;
-    font-weight: 700 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-  }
 
   /* Responsive Rules: 1366px (15.6-inch laptop), 1280px, 991px, 576px */
   @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      max-width: 300px !important;
+      max-width: 240px !important;
+    }
+    .client-header-title {
+      font-size: 14px !important;
+    }
+    .client-header-subtitle {
+      font-size: 10px !important;
+      max-width: 190px !important;
+    }
+    .client-step-circle {
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      font-size: 10.5px !important;
     }
     .client-step-line {
-      width: 16px !important;
-      margin: 0 5px !important;
+      width: 14px !important;
+      margin: 0 4px !important;
     }
     .client-step-item {
-      gap: 6px !important;
+      gap: 5px !important;
     }
     .client-step-name {
-      font-size: 11.5px !important;
+      font-size: 10.5px !important;
     }
     .client-step-sub {
-      font-size: 10px !important;
+      font-size: 9px !important;
     }
     .client-branding-grid {
       grid-template-columns: 160px 130px minmax(0, 1fr) !important;
@@ -2809,45 +2781,19 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
       <!--Card-->
 
       <!-- =========================================================================
-           BOTTOM DOCKED ACTION NAVIGATION BAR
-           Pixel-perfect match to master design system:
-           - Left: Cancel, Save as Draft, Autosave status message
-           - Right: Previous, Next Page (Steps 1-4) / Create or Update Client (Step 5)
+           BOTTOM STATIC ACTIONS ROW (Matches reference media_1792307385461_c2bbe593.png)
+           Non-floating, clean static row with Cancel and Save as Draft on the left
            ========================================================================= -->
-      <div class="client-wizard-sticky-footer" id="client_wizard_sticky_footer">
-        <div class="client-action-left">
-          <button type="button" class="btn client-cancel-btn client-nav-cancel" id="client_bottom_cancel_btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            <span>Cancel</span>
-          </button>
-          <button type="button" class="btn client-draft-btn" id="client_bottom_save_draft_btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            <span>Save as Draft</span>
-          </button>
-          <span class="client-draft-status-msg text-muted" id="client_draft_status_msg" style="font-size:11.5px; font-weight:500; margin-left:8px; display:none;"></span>
-        </div>
-
-        <div class="client-action-right">
-          <button type="button" class="btn client-bottom-back-btn client-nav-back" id="client_bottom_back_btn" style="display:none !important;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>Previous</span>
-          </button>
-          <button type="button" class="btn client-bottom-next-btn client-nav-next client-top-next-btn" id="client_bottom_next_btn">
-            <span>Next Page</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </button>
-          @if ($page_event == 'EDIT')
-            <button type="button" class="btn client-bottom-submit-btn updatefrm" id="client_bottom_submit_btn" style="display:none !important;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Update Client</span>
-            </button>
-          @else
-            <button type="button" class="btn client-bottom-submit-btn submitfrm" id="client_bottom_submit_btn" style="display:none !important;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Create Client</span>
-            </button>
-          @endif
-        </div>
+      <div class="client-bottom-actions-row" id="client_bottom_actions_row">
+        <button type="button" class="btn client-cancel-btn client-nav-cancel" id="client_bottom_cancel_btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <span>Cancel</span>
+        </button>
+        <button type="button" class="btn client-draft-btn" id="client_bottom_save_draft_btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Save as Draft</span>
+        </button>
+        <span class="client-draft-status-msg text-muted" id="client_draft_status_msg" style="font-size:11.5px; font-weight:500; margin-left:8px; display:none;"></span>
       </div>
     </div>
     <!--end::Container-->
@@ -5914,25 +5860,10 @@ $('.remove_address').click(function(){
     // Steps 2-5: Show Back button
     if (activeStep <= 1) {
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
-      $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
-      $('#client_bottom_back_btn').attr('style', 'display: none !important;').hide();
-      $('#client_bottom_next_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_submit_btn').attr('style', 'display: none !important;').hide();
     } else if (activeStep < 5) {
-      $('body').removeClass('on-step-1').addClass('on-step-' + activeStep);
-      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
-      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_back_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_next_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_submit_btn').attr('style', 'display: none !important;').hide();
+      $('body').removeClass('on-step-1 on-review-step').addClass('on-step-' + activeStep);
     } else {
       $('body').removeClass('on-step-1').addClass('on-step-5 on-review-step');
-      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
-      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_back_btn').attr('style', 'display: inline-flex !important;').show();
-      $('#client_bottom_next_btn').attr('style', 'display: none !important;').hide();
-      $('#client_bottom_submit_btn').attr('style', 'display: inline-flex !important;').show();
     }
 
     // Dynamic Top Header Subtitles matching workflow steps
@@ -5950,14 +5881,14 @@ $('.remove_address').click(function(){
     if (activeStep >= 5) {
       $('body').addClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
-      $('#submitBtn, #client_bottom_submit_btn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
       if (typeof populateReviewSummaries === 'function') {
         populateReviewSummaries();
       }
     } else {
       $('body').removeClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
-      $('#submitBtn, #client_bottom_submit_btn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     }
 
     // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
