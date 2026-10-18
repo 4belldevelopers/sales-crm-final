@@ -409,6 +409,10 @@
       <div class="mm-footer">
         <div class="mm-footer-left">
           <button type="button" class="mm-btn-cancel" onclick="(function(){
+              if (typeof window.closeCandidateSendMailDrawer === 'function') {
+                  window.closeCandidateSendMailDrawer();
+                  return;
+              }
               if (typeof window.hideCandidateSendMailDrawer === 'function') {
                   window.hideCandidateSendMailDrawer();
                   return;
@@ -786,6 +790,7 @@
         $('#kt_sendmail_recipient_drawer').hide();
         $('#kt_sendmail_recipient_overlay').hide();
     };
+    window.closeCandidateEmailRecipientDrawer = window.closeSendMailRecipientDrawer;
 
     // Tab switching (Internal vs Client)
     $(document).off('click', '#sendmail_rcp_tab_internal, #sendmail_rcp_tab_client').on('click', '#sendmail_rcp_tab_internal, #sendmail_rcp_tab_client', function() {
