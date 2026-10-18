@@ -5795,8 +5795,28 @@ setTimeout(() => {
         var arr = [sid];
         var jobIdArr = [jid];
 
-        // Trigger hidden toggle — KTDrawer binds to this on createInstances()
-        $('#kt_send_mail_sd_toggle').trigger('click');
+        // 1. Synchronously open Send Email Drawer (0ms perceived latency, outside Candidate Drawer stacking context)
+        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+        if (drawerEl) {
+            drawerEl.style.removeProperty('display');
+            drawerEl.style.setProperty('z-index', '1000050', 'important');
+            if (!drawerEl.classList.contains('drawer')) {
+                drawerEl.classList.add('drawer', 'drawer-end');
+            }
+            drawerEl.classList.add('drawer-on');
+            drawerEl.style.transform = 'none';
+
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) {
+                    drawer.shown = true;
+                }
+            }
+
+            if (typeof window.showCandidateSendMailOverlay === 'function') {
+                window.showCandidateSendMailOverlay();
+            }
+        }
 
         // Fast-path: Check Client-First RAM Store (0ms perceived time, 0 server strain)
         var cacheKey = CandidateSendMailRamStore.buildKey(sid, jid);
@@ -6772,73 +6792,43 @@ setTimeout(() => {
     });
 
 </script> 
-<!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
-<div id="kt_send_mail_sd_toggle" style="display:none;"></div>
-<div id="kt_send_mail_showdetail_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-    data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
-    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close">
-    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-        <div class="card-header px-5 py-0 flex-shrink-0">
-            <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
-            <div class="card-toolbar">
-                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-                        </svg>
-                    </span>
-                </button>
-            </div>
-        </div>
-        <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
-    </div>
-</div>
-<!--end::Send Mail - Drawer-->
+<!--begin::Send Mail - Drawer Defensive Guard (Authoritative Drawer lives in layout root DOM) -->
 <script>
 (function() {
+    // If #kt_send_mail_showdetail_drawer is not yet in document.body, append it to body to ensure zero stacking context trap
+    if (!document.getElementById('kt_send_mail_showdetail_drawer')) {
+        var drawerHtml = 
+            '<div id="kt_send_mail_sd_toggle" style="display:none;"></div>' +
+            '<div id="kt_send_mail_showdetail_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"' +
+            '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
+            '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
+            '    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close"' +
+            '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
+            '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
+            '    <div class="card-header px-5 py-0 flex-shrink-0" style="min-height: 55px; border-bottom: 1px solid #EFF2F5;">' +
+            '      <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>' +
+            '      <div class="card-toolbar">' +
+            '        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">' +
+            '          <span class="svg-icon svg-icon-1">' +
+            '            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">' +
+            '              <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />' +
+            '              <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />' +
+            '            </svg>' +
+            '          </span>' +
+            '        </button>' +
+            '      </div>' +
+            '    </div>' +
+            '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>' +
+            '  </div>' +
+            '</div>';
+        $('body').append(drawerHtml);
+    }
     if (typeof KTDrawer !== 'undefined') {
         KTDrawer.createInstances();
     }
-
-    // Manual overlay for the send-mail drawer (avoids conflicts with parent drawer overlay)
-    var $overlay = null;
-
-    function showSendMailOverlay() {
-        if ($overlay) return;
-        $overlay = $('<div class="sd-mail-overlay"></div>').appendTo('body');
-        $overlay.on('click', hideSendMailDrawer);
-        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
-        if (drawerEl) {
-            drawerEl.style.setProperty('z-index', '1000050', 'important');
-        }
-    }
-
-    function hideSendMailDrawer() {
-        if ($overlay) { $overlay.remove(); $overlay = null; }
-        $('.sd-mail-overlay').remove();
-        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
-        if (drawerEl) {
-            drawerEl.classList.remove('drawer-on');
-            if (typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) { drawer.hide(); }
-            }
-        }
-    }
-
-    window.hideCandidateSendMailDrawer = hideSendMailDrawer;
-
-    $(document).off('click.sdMailModal').on('click.sdMailModal', '.sendmaimodal', function() {
-        showSendMailOverlay();
-    });
-
-    $(document).off('click.sdMailClose').on('click.sdMailClose', '#kt_send_mail_showdetail_close', function() {
-        hideSendMailDrawer();
-    });
 })();
 </script>
+<!--end::Send Mail - Drawer Defensive Guard -->
 
 <!--begin::Send Whatsapp - Drawer (hidden toggle pattern) -->
 <div id="kt_send_whatsapp_sd_toggle" style="display:none;"></div>
@@ -9058,6 +9048,10 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   #kt_send_mail_showdetail_drawer {
     z-index: 1000050 !important;
   }
+  #kt_send_mail_showdetail_drawer:not(.drawer-on) {
+    display: none !important;
+    transform: translateX(100%) !important;
+  }
   .sd-mail-overlay {
     position: fixed;
     inset: 0;
@@ -9219,6 +9213,35 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
         e.stopPropagation();
         if (typeof window.closeCandidateForwardResume === 'function') {
           window.closeCandidateForwardResume();
+        }
+      }
+    }
+  });
+
+  // Sibling Isolation: Candidate Send Email Drawer Close delegation & ESC handler (Rule 3, Rule 17)
+  $(document).off('click.sendMailClose').on('click.sendMailClose', '#kt_send_mail_showdetail_close', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof window.closeCandidateSendMailDrawer === 'function') {
+      window.closeCandidateSendMailDrawer();
+    }
+  });
+
+  $(document).off('keydown.sendMailEsc').on('keydown.sendMailEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_sendmail_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeSendMailRecipientDrawer === 'function') {
+          window.closeSendMailRecipientDrawer();
+        }
+        return;
+      }
+      var el = document.getElementById('kt_send_mail_showdetail_drawer');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeCandidateSendMailDrawer === 'function') {
+          window.closeCandidateSendMailDrawer();
         }
       }
     }

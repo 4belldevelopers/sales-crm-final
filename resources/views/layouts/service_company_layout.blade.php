@@ -787,6 +787,21 @@
     overflow-x: hidden !important;
     background: #fbfbfd !important;
   }
+  /* Candidate Send Email Drawer & Dedicated Overlay (Rule 3, Rule 17) */
+  #kt_send_mail_showdetail_drawer {
+    z-index: 1000050 !important;
+  }
+  #kt_send_mail_showdetail_drawer:not(.drawer-on) {
+    display: none !important;
+    transform: translateX(100%) !important;
+  }
+  .sd-mail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000045 !important;
+    cursor: pointer;
+  }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
@@ -922,6 +937,30 @@
     style="z-index: 1000050 !important; scrollbar-gutter: stable;">
   <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
     <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
+  </div>
+</div>
+<!-- Candidate Send Email Drawer -->
+<div id="kt_send_mail_sd_toggle" style="display:none;"></div>
+<div id="kt_send_mail_showdetail_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close"
+    style="z-index: 1000050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-header px-5 py-0 flex-shrink-0" style="min-height: 55px; border-bottom: 1px solid #EFF2F5;">
+      <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
+      <div class="card-toolbar">
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">
+          <span class="svg-icon svg-icon-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
+              <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
   </div>
 </div>
 <!-- Bench Candidate Download Resume Center Drawer (Engine 1-B) -->
@@ -1142,7 +1181,7 @@
           </span>
         </div>
       </div>
-      <div class="card-body position-relative px-0 py-0" id="application_send_mail_body_content"></div>
+      <div class="card-body position-relative px-0 py-0" id="legacy_application_send_mail_body_content"></div>
     </div>
   </div>
 </div>
@@ -3241,6 +3280,48 @@ $( document ).ready(function() {
     $('.fwd-resume-overlay').remove();
   }
 
+  // Dedicated Overlay & Lifecycle Management for Candidate Send Email Drawer (Rule 3, Rule 17)
+  window.showCandidateSendMailOverlay = function() {
+    if ($('.sd-mail-overlay').length > 0) return;
+    $('<div class="sd-mail-overlay"></div>').css({
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 1000045,
+      cursor: 'pointer'
+    }).appendTo('body').on('click', function(e) {
+      e.preventDefault();
+      window.closeCandidateSendMailDrawer();
+    });
+  };
+
+  window.hideCandidateSendMailOverlay = function() {
+    $('.sd-mail-overlay').remove();
+  };
+
+  window.closeCandidateSendMailDrawer = function() {
+    var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+    if (drawerEl) {
+      drawerEl.classList.remove('drawer-on');
+      drawerEl.style.removeProperty('transform');
+      drawerEl.style.removeProperty('display');
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) drawer.shown = false;
+      }
+    }
+    window.hideCandidateSendMailOverlay();
+    if (typeof window.closeCandidateEmailRecipientDrawer === 'function') {
+      try { window.closeCandidateEmailRecipientDrawer(); } catch (e) {}
+    }
+    if (typeof window.closeSendMailRecipientDrawer === 'function') {
+      try { window.closeSendMailRecipientDrawer(); } catch (e) {}
+    }
+    $('#kt_sendmail_recipient_drawer').css('display', 'none');
+    $('#kt_sendmail_recipient_overlay').css('display', 'none');
+  };
+  window.hideCandidateSendMailDrawer = window.closeCandidateSendMailDrawer;
+
   window.closeCandidateForwardResume = function() {
     var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
     drawerIds.forEach(function(id) {
@@ -3419,6 +3500,31 @@ $( document ).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         closeCandidateForwardResume();
+      }
+    }
+  });
+
+  // Send Email Drawer Close event delegation & ESC handler (Rule 3, Rule 17)
+  $(document).off('click.sendMailClose').on('click.sendMailClose', '#kt_send_mail_showdetail_close', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    closeCandidateSendMailDrawer();
+  });
+
+  $(document).off('keydown.sendMailEsc').on('keydown.sendMailEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_sendmail_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeSendMailRecipientDrawer === 'function') {
+          window.closeSendMailRecipientDrawer();
+        }
+        return;
+      }
+      var el = document.getElementById('kt_send_mail_showdetail_drawer');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCandidateSendMailDrawer();
       }
     }
   });
@@ -3784,6 +3890,9 @@ $( document ).ready(function() {
               try { window.ForwardResumeManager.close(); } catch(e) {}
           } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
               try { window.closeTestFwdResumeDrawer(); } catch(e) {}
+          }
+          if (typeof window.closeCandidateSendMailDrawer === 'function') {
+              try { window.closeCandidateSendMailDrawer(); } catch(e) {}
           }
       }
       var drawerEl = document.getElementById(drawerId);

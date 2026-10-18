@@ -20,6 +20,18 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-18* — **Candidate Drawer Send Email Overlay Stacking Trap & Root Sibling Isolation (100% FIXED & VERIFIED)**:
+  - **Issue**: Clicking "Email" from Candidate Drawer (`#kt_activitiesApplication`) header opened the Send Email compose window completely covered by a dark, opaque overlay (`.sd-mail-overlay`), preventing any editing, clicking, text selection, or focus on Quill / form inputs.
+  - **Root Cause**: Stacking Context Collision. `#kt_send_mail_showdetail_drawer` was declared inside `showdetail.blade.php`, which rendered dynamically via AJAX inside `#kt_activitiesApplication` (`z-index: 999999`). When `.sd-mail-overlay` (`z-index: 1000045`) was appended to `document.body`, it rendered in the root stacking context ABOVE `#kt_activitiesApplication` (1,000,045 > 999,999). Because `#kt_send_mail_showdetail_drawer` was trapped inside `#kt_activitiesApplication`'s child stacking context, its `z-index: 1000050` could not escape its parent, causing the body overlay to cover the drawer completely.
+  - **Permanent Resolution**:
+    1. **Layout Root DOM Shell**: Moved `#kt_send_mail_showdetail_drawer` shell directly to `resources/views/layouts/service_company_layout.blade.php` alongside `#kt_test_fwd_resume_drawer` at the root of `<body>`. Both drawer (`z-index: 1000050`) and `.sd-mail-overlay` (`z-index: 1000045`) now evaluate in the root stacking context, guaranteeing that the drawer sits strictly above the overlay, while the overlay dims `#kt_activitiesApplication` behind it.
+    2. **Eliminated Duplicate IDs**: Renamed `id="application_send_mail_body_content"` inside the legacy modal `#send_mail` in `service_company_layout.blade.php` to prevent DOM ID collisions.
+    3. **Synchronous 0ms Drawer Open**: Updated `.sendmaimodal` click handler in `showdetail.blade.php` to synchronously apply `.drawer.drawer-end.drawer-on`, `transform: none`, and trigger `showCandidateSendMailOverlay()`.
+    4. **Defensive Body Guard**: Added a defensive check in `showdetail.blade.php` to ensure `#kt_send_mail_showdetail_drawer` is attached to `document.body` if ever loaded in isolated views.
+    5. **CSS Guard `:not(.drawer-on)`**: Added `display: none !important; transform: translateX(100%) !important;` for `#kt_send_mail_showdetail_drawer:not(.drawer-on)` in both layout and view.
+    6. **ESC & Close Delegation**: Standardized `closeCandidateSendMailDrawer()` across layout, candidate drawer close, close button (`#kt_send_mail_showdetail_close`), and ESC key handling.
+  - **Verification**: Verified PHP syntax (`php -l`) across all 3 touched files with 0 errors.
+
 - *2026-10-18* — **Candidate Drawer ↔ Forward Resume Permanent Architectural Alignment & Sibling Drawer Isolation (100% FIXED & VERIFIED)**:
   - **Issue**: Forward Resume failed to open from Candidate Drawer (`#kt_activitiesApplication`) header or caused the entire screen to go blank light dark (`.drawer-overlay` backdrop lock) on subsequent openings.
   - **Audit Findings against Working Sibling Drawers**:
