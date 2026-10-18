@@ -808,7 +808,7 @@
                             <!-- CANDIDATE CATEGORY -->
                             <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_NAME}]" data-desc="Candidate full name" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_NAME&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CANDIDATE_NAME}]</span>
                                     <p class="var-item-desc">Candidate full name</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_NAME}]')" title="Copy variable">
@@ -818,7 +818,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_EMAIL}]" data-desc="Candidate email address" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_EMAIL&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CANDIDATE_EMAIL}]</span>
                                     <p class="var-item-desc">Candidate email address</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_EMAIL}]')" title="Copy variable">
@@ -828,7 +828,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_PHONE}]" data-desc="Candidate phone number" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CANDIDATE_PHONE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CANDIDATE_PHONE}]</span>
                                     <p class="var-item-desc">Candidate phone number</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_PHONE}]')" title="Copy variable">
@@ -838,7 +838,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{CURRENT_LOCATION}]" data-desc="Current location" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CURRENT_LOCATION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CURRENT_LOCATION}]</span>
                                     <p class="var-item-desc">Current location</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CURRENT_LOCATION}]')" title="Copy variable">
@@ -848,7 +848,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{TOTAL_EXPERIENCE}]" data-desc="Total years of experience" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;TOTAL_EXPERIENCE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{TOTAL_EXPERIENCE}]</span>
                                     <p class="var-item-desc">Total years of experience</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{TOTAL_EXPERIENCE}]')" title="Copy variable">
@@ -858,7 +858,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{HIGHEST_QUALIFICATION}]" data-desc="Highest qualification" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;HIGHEST_QUALIFICATION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{HIGHEST_QUALIFICATION}]</span>
                                     <p class="var-item-desc">Highest qualification</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HIGHEST_QUALIFICATION}]')" title="Copy variable">
@@ -868,7 +868,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{PRIMARY_SKILLS}]" data-desc="Primary skills" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;PRIMARY_SKILLS&#125;&#125;</span>
+                                    <span class="var-token-badge">[{PRIMARY_SKILLS}]</span>
                                     <p class="var-item-desc">Primary skills</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{PRIMARY_SKILLS}]')" title="Copy variable">
@@ -878,7 +878,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{NOTICE_PERIOD}]" data-desc="Notice period" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;NOTICE_PERIOD&#125;&#125;</span>
+                                    <span class="var-token-badge">[{NOTICE_PERIOD}]</span>
                                     <p class="var-item-desc">Notice period</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{NOTICE_PERIOD}]')" title="Copy variable">
@@ -888,7 +888,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{EXPECTED_CTC}]" data-desc="Expected CTC" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;EXPECTED_CTC&#125;&#125;</span>
+                                    <span class="var-token-badge">[{EXPECTED_CTC}]</span>
                                     <p class="var-item-desc">Expected CTC</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{EXPECTED_CTC}]')" title="Copy variable">
@@ -898,7 +898,7 @@
 
                             <div class="var-item-card" data-cat="candidate" data-token="[{CURRENT_CTC}]" data-desc="Current CTC" onclick="handleCardClick(this)">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CURRENT_CTC&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CURRENT_CTC}]</span>
                                     <p class="var-item-desc">Current CTC</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CURRENT_CTC}]')" title="Copy variable">
@@ -906,10 +906,20 @@
                                 </button>
                             </div>
 
+                            <div class="var-item-card" data-cat="candidate" data-token="[{CANDIDATE_COMMENT}]" data-desc="Candidate remarks & notes" onclick="handleCardClick(this)">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{CANDIDATE_COMMENT}]</span>
+                                    <p class="var-item-desc">Candidate remarks & notes</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CANDIDATE_COMMENT}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
                             <!-- JOB CATEGORY -->
                             <div class="var-item-card" data-cat="job" data-token="[{JOB_TITLE}]" data-desc="Job opportunity designation / title" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;JOB_TITLE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{JOB_TITLE}]</span>
                                     <p class="var-item-desc">Job opportunity designation / title</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_TITLE}]')" title="Copy variable">
@@ -919,7 +929,7 @@
 
                             <div class="var-item-card" data-cat="job" data-token="[{WORK_LOCATION}]" data-desc="Job location / city" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;WORK_LOCATION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{WORK_LOCATION}]</span>
                                     <p class="var-item-desc">Job location / city</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{WORK_LOCATION}]')" title="Copy variable">
@@ -927,9 +937,19 @@
                                 </button>
                             </div>
 
+                            <div class="var-item-card" data-cat="job" data-token="[{JOB_LOCATION}]" data-desc="Work location alias" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{JOB_LOCATION}]</span>
+                                    <p class="var-item-desc">Work location alias</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_LOCATION}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
                             <div class="var-item-card" data-cat="job" data-token="[{JOB_DESCRIPTION}]" data-desc="Complete job description text" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;JOB_DESCRIPTION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{JOB_DESCRIPTION}]</span>
                                     <p class="var-item-desc">Complete job description text</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_DESCRIPTION}]')" title="Copy variable">
@@ -939,7 +959,7 @@
 
                             <div class="var-item-card" data-cat="job" data-token="[{SALARY_AMOUNT}]" data-desc="Offered salary or package" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;SALARY_AMOUNT&#125;&#125;</span>
+                                    <span class="var-token-badge">[{SALARY_AMOUNT}]</span>
                                     <p class="var-item-desc">Offered salary or package</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{SALARY_AMOUNT}]')" title="Copy variable">
@@ -949,7 +969,7 @@
 
                             <div class="var-item-card" data-cat="job" data-token="[{JOB_TYPE}]" data-desc="Job type (Full-time, Contract, Remote)" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;JOB_TYPE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{JOB_TYPE}]</span>
                                     <p class="var-item-desc">Job type (Full-time, Contract, Remote)</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_TYPE}]')" title="Copy variable">
@@ -957,11 +977,41 @@
                                 </button>
                             </div>
 
-                            <!-- COMPANY CATEGORY -->
-                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_NAME}]" data-desc="Hiring company or recruiter organization" onclick="handleCardClick(this)" style="display: none;">
+                            <div class="var-item-card" data-cat="job" data-token="[{WORK_SHIFT}]" data-desc="Work shift / hours (e.g. Day, Night)" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;COMPANY_NAME&#125;&#125;</span>
-                                    <p class="var-item-desc">Hiring company or recruiter organization</p>
+                                    <span class="var-token-badge">[{WORK_SHIFT}]</span>
+                                    <p class="var-item-desc">Work shift / hours (e.g. Day, Night)</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{WORK_SHIFT}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{JOB_LINK}]" data-desc="Direct link to job post" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{JOB_LINK}]</span>
+                                    <p class="var-item-desc">Direct link to job post</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{JOB_LINK}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="job" data-token="[{NUMBER_OF_VACANCIES}]" data-desc="Total number of open positions" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{NUMBER_OF_VACANCIES}]</span>
+                                    <p class="var-item-desc">Total number of open positions</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{NUMBER_OF_VACANCIES}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- COMPANY CATEGORY -->
+                            <div class="var-item-card" data-cat="company" data-token="[{COMPANY_NAME}]" data-desc="Your recruitment company / employer organization" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{COMPANY_NAME}]</span>
+                                    <p class="var-item-desc">Your recruitment company / employer organization</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_NAME}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
@@ -970,7 +1020,7 @@
 
                             <div class="var-item-card" data-cat="company" data-token="[{COMPANY_WEBSITE}]" data-desc="Organization website URL" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;COMPANY_WEBSITE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{COMPANY_WEBSITE}]</span>
                                     <p class="var-item-desc">Organization website URL</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_WEBSITE}]')" title="Copy variable">
@@ -980,7 +1030,7 @@
 
                             <div class="var-item-card" data-cat="company" data-token="[{COMPANY_DESCRIPTION}]" data-desc="About the company overview" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;COMPANY_DESCRIPTION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{COMPANY_DESCRIPTION}]</span>
                                     <p class="var-item-desc">About the company overview</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_DESCRIPTION}]')" title="Copy variable">
@@ -990,7 +1040,7 @@
 
                             <div class="var-item-card" data-cat="company" data-token="[{COMPANY_ADDRESS}]" data-desc="Company registered address" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;COMPANY_ADDRESS&#125;&#125;</span>
+                                    <span class="var-token-badge">[{COMPANY_ADDRESS}]</span>
                                     <p class="var-item-desc">Company registered address</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{COMPANY_ADDRESS}]')" title="Copy variable">
@@ -998,21 +1048,41 @@
                                 </button>
                             </div>
 
-                            <!-- CLIENT CATEGORY -->
-                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_NAME}]" data-desc="End client / hiring partner name" onclick="handleCardClick(this)" style="display: none;">
+                            <div class="var-item-card" data-cat="company" data-token="[{NO_OF_EMP}]" data-desc="Company size / employee count" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CLIENT_NAME&#125;&#125;</span>
-                                    <p class="var-item-desc">End client / hiring partner name</p>
+                                    <span class="var-token-badge">[{NO_OF_EMP}]</span>
+                                    <p class="var-item-desc">Company size / employee count</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{NO_OF_EMP}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <!-- CLIENT CATEGORY -->
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_NAME}]" data-desc="Client organization / hiring partner name" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{CLIENT_NAME}]</span>
+                                    <p class="var-item-desc">Client organization / hiring partner name</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_NAME}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             </div>
 
-                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_WEBSITE}]" data-desc="End client official website URL" onclick="handleCardClick(this)" style="display: none;">
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_COMPANY_NAME}]" data-desc="Client company name alias" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CLIENT_WEBSITE&#125;&#125;</span>
-                                    <p class="var-item-desc">End client official website URL</p>
+                                    <span class="var-token-badge">[{CLIENT_COMPANY_NAME}]</span>
+                                    <p class="var-item-desc">Client company name alias</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_COMPANY_NAME}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="client" data-token="[{CLIENT_WEBSITE}]" data-desc="Client official website URL" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{CLIENT_WEBSITE}]</span>
+                                    <p class="var-item-desc">Client official website URL</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_WEBSITE}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
@@ -1021,7 +1091,7 @@
 
                             <div class="var-item-card" data-cat="client" data-token="[{CLIENT_DESCRIPTION}]" data-desc="Client organization description" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;CLIENT_DESCRIPTION&#125;&#125;</span>
+                                    <span class="var-token-badge">[{CLIENT_DESCRIPTION}]</span>
                                     <p class="var-item-desc">Client organization description</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{CLIENT_DESCRIPTION}]')" title="Copy variable">
@@ -1032,7 +1102,7 @@
                             <!-- RECRUITER CATEGORY -->
                             <div class="var-item-card" data-cat="recruiter" data-token="[{HR_NAME}]" data-desc="Sender recruiter / HR contact name" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;HR_NAME&#125;&#125;</span>
+                                    <span class="var-token-badge">[{HR_NAME}]</span>
                                     <p class="var-item-desc">Sender recruiter / HR contact name</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_NAME}]')" title="Copy variable">
@@ -1042,7 +1112,7 @@
 
                             <div class="var-item-card" data-cat="recruiter" data-token="[{HR_EMAIL}]" data-desc="Recruiter contact email address" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;HR_EMAIL&#125;&#125;</span>
+                                    <span class="var-token-badge">[{HR_EMAIL}]</span>
                                     <p class="var-item-desc">Recruiter contact email address</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_EMAIL}]')" title="Copy variable">
@@ -1052,7 +1122,7 @@
 
                             <div class="var-item-card" data-cat="recruiter" data-token="[{HR_PHONE}]" data-desc="Recruiter phone number" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;HR_PHONE&#125;&#125;</span>
+                                    <span class="var-token-badge">[{HR_PHONE}]</span>
                                     <p class="var-item-desc">Recruiter phone number</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{HR_PHONE}]')" title="Copy variable">
@@ -1060,10 +1130,20 @@
                                 </button>
                             </div>
 
+                            <div class="var-item-card" data-cat="recruiter" data-token="[{WHAT_LINK}]" data-desc="Recruiter WhatsApp direct link" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{WHAT_LINK}]</span>
+                                    <p class="var-item-desc">Recruiter WhatsApp direct link</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{WHAT_LINK}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
                             <!-- OTHER CATEGORY -->
                             <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_DATE_TIME}]" data-desc="Scheduled interview date and time" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;INTERVIEW_DATE_TIME&#125;&#125;</span>
+                                    <span class="var-token-badge">[{INTERVIEW_DATE_TIME}]</span>
                                     <p class="var-item-desc">Scheduled interview date and time</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_DATE_TIME}]')" title="Copy variable">
@@ -1073,7 +1153,7 @@
 
                             <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_LINK}]" data-desc="Virtual interview video meeting link" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;INTERVIEW_LINK&#125;&#125;</span>
+                                    <span class="var-token-badge">[{INTERVIEW_LINK}]</span>
                                     <p class="var-item-desc">Virtual interview video meeting link</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_LINK}]')" title="Copy variable">
@@ -1081,12 +1161,42 @@
                                 </button>
                             </div>
 
+                            <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_QUESTIONS}]" data-desc="Interview / screening questions list" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{INTERVIEW_QUESTIONS}]</span>
+                                    <p class="var-item-desc">Interview / screening questions list</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_QUESTIONS}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="other" data-token="[{INTERVIEW_MODE}]" data-desc="Interview mode (Phone / Video / F2F)" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{INTERVIEW_MODE}]</span>
+                                    <p class="var-item-desc">Interview mode (Phone / Video / F2F)</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{INTERVIEW_MODE}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
                             <div class="var-item-card" data-cat="other" data-token="[{OFFER_LETTER_LINK}]" data-desc="Offer letter download or view link" onclick="handleCardClick(this)" style="display: none;">
                                 <div class="var-item-left">
-                                    <span class="var-token-badge">&#123;&#123;OFFER_LETTER_LINK&#125;&#125;</span>
+                                    <span class="var-token-badge">[{OFFER_LETTER_LINK}]</span>
                                     <p class="var-item-desc">Offer letter download or view link</p>
                                 </div>
                                 <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{OFFER_LETTER_LINK}]')" title="Copy variable">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+
+                            <div class="var-item-card" data-cat="other" data-token="[{DATE}]" data-desc="Current date" onclick="handleCardClick(this)" style="display: none;">
+                                <div class="var-item-left">
+                                    <span class="var-token-badge">[{DATE}]</span>
+                                    <p class="var-item-desc">Current date</p>
+                                </div>
+                                <button type="button" class="var-copy-btn" onclick="copyTokenDirect(event, '[{DATE}]')" title="Copy variable">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             </div>

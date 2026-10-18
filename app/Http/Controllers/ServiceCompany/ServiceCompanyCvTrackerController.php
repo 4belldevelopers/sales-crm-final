@@ -6645,12 +6645,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$rel_exp.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$current_ctc_cur.' '.@$ctc.'/'.$current_ctc_mode.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$current_ectc_cur.' '.@$ectc.'/'.$current_ctc_mode.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords((@$appData->comment)).'<o:p></o:p></span></p></td>
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords((string) (@$appData->comment ?? '')).'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$np.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$appData->current_company.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="'.ucwords($row_city_name).'">'.ucwords(substr($row_city_name, 0, 50)).'</a>,
-				<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="'.ucwords($row_state_name).' | '.strtoupper($row_country_name).'">'.ucfirst(substr($row_state_name, 0, 50)).' , '.strtoupper(substr($row_country_name, 0, 10)).'</span><o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(substr(@$appData->qualification_name, 0, 10)).'<o:p></o:p></span></p></td>				
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="'.ucwords((string) ($row_city_name ?? '')).'">'.ucwords(substr((string) ($row_city_name ?? ''), 0, 50)).'</a>,
+				<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="'.ucwords((string) ($row_state_name ?? '')).' | '.strtoupper((string) ($row_country_name ?? '')).'">'.ucfirst(substr((string) ($row_state_name ?? ''), 0, 50)).' , '.strtoupper(substr((string) ($row_country_name ?? ''), 0, 10)).'</span><o:p></o:p></span></p></td>
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(substr((string) (@$appData->qualification_name ?? ''), 0, 10)).'<o:p></o:p></span></p></td>				
 
 				</tr>';
 
@@ -6969,51 +6969,78 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $userEmail = auth()->user()->email ?? '';
             $userMobile = auth()->user()->mobile ?? (auth()->user()->phone ?? '');
 
-            $subject = str_replace(
-                ['[{CURRENTDATE}]', '[{JOB_TITLE}]', '[{CLIENT_NAME_COMPANY_NAME}]', '<br>'],
-                [date('d M Y'), @$job_title, $client_company_name, ''],
-                $templateData->template_subject ?? ''
-            );
-
-            $template_description = str_replace(
-                ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[HR_NAME]', '[{HR_EMAIL}]', '[{POSITION}]'],
-                [$companyName, $userMobile, $userName, $userName, $userEmail, $userDesignation],
-                $template_description
-            );
+            $context1 = [
+                'company_name' => $companyName,
+                'client_company_name' => $client_company_name ?? $companyName,
+                'client_name_company_name' => $client_company_name ?? $companyName,
+                'job_title' => @$job_title ?? '',
+                'current_date' => date('d M Y'),
+                'hr_phone' => $userMobile,
+                'hr_name' => $userName,
+                'hr_email' => $userEmail,
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context1);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context1);
+            $template_description = str_replace(['[{POSITION}]', '{{POSITION}}', '[POSITION]'], $userDesignation, $template_description);
         }
         if ((int) $request->mailtype == 2) {
-            // dd($company_name->company_name, auth()->user()->phone, auth()->user()->name, auth()->user()->email);
-            $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$company_name->company_name, ''], $templateData->template_subject);
-            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect To Wahtsapp</a>';
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]'], [$company_name->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink], $template_description);
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+            $context2 = [
+                'company_name' => $company_name->company_name ?? 'Our Company',
+                'hr_phone' => auth()->user()->mobile ?? (auth()->user()->phone ?? ''),
+                'hr_name' => auth()->user()->name ?? 'Recruiter',
+                'hr_email' => auth()->user()->email ?? '',
+                'what_link' => $whatlink,
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context2);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context2);
         }
         if ((int) $request->mailtype == 3) {
-
-            $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$company_name->company_name, ''], $templateData->template_subject);
+            $context3 = [
+                'company_name' => $company_name->company_name ?? 'Our Company',
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context3);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context3);
         }
         if ((int) $request->mailtype == 4) {
 
             // Universal Safe Email Parser: handles Plain Email, Tagify JSON, and Array without throwing TypeError
             $parseFirstEmail = function ($input) {
-                if (empty($input)) return '';
+                if (empty($input)) {
+                    return '';
+                }
                 if (is_array($input)) {
-                    if (isset($input[0]['value'])) return trim($input[0]['value']);
-                    if (isset($input['value'])) return trim($input['value']);
-                    if (isset($input[0]) && is_string($input[0])) return trim($input[0]);
+                    if (isset($input[0]['value'])) {
+                        return trim($input[0]['value']);
+                    }
+                    if (isset($input['value'])) {
+                        return trim($input['value']);
+                    }
+                    if (isset($input[0]) && is_string($input[0])) {
+                        return trim($input[0]);
+                    }
                 }
                 if (is_string($input)) {
                     $trimmed = trim($input);
                     if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
                         $decoded = json_decode($trimmed, true);
                         if (is_array($decoded)) {
-                            if (isset($decoded[0]['value'])) return trim($decoded[0]['value']);
-                            if (isset($decoded['value'])) return trim($decoded['value']);
-                            if (isset($decoded[0]) && is_string($decoded[0])) return trim($decoded[0]);
+                            if (isset($decoded[0]['value'])) {
+                                return trim($decoded[0]['value']);
+                            }
+                            if (isset($decoded['value'])) {
+                                return trim($decoded['value']);
+                            }
+                            if (isset($decoded[0]) && is_string($decoded[0])) {
+                                return trim($decoded[0]);
+                            }
                         }
                     }
                     $parts = explode(',', $trimmed);
+
                     return trim($parts[0]);
                 }
+
                 return '';
             };
 
@@ -7090,12 +7117,28 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cliName = $companyOrClientName->client ?: $compName;
             $jobTitle = $jobs->title ?? 'Candidate Application';
 
-            // Universal Subject Replacement (Matches all template variations: Company, Client, Payroll, Documents)
-            $subject = str_replace(
-                ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'],
-                [$compName, $cliName, $jobTitle, $location, ''],
-                $templateData->template_subject ?? ''
-            );
+            $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
+            $candName = ! empty($firstApp->full_name) ? ucwords(strtolower($firstApp->full_name)) : 'Candidate';
+            $candEmail = $firstApp->email ?? '';
+            $candPhone = $firstApp->phone ?? '';
+            $candSkills = $firstApp->skills ?? '';
+            $candNp = $firstApp->np_id ?? '';
+            $candCtc = $firstApp->ctc ?? '';
+            $candEctc = $firstApp->ectc ?? '';
+
+            // Fetch interview questions if attached to this job
+            $interview_ques = '';
+            if ($jobid > 0) {
+                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
+                if ($interview_questions->count() > 0) {
+                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
+                    $interview_ques .= '<ol>';
+                    foreach ($interview_questions as $row) {
+                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                    }
+                    $interview_ques .= '</ol><hr />';
+                }
+            }
 
             $dataMail = [
                 'status' => 1,
@@ -7107,24 +7150,43 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $userId = auth()->user()->id;
             $companyId = auth()->user()->company_id;
-            $interested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(1).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
-            $notInterested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(2).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
-
             $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
 
-            $candName = 'Candidate';
-            if (! empty($applicationData)) {
-                $firstApp = is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first();
-                if ($firstApp && ! empty($firstApp->full_name)) {
-                    $candName = ucwords(strtolower($firstApp->full_name));
-                }
-            }
+            $templateContext = [
+                'company_name' => $compName,
+                'client_name' => $cliName,
+                'job_title' => $jobTitle,
+                'job_location' => $location,
+                'work_location' => $location,
+                'candidate_name' => $candName,
+                'candidate_email' => $candEmail,
+                'candidate_phone' => $candPhone,
+                'primary_skills' => $candSkills,
+                'notice_period' => $candNp,
+                'current_ctc' => $candCtc,
+                'expected_ctc' => $candEctc,
+                'job_description' => $jobs->job_description ?? '',
+                'work_shift' => $jobs->work_shifts ?? '',
+                'hr_name' => auth()->user()->name,
+                'hr_email' => auth()->user()->email,
+                'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+                'what_link' => $whatlink,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'company_address' => $address,
+                'no_of_emp' => $companyOrClientName->company_size ?? '',
+                'interview_questions' => $interview_ques,
+                'current_date' => date('d M Y'),
+            ];
 
-            $template_description = str_replace(
-                ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]', '[{WORK_SHIFT}]', '[{COMPANY_ADDRESS}]'],
-                [$compName, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $cliName, $jobTitle, $location, $companyOrClientName->client_website ?? '', $jobs->job_description ?? '', $companyOrClientName->company_website ?? '', $companyOrClientName->company_description ?? '', $companyOrClientName->client_description ?? '', $companyOrClientName->company_size ?? '', $candName, $jobs->work_shifts ?? '', $address],
-                $template_description
-            );
+            // Universal Subject and Body Replacement (Handles [{TOKEN}], {{TOKEN}}, [TOKEN])
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
+
+            $interested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(1).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
+            $notInterested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(2).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
 
         }
         if ((int) $request->mailtype == 7) {
@@ -7165,10 +7227,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $Urlcopy = '<a href="'.$link.'" style="text-decoration:none;color: #009EF7">'.$link.'</a>';
 
-            // dd($offerId,$job_applications->full_name);
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy], $template_description);
-
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext7 = [
+                'company_name' => $companyDetails->company_name ?? 'Our Company',
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext7);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [@$Url, @$Urlcopy], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext7);
 
         }
         if ((int) $request->mailtype == 8) {
@@ -7226,9 +7294,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $JOB_TYPE = ($job_applications->employment_type == 1) ? 'Contract' : 'Full-time';
             // dd($offerId,$job_applications->full_name);
             $designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{CANDIDATE_ID}]', '[{JOB_ID}]', '[{START_DATE_TIME}]', '[{CURRENCY}]', '[{SALARY_AMOUNT}]', '[{SALARY_MODE}]', '[{JOB_TYPE}]', '[{MANAGER_NAME}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy, @$job_applications->id, @$job_applications->jobId, date('d M Y', strtotime(@$job_applications->joined_date)), $CURRENCY_SELCT, $SALARY_AMOUNT, $SALARY_MODE, $JOB_TYPE, @$users->contact_person_name], $template_description);
 
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext8 = [
+                'company_name' => $companyDetails->company_name ?? 'Our Company',
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+                'candidate_id' => @$job_applications->id,
+                'job_id' => @$job_applications->jobId,
+                'start_date_time' => date('d M Y', strtotime(@$job_applications->joined_date)),
+                'joining_date' => date('d M Y', strtotime(@$job_applications->joined_date)),
+                'currency' => $CURRENCY_SELCT,
+                'salary_amount' => $SALARY_AMOUNT,
+                'salary_mode' => $SALARY_MODE,
+                'job_type' => $JOB_TYPE,
+                'manager_name' => @$users->contact_person_name,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext8);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [@$Url, @$Urlcopy], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext8);
 
         }
         if ((int) $request->mailtype == 9) {
@@ -7382,9 +7467,42 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $location = ucwords(@$addressName).' | '.ucwords(@$city).' | '.ucwords(@$country_name);
 
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{CANDIDATE_ID}]', '[{JOB_ID}]', '[{JOINING_DATE}]', '[{CURRENCY}]', '[{SALARY_AMOUNT}]', '[{SALARY_MODE}]', '[{JOB_TYPE}]', '[{MANAGER_NAME}]', '[{CLIENT_NAME}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]', '[{CLIENT_WEBSITE}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy, @$job_applications->id, @$job_applications->jobId, date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)), $CURRENCY_SELCT, $SALARY_AMOUNT, $SALARY_MODE, $JOB_TYPE, @$users->contact_person_name, $companyOrClientName->client, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques, $companyOrClientName->client_website], $template_description);
-
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext9 = [
+                'company_name' => $companyDetails->company_name ?? 'Our Company',
+                'client_name' => $companyOrClientName->client ?: ($companyDetails->company_name ?? 'Our Company'),
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+                'candidate_id' => @$job_applications->id,
+                'job_id' => @$job_applications->jobId,
+                'joining_date' => date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)),
+                'start_date_time' => date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)),
+                'currency' => $CURRENCY_SELCT,
+                'salary_amount' => $SALARY_AMOUNT,
+                'salary_mode' => $SALARY_MODE,
+                'job_type' => $JOB_TYPE,
+                'manager_name' => @$users->contact_person_name,
+                'interview_mode' => $InterviewMode,
+                'interview_date_time' => $dateTime,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'interview_link' => $videoUrl,
+                'interview_link_url' => $videoUrlInter,
+                'other_description' => $otherDetails,
+                'work_location' => $location,
+                'job_location' => $location,
+                'job_description' => $job->job_description ?? '',
+                'hr_name' => auth()->user()->name,
+                'interview_level' => $interview_level,
+                'text_set' => $text_set,
+                'interview_questions' => $interview_ques,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext9);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{OTHER_DESCRIPTION}]'], [@$Url, @$Urlcopy, $videoUrlInter, $interview_level, $text_set, $otherDetails], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext9);
 
         }
 

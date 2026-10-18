@@ -3173,7 +3173,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '$';
                 $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
                 $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
-                $salary_display = $isSalaryConfidential ? 'Confidential' : ($min_salary_currency . ' ' . $min_salary . ' - ' . $max_salary . ' ' . $min_sal_mode);
+                $salary_display = $isSalaryConfidential ? 'Confidential' : ($min_salary_currency.' '.$min_salary.' - '.$max_salary.' '.$min_sal_mode);
 
                 $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
                 if ($isDirectClientJob) {
@@ -4835,7 +4835,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
             $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-            $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
+            $subject = str_replace(
+                ['[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}'],
+                [$jobRow->title, $jobRow->title, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company],
+                $mailTypeSubject->subject
+            );
             $employment_type = '';
             if ($jobRow->employment_type == 1) {
                 $employment_type = 'CONTRACT';
@@ -4920,10 +4924,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 								<ul>
 									<li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
 									<li>If a candidate remains in <strong>&quot;In Review&quot; status, the profile will only be visible to you and your team</strong>, not the client.</li>
-									<li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
-								</ul>
-								';
-            $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
+								</ul>';
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{VENDOR_NAME}]', '{{VENDOR_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'],
+                [$detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $jobRow->title, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd],
+                $template_description
+            );
 
             $message = $template_description;
 
@@ -6340,24 +6346,24 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                     $jdHtml = '';
                     if (! empty($d->role_summary)) {
-                        $jdHtml .= '<p><strong>Role Summary:</strong><br>' . htmlspecialchars($d->role_summary) . '</p>';
+                        $jdHtml .= '<p><strong>Role Summary:</strong><br>'.htmlspecialchars($d->role_summary).'</p>';
                     }
                     if (! empty($respArr)) {
                         $jdHtml .= '<p><strong>Key Responsibilities:</strong></p><ul>';
                         foreach ($respArr as $r) {
-                            $jdHtml .= '<li>' . htmlspecialchars($r) . '</li>';
+                            $jdHtml .= '<li>'.htmlspecialchars($r).'</li>';
                         }
                         $jdHtml .= '</ul>';
                     }
                     if (! empty($skillsArr)) {
                         $jdHtml .= '<p><strong>Core Technical Competencies:</strong></p><ul>';
                         foreach ($skillsArr as $s) {
-                            $jdHtml .= '<li>' . htmlspecialchars($s) . '</li>';
+                            $jdHtml .= '<li>'.htmlspecialchars($s).'</li>';
                         }
                         $jdHtml .= '</ul>';
                     }
                     if (! empty($toolsArr)) {
-                        $jdHtml .= '<p><strong>Tools & Platforms:</strong> ' . htmlspecialchars(implode(', ', $toolsArr)) . '</p>';
+                        $jdHtml .= '<p><strong>Tools & Platforms:</strong> '.htmlspecialchars(implode(', ', $toolsArr)).'</p>';
                     }
 
                     return (object) [
@@ -6601,7 +6607,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $resolvedCity = '';
         if ($locRecord) {
-            $resolvedCity = ($locRecord->country_id == 101 && !empty($locRecord->city_name))
+            $resolvedCity = ($locRecord->country_id == 101 && ! empty($locRecord->city_name))
                 ? $locRecord->city_name
                 : ($locRecord->city ?? '');
         }
@@ -6955,7 +6961,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      *
      * Tenancy Note: Tenant-scoped by auth()->user()->company_id.
      *
-     * @param int|string $id
+     * @param  int|string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function checkReady($id)
@@ -6977,11 +6983,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         try {
             $exists = $this->elasticService->getClient()->exists([
                 'index' => 'ats_jobs_elastic',
-                'id'    => (string) $jobId,
+                'id' => (string) $jobId,
             ])->asBool();
 
             if ($exists) {
                 Cache::put("job:ready:{$companyId}:{$jobId}", true, 120);
+
                 return response()->json(['ready' => true, 'source' => 'es']);
             }
         } catch (\Throwable $e) {
@@ -7100,7 +7107,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 if (! empty($hmIds) && ! empty($hmNames)) {
                     $validHmQuery->where(function ($q) use ($hmIds, $hmNames) {
                         $q->whereIn('client_contact_info.id', $hmIds)
-                          ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                            ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
                     });
                 } elseif (! empty($hmIds)) {
                     $validHmQuery->whereIn('client_contact_info.id', $hmIds);
@@ -8966,7 +8973,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response(null, 304)->header('ETag', $etag);
         }
 
-
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -9663,7 +9669,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->header('X-ATS-Trace-Id', $traceId)
                 ->header('X-ATS-Cache', 'VALIDATED-304');
         }
-
 
         if (cache()->has($cacheKeySet) && ! $hasForce) {
             return response()->json(cache()->get($cacheKeySet))
@@ -11088,7 +11093,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response(null, 304)->header('ETag', $etag);
         }
 
-
         if (cache()->has($cacheKeySet) && ! $hasForce) {
             return response()->json(cache()->get($cacheKeySet))
                 ->header('ETag', $etag)
@@ -12124,7 +12128,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
                 $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
                 $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-                $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
+                $subject = str_replace(
+                    ['[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}'],
+                    [$jobRow->title, $jobRow->title, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company],
+                    $mailTypeSubject->subject
+                );
                 $employment_type = ($jobRow->employment_type == 1) ? 'CONTRACT' : 'FULLTIME';
 
                 $salaryMode = GeneralMethod::salaryMode();
@@ -12173,7 +12181,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                         <li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
                                     </ul>';
 
-                $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
+                $template_description = str_replace(
+                    ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{VENDOR_NAME}]', '{{VENDOR_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'],
+                    [$detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $jobRow->title, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd],
+                    $template_description
+                );
 
                 $notificationemail = GeneralMethod::notification($to_company_id, 'Sales');
                 $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email;
@@ -12258,7 +12270,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $lockKey = 'ats:lock:agency_recom:'.$from_company_id.':'.$to_company_id.':'.$jobidGet;
         $lock = Cache::lock($lockKey, 10);
-
 
         try {
             if (! $lock->block(3)) {
@@ -12499,7 +12510,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ]);
             });
 
-
             // Post-commit Elastic indexing
             if ($invitationId) {
                 GeneralMethod::clientRequestIndexElastic($invitationId);
@@ -12542,7 +12552,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
                 $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
                 $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-                $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
+                $subject = str_replace(
+                    ['[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}'],
+                    [$jobRow->title, $jobRow->title, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company],
+                    $mailTypeSubject->subject
+                );
                 $employment_type = ($jobRow->employment_type == 1) ? 'CONTRACT' : 'FULLTIME';
 
                 $salaryMode = GeneralMethod::salaryMode();
@@ -12591,7 +12605,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                         <li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
                                     </ul>';
 
-                $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
+                $template_description = str_replace(
+                    ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{VENDOR_NAME}]', '{{VENDOR_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'],
+                    [$detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $jobRow->title, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd],
+                    $template_description
+                );
 
                 $notificationemail = GeneralMethod::notification($to_company_id, 'Sales');
                 $defailsEmail = DB::table('companies')->where('id', $to_company_id)->first()->company_email ?? '';
@@ -12634,7 +12652,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         } finally {
             optional($lock)->release();
         }
-
 
     }
 
@@ -12688,7 +12705,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $lockKey = 'ats:lock:agency_recom:'.$fromcompany.':'.$tocompany.':'.$jobid;
         $lock = Cache::lock($lockKey, 10);
-
 
         try {
             if (! $lock->block(3)) {
@@ -12840,7 +12856,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ]);
             });
 
-
             if ($relationId) {
                 GeneralMethod::jobRequestIndexElastic($relationId);
             }
@@ -12850,7 +12865,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $mailTypeSubject = GeneralMethod::mailTypeSubject(17, 2);
                 $detailsVendorSide = GeneralMethod::companyAsVendor($fromcompany, $tocompany);
                 $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-                $subject = str_replace(['[{JOB_TITLE}]', '[{COMPANY_NAME}]'], [$jobRow->title, $detailsVendorSide->client_company], $mailTypeSubject->subject);
+                $subject = str_replace(
+                    ['[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}'],
+                    [$jobRow->title, $jobRow->title, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company],
+                    $mailTypeSubject->subject
+                );
                 $employment_type = ($jobRow->employment_type == 1) ? 'CONTRACT' : 'FULLTIME';
 
                 $salaryMode = GeneralMethod::salaryMode();
@@ -12899,7 +12918,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                         <li>Ensure that you <strong>change the status to &quot;Sourcing&quot;</strong> for the client to review and take further action on the profiles.</li>
                                     </ul>';
 
-                $template_description = str_replace(['[{VENDOR_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd], $template_description);
+                $template_description = str_replace(
+                    ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{VENDOR_NAME}]', '{{VENDOR_NAME}}', '[{VENDOR_COMPANY_NAME}]', '{{VENDOR_COMPANY_NAME}}', '[{CLIENT_NAME}]', '{{CLIENT_NAME}}', '[{CLIENT_COMPANY_NAME}]', '{{CLIENT_COMPANY_NAME}}', '[{JOB_TITLE}]', '{{JOB_TITLE}}', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{HR_PHONE}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{STATUS}]', '[{DATEADD}]'],
+                    [$detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $detailsVendorSide->client_company, $jobRow->title, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $detailsVendorSide->client_name, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, @$jonTermsterms, $TERMS_FIXED, $statusAndId, $dateAdd],
+                    $template_description
+                );
 
                 $notificationemail = GeneralMethod::notification($tocompany, 'Sales');
                 $defailsEmail = DB::table('companies')->where('id', $tocompany)->first()->company_email ?? '';
@@ -12958,7 +12981,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $from_company_id = (int) (auth()->check() ? auth()->user()->company_id : ($this->user->company_id ?? 0));
         $from_user_id = (int) ($this->user->id ?? auth()->id());
 
-        if (!$from_company_id) {
+        if (! $from_company_id) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized: Please log in.'], 401);
         }
 
@@ -12990,7 +13013,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // Top-Level Idempotency Protection
         $idempotencyKey = $request->header('X-Idempotency-Key')
             ?: $request->input('idempotency_key')
-            ?: "bulk_inv_{$from_company_id}_{$jobId}_" . md5(implode(',', $agencyIds));
+            ?: "bulk_inv_{$from_company_id}_{$jobId}_".md5(implode(',', $agencyIds));
 
         $idempotentCheck = $this->claimIdempotency($from_company_id, $idempotencyKey, [
             'from_company_id' => $from_company_id,
@@ -13174,7 +13197,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'invited_agencies' => $successAgencyIds,
                 'skipped_agencies' => array_values($existingRelations),
                 'total_invited' => $count,
-                'message' => "Requirement successfully sent to {$count} " . ($count === 1 ? 'agency' : 'agencies') . '.'
+                'message' => "Requirement successfully sent to {$count} ".($count === 1 ? 'agency' : 'agencies').'.',
             ];
 
             $this->completeIdempotency($from_company_id, $idempotencyKey, $responsePayload);
@@ -14056,7 +14079,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      *
      * Tenancy Note: Scoped strictly to auth()->user()->company_id.
      *
-     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function auction_send_job_request(Request $request)
@@ -14065,7 +14087,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (! is_numeric($jobidGet)) {
             try {
                 $jobidGet = GeneralMethod::value_decrypt($jobidGet);
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         }
 
         $jobidGet = (int) $jobidGet;
@@ -14150,7 +14173,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $jobMeta['auto_expire'] = $expireVal;
                 $job->end_date = Carbon::now()->addDays($expireVal)->format('Y-m-d 23:59:59');
                 $job->closeType = 1; // 1 = auto close
-                $changes[] = "Auto-expire set to {$expireVal} days (".Carbon::parse($job->end_date)->format('d M Y').")";
+                $changes[] = "Auto-expire set to {$expireVal} days (".Carbon::parse($job->end_date)->format('d M Y').')';
             }
 
             $job->meta_details = $jobMeta;
@@ -14216,7 +14239,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'risk_score' => 0.00,
                         'created_at' => now(),
                     ]);
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
 
                 try {
                     $idempotencyKey = 'mkt_unpub_'.$job->id.'_'.time().'_'.bin2hex(random_bytes(4));
@@ -14400,7 +14424,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'risk_score' => 0.00,
                     'created_at' => now(),
                 ]);
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             DB::table('market_job_added_count')
                 ->where('job_id', '=', $job->id)
@@ -15618,7 +15643,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
-
      * Atomically claim idempotency lease for an agency mutation using MySQL sys_idempotency_keys UNIQUE constraint.
      * Tenancy: Scoped to tenantId and stable logical idempotencyKey.
      *
@@ -15649,6 +15673,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 }
                 if ($existing->status === 'COMPLETED') {
                     $cached = json_decode($existing->response_body, true);
+
                     return $cached ?? ['status' => 'success'];
                 }
                 if ($existing->status === 'PROCESSING') {
@@ -15663,6 +15688,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             'last_error' => null,
                             'updated_at' => now(),
                         ]);
+
                     return null;
                 }
             }
@@ -15711,7 +15737,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      * @return void
      */
     protected function invalidateAgencyDrawerCaches($jobId = null)
-
     {
         $userId = $this->user->id ?? auth()->id();
         $companyId = auth()->check() ? auth()->user()->company_id : ($this->user->company_id ?? null);

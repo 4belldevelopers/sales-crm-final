@@ -3861,6 +3861,164 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Intent: Authoritatively replace all dynamic email template variables.
+     * Supports legacy [{TOKEN}], modern {{TOKEN}}, and bracket [TOKEN] syntax.
+     * Ensures COMPANY_NAME is never overwritten by CLIENT_NAME, and all
+     * candidate, job, client, and recruiter variables resolve accurately.
+     *
+     * @param  string  $text
+     * @return string
+     */
+    public static function replaceTemplateVariables($text, array $context = [])
+    {
+        if (empty($text) || ! is_string($text)) {
+            return (string) $text;
+        }
+
+        // 1. Authoritative Company vs Client Separation
+        $companyName = (string) ($context['company_name'] ?? ($context['company'] ?? ''));
+        $clientName = (string) ($context['client_name'] ?? ($context['client'] ?? ''));
+        if (empty($clientName)) {
+            $clientName = $companyName;
+        }
+
+        // 2. Candidate Info
+        $candidateName = (string) ($context['candidate_name'] ?? ($context['full_name'] ?? ''));
+        $candidateEmail = (string) ($context['candidate_email'] ?? ($context['to_email'] ?? ''));
+        $candidatePhone = (string) ($context['candidate_phone'] ?? ($context['candidate_mobile'] ?? ''));
+        $candidateComment = (string) ($context['candidate_comment'] ?? ($context['comments'] ?? ($context['comment'] ?? '')));
+        $totalExperience = (string) ($context['total_experience'] ?? ($context['experience'] ?? ($context['total_exp'] ?? '')));
+        $highestQualification = (string) ($context['highest_qualification'] ?? ($context['qualification'] ?? ''));
+        $currentLocation = (string) ($context['current_location'] ?? ($context['candidate_location'] ?? ($context['city'] ?? '')));
+        $primarySkills = (string) ($context['primary_skills'] ?? ($context['skills'] ?? ''));
+        $noticePeriod = (string) ($context['notice_period'] ?? ($context['np_id'] ?? ''));
+        $currentCtc = (string) ($context['current_ctc'] ?? ($context['ctc'] ?? ''));
+        $expectedCtc = (string) ($context['expected_ctc'] ?? ($context['ectc'] ?? ''));
+        $candidateId = (string) ($context['candidate_id'] ?? ($context['applicant_id'] ?? ''));
+
+        // 3. Job Info
+        $jobId = (string) ($context['job_id'] ?? ($context['jobId'] ?? ''));
+        $jobTitle = (string) ($context['job_title'] ?? ($context['title'] ?? ''));
+        $jobLocation = (string) ($context['job_location'] ?? ($context['location'] ?? ($context['work_location'] ?? '')));
+        $jobDescription = (string) ($context['job_description'] ?? '');
+        $jobType = (string) ($context['job_type'] ?? ($context['employment_type'] ?? ''));
+        $salaryAmount = (string) ($context['salary_amount'] ?? ($context['salary'] ?? ''));
+        $workShift = (string) ($context['work_shift'] ?? ($context['work_shifts'] ?? ''));
+        $jobLink = (string) ($context['job_link'] ?? '');
+        $numberOfVacancies = (string) ($context['number_of_vacancies'] ?? ($context['total_positions'] ?? ($context['vacancies'] ?? '')));
+
+        // 4. Recruiter / HR Info
+        $hrName = (string) ($context['hr_name'] ?? '');
+        $hrEmail = (string) ($context['hr_email'] ?? '');
+        $hrPhone = (string) ($context['hr_phone'] ?? ($context['hr_mobile'] ?? ($context['phone'] ?? '')));
+        $whatLink = (string) ($context['what_link'] ?? '');
+
+        // 5. Company & Client Organization Details
+        $companyWebsite = (string) ($context['company_website'] ?? '');
+        $clientWebsite = (string) ($context['client_website'] ?? '');
+        $companyDescription = (string) ($context['company_description'] ?? '');
+        $clientDescription = (string) ($context['client_description'] ?? '');
+        $companyAddress = (string) ($context['company_address'] ?? ($context['address'] ?? ''));
+        $noOfEmp = (string) ($context['no_of_emp'] ?? ($context['company_size'] ?? ''));
+
+        // 6. Interview & Offer Details
+        $interviewDateTime = (string) ($context['interview_date_time'] ?? ($context['dateTime'] ?? ''));
+        $interviewMode = (string) ($context['interview_mode'] ?? '');
+        $interviewLink = (string) ($context['interview_link'] ?? ($context['videoUrl'] ?? ''));
+        $interviewLinkUrl = (string) ($context['interview_link_url'] ?? ($context['videoUrlInter'] ?? ''));
+        $interviewQuestions = (string) ($context['interview_questions'] ?? ($context['interview_ques'] ?? ''));
+        $interviewLevel = (string) ($context['interview_level'] ?? '');
+        $textSet = (string) ($context['text_set'] ?? '');
+        $otherDescription = (string) ($context['other_description'] ?? ($context['otherDetails'] ?? ''));
+        $offerLetterLink = (string) ($context['offer_letter_link'] ?? ($context['url'] ?? ''));
+        $offerLetterLinkCopy = (string) ($context['offer_letter_link_copy'] ?? ($context['urlcopy'] ?? ''));
+        $joiningDate = (string) ($context['joining_date'] ?? ($context['start_date_time'] ?? ''));
+        $currencyVal = (string) ($context['currency'] ?? '');
+        $salaryModeVal = (string) ($context['salary_mode'] ?? '');
+        $managerName = (string) ($context['manager_name'] ?? '');
+
+        // 7. Partnership & Vendor Details
+        $vendorCompanyName = (string) ($context['vendor_company_name'] ?? ($context['vendor_company'] ?? $companyName));
+        $clientCompanyName = (string) ($context['client_company_name'] ?? ($context['client_company'] ?? $clientName));
+        $clientNameCompanyName = (string) ($context['client_name_company_name'] ?? ($clientName !== $companyName ? "{$clientName} ({$companyName})" : $companyName));
+        $currentDate = (string) ($context['current_date'] ?? ($context['date'] ?? date('d M Y')));
+
+        $replaceMap = [
+            'COMPANY_NAME' => $companyName,
+            'CLIENT_NAME' => $clientName,
+            'JOB_TITLE' => $jobTitle,
+            'JOB_LOCATION' => $jobLocation,
+            'WORK_LOCATION' => $jobLocation,
+            'LOCATION' => $jobLocation,
+            'CANDIDATE_NAME' => $candidateName,
+            'CANDIDATE_EMAIL' => $candidateEmail,
+            'CANDIDATE_PHONE' => $candidatePhone,
+            'CANDIDATE_COMMENT' => $candidateComment,
+            'TOTAL_EXPERIENCE' => $totalExperience,
+            'EXPERIENCE' => $totalExperience,
+            'EXPERENCE' => $totalExperience,
+            'HIGHEST_QUALIFICATION' => $highestQualification,
+            'QUALIFICATION' => $highestQualification,
+            'CURRENT_LOCATION' => $currentLocation,
+            'PRIMARY_SKILLS' => $primarySkills,
+            'NOTICE_PERIOD' => $noticePeriod,
+            'CURRENT_CTC' => $currentCtc,
+            'EXPECTED_CTC' => $expectedCtc,
+            'CANDIDATE_ID' => $candidateId,
+            'JOB_ID' => $jobId,
+            'JOB_DESCRIPTION' => $jobDescription,
+            'JOB_TYPE' => $jobType,
+            'JOB_LINK' => $jobLink,
+            'NUMBER_OF_VACANCIES' => $numberOfVacancies,
+            'SALARY_AMOUNT' => $salaryAmount,
+            'SALARY_MODE' => $salaryModeVal,
+            'CURRENCY' => $currencyVal,
+            'WORK_SHIFT' => $workShift,
+            'HR_NAME' => $hrName,
+            'HR_EMAIL' => $hrEmail,
+            'HR_PHONE' => $hrPhone,
+            'WHAT_LINK' => $whatLink,
+            'COMPANY_WEBSITE' => $companyWebsite,
+            'CLIENT_WEBSITE' => $clientWebsite,
+            'WEBSITE' => ! empty($clientWebsite) ? $clientWebsite : $companyWebsite,
+            'COMPANY_DESCRIPTION' => $companyDescription,
+            'CLIENT_DESCRIPTION' => $clientDescription,
+            'COMPANY_ADDRESS' => $companyAddress,
+            'NO_OF_EMP' => $noOfEmp,
+            'INTERVIEW_DATE_TIME' => $interviewDateTime,
+            'INTERVIEW_MODE' => $interviewMode,
+            'INTERVIEW_LINK' => $interviewLink,
+            'INTERVIEW_LINK_URL' => $interviewLinkUrl,
+            'INTERVIEW_QUESTIONS' => $interviewQuestions,
+            'INTERVIEW_LEVEL' => $interviewLevel,
+            'TEXT_SET' => $textSet,
+            'OTHER_DESCRIPTION' => $otherDescription,
+            'OFFER_LETTER_LINK' => $offerLetterLink,
+            'OFFER_LETTER_LINK_COPY' => $offerLetterLinkCopy,
+            'START_DATE_TIME' => $joiningDate,
+            'JOINING_DATE' => $joiningDate,
+            'MANAGER_NAME' => $managerName,
+            'VENDOR_COMPANY_NAME' => $vendorCompanyName,
+            'CLIENT_COMPANY_NAME' => $clientCompanyName,
+            'CLIENT_NAME_COMPANY_NAME' => $clientNameCompanyName,
+            'CURRENTDATE' => $currentDate,
+            'TODAY_DATE' => $currentDate,
+            'DATE' => $currentDate,
+        ];
+
+        // Replace both [{TOKEN}], {{TOKEN}}, and [TOKEN] safely
+        foreach ($replaceMap as $key => $val) {
+            $text = str_replace(
+                ['[{'.$key.'}]', '{{'.$key.'}}', '['.$key.']'],
+                $val,
+                $text
+            );
+        }
+
+        return $text;
+    }
+
     public static function baseCompany()
     {
         return cache()->remember('sys_base_company_smtp', 86400, function () {

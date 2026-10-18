@@ -8978,12 +8978,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $job = Job::withoutGlobalScopes()->find($request->jobId);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id);
+        $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+        $cliName = $companyOrClientName->client ?: $compName;
+        $jobTitleClean = $job_applications->title ?? ($job->title ?? '');
 
-        $template_subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CLIENT_NAME}]'], [$companyOrClientName->company, $job_title, $companyOrClientName->client], $dataRow->template_subject);
-
-        $template_subject = str_replace('[{JOB_TITLE}]', $job_title, $template_subject);
-        $template_subject = str_replace('[{COMPANY_NAME}]', $client_name, $template_subject);
         $InterviewMode = '';
         if (@$request->interview_mode == 1) {
             $InterviewMode = 'Telephonic';
@@ -8998,25 +8996,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $dateTime = date('d-M-Y', strtotime($request->interviewDate)).' '.$interviewTime.' ('.$timezone.')';
 
-        // if($dataRow->tempForInterview==1){
-        //      $template_subject =	"Interview Confirmation || $job->title || $companyOrClientName->company | $dateTime | $InterviewMode Interview";
-        // }elseif($dataRow->tempForInterview==2){
-        //      $template_subject =	"Interview Confirmation || $job->title || $companyOrClientName->client | $dateTime | $InterviewMode Interview";
-        // }elseif($dataRow->tempForInterview==3){
-        //      $template_subject =	"Interview Confirmation ||  $job->title || $companyOrClientName->client | Payroll $companyOrClientName->company";
-        // }
-
-        $template_description = $dataRow->template_description;
-        // $template_description = str_replace("[{JOB_TITLE}]", $job_title, $template_description);
-        // $template_description = str_replace("[{COMPANY_NAME}]", $client_name, $template_description);
-        // $template_description = str_replace("[{CANDIDATE_NAME}]", $full_name, $template_description);
-
+        $template_description = $dataRow->template_description ?? '';
         $jobid = @$job_applications->jobId;
 
         $videoUrl = '';
         $videoUrlInter = '';
         $text_set = '';
         $interview_level = '';
+        $otherDetails = '';
         if (! empty(@$request->interview_mode)) {
             if (@$request->interview_mode == 1) {
                 $videoUrl = '**Telephonic** : ...........';
@@ -9057,24 +9044,44 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
             $interview_ques .= '<ol>';
             foreach ($interview_questions as $row) {
-                $interview_ques .= '<li>'.$row->questions.'</i>';
+                $interview_ques .= '<li>'.$row->questions.'</li>';
             }
             $interview_ques .= '</ol><hr />';
-
         }
-        // dd($interview_ques);
 
+        $templateContext = [
+            'company_name' => $compName,
+            'client_name' => $cliName,
+            'job_title' => $jobTitleClean,
+            'job_id' => $job_id,
+            'job_location' => $location,
+            'work_location' => $location,
+            'candidate_name' => $full_name,
+            'candidate_email' => $job_applications->email ?? '',
+            'candidate_phone' => $job_applications->phone ?? '',
+            'interview_mode' => $InterviewMode,
+            'interview_date_time' => $dateTime,
+            'interview_link' => $videoUrl,
+            'interview_link_url' => $videoUrlInter,
+            'interview_level' => $interview_level,
+            'text_set' => $text_set,
+            'other_description' => $otherDetails,
+            'interview_questions' => $interview_ques,
+            'job_description' => $job->job_description ?? '',
+            'company_description' => $companyOrClientName->company_description ?? '',
+            'client_description' => $companyOrClientName->client_description ?? '',
+            'company_website' => $companyOrClientName->company_website ?? '',
+            'client_website' => $companyOrClientName->client_website ?? '',
+            'hr_name' => auth()->user()->name,
+            'hr_email' => auth()->user()->email,
+            'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+            'current_date' => date('d M Y'),
+        ];
+
+        // Universal Authoritative Substitution (Resolves [{TOKEN}], {{TOKEN}}, [TOKEN])
+        $template_subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $dataRow->template_subject ?? ''), $templateContext);
+        $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
         $template_description = str_replace('[{VIDEOURL}]', $videoUrl, $template_description);
-        if ($dataRow->tempForInterview == 1) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->company, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $videoUrl, $otherDetails, $location,	auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-        } elseif ($dataRow->tempForInterview == 2) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{COMPANY_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->client, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->client_website, $job->job_description, $companyOrClientName->company_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $companyOrClientName->company, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-        } elseif ($dataRow->tempForInterview == 3) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->client, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->client_website, $job->job_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->company, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $videoUrl, $otherDetails, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-
-        }
 
         $to_email = $job_applications->email;
         $cc_email = $this->user->email;
