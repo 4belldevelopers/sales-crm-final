@@ -136,7 +136,7 @@
       min-height: 44px;
       border: 1px solid #E5E7EB;
       border-radius: 8px;
-      padding: 5px 105px 5px 8px;
+      padding: 5px 140px 5px 10px;
       font-size: 13px;
       font-family: 'Poppins', sans-serif;
       background: #F9FAFB;
@@ -157,8 +157,133 @@
     .mm-email-tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; color: #6B7280; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; margin-left: 2px; }
     .mm-email-tag-remove:hover { background: #DBEAFE; color: #1E3A8A; }
     .mm-tag-input { border: none !important; background: transparent !important; padding: 4px 6px !important; font-size: 13px !important; font-family: 'Poppins', sans-serif !important; color: #374151 !important; outline: none !important; box-shadow: none !important; flex: 1; min-width: 140px; margin: 0; }
-    .mm-add-email-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11.5px; font-weight: 600; color: #2563EB; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 6px; padding: 4px 10px; cursor: pointer; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
-    .mm-add-email-btn:hover { background: #DBEAFE; text-decoration: none; }
+
+    /* Yellow theme button for "+ Add Recipient" in CC box */
+    .mm-add-recipient-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #92400E;
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      text-decoration: none !important;
+      transition: all 0.15s ease-in-out;
+      z-index: 5;
+      box-shadow: 0 1px 2px rgba(217, 119, 6, 0.08);
+    }
+    .mm-add-recipient-btn:hover {
+      background: #FDE68A;
+      border-color: #F59E0B;
+      color: #78350F;
+      text-decoration: none !important;
+      box-shadow: 0 2px 4px rgba(217, 119, 6, 0.15);
+    }
+
+    /* Modern Header (Design #2: Envelope Icon + Title/Subtitle + Close + Send Email button) */
+    .mm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      flex-shrink: 0;
+      gap: 16px;
+    }
+    .mm-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .mm-header-icon-box {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 10px;
+      background: #EFF6FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mm-header-text { min-width: 0; }
+    .mm-header-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.2px;
+      line-height: 1.3;
+    }
+    .mm-header-subtitle {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.3;
+    }
+    .mm-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .mm-header-btn-close {
+      width: 38px;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      color: #64748B;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      padding: 0;
+    }
+    .mm-header-btn-close:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+      color: #1E293B;
+    }
+    .mm-header-btn-send {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #2563EB;
+      color: #FFFFFF;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.15);
+    }
+    .mm-header-btn-send:hover {
+      background: #1D4ED8;
+    }
+    .mm-header-btn-send:disabled,
+    .mm-header-btn-send.disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
 
     /* Recipient Slide-Over Drawer Styles (Isolated to Send Email) */
     #kt_sendmail_recipient_drawer {
@@ -239,20 +364,47 @@
       right: 14px;
     }
     .mm-row-body { align-items: flex-start; }
-    .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
-    .mm-add-email-btn:hover { color: #1d4ed8; }
-    .mm-input-with-btn { padding-right: 110px; }
-    .mm-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; gap: 10px; flex-wrap: wrap; position: sticky; bottom: 0; z-index: 10; }
-    .mm-footer-left { display: flex; align-items: center; gap: 8px; }
-    .mm-footer-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-    .mm-btn-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; color: #374151; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
-    .mm-btn-cancel:hover { background: #F3F4F6; }
-    .mm-btn-send { padding: 8px 20px; border-radius: 8px; border: none; background: #2563EB; color: #fff; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
-    .mm-btn-send:hover { background: #1d4ed8; }
     </style>
 
     <div class="mm-wrap">
     <form id="form1" onsubmit="return false;">
+      {{-- Header: Modern Design matching 2nd design with icon, title, subtitle, close button & Send Email button --}}
+      <div class="mm-header">
+        <div class="mm-header-left">
+          <div class="mm-header-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </div>
+          <div class="mm-header-text">
+            <h3 class="mm-header-title">Send Email</h3>
+            <p class="mm-header-subtitle">Compose and send an email to the selected recipient(s)</p>
+          </div>
+        </div>
+        <div class="mm-header-actions">
+          <button type="button" class="mm-header-btn-close" id="kt_send_mail_showdetail_close" onclick="(function(){ if(typeof window.closeCandidateSendMailDrawer === 'function') { window.closeCandidateSendMailDrawer(); } else if(typeof window.hideCandidateSendMailDrawer === 'function') { window.hideCandidateSendMailDrawer(); } else { $('.sd-mail-overlay').remove(); $('#kt_send_mail_showdetail_drawer').removeClass('drawer-on'); } })()" title="Close">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <button type="button" class="mm-header-btn-send" name="btnSubmitSendMail" id="btnSubmitSendMail" value="btnSubmitSendMail">
+            <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              Send Email
+            </span>
+            <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
+              <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+              <span>Sending...</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
       <div class="mm-form-body">
 
         {{-- Hidden fields --}}
@@ -336,12 +488,22 @@
             <div class="mm-tag-box" id="sendmail_cc_email_box" onclick="$('#sendmail_cc_email_input').focus()">
               <div class="mm-tag-list" id="sendmail_cc_email_tags"></div>
               <input type="text" class="mm-tag-input" id="sendmail_cc_email_input" placeholder="Type CC email and press Enter...">
-              <a href="javascript:;" class="mm-add-email-btn" onclick="openSendMailRecipientDrawer(); return false;">+ Add Email</a>
+              <a href="javascript:;" class="mm-add-recipient-btn" onclick="openSendMailRecipientDrawer(); return false;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <line x1="19" y1="8" x2="19" y2="14"/>
+                  <line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
+                + Add Recipient
+              </a>
             </div>
             <input type="hidden" name="sendmail_panel" id="sendmail_panel" value="">
             <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
-              <span>Type CC address and press Enter or comma, or click "+ Add Email"</span>
-              <span style="color:#2563EB;font-weight:600;font-size:11px;">Deliverability Safeguard: Max 5 Total (1 To + up to 4 CC)</span>
+              <span>Type CC address and press Enter or comma, or click "+ Add Recipient"</span>
+              <span style="background:#FFFBEB;border:1px solid #FEF3C7;color:#B45309;padding:2px 8px;border-radius:4px;font-weight:600;font-size:11px;">
+                Deliverability Safeguard: Max 5 Total (1 To + up to 4 CC)
+              </span>
             </div>
           </div>
         </div>
@@ -404,33 +566,6 @@
           </div>
         </div>
 
-      </div>
-
-      <div class="mm-footer">
-        <div class="mm-footer-left">
-          <button type="button" class="mm-btn-cancel" onclick="(function(){
-              if (typeof window.closeCandidateSendMailDrawer === 'function') {
-                  window.closeCandidateSendMailDrawer();
-                  return;
-              }
-              if (typeof window.hideCandidateSendMailDrawer === 'function') {
-                  window.hideCandidateSendMailDrawer();
-                  return;
-              }
-              var d = document.getElementById('kt_send_mail_showdetail_drawer') || document.getElementById('kt_mass_mail_drawer') || document.getElementById('kt_mass_mail_drawer_aptk');
-              if (d && typeof KTDrawer !== 'undefined') {
-                  var dr = KTDrawer.getInstance(d);
-                  if (dr) dr.hide();
-              }
-              $('.sd-mail-overlay').remove();
-          })()">Cancel</button>
-        </div>
-        <div class="mm-footer-right">
-          <button type="button" class="mm-btn-send" name="btnSubmitSendMail" id="btnSubmitSendMail" value="btnSubmitSendMail">
-            <span class="indicator-label">Send</span>
-            <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-          </button>
-        </div>
       </div>
     </form>
     </div>
@@ -706,7 +841,7 @@
             }
 
             $('.indicator-label', $btn).hide();
-            $('.indicator-progress', $btn).show();
+            $('.indicator-progress', $btn).css('display', 'inline-flex');
 
             function closeDrawerTargeted() {
                 if (typeof window.hideCandidateSendMailDrawer === 'function') {
@@ -764,7 +899,7 @@
                     isSendingEmail = false;
                     $btn.data('sending', false);
                     $btn.prop('disabled', false).removeClass('disabled');
-                    $('.indicator-label', $btn).show();
+                    $('.indicator-label', $btn).css('display', 'inline-flex');
                     $('.indicator-progress', $btn).hide();
                 }
             });
