@@ -4177,6 +4177,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
 
           // 5. Broadcast to other recruiter tabs if local action
@@ -4252,6 +4253,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
 
           // 4. Invalidate drawer cache for this candidate so future drawer opens fetch fresh comments
@@ -4373,6 +4375,7 @@ $( document ).ready(function() {
                   if (window.ForwardResumeManager) {
                       window.ForwardResumeManager._compiledAttachments = {};
                       window.ForwardResumeManager._recipientsCache = null;
+                      window.ForwardResumeManager._recipientsCacheKey = null;
                   }
               });
       }
@@ -4416,6 +4419,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
           window.purgeCandidateDrawerCaches(false);
       }

@@ -1314,7 +1314,13 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     <div class="rcp-header">
       <div class="rcp-header-left">
         <h3 class="rcp-header-title">Add Email Recipient</h3>
-        <p class="rcp-header-subtitle">Choose a contact from your internal team or client company.</p>
+        <p class="rcp-header-subtitle">
+          @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
+            Choose a contact from your organization or client company.
+          @else
+            Choose a contact from your organization.
+          @endif
+        </p>
       </div>
       <button type="button" class="rcp-close-btn" id="kt_test_recipient_drawer_close" onclick="closeTestEmailRecipientDrawer()" title="Close drawer">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1324,25 +1330,27 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </button>
     </div>
 
-    <div class="rcp-tabs-wrap">
+    <div class="rcp-tabs-wrap" id="test_rcp_tabs_wrap">
       <div class="rcp-tab-card active" id="test_rcp_tab_internal" data-tab="internal">
         <div class="rcp-tab-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         </div>
         <div class="rcp-tab-info">
-          <div class="rcp-tab-title">Internal Team</div>
+          <div class="rcp-tab-title">My Organization</div>
           <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} active</div>
         </div>
       </div>
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
       <div class="rcp-tab-card" id="test_rcp_tab_client" data-tab="client">
         <div class="rcp-tab-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
         </div>
         <div class="rcp-tab-info">
           <div class="rcp-tab-title">Client Contacts</div>
-          <div class="rcp-tab-sub">{{ count($client_contacts_data ?? []) }} available</div>
+          <div class="rcp-tab-sub">{{ count($client_contacts_data) }} available</div>
         </div>
       </div>
+      @endif
     </div>
 
     <div class="rcp-search-wrap">
@@ -1383,16 +1391,33 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No active internal team members found.</div>
         @endif
       </div>
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
       <div id="test_rcp_section_client" style="display:none;">
-        @if(!empty($client_contacts_data))
           @foreach($client_contacts_data as $ccUser)
-            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? '') }}">
+            @php
+              $roleTag = $ccUser->role_tag ?? '';
+              $badgeBg = '#DCFCE7';
+              $badgeColor = '#15803D';
+              if ($roleTag === 'Hiring Manager') {
+                  $badgeBg = '#EEF2FF';
+                  $badgeColor = '#4F46E5';
+              } elseif (str_contains($roleTag, 'Agency Added By')) {
+                  $badgeBg = '#FEF3C7';
+                  $badgeColor = '#D97706';
+              }
+            @endphp
+            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? ($ccUser->company_name ?? '')) }}">
               <div style="display:flex;align-items:center;min-width:0;flex:1;">
                 <div class="rcp-avatar" style="background:#DCFCE7;color:#15803D;">{{ strtoupper(substr($ccUser->name ?? 'C', 0, 1)) }}</div>
                 <div class="rcp-info">
-                  <div class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</span>
+                    @if(!empty($roleTag))
+                      <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:{{ $badgeBg }};color:{{ $badgeColor }};font-weight:600;">{{ $roleTag }}</span>
+                    @endif
+                  </div>
                   <div class="rcp-email">{{ $ccUser->email }}</div>
-                  <div class="rcp-role">{{ $ccUser->company_name ?? 'Client' }}</div>
+                  <div class="rcp-role">{{ $ccUser->display_name ?: ($ccUser->company_name ?? 'Client') }}</div>
                 </div>
               </div>
               <button type="button" class="rcp-toggle-btn test-rcp-toggle-btn" data-email="{{ $ccUser->email }}">
@@ -1401,8 +1426,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
               </button>
             </div>
           @endforeach
-        @endif
       </div>
+      @endif
     </div>
 
     <div class="rcp-footer">
@@ -2771,8 +2796,9 @@ window.openTestEmailRecipientDrawer = function(target) {
     $('#test_rcp_search_input').val('');
     applyTestRcpSearch();
 
-    // Automatically switch to client contacts for 'to' field and internal team for 'cc' field
-    if (_testCurrentRcpTarget === 'to') {
+    // Automatically switch to client contacts for 'to' field (if eligible client contacts exist) and internal team for 'cc' field
+    var hasClientTab = $('#test_rcp_tab_client').length > 0 && $('#test_rcp_tab_client').is(':visible');
+    if (_testCurrentRcpTarget === 'to' && hasClientTab) {
         $('#test_rcp_tab_client').trigger('click');
     } else {
         $('#test_rcp_tab_internal').trigger('click');
