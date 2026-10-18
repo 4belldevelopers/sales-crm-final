@@ -4668,137 +4668,275 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function emailThemes()
     {
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must_not' => [
-                            [
-                                'term' => [
-                                    'temptype' => 9,
+        $templates = collect();
+
+        // CQRS: Elasticsearch strictly for reads
+        try {
+            $params = [
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'body' => [
+                    'size' => 10000,
+                    'query' => [
+                        'bool' => [
+                            'must_not' => [
+                                [
+                                    'term' => [
+                                        'temptype' => 9,
+                                    ],
                                 ],
                             ],
                         ],
                     ],
                 ],
-            ],
+            ];
+
+            $response = $this->elasticService->getClient()->search($params);
+
+            $templates = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+        } catch (\Exception $e) {
+            \Log::error('ES search error in emailThemes: ' . $e->getMessage());
+        }
+
+        // Resilient fallback to MySQL if ES empty or failed
+        if ($templates->isEmpty()) {
+            $templates = DB::table('th_email_template')
+                ->where('temptype', '!=', 9)
+                ->orderBy('e_temp_id', 'ASC')
+                ->get();
+        } else {
+            // Natural sort by e_temp_id ascending
+            $templates = $templates->sortBy(function ($t) {
+                return (int) ($t->e_temp_id ?? $t->id ?? 0);
+            })->values();
+        }
+
+        $this->th_email_template = $templates;
+
+        // Calculate KPI Metrics for Header Cards and Filter Tabs
+        $this->kpi = [
+            'total' => $templates->count(),
+            'active' => $templates->where('status', 1)->count(),
+            'inactive' => $templates->where('status', 0)->count(),
+            'send_mail' => $templates->where('temptype', 4)->count(),
+            'interview_mail' => $templates->where('temptype', 3)->count(),
+            'mass_mail' => $templates->where('temptype', 2)->count(),
+            'forward_mail' => $templates->where('temptype', 1)->count(),
+            'system_mail' => $templates->whereIn('temptype', [5, 6, 7, 8])->count(),
         ];
-
-        $response = $this->elasticService->getClient()->search($params);
-
-        $this->th_email_template = collect($response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
-
-        // $this->th_email_template =  isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
 
         return view('super-admin.emailthemes.index', $this->data);
     }
 
     public function emailThemesupdate(Request $request, $Id)
     {
-        // dd($Id);
+        $template = null;
 
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['e_temp_id' => (int) $Id]],
+        if ((int) $Id > 0) {
+            try {
+                $params = [
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'body' => [
+                        'size' => 1,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['e_temp_id' => (int) $Id]],
+                                ],
+                            ],
                         ],
                     ],
-                ],
-            ],
-        ];
+                ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        $this->th_email_template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+                $response = $this->elasticService->getClient()->search($params);
+                $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+            } catch (\Exception $e) {
+                \Log::error('ES search error in emailThemesupdate: ' . $e->getMessage());
+            }
+
+            // Resilient fallback to MySQL
+            if (!$template) {
+                $template = DB::table('th_email_template')->where('e_temp_id', (int) $Id)->first();
+            }
+        }
+
+        $this->th_email_template = $template;
+        $this->tokenId = (int) $Id;
 
         return view('super-admin.emailthemes.add-edit', $this->data);
     }
 
     public function addEditemailThemesupdate(Request $request)
     {
-        // dd($request->tokenId);
-        if ($request->tokenId == 0) {
-            //  dd($request->all());
-            $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
+        $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
+        $statusVal = (int) ($request->status_is ?? 1);
+        $temptypeVal = (int) ($request->temptype_is ?? 1);
+
+        if ((int) $request->tokenId == 0) {
             $values = [
                 'template_name' => $request->template,
                 'display_name' => $request->template,
                 'template_subject' => $request->subject,
                 'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'temptype' => $request->temptype_is,
+                'status' => $statusVal,
+                'temptype' => $temptypeVal,
                 'tempForInterview' => $tempForInterviewVal,
-                'curr_date' => date('Y-m-d'),
+                'curr_date' => now(),
             ];
             $e_temp_id = DB::table('th_email_template')->insertGetId($values);
 
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $e_temp_id,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $e_temp_id,
-                        'e_temp_id' => $e_temp_id,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'tempForInterview' => $tempForInterviewVal,
-                        'temptype' => $request->temptype_is,
-                        'curr_date' => now()->toIso8601String(),
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $e_temp_id,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $e_temp_id,
+                            'e_temp_id' => (int) $e_temp_id,
+                            'template_name' => $request->template,
+                            'display_name' => $request->template,
+                            'template_subject' => $request->subject,
+                            'template_description' => $request->editor1,
+                            'status' => $statusVal,
+                            'tempForInterview' => $tempForInterviewVal,
+                            'temptype' => $temptypeVal,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
                     ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('ES insert error: ' . $e->getMessage());
+            }
 
         } else {
-            $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
             $values = [
                 'template_name' => $request->template,
                 'display_name' => $request->template,
                 'template_subject' => $request->subject,
                 'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'temptype' => $request->temptype_is,
+                'status' => $statusVal,
+                'temptype' => $temptypeVal,
                 'tempForInterview' => $tempForInterviewVal,
+                'curr_date' => now(),
             ];
             DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $request->tokenId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $request->tokenId,
-                        'e_temp_id' => $request->tokenId,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'temptype' => $request->temptype_is,
-                        'tempForInterview' => $tempForInterviewVal,
+
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $request->tokenId,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $request->tokenId,
+                            'e_temp_id' => (int) $request->tokenId,
+                            'template_name' => $request->template,
+                            'display_name' => $request->template,
+                            'template_subject' => $request->subject,
+                            'template_description' => $request->editor1,
+                            'status' => $statusVal,
+                            'temptype' => $temptypeVal,
+                            'tempForInterview' => $tempForInterviewVal,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
                     ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('ES update error: ' . $e->getMessage());
+            }
 
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        return Reply::successWithData('Email template saved successfully.', [
+            'status' => 'success',
+            'url' => route('superadmin.company.emailthemes'),
+        ]);
 
+    }
+
+    public function toggleEmailTemplateStatus(Request $request)
+    {
+        $id = (int) $request->id;
+        $status = (int) $request->status;
+
+        if (!$id) {
+            return Reply::error('Invalid template ID.');
+        }
+
+        DB::table('th_email_template')->where('e_temp_id', $id)->update([
+            'status' => $status,
+            'curr_date' => now(),
+        ]);
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'id' => (string) $id,
+                'retry_on_conflict' => 5,
+                'refresh' => true,
+                'body' => [
+                    'doc' => [
+                        'status' => $status,
+                        'curr_date' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ES toggle status error: ' . $e->getMessage());
+        }
+
+        return Reply::successWithData('Template status updated successfully.', [
+            'id' => $id,
+            'template_status' => $status,
+            'status_text' => $status == 1 ? 'Active' : 'Inactive',
+        ]);
+    }
+
+    public function bulkUpdateEmailTemplateStatus(Request $request)
+    {
+        $ids = (array) $request->ids;
+        $status = (int) $request->status;
+
+        if (empty($ids)) {
+            return Reply::error('No templates selected.');
+        }
+
+        DB::table('th_email_template')->whereIn('e_temp_id', $ids)->update([
+            'status' => $status,
+            'curr_date' => now(),
+        ]);
+
+        foreach ($ids as $id) {
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $id,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'status' => $status,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                // log
+            }
+        }
+
+        return Reply::success('Bulk status updated successfully.');
     }
 
     public function featuresList()
