@@ -4007,6 +4007,10 @@ END:VCALENDAR";
             'DATE' => $currentDate,
         ];
 
+        if (isset($context['email_tracker'])) {
+            $replaceMap['EMAIL_TRACKER'] = (string) $context['email_tracker'];
+        }
+
         // Replace both [{TOKEN}], {{TOKEN}}, and [TOKEN] safely
         foreach ($replaceMap as $key => $val) {
             $text = str_replace(
