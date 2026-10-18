@@ -5980,18 +5980,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->location = ($location) ? $location : '';
 
         // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
-        // Hide Template 2, Template 3, and Template 5 from available templates
+        // Filter out templates where client_required == 1 (configured dynamically in SuperAdmin)
         $hasClient = (! empty($this->clientTemp) && (int) $this->selfCompany !== 1);
         if (! $hasClient && ! empty($this->templateData)) {
             $this->templateData = $this->templateData->filter(function ($tdata) {
-                $tId = (int) ($tdata->e_temp_id ?? ($tdata->id ?? 0));
-                $rawName = $tdata->display_name ?? ($tdata->template_name ?? '');
-                $rawSubj = $tdata->template_subject ?? '';
-                $isClientOnlyTemplate = in_array($tId, [9, 10, 16], true)
-                    || preg_match('/\[TEMPLATE-[235]\]/i', $rawName)
-                    || preg_match('/\[TEMPLATE-[235]\]/i', $rawSubj);
-
-                return ! $isClientOnlyTemplate;
+                return empty($tdata->client_required) || (int) $tdata->client_required !== 1;
             })->values();
         }
 
@@ -7120,16 +7113,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
             $jobTitle = $jobs->title ?? 'Candidate Application';
 
-            // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
-            // Template 2, Template 3, and Template 5 cannot be used.
-            $rawTplName = $templateData->display_name ?? ($templateData->template_name ?? '');
-            $rawTplSubj = $templateData->template_subject ?? '';
-            $isClientOnlyTemplate = in_array((int) ($templateData->e_temp_id ?? 0), [9, 10, 16], true)
-                || preg_match('/\[TEMPLATE-[235]\]/i', $rawTplName)
-                || preg_match('/\[TEMPLATE-[235]\]/i', $rawTplSubj);
+            // Tenancy / Intent: If position has no client (internal position for My Organization),
+            // templates configured in SuperAdmin as Client Positions Only (client_required == 1) cannot be used.
+            $isClientOnlyTemplate = ! empty($templateData->client_required) && (int) $templateData->client_required === 1;
 
             if ($isSelf && $isClientOnlyTemplate) {
-                return Reply::error('This template is only available for client positions. For internal organization positions, please select Template 1, 4, or 6.');
+                return Reply::error('This template is only available for client positions. For internal organization positions, please select a template applicable to your organization.');
             }
 
             $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;

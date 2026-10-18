@@ -511,13 +511,9 @@
                     $clName = !empty($clientTemp) ? $clientTemp : '';
                     $isSelf = !empty($selfCompany) || empty($clName);
 
-                    // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
-                    // Hide Template 2, Template 3, and Template 5
-                    $rawName = $tdata->display_name ?? ($tdata->template_name ?? '');
-                    $rawSubj = $tdata->template_subject ?? '';
-                    $isClientOnlyTemplate = in_array((int) $tId, [9, 10, 16], true)
-                      || preg_match('/\[TEMPLATE-[235]\]/i', $rawName)
-                      || preg_match('/\[TEMPLATE-[235]\]/i', $rawSubj);
+                    // Tenancy / Intent: If there is no client (internal position for My Organization),
+                    // templates where client_required == 1 (configured dynamically in SuperAdmin) are hidden
+                    $isClientOnlyTemplate = !empty($tdata->client_required) && (int) $tdata->client_required === 1;
 
                     if ($isSelf && $isClientOnlyTemplate) {
                       continue;
@@ -543,7 +539,7 @@
               @endif
             </select>
             @if (!empty($selfCompany) || empty($clientTemp))
-              <div class="mm-hint">Showing templates for My Organization (Templates 2, 3, and 5 are hidden for internal positions)</div>
+              <div class="mm-hint">Showing templates for My Organization (Client-required templates are hidden for internal positions)</div>
             @else
               <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
             @endif

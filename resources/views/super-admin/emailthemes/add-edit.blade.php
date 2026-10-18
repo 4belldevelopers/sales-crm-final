@@ -738,6 +738,16 @@
                         </div>
 
                         <div class="row g-2">
+                            <!-- Client Requirement / Position Scope -->
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Position Scope (Client Required) <span class="req">*</span></label>
+                                <select name="client_required_is" id="client_required_is" class="form-select-custom">
+                                    <option value="0" {{ empty($th_email_template->client_required) ? 'selected' : '' }}>● All Positions (Internal Organization & Client)</option>
+                                    <option value="1" {{ !empty($th_email_template->client_required) ? 'selected' : '' }}>● Client Positions Only (Hide for Internal / My Organization)</option>
+                                </select>
+                                <span class="form-hint">When set to "Client Positions Only", this template is automatically hidden for internal positions with no client.</span>
+                            </div>
+
                             <!-- Audience Validation -->
                             <div class="col-md-6">
                                 <label class="form-label-custom">Audience Validation</label>
@@ -1462,6 +1472,7 @@
             var subject = $('#subject').val().trim();
             var temptype_is = $('#temptype_is').val();
             var status_is = $('#status_is').val();
+            var client_required_is = $('#client_required_is').val();
             var tempForInterview_is = $('#tempForInterview_is').val();
             var tokenId = $('#tokenId').val();
 
@@ -1511,6 +1522,7 @@
                     'editor1': editor1,
                     'status_is': status_is,
                     'temptype_is': temptype_is,
+                    'client_required_is': client_required_is,
                     'tempForInterview_is': tempForInterview_is
                 },
                 success: function(response) {

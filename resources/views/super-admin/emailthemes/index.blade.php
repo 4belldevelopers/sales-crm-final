@@ -464,6 +464,40 @@
         .dot-active { background-color: #10B981; }
         .dot-inactive { background-color: #EF4444; }
 
+        /* Scope Badge Pill */
+        .badge-scope-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 14px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .badge-scope-client {
+            background: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FDE68A;
+        }
+
+        .badge-scope-client:hover {
+            background: #FEF3C7;
+        }
+
+        .badge-scope-all {
+            background: #EFF6FF;
+            color: #2563EB;
+            border: 1px solid #DBEAFE;
+        }
+
+        .badge-scope-all:hover {
+            background: #DBEAFE;
+        }
+
         /* Action Buttons */
         .action-icon-btn {
             width: 26px;
@@ -810,6 +844,7 @@
                             <th style="min-width: 220px;">Template</th>
                             <th style="min-width: 105px;">Type</th>
                             <th style="min-width: 240px;">Subject</th>
+                            <th style="min-width: 100px;">Scope</th>
                             <th style="min-width: 85px;">Status</th>
                             <th style="min-width: 75px;">Usage</th>
                             <th style="min-width: 115px;">Last Updated</th>
@@ -937,6 +972,20 @@
                                         </div>
                                     </td>
 
+                                    <!-- Position Scope with 1-click toggle -->
+                                    <td>
+                                        @php
+                                            $tClientReq = (int) ($template->client_required ?? 0);
+                                        @endphp
+                                        <span class="badge-scope-pill {{ $tClientReq == 1 ? 'badge-scope-client' : 'badge-scope-all' }}" 
+                                              id="scopePill-{{ $tId }}"
+                                              onclick="toggleTemplateClientRequired({{ $tId }}, {{ $tClientReq == 1 ? 0 : 1 }})"
+                                              title="Click to toggle: {{ $tClientReq == 1 ? 'Client Required (Hidden for Internal)' : 'All Positions' }}">
+                                            <i class="bi {{ $tClientReq == 1 ? 'bi-building' : 'bi-globe' }}" id="scopeIcon-{{ $tId }}"></i>
+                                            <span id="scopeText-{{ $tId }}">{{ $tClientReq == 1 ? 'Client Only' : 'All Positions' }}</span>
+                                        </span>
+                                    </td>
+
                                     <!-- Status with 1-click toggle -->
                                     <td>
                                         <span class="badge-status-pill {{ $tStatus == 1 ? 'badge-status-active' : 'badge-status-inactive' }}" 
@@ -1003,7 +1052,7 @@
                             @endforeach
                         @else
                             <tr id="emptyTemplatesRow">
-                                <td colspan="8" class="text-center py-6 text-muted">
+                                <td colspan="9" class="text-center py-6 text-muted">
                                     <i class="bi bi-envelope-open fs-3 text-gray-400 d-block mb-1"></i>
                                     <h6>No Email Templates Found</h6>
                                     <p class="fs-9 text-muted">Create your first recruitment template by clicking "+ Create Template" above.</p>
@@ -1438,6 +1487,65 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Failed to update template status. Please try again.'
+                    });
+                }
+            });
+        }
+
+        function toggleTemplateClientRequired(templateId, newReq) {
+            var pill = $('#scopePill-' + templateId);
+            var icon = $('#scopeIcon-' + templateId);
+            var text = $('#scopeText-' + templateId);
+
+            pill.css('opacity', '0.5');
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('superadmin.company.emailThemesToggleClientRequired') }}",
+                data: {
+                    '_token': "{{ csrf_token() }}",
+                    'id': templateId,
+                    'client_required': newReq
+                },
+                success: function(response) {
+                    pill.css('opacity', '1');
+                    if (response.status === 'success') {
+                        var isClientOnly = (newReq === 1);
+
+                        if (isClientOnly) {
+                            pill.removeClass('badge-scope-all').addClass('badge-scope-client');
+                            icon.removeClass('bi-globe').addClass('bi-building');
+                            text.text('Client Only');
+                            pill.attr('onclick', 'toggleTemplateClientRequired(' + templateId + ', 0)');
+                            pill.attr('title', 'Click to toggle: All Positions');
+                        } else {
+                            pill.removeClass('badge-scope-client').addClass('badge-scope-all');
+                            icon.removeClass('bi-building').addClass('bi-globe');
+                            text.text('All Positions');
+                            pill.attr('onclick', 'toggleTemplateClientRequired(' + templateId + ', 1)');
+                            pill.attr('title', 'Click to toggle: Client Only');
+                        }
+
+                        if (templatesDataMap[templateId]) {
+                            templatesDataMap[templateId].client_required = newReq;
+                        }
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Position Scope updated: ' + (isClientOnly ? 'Client Positions Only' : 'All Positions'),
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                },
+                error: function() {
+                    pill.css('opacity', '1');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to update position scope. Please try again.'
                     });
                 }
             });

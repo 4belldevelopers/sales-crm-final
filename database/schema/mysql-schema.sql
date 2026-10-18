@@ -4364,6 +4364,7 @@ CREATE TABLE `th_email_template` (
   `status` int(11) NOT NULL DEFAULT 0,
   `curr_date` datetime NOT NULL,
   `temptype` int(11) NOT NULL DEFAULT 1 COMMENT '1- fwd_resume, 2- mass-mail, 3- interview, 4-send mail , 5-bench reject',
+  `client_required` tinyint(1) NOT NULL DEFAULT 0,
   `tempForInterview` int(11) NOT NULL DEFAULT 1,
   `company_id` bigint(20) DEFAULT NULL,
   `orderByShow` int(11) DEFAULT NULL,
