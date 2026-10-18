@@ -270,21 +270,31 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-info-step .client-main-column > .client-section-card > .card-body {
     flex: 1 1 auto !important;
   }
-  .client-info-step .client-branding-grid {
-    display: grid !important;
-    grid-template-columns: 180px 140px minmax(0, 1fr) !important;
-    gap: 16px !important;
-    align-items: stretch !important;
+  .client-info-step .client-identity-logo-row {
+    transition: all 0.2s ease;
   }
-  .client-info-step .client-logo-upload,
   .client-info-step .client-logo-preview {
-    height: 100% !important;
-    min-height: 152px !important;
+    height: auto !important;
+    min-height: auto !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
+  }
+  .client-info-step .client-logo-preview .image-input-outline {
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .client-info-step .client-logo-preview .image-input-outline:hover {
+    border-color: #2563eb !important;
+    background-color: #eff6ff !important;
+  }
+  .client-suggestion-status {
+    color: #10b981 !important;
+    transition: color 0.2s ease;
+  }
+  .client-suggestion-status.is-missing {
+    color: #cbd5e1 !important;
   }
   .client-info-step .client-side-column > .client-helper-card {
     min-height: 0 !important;
@@ -1416,9 +1426,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      ========================================================================= */
   .client-top-nav-card {
     background: #ffffff !important;
-    border: 1.5px solid #F6DF83 !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
     padding: 8px 16px !important;
     margin-bottom: 16px !important;
     box-sizing: border-box !important;
@@ -1554,9 +1564,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-circle.is-upcoming {
-    background: #ffffff !important;
-    color: #101A46 !important;
-    border: 1.5px solid #F6DF83 !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    border: 1.5px solid #e2e8f0 !important;
     font-weight: 600 !important;
   }
 
@@ -1588,7 +1598,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     width: 14px !important;
     height: 1.5px !important;
     min-width: 8px !important;
-    background: #F6DF83 !important;
+    background: #e2e8f0 !important;
     margin: 0 4px !important;
     flex-shrink: 0 !important;
   }
@@ -1602,15 +1612,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .client-top-next-btn,
   .client-top-submit-btn {
-    background: #FFD21F !important;
-    border: none !important;
-    color: #101A46 !important;
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    border: 1px solid #d4a017 !important;
+    color: #10143b !important;
     font-weight: 700 !important;
     font-size: 12.5px !important;
     height: 36px !important;
-    padding: 0 16px !important;
+    padding: 0 18px !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(255, 210, 31, 0.4) !important;
+    box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1623,7 +1633,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-top-next-btn:hover,
   .client-top-submit-btn:hover {
     background: #f5c400 !important;
-    box-shadow: 0 2px 6px rgba(255, 210, 31, 0.5) !important;
+    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.4) !important;
+    transform: translateY(-1px);
   }
 
   /* Step 5 vs Steps 1-4 Action Visibility Rules */
@@ -2296,14 +2307,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .jero-ind-input {
     width: 100%;
     padding-left: 36px !important;
-    padding-right: 68px !important;
-    height: 40px;
+    padding-right: 56px !important;
+    height: 42px !important;
     font-size: 13px;
     font-weight: 500;
     color: #1e293b;
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
-    border-radius: 7px;
+    border-radius: 8px;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
     font-family: inherit;
@@ -2335,7 +2346,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   .jero-ind-kbd {
     position: absolute;
-    right: 36px;
+    right: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2359,7 +2370,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   .jero-ind-clear-btn {
     position: absolute;
-    right: 36px;
+    right: 32px;
     width: 24px;
     height: 24px;
     background: transparent;
@@ -3834,6 +3845,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
          var output 		=	URL.createObjectURL(event.target.files[0]);
          $('.client-logo-preview .image-input-wrapper').css('background-image', 'url(' + output + ')').empty();
          $('#client_avatar_remove').val('0');
+         $('#client_preview_remove_btn').show();
+         if (typeof updateCompletion === 'function') updateCompletion();
       }
    };
    
@@ -6629,7 +6642,8 @@ $('.remove_address').click(function(){
       $('#client_avatar_remove').val('1');
       $('.client-logo-preview .image-input-wrapper')
         .css('background-image', 'none')
-        .html('<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#64748b; color:#ffffff;"><i class="la la-building" style="font-size:30px; color:#ffffff;"></i></div>');
+        .html('<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;"><i class="la la-building" style="font-size:24px; color:#94a3b8;"></i><span style="font-size:9px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.3px;">Logo</span></div>');
+      $(this).hide();
       if (typeof updateCompletion === 'function') updateCompletion();
     });
 
