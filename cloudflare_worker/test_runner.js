@@ -28,7 +28,7 @@ async function runTests() {
     const latency = Date.now() - start;
 
     console.log(`  ⏱️ Latency: ${latency}ms`);
-    console.log(`  📌 [1] Company Name: ${data.name} (${data.confidence.name || 'DEFAULT'})`);
+    console.log(`  📌 [1] Company Name: ${data.name}`);
     console.log(`  📌 [2] Logo: ${data.logo}`);
     console.log(`  📌 [3] Industry: ${data.industry}`);
     console.log(`  📌 [4] Headcount: ${data.company_sizes}`);

@@ -167,7 +167,7 @@ export async function enrichCompany(domain) {
     website_stream: false,
     gleif: false,
     wikidata: false,
-    logo_cdn: 'Clearbit / Google V2'
+    logo_cdn: 'Google Favicon V2 (256px)'
   };
 
   const data = {
@@ -175,7 +175,7 @@ export async function enrichCompany(domain) {
     website: `https://${domain}`,
     // The 21 Boxes
     name: null,
-    logo: `https://logo.clearbit.com/${domain}`,
+    logo: `https://www.google.com/s2/favicons?domain=${domain}&sz=256`,
     industry: null,
     company_sizes: null,
     company_type: 'Corporation',
