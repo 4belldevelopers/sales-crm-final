@@ -3817,48 +3817,51 @@ END:VCALENDAR";
 
     public static function companyOrClientName($id = '')
     {
-        $company_id = auth()->user()->company_id;
+        $company_id = auth()->check() ? (auth()->user()->company_id ?? null) : null;
 
-        $strAdded = DB::table('clients')
-            ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
-            ->join('companies', 'companies.id', '=', 'clients.company_id')
-            ->where('clients.id', $id)
-            ->first();
-        $companyOrclientName = '';
+        $strAdded = null;
+        if (! empty($id)) {
+            $strAdded = DB::table('clients')
+                ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
+                ->join('companies', 'companies.id', '=', 'clients.company_id')
+                ->where('clients.id', $id)
+                ->first();
+        }
+
+        $tenantCompany = (auth()->check() && ! empty(auth()->user()->company->company_name))
+            ? auth()->user()->company->company_name
+            : ($strAdded->company_name ?? 'Our Company');
+
         if ($strAdded) {
-
-            if ($strAdded->company_id != $company_id) {
-                $companyOrclientName = $strAdded->company_name;
-            } else {
-                if ($strAdded->self_company == 0) {
-                    $companyOrclientName = $strAdded->name;
-                } else {
-                    $companyOrclientName = $strAdded->company_name;
-                }
-
-            }
-
-            if ($strAdded->self_company == 1) {
-                $companyOrclientName = $strAdded->company_name;
-            } else {
-                $companyOrclientName = $strAdded->name;
-            }
+            $isSelf = ((int) $strAdded->self_company === 1);
+            $clientName = $isSelf ? '' : ($strAdded->name ?? '');
 
             $data = [
-                'companyOrclientName' => (@$companyOrclientName) ? $companyOrclientName : '',
-                'selfCompany' => (@$strAdded->self_company) ? @$strAdded->self_company : '',
-                'company' => ($strAdded->company_name) ? @$strAdded->company_name : '',
-                'client' => ($strAdded->name) ? @$strAdded->name : '',
+                'companyOrclientName' => $isSelf ? $tenantCompany : ($clientName ?: $tenantCompany),
+                'selfCompany' => $isSelf ? 1 : 0,
+                'company' => $tenantCompany,
+                'client' => $clientName,
                 'company_website' => ($strAdded->company_website) ? @$strAdded->company_website : '',
-                'client_website' => ($strAdded->client_website) ? @$strAdded->client_website : '',
+                'client_website' => $isSelf ? '' : (($strAdded->client_website) ? @$strAdded->client_website : ''),
                 'company_description' => ($strAdded->company_description) ? @$strAdded->company_description : '',
-                'client_description' => ($strAdded->client_description) ? @$strAdded->client_description : '',
+                'client_description' => $isSelf ? '' : (($strAdded->client_description) ? @$strAdded->client_description : ''),
                 'company_size' => ($strAdded->company_sizes) ? @$strAdded->company_sizes : $strAdded->company_size,
             ];
 
             return (object) $data;
         }
 
+        return (object) [
+            'companyOrclientName' => $tenantCompany,
+            'selfCompany' => 1,
+            'company' => $tenantCompany,
+            'client' => '',
+            'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+            'client_website' => '',
+            'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+            'client_description' => '',
+            'company_size' => (auth()->check() && ! empty(auth()->user()->company->company_size)) ? auth()->user()->company->company_size : '50-200',
+        ];
     }
 
     /**
@@ -3877,10 +3880,49 @@ END:VCALENDAR";
         }
 
         // 1. Authoritative Company vs Client Separation
-        $companyName = (string) ($context['company_name'] ?? ($context['company'] ?? ''));
-        $clientName = (string) ($context['client_name'] ?? ($context['client'] ?? ''));
-        if (empty($clientName)) {
-            $clientName = $companyName;
+        $companyName = trim((string) ($context['company_name'] ?? ($context['company'] ?? '')));
+        if (empty($companyName)) {
+            $companyName = (auth()->check() && ! empty(auth()->user()->company->company_name))
+                ? auth()->user()->company->company_name
+                : 'Our Company';
+        }
+
+        $clientName = trim((string) ($context['client_name'] ?? ($context['client'] ?? '')));
+
+        // Check if this is an internal / self-company opportunity
+        $isSelfCompany = (! empty($context['self_company']) && (int) $context['self_company'] === 1)
+            || empty($clientName)
+            || (strcasecmp($clientName, $companyName) === 0)
+            || ($clientName === '[Client Name]');
+
+        // 1b. Composite phrase resolution (Pre-pass before token substitution)
+        // Handles patterns like [{CLIENT_NAME}] PAYROLL with [{COMPANY_NAME}] or on the payroll
+        $payrollRegexes = [
+            '/(?:\[\{|\{\{|\[)\s*CLIENT_NAME\s*(?:\}\}|\}\]|\])\s+PAYROLL\s+with\s+(?:\[\{|\{\{|\[)\s*COMPANY_NAME\s*(?:\}\}|\}\]|\])/i',
+            '/(?:\[\{|\{\{|\[)\s*CLIENT_NAME\s*(?:\}\}|\}\]|\])\s+on\s+the\s+payroll\s+(?:\[\{|\{\{|\[)\s*COMPANY_NAME\s*(?:\}\}|\}\]|\])/i',
+        ];
+
+        if ($isSelfCompany) {
+            foreach ($payrollRegexes as $rgx) {
+                $text = preg_replace($rgx, $companyName, $text);
+            }
+            $clientDisplay = '[Client Name]';
+            $clientCompanyName = '[Client Name]';
+            $clientNameCompanyName = $companyName;
+            $clientWebsite = '';
+            $clientDescription = '';
+        } else {
+            foreach ($payrollRegexes as $idx => $rgx) {
+                $replacement = ($idx === 0)
+                    ? "{$clientName} PAYROLL with {$companyName}"
+                    : "{$clientName} on the payroll {$companyName}";
+                $text = preg_replace($rgx, $replacement, $text);
+            }
+            $clientDisplay = $clientName;
+            $clientCompanyName = $clientName;
+            $clientNameCompanyName = "{$clientName} ({$companyName})";
+            $clientWebsite = (string) ($context['client_website'] ?? '');
+            $clientDescription = (string) ($context['client_description'] ?? '');
         }
 
         // 2. Candidate Info
@@ -3899,7 +3941,7 @@ END:VCALENDAR";
 
         // 3. Job Info
         $jobId = (string) ($context['job_id'] ?? ($context['jobId'] ?? ''));
-        $jobTitle = (string) ($context['job_title'] ?? ($context['title'] ?? ''));
+        $jobTitle = (string) ($context['job_title'] ?? ($context['title'] ?? 'Candidate Application'));
         $jobLocation = (string) ($context['job_location'] ?? ($context['location'] ?? ($context['work_location'] ?? '')));
         $jobDescription = (string) ($context['job_description'] ?? '');
         $jobType = (string) ($context['job_type'] ?? ($context['employment_type'] ?? ''));
@@ -3909,16 +3951,21 @@ END:VCALENDAR";
         $numberOfVacancies = (string) ($context['number_of_vacancies'] ?? ($context['total_positions'] ?? ($context['vacancies'] ?? '')));
 
         // 4. Recruiter / HR Info
-        $hrName = (string) ($context['hr_name'] ?? '');
-        $hrEmail = (string) ($context['hr_email'] ?? '');
-        $hrPhone = (string) ($context['hr_phone'] ?? ($context['hr_mobile'] ?? ($context['phone'] ?? '')));
+        $hrName = (string) ($context['hr_name'] ?? (auth()->check() ? auth()->user()->name : 'HR Team'));
+        $hrEmail = (string) ($context['hr_email'] ?? (auth()->check() ? auth()->user()->email : ''));
+        $hrPhone = (string) ($context['hr_phone'] ?? ($context['hr_mobile'] ?? (auth()->check() ? (auth()->user()->mobile ?: (auth()->user()->phone ?? '')) : '')));
         $whatLink = (string) ($context['what_link'] ?? '');
+        if (empty($whatLink) && ! empty($hrPhone)) {
+            $cleanPhone = preg_replace('/[^0-9]/', '', $hrPhone);
+            if (! empty($cleanPhone)) {
+                $whatLink = '<a href="https://wa.me/'.$cleanPhone.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.$cleanPhone.'">Connect on WhatsApp</a>';
+            }
+        }
+        $position = (string) ($context['position'] ?? ($context['designation'] ?? ($context['hr_position'] ?? 'Recruitment Department')));
 
         // 5. Company & Client Organization Details
         $companyWebsite = (string) ($context['company_website'] ?? '');
-        $clientWebsite = (string) ($context['client_website'] ?? '');
         $companyDescription = (string) ($context['company_description'] ?? '');
-        $clientDescription = (string) ($context['client_description'] ?? '');
         $companyAddress = (string) ($context['company_address'] ?? ($context['address'] ?? ''));
         $noOfEmp = (string) ($context['no_of_emp'] ?? ($context['company_size'] ?? ''));
 
@@ -3940,17 +3987,19 @@ END:VCALENDAR";
 
         // 7. Partnership & Vendor Details
         $vendorCompanyName = (string) ($context['vendor_company_name'] ?? ($context['vendor_company'] ?? $companyName));
-        $clientCompanyName = (string) ($context['client_company_name'] ?? ($context['client_company'] ?? $clientName));
-        $clientNameCompanyName = (string) ($context['client_name_company_name'] ?? ($clientName !== $companyName ? "{$clientName} ({$companyName})" : $companyName));
         $currentDate = (string) ($context['current_date'] ?? ($context['date'] ?? date('d M Y')));
+        $emailTracker = (string) ($context['email_tracker'] ?? ($context['candidate_tracker'] ?? ($context['tracker'] ?? '')));
 
         $replaceMap = [
             'COMPANY_NAME' => $companyName,
-            'CLIENT_NAME' => $clientName,
+            'CLIENT_NAME' => $clientDisplay,
+            'CLIENT_COMPANY_NAME' => $clientCompanyName,
+            'CLIENT_NAME_COMPANY_NAME' => $clientNameCompanyName,
             'JOB_TITLE' => $jobTitle,
             'JOB_LOCATION' => $jobLocation,
             'WORK_LOCATION' => $jobLocation,
             'LOCATION' => $jobLocation,
+            'POSITION' => $position,
             'CANDIDATE_NAME' => $candidateName,
             'CANDIDATE_EMAIL' => $candidateEmail,
             'CANDIDATE_PHONE' => $candidatePhone,
@@ -3981,7 +4030,7 @@ END:VCALENDAR";
             'WHAT_LINK' => $whatLink,
             'COMPANY_WEBSITE' => $companyWebsite,
             'CLIENT_WEBSITE' => $clientWebsite,
-            'WEBSITE' => ! empty($clientWebsite) ? $clientWebsite : $companyWebsite,
+            'WEBSITE' => (! empty($clientWebsite) && ! $isSelfCompany) ? $clientWebsite : $companyWebsite,
             'COMPANY_DESCRIPTION' => $companyDescription,
             'CLIENT_DESCRIPTION' => $clientDescription,
             'COMPANY_ADDRESS' => $companyAddress,
@@ -4000,18 +4049,14 @@ END:VCALENDAR";
             'JOINING_DATE' => $joiningDate,
             'MANAGER_NAME' => $managerName,
             'VENDOR_COMPANY_NAME' => $vendorCompanyName,
-            'CLIENT_COMPANY_NAME' => $clientCompanyName,
-            'CLIENT_NAME_COMPANY_NAME' => $clientNameCompanyName,
             'CURRENTDATE' => $currentDate,
             'TODAY_DATE' => $currentDate,
             'DATE' => $currentDate,
+            'EMAIL_TRACKER' => $emailTracker,
+            'CANDIDATE_TRACKER' => $emailTracker,
         ];
 
-        if (isset($context['email_tracker'])) {
-            $replaceMap['EMAIL_TRACKER'] = (string) $context['email_tracker'];
-        }
-
-        // Replace both [{TOKEN}], {{TOKEN}}, and [TOKEN] safely
+        // Replace [{TOKEN}], {{TOKEN}}, and [TOKEN] safely
         foreach ($replaceMap as $key => $val) {
             $text = str_replace(
                 ['[{'.$key.'}]', '{{'.$key.'}}', '['.$key.']'],

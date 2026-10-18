@@ -1573,6 +1573,7 @@ class AdminJobApplicationController extends AdminBaseController
                 'clients.name as client_name',
                 'clients.website as client_website',
                 'clients.description as client_description',
+                'clients.self_company',
                 'companies.company_name',
                 'companies.website as company_website',
                 'companies.description as company_description',
@@ -1585,7 +1586,10 @@ class AdminJobApplicationController extends AdminBaseController
             ->first();
 
         $compName = $applicationRow->company_name ?: ($this->user->company->company_name ?? 'Our Company');
-        $cliName = $applicationRow->client_name ?: $compName;
+        $isSelf = (! empty($applicationRow->self_company) && (int) $applicationRow->self_company === 1)
+            || empty($applicationRow->client_name)
+            || (strcasecmp((string) $applicationRow->client_name, (string) $compName) === 0);
+        $cliName = $isSelf ? '' : ($applicationRow->client_name ?: '');
         $jobTitleClean = $applicationRow->title ?? '';
         $full_name = $applicationRow->full_name ?? '';
         $job_id = $applicationRow->job_id ?? '';
@@ -1612,6 +1616,8 @@ class AdminJobApplicationController extends AdminBaseController
         $templateContext = [
             'company_name' => $compName,
             'client_name' => $cliName,
+            'self_company' => $isSelf ? 1 : 0,
+            'position' => $this->user->designation ?? 'Recruitment Department',
             'job_title' => $jobTitleClean,
             'candidate_name' => $full_name,
             'candidate_email' => $applicationRow->to_email ?? '',
