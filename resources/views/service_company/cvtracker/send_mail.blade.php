@@ -20,8 +20,12 @@
     window.setCandidateEmailBodyHtml = function(html) {
         var cleanHtml = (html === null || html === undefined) ? '' : String(html);
         $('#editor1mass').val(cleanHtml);
-        if (window.candidateEmailQuill && window.candidateEmailQuill.root) {
-            window.candidateEmailQuill.root.innerHTML = cleanHtml;
+        if (window.candidateEmailQuill) {
+            if (window.candidateEmailQuill.clipboard && typeof window.candidateEmailQuill.clipboard.dangerouslyPasteHTML === 'function') {
+                window.candidateEmailQuill.clipboard.dangerouslyPasteHTML(cleanHtml);
+            } else if (window.candidateEmailQuill.root) {
+                window.candidateEmailQuill.root.innerHTML = cleanHtml;
+            }
         }
     };
 
@@ -58,7 +62,11 @@
             });
 
             if (existingContent) {
-                window.candidateEmailQuill.root.innerHTML = existingContent;
+                if (window.candidateEmailQuill.clipboard && typeof window.candidateEmailQuill.clipboard.dangerouslyPasteHTML === 'function') {
+                    window.candidateEmailQuill.clipboard.dangerouslyPasteHTML(existingContent);
+                } else if (window.candidateEmailQuill.root) {
+                    window.candidateEmailQuill.root.innerHTML = existingContent;
+                }
             }
 
             window.candidateEmailQuill.on('text-change', function() {
@@ -422,7 +430,7 @@
           </div>
           <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
             <select class="mm-select" name="from_email_mass_mail" id="from_email_mass_mail" style="flex:1;min-width:0;">
-              <option value="notify@jeroworks.com">{{ $userdata->name ?? $userdata->email }} &lt;notify@jeroworks.com&gt;</option>
+              <option value="notify@jeroworks.com">{{ $userdata?->name ?? ($userdata?->email ?? (auth()->user()?->name ?? 'Recruiter')) }} &lt;notify@jeroworks.com&gt;</option>
             </select>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
               <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
@@ -431,7 +439,7 @@
               Reply To
             </div>
             <select class="mm-select" name="reply_to_email" id="reply_to_email" style="flex:1;min-width:0;">
-              <option value="{{ $userdata->email }}">{{ $userdata->email }}</option>
+              <option value="{{ $userdata?->email ?? (auth()->user()?->email ?? 'noreply@jeroworks.com') }}">{{ $userdata?->email ?? (auth()->user()?->email ?? 'noreply@jeroworks.com') }}</option>
             </select>
           </div>
         </div>
@@ -521,14 +529,34 @@
               <option value="">Select Email Template...</option>
               @if (!empty($templateData))
                 @foreach ($templateData as $tdata)
-                  @if (@$tdata->tempForInterview == 1 && $selfCompany == 1)
-                    <option value="{{ $tdata->id }}">{{ str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]'], [$companyTemp, $job_title, $location], $tdata->display_name) }}</option>
-                  @endif
-                  @if ($selfCompany == '')
-                    <option value="{{ $tdata->id }}">{{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]', '[{JOB_LOCATION}]', '[{JOB_TITLE}]'], [$clientTemp, $companyTemp, $location], $tdata->display_name, $job_title) }}</option>
-                  @endif
-                  @if (@$tdata->tempForInterview == 4 && $selfCompany == 1)
-                    <option value="{{ $tdata->id }}">{{ str_replace(['[{COMPANY_NAME}]'], [$companyTemp], $tdata->display_name) }}</option>
+                  @php
+                    $tId = $tdata->e_temp_id ?? ($tdata->id ?? '');
+                    if (empty($tId)) continue;
+                    $tFor = (int) ($tdata->tempForInterview ?? 1);
+                    $showOption = false;
+
+                    if ($selfCompany == 1) {
+                      if ($tFor == 1 || $tFor == 4) {
+                        $showOption = true;
+                      }
+                    } else {
+                      $showOption = true;
+                    }
+                  @endphp
+                  @if ($showOption)
+                    @php
+                      $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
+                      $clName = !empty($clientTemp) ? $clientTemp : $cName;
+                      $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
+                      $jLoc = !empty($location) ? $location : '';
+
+                      $displayName = str_replace(
+                        ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_LOCATION}]', '[{JOB_TITLE}]'],
+                        [$cName, $clName, $jLoc, $jTitle],
+                        $tdata->display_name ?? ''
+                      );
+                    @endphp
+                    <option value="{{ $tId }}">{{ $displayName }}</option>
                   @endif
                 @endforeach
               @endif
@@ -706,69 +734,76 @@
 </div>
 
 
-<script src="{{ asset('demo/v7/js/pages/crud/forms/widgets/select2.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}<?php echo TM_VERSION; ?>"></script>
-{{-- <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script> --}}
 <script>
-    $('#templatemassmail').change(function() {
-
-
-        var template = $('#templatemassmail').val();
-        if (template > 0) {
-            var id = $('#templatemassmail').val();
-            var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
-            url = url.replace(':id', id);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-            var token = "{{ csrf_token() }}";
-            var to_email = $('#to_email_mass_mail').val() || '';
-            var from_email = $('#from_email_mass_mail').val() || '';
-            var jobid = $('#jobid').val() || 0;
-            var mailtype = 4;
-
-            var selectedApplicantListing = [];
-            var jqueryarray = <?php echo json_encode($applicationData); ?>;
-            if (jqueryarray && Array.isArray(jqueryarray)) {
-                jqueryarray.forEach(function(mval) {
-                    if (mval && mval.id) selectedApplicantListing.push(mval.id);
-                });
-            }
-
-            var jobID = jobid;
-
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'template': template,
-                    'selectedApplicantListing': selectedApplicantListing,
-                    'to_email': to_email,
-                    'from_email': from_email,
-                    'mailtype': mailtype,
-                    'jobID': jobID
-                },
-                success: function(response) {
-                    if (response && response.status == "success") {
-                        if (typeof window.setCandidateEmailBodyHtml === 'function') {
-                            window.setCandidateEmailBodyHtml(response.template_description || '');
-                        } else {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) {
-                                CKEDITOR.instances.editor1mass.setData(response.template_description);
-                            }
-                            $('#editor1mass').val(response.template_description || '');
-                        }
-                        $('#subject_mass_mail').val(response.subject || '');
-                    }
-                }
-            });
-
-        } else {
-            $('#editor').html('Choose email template');
+    $(document).off('change', '#templatemassmail').on('change', '#templatemassmail', function() {
+        var template = $(this).val();
+        if (!template || parseInt(template, 10) <= 0) {
+            return;
         }
 
+        var $subjectInput = $('#subject_mass_mail');
+        var origSubjectPlaceholder = $subjectInput.attr('placeholder') || 'Enter email subject';
+        $subjectInput.attr('placeholder', 'Loading template...').val('');
 
+        var url = "{{ route('service_company.cvtracker.email_template', ':id') }}".replace(':id', template);
+        var token = "{{ csrf_token() }}";
+        var to_email = $('#to_email_mass_mail').val() || '';
+        var from_email = $('#from_email_mass_mail').val() || '';
+        var jobid = $('#jobid').val() || 0;
+        var mailtype = 4;
 
+        var selectedApplicantListing = [];
+        var rawAppData = <?php echo json_encode($applicationData ?? []); ?>;
+        if (rawAppData) {
+            var list = Array.isArray(rawAppData) ? rawAppData : Object.values(rawAppData);
+            list.forEach(function(mval) {
+                if (mval && mval.id) selectedApplicantListing.push(mval.id);
+            });
+        }
+        if (selectedApplicantListing.length === 0) {
+            var fallbackAppId = $('#applicationDataId').val();
+            if (fallbackAppId) {
+                selectedApplicantListing.push(fallbackAppId);
+            }
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                '_token': token,
+                '_method': 'POST',
+                'template': template,
+                'selectedApplicantListing': selectedApplicantListing,
+                'to_email': to_email,
+                'from_email': from_email,
+                'mailtype': mailtype,
+                'jobID': jobid
+            },
+            dataType: 'json',
+            success: function(response) {
+                $subjectInput.attr('placeholder', origSubjectPlaceholder);
+                if (response && response.status === 'success') {
+                    if (typeof window.setCandidateEmailBodyHtml === 'function') {
+                        window.setCandidateEmailBodyHtml(response.template_description || '');
+                    } else {
+                        $('#editor1mass').val(response.template_description || '');
+                    }
+                    $subjectInput.val(response.subject || '');
+                } else {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.warning((response && response.message) ? response.message : 'Could not load the selected template.');
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                $subjectInput.attr('placeholder', origSubjectPlaceholder);
+                console.error('[CandidateEmail] Template load error:', error);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Failed to load email template. Please try again.');
+                }
+            }
+        });
     });
 
 
@@ -816,8 +851,9 @@
             url = url.replace(':id', id);
             var token = "{{ csrf_token() }}";
 
-            var jqueryarray = <?php echo json_encode($applicationData); ?>;
-            var sid = (jqueryarray && jqueryarray.length > 0) ? jqueryarray[0]['id'] : ($('#applicationDataId').val() || 0);
+            var rawAppData = <?php echo json_encode($applicationData ?? []); ?>;
+            var appList = rawAppData ? (Array.isArray(rawAppData) ? rawAppData : Object.values(rawAppData)) : [];
+            var sid = (appList.length > 0 && appList[0] && appList[0].id) ? appList[0].id : ($('#applicationDataId').val() || 0);
             var arr = [sid];
 
             var template = $('#templatemassmail').val();

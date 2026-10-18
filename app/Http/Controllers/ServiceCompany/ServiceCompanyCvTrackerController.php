@@ -5874,7 +5874,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 return (object) $hit['_source'];
             });
 
-        $this->userdata = $this->user;
+        $this->userdata = $this->user ?: auth()->user();
 
         $this->to_email_from_count = $this->cc_email_count = 0;
         $this->to_email_from_data = [];
@@ -6978,91 +6978,113 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
         if ((int) $request->mailtype == 4) {
 
-            $email = '0';
-            if (! empty($request->from_email)) {
-                $from = $request->from_email;
-                $from = json_decode($from, true);
-                $from = array_column($from, 'value');
-                $from = implode(',', $from);
+            // Universal Safe Email Parser: handles Plain Email, Tagify JSON, and Array without throwing TypeError
+            $parseFirstEmail = function ($input) {
+                if (empty($input)) return '';
+                if (is_array($input)) {
+                    if (isset($input[0]['value'])) return trim($input[0]['value']);
+                    if (isset($input['value'])) return trim($input['value']);
+                    if (isset($input[0]) && is_string($input[0])) return trim($input[0]);
+                }
+                if (is_string($input)) {
+                    $trimmed = trim($input);
+                    if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                        $decoded = json_decode($trimmed, true);
+                        if (is_array($decoded)) {
+                            if (isset($decoded[0]['value'])) return trim($decoded[0]['value']);
+                            if (isset($decoded['value'])) return trim($decoded['value']);
+                            if (isset($decoded[0]) && is_string($decoded[0])) return trim($decoded[0]);
+                        }
+                    }
+                    $parts = explode(',', $trimmed);
+                    return trim($parts[0]);
+                }
+                return '';
+            };
 
-                $email = explode(',', $from);
-                $email = $email[0];
+            $email = $parseFirstEmail($request->from_email) ?: (auth()->user()->email ?? 'notify@jeroworks.com');
+            $to_email = $parseFirstEmail($request->to_email) ?: 'candidate@jero.works';
+
+            $jobid = (int) ($request->jobID ?? 0);
+            $job_application_id = 0;
+            if (! empty($selectedApplicantListing) && is_array($selectedApplicantListing)) {
+                $job_application_id = (int) ($selectedApplicantListing[0] ?? 0);
+            } elseif (! empty($request->applicationDataId)) {
+                $job_application_id = (int) $request->applicationDataId;
             }
 
-            $to_email = '0';
-            if (! empty($request->to_email)) {
-                $to = $request->to_email;
-                $to = json_decode($to, true);
-                $to = array_column($to, 'value');
-                $to = implode(',', $to);
-
-                $to_email = explode(',', $to);
-                $to_email = $to_email[0];
-            }
-            $jobid = $request->jobID;
-            $job_application_id = $selectedApplicantListing[0];
-            $job_wise_condidates = DB::table('add_job_wise_condidates')->select('add_job_wise_condidates.id')->where('job_application_id', $job_application_id)->where('job_id', $jobid)->first();
-
-            $wise_condidateId = $job_wise_condidates->id;
-
-            $country_id = $country_name = '';
-
-            $client_loc = DB::table('client_location_jobs')
-                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-                ->where('client_location_jobs.job_id', $jobid)
-                ->first();
-            $address = @$client_loc->address;
-            // dd($address);
-            $client_loc = DB::table('client_city_jobs')
-                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city', 'countries.id as country_id', 'countries.country_name', 'city_list.city as city_name', 'state_list.state as state_name')
-                ->where('client_city_jobs.job_id', $jobid)
-                ->get();
-
-            // dd($client_loc);
-
-            // $country_id = @$client_loc->country_id;
-            $location = '';
-
-            if (count($client_loc) > 0) {
-                // $country_name = GeneralMethod::getCountryName($country_id);
-                foreach ($client_loc as $key => $cval) {
-                    $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
-                    // $country_name = ucwords($cval['sortname']);
+            $wise_condidateId = $job_application_id;
+            if ($job_application_id > 0 && $jobid > 0) {
+                $job_wise_condidates = DB::table('add_job_wise_condidates')
+                    ->select('id')
+                    ->where('job_application_id', $job_application_id)
+                    ->where('job_id', $jobid)
+                    ->first();
+                if ($job_wise_condidates && ! empty($job_wise_condidates->id)) {
+                    $wise_condidateId = $job_wise_condidates->id;
                 }
             }
-            // dd($location);
 
-            // $city = substr(@$client_loc->city, 0, 30);
-            // if (@$client_loc->country_id == 101) {
-            // 	$city = substr(@$client_loc->city_name, 0, 30);
-            // }
-            $jobs = Job::withoutGlobalScopes()->find($jobid);
-
-            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-
-            // //  dd($companyOrClientName);
-
-            //  $location = $city.' | '.$country_name;
-
-            // dd($templateData->template_subject);
-            if ($templateData->tempForInterview == 1) {
-                $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->company, $jobs->title, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 2) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->client, $jobs->title, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 3) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->client, $companyOrClientName->company, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 4) {
-                //  Documents Required | [{COMPANY_NAME}]
-                $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$companyOrClientName->company, ''], $templateData->template_subject);
+            $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
+            $companyOrClientName = null;
+            if ($jobs && ! empty($jobs->client_id)) {
+                $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
             }
+            if (! $companyOrClientName) {
+                $curComp = auth()->user()->company ?? DB::table('companies')->where('id', auth()->user()->company_id)->first();
+                $companyOrClientName = (object) [
+                    'company' => $curComp->company_name ?? 'Our Company',
+                    'client' => '',
+                    'company_website' => $curComp->website ?? '',
+                    'client_website' => '',
+                    'company_description' => $curComp->description ?? '',
+                    'client_description' => '',
+                    'company_size' => $curComp->company_size ?? '50-200',
+                ];
+            }
+
+            $country_id = $country_name = '';
+            $address = '';
+            $location = '';
+
+            if ($jobid > 0) {
+                $client_loc_addr = DB::table('client_location_jobs')
+                    ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
+                    ->where('client_location_jobs.job_id', $jobid)
+                    ->first();
+                $address = @$client_loc_addr->address ?: '';
+
+                $client_loc_cities = DB::table('client_city_jobs')
+                    ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->where('client_city_jobs.job_id', $jobid)
+                    ->get();
+
+                if ($client_loc_cities->count() > 0) {
+                    foreach ($client_loc_cities as $key => $cval) {
+                        $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
+                    }
+                }
+            }
+
+            $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName = $companyOrClientName->client ?: $compName;
+            $jobTitle = $jobs->title ?? 'Candidate Application';
+
+            // Universal Subject Replacement (Matches all template variations: Company, Client, Payroll, Documents)
+            $subject = str_replace(
+                ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'],
+                [$compName, $cliName, $jobTitle, $location, ''],
+                $templateData->template_subject ?? ''
+            );
+
             $dataMail = [
-                'status' => 1, // or whatever status you want
-                'created_at' => now(), // optional, if using timestamps manually
+                'status' => 1,
+                'created_at' => now(),
                 'updated_at' => now(),
             ];
 
@@ -7073,23 +7095,21 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $interested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(1).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
             $notInterested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(2).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
 
-            $additional = '<div style="margin-top: 20px;">
-						<!-- Interested Button -->
-						<a href="'.$interested.'" 
-						style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; font-size: 14px;">
-							Interested
-						</a>
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
 
-						<!-- Not Interested Button -->
-						<a href="'.$notInterested.'" 
-						style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; font-size: 14px; margin-left: 10px;">
-							Not Interested
-						</a>
-					</div>';
+            $candName = 'Candidate';
+            if (! empty($applicationData)) {
+                $firstApp = is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first();
+                if ($firstApp && ! empty($firstApp->full_name)) {
+                    $candName = ucwords(strtolower($firstApp->full_name));
+                }
+            }
 
-            //    $template_description = $additional.$template_description;
-
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]', '[{WORK_SHIFT}]', '[{COMPANY_ADDRESS}]'], [$companyOrClientName->company, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $companyOrClientName->client, $jobs->title, $location, $companyOrClientName->client_website, $jobs->job_description, $companyOrClientName->company_website, $companyOrClientName->company_description, $companyOrClientName->client_description, $companyOrClientName->company_size, ucwords(strtolower($applicationData[0]->full_name)), $jobs->work_shifts, $address], $template_description);
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]', '[{WORK_SHIFT}]', '[{COMPANY_ADDRESS}]'],
+                [$compName, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $cliName, $jobTitle, $location, $companyOrClientName->client_website ?? '', $jobs->job_description ?? '', $companyOrClientName->company_website ?? '', $companyOrClientName->company_description ?? '', $companyOrClientName->client_description ?? '', $companyOrClientName->company_size ?? '', $candName, $jobs->work_shifts ?? '', $address],
+                $template_description
+            );
 
         }
         if ((int) $request->mailtype == 7) {
