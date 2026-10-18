@@ -135,7 +135,6 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('clients/update/{id}', [ServiceCompanyClientController::class, 'update'])->name('clients.update');
                 Route::get('clients/client_request/{id?}', [ServiceCompanyClientController::class, 'client_request'])->name('clients.client_request');
                 Route::get('clients/requestviewmore/{id?}', [ServiceCompanyClientController::class, 'requestviewmore'])->name('clients.requestviewmore');
-                Route::post('clients/fetch-company-intelligence', [ServiceCompanyClientController::class, 'fetchCompanyIntelligence'])->name('clients.fetchCompanyIntelligence');
                 // END
                 // #############       	START JOB MANAGEMENT
                 Route::get('jobs/custom_requisition_data', [ServiceCompanyJobsController::class, 'custom_requisition_data'])->name('jobs.custom_requisition_data');
