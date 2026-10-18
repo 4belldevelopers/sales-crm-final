@@ -947,19 +947,6 @@
     data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close"
     style="z-index: 1000050 !important; scrollbar-gutter: stable;">
   <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-    <div class="card-header px-5 py-0 flex-shrink-0" style="min-height: 55px; border-bottom: 1px solid #EFF2F5;">
-      <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
-      <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">
-          <span class="svg-icon svg-icon-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-              <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-            </svg>
-          </span>
-        </button>
-      </div>
-    </div>
     <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
   </div>
 </div>
