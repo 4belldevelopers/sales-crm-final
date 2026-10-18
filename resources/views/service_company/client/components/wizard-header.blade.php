@@ -1,107 +1,104 @@
 {{-- 
-  Unified Header & Wizard Stepper for Add / Edit Client Wizard
+  Unified Header & Compact 5-Stage Progress Stepper for Add / Edit Client Workflow
   Strictly isolated to Client Wizard (Service Company & Admin)
-  Pixel-consistent baseline: Step 2 Reference (media_1792065531568.png / media_1792068852883.png)
+  Optimized for 15.6" Laptops (1366x768 & 1920x1080) and Smaller Screens
 --}}
 <div class="card client-top-nav-card" id="client_top_nav_card">
   <div class="client-header-grid">
     
-    <!-- LEFT: Back Button + Title Block -->
+    <!-- LEFT: Title Block (Clean, without separate back arrow) -->
     <div class="client-header-identity">
-      <button type="button" class="btn client-header-back-btn client-nav-back" id="client_header_back_btn" aria-label="Go Back" title="Go Back">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-      </button>
       <div class="client-header-titles">
         <h2 class="client-header-title" id="client_header_title">{{ $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client' }}</h2>
         <p class="client-header-subtitle" id="client_header_subtitle" title="Create and configure a client profile for jobs, contacts and recruitment operations.">Create and configure a client profile for jobs, contacts and recruitment operations.</p>
       </div>
     </div>
 
-    <!-- CENTER: 5-Step Horizontal Stepper -->
+    <!-- CENTER: Compact 5-Stage Stepper -->
     <div class="client-header-stepper-col">
       <div class="client-stepper-wrap" id="client_wizard_stepper" role="tablist">
         
-        <!-- Step 1 -->
-        <div class="client-step-item" data-step="1" role="tab" aria-current="step" aria-label="Step 1: Client Information">
+        <!-- Step 1: Client Info -->
+        <div class="client-step-item is-active" data-step="1" role="tab" aria-current="step" aria-label="Step 1: Client Info">
           <div class="client-step-circle client-step-circle-1 is-active">1</div>
-          <div class="client-step-text">
-            <div class="client-step-name">Client Information</div>
-            <div class="client-step-sub">Basic details</div>
-          </div>
+          <span class="client-step-name">Client Info</span>
         </div>
 
         <div class="client-step-line" aria-hidden="true"></div>
 
-        <!-- Step 2 -->
-        <div class="client-step-item" data-step="2" role="tab" aria-label="Step 2: Client Description">
+        <!-- Step 2: Description -->
+        <div class="client-step-item" data-step="2" role="tab" aria-label="Step 2: Description">
           <div class="client-step-circle client-step-circle-2 is-upcoming">2</div>
-          <div class="client-step-text">
-            <div class="client-step-name">Client Description</div>
-            <div class="client-step-sub">About the client</div>
-          </div>
+          <span class="client-step-name">Description</span>
         </div>
 
         <div class="client-step-line" aria-hidden="true"></div>
 
-        <!-- Step 3 -->
-        <div class="client-step-item" data-step="3" role="tab" aria-label="Step 3: Address Details">
+        <!-- Step 3: Address -->
+        <div class="client-step-item" data-step="3" role="tab" aria-label="Step 3: Address">
           <div class="client-step-circle client-step-circle-3 is-upcoming">3</div>
-          <div class="client-step-text">
-            <div class="client-step-name">Address Details</div>
-            <div class="client-step-sub">Location & address</div>
-          </div>
+          <span class="client-step-name">Address</span>
         </div>
 
         <div class="client-step-line" aria-hidden="true"></div>
 
-        <!-- Step 4 -->
-        <div class="client-step-item" data-step="4" role="tab" aria-label="Step 4: Contact Person">
+        <!-- Step 4: Contacts -->
+        <div class="client-step-item" data-step="4" role="tab" aria-label="Step 4: Contacts">
           <div class="client-step-circle client-step-circle-4 is-upcoming">4</div>
-          <div class="client-step-text">
-            <div class="client-step-name">Contact Person</div>
-            <div class="client-step-sub">Key contacts</div>
-          </div>
+          <span class="client-step-name">Contacts</span>
         </div>
 
         <div class="client-step-line" aria-hidden="true"></div>
 
-        <!-- Step 5 -->
-        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Review & Submit">
+        <!-- Step 5: Submit -->
+        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Submit">
           <div class="client-step-circle client-step-circle-5 is-upcoming">5</div>
-          <div class="client-step-text">
-            <div class="client-step-name">Review & Submit</div>
-            <div class="client-step-sub">Confirm & save</div>
-          </div>
+          <span class="client-step-name">Submit</span>
         </div>
 
       </div>
     </div>
 
-    <!-- RIGHT: Contextual Action Buttons -->
+    <!-- RIGHT: Unified Contextual Action Navigation Area -->
     <div class="client-header-actions" id="client_header_actions">
+      <!-- Step 1: Close (x) Button (Visible on Page 1 immediately before Next button) -->
+      <button type="button" class="btn client-top-close-btn client-nav-close" id="client_top_close_btn" title="Close and exit">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Close</span>
+      </button>
+
+      <!-- Steps 2-5: Back Button (Returns to previous step) -->
+      <button type="button" class="btn client-top-back-btn client-nav-back" id="client_top_back_btn" title="Back to previous step" style="display:none !important;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/>
+          <path d="m12 19-7-7 7-7"/>
+        </svg>
+        <span>Back</span>
+      </button>
+
       <!-- Steps 1-4: Next Page Button -->
       <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
         <span>Next Page</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/>
           <path d="m12 5 7 7-7 7"/>
         </svg>
       </button>
 
-      <!-- Step 5: Submit / Update Button -->
+      <!-- Step 5: Final Submit / Update Button -->
       @if ($page_event == 'EDIT')
         <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>Update Client</span>
         </button>
       @else
         <button type="button" class="btn client-top-submit-btn submitfrm" id="submitBtn" style="display:none !important;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>Create Client</span>

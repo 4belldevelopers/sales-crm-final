@@ -1452,30 +1452,6 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     max-width: 240px !important;
   }
 
-  .client-header-back-btn {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-    border-radius: 50% !important;
-    border: 1.5px solid #E2E8F0 !important;
-    background: #ffffff !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-    cursor: pointer !important;
-    color: #101A46 !important;
-    flex-shrink: 0 !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-    transition: all 0.15s ease !important;
-  }
-  .client-header-back-btn:hover {
-    background: #f8fafc !important;
-    border-color: #cbd5e1 !important;
-    color: #101A46 !important;
-  }
-
   .client-header-titles {
     min-width: 0 !important;
     flex: 1 1 auto !important;
@@ -1485,7 +1461,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-header-title {
-    font-size: 14.5px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #101A46 !important;
     margin: 0 0 1px 0 !important;
@@ -1500,7 +1476,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     margin: 0 !important;
     line-height: 1.25 !important;
     font-weight: 400 !important;
-    max-width: 195px !important;
+    max-width: 200px !important;
     white-space: normal !important;
   }
 
@@ -1525,7 +1501,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
@@ -1533,15 +1509,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-circle {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    min-height: 24px !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1553,45 +1529,40 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     color: #ffffff !important;
     border: none !important;
     font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25) !important;
   }
 
   .client-step-circle.is-active {
-    background: #FFD21F !important;
+    background: #ffd428 !important;
     color: #101A46 !important;
     border: none !important;
     font-weight: 700 !important;
-    box-shadow: 0 0 0 2.5px #fffdf0, 0 0 0 4px #FFD21F !important;
+    box-shadow: 0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428 !important;
   }
 
   .client-step-circle.is-upcoming {
     background: #f8fafc !important;
     color: #64748b !important;
-    border: 1.5px solid #e2e8f0 !important;
+    border: 1.5px solid #cbd5e1 !important;
     font-weight: 600 !important;
   }
 
-  .client-step-text {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    line-height: 1.15 !important;
-    flex-shrink: 0 !important;
+  .client-step-name {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    transition: color 0.15s ease !important;
   }
 
-  .client-step-name {
-    font-size: 10.5px !important;
+  .client-step-item.is-active .client-step-name {
     font-weight: 700 !important;
     color: #101A46 !important;
-    line-height: 1.15 !important;
-    white-space: nowrap !important;
   }
 
-  .client-step-sub {
-    font-size: 9px !important;
-    color: #5C6F9F !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    margin-top: 1px !important;
+  .client-step-item:hover .client-step-name {
+    color: #101A46 !important;
   }
 
   .client-step-line {
@@ -1599,15 +1570,45 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     height: 1.5px !important;
     min-width: 8px !important;
     background: #e2e8f0 !important;
-    margin: 0 4px !important;
+    margin: 0 5px !important;
     flex-shrink: 0 !important;
+    border-radius: 1px !important;
   }
 
   .client-header-actions {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
+    gap: 8px !important;
     flex: 0 0 auto !important;
+  }
+
+  .client-top-close-btn,
+  .client-top-back-btn {
+    background: #f8fafc !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    height: 36px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+    flex-shrink: 0 !important;
+    text-decoration: none !important;
+  }
+  .client-top-close-btn:hover,
+  .client-top-back-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
   }
 
   .client-top-next-btn,
@@ -1637,104 +1638,99 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     transform: translateY(-1px);
   }
 
-  /* Step 5 vs Steps 1-4 Action Visibility Rules */
-  #submitBtn, .submitfrm, .updatefrm {
-    display: none !important;
-  }
-  body.on-review-step #submitBtn,
-  body.on-review-step .submitfrm,
-  body.on-review-step .updatefrm,
-  [data-wizard-state="last"] #submitBtn,
-  [data-wizard-state="last"] .submitfrm,
-  [data-wizard-state="last"] .updatefrm {
+  /* Navigation button visibility rules per step */
+  body.on-step-1 #client_top_close_btn {
     display: inline-flex !important;
   }
-  body.on-review-step #client_top_next_btn,
-  body.on-review-step #continueButton,
-  body.on-review-step [data-wizard-type="action-next"],
-  [data-wizard-state="last"] #client_top_next_btn,
-  [data-wizard-state="last"] #continueButton,
-  [data-wizard-state="last"] [data-wizard-type="action-next"] {
+  body.on-step-1 #client_top_back_btn {
+    display: none !important;
+  }
+  body.on-step-1 #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-1 #submitBtn {
     display: none !important;
   }
 
-  /* Static Bottom Actions Row (Matches Reference media_1792307385461_c2bbe593.png) */
-  .client-bottom-actions-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 16px !important;
-    padding: 16px 0 24px 0 !important;
-    width: 100% !important;
+  body:not(.on-step-1):not(.on-step-5) #client_top_close_btn {
+    display: none !important;
   }
-  .client-cancel-btn {
-    background: transparent !important;
+  body:not(.on-step-1):not(.on-step-5) #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body:not(.on-step-1):not(.on-step-5) #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  body:not(.on-step-1):not(.on-step-5) #submitBtn {
+    display: none !important;
+  }
+
+  body.on-step-5 #client_top_close_btn {
+    display: none !important;
+  }
+  body.on-step-5 #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-5 #client_top_next_btn {
+    display: none !important;
+  }
+  body.on-step-5 #submitBtn {
+    display: inline-flex !important;
+  }
+
+  /* Completely remove footer action buttons & spacing across all 5 pages */
+  .client-bottom-actions-row,
+  .client-cancel-btn,
+  .client-draft-btn,
+  .client-wizard-sticky-footer {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
     border: none !important;
-    color: #475569 !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    padding: 6px 10px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    transition: color 0.15s ease !important;
-  }
-  .client-cancel-btn:hover {
-    color: #101A46 !important;
-  }
-  .client-draft-btn {
-    background: #ffffff !important;
-    border: 1.5px solid #2563EB !important;
-    color: #2563EB !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-  }
-  .client-draft-btn:hover {
-    background: #eff6ff !important;
-    border-color: #1d4ed8 !important;
-    color: #1d4ed8 !important;
+    overflow: hidden !important;
   }
 
-  /* Responsive Rules: 1366px (15.6-inch laptop), 1280px, 991px, 576px */
+  /* Responsive Rules: 1400px (15.6-inch laptop), 1200px, 991px, 576px */
   @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      max-width: 240px !important;
+      max-width: 220px !important;
     }
     .client-header-title {
-      font-size: 14px !important;
+      font-size: 13.5px !important;
     }
     .client-header-subtitle {
-      font-size: 10px !important;
-      max-width: 190px !important;
+      font-size: 9.5px !important;
+      max-width: 180px !important;
     }
     .client-step-circle {
-      width: 24px !important;
-      height: 24px !important;
-      min-width: 24px !important;
-      min-height: 24px !important;
-      font-size: 10.5px !important;
+      width: 20px !important;
+      height: 20px !important;
+      min-width: 20px !important;
+      min-height: 20px !important;
+      font-size: 10px !important;
     }
     .client-step-line {
-      width: 14px !important;
+      width: 12px !important;
       margin: 0 4px !important;
     }
     .client-step-item {
-      gap: 5px !important;
+      gap: 4px !important;
     }
     .client-step-name {
       font-size: 10.5px !important;
     }
-    .client-step-sub {
-      font-size: 9px !important;
+    .client-top-close-btn,
+    .client-top-back-btn {
+      height: 34px !important;
+      padding: 0 12px !important;
+      font-size: 11.5px !important;
+    }
+    .client-top-next-btn,
+    .client-top-submit-btn {
+      height: 34px !important;
+      padding: 0 14px !important;
+      font-size: 11.5px !important;
     }
     .client-branding-grid {
       grid-template-columns: 160px 130px minmax(0, 1fr) !important;
@@ -1743,35 +1739,39 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   @media (max-width: 1199.98px) {
-    .client-step-sub {
-      display: none !important;
+    .client-header-identity {
+      max-width: 180px !important;
     }
     .client-step-line {
-      width: 12px !important;
-      margin: 0 4px !important;
+      width: 10px !important;
+      margin: 0 3px !important;
+    }
+    .client-step-name {
+      font-size: 10px !important;
     }
   }
 
   @media (max-width: 991px) {
     .client-header-grid {
       flex-wrap: wrap !important;
-      gap: 12px !important;
+      gap: 10px !important;
     }
     .client-header-identity {
       max-width: 100% !important;
-      width: 100% !important;
-      justify-content: space-between !important;
+      width: auto !important;
+      flex: 1 1 auto !important;
+    }
+    .client-header-actions {
+      order: 2 !important;
+      margin-left: auto !important;
     }
     .client-header-stepper-col {
       width: 100% !important;
-      order: 2 !important;
+      order: 3 !important;
       overflow-x: auto !important;
-      padding-bottom: 4px !important;
+      padding-bottom: 2px !important;
       -webkit-overflow-scrolling: touch !important;
-    }
-    .client-header-actions {
-      order: 1 !important;
-      margin-left: auto !important;
+      justify-content: flex-start !important;
     }
     .client-information-layout,
     .client-description-layout,
@@ -1792,10 +1792,10 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   @media (max-width: 575.98px) {
     .client-top-nav-card {
-      padding: 10px 12px !important;
+      padding: 8px 10px !important;
     }
     .client-header-title {
-      font-size: 15px !important;
+      font-size: 13.5px !important;
     }
     .client-header-subtitle {
       display: none !important;
@@ -1806,22 +1806,26 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
       justify-content: flex-start !important;
     }
     .client-step-name {
-      display: none !important;
+      display: inline-block !important;
+      font-size: 10px !important;
+    }
+    .client-top-close-btn,
+    .client-top-back-btn {
+      padding: 0 10px !important;
+      font-size: 11px !important;
+      height: 32px !important;
+    }
+    .client-top-next-btn,
+    .client-top-submit-btn {
+      padding: 0 12px !important;
+      font-size: 11px !important;
+      height: 32px !important;
     }
     .client-branding-grid {
       grid-template-columns: 1fr !important;
     }
     .client-details-grid {
       grid-template-columns: 1fr !important;
-    }
-    .client-wizard-sticky-footer {
-      flex-direction: column !important;
-      gap: 12px !important;
-      padding: 12px 14px !important;
-    }
-    .client-action-left, .client-action-right {
-      width: 100% !important;
-      justify-content: space-between !important;
     }
   }
 
@@ -2790,22 +2794,6 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
         <!--end::Wizard-->
       </div>
       <!--Card-->
-
-      <!-- =========================================================================
-           BOTTOM STATIC ACTIONS ROW (Matches reference media_1792307385461_c2bbe593.png)
-           Non-floating, clean static row with Cancel and Save as Draft on the left
-           ========================================================================= -->
-      <div class="client-bottom-actions-row" id="client_bottom_actions_row">
-        <button type="button" class="btn client-cancel-btn client-nav-cancel" id="client_bottom_cancel_btn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          <span>Cancel</span>
-        </button>
-        <button type="button" class="btn client-draft-btn" id="client_bottom_save_draft_btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-          <span>Save as Draft</span>
-        </button>
-        <span class="client-draft-status-msg text-muted" id="client_draft_status_msg" style="font-size:11.5px; font-weight:500; margin-left:8px; display:none;"></span>
-      </div>
     </div>
     <!--end::Container-->
   </div>
@@ -5879,15 +5867,31 @@ $('.remove_address').click(function(){
       activeStep = (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1;
     }
 
-    // Step-conditional action navigation controls:
-    // Step 1: Hide Back button
-    // Steps 2-5: Show Back button
+    // Step-conditional body classes & action controls:
+    // Step 1: Show Close (x) button, hide Back button, show Next Page, hide Submit
+    // Steps 2-4: Hide Close button, show Back button, show Next Page, hide Submit
+    // Step 5: Hide Close button, show Back button, hide Next Page, show Submit
     if (activeStep <= 1) {
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
+      $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     } else if (activeStep < 5) {
       $('body').removeClass('on-step-1 on-review-step').addClass('on-step-' + activeStep);
+      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     } else {
       $('body').removeClass('on-step-1').addClass('on-step-5 on-review-step');
+      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
+      if (typeof populateReviewSummaries === 'function') {
+        populateReviewSummaries();
+      }
     }
 
     // Dynamic Top Header Subtitles matching workflow steps
@@ -5901,26 +5905,11 @@ $('.remove_address').click(function(){
     var currentSub = subtitles[activeStep] || subtitles[1];
     $('#client_header_subtitle').text(currentSub).attr('title', currentSub);
 
-    // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4:
-    if (activeStep >= 5) {
-      $('body').addClass('on-review-step');
-      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
-      if (typeof populateReviewSummaries === 'function') {
-        populateReviewSummaries();
-      }
-    } else {
-      $('body').removeClass('on-review-step');
-      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
-    }
-
-    // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
+    // Synchronize Top Stepper Indicators (Pixel-perfect compact design)
     $('#client_wizard_stepper .client-step-item').each(function () {
       var s = parseInt($(this).data('step'), 10);
       var $circle = $(this).find('.client-step-circle');
       var $title = $(this).find('.client-step-name');
-      var $sub = $(this).find('.client-step-sub');
       var $nextDivider = $(this).next('.client-step-line');
 
       if (s < activeStep) {
@@ -5929,33 +5918,30 @@ $('.remove_address').click(function(){
           'background': '#10b981',
           'color': '#ffffff',
           'border': 'none',
-          'box-shadow': '0 1px 3px rgba(16,185,129,0.3)'
-        }).html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
-        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+          'box-shadow': '0 1px 3px rgba(16,185,129,0.25)'
+        }).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+        $title.css({ 'color': '#0f172a', 'font-weight': '600' });
+        if ($nextDivider.length) $nextDivider.css('background', '#10b981');
       } else if (s === activeStep) {
         $(this).attr('aria-current', 'step');
         $circle.removeClass('is-completed is-upcoming').addClass('is-active').css({
           'background': '#ffd428',
-          'color': '#0a1647',
+          'color': '#0f172a',
           'border': 'none',
-          'box-shadow': '0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428'
+          'box-shadow': '0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428'
         }).text(s);
-        $title.css({ 'color': '#0a1647', 'font-weight': '800' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+        $title.css({ 'color': '#0f172a', 'font-weight': '700' });
+        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
       } else {
         $(this).attr('aria-current', 'false');
         $circle.removeClass('is-completed is-active').addClass('is-upcoming').css({
-          'background': '#ffffff',
-          'color': '#0a1647',
-          'border': '1.5px solid #fde047',
+          'background': '#f8fafc',
+          'color': '#64748b',
+          'border': '1.5px solid #cbd5e1',
           'box-shadow': 'none'
         }).text(s);
-        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+        $title.css({ 'color': '#64748b', 'font-weight': '500' });
+        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
       }
     });
 
@@ -6226,7 +6212,7 @@ $('.remove_address').click(function(){
       }
     });
 
-    // Intercept Top Close button clicks on Step 1 — exit wizard cleanly
+    // Intercept Top Close button clicks on Step 1 — exit wizard cleanly with unsaved changes prompt
     $(document).on('click', '#client_top_close_btn, .client-nav-close', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -6235,8 +6221,30 @@ $('.remove_address').click(function(){
       if (now - lastNavTime < 250) return false;
       lastNavTime = now;
 
-      if (window.history.length > 1) {
-        window.history.back();
+      var hasData = Boolean(
+        ($('#client_id').val() || '').trim() ||
+        ($('#website').val() || '').trim()
+      );
+
+      if (hasData && typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Leave without saving?',
+          text: 'You have unsaved changes. Are you sure you want to exit?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Exit',
+          cancelButtonText: 'Stay on Page',
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#e2e8f0',
+          customClass: {
+            confirmButton: 'btn btn-danger font-weight-bold',
+            cancelButton: 'btn btn-light font-weight-bold'
+          }
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            window.location.href = "{{ route('service_company.clients.index') }}";
+          }
+        });
       } else {
         window.location.href = "{{ route('service_company.clients.index') }}";
       }
@@ -6611,40 +6619,6 @@ $('.remove_address').click(function(){
     window.saveClientDraft = saveClientDraft;
     window.restoreClientDraft = restoreClientDraft;
     window.checkDraftPromptOnLoad = checkDraftPromptOnLoad;
-
-    // Save as Draft button click
-    $(document).on('click', '#client_bottom_save_draft_btn, .client-draft-btn', function (e) {
-      e.preventDefault();
-      saveClientDraft(false);
-    });
-
-    // Cancel button click with confirmation if form has data
-    $(document).on('click', '#client_bottom_cancel_btn, .client-cancel-btn', function (e) {
-      e.preventDefault();
-      var hasData = Boolean($('#client_id').val() || $('#website').val());
-      if (hasData && typeof Swal !== 'undefined') {
-        Swal.fire({
-          title: 'Leave without saving?',
-          text: 'You have unsaved changes. Are you sure you want to exit?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, Exit',
-          cancelButtonText: 'Stay on Page',
-          confirmButtonColor: '#ef4444',
-          cancelButtonColor: '#e2e8f0',
-          customClass: {
-            confirmButton: 'btn btn-danger font-weight-bold',
-            cancelButton: 'btn btn-light font-weight-bold'
-          }
-        }).then(function(res) {
-          if (res.isConfirmed) {
-            window.location.href = "{{ route('service_company.clients.index') }}";
-          }
-        });
-      } else {
-        window.location.href = "{{ route('service_company.clients.index') }}";
-      }
-    });
 
     // Remove Logo Button Handler
     $(document).on('click', '#client_preview_remove_btn', function (e) {
