@@ -254,11 +254,6 @@ export async function enrichCompany(domain) {
       data.provenance.name = 'SCHEMA_ORG_JSONLD';
       data.confidence.name = 'MEDIUM';
     }
-    if (s.description) {
-      data.description = s.description;
-      data.provenance.description = 'WEBSITE_META_DESCRIPTION';
-      data.confidence.description = 'MEDIUM';
-    }
     if (s.founded && !data.founded) {
       data.founded = s.founded;
       data.provenance.founded = 'SCHEMA_ORG_FOUNDING_DATE';
@@ -365,7 +360,40 @@ export async function enrichCompany(domain) {
     if (!data.instagram_url && w.instagram_url) data.instagram_url = w.instagram_url;
   }
 
-  // 4. Clean Fallbacks & Derivations
+  // 4. Multi-Source Rich Corporate Description Resolution
+  const candidateDescriptions = [];
+
+  if (siteResult.status === 'fulfilled' && siteResult.value?.descriptions) {
+    candidateDescriptions.push(...siteResult.value.descriptions);
+  }
+
+  if (wikiResult.status === 'fulfilled' && wikiResult.value?.description) {
+    const text = wikiResult.value.description;
+    candidateDescriptions.push({
+      source: 'WIKIPEDIA_ENCYCLOPEDIC_SUMMARY',
+      text: text,
+      priority: text.length > 150 ? 90 : 60,
+      len: text.length
+    });
+  }
+
+  if (candidateDescriptions.length > 0) {
+    candidateDescriptions.sort((a, b) => {
+      const score = (item) => {
+        let s = (item.priority || 50) * 10;
+        // Substantial descriptions between 150 and 1500 characters get highest score
+        if (item.len >= 150 && item.len <= 1500) s += 300;
+        else if (item.len > 1500) s += 100;
+        else if (item.len < 80) s -= 200; // Penalize ultra-short 5-10 word snippets
+        return s;
+      };
+      return score(b) - score(a);
+    });
+
+    data.description = candidateDescriptions[0].text;
+  }
+
+  // 5. Clean Fallbacks & Derivations
   if (!data.name) {
     const rawSlug = domain.split('.')[0];
     data.name = rawSlug.charAt(0).toUpperCase() + rawSlug.slice(1);
@@ -383,6 +411,8 @@ export async function enrichCompany(domain) {
   }
   if (!data.description) {
     data.description = `${data.name} is a leading organization specializing in ${data.industry}, providing scalable industry solutions.`;
+  } else if (data.description.length > 2000) {
+    data.description = data.description.substring(0, 1997).trim() + '...';
   }
   if (data.tags.length === 0) {
     data.tags = ['Software Development', 'Technology Services', 'Enterprise Platform'];
@@ -402,7 +432,7 @@ export async function enrichCompany(domain) {
 async function fetchWebsiteData(domain) {
   const result = {
     name: null,
-    description: null,
+    descriptions: [],
     founded: null,
     company_sizes: null,
     industry: null,
@@ -455,15 +485,59 @@ async function fetchWebsiteData(domain) {
   // 1. Unescape HTML and slashes for React/Next.js JSON blocks
   const unescapedHtml = combinedHtml.replace(/\\\//g, '/').replace(/\\"/g, '"');
 
+  // Helper to sanitize and normalize candidate descriptions
+  const cleanDescription = (str) => {
+    if (!str || typeof str !== 'string') return null;
+    let clean = str
+      .replace(/<[^>]+>/g, '') // strip HTML tags
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (clean.length > 2000) {
+      clean = clean.slice(0, 1997) + '...';
+    }
+    return clean.length >= 20 ? clean : null;
+  };
+
   // 2. Extract Head Meta Tags (Twitter site/creator & Meta description)
   const twMeta = unescapedHtml.match(/<meta\s+[^>]*name=["'](?:twitter:site|twitter:creator)["'][^>]*content=["']@?([a-zA-Z0-9_]{1,30})["']/i);
   if (twMeta && !SOCIAL_EXCLUDED.twitter.includes(twMeta[1].toLowerCase())) {
     result.twitter_url = `https://x.com/${twMeta[1]}`;
   }
 
-  const descMeta = unescapedHtml.match(/<meta\s+[^>]*name=["']description["'][^>]*content=["']([^"']{20,350})["']/i);
-  if (descMeta) {
-    result.description = descMeta[1].trim();
+  // OpenGraph Description (often 2-4 comprehensive sentences)
+  const ogDescMatch = unescapedHtml.match(/<meta\s+[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i)
+    || unescapedHtml.match(/<meta\s+[^>]*content=["']([^"']+)["'][^>]*property=["']og:description["']/i);
+  if (ogDescMatch) {
+    const desc = cleanDescription(ogDescMatch[1]);
+    if (desc) {
+      result.descriptions.push({
+        source: 'OG_DESCRIPTION',
+        text: desc,
+        priority: 70,
+        len: desc.length
+      });
+    }
+  }
+
+  // Standard Meta Description
+  const metaDescMatch = unescapedHtml.match(/<meta\s+[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
+    || unescapedHtml.match(/<meta\s+[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
+  if (metaDescMatch) {
+    const desc = cleanDescription(metaDescMatch[1]);
+    if (desc) {
+      result.descriptions.push({
+        source: 'META_DESCRIPTION',
+        text: desc,
+        priority: 60,
+        len: desc.length
+      });
+    }
   }
 
   // 3. Parse Schema.org JSON-LD
@@ -475,7 +549,17 @@ async function fetchWebsiteData(domain) {
       for (const item of items) {
         if (/Organization|Corporation|LocalBusiness|Company/i.test(item['@type'] || '')) {
           if (!result.name && (item.legalName || item.name)) result.name = item.legalName || item.name;
-          if (!result.description && item.description) result.description = item.description;
+          if (item.description) {
+            const desc = cleanDescription(item.description);
+            if (desc) {
+              result.descriptions.push({
+                source: 'SCHEMA_ORG_JSONLD',
+                text: desc,
+                priority: desc.length > 100 ? 95 : 75,
+                len: desc.length
+              });
+            }
+          }
           if (!result.tax_id && item.taxID) result.tax_id = item.taxID;
           if (!result.founded && item.foundingDate) {
             const fMatch = String(item.foundingDate).match(/\b(\d{4})\b/);
@@ -497,6 +581,20 @@ async function fetchWebsiteData(domain) {
       }
     } catch (e) {
       // Ignore JSON parse error on malformed blocks
+    }
+  }
+
+  // About page introductory paragraph (if substantial)
+  const aboutPMatch = unescapedHtml.match(/<p[^>]*>([A-Z][^<]{100,800})<\/p>/i);
+  if (aboutPMatch) {
+    const desc = cleanDescription(aboutPMatch[1]);
+    if (desc) {
+      result.descriptions.push({
+        source: 'ABOUT_PARAGRAPH',
+        text: desc,
+        priority: 65,
+        len: desc.length
+      });
     }
   }
 
@@ -641,7 +739,7 @@ async function fetchWikidata(domain) {
     const entityId = sJson.search?.[0]?.id;
     if (!entityId) return null;
 
-    const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&languages=en&format=json`;
+    const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=labels|descriptions|claims|sitelinks&sitefilter=enwiki&languages=en&format=json`;
     const eRes = await fetch(entityUrl, {
       headers: { 'User-Agent': 'JeroWorksATS/1.0 (contact@jero.works)' }
     });
@@ -654,6 +752,7 @@ async function fetchWikidata(domain) {
     const claims = entity.claims || {};
     const result = {
       name: entity.labels?.en?.value || null,
+      description: null,
       founded: null,
       company_sizes: null,
       industry: null,
@@ -664,6 +763,30 @@ async function fetchWikidata(domain) {
       facebook_url: null,
       instagram_url: null
     };
+
+    // Wikipedia Encyclopedic Article Summary
+    const enwikiTitle = entity.sitelinks?.enwiki?.title;
+    if (enwikiTitle) {
+      try {
+        const wCtrl = new AbortController();
+        const wTime = setTimeout(() => wCtrl.abort(), 2000);
+        const wRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(enwikiTitle)}`, {
+          signal: wCtrl.signal,
+          headers: { 'User-Agent': 'JeroWorksATS/1.0 (contact@jero.works)' }
+        });
+        clearTimeout(wTime);
+        if (wRes.ok) {
+          const wJson = await wRes.json();
+          if (wJson.extract && wJson.type !== 'disambiguation' && wJson.extract.length > 50) {
+            result.description = wJson.extract.trim();
+          }
+        }
+      } catch (err) {}
+    }
+
+    if (!result.description && entity.descriptions?.en?.value) {
+      result.description = entity.descriptions.en.value.trim();
+    }
 
     // P571: Inception Date
     if (claims.P571?.[0]?.mainsnak?.datavalue?.value?.time) {

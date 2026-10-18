@@ -35,7 +35,9 @@ async function runTests() {
     console.log(`  📌 [5] Company Type: ${data.company_type}`);
     console.log(`  📌 [6] Founded Year: ${data.founded}`);
     console.log(`  📌 [7] Careers URL: ${data.career_page_url}`);
-    console.log(`  📌 [8] Description: ${(data.description || '').slice(0, 80)}...`);
+    const descPreview = (data.description || '').length > 120 ? (data.description.slice(0, 120) + '...') : (data.description || 'None');
+    const wordCount = (data.description || '').trim() ? data.description.trim().split(/\s+/).length : 0;
+    console.log(`  📌 [8] Description (${data.description?.length || 0} chars, ${wordCount} words):\n       "${descPreview}"`);
     console.log(`  📌 [9] Tags: ${data.tags.join(', ')}`);
     console.log(`  📌 [10] City: ${data.city}`);
     console.log(`  📌 [11] Full Address: ${data.address}`);
