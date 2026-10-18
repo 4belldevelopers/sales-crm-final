@@ -4,46 +4,80 @@
     $currencySymbole = GeneralMethod::currencySymbole();
 
 @endphp
-<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/modules/fwd-resume/quill/quill.snow.css') }}">
+<script src="{{ asset('assets/modules/fwd-resume/quill/quill.min.js') }}"></script>
 <script>
-    if (CKEDITOR.env.ie && CKEDITOR.env.version < 9)
+    window.candidateEmailQuill = null;
 
-        CKEDITOR.tools.enableHtml5Elements(document);
-    CKEDITOR.config.height = 350;
-    CKEDITOR.config.width = 'auto';
+    window.getCandidateEmailBodyHtml = function() {
+        if (window.candidateEmailQuill && window.candidateEmailQuill.root) {
+            var html = window.candidateEmailQuill.root.innerHTML || '';
+            return (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+        }
+        return $('#editor1mass').val() || '';
+    };
 
-    var initSample = (function() {
-        var wysiwygareaAvailable = isWysiwygareaAvailable(),
-            isBBCodeBuiltIn = !!CKEDITOR.plugins.get('bbcode');
+    window.setCandidateEmailBodyHtml = function(html) {
+        var cleanHtml = (html === null || html === undefined) ? '' : String(html);
+        $('#editor1mass').val(cleanHtml);
+        if (window.candidateEmailQuill && window.candidateEmailQuill.root) {
+            window.candidateEmailQuill.root.innerHTML = cleanHtml;
+        }
+    };
 
-        return function() {
-            var editorElement = CKEDITOR.document.getById('editor1mass');
+    window.initCandidateEmailEditor = function() {
+        var quillContainer = document.getElementById('candidate_email_quill');
+        if (!quillContainer) return;
 
-            if (isBBCodeBuiltIn) {
-                editorElement.setHtml(
-                    'Hello world!\n\n' +
-                    'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
-                );
-            }
-            if (wysiwygareaAvailable) {
-                CKEDITOR.replace('editor1mass');
-            } else {
-                editorElement.setAttribute('contenteditable', 'true');
-                CKEDITOR.inline('editor1mass');
-            }
-        };
-
-        function isWysiwygareaAvailable() {
-            if (CKEDITOR.revision == ('%RE' + 'V%')) {
-                return true;
-            }
-            return !!CKEDITOR.plugins.get('wysiwygarea');
+        // If Quill instance already exists and container is still attached, don't recreate
+        if (window.candidateEmailQuill && window.candidateEmailQuill.root && quillContainer.contains(window.candidateEmailQuill.root)) {
+            return;
         }
 
-    })();
+        if (typeof Quill === 'undefined') {
+            setTimeout(window.initCandidateEmailEditor, 50);
+            return;
+        }
 
+        try {
+            var existingContent = $('#editor1mass').val() || '';
+            quillContainer.innerHTML = '';
+            window.candidateEmailQuill = new Quill('#candidate_email_quill', {
+                theme: 'snow',
+                placeholder: 'Compose email message...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link', 'clean']
+                    ]
+                }
+            });
 
-    initSample();
+            if (existingContent) {
+                window.candidateEmailQuill.root.innerHTML = existingContent;
+            }
+
+            window.candidateEmailQuill.on('text-change', function() {
+                var html = window.getCandidateEmailBodyHtml();
+                $('#editor1mass').val(html);
+            });
+        } catch(err) {
+            console.warn('[CandidateEmail] Quill init warning:', err);
+        }
+    };
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(window.initCandidateEmailEditor, 30);
+    } else {
+        document.addEventListener('DOMContentLoaded', window.initCandidateEmailEditor);
+    }
+    $(document).ready(function() {
+        setTimeout(window.initCandidateEmailEditor, 50);
+    });
 </script>
 
 <div class="main_container" id="main_container">
@@ -95,12 +129,41 @@
     .mm-addfrom { font-size: 12px; font-weight: 600; color: #9CA3AF; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
     .mm-addfrom a { color: #2563EB; text-decoration: none; font-weight: 600; }
     .mm-addfrom a:hover { text-decoration: underline; }
-    .mm-editor-wrap { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+    .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+    .mm-editor-wrap .ql-toolbar.ql-snow {
+      border: none !important;
+      border-bottom: 1px solid #E5E7EB !important;
+      background: #F8FAFC;
+      padding: 8px 12px;
+      font-family: 'Poppins', sans-serif;
+    }
+    .mm-editor-wrap .ql-container.ql-snow {
+      border: none !important;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #1E293B;
+      min-height: 220px;
+    }
+    .mm-editor-wrap .ql-editor {
+      min-height: 220px;
+      max-height: 380px;
+      overflow-y: auto;
+      line-height: 1.6;
+      padding: 12px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+    }
+    .mm-editor-wrap .ql-editor.ql-blank::before {
+      color: #94A3B8;
+      font-style: normal;
+      left: 14px;
+      right: 14px;
+    }
     .mm-row-body { align-items: flex-start; }
     .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
     .mm-add-email-btn:hover { color: #1d4ed8; }
     .mm-input-with-btn { padding-right: 110px; }
-    .mm-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; gap: 10px; flex-wrap: wrap; }
+    .mm-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; gap: 10px; flex-wrap: wrap; position: sticky; bottom: 0; z-index: 10; }
     .mm-footer-left { display: flex; align-items: center; gap: 8px; }
     .mm-footer-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .mm-btn-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; color: #374151; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
@@ -171,7 +234,7 @@
                     <span class="mm-chip">
                       <span class="mm-chip-av" style="background:{{ $avColor }};">{{ $initials }}</span>
                       <span class="mm-chip-text">{{ $temail }}</span>
-                      <button type="button" class="mm-chip-x" title="Readonly">×</button>
+                      <span class="badge badge-light-primary ms-1" style="font-size:10px;padding:2px 6px;">Primary</span>
                     </span>
                   @empty
                     <span style="font-size:12.5px;color:#9CA3AF;">No recipient</span>
@@ -251,7 +314,8 @@
           </div>
           <div class="mm-field-col">
             <div class="mm-editor-wrap">
-              <textarea id="editor1mass" name="editor1mass" rows="10">{{ @$template_body }}</textarea>
+              <div id="candidate_email_quill"></div>
+              <textarea id="editor1mass" name="editor1mass" class="d-none" rows="10">{{ @$template_body }}</textarea>
             </div>
           </div>
         </div>
@@ -260,7 +324,18 @@
 
       <div class="mm-footer">
         <div class="mm-footer-left">
-          <button type="button" class="mm-btn-cancel" onclick="(function(){var d=document.getElementById('kt_mass_mail_drawer')||document.getElementById('kt_mass_mail_drawer_aptk');if(d&&typeof KTDrawer!=='undefined'){var dr=KTDrawer.getInstance(d);if(dr)dr.hide();}})()">Cancel</button>
+          <button type="button" class="mm-btn-cancel" onclick="(function(){
+              if (typeof window.hideCandidateSendMailDrawer === 'function') {
+                  window.hideCandidateSendMailDrawer();
+                  return;
+              }
+              var d = document.getElementById('kt_send_mail_showdetail_drawer') || document.getElementById('kt_mass_mail_drawer') || document.getElementById('kt_mass_mail_drawer_aptk');
+              if (d && typeof KTDrawer !== 'undefined') {
+                  var dr = KTDrawer.getInstance(d);
+                  if (dr) dr.hide();
+              }
+              $('.sd-mail-overlay').remove();
+          })()">Cancel</button>
         </div>
         <div class="mm-footer-right">
           <button type="button" class="mm-btn-send" name="btnSubmitSendMail" id="btnSubmitSendMail" value="btnSubmitSendMail">
@@ -426,9 +501,6 @@
 <script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}<?php echo TM_VERSION; ?>"></script>
 {{-- <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script> --}}
 <script>
-    $('#ck-editor__editable_inline').html("testing");
-
-
     $('#templatemassmail').change(function() {
 
 
@@ -439,21 +511,20 @@
             url = url.replace(':id', id);
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             var token = "{{ csrf_token() }}";
-            var to_email = $('#phone').val();
-            var from_email = $('#f_phone').val();
-            var jobid = $('#jobid').val();
-            var mailtype = 4
+            var to_email = $('#to_email_mass_mail').val() || '';
+            var from_email = $('#from_email_mass_mail').val() || '';
+            var jobid = $('#jobid').val() || 0;
+            var mailtype = 4;
 
             var selectedApplicantListing = [];
             var jqueryarray = <?php echo json_encode($applicationData); ?>;
-            jqueryarray.map((mval, mid, marr) => {
-                selectedApplicantListing.push(mval.id);
-            });
+            if (jqueryarray && Array.isArray(jqueryarray)) {
+                jqueryarray.forEach(function(mval) {
+                    if (mval && mval.id) selectedApplicantListing.push(mval.id);
+                });
+            }
 
-            var jqueryarrayjobs = <?php echo json_encode($applicationData); ?>;
-
-            var jobID = jobid;//jqueryarrayjobs[0]['jobID'];
-
+            var jobID = jobid;
 
             $.ajax({
                 type: 'POST',
@@ -468,21 +539,17 @@
                     'mailtype': mailtype,
                     'jobID': jobID
                 },
-                beforeSend: function() {
-                    //$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-                },
                 success: function(response) {
-
-
-                    if (response.status == "success") {
-
-
-                        CKEDITOR.instances.editor1mass.setData(response.template_description);
-                        setTimeout(() => {
-                            $('#editor1mass').val(response.template_description);
-                            $('#subject_mass_mail').val(response.subject);
-                        }, 500);
-
+                    if (response && response.status == "success") {
+                        if (typeof window.setCandidateEmailBodyHtml === 'function') {
+                            window.setCandidateEmailBodyHtml(response.template_description || '');
+                        } else {
+                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) {
+                                CKEDITOR.instances.editor1mass.setData(response.template_description);
+                            }
+                            $('#editor1mass').val(response.template_description || '');
+                        }
+                        $('#subject_mass_mail').val(response.subject || '');
                     }
                 }
             });
@@ -517,6 +584,12 @@
                 return false;
             }
 
+            // Client-generated UUID Idempotency Key retained during retry
+            if (!$btn.data('idempotency-key')) {
+                $btn.data('idempotency-key', (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)));
+            }
+            var idempotencyKey = $btn.data('idempotency-key');
+
             isSendingEmail = true;
             $btn.data('sending', true);
             $btn.prop('disabled', true).addClass('disabled');
@@ -535,7 +608,7 @@
             var token = "{{ csrf_token() }}";
 
             var jqueryarray = <?php echo json_encode($applicationData); ?>;
-            var sid = jqueryarray[0]['id'];
+            var sid = (jqueryarray && jqueryarray.length > 0) ? jqueryarray[0]['id'] : ($('#applicationDataId').val() || 0);
             var arr = [sid];
 
             var template = $('#templatemassmail').val();
@@ -544,19 +617,41 @@
             var cc_email = $('#sendmail_panel').val();
             var subject = $('#subject_mass_mail').val();
             var jobid = $('#jobid').val();
-            var applicationDataId = $('#applicationDataId').val();
+            var applicationDataId = $('#applicationDataId').val() || sid;
             var attached_cv = 0;
-            var editor1mass = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) ? CKEDITOR.instances.editor1mass.getData() : $('#editor1mass').val();
+            var editor1mass = (typeof window.getCandidateEmailBodyHtml === 'function')
+                ? window.getCandidateEmailBodyHtml()
+                : ((typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) ? CKEDITOR.instances.editor1mass.getData() : ($('#editor1mass').val() || ''));
+
+            if (!subject || !subject.trim()) {
+                Swal.fire("Warning", "Please enter an email subject.", "warning");
+                isSendingEmail = false;
+                $btn.data('sending', false);
+                $btn.prop('disabled', false).removeClass('disabled');
+                return false;
+            }
 
             $('.indicator-label', $btn).hide();
             $('.indicator-progress', $btn).show();
 
+            function closeDrawerTargeted() {
+                if (typeof window.hideCandidateSendMailDrawer === 'function') {
+                    window.hideCandidateSendMailDrawer();
+                } else {
+                    $('#kt_send_mail_showdetail_close').trigger('click');
+                }
+            }
+
             $.ajax({
                 type: 'POST',
                 url: url,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': token,
                     '_method': 'POST',
+                    'idempotency_key': idempotencyKey,
                     'template': template,
                     'from_email': from_email,
                     'to_email': to_email,
@@ -570,20 +665,21 @@
                 },
                 success: function(response) {
                     if (response.status == 'coinCheck') {
-                        Swal.fire("Failed", ` ${response.message}`, "warning").then(
-                            function() {
-                                $(".btn-active-light-danger").click();
-                            });
+                        Swal.fire("Failed", ` ${response.message}`, "warning").then(function() {
+                            closeDrawerTargeted();
+                        });
                         return false;
                     }
 
                     if (response.status == "success") {
+                        $btn.removeData('idempotency-key');
                         swalWithBootstrapButtons.fire(
                             'Success!',
-                            'Email has been sent.',
+                            'Email has been queued and sent.',
                             'success'
-                        );
-                        $(".btn-active-light-danger").click();
+                        ).then(function() {
+                            closeDrawerTargeted();
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
@@ -625,45 +721,30 @@
     });
 
     function AddEventSend(name, email) {
-
-        var to_email = $('#sendmail_panel').val();
-        if (to_email != '') {
-            var includeStr = to_email.includes(email);
-            if (includeStr === false) {
-                var assignNewEmail = to_email + ' , ' + email;
-                $('#sendmail_panel').val(assignNewEmail);
-
+        var cleanEmail = (email || '').trim();
+        if (!cleanEmail) return;
+        var to_email = ($('#sendmail_panel').val() || '').trim();
+        if (to_email !== '') {
+            var emailArr = to_email.split(',').map(function(e){ return e.trim(); }).filter(Boolean);
+            if (!emailArr.includes(cleanEmail)) {
+                emailArr.push(cleanEmail);
+                $('#sendmail_panel').val(emailArr.join(', '));
             }
         } else {
-            $('#sendmail_panel').val(email);
-
+            $('#sendmail_panel').val(cleanEmail);
         }
-
-
     }
 
     function DeleteEventTo(contact_person_name, email) {
-
-        var team_hiring_manager_email = '';
-        var tempEmail = [];
-        var to_email = $('#sendmail_panel').val();
-
-        if (to_email != '') {
-
-            var emailArr = to_email.split(',');
-            for (var inc = 0; inc < emailArr.length; inc++) {
-                if (email.trim() != emailArr[inc].trim()) {
-                    tempEmail.push(emailArr[inc]);
-
-                }
-            }
-            team_hiring_manager_email = tempEmail.toString();
-
-
+        var cleanEmail = (email || '').trim().toLowerCase();
+        var to_email = ($('#sendmail_panel').val() || '').trim();
+        if (to_email !== '') {
+            var emailArr = to_email.split(',').map(function(e){ return e.trim(); }).filter(Boolean);
+            var filtered = emailArr.filter(function(e) {
+                return e.toLowerCase() !== cleanEmail;
+            });
+            $('#sendmail_panel').val(filtered.join(', '));
         }
-
-        $('#sendmail_panel').val(team_hiring_manager_email);
-
     }
 </script>
 <script>
