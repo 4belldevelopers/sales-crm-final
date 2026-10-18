@@ -780,7 +780,7 @@ function renderData(d) {
     if (d.sources_used.gleif) pills += `<span class="source-pill"><i class="la la-balance-scale"></i> GLEIF Registry</span>`;
     if (d.sources_used.wikidata) pills += `<span class="source-pill"><i class="la la-database"></i> Wikidata API</span>`;
     if (d.sources_used.crawled_pages) pills += `<span class="source-pill"><i class="la la-sitemap"></i> Sub-page Crawl (${d.sources_used.crawled_pages.length})</span>`;
-    if (d.sources_used.logo_cdn) pills += `<span class="source-pill"><i class="la la-image"></i> Clearbit CDN</span>`;
+    if (d.sources_used.logo_cdn) pills += `<span class="source-pill"><i class="la la-image"></i> Google Favicon CDN</span>`;
     sourcesContainer.innerHTML = pills || '<span style="color:#94a3b8;">None</span>';
   }
 
