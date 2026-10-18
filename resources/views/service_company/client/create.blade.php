@@ -4791,14 +4791,13 @@ $('.remove_address').click(function(){
       return;
     }
 
+    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || 'http://127.0.0.1:8787';
+    var targetUrl = workerEndpoint.replace(/\/+$/, '') + '/?domain=' + encodeURIComponent(cleanDomain);
+
     $.ajax({
-      url: "{{ route('service_company.clients.fetchCompanyIntelligence') }}",
-      type: "POST",
-      headers: {
-        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-        'Accept': 'application/json'
-      },
-      data: { website: website },
+      url: targetUrl,
+      type: "GET",
+      dataType: "json",
       timeout: 15000,
       success: function (data) {
         $fetchBtn.prop('disabled', false).html(originalBtnHtml);
