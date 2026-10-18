@@ -1621,8 +1621,19 @@
             var sub = rawSubject
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
+                .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[COMPANY_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_NAME\}\}/gi, companyName)
+                .replace(/\[CLIENT_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
+                .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle);
             $('#test_subject').val(sub);
 
@@ -1632,11 +1643,23 @@
 
             var body = rawBody
                 .replace(/\[\{HR_NAME\}\]/gi, recipientName)
+                .replace(/\{\{HR_NAME\}\}/gi, recipientName)
                 .replace(/\[\{RECIPIENT_NAME\}\]/gi, recipientName)
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
+                .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[COMPANY_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_NAME\}\}/gi, companyName)
+                .replace(/\[CLIENT_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
+                .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle)
                 .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
                 .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
@@ -1644,7 +1667,8 @@
                 .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, candidateSummaryHtml)
                 .replace(/\[\{MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
                 .replace(/\[MATRIX_TABLE\]/gi, candidateSummaryHtml)
-                .replace(/\[\{DATE\}\]/gi, dateStr);
+                .replace(/\[\{DATE\}\]/gi, dateStr)
+                .replace(/\{\{DATE\}\}/gi, dateStr);
 
             self.setEditorHtml(body, function () {
                 self.syncFirstRecipientSalutation();

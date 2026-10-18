@@ -540,10 +540,15 @@
                     $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
                     $jLoc = !empty($location) ? $location : '';
 
-                    $displayName = str_replace(
-                      ['[{COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{JOB_LOCATION}]', '[{JOB_TITLE}]'],
-                      [$cName, $clName, $jLoc, $jTitle],
-                      $tdata->display_name ?? ''
+                    $displayName = \App\Helper\GeneralMethod::replaceTemplateVariables(
+                      $tdata->display_name ?? '',
+                      [
+                        'company_name' => $cName,
+                        'client_name' => $clName,
+                        'job_location' => $jLoc,
+                        'work_location' => $jLoc,
+                        'job_title' => $jTitle,
+                      ]
                     );
                   @endphp
                   <option value="{{ $tId }}">{{ $displayName }}</option>

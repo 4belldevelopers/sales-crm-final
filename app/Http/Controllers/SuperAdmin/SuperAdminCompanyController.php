@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Enums\BenchSubmissionState;
+use App\Enums\ClaimCapacity;
+use App\Enums\MarketModState;
+use App\Enums\MarketPubState;
 use App\Helper\Files;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
@@ -26,10 +30,6 @@ use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
-use App\Enums\BenchSubmissionState;
-use App\Enums\ClaimCapacity;
-use App\Enums\MarketModState;
-use App\Enums\MarketPubState;
 use App\Services\AgencyCommercialTermsService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
@@ -4697,7 +4697,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     return (object) $hit['_source'];
                 });
         } catch (\Exception $e) {
-            \Log::error('ES search error in emailThemes: ' . $e->getMessage());
+            \Log::error('ES search error in emailThemes: '.$e->getMessage());
         }
 
         // Resilient fallback to MySQL if ES empty or failed
@@ -4753,11 +4753,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $response = $this->elasticService->getClient()->search($params);
                 $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
             } catch (\Exception $e) {
-                \Log::error('ES search error in emailThemesupdate: ' . $e->getMessage());
+                \Log::error('ES search error in emailThemesupdate: '.$e->getMessage());
             }
 
             // Resilient fallback to MySQL
-            if (!$template) {
+            if (! $template) {
                 $template = DB::table('th_email_template')->where('e_temp_id', (int) $Id)->first();
             }
         }
@@ -4811,7 +4811,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     ],
                 ]);
             } catch (\Exception $e) {
-                \Log::error('ES insert error: ' . $e->getMessage());
+                \Log::error('ES insert error: '.$e->getMessage());
             }
 
         } else {
@@ -4851,7 +4851,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     ],
                 ]);
             } catch (\Exception $e) {
-                \Log::error('ES update error: ' . $e->getMessage());
+                \Log::error('ES update error: '.$e->getMessage());
             }
 
         }
@@ -4868,7 +4868,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $id = (int) $request->id;
         $status = (int) $request->status;
 
-        if (!$id) {
+        if (! $id) {
             return Reply::error('Invalid template ID.');
         }
 
@@ -4892,7 +4892,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ],
             ]);
         } catch (\Exception $e) {
-            \Log::error('ES toggle status error: ' . $e->getMessage());
+            \Log::error('ES toggle status error: '.$e->getMessage());
         }
 
         return Reply::successWithData('Template status updated successfully.', [
@@ -6377,21 +6377,28 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         if ((int) $request->mailtype == 1) {
             $companyDetails = Company::join('users_profile', 'users_profile.company_id', 'companies.id')->select('users_profile.designation', 'companies.company_name')
                 ->where('users_profile.user_id', auth()->user()->id)->where('users_profile.company_id', auth()->user()->company_id)->first();
-            // dd($companyDetails->designation);
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
+            $compName = $companyDetails->company_name ?? ($company_name->company_name ?? 'Our Company');
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
 
-            //	dd($template_description);
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{POSITION}]'], [$companyDetails->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $companyDetails->designation], $template_description);
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{HR_PHONE}]', '{{HR_PHONE}}', '[{HR_NAME}]', '{{HR_NAME}}', '[{HR_EMAIL}]', '{{HR_EMAIL}}', '[{POSITION}]', '{{POSITION}}'],
+                [$compName, $compName, auth()->user()->mobile, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, auth()->user()->email, $companyDetails->designation ?? 'Recruitment Team', $companyDetails->designation ?? 'Recruitment Team'],
+                $template_description
+            );
         }
         if ((int) $request->mailtype == 2) {
-            // dd($company_name->company_name, auth()->user()->phone, auth()->user()->name, auth()->user()->email);
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
-            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect To Wahtsapp</a>';
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]'], ['aaaaaa', auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink], $template_description);
+            $compName = $company_name->company_name ?? 'Our Company';
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{HR_PHONE}]', '{{HR_PHONE}}', '[{HR_NAME}]', '{{HR_NAME}}', '[{HR_EMAIL}]', '{{HR_EMAIL}}', '[{WHAT_LINK}]', '{{WHAT_LINK}}'],
+                [$compName, $compName, auth()->user()->mobile, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, auth()->user()->email, $whatlink, $whatlink],
+                $template_description
+            );
         }
         if ((int) $request->mailtype == 3) {
-
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
+            $compName = $company_name->company_name ?? 'Our Company';
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
         }
         if ((int) $request->mailtype == 4) {
 
@@ -6408,33 +6415,82 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             if (@$country_id > 0) {
                 $country_name = GeneralMethod::getCountryName($country_id);
                 foreach ($country_name as $cval) {
-                    $country_name = ucwords($cval['sortname']);
+                    $country_name = ucwords($cval['sortname'] ?? '');
                 }
             }
 
-            $city = substr(@$client_loc->city, 0, 6);
+            $city = substr(@$client_loc->city ?? '', 0, 6);
             if (@$client_loc->country_id == 101) {
-                $city = substr(@$client_loc->city_name, 0, 6);
+                $city = substr(@$client_loc->city_name ?? '', 0, 6);
             }
             $jobs = Job::withoutGlobalScopes()->find($jobid);
 
-            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-
-            $location = $city.' | '.$country_name;
-
-            // dd($templateData->template_subject);
-            if ($templateData->tempForInterview == 1) {
-                $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]'], [$companyOrClientName->company, $jobs->title, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 2) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]'], [$companyOrClientName->client, $jobs->title, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 3) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]', '[{JOB_LOCATION}]'], [$companyOrClientName->client, $companyOrClientName->company, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 4) {
-                //  Documents Required | [{COMPANY_NAME}]
-                $subject = str_replace(['[{COMPANY_NAME}]'], [$companyOrClientName->company], $templateData->template_subject);
+            $companyOrClientName = null;
+            if ($jobs && ! empty($jobs->client_id)) {
+                $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+            }
+            if (! $companyOrClientName) {
+                $curComp = auth()->user()->company ?? DB::table('companies')->where('id', auth()->user()->company_id)->first();
+                $companyOrClientName = (object) [
+                    'company' => $curComp->company_name ?? 'Our Company',
+                    'client' => '',
+                    'company_website' => $curComp->website ?? '',
+                    'client_website' => '',
+                    'company_description' => $curComp->description ?? '',
+                    'client_description' => '',
+                    'company_size' => $curComp->company_size ?? '50-200',
+                ];
             }
 
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]'], [$companyOrClientName->company, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $companyOrClientName->client, $jobs->title, $location, $companyOrClientName->client_website, $jobs->job_description, $companyOrClientName->company_website, $companyOrClientName->company_description, $companyOrClientName->client_description, $companyOrClientName->company_size, $applicationData[0]->full_name], $template_description);
+            $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName = $companyOrClientName->client ?: $compName;
+            $location = trim($city.($country_name ? ' | '.$country_name : ''));
+
+            $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
+            $candName = ! empty($firstApp->full_name) ? ucwords(strtolower($firstApp->full_name)) : 'Candidate';
+
+            $interview_ques = '';
+            if ($jobid > 0) {
+                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
+                if ($interview_questions->count() > 0) {
+                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3><ol>';
+                    foreach ($interview_questions as $row) {
+                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                    }
+                    $interview_ques .= '</ol><hr />';
+                }
+            }
+
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+
+            $templateContext = [
+                'company_name' => $compName,
+                'client_name' => $cliName,
+                'job_title' => $jobs->title ?? 'Candidate Application',
+                'job_location' => $location,
+                'work_location' => $location,
+                'candidate_name' => $candName,
+                'candidate_email' => $firstApp->email ?? '',
+                'candidate_phone' => $firstApp->phone ?? '',
+                'job_description' => $jobs->job_description ?? '',
+                'work_shift' => $jobs->work_shifts ?? '',
+                'hr_name' => auth()->user()->name,
+                'hr_email' => auth()->user()->email,
+                'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+                'what_link' => $whatlink,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'company_address' => $client_loc->address ?? '',
+                'no_of_emp' => $companyOrClientName->company_size ?? '',
+                'interview_questions' => $interview_ques,
+                'current_date' => date('d M Y'),
+            ];
+
+            // Universal Authoritative Substitution (Resolves [{TOKEN}], {{TOKEN}}, [TOKEN])
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
 
         }
 
@@ -11653,7 +11709,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 // Multi-Tenant Atomic Cache Invalidation
                 Cache::forget("company_jobs_{$rowdata->company_id}");
                 Cache::forget("job_details_{$jobId}");
-                Cache::forget("marketplace_public_jobs");
+                Cache::forget('marketplace_public_jobs');
 
                 // Legacy mail permission & notification
                 $checkMailPermision = GeneralMethod::mailPermission(28);
@@ -11711,7 +11767,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
                     Cache::forget("company_jobs_{$compJob->company_id}");
                     Cache::forget("job_details_{$jobId}");
-                    Cache::forget("marketplace_public_jobs");
+                    Cache::forget('marketplace_public_jobs');
                 }
             }
 
@@ -12150,7 +12206,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function boostkeywordadd(Request $request)
     {
-        $boostkeywords = DB::table('boostkeywords')->where('company_id',$request->keyword_compant_id)->delete();
+        $boostkeywords = DB::table('boostkeywords')->where('company_id', $request->keyword_compant_id)->delete();
         $tags = request('tags');
         $tags_key = json_decode($tags, true);
         if (\request('tags') != '') {
