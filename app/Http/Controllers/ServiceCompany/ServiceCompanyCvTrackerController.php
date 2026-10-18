@@ -5979,6 +5979,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $this->location = ($location) ? $location : '';
 
+        // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
+        // Hide Template 2, Template 3, and Template 5 from available templates
+        $hasClient = (! empty($this->clientTemp) && (int) $this->selfCompany !== 1);
+        if (! $hasClient && ! empty($this->templateData)) {
+            $this->templateData = $this->templateData->filter(function ($tdata) {
+                $tId = (int) ($tdata->e_temp_id ?? ($tdata->id ?? 0));
+                $rawName = $tdata->display_name ?? ($tdata->template_name ?? '');
+                $rawSubj = $tdata->template_subject ?? '';
+                $isClientOnlyTemplate = in_array($tId, [9, 10, 16], true)
+                    || preg_match('/\[TEMPLATE-[235]\]/i', $rawName)
+                    || preg_match('/\[TEMPLATE-[235]\]/i', $rawSubj);
+
+                return ! $isClientOnlyTemplate;
+            })->values();
+        }
+
         $fingerprint = md5(json_encode([
             'job_id' => $targetJobId,
             'cand_ids' => $this->arr,
@@ -6383,7 +6399,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $applicationDataCount = count($applicationData);
 
-        $template = (int) $request->template;
+        $template = (int) ($request->template ?: ($request->id ?: 0));
         $templateData = null;
 
         try {
@@ -7039,7 +7055,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $email = $parseFirstEmail($request->from_email) ?: (auth()->user()->email ?? 'notify@jeroworks.com');
             $to_email = $parseFirstEmail($request->to_email) ?: 'candidate@jero.works';
 
-            $jobid = (int) ($request->jobID ?? 0);
+            $jobid = (int) ($request->jobID ?? ($request->jobid ?? 0));
             $job_application_id = 0;
             if (! empty($selectedApplicantListing) && is_array($selectedApplicantListing)) {
                 $job_application_id = (int) ($selectedApplicantListing[0] ?? 0);
@@ -7103,6 +7119,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cliName = $companyOrClientName->client ?: '';
             $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
             $jobTitle = $jobs->title ?? 'Candidate Application';
+
+            // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
+            // Template 2, Template 3, and Template 5 cannot be used.
+            $rawTplName = $templateData->display_name ?? ($templateData->template_name ?? '');
+            $rawTplSubj = $templateData->template_subject ?? '';
+            $isClientOnlyTemplate = in_array((int) ($templateData->e_temp_id ?? 0), [9, 10, 16], true)
+                || preg_match('/\[TEMPLATE-[235]\]/i', $rawTplName)
+                || preg_match('/\[TEMPLATE-[235]\]/i', $rawTplSubj);
+
+            if ($isSelf && $isClientOnlyTemplate) {
+                return Reply::error('This template is only available for client positions. For internal organization positions, please select Template 1, 4, or 6.');
+            }
 
             $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
             $candName = ! empty($firstApp->full_name) ? ucwords(strtolower($firstApp->full_name)) : 'Candidate';
