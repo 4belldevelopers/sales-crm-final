@@ -482,43 +482,51 @@
     flex-shrink: 0;
   }
   .client-addr-header-title {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
-    color: #0f172a;
+    color: #101A46;
     margin: 0 0 2px 0;
     line-height: 1.25;
   }
   .client-addr-header-sub {
-    font-size: 13px;
-    color: #64748b;
+    font-size: 12px;
+    color: #5C6F9F;
     margin: 0;
   }
   .client-addr-info-banner {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    padding: 11px 16px;
+    background: #eff7ff;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 9px 14px;
     margin-top: 14px;
     color: #1e40af;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
   }
   .client-addr-info-icon {
-    color: #2563eb;
+    color: #3b82f6;
     flex-shrink: 0;
   }
 
   /* Main White Cards */
   .client-addr-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1.5px solid #F6DF83 !important;
     border-radius: 12px;
     padding: 22px 24px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+  .client-branch-card {
+    background: #ffffff;
+    border: 1.5px solid #F6DF83 !important;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   }
   .client-addr-card-head {
     display: flex;

@@ -1411,55 +1411,64 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     margin-top: 0 !important;
   }
 
-  .client-header-grid {
-    display: grid !important;
-    grid-template-columns: 200px 1fr 240px !important;
-    align-items: center !important;
+  /* =========================================================================
+     TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR CSS (Pixel-matched to reference)
+     ========================================================================= */
+  .client-top-nav-card {
+    background: #ffffff !important;
+    border: 1.5px solid #F6DF83 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    padding: 12px 20px !important;
+    margin-bottom: 16px !important;
+    box-sizing: border-box !important;
     width: 100% !important;
-    height: 100% !important;
-    gap: 12px !important;
+  }
+
+  .client-header-grid {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 16px !important;
     box-sizing: border-box !important;
   }
 
   .client-header-identity {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
+    gap: 12px !important;
+    flex: 0 0 auto !important;
+    max-width: 380px !important;
   }
 
   .client-header-back-btn {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
     border-radius: 50% !important;
-    border: 1.5px solid #fde047 !important;
+    border: 1.5px solid #E2E8F0 !important;
     background: #ffffff !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
     cursor: pointer !important;
-    color: #0a1647 !important;
+    color: #101A46 !important;
     flex-shrink: 0 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     transition: all 0.15s ease !important;
   }
   .client-header-back-btn:hover {
-    background: #fef08a !important;
-    border-color: #ffd428 !important;
-    color: #0a1647 !important;
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #101A46 !important;
   }
 
   .client-header-titles {
     min-width: 0 !important;
     flex: 1 1 auto !important;
-    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
@@ -1467,31 +1476,28 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .client-header-title {
     font-size: 17px !important;
-    font-weight: 800 !important;
-    color: #0a1647 !important;
+    font-weight: 700 !important;
+    color: #101A46 !important;
     margin: 0 0 2px 0 !important;
     line-height: 1.2 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
   }
 
   .client-header-subtitle {
-    font-size: 11px !important;
-    color: #5b6b8b !important;
+    font-size: 11.5px !important;
+    color: #5C6F9F !important;
     margin: 0 !important;
     line-height: 1.25 !important;
-    font-weight: 500 !important;
+    font-weight: 400 !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
   }
 
   .client-header-stepper-col {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;
   }
@@ -1501,13 +1507,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    min-width: 0 !important;
+    max-width: 720px !important;
+    width: 100% !important;
   }
 
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
@@ -1534,22 +1541,21 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     background: #10b981 !important;
     color: #ffffff !important;
     border: none !important;
-    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3) !important;
+    font-weight: 700 !important;
   }
 
   .client-step-circle.is-active {
-    background: #ffd428 !important;
-    color: #0a1647 !important;
+    background: #FFD21F !important;
+    color: #101A46 !important;
     border: none !important;
-    font-weight: 800 !important;
-    box-shadow: 0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428 !important;
+    font-weight: 700 !important;
   }
 
   .client-step-circle.is-upcoming {
     background: #ffffff !important;
-    color: #0a1647 !important;
-    border: 1.5px solid #fde047 !important;
-    box-shadow: none !important;
+    color: #101A46 !important;
+    border: 1.5px solid #F6DF83 !important;
+    font-weight: 600 !important;
   }
 
   .client-step-text {
@@ -1559,78 +1565,47 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-name {
-    font-size: 11px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
-    color: #0a1647 !important;
+    color: #101A46 !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
   }
 
   .client-step-sub {
-    font-size: 9.5px !important;
-    color: #5b6b8b !important;
+    font-size: 10.5px !important;
+    color: #5C6F9F !important;
     line-height: 1.1 !important;
     white-space: nowrap !important;
   }
 
   .client-step-line {
-    width: 20px !important;
+    width: 24px !important;
     height: 2px !important;
     min-width: 12px !important;
-    background: #ffd428 !important;
-    margin: 0 6px !important;
+    background: #F6DF83 !important;
+    margin: 0 8px !important;
     flex-shrink: 0 !important;
   }
 
   .client-header-actions {
-    width: 240px !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 8px !important;
-    flex-shrink: 0 !important;
+    flex: 0 0 auto !important;
   }
 
-  .client-top-secondary-btn {
-    background: #ffffff !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #0a1647 !important;
+  .client-top-next-btn,
+  .client-top-submit-btn {
+    background: #FFD21F !important;
+    border: none !important;
+    color: #101A46 !important;
     font-weight: 700 !important;
     font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 16px !important;
+    height: 40px !important;
+    padding: 0 20px !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.15s ease !important;
-    line-height: 1 !important;
-    flex-shrink: 0 !important;
-    text-decoration: none !important;
-  }
-  .client-top-secondary-btn:hover {
-    background: #f8fafc !important;
-    border-color: #94a3b8 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
-  }
-
-  .client-top-next-btn {
-    background: #ffd428 !important;
-    border: none !important;
-    color: #0a1647 !important;
-    font-weight: 800 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
+    box-shadow: 0 1px 3px rgba(255, 210, 31, 0.4) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1640,71 +1615,10 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     transition: all 0.15s ease !important;
     flex-shrink: 0 !important;
   }
-  .client-top-next-btn:hover {
-    background: #f5c400 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
-  }
-
-  .client-top-submit-btn {
-    background: #ffd428 !important;
-    border: none !important;
-    color: #0a1647 !important;
-    font-weight: 800 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.15s ease !important;
-    flex-shrink: 0 !important;
-  }
+  .client-top-next-btn:hover,
   .client-top-submit-btn:hover {
     background: #f5c400 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
-  }
-
-  /* Wizard Navigation Button Visibility in Header Actions */
-  /* Step 1: Show Close, Hide Back */
-  #client_top_close_btn {
-    display: inline-flex !important;
-  }
-  #client_top_back_btn {
-    display: none !important;
-  }
-
-  /* Steps 2-5: Show Back, Hide Close */
-  body.on-step-2 #client_top_close_btn,
-  body.on-step-3 #client_top_close_btn,
-  body.on-step-4 #client_top_close_btn,
-  body.on-step-5 #client_top_close_btn,
-  body.on-review-step #client_top_close_btn,
-  [data-wizard-state="between"] #client_top_close_btn,
-  [data-wizard-state="last"] #client_top_close_btn {
-    display: none !important;
-  }
-
-  body.on-step-2 #client_top_back_btn,
-  body.on-step-3 #client_top_back_btn,
-  body.on-step-4 #client_top_back_btn,
-  body.on-step-5 #client_top_back_btn,
-  body.on-review-step #client_top_back_btn,
-  [data-wizard-state="between"] #client_top_back_btn,
-  [data-wizard-state="last"] #client_top_back_btn {
-    display: inline-flex !important;
-  }
-
-  body.on-step-1 #client_top_close_btn {
-    display: inline-flex !important;
-  }
-  body.on-step-1 #client_top_back_btn {
-    display: none !important;
+    box-shadow: 0 2px 6px rgba(255, 210, 31, 0.5) !important;
   }
 
   /* Step 5 vs Steps 1-4 Action Visibility Rules */
@@ -1728,72 +1642,203 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: none !important;
   }
 
-  /* Responsive Behavior: 1366px (15.6-inch), 1200px, 991px */
-  @media (max-width: 1399.98px) and (min-width: 992px) {
-    .client-header-grid {
-      grid-template-columns: 185px 1fr 235px !important;
-      gap: 8px !important;
-    }
+  /* ===== Bottom Docked Action Navigation Bar ===== */
+  .client-wizard-sticky-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 12px 20px;
+    margin-top: 20px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0 0 12px 12px;
+  }
+  .client-action-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .client-action-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .client-cancel-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease !important;
+  }
+  .client-cancel-btn:hover {
+    color: #101A46 !important;
+  }
+  .client-draft-btn {
+    background: #ffffff !important;
+    border: 1.5px solid #2563EB !important;
+    color: #2563EB !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-draft-btn:hover {
+    background: #eff6ff !important;
+    border-color: #1d4ed8 !important;
+    color: #1d4ed8 !important;
+  }
+  .client-bottom-back-btn {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #101A46 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+  }
+  .client-bottom-next-btn,
+  .client-bottom-submit-btn {
+    background: #FFD21F !important;
+    border: none !important;
+    color: #101A46 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+  }
+
+  /* Responsive Rules: 1366px (15.6-inch laptop), 1280px, 991px, 576px */
+  @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      width: 185px !important;
-      min-width: 185px !important;
-      max-width: 185px !important;
-    }
-    .client-header-actions {
-      width: 235px !important;
-      min-width: 235px !important;
-      max-width: 235px !important;
-      gap: 6px !important;
-    }
-    .client-top-secondary-btn {
-      padding: 0 12px !important;
-      font-size: 12.5px !important;
-    }
-    .client-top-next-btn,
-    .client-top-submit-btn {
-      padding: 0 14px !important;
-      font-size: 12.5px !important;
+      max-width: 300px !important;
     }
     .client-step-line {
-      width: 14px !important;
-      min-width: 8px !important;
+      width: 16px !important;
+      margin: 0 5px !important;
+    }
+    .client-step-item {
+      gap: 6px !important;
+    }
+    .client-step-name {
+      font-size: 11.5px !important;
+    }
+    .client-step-sub {
+      font-size: 10px !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 160px 130px minmax(0, 1fr) !important;
+      gap: 12px !important;
+    }
+  }
+
+  @media (max-width: 1199.98px) {
+    .client-step-sub {
+      display: none !important;
+    }
+    .client-step-line {
+      width: 12px !important;
       margin: 0 4px !important;
     }
   }
 
   @media (max-width: 991px) {
-    .client-top-nav-card {
-      height: auto !important;
-      min-height: auto !important;
-      max-height: none !important;
-      padding: 12px 14px !important;
-    }
     .client-header-grid {
-      display: flex !important;
-      flex-direction: column !important;
+      flex-wrap: wrap !important;
       gap: 12px !important;
     }
     .client-header-identity {
+      max-width: 100% !important;
       width: 100% !important;
-      min-width: 0 !important;
-      max-width: none !important;
       justify-content: space-between !important;
     }
     .client-header-stepper-col {
       width: 100% !important;
+      order: 2 !important;
       overflow-x: auto !important;
-      justify-content: flex-start !important;
       padding-bottom: 4px !important;
       -webkit-overflow-scrolling: touch !important;
     }
+    .client-header-actions {
+      order: 1 !important;
+      margin-left: auto !important;
+    }
+    .client-information-layout,
+    .client-description-layout,
+    .client-address-layout,
+    .client-contact-layout {
+      grid-template-columns: 1fr !important;
+    }
+    .client-review-grid-2x2 {
+      grid-template-columns: 1fr !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    .client-branding-grid > .client-brand-fields {
+      grid-column: 1 / -1 !important;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .client-top-nav-card {
+      padding: 10px 12px !important;
+    }
+    .client-header-title {
+      font-size: 15px !important;
+    }
+    .client-header-subtitle {
+      display: none !important;
+    }
     .client-stepper-wrap {
+      overflow-x: auto !important;
+      width: 100% !important;
       justify-content: flex-start !important;
     }
-    .client-header-actions {
+    .client-step-name {
+      display: none !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .client-details-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .client-wizard-sticky-footer {
+      flex-direction: column !important;
+      gap: 12px !important;
+      padding: 12px 14px !important;
+    }
+    .client-action-left, .client-action-right {
       width: 100% !important;
-      min-width: 0 !important;
-      max-width: none !important;
-      justify-content: flex-end !important;
+      justify-content: space-between !important;
     }
   }
 
@@ -2762,6 +2807,48 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
         <!--end::Wizard-->
       </div>
       <!--Card-->
+
+      <!-- =========================================================================
+           BOTTOM DOCKED ACTION NAVIGATION BAR
+           Pixel-perfect match to master design system:
+           - Left: Cancel, Save as Draft, Autosave status message
+           - Right: Previous, Next Page (Steps 1-4) / Create or Update Client (Step 5)
+           ========================================================================= -->
+      <div class="client-wizard-sticky-footer" id="client_wizard_sticky_footer">
+        <div class="client-action-left">
+          <button type="button" class="btn client-cancel-btn client-nav-cancel" id="client_bottom_cancel_btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Cancel</span>
+          </button>
+          <button type="button" class="btn client-draft-btn" id="client_bottom_save_draft_btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span>Save as Draft</span>
+          </button>
+          <span class="client-draft-status-msg text-muted" id="client_draft_status_msg" style="font-size:11.5px; font-weight:500; margin-left:8px; display:none;"></span>
+        </div>
+
+        <div class="client-action-right">
+          <button type="button" class="btn client-bottom-back-btn client-nav-back" id="client_bottom_back_btn" style="display:none !important;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Previous</span>
+          </button>
+          <button type="button" class="btn client-bottom-next-btn client-nav-next client-top-next-btn" id="client_bottom_next_btn">
+            <span>Next Page</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          @if ($page_event == 'EDIT')
+            <button type="button" class="btn client-bottom-submit-btn updatefrm" id="client_bottom_submit_btn" style="display:none !important;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Update Client</span>
+            </button>
+          @else
+            <button type="button" class="btn client-bottom-submit-btn submitfrm" id="client_bottom_submit_btn" style="display:none !important;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Create Client</span>
+            </button>
+          @endif
+        </div>
+      </div>
     </div>
     <!--end::Container-->
   </div>
@@ -3797,8 +3884,11 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
    })
    
    var loadFile 	=	function(event) {
-   		var output 		=	URL.createObjectURL(event.target.files[0]);
-   		$('.image-input-wrapper').css('background-image', 'url(' + output + ')');
+      if (event.target && event.target.files && event.target.files[0]) {
+         var output 		=	URL.createObjectURL(event.target.files[0]);
+         $('.client-logo-preview .image-input-wrapper').css('background-image', 'url(' + output + ')').empty();
+         $('#client_avatar_remove').val('0');
+      }
    };
    
 </script>
@@ -4277,8 +4367,10 @@ $('.remove_address').click(function(){
                  {
                    if(data.status == 'success')
                    {
+                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                       window.location = data.url || '{{ route('service_company.clients.index') }}';
                    } else if (data.status === 'processing') {
+                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                       setTimeout(function() {
                           window.location = data.url || '{{ route('service_company.clients.index') }}';
                       }, 1000);
@@ -4369,8 +4461,10 @@ $('.remove_address').click(function(){
                {
                   if(data.status == 'success')
                   {
+                     try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                      window.location = data.url || '{{ route('service_company.clients.index') }}';
                   } else if (data.status === 'processing') {
+                     try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                      setTimeout(function() {
                          window.location = data.url || '{{ route('service_company.clients.index') }}';
                      }, 1000);
@@ -5816,22 +5910,35 @@ $('.remove_address').click(function(){
     }
 
     // Step-conditional action navigation controls:
-    // Step 1: Show Close button, Hide Back button
-    // Steps 2-5: Show Back button, Hide Close button
+    // Step 1: Hide Back button
+    // Steps 2-5: Show Back button
     if (activeStep <= 1) {
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
-    } else {
+      $('#client_bottom_back_btn').attr('style', 'display: none !important;').hide();
+      $('#client_bottom_next_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_submit_btn').attr('style', 'display: none !important;').hide();
+    } else if (activeStep < 5) {
       $('body').removeClass('on-step-1').addClass('on-step-' + activeStep);
       $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
       $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_next_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_submit_btn').attr('style', 'display: none !important;').hide();
+    } else {
+      $('body').removeClass('on-step-1').addClass('on-step-5 on-review-step');
+      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_bottom_next_btn').attr('style', 'display: none !important;').hide();
+      $('#client_bottom_submit_btn').attr('style', 'display: inline-flex !important;').show();
     }
 
-    // Dynamic Top Header Subtitles & Titles matching screenshots
+    // Dynamic Top Header Subtitles matching workflow steps
     var subtitles = {
       1: 'Create and configure a client profile for jobs, contacts and recruitment operations.',
-      2: 'Enter client details and submit',
+      2: 'Provide client description and service offerings.',
       3: 'Enter the city and full address of this client.',
       4: 'Add key contacts for this client organization.',
       5: 'Review all the information before submitting.'
@@ -5840,18 +5947,17 @@ $('.remove_address').click(function(){
     $('#client_header_subtitle').text(currentSub).attr('title', currentSub);
 
     // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4:
-    // Right action container holds only one primary action (Next Page on 1-4, Update/Submit on 5)
     if (activeStep >= 5) {
       $('body').addClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, #client_bottom_submit_btn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
       if (typeof populateReviewSummaries === 'function') {
         populateReviewSummaries();
       }
     } else {
       $('body').removeClass('on-review-step');
       $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, #client_bottom_submit_btn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     }
 
     // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
@@ -5970,6 +6076,11 @@ $('.remove_address').click(function(){
     updateCompletion();
     renderContactTable();
     goToWizardStep(1);
+    setTimeout(function () {
+      if (typeof checkDraftPromptOnLoad === 'function') {
+        checkDraftPromptOnLoad();
+      }
+    }, 350);
 
     // Deterministic Step Tracking & Non-locking Debounce Engine
     var currentStepNumber = 1;
@@ -6152,6 +6263,9 @@ $('.remove_address').click(function(){
       var nextStep = Math.min(5, currentStep + 1);
       try {
         goToWizardStep(nextStep);
+        if (typeof saveClientDraft === 'function') {
+          saveClientDraft(true);
+        }
       } catch (err) {
         console.error('goToWizardStep navigation error:', err);
       }
@@ -6355,9 +6469,238 @@ $('.remove_address').click(function(){
       }
     });
 
-// Goto-step listener unified in goToWizardStep above
+    // =========================================================================
+    // MULTI-TENANT ISOLATED DRAFT PERSISTENCE & CONTROL ENGINE
+    // Strictly tenant-scoped (company_id) per Rule 6 & 9 (Zero cross-tenant leakage)
+    // =========================================================================
+    var DRAFT_STORAGE_KEY = 'jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }};
 
-    // Draft save and restore removed per user request
+    function saveClientDraft(silent) {
+      try {
+        var draftData = {
+          timestamp: new Date().toISOString(),
+          timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          currentStep: (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1,
+          name: ($('#client_id').val() || '').trim(),
+          website: ($('#website').val() || '').trim(),
+          industry: ($('#industry').val() || '').trim(),
+          industryDisplay: ($('#industry_display').val() || '').trim(),
+          company_sizes: ($('#company_sizes').val() || '').trim(),
+          company_type: ($('#company_type').val() || '').trim(),
+          founded: ($('#founded').val() || '').trim(),
+          description: (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || ''),
+          tags: (window.clientTagsTagify ? (window.clientTagsTagify.value || []).map(function(t) { return t.value; }) : []),
+          hq_address: ($('input[name="address[]"]').first().val() || '').trim(),
+          hq_city_search: ($('#city_search_0').val() || '').trim(),
+          hq_city_tagify: ($('#kt_tagify_work_location_0').val() || '').trim(),
+          branches: [],
+          contacts: (typeof getContactRowsData === 'function') ? getContactRowsData() : []
+        };
+
+        $('#additional_addresses_container .client-branch-card').each(function() {
+          var $card = $(this);
+          var cid = $card.data('cid') || $card.attr('data-cid');
+          draftData.branches.push({
+            cid: cid,
+            address: ($card.find('input[name="address[]"]').val() || '').trim(),
+            city_search: ($card.find('input[id^="branch_city_search_"]').val() || '').trim(),
+            city_tagify: ($card.find('input[id^="kt_tagify_work_location_"]').val() || '').trim()
+          });
+        });
+
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+
+        var statusText = 'Draft saved at ' + draftData.timeFormatted;
+        $('#client_draft_status_msg').text(statusText).fadeIn();
+
+        if (!silent && typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+          }).fire({
+            icon: 'success',
+            title: 'Draft saved successfully!'
+          });
+        }
+      } catch (e) {
+        console.warn('saveClientDraft error:', e);
+      }
+    }
+
+    function restoreClientDraft() {
+      try {
+        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        var d = JSON.parse(raw);
+        if (!d) return;
+
+        if (d.name) $('#client_id').val(d.name).trigger('input');
+        if (d.website) $('#website').val(d.website).trigger('input');
+        if (d.industry) {
+          $('#industry').val(d.industry);
+          $('#industry_display').val(d.industryDisplay || d.industry);
+        }
+        if (d.company_sizes) $('#company_sizes').val(d.company_sizes).trigger('change');
+        if (d.company_type) $('#company_type').val(d.company_type).trigger('change');
+        if (d.founded) $('#founded').val(d.founded).trigger('input');
+
+        // Restore Description
+        if (d.description) {
+          $('#kt_docs_tinymce_hidden').val(d.description);
+          if (window.clientDescQuill) {
+            window.clientDescQuill.clipboard.dangerouslyPasteHTML(d.description);
+          }
+        }
+
+        // Restore Tags
+        if (d.tags && Array.isArray(d.tags) && d.tags.length > 0 && window.clientTagsTagify) {
+          window.clientTagsTagify.removeAllTags();
+          window.clientTagsTagify.addTags(d.tags);
+        }
+
+        // Restore HQ Address
+        if (d.hq_address) $('input[name="address[]"]').first().val(d.hq_address).trigger('input');
+        if (d.hq_city_search) $('#city_search_0').val(d.hq_city_search);
+        if (d.hq_city_tagify) $('#kt_tagify_work_location_0').val(d.hq_city_tagify);
+
+        // Restore Branch Addresses
+        if (d.branches && Array.isArray(d.branches) && d.branches.length > 0) {
+          d.branches.forEach(function(b) {
+            $('#btn_add_another_address, .add_address').first().click();
+            var $lastBranch = $('#additional_addresses_container .client-branch-card').last();
+            if (b.address) $lastBranch.find('input[name="address[]"]').val(b.address);
+            if (b.city_search) $lastBranch.find('input[id^="branch_city_search_"]').val(b.city_search);
+            if (b.city_tagify) $lastBranch.find('input[id^="kt_tagify_work_location_"]').val(b.city_tagify);
+          });
+        }
+
+        // Restore Contacts
+        if (d.contacts && Array.isArray(d.contacts) && d.contacts.length > 0) {
+          $('.client-cperson-container:gt(0)').remove();
+          d.contacts.forEach(function(c, idx) {
+            if (idx === 0) {
+              var $c0 = $('.client-cperson-container').first();
+              $c0.find('input[name="cp_name[]"]').val(c.name || '');
+              $c0.find('input[name="cp_email[]"]').val(c.email || '');
+              $c0.find('input[name="cp_number[]"]').val(c.phone || '');
+              $c0.find('input[name="cp_desigination[]"]').val(c.designation || '');
+              $c0.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
+            } else {
+              $('.add_cperson').first().click();
+              var $newC = $('.client-cperson-container').last();
+              $newC.find('input[name="cp_name[]"]').val(c.name || '');
+              $newC.find('input[name="cp_email[]"]').val(c.email || '');
+              $newC.find('input[name="cp_number[]"]').val(c.phone || '');
+              $newC.find('input[name="cp_desigination[]"]').val(c.designation || '');
+              $newC.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
+            }
+          });
+          renderContactTable();
+        }
+
+        if (d.timeFormatted) {
+          $('#client_draft_status_msg').text('Draft restored from ' + d.timeFormatted).fadeIn();
+        }
+
+        if (typeof updateCompletion === 'function') updateCompletion();
+        if (typeof updateAssistantPanel === 'function') updateAssistantPanel();
+
+        if (d.currentStep && d.currentStep > 1) {
+          goToWizardStep(d.currentStep);
+        }
+      } catch (e) {
+        console.warn('restoreClientDraft error:', e);
+      }
+    }
+
+    function checkDraftPromptOnLoad() {
+      try {
+        if (typeof page_event !== 'undefined' && page_event !== 'ADD') return;
+        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        var d = JSON.parse(raw);
+        if (!d || (!d.name && !d.website && !d.hq_address && (!d.contacts || !d.contacts.length))) return;
+
+        var savedTime = d.timeFormatted || (new Date(d.timestamp)).toLocaleTimeString();
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+          Swal.fire({
+            title: 'Restore Unsaved Draft?',
+            html: 'We found an unfinished client draft from <b>' + savedTime + '</b>.<br>Would you like to restore where you left off?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Restore Draft',
+            cancelButtonText: 'Discard Draft',
+            confirmButtonColor: '#ffd428',
+            cancelButtonColor: '#e2e8f0',
+            customClass: {
+              confirmButton: 'btn btn-primary text-dark font-weight-bold',
+              cancelButton: 'btn btn-light text-muted font-weight-bold'
+            }
+          }).then(function(result) {
+            if (result.isConfirmed) {
+              restoreClientDraft();
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.removeItem(DRAFT_STORAGE_KEY);
+              $('#client_draft_status_msg').hide();
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('checkDraftPromptOnLoad error:', e);
+      }
+    }
+
+    window.saveClientDraft = saveClientDraft;
+    window.restoreClientDraft = restoreClientDraft;
+    window.checkDraftPromptOnLoad = checkDraftPromptOnLoad;
+
+    // Save as Draft button click
+    $(document).on('click', '#client_bottom_save_draft_btn, .client-draft-btn', function (e) {
+      e.preventDefault();
+      saveClientDraft(false);
+    });
+
+    // Cancel button click with confirmation if form has data
+    $(document).on('click', '#client_bottom_cancel_btn, .client-cancel-btn', function (e) {
+      e.preventDefault();
+      var hasData = Boolean($('#client_id').val() || $('#website').val());
+      if (hasData && typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Leave without saving?',
+          text: 'You have unsaved changes. Are you sure you want to exit?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Exit',
+          cancelButtonText: 'Stay on Page',
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#e2e8f0',
+          customClass: {
+            confirmButton: 'btn btn-danger font-weight-bold',
+            cancelButton: 'btn btn-light font-weight-bold'
+          }
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            window.location.href = "{{ route('service_company.clients.index') }}";
+          }
+        });
+      } else {
+        window.location.href = "{{ route('service_company.clients.index') }}";
+      }
+    });
+
+    // Remove Logo Button Handler
+    $(document).on('click', '#client_preview_remove_btn', function (e) {
+      e.preventDefault();
+      $('#client_logo_input').val('');
+      $('#client_avatar_remove').val('1');
+      $('.client-logo-preview .image-input-wrapper')
+        .css('background-image', 'none')
+        .html('<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#64748b; color:#ffffff;"><i class="la la-building" style="font-size:30px; color:#ffffff;"></i></div>');
+      if (typeof updateCompletion === 'function') updateCompletion();
+    });
 
     if (window.clientTagsTagify) {
       var refreshTags = function () {

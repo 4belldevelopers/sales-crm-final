@@ -6,8 +6,14 @@
 <div class="card client-top-nav-card" id="client_top_nav_card">
   <div class="client-header-grid">
     
-    <!-- LEFT: Title Block -->
+    <!-- LEFT: Back Button + Title Block -->
     <div class="client-header-identity">
+      <button type="button" class="btn client-header-back-btn client-nav-back" id="client_header_back_btn" aria-label="Go Back" title="Go Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
       <div class="client-header-titles">
         <h2 class="client-header-title" id="client_header_title">{{ $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client' }}</h2>
         <p class="client-header-subtitle" id="client_header_subtitle" title="Create and configure a client profile for jobs, contacts and recruitment operations.">Create and configure a client profile for jobs, contacts and recruitment operations.</p>
@@ -76,48 +82,29 @@
 
     <!-- RIGHT: Contextual Action Buttons -->
     <div class="client-header-actions" id="client_header_actions">
-      <!-- Step 1: Close Button -->
-      <button type="button" class="btn client-top-secondary-btn client-top-close-btn client-nav-close" id="client_top_close_btn" aria-label="Close Wizard">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-        <span>Close</span>
-      </button>
-
-      <!-- Steps 2-5: Back Button -->
-      <button type="button" class="btn client-top-secondary-btn client-top-back-btn client-nav-back" id="client_top_back_btn" aria-label="Go Back" style="display:none !important;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5"/>
-          <path d="m12 19-7-7 7-7"/>
-        </svg>
-        <span>Back</span>
-      </button>
-
       <!-- Steps 1-4: Next Page Button -->
       <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
         <span>Next Page</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a1647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/>
           <path d="m12 5 7 7-7 7"/>
         </svg>
       </button>
 
-
       <!-- Step 5: Submit / Update Button -->
       @if ($page_event == 'EDIT')
         <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>Update Client</span>
         </button>
       @else
         <button type="button" class="btn client-top-submit-btn submitfrm" id="submitBtn" style="display:none !important;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#101A46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span>Submit Client</span>
+          <span>Create Client</span>
         </button>
       @endif
     </div>
