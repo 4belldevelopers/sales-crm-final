@@ -12,18 +12,18 @@
         .template-header-bar {
             background: #FFFFFF;
             border-bottom: 1px solid #E2E8F0;
-            padding: 12px 20px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
         }
 
         .header-icon-box {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             background: #FFFBEB;
             border: 1px solid #FDE68A;
             display: flex;
@@ -38,9 +38,9 @@
             border-color: #F59E0B !important;
             color: #111827 !important;
             font-weight: 700 !important;
-            font-size: 12px !important;
-            padding: 7px 18px !important;
-            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            padding: 6px 16px !important;
+            border-radius: 6px !important;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -61,9 +61,9 @@
             border: 1px solid #D1D5DB !important;
             color: #374151 !important;
             font-weight: 600 !important;
-            font-size: 12px !important;
-            padding: 7px 16px !important;
-            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            padding: 6px 14px !important;
+            border-radius: 6px !important;
             transition: all 0.15s ease-in-out;
             text-decoration: none !important;
         }
@@ -77,9 +77,9 @@
         .section-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 16px 18px;
-            margin-bottom: 14px;
+            border-radius: 9px;
+            padding: 13px 16px;
+            margin-bottom: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             position: relative;
         }
@@ -87,15 +87,15 @@
         .section-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
+            gap: 9px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #F1F5F9;
         }
 
         .section-header-icon {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 7px;
             display: flex;
             align-items: center;
@@ -128,7 +128,7 @@
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 700;
             color: #0F172A;
             margin: 0;
@@ -136,20 +136,20 @@
         }
 
         .section-subtitle {
-            font-size: 11px;
+            font-size: 10.5px;
             color: #64748B;
             margin: 1px 0 0 0;
         }
 
         /* Form Inputs */
         .form-label-custom {
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
             color: #1E293B;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
         .form-label-custom .req {
@@ -158,12 +158,12 @@
 
         .form-control-custom,
         .form-select-custom {
-            height: 34px;
-            border-radius: 7px;
+            height: 32px;
+            border-radius: 6px;
             border: 1px solid #CBD5E1;
-            font-size: 12px;
+            font-size: 11.5px;
             color: #0F172A;
-            padding: 5px 11px;
+            padding: 4px 10px;
             background-color: #FFFFFF;
             transition: all 0.15s ease-in-out;
             width: 100%;
@@ -178,9 +178,9 @@
         }
 
         .form-hint {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #64748B;
-            margin-top: 3px;
+            margin-top: 2px;
             display: block;
         }
 
@@ -190,20 +190,20 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 3px;
-            padding: 6px 10px;
+            padding: 5px 8px;
             background: #F8FAFC;
             border: 1px solid #CBD5E1;
             border-bottom: none;
-            border-top-left-radius: 7px;
-            border-top-right-radius: 7px;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
         }
 
         .ed-tool-btn {
             background: transparent;
             border: 1px solid transparent;
             border-radius: 4px;
-            padding: 3px 6px;
-            font-size: 12px;
+            padding: 2px 5px;
+            font-size: 11.5px;
             color: #475569;
             cursor: pointer;
             display: inline-flex;
@@ -220,18 +220,18 @@
 
         .ed-tool-sep {
             width: 1px;
-            height: 16px;
+            height: 14px;
             background: #CBD5E1;
-            margin: 0 3px;
+            margin: 0 2px;
         }
 
         .ed-select-style {
-            height: 25px;
+            height: 24px;
             font-size: 11px;
             border-radius: 4px;
             border: 1px solid #CBD5E1;
             background: #FFFFFF;
-            padding: 1px 6px;
+            padding: 0 5px;
             color: #334155;
             cursor: pointer;
         }
@@ -240,14 +240,14 @@
             background: #EFF6FF;
             color: #1D4ED8;
             border: 1px solid #BFDBFE;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 5px;
+            padding: 2px 7px;
+            border-radius: 4px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             margin-left: auto;
             transition: all 0.15s ease;
         }
@@ -259,8 +259,8 @@
 
         /* Editor Container wrapper */
         .editor-wrapper {
-            border-bottom-left-radius: 7px;
-            border-bottom-right-radius: 7px;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
             overflow: hidden;
             border: 1px solid #CBD5E1;
         }
@@ -274,10 +274,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 5px 10px;
+            padding: 4px 8px;
             background: #F8FAFC;
             border-top: 1px solid #E2E8F0;
-            font-size: 10.5px;
+            font-size: 10px;
             color: #64748B;
         }
 
@@ -285,22 +285,21 @@
         .variables-panel {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 16px;
+            border-radius: 9px;
+            padding: 14px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             position: sticky;
-            top: 16px;
-            max-height: calc(100vh - 110px);
+            top: 14px;
             display: flex;
             flex-direction: column;
         }
 
         .var-search-input {
-            height: 32px;
-            border-radius: 7px;
+            height: 28px;
+            border-radius: 6px;
             border: 1px solid #CBD5E1;
-            font-size: 11.5px;
-            padding: 4px 10px 4px 30px;
+            font-size: 11px;
+            padding: 2px 8px 2px 26px;
             width: 100%;
             background: #FFFFFF;
             transition: all 0.15s ease;
@@ -314,55 +313,46 @@
 
         .var-search-wrap {
             position: relative;
-            margin-bottom: 10px;
         }
 
         .var-search-wrap .search-icon {
             position: absolute;
-            left: 10px;
+            left: 8px;
             top: 50%;
             transform: translateY(-50%);
             color: #94A3B8;
-            font-size: 12px;
+            font-size: 11px;
         }
 
-        /* Category Pill Tabs */
+        /* Category Pill Tabs - Clean Multi-Row Wrap without Horiz Scrollbar */
         .var-pill-tabs {
             display: flex;
             align-items: center;
-            gap: 4px;
-            overflow-x: auto;
+            flex-wrap: wrap;
+            gap: 4px 6px;
+            margin-bottom: 8px;
             padding-bottom: 6px;
-            margin-bottom: 10px;
             border-bottom: 1px solid #F1F5F9;
-            scrollbar-width: thin;
-        }
-
-        .var-pill-tabs::-webkit-scrollbar {
-            height: 3px;
-        }
-
-        .var-pill-tabs::-webkit-scrollbar-thumb {
-            background: #E2E8F0;
-            border-radius: 4px;
         }
 
         .var-pill-btn {
             background: #F8FAFC;
             border: 1px solid #E2E8F0;
-            border-radius: 16px;
-            padding: 3px 10px;
-            font-size: 11px;
+            border-radius: 14px;
+            padding: 3px 9px;
+            font-size: 10.5px;
             font-weight: 500;
             color: #475569;
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.12s ease-in-out;
+            line-height: 1.25;
         }
 
         .var-pill-btn:hover {
             background: #F1F5F9;
             color: #0F172A;
+            border-color: #CBD5E1;
         }
 
         .var-pill-btn.active {
@@ -372,14 +362,14 @@
             font-weight: 700;
         }
 
-        /* Variables List */
+        /* Variables List Container */
         .var-cards-list {
-            max-height: calc(100vh - 290px);
+            max-height: calc(100vh - 250px);
             overflow-y: auto;
-            padding-right: 3px;
+            padding-right: 2px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
             scrollbar-width: thin;
         }
 
@@ -396,9 +386,9 @@
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
             border-radius: 7px;
-            padding: 8px 10px;
+            padding: 7px 10px;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 8px;
             cursor: pointer;
@@ -418,16 +408,17 @@
             flex-direction: column;
             gap: 2px;
             min-width: 0;
+            flex: 1;
         }
 
         .var-token-badge {
             font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 700;
             color: #2563EB;
             background: #EFF6FF;
             border: 1px solid #DBEAFE;
-            border-radius: 5px;
+            border-radius: 4px;
             padding: 1px 6px;
             display: inline-block;
             letter-spacing: -0.2px;
@@ -435,9 +426,9 @@
         }
 
         .var-item-desc {
-            font-size: 11px;
+            font-size: 10.5px;
             color: #64748B;
-            line-height: 1.3;
+            line-height: 1.25;
             margin: 0;
             white-space: nowrap;
             overflow: hidden;
@@ -445,7 +436,7 @@
         }
 
         .var-copy-btn {
-            background: #F1F5F9;
+            background: #F8FAFC;
             border: 1px solid #E2E8F0;
             border-radius: 5px;
             width: 24px;
@@ -468,15 +459,15 @@
 
         /* Target Insertion Indicator */
         .var-target-bar {
-            background: #F1F5F9;
+            background: #F8FAFC;
             border: 1px solid #E2E8F0;
-            border-radius: 7px;
-            padding: 4px 8px;
-            margin-bottom: 8px;
+            border-radius: 6px;
+            padding: 3px 8px;
+            margin-bottom: 7px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 10.5px;
+            font-size: 10px;
             color: #475569;
         }
 
@@ -487,17 +478,17 @@
             right: 20px;
             background: #0F172A;
             color: #FFFFFF;
-            padding: 8px 15px;
-            border-radius: 7px;
-            font-size: 12px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 11.5px;
             font-weight: 500;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
             z-index: 99999;
             opacity: 0;
-            transform: translateY(15px);
+            transform: translateY(12px);
             transition: all 0.22s ease;
             pointer-events: none;
         }
@@ -510,23 +501,23 @@
         .emoji-picker-menu {
             position: absolute;
             right: 0;
-            top: 40px;
+            top: 38px;
             background: #FFFFFF;
             border: 1px solid #CBD5E1;
-            border-radius: 7px;
+            border-radius: 6px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-            padding: 8px;
+            padding: 6px;
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 4px;
+            gap: 3px;
             z-index: 1050;
-            font-size: 16px;
+            font-size: 15px;
             display: none;
         }
 
         .emoji-picker-menu span {
             cursor: pointer;
-            padding: 3px;
+            padding: 2px;
             text-align: center;
             border-radius: 4px;
             transition: background 0.1s;
@@ -540,28 +531,28 @@
 
 @section('content')
     <!-- Top Action Bar matching Image 1 -->
-    <div class="template-header-bar mb-4">
+    <div class="template-header-bar mb-3">
         <div class="d-flex align-items-center">
-            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn btn-sm btn-icon btn-white border border-gray-300 rounded-circle me-3 hover-elevate-up" style="width: 32px; height: 32px;" title="Back to Templates">
+            <a href="{{ route('superadmin.company.emailthemes') }}" class="btn btn-sm btn-icon btn-white border border-gray-300 rounded-circle me-3 hover-elevate-up" style="width: 30px; height: 30px;" title="Back to Templates">
                 <i class="bi bi-arrow-left fs-5 text-gray-700"></i>
             </a>
             <div class="header-icon-box me-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                 </svg>
             </div>
             <div>
-                <h1 class="fs-4 fw-bolder text-gray-900 m-0">
+                <h1 class="fs-5 fw-bolder text-gray-900 m-0">
                     {{ @$th_email_template->e_temp_id ? 'Edit Email Template' : 'Add Email Template' }}
                 </h1>
-                <p class="fs-8 text-muted m-0">Create a new email template for recruitment communication.</p>
+                <p class="fs-9 text-muted m-0">Create a new email template for recruitment communication.</p>
             </div>
         </div>
         <div class="d-flex align-items-center">
             <a href="{{ route('superadmin.company.emailthemes') }}" class="btn-cancel-light me-2">Cancel</a>
             <button type="button" id="save-form" class="btn-save-yellow">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                     <polyline points="17 21 17 13 7 13 7 21"></polyline>
                     <polyline points="7 3 7 8 15 8"></polyline>
@@ -571,21 +562,21 @@
         </div>
     </div>
 
-    <!-- Main Content Container: 2 Columns - Responsive for 1366x768 and smaller -->
-    <div class="container-fluid px-4 pb-8">
+    <!-- Main Content Container: 2 Columns - Balanced for 15.6" Displays -->
+    <div class="container-fluid px-3 pb-6">
         <form id="editSettings" class="ajax-form">
             @csrf
             <input type="hidden" name="tokenId" id="tokenId" value="{{ (@$th_email_template->e_temp_id) ? @$th_email_template->e_temp_id : 0 }}">
 
-            <div class="row g-4">
-                <!-- Left Column: Form & Editor (Col 7 / 8) -->
-                <div class="col-xl-8 col-lg-7">
+            <div class="row g-3">
+                <!-- Left Column: Form & Editor (Col 7) -->
+                <div class="col-xl-7 col-lg-7">
 
                     <!-- Card 1: Template Details -->
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-purple">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -599,7 +590,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <!-- Template Name -->
                             <div class="col-md-6">
                                 <label class="form-label-custom">Template Name <span class="req">*</span></label>
@@ -629,7 +620,7 @@
                             <div class="col-md-6">
                                 <label class="form-label-custom">Subject <span class="req">*</span></label>
                                 <div class="position-relative">
-                                    <input type="text" class="form-control-custom pe-8" name="subject" id="subject" placeholder="Job Openings | [{COMPANY_NAME}] | Apply Now" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" required>
+                                    <input type="text" class="form-control-custom pe-7" name="subject" id="subject" placeholder="Job Openings | [{COMPANY_NAME}] | Apply Now" value="{{ (@$th_email_template->template_subject) ? @$th_email_template->template_subject : '' }}" required>
                                     <button type="button" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-1" id="btnToggleEmoji" title="Insert Emoji">
                                         <i class="bi bi-emoji-smile fs-6 text-gray-500"></i>
                                     </button>
@@ -657,7 +648,7 @@
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-blue">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                 </svg>
                             </div>
@@ -705,7 +696,7 @@
                                     <i class="bi bi-magic fs-8"></i>
                                     Personalize
                                 </div>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="btnPersonalizeDropdown" style="font-size: 11.5px; max-height: 240px; overflow-y: auto;">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="btnPersonalizeDropdown" style="font-size: 11px; max-height: 220px; overflow-y: auto;">
                                     <li><h6 class="dropdown-header text-uppercase text-muted fw-bold fs-9">Candidate Tokens</h6></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_NAME}]')"><code>[{CANDIDATE_NAME}]</code> &middot; Candidate Name</a></li>
                                     <li><a class="dropdown-item py-1 px-3" href="javascript:void(0);" onclick="insertVariableToken('[{CANDIDATE_EMAIL}]')"><code>[{CANDIDATE_EMAIL}]</code> &middot; Candidate Email</a></li>
@@ -719,7 +710,7 @@
                                 </ul>
                             </div>
 
-                            <textarea name="editor1" id="editor1" rows="9" class="form-control" style="min-height: 260px;">{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
+                            <textarea name="editor1" id="editor1" rows="8" class="form-control" style="min-height: 240px;">{{ (@$th_email_template->template_description) ? @$th_email_template->template_description : '' }}</textarea>
 
                             <div class="editor-footer-info">
                                 <span>Rich Text Editor &middot; Use variables from the right panel to dynamically populate fields</span>
@@ -734,9 +725,9 @@
                     <div class="section-card">
                         <div class="section-header">
                             <div class="section-header-icon icon-gray">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                                 </svg>
                             </div>
                             <div>
@@ -745,7 +736,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <!-- Audience Validation -->
                             <div class="col-md-6">
                                 <label class="form-label-custom">Audience Validation</label>
@@ -772,11 +763,11 @@
 
                 </div>
 
-                <!-- Right Column: Available Variables Panel (Col 5 / 4) -->
-                <div class="col-xl-4 col-lg-5">
+                <!-- Right Column: Available Variables Panel (Col 5) - Generous Breathing Room -->
+                <div class="col-xl-5 col-lg-5">
                     <div class="variables-panel">
-                        <!-- Header -->
-                        <div class="d-flex align-items-center justify-content-between mb-3">
+                        <!-- Header with Inline Search Box matching Reference Design -->
+                        <div class="d-flex align-items-center justify-content-between mb-2 gap-2">
                             <div class="d-flex align-items-center gap-2">
                                 <div class="section-header-icon icon-amber">
                                     <span class="fs-6 fw-bolder font-monospace">{ }</span>
@@ -786,29 +777,27 @@
                                     <p class="section-subtitle">Use these variables to personalize your email.</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Search Input -->
-                        <div class="var-search-wrap">
-                            <i class="bi bi-search search-icon"></i>
-                            <input type="text" class="var-search-input" id="varSearchInput" placeholder="Search variables...">
-                        </div>
-
-                        <!-- Active Target Bar -->
-                        <div class="var-target-bar">
-                            <span>Inserts into:</span>
-                            <div class="d-flex gap-1">
-                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetBodyBtn" onclick="setInsertTarget('body')">Body</button>
-                                <button type="button" class="btn btn-xs py-1 px-2 border target-btn-choice" id="targetSubjectBtn" onclick="setInsertTarget('subject')">Subject</button>
+                            <div class="var-search-wrap" style="max-width: 165px; width: 100%;">
+                                <i class="bi bi-search search-icon"></i>
+                                <input type="text" class="var-search-input" id="varSearchInput" placeholder="Search variables...">
                             </div>
                         </div>
 
-                        <!-- Category Tabs matching Image 1 -->
+                        <!-- Target Bar -->
+                        <div class="var-target-bar">
+                            <span class="fs-10 text-muted">Clicking card inserts into:</span>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-xs py-0 px-2 border target-btn-choice" id="targetBodyBtn" onclick="setInsertTarget('body')">Body</button>
+                                <button type="button" class="btn btn-xs py-0 px-2 border target-btn-choice" id="targetSubjectBtn" onclick="setInsertTarget('subject')">Subject</button>
+                            </div>
+                        </div>
+
+                        <!-- Category Tabs - Multiline Wrap without Overlapping Scrollbars -->
                         <div class="var-pill-tabs" id="varCategoryTabs">
                             <button type="button" class="var-pill-btn active" data-cat="candidate">Candidate</button>
                             <button type="button" class="var-pill-btn" data-cat="job">Job</button>
                             <button type="button" class="var-pill-btn" data-cat="company">Company</button>
-                            <button type="button" class="var-pill-btn" data-cat="client">Client</button>
+                            <button type="button" class="var-pill-btn" data-cat="client">Client / End Customer</button>
                             <button type="button" class="var-pill-btn" data-cat="recruiter">Recruiter</button>
                             <button type="button" class="var-pill-btn" data-cat="other">Other</button>
                         </div>
@@ -1130,9 +1119,9 @@
             // Update Active Target Visual State
             updateTargetButtons();
 
-            // Init CKEditor 4 with compact 15.6" height (260px)
+            // Init CKEditor 4 with compact 15.6" height (240px)
             if (typeof CKEDITOR !== 'undefined') {
-                CKEDITOR.config.height = 260;
+                CKEDITOR.config.height = 240;
                 CKEDITOR.config.width = 'auto';
                 CKEDITOR.config.removePlugins = 'elementspath';
                 CKEDITOR.config.resize_enabled = false;

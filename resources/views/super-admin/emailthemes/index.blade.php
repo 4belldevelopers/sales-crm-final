@@ -8,22 +8,22 @@
             background-color: #F8FAFC;
         }
 
-        /* Top Action Bar - Compact 15.6" Saas Header */
+        /* Top Action Bar - Compact 15.6" Header */
         .template-top-bar {
             background: #FFFFFF;
             border-bottom: 1px solid #E2E8F0;
-            padding: 12px 20px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
         }
 
         .header-icon-box {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             background: #FFFBEB;
             border: 1px solid #FDE68A;
             display: flex;
@@ -38,12 +38,12 @@
             border-color: #F59E0B !important;
             color: #111827 !important;
             font-weight: 700 !important;
-            font-size: 12px !important;
-            padding: 7px 16px !important;
-            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            padding: 6px 15px !important;
+            border-radius: 6px !important;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
             transition: all 0.15s ease-in-out;
             text-decoration: none !important;
@@ -57,34 +57,34 @@
             box-shadow: 0 3px 8px rgba(217, 119, 6, 0.28);
         }
 
-        /* Top 8 KPI Metrics Cards Container - Fully Responsive on 1366x768 & smaller */
+        /* Top 8 KPI Metrics Cards Container - Single Row on 1366px Screens */
         .kpi-metrics-container {
             display: grid;
             grid-template-columns: repeat(8, minmax(0, 1fr));
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            margin-bottom: 14px;
+            border-radius: 9px;
+            margin-bottom: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            overflow-x: auto;
+            overflow: hidden;
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1149px) {
             .kpi-metrics-container {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 680px) {
             .kpi-metrics-container {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
         .kpi-metric-card {
-            padding: 10px 12px;
+            padding: 8px 10px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             border-right: 1px solid #F1F5F9;
             transition: background 0.12s ease;
         }
@@ -98,14 +98,14 @@
         }
 
         .kpi-metric-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 7px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .kpi-icon-blue { background: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; }
@@ -121,15 +121,17 @@
         }
 
         .kpi-metric-title {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 500;
             color: #64748B;
             margin: 0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .kpi-metric-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #0F172A;
             line-height: 1.15;
@@ -137,7 +139,7 @@
         }
 
         .kpi-metric-sub {
-            font-size: 9.5px;
+            font-size: 9px;
             color: #94A3B8;
             margin: 0;
             white-space: nowrap;
@@ -147,24 +149,24 @@
         .category-filter-bar {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             overflow-x: auto;
-            margin-bottom: 12px;
-            padding-bottom: 3px;
+            margin-bottom: 10px;
+            padding-bottom: 2px;
             scrollbar-width: thin;
         }
 
         .cat-tab-btn {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 11.5px;
+            border-radius: 7px;
+            padding: 5px 11px;
+            font-size: 11px;
             font-weight: 600;
             color: #475569;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             cursor: pointer;
             transition: all 0.12s ease-in-out;
             white-space: nowrap;
@@ -186,9 +188,9 @@
 
         .cat-tab-badge {
             background: rgba(0, 0, 0, 0.06);
-            border-radius: 10px;
-            padding: 1px 6px;
-            font-size: 10px;
+            border-radius: 9px;
+            padding: 1px 5px;
+            font-size: 9.5px;
             font-weight: 700;
         }
 
@@ -203,24 +205,24 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
         .search-input-box {
             position: relative;
             flex: 1;
-            min-width: 240px;
-            max-width: 440px;
+            min-width: 220px;
+            max-width: 420px;
         }
 
         .search-input-box input {
-            height: 34px;
-            border-radius: 7px;
+            height: 32px;
+            border-radius: 6px;
             border: 1px solid #CBD5E1;
-            padding-left: 34px;
-            padding-right: 12px;
-            font-size: 12px;
+            padding-left: 32px;
+            padding-right: 10px;
+            font-size: 11.5px;
             width: 100%;
             background: #FFFFFF;
             transition: all 0.15s ease;
@@ -234,20 +236,20 @@
 
         .search-input-box .search-icon {
             position: absolute;
-            left: 11px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #94A3B8;
-            font-size: 12.5px;
+            font-size: 12px;
         }
 
         .filter-dropdown-select {
-            height: 34px;
-            border-radius: 7px;
+            height: 32px;
+            border-radius: 6px;
             border: 1px solid #CBD5E1;
             background: #FFFFFF;
-            padding: 0 10px;
-            font-size: 11.5px;
+            padding: 0 8px;
+            font-size: 11px;
             font-weight: 500;
             color: #334155;
             cursor: pointer;
@@ -263,7 +265,7 @@
         .view-toggle-wrap {
             display: inline-flex;
             border: 1px solid #CBD5E1;
-            border-radius: 7px;
+            border-radius: 6px;
             overflow: hidden;
             background: #FFFFFF;
         }
@@ -271,7 +273,7 @@
         .view-toggle-btn {
             background: transparent;
             border: none;
-            padding: 6px 10px;
+            padding: 5px 9px;
             cursor: pointer;
             color: #64748B;
             transition: all 0.12s;
@@ -289,17 +291,17 @@
         .table-card-container {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
+            border-radius: 9px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             overflow: hidden;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .enterprise-template-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
         .enterprise-template-table thead tr {
@@ -308,9 +310,9 @@
         }
 
         .enterprise-template-table th {
-            padding: 10px 12px;
+            padding: 9px 10px;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10.5px;
             color: #64748B;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -319,7 +321,7 @@
         }
 
         .enterprise-template-table td {
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-bottom: 1px solid #F1F5F9;
             vertical-align: middle;
             color: #1E293B;
@@ -337,24 +339,25 @@
 
         /* Table Components */
         .template-cell-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 7px;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .template-name-title {
-            font-size: 12.5px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 600;
             color: #0F172A;
             margin: 0;
             line-height: 1.25;
             text-decoration: none;
             display: inline-block;
+            max-width: 280px;
             transition: color 0.15s;
         }
 
@@ -363,16 +366,16 @@
         }
 
         .template-meta-line {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #64748B;
             margin: 1px 0 0 0;
         }
 
         .template-desc-snippet {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #94A3B8;
             margin: 1px 0 0 0;
-            max-width: 260px;
+            max-width: 250px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -380,9 +383,9 @@
 
         /* Pastel Type Badges */
         .badge-type-pill {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 3px 8px;
+            padding: 2px 7px;
             border-radius: 5px;
             display: inline-block;
             white-space: nowrap;
@@ -396,21 +399,21 @@
 
         /* Subject Dynamic Token Pills */
         .subject-container {
-            max-width: 320px;
-            font-size: 11.5px;
+            max-width: 290px;
+            font-size: 11px;
             color: #334155;
-            line-height: 1.4;
+            line-height: 1.35;
         }
 
         .token-highlight-pill {
             font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 700;
             color: #2563EB;
             background: #EFF6FF;
             border: 1px solid #DBEAFE;
             border-radius: 4px;
-            padding: 1px 5px;
+            padding: 0 4px;
             display: inline-block;
             margin: 0 1px;
             letter-spacing: -0.2px;
@@ -421,10 +424,10 @@
         .badge-status-pill {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 3px 8px;
-            border-radius: 16px;
-            font-size: 11px;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 14px;
+            font-size: 10.5px;
             font-weight: 600;
             white-space: nowrap;
             cursor: pointer;
@@ -452,8 +455,8 @@
         }
 
         .status-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -463,16 +466,16 @@
 
         /* Action Buttons */
         .action-icon-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
+            width: 26px;
+            height: 26px;
+            border-radius: 5px;
             border: 1px solid #E2E8F0;
             background: #FFFFFF;
             color: #64748B;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11.5px;
             cursor: pointer;
             transition: all 0.12s;
             text-decoration: none !important;
@@ -489,21 +492,21 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 16px;
+            padding: 8px 14px;
             background: #FFFFFF;
             border-top: 1px solid #E2E8F0;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .pagination-range-text {
-            font-size: 11.5px;
+            font-size: 11px;
             color: #64748B;
         }
 
         .page-num-btn {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border-radius: 5px;
             border: 1px solid #E2E8F0;
             background: #FFFFFF;
@@ -511,7 +514,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.12s;
@@ -530,21 +533,21 @@
         /* Grid View Cards Container */
         .grid-cards-container {
             display: none;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
         .template-grid-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 14px;
+            border-radius: 8px;
+            padding: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             transition: transform 0.12s, box-shadow 0.12s;
         }
 
@@ -556,16 +559,16 @@
         /* Bulk Selection Floating Bar */
         .bulk-action-bar {
             position: fixed;
-            bottom: 20px;
+            bottom: 18px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
             background: #0F172A;
             color: #FFFFFF;
-            padding: 8px 18px;
-            border-radius: 8px;
+            padding: 6px 16px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
             z-index: 1050;
             transition: transform 0.25s ease;
@@ -579,21 +582,21 @@
 
 @section('content')
     <!-- Top Bar matching Image 2 -->
-    <div class="template-top-bar mb-4">
+    <div class="template-top-bar mb-3">
         <div class="d-flex align-items-center">
             <div class="header-icon-box me-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                 </svg>
             </div>
             <div>
-                <h1 class="fs-4 fw-bolder text-gray-900 m-0">Email Templates</h1>
-                <p class="fs-8 text-muted m-0">Create, manage and reuse email communication templates across Jero.</p>
+                <h1 class="fs-5 fw-bolder text-gray-900 m-0">Email Templates</h1>
+                <p class="fs-9 text-muted m-0">Create, manage and reuse email communication templates across Jero.</p>
             </div>
         </div>
         <a href="{{ route('superadmin.company.emailThemesupdate', 0) }}" class="btn-create-template">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -602,9 +605,9 @@
     </div>
 
     <!-- Main Container - Compact 15.6" Padding -->
-    <div class="container-fluid px-4 pb-8">
+    <div class="container-fluid px-3 pb-6">
 
-        <!-- Top 8 KPI Metric Cards Container -->
+        <!-- Top 8 KPI Metric Cards Container - Single Row Bar -->
         <div class="kpi-metrics-container">
             <!-- 1. Total Templates -->
             <div class="kpi-metric-card">
@@ -614,7 +617,7 @@
                 <div class="kpi-metric-content">
                     <span class="kpi-metric-title">Total Templates</span>
                     <span class="kpi-metric-value" id="kpiTotalVal">{{ $kpi['total'] ?? 0 }}</span>
-                    <span class="kpi-metric-sub">All email templates</span>
+                    <span class="kpi-metric-sub">All templates</span>
                 </div>
             </div>
 
@@ -638,7 +641,7 @@
                 <div class="kpi-metric-content">
                     <span class="kpi-metric-title">Inactive Templates</span>
                     <span class="kpi-metric-value text-danger" id="kpiInactiveVal">{{ $kpi['inactive'] ?? 0 }}</span>
-                    <span class="kpi-metric-sub">Currently disabled</span>
+                    <span class="kpi-metric-sub">Disabled</span>
                 </div>
             </div>
 
@@ -801,16 +804,16 @@
                 <table class="enterprise-template-table" id="templatesTable">
                     <thead>
                         <tr>
-                            <th style="width: 36px;">
+                            <th style="width: 32px;">
                                 <input type="checkbox" class="form-check-input" id="checkAllTemplates">
                             </th>
                             <th style="min-width: 220px;">Template</th>
-                            <th style="min-width: 110px;">Type</th>
+                            <th style="min-width: 105px;">Type</th>
                             <th style="min-width: 240px;">Subject</th>
-                            <th style="min-width: 90px;">Status</th>
-                            <th style="min-width: 80px;">Usage</th>
-                            <th style="min-width: 125px;">Last Updated</th>
-                            <th style="min-width: 100px; text-align: center;">Action</th>
+                            <th style="min-width: 85px;">Status</th>
+                            <th style="min-width: 75px;">Usage</th>
+                            <th style="min-width: 115px;">Last Updated</th>
+                            <th style="min-width: 90px; text-align: center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="templateTableBody">
@@ -869,22 +872,25 @@
                                         $typeIcon = 'bi-shield-check';
                                     }
 
-                                    // Subject token formatting: Convert [{TOKEN}] or {{TOKEN}} into styled pill badges
+                                    // Dynamic Subject tokens formatting
                                     $rawSubject = (string) ($template->template_subject ?? '');
-                                    $highlightedSubject = preg_replace('/(\[\{[A-Z0-9_]+\}\]|&#123;&#123;[A-Z0-9_]+&#125;&#125;|\{\{[A-Z0-9_]+\}\})/', '<span class="token-highlight-pill">$1</span>', e($rawSubject));
+                                    $highlightedSubject = preg_replace('/(\[\{[A-Za-z0-9_]+\}\]|\{\{[A-Za-z0-9_]+\}\})/', '<span class="token-highlight-pill">$1</span>', e($rawSubject));
                                     $highlightedSubject = str_replace(['[{', '}]'], ['{{', '}}'], $highlightedSubject);
 
-                                    // Usage count estimation
+                                    // Dynamic Snippet tokens formatting
+                                    $rawDesc = trim(strip_tags($template->template_description ?? ''));
+                                    if (empty($rawDesc)) {
+                                        $rawDesc = 'Template communication message for recruitment workflow.';
+                                    }
+                                    $shortDesc = substr($rawDesc, 0, 52) . (strlen($rawDesc) > 52 ? '...' : '');
+                                    $highlightedDesc = preg_replace('/(\[\{[A-Za-z0-9_]+\}\]|\{\{[A-Za-z0-9_]+\}\})/', '<span class="token-highlight-pill" style="font-size:9.5px; padding:0 3px;">$1</span>', e($shortDesc));
+                                    $highlightedDesc = str_replace(['[{', '}]'], ['{{', '}}'], $highlightedDesc);
+
+                                    // Usage estimation
                                     $usageCount = (($tId * 3) % 11) + 2;
 
                                     // Formatted Date
                                     $formattedDate = !empty($template->curr_date) ? \Carbon\Carbon::parse($template->curr_date)->format('M d, Y') : date('M d, Y');
-
-                                    // Description snippet
-                                    $descSnippet = trim(strip_tags($template->template_description ?? ''));
-                                    if (empty($descSnippet)) {
-                                        $descSnippet = 'Template communication message for recruitment workflow.';
-                                    }
                                 @endphp
 
                                 <tr class="template-row-item" 
@@ -912,8 +918,8 @@
                                                 <p class="template-meta-line">
                                                     TEMPLATE-{{ $tId }} &middot; {{ ($tType == 3 || $tType == 4) ? 'System Template' : 'Custom Template' }}
                                                 </p>
-                                                <p class="template-desc-snippet" title="{{ $descSnippet }}">
-                                                    {{ substr($descSnippet, 0, 48) }}{{ strlen($descSnippet) > 48 ? '...' : '' }}
+                                                <p class="template-desc-snippet" title="{{ $rawDesc }}">
+                                                    {!! $highlightedDesc !!}
                                                 </p>
                                             </div>
                                         </div>
@@ -997,10 +1003,10 @@
                             @endforeach
                         @else
                             <tr id="emptyTemplatesRow">
-                                <td colspan="8" class="text-center py-8 text-muted">
-                                    <i class="bi bi-envelope-open fs-2 text-gray-400 d-block mb-2"></i>
+                                <td colspan="8" class="text-center py-6 text-muted">
+                                    <i class="bi bi-envelope-open fs-3 text-gray-400 d-block mb-1"></i>
                                     <h6>No Email Templates Found</h6>
-                                    <p class="fs-8 text-muted">Create your first recruitment template by clicking "+ Create Template" above.</p>
+                                    <p class="fs-9 text-muted">Create your first recruitment template by clicking "+ Create Template" above.</p>
                                 </td>
                             </tr>
                         @endif
@@ -1016,7 +1022,7 @@
 
                 <div class="d-flex align-items-center gap-2">
                     <div class="d-flex align-items-center gap-1">
-                        <select class="filter-dropdown-select" id="rowsPerPageSelect" style="height: 28px; padding: 0 8px; font-size: 11px;">
+                        <select class="filter-dropdown-select" id="rowsPerPageSelect" style="height: 26px; padding: 0 6px; font-size: 10.5px;">
                             <option value="10" selected>10 per page</option>
                             <option value="25">25 per page</option>
                             <option value="50">50 per page</option>
@@ -1108,9 +1114,9 @@
     <div class="modal fade" id="previewTemplateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-3">
-                <div class="modal-header px-5 py-3 border-bottom border-gray-200 bg-light">
+                <div class="modal-header px-4 py-3 border-bottom border-gray-200 bg-light">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="header-icon-box" style="width: 32px; height: 32px;">
+                        <div class="header-icon-box" style="width: 30px; height: 30px;">
                             <i class="bi bi-envelope-open text-warning fs-6"></i>
                         </div>
                         <div>
@@ -1120,7 +1126,7 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-5">
+                <div class="modal-body p-4">
                     <!-- Subject Box -->
                     <div class="mb-3 p-2 bg-light rounded border border-gray-200">
                         <div class="fs-9 text-muted fw-bold text-uppercase mb-1">Subject</div>
@@ -1129,11 +1135,11 @@
 
                     <!-- Email Body Container -->
                     <div class="fs-9 text-muted fw-bold text-uppercase mb-1">Email Body Content</div>
-                    <div class="p-3 bg-white rounded border border-gray-300" id="previewModalBody" style="min-height: 180px; max-height: 340px; overflow-y: auto; line-height: 1.5; font-size: 12.5px;">
+                    <div class="p-3 bg-white rounded border border-gray-300" id="previewModalBody" style="min-height: 180px; max-height: 320px; overflow-y: auto; line-height: 1.5; font-size: 12px;">
                         -
                     </div>
                 </div>
-                <div class="modal-footer px-5 py-2 border-top border-gray-200 bg-light">
+                <div class="modal-footer px-4 py-2 border-top border-gray-200 bg-light">
                     <button type="button" class="btn btn-xs btn-light fw-bold" data-bs-dismiss="modal">Close</button>
                     <a href="javascript:void(0);" id="previewModalEditLink" class="btn btn-xs btn-warning text-dark fw-bold" style="background: #F59E0B; border: none;">
                         <i class="bi bi-pencil me-1"></i> Edit Template
@@ -1499,12 +1505,14 @@
             
             // Format subject tokens
             var rawSubject = data.subject || '(No Subject)';
-            var formattedSubject = rawSubject.replace(/(\[\{[A-Z0-9_]+\}\]|\{\{[A-Z0-9_]+\}\})/g, '<span class="token-highlight-pill">$1</span>');
+            var formattedSubject = rawSubject.replace(/(\[\{[A-Za-z0-9_]+\}\]|\{\{[A-Za-z0-9_]+\}\})/g, '<span class="token-highlight-pill">$1</span>');
+            formattedSubject = formattedSubject.replace(/\[\{/g, '{{').replace(/\}\]/g, '}}');
             $('#previewModalSubject').html(formattedSubject);
 
             // Format body tokens
             var rawBody = data.body || '<p class="text-muted">No content in this template.</p>';
-            var formattedBody = rawBody.replace(/(\[\{[A-Z0-9_]+\}\]|\{\{[A-Z0-9_]+\}\})/g, '<span class="token-highlight-pill">$1</span>');
+            var formattedBody = rawBody.replace(/(\[\{[A-Za-z0-9_]+\}\]|\{\{[A-Za-z0-9_]+\}\})/g, '<span class="token-highlight-pill">$1</span>');
+            formattedBody = formattedBody.replace(/\[\{/g, '{{').replace(/\}\]/g, '}}');
             $('#previewModalBody').html(formattedBody);
 
             var editUrl = "{{ route('superadmin.company.emailThemesupdate', ':id') }}".replace(':id', templateId);
