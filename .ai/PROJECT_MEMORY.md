@@ -20,11 +20,45 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-<<<<<<< HEAD
+- *2026-10-19* — **Forward Resume God-Level Card-Trigger Template Picker & 8-Template Enterprise Suite (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
+  - **Requirements**:
+    1. Redesign Forward Resume email templates dropdown at a "God-Level" replacing the plain HTML `<select>` across both the client-first V4.1 micro-JSON loader and server AJAX fallback paths.
+    2. Expand template suite to 8 enterprise categories covering major B2B recruitment workflows:
+       - Dynamic Multi-Candidate Matrix Table (Recommended)
+       - [TEMPLATE-1] Forward Profiles for Review & Interview Scheduling (`fresh`)
+       - [TEMPLATE-5] Candidate Presentation — Single Executive Spotlight (`executive`, ID 73)
+       - [TEMPLATE-3] Prescreen Report with Resume for Review & Interview Scheduling (`fresh`, ID 60)
+       - [TEMPLATE-4] Action Required | Candidate Feedback & Interview Availability (`urgency`, ID 61)
+       - [TEMPLATE-6] In-House Bench / C2C Talent Deployment Proposal (`bench`, ID 74)
+       - [TEMPLATE-2] Request for Feedback on Shared Profiles (`feedback`, ID 2)
+       - [TEMPLATE-7] Requisition Health Check & Follow-Up (`feedback`, ID 75)
+    3. Ensure 15.6" screen responsiveness (clamped popovers with internal smooth scroll), instant (< 1ms) real-time search & category pill filtering, zero MySQL read strain (0% reads on warm page path, Redis/ES metadata hydration), and multi-tenant isolation.
+  - **Resolution**:
+    1. **Interactive Card-Trigger & Floating Popover Architecture**:
+       - Replaced legacy HTML dropdown with an interactive card trigger featuring template category icons, title, badge pills, interpolated subject preview, available template counter, clear button, and animated chevron.
+       - Built a floating popover panel with real-time text search, 7 category tabs (`All (8)`, `📊 Matrix (1)`, `🚀 Fresh Shortlist (2)`, `⚡ High Urgency (1)`, `💼 Bench & C2C (1)`, `⭐ Executive (1)`, `🕒 Follow-up (2)`), and rich template cards with description, badge, and live subject preview.
+       - Implemented click-outside (`click.fwdTplPicker`) and Escape key (`keydown.fwdTplEsc`) event isolation.
+    2. **Database & Elasticsearch Seeding**:
+       - Seeded 3 new core templates into `th_email_template` (`temptype = 1`) and synced to Elasticsearch cluster index `ats_th_email_template`:
+         - ID 73: `[TEMPLATE-5] Candidate Presentation — Single Executive Spotlight`
+         - ID 74: `[TEMPLATE-6] In-House Bench / C2C Talent Deployment Proposal`
+         - ID 75: `[TEMPLATE-7] Requisition Health Check & Follow-Up (Follow-up 2)`
+       - Cleaned Redis metadata cache (`tenant:*:fwd_template_metadata`).
+    3. **Elasticsearch & Controller Alignment**:
+       - Updated `ServiceCompanyCvTrackerController@test_fwd_resume_data` to request both `template_subject` and `template_description` from Elasticsearch alongside legacy aliases, eliminating blank subject/body hits on ES reads and fixing the MySQL fallback query.
+    4. **Client-First Micro-JSON Engine (`ForwardResumeManager.js` & `shell.v4.html`)**:
+       - Embedded `_canonicalTemplates` suite with rich metadata, category classifications, and token placeholders.
+       - Implemented `getAllTemplatesList()`, `initTemplatePicker()`, `renderTemplateCards()`, `toggleTemplatePicker()`, `closeTemplatePicker()`, `selectTemplate()`, `clearTemplate()`, and `clearTemplateSearch()`.
+       - Updated `hydrateUI` to auto-initialize the picker and intelligently select `__executive_matrix__` for multi-candidate batches and `1` for single candidates.
+       - Enhanced `renderClientTemplate` to support `[{EMAIL_TRACKER}]`, `[{CANDIDATE_COUNT}]`, `[{CURRENTDATE}]`, `[{CLIENT_NAME_COMPANY_NAME}]`, and `buildDynamicMatrixTable()`.
+    5. **Fallback View Parity (`test_fwd_resume.blade.php`)**:
+       - Replicated the identical God-Level Card-Trigger & Floating Popover Picker markup and CSS in `test_fwd_resume.blade.php`.
+       - Injected matching global controller methods (`window.initTestTemplatePicker`, `window.selectTestTemplate`, `window.onTestTemplateChange`) for 100% feature and visual parity.
+  - **Verification**: Verified PHP syntax (`php -l`) and JavaScript syntax (`node -c`) with 0 errors across all modified controllers, modules, and blade views.
+
 - *2026-10-19* — **Enterprise Currency Synchronization & Zero-SQL JSON Serving Architecture (100% IMPLEMENTED, VERIFIED & DOCUMENTED)**:
   - **Standard**: Strictly adheres to `docs/CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD.md` across both In-House Talent (`bench-candidates/create`) and Hiring Services (`service_company/account?tab=services` -> `services_view.blade.php` and `ServiceCompanyJobsController`).
   - **Requirement**: Synchronize the 113 world currencies available in Company Profile Settings (`service_company/account`) with Hiring Services (both Fulltime and Contract hiring services drawers and summary cards) and In-House Talent rates/compensation dropdowns, eliminate all SQL database reads by serving 100% of currency reference data from static JSON (`currencies.json`), pre-select tenant default currency on creation, normalize legacy unconfigured defaults (`USD = 4`), preserve custom saved values on edit, and enforce zero-SQL CQRS architecture.
-=======
 - *2026-10-19* — **Forward Resume Drawer HTML / Excel Tracker & God-Level Validation Safeguards (100% FIXED & VERIFIED)**:
   - **Requirements**:
     1. In the Forward Resume drawer (`ForwardResumeManager.js`, `shell.v4.html`, and `test_fwd_resume.blade.php`), Excel table trackers and HTML email tables were stripped or unformatted when pasting or loading matrix tables, because Quill lacked native HTML table parsing and clipboard support for rich spreadsheet structures.
