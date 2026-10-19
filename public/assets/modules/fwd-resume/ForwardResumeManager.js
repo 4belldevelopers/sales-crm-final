@@ -401,6 +401,92 @@
         _companyData: { companyName: 'Hiring Partner', companyLogo: '' },
         _jobSkills: [],
         _templateData: [],
+        _selectedTemplateId: '',
+        _activeTemplateCategory: 'all',
+        _templateSearchTerm: '',
+        _canonicalTemplates: [
+            {
+                id: '__executive_matrix__',
+                category: 'matrix',
+                badge: 'Executive Matrix',
+                badgeClass: 'fwd-badge-matrix',
+                icon: '📊',
+                name: 'Executive Multi-Candidate Matrix Table (Recommended)',
+                desc: 'Dynamic comparative dossier displaying candidate experience, skills, current compensation, notice period & client report links.',
+                subject: '',
+                isDynamicMatrix: true
+            },
+            {
+                id: '1',
+                category: 'fresh',
+                badge: 'Fresh Shortlist',
+                badgeClass: 'fwd-badge-fresh',
+                icon: '🚀',
+                name: '[TEMPLATE-1] Forward Profiles for Review and Interview Scheduling',
+                desc: 'Standard formal presentation of vetted candidates for client evaluation and round-1 scheduling.',
+                subject: '[{CURRENTDATE}] | Fresh Profiles | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+            },
+            {
+                id: '73',
+                category: 'executive',
+                badge: 'Executive Spotlight',
+                badgeClass: 'fwd-badge-executive',
+                icon: '⭐',
+                name: '[TEMPLATE-5] Candidate Presentation — Single Executive Spotlight',
+                desc: 'High-touch spotlight for leadership, C-suite, and principal specialists with executive summary and key achievements.',
+                subject: 'Candidate Presentation: [{CANDIDATE_NAME}] - [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+            },
+            {
+                id: '60',
+                category: 'fresh',
+                badge: 'Prescreen Dossier',
+                badgeClass: 'fwd-badge-dossier',
+                icon: '📋',
+                name: '[TEMPLATE-3] Prescreen Report with Resume for Review and Interview Scheduling',
+                desc: 'Detailed prescreening breakdown including salary expectations, notice period, and technical assessment metrics.',
+                subject: 'Fresh Profiles with Prescreen Report | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}] | [{CURRENTDATE}]'
+            },
+            {
+                id: '61',
+                category: 'urgency',
+                badge: 'High Urgency',
+                badgeClass: 'fwd-badge-urgency',
+                icon: '⚡',
+                name: '[TEMPLATE-4] Action Required | Candidate Feedback & Interview Availability',
+                desc: 'Time-critical alert for high-demand talent with active competing offers or 0-15 days notice period.',
+                subject: 'Action Required | Candidate Feedback & Interview Availability | [{JOB_TITLE}]'
+            },
+            {
+                id: '74',
+                category: 'bench',
+                badge: 'Bench & C2C',
+                badgeClass: 'fwd-badge-bench',
+                icon: '💼',
+                name: '[TEMPLATE-6] In-House Bench / C2C Talent Deployment Proposal',
+                desc: 'Instant-deployment vetted bench resources and contract-to-hire specialists ready for immediate kickoff.',
+                subject: 'Immediate Available Consultant | [{CANDIDATE_NAME}] - [{JOB_TITLE}] | B2B / C2C Deployment'
+            },
+            {
+                id: '2',
+                category: 'feedback',
+                badge: '1st Follow-up',
+                badgeClass: 'fwd-badge-feedback',
+                icon: '🕒',
+                name: '[TEMPLATE-2] Request for Feedback on Shared Profiles',
+                desc: 'Polite 48-hour follow-up on previously forwarded candidate shortlists to maintain pipeline momentum.',
+                subject: 'Feedback Pending | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+            },
+            {
+                id: '75',
+                category: 'feedback',
+                badge: '2nd Follow-up',
+                badgeClass: 'fwd-badge-feedback',
+                icon: '🔄',
+                name: '[TEMPLATE-7] Requisition Health Check & Follow-Up (Follow-up 2)',
+                desc: 'Pipeline health check inquiry: gauge client hiring timeline, offer calibration, or profile readjustment.',
+                subject: 'Status Check & Shortlist Alignment | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+            }
+        ],
         _compiledAttachments: {},
         _isCompiling: false,
         _compileToken: 0,
@@ -732,6 +818,15 @@
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
             self.setEditorHtml('');
+            self._selectedTemplateId = '';
+            $('#test_fwd_template_select').val('');
+            if ($('#fwdTplTriggerPlaceholder').length) {
+                $('#fwdTplTriggerPlaceholder').show();
+                $('#fwdTplTriggerTitle').hide();
+                $('#fwdTplTriggerMeta').hide();
+                $('#fwdTplTriggerClear').hide();
+                $('#fwdTplTriggerIcon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+            }
             self._emailTags = { to: [], cc: [] };
             self._renderTags('to');
             self._renderTags('cc');
@@ -908,23 +1003,11 @@
                 : ('Forwarded Candidate Profile: ' + (primaryCand.full_name || 'Candidate') + ' - ' + (primaryCand.designation || primaryCand.current_designation || 'Specialist'));
             $('#test_subject').val(defaultSubj);
 
-            // Populate Templates Dropdown (Includes Dynamic Executive Matrix Table)
-            var tmplSelect = $('#test_fwd_template_select');
-            tmplSelect.empty();
-            tmplSelect.append('<option value="">-- Select Email Template (Optional) --</option>');
-            tmplSelect.append('<option value="__executive_matrix__"' + (isMulti ? ' selected' : '') + '>📊 Executive Multi-Candidate Matrix Table (Recommended)</option>');
-            self._templateData.forEach(function (tmpl) {
-                var tid = tmpl.e_temp_id || tmpl.id || '';
-                var tname = tmpl.display_name || tmpl.template_name || ('Template #' + tid);
-                tmplSelect.append('<option value="' + escapeHtml(tid) + '">' + escapeHtml(tname) + '</option>');
-            });
-
-            // Populate Executive Presentation Body into Editor
+            // Initialize God-Level Template Picker & Select Default Template
+            self.initTemplatePicker();
             if (self._applicationData.length > 0) {
-                var initialBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
-                self.setEditorHtml(initialBody, function () {
-                    self.syncFirstRecipientSalutation();
-                });
+                var defaultTplId = isMulti ? '__executive_matrix__' : '1';
+                self.selectTemplate(defaultTplId, false);
             }
 
             // Render Candidate Roster Cards
@@ -1673,32 +1756,352 @@
             if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
         },
 
+        getAllTemplatesList: function () {
+            var self = this;
+            var list = self._canonicalTemplates.map(function (c) {
+                var item = Object.assign({}, c);
+                var serverMatch = self._templateData.find(function (t) {
+                    var tid = String(t.e_temp_id || t.id || '');
+                    return tid === String(item.id);
+                });
+                if (serverMatch) {
+                    item.serverData = serverMatch;
+                    var b = serverMatch.template_body || serverMatch.body || serverMatch.template_description || '';
+                    if (b) item.body = b;
+                    var s = serverMatch.template_subject || serverMatch.subject || serverMatch.template_sub || '';
+                    if (s) item.subject = s;
+                    var n = serverMatch.display_name || serverMatch.name || serverMatch.template_name || '';
+                    if (n) item.name = n;
+                }
+                return item;
+            });
+
+            self._templateData.forEach(function (t) {
+                var tid = String(t.e_temp_id || t.id || '');
+                if (!tid) return;
+                var already = list.some(function (x) { return String(x.id) === tid; });
+                if (!already) {
+                    list.push({
+                        id: tid,
+                        category: 'feedback',
+                        badge: 'Custom Template',
+                        badgeClass: 'fwd-badge-feedback',
+                        icon: '📄',
+                        name: t.display_name || t.name || t.template_name || ('Template #' + tid),
+                        desc: 'Organization-configured email template.',
+                        subject: t.template_subject || t.subject || t.template_sub || '',
+                        body: t.template_body || t.body || t.template_description || '',
+                        serverData: t
+                    });
+                }
+            });
+
+            return list;
+        },
+
+        initTemplatePicker: function () {
+            var self = this;
+            var wrapper = $('#fwdTplPickerWrapper');
+            if (!wrapper.length) return;
+
+            self._activeTemplateCategory = 'all';
+            self._templateSearchTerm = '';
+            $('#fwdTplSearchInput').val('');
+
+            wrapper.find('.fwd-tpl-cat-btn').off('click').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var cat = $(this).attr('data-category') || 'all';
+                self._activeTemplateCategory = cat;
+                wrapper.find('.fwd-tpl-cat-btn').removeClass('is-active');
+                $(this).addClass('is-active');
+                self.renderTemplateCards();
+            });
+
+            $('#fwdTplSearchInput').off('input').on('input', function () {
+                self._templateSearchTerm = $(this).val().trim().toLowerCase();
+                if (self._templateSearchTerm.length > 0) {
+                    $('#fwdTplSearchClear').css('display', 'flex');
+                } else {
+                    $('#fwdTplSearchClear').hide();
+                }
+                self.renderTemplateCards();
+            });
+
+            $(document).off('click.fwdTplPicker').on('click.fwdTplPicker', function (e) {
+                if (!$(e.target).closest('#fwdTplPickerWrapper').length) {
+                    self.closeTemplatePicker();
+                }
+            });
+
+            $(document).off('keydown.fwdTplEsc').on('keydown.fwdTplEsc', function (e) {
+                if (e.key === 'Escape') {
+                    self.closeTemplatePicker();
+                }
+            });
+
+            var allList = self.getAllTemplatesList();
+            var counts = { all: allList.length, matrix: 0, fresh: 0, urgency: 0, bench: 0, executive: 0, feedback: 0 };
+            allList.forEach(function (tmpl) {
+                var c = tmpl.category || 'feedback';
+                if (counts[c] !== undefined) counts[c]++;
+            });
+            Object.keys(counts).forEach(function (key) {
+                $('#fwdTplCatCount_' + key).text('(' + counts[key] + ')');
+            });
+
+            $('#fwdTplAvailableCountBadge').text(allList.length + ' Available');
+            self.renderTemplateCards();
+        },
+
+        renderTemplateCards: function () {
+            var self = this;
+            var allList = self.getAllTemplatesList();
+            var container = $('#fwdTplItemsList');
+            var emptyNotice = $('#fwdTplEmptySearch');
+            if (!container.length) return;
+
+            var cat = self._activeTemplateCategory || 'all';
+            var term = (self._templateSearchTerm || '').toLowerCase();
+            var selectedId = self._selectedTemplateId || $('#test_fwd_template_select').val() || '';
+
+            var filtered = allList.filter(function (tmpl) {
+                if (cat !== 'all' && tmpl.category !== cat) {
+                    return false;
+                }
+                if (term) {
+                    var searchTarget = (
+                        (tmpl.name || '') + ' ' +
+                        (tmpl.desc || '') + ' ' +
+                        (tmpl.badge || '') + ' ' +
+                        (tmpl.subject || '')
+                    ).toLowerCase();
+                    return searchTarget.indexOf(term) !== -1;
+                }
+                return true;
+            });
+
+            container.empty();
+
+            if (filtered.length === 0) {
+                emptyNotice.show();
+                $('#fwdTplFilteredCountText').text('Showing 0 templates');
+                return;
+            }
+
+            emptyNotice.hide();
+            $('#fwdTplFilteredCountText').text('Showing ' + filtered.length + ' ' + (filtered.length === 1 ? 'template' : 'templates'));
+
+            var primaryCand = self._applicationData[0] || {};
+            var candName = primaryCand.full_name || 'Candidate';
+            var jobTitle = primaryCand.job_title || primaryCand.current_designation || 'Position';
+            var compName = self._companyData.companyName || 'Hiring Partner';
+            var candCount = self._applicationData.length || 1;
+            var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            filtered.forEach(function (tmpl) {
+                var isSelected = String(tmpl.id) === String(selectedId);
+                var subjPreview = tmpl.subject || '';
+                if (tmpl.isDynamicMatrix) {
+                    subjPreview = candCount > 1
+                        ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
+                        : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
+                } else {
+                    subjPreview = subjPreview
+                        .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                        .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
+                        .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                        .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
+                        .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
+                        .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
+                }
+
+                var cardHtml = '<div class="fwd-tpl-item-card' + (isSelected ? ' is-selected' : '') + '" data-template-id="' + escapeHtml(tmpl.id) + '" role="option" aria-selected="' + isSelected + '">' +
+                    '<div class="fwd-tpl-num-badge">' + escapeHtml(tmpl.icon || '📄') + '</div>' +
+                    '<div class="fwd-tpl-item-main">' +
+                        '<div class="fwd-tpl-item-header">' +
+                            '<div class="fwd-tpl-item-name">' + escapeHtml(tmpl.name) + '</div>' +
+                            '<div class="fwd-tpl-item-badges">' +
+                                '<span class="fwd-tpl-badge-pill ' + escapeHtml(tmpl.badgeClass || 'fwd-badge-feedback') + '">' + escapeHtml(tmpl.badge) + '</span>' +
+                                '<div class="fwd-tpl-item-check">' +
+                                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                        '<polyline points="20 6 9 17 4 12"></polyline>' +
+                                    '</svg>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="fwd-tpl-item-desc">' + escapeHtml(tmpl.desc) + '</div>' +
+                        (subjPreview ? ('<div class="fwd-tpl-item-preview-subj"><strong>Subject:</strong> ' + escapeHtml(subjPreview) + '</div>') : '') +
+                    '</div>' +
+                '</div>';
+
+                var $card = $(cardHtml);
+                $card.on('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    self.selectTemplate(tmpl.id);
+                });
+                container.append($card);
+            });
+        },
+
+        toggleTemplatePicker: function (event) {
+            var self = this;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            var popover = $('#fwdTplPopoverDropdown');
+            var trigger = $('#fwdTplTrigger');
+            if (!popover.length) return;
+
+            if (popover.is(':visible')) {
+                self.closeTemplatePicker();
+            } else {
+                popover.css('display', 'flex');
+                trigger.addClass('is-active').attr('aria-expanded', 'true');
+                setTimeout(function () {
+                    $('#fwdTplSearchInput').focus();
+                }, 50);
+            }
+        },
+
+        closeTemplatePicker: function () {
+            var popover = $('#fwdTplPopoverDropdown');
+            var trigger = $('#fwdTplTrigger');
+            if (popover.length) popover.hide();
+            if (trigger.length) trigger.removeClass('is-active').attr('aria-expanded', 'false');
+        },
+
+        selectTemplate: function (templateId, skipChange) {
+            var self = this;
+            self._selectedTemplateId = String(templateId || '');
+            $('#test_fwd_template_select').val(self._selectedTemplateId);
+
+            var allList = self.getAllTemplatesList();
+            var match = allList.find(function (t) { return String(t.id) === String(self._selectedTemplateId); });
+
+            var placeholder = $('#fwdTplTriggerPlaceholder');
+            var titleEl = $('#fwdTplTriggerTitle');
+            var metaEl = $('#fwdTplTriggerMeta');
+            var catBadge = $('#fwdTplTriggerCategory');
+            var previewSubj = $('#fwdTplTriggerSubjPreview');
+            var clearBtn = $('#fwdTplTriggerClear');
+            var iconEl = $('#fwdTplTriggerIcon');
+
+            if (match) {
+                placeholder.hide();
+                titleEl.text(match.name).show();
+                catBadge.text(match.badge).attr('class', 'fwd-tpl-badge-pill ' + (match.badgeClass || 'fwd-badge-feedback'));
+
+                var primaryCand = self._applicationData[0] || {};
+                var candName = primaryCand.full_name || 'Candidate';
+                var jobTitle = primaryCand.job_title || primaryCand.current_designation || 'Position';
+                var compName = self._companyData.companyName || 'Hiring Partner';
+                var candCount = self._applicationData.length || 1;
+                var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                var subj = match.subject || '';
+                if (match.isDynamicMatrix) {
+                    subj = candCount > 1
+                        ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
+                        : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
+                } else {
+                    subj = subj
+                        .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                        .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
+                        .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                        .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
+                        .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
+                        .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
+                }
+                previewSubj.text(subj || 'Template ready');
+                metaEl.show();
+                clearBtn.css('display', 'flex');
+
+                if (match.icon) {
+                    iconEl.html('<span style="font-size:16px;">' + match.icon + '</span>');
+                }
+            } else {
+                placeholder.show();
+                titleEl.hide();
+                metaEl.hide();
+                clearBtn.hide();
+                iconEl.html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+            }
+
+            $('#fwdTplItemsList .fwd-tpl-item-card').each(function () {
+                var cardId = $(this).attr('data-template-id');
+                var isCardSelected = String(cardId) === String(self._selectedTemplateId);
+                $(this).toggleClass('is-selected', isCardSelected).attr('aria-selected', isCardSelected);
+            });
+
+            self.closeTemplatePicker();
+
+            if (!skipChange) {
+                self.onTemplateChange(self._selectedTemplateId);
+            }
+        },
+
+        clearTemplate: function (event) {
+            var self = this;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            self._selectedTemplateId = '';
+            $('#test_fwd_template_select').val('');
+            $('#fwdTplTriggerPlaceholder').show();
+            $('#fwdTplTriggerTitle').hide();
+            $('#fwdTplTriggerMeta').hide();
+            $('#fwdTplTriggerClear').hide();
+            $('#fwdTplTriggerIcon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+            $('#fwdTplItemsList .fwd-tpl-item-card').removeClass('is-selected').attr('aria-selected', 'false');
+            self.closeTemplatePicker();
+            self.onTemplateChange('');
+        },
+
+        clearTemplateSearch: function () {
+            var self = this;
+            $('#fwdTplSearchInput').val('');
+            self._templateSearchTerm = '';
+            $('#fwdTplSearchClear').hide();
+            self.renderTemplateCards();
+            $('#fwdTplSearchInput').focus();
+        },
+
         renderClientTemplate: function (templateId) {
             var self = this;
             if (!templateId) return false;
-            var tmpl = self._templateData.find(function (t) {
-                var tid = t.e_temp_id || t.id;
-                return String(tid) === String(templateId);
+            var allList = self.getAllTemplatesList();
+            var tmpl = allList.find(function (t) {
+                return String(t.id) === String(templateId);
             });
 
-            if (!tmpl || (!tmpl.body && !tmpl.template_body)) {
-                return false;
-            }
+            if (!tmpl) return false;
 
-            var rawSubject = tmpl.subject || tmpl.template_sub || 'Forwarded Candidate Profiles';
-            var rawBody = tmpl.body || tmpl.template_body || '';
+            var rawSubject = tmpl.subject || tmpl.template_subject || tmpl.template_sub || 'Forwarded Candidate Profiles';
+            var rawBody = tmpl.body || tmpl.template_body || tmpl.template_description || '';
+
+            if (!rawBody) return false;
 
             var primaryCand = self._applicationData[0] || {};
             var candidateName = primaryCand.full_name || 'Candidate';
             var companyName = self._companyData.companyName || 'Hiring Partner';
             var jobTitle = primaryCand.job_title || primaryCand.current_designation || 'Position';
             var recipientName = self.getFirstRecipientName() || 'Hiring Manager';
+            var candCount = self._applicationData.length || 1;
+            var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
             var sub = rawSubject
+                .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                .replace(/\{\{CURRENTDATE\}\}/gi, dateStr)
+                .replace(/\[CURRENTDATE\]/gi, dateStr)
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
                 .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
                 .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
+                .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[COMPANY_NAME\]/gi, companyName)
@@ -1707,6 +2110,7 @@
                 .replace(/\[CLIENT_NAME\]/gi, companyName)
                 .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
                 .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
                 .replace(/\[JOB_TITLE\]/gi, jobTitle)
@@ -1715,16 +2119,17 @@
 
             var skillTrackerHtml = self.buildClientSkillTrackerHtml();
             var candidateSummaryHtml = self.buildDynamicMatrixTable();
-            var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
             var body = rawBody
                 .replace(/\[\{HR_NAME\}\]/gi, recipientName)
                 .replace(/\{\{HR_NAME\}\}/gi, recipientName)
+                .replace(/\[HR_NAME\]/gi, recipientName)
                 .replace(/\[\{RECIPIENT_NAME\}\]/gi, recipientName)
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
                 .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
                 .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
+                .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[COMPANY_NAME\]/gi, companyName)
@@ -1733,16 +2138,21 @@
                 .replace(/\[CLIENT_NAME\]/gi, companyName)
                 .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
                 .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
                 .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle)
                 .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
+                .replace(/\[\{EMAIL_TRACKER\}\]/gi, candidateSummaryHtml)
+                .replace(/\[EMAIL_TRACKER\]/gi, candidateSummaryHtml)
                 .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
                 .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
                 .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, candidateSummaryHtml)
                 .replace(/\[\{MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
                 .replace(/\[MATRIX_TABLE\]/gi, candidateSummaryHtml)
+                .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                .replace(/\[CURRENTDATE\]/gi, dateStr)
                 .replace(/\[\{DATE\}\]/gi, dateStr)
                 .replace(/\{\{DATE\}\}/gi, dateStr);
 
@@ -1807,6 +2217,15 @@
                 success: function (res) {
                     if (res && res.status === 'success') {
                         var desc = res.template_description || res.template_body || '';
+                        var matrixTableHtml = self.buildDynamicMatrixTable();
+                        desc = desc
+                            .replace(/\[\{EMAIL_TRACKER\}\]/gi, matrixTableHtml)
+                            .replace(/\[EMAIL_TRACKER\]/gi, matrixTableHtml)
+                            .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, matrixTableHtml)
+                            .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, matrixTableHtml)
+                            .replace(/\[\{MATRIX_TABLE\}\]/gi, matrixTableHtml)
+                            .replace(/\[MATRIX_TABLE\]/gi, matrixTableHtml);
+
                         $('#test_subject').val(res.subject || '');
                         self.setEditorHtml(desc, function () {
                             self.syncFirstRecipientSalutation();

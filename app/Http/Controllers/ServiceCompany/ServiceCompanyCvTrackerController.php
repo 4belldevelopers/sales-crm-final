@@ -4331,7 +4331,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     'index' => config('constants.ELASTIC_EMAIL_TEMPLATE'),
                     'body' => [
                         'size' => 50,
-                        '_source' => ['id', 'e_temp_id', 'template_name', 'template_sub', 'template_body'],
+                        '_source' => ['id', 'e_temp_id', 'template_name', 'display_name', 'template_sub', 'template_subject', 'template_body', 'template_description'],
                         'query' => [
                             'bool' => [
                                 'must' => [
@@ -4351,9 +4351,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                     return [
                         'id' => (int) $tId,
-                        'name' => $src['template_name'] ?? 'Template',
-                        'subject' => $src['template_sub'] ?? '',
-                        'body' => $src['template_body'] ?? '',
+                        'name' => $src['display_name'] ?? ($src['template_name'] ?? 'Template'),
+                        'subject' => $src['template_subject'] ?? ($src['template_sub'] ?? ''),
+                        'body' => $src['template_description'] ?? ($src['template_body'] ?? ''),
                     ];
                 })->toArray();
             } catch (\Throwable $e) {
@@ -4361,7 +4361,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('status', 1)
                     ->where('temptype', 1)
                     ->limit(50)
-                    ->select('e_temp_id as id', 'template_name as name', 'template_sub as subject', 'template_body as body')
+                    ->select('e_temp_id as id', 'display_name as name', 'template_subject as subject', 'template_description as body')
                     ->get()
                     ->toArray();
             }

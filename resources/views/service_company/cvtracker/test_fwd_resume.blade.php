@@ -674,6 +674,390 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 .rcp-footer { padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .rcp-btn-cancel { padding: 8px 16px; border: 1px solid #E5E7EB; background: #fff; border-radius: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; }
 .rcp-btn-done { padding: 8px 20px; border: none; background: #2563EB; border-radius: 7px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GOD-LEVEL ENTERPRISE TEMPLATE PICKER (FORWARD RESUME)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.fwd-tpl-picker-wrapper {
+  position: relative;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+.fwd-tpl-trigger {
+  width: 100%;
+  min-height: 48px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+.fwd-tpl-trigger:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+.fwd-tpl-trigger.is-active,
+.fwd-tpl-trigger:focus {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+.fwd-tpl-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.fwd-tpl-trigger-icon {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 8px;
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #DBEAFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.fwd-tpl-trigger-icon svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+.fwd-tpl-trigger-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+.fwd-tpl-trigger-placeholder {
+  font-size: 13px;
+  color: #94A3B8;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fwd-tpl-trigger-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.fwd-tpl-trigger-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.fwd-tpl-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.fwd-tpl-trigger-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+.fwd-tpl-trigger-clear {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #64748B;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.fwd-tpl-trigger-clear:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.fwd-tpl-trigger-chevron {
+  width: 16px;
+  height: 16px;
+  color: #94A3B8;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.fwd-tpl-trigger.is-active .fwd-tpl-trigger-chevron {
+  transform: rotate(180deg);
+  color: #2563EB;
+}
+
+/* Floating Popover Dropdown */
+.fwd-tpl-popover-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.14), 0 6px 12px -2px rgba(15, 23, 42, 0.06);
+  z-index: 1050;
+  display: none;
+  overflow: hidden;
+  animation: fwdTplFadeIn 0.16s ease-out;
+}
+@keyframes fwdTplFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Popover Search Bar */
+.fwd-tpl-search-box {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FAFAFA;
+  position: relative;
+}
+.fwd-tpl-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.fwd-tpl-search-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+.fwd-tpl-search-input {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 7px;
+  padding: 7px 30px 7px 32px;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  color: #1E293B;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.fwd-tpl-search-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+.fwd-tpl-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #64748B;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Category Filter Tabs / Pills */
+.fwd-tpl-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FFFFFF;
+  scrollbar-width: none;
+}
+.fwd-tpl-category-tabs::-webkit-scrollbar { display: none; }
+.fwd-tpl-cat-btn {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+  user-select: none;
+  font-family: 'Poppins', sans-serif;
+}
+.fwd-tpl-cat-btn:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+.fwd-tpl-cat-btn.is-active {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+/* Templates List Container */
+.fwd-tpl-items-list {
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 6px;
+}
+.fwd-tpl-items-list::-webkit-scrollbar { width: 5px; }
+.fwd-tpl-items-list::-webkit-scrollbar-track { background: #F8FAFC; }
+.fwd-tpl-items-list::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+/* Template Card Item */
+.fwd-tpl-item-card {
+  padding: 9px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  user-select: none;
+}
+.fwd-tpl-item-card:hover {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+.fwd-tpl-item-card.is-selected {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+.fwd-tpl-num-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.fwd-tpl-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.fwd-tpl-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fwd-tpl-item-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.fwd-tpl-item-card.is-selected .fwd-tpl-item-name {
+  color: #1D4ED8;
+}
+.fwd-tpl-item-desc {
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.fwd-tpl-item-preview-subj {
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.fwd-tpl-item-badges {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.fwd-tpl-badge-pill {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.fwd-badge-matrix { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.fwd-badge-fresh { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.fwd-badge-urgency { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.fwd-badge-bench { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.fwd-badge-executive { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+.fwd-badge-dossier { background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; }
+.fwd-badge-feedback { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+
+.fwd-tpl-item-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563EB;
+  color: #FFFFFF;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.fwd-tpl-item-card.is-selected .fwd-tpl-item-check {
+  display: inline-flex;
+}
+.fwd-tpl-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #F8FAFC;
+  border-top: 1px solid #F1F5F9;
+  font-size: 11px;
+  color: #64748B;
+}
 </style>
 
 <div class="mm-wrap">
@@ -790,20 +1174,85 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     <div class="mm-row">
       <div class="mm-label-col">
         <span class="mm-label-icon mm-ic-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </span>
         Template
       </div>
       <div class="mm-field-col">
-        <select name="template" id="test_template" class="mm-select" onchange="if(window.onTestTemplateChange) window.onTestTemplateChange(this);">
-          <option value="">Select Email Template...</option>
-          <option value="__executive_matrix__" {{ $isMulti ? 'selected' : '' }}>📊 Executive Multi-Candidate Matrix Table (Recommended)</option>
-          @if(!empty($templateData))
-            @foreach($templateData as $tdata)
-              <option value="{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
-            @endforeach
-          @endif
-        </select>
+        <div class="fwd-tpl-picker-wrapper" id="testTplPickerWrapper">
+          <!-- Interactive Trigger Card -->
+          <div class="fwd-tpl-trigger" id="testTplTrigger" tabindex="0" role="combobox" aria-expanded="false" onclick="if(window.toggleTestTemplatePicker) window.toggleTestTemplatePicker(event);">
+            <div class="fwd-tpl-trigger-left">
+              <div class="fwd-tpl-trigger-icon" id="testTplTriggerIcon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+              </div>
+              <div class="fwd-tpl-trigger-content">
+                <span class="fwd-tpl-trigger-placeholder" id="testTplTriggerPlaceholder">Choose an enterprise email template...</span>
+                <div class="fwd-tpl-trigger-title" id="testTplTriggerTitle" style="display:none;"></div>
+                <div class="fwd-tpl-trigger-meta" id="testTplTriggerMeta" style="display:none;">
+                  <span id="testTplTriggerCategory" class="fwd-tpl-badge-pill"></span>
+                  <span style="color:#CBD5E1;">•</span>
+                  <span id="testTplTriggerSubjPreview" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                </div>
+              </div>
+            </div>
+            <div class="fwd-tpl-trigger-right">
+              <span class="fwd-tpl-trigger-badge" id="testTplAvailableCountBadge">8 Available</span>
+              <span class="fwd-tpl-trigger-clear" id="testTplTriggerClear" title="Clear template selection" onclick="if(window.clearTestTemplate) window.clearTestTemplate(event);">&times;</span>
+              <svg class="fwd-tpl-trigger-chevron" id="testTplChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Floating Popover Dropdown Panel -->
+          <div class="fwd-tpl-popover-dropdown" id="testTplPopoverDropdown" style="display:none;">
+            <!-- Real-time Search Box -->
+            <div class="fwd-tpl-search-box">
+              <div class="fwd-tpl-search-input-wrap">
+                <svg class="fwd-tpl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" class="fwd-tpl-search-input" id="testTplSearchInput" placeholder="Search templates by title, subject, or scenario..." autocomplete="off">
+                <span class="fwd-tpl-search-clear" id="testTplSearchClear" onclick="if(window.clearTestTemplateSearch) window.clearTestTemplateSearch();">&times;</span>
+              </div>
+            </div>
+
+            <!-- Category Filter Tabs / Pills -->
+            <div class="fwd-tpl-category-tabs" id="testTplCategoryTabs">
+              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all">All <span id="testTplCatCount_all">(8)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix">📊 Matrix <span id="testTplCatCount_matrix">(1)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh">🚀 Fresh Shortlist <span id="testTplCatCount_fresh">(2)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency">⚡ High Urgency <span id="testTplCatCount_urgency">(1)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="bench">💼 Bench &amp; C2C <span id="testTplCatCount_bench">(1)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="executive">⭐ Executive <span id="testTplCatCount_executive">(1)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback">🕒 Follow-up <span id="testTplCatCount_feedback">(2)</span></button>
+            </div>
+
+            <!-- Template Items List -->
+            <div class="fwd-tpl-items-list" id="testTplItemsList"></div>
+
+            <div class="fwd-tpl-empty-search" id="testTplEmptySearch" style="display:none;padding:24px 16px;text-align:center;font-size:12px;color:#94A3B8;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <div>No templates match your search filter</div>
+            </div>
+
+            <!-- Popover Footer -->
+            <div class="fwd-tpl-popover-footer">
+              <span id="testTplFilteredCountText">Showing 8 templates</span>
+              <span style="font-size:10.5px;color:#94A3B8;">Click any card to apply</span>
+            </div>
+          </div>
+
+          <input type="hidden" name="template" id="test_template" value="{{ $isMulti ? '__executive_matrix__' : '1' }}" />
+        </div>
         <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
       </div>
     </div>
@@ -2016,9 +2465,400 @@ window.insertTestMatrixTableIntoEditor = function() {
     if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
 };
 
+// Canonical God-Level Template Suite for Forward Resume
+window.testCanonicalTemplates = [
+    {
+        id: '__executive_matrix__',
+        category: 'matrix',
+        badge: 'Executive Matrix',
+        badgeClass: 'fwd-badge-matrix',
+        icon: '📊',
+        name: 'Executive Multi-Candidate Matrix Table (Recommended)',
+        desc: 'Dynamic comparative dossier displaying candidate experience, skills, current compensation, notice period & client report links.',
+        subject: '',
+        isDynamicMatrix: true
+    },
+    {
+        id: '1',
+        category: 'fresh',
+        badge: 'Fresh Shortlist',
+        badgeClass: 'fwd-badge-fresh',
+        icon: '🚀',
+        name: '[TEMPLATE-1] Forward Profiles for Review and Interview Scheduling',
+        desc: 'Standard formal presentation of vetted candidates for client evaluation and round-1 scheduling.',
+        subject: '[{CURRENTDATE}] | Fresh Profiles | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+    },
+    {
+        id: '73',
+        category: 'executive',
+        badge: 'Executive Spotlight',
+        badgeClass: 'fwd-badge-executive',
+        icon: '⭐',
+        name: '[TEMPLATE-5] Candidate Presentation — Single Executive Spotlight',
+        desc: 'High-touch spotlight for leadership, C-suite, and principal specialists with executive summary and key achievements.',
+        subject: 'Candidate Presentation: [{CANDIDATE_NAME}] - [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+    },
+    {
+        id: '60',
+        category: 'fresh',
+        badge: 'Prescreen Dossier',
+        badgeClass: 'fwd-badge-dossier',
+        icon: '📋',
+        name: '[TEMPLATE-3] Prescreen Report with Resume for Review and Interview Scheduling',
+        desc: 'Detailed prescreening breakdown including salary expectations, notice period, and technical assessment metrics.',
+        subject: 'Fresh Profiles with Prescreen Report | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}] | [{CURRENTDATE}]'
+    },
+    {
+        id: '61',
+        category: 'urgency',
+        badge: 'High Urgency',
+        badgeClass: 'fwd-badge-urgency',
+        icon: '⚡',
+        name: '[TEMPLATE-4] Action Required | Candidate Feedback & Interview Availability',
+        desc: 'Time-critical alert for high-demand talent with active competing offers or 0-15 days notice period.',
+        subject: 'Action Required | Candidate Feedback & Interview Availability | [{JOB_TITLE}]'
+    },
+    {
+        id: '74',
+        category: 'bench',
+        badge: 'Bench & C2C',
+        badgeClass: 'fwd-badge-bench',
+        icon: '💼',
+        name: '[TEMPLATE-6] In-House Bench / C2C Talent Deployment Proposal',
+        desc: 'Instant-deployment vetted bench resources and contract-to-hire specialists ready for immediate kickoff.',
+        subject: 'Immediate Available Consultant | [{CANDIDATE_NAME}] - [{JOB_TITLE}] | B2B / C2C Deployment'
+    },
+    {
+        id: '2',
+        category: 'feedback',
+        badge: '1st Follow-up',
+        badgeClass: 'fwd-badge-feedback',
+        icon: '🕒',
+        name: '[TEMPLATE-2] Request for Feedback on Shared Profiles',
+        desc: 'Polite 48-hour follow-up on previously forwarded candidate shortlists to maintain pipeline momentum.',
+        subject: 'Feedback Pending | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+    },
+    {
+        id: '75',
+        category: 'feedback',
+        badge: '2nd Follow-up',
+        badgeClass: 'fwd-badge-feedback',
+        icon: '🔄',
+        name: '[TEMPLATE-7] Requisition Health Check & Follow-Up (Follow-up 2)',
+        desc: 'Pipeline health check inquiry: gauge client hiring timeline, offer calibration, or profile readjustment.',
+        subject: 'Status Check & Shortlist Alignment | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+    }
+];
+
+window._testActiveTplCategory = 'all';
+window._testTplSearchTerm = '';
+window._testSelectedTplId = '{{ $isMulti ? "__executive_matrix__" : "1" }}';
+
+window.getAllTestTemplatesList = function() {
+    var rawServer = @json($templateData ?? []);
+    var serverList = Array.isArray(rawServer) ? rawServer : Object.values(rawServer || {});
+    var list = window.testCanonicalTemplates.map(function(c) {
+        var item = Object.assign({}, c);
+        var sMatch = serverList.find(function(t) {
+            var tid = String(t.e_temp_id || t.id || '');
+            return tid === String(item.id);
+        });
+        if (sMatch) {
+            item.serverData = sMatch;
+            if (sMatch.display_name || sMatch.template_name) item.name = sMatch.display_name || sMatch.template_name;
+            if (sMatch.template_subject || sMatch.subject) item.subject = sMatch.template_subject || sMatch.subject;
+        }
+        return item;
+    });
+
+    serverList.forEach(function(t) {
+        var tid = String(t.e_temp_id || t.id || '');
+        if (!tid) return;
+        var exists = list.some(function(x) { return String(x.id) === tid; });
+        if (!exists) {
+            list.push({
+                id: tid,
+                category: 'feedback',
+                badge: 'Custom Template',
+                badgeClass: 'fwd-badge-feedback',
+                icon: '📄',
+                name: t.display_name || t.template_name || ('Template #' + tid),
+                desc: 'Organization-configured email template.',
+                subject: t.template_subject || t.subject || '',
+                serverData: t
+            });
+        }
+    });
+
+    return list;
+};
+
+window.initTestTemplatePicker = function() {
+    var wrapper = $('#testTplPickerWrapper');
+    if (!wrapper.length) return;
+
+    window._testActiveTplCategory = 'all';
+    window._testTplSearchTerm = '';
+    $('#testTplSearchInput').val('');
+
+    wrapper.find('.fwd-tpl-cat-btn').off('click').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var cat = $(this).attr('data-category') || 'all';
+        window._testActiveTplCategory = cat;
+        wrapper.find('.fwd-tpl-cat-btn').removeClass('is-active');
+        $(this).addClass('is-active');
+        window.renderTestTemplateCards();
+    });
+
+    $('#testTplSearchInput').off('input').on('input', function() {
+        window._testTplSearchTerm = $(this).val().trim().toLowerCase();
+        if (window._testTplSearchTerm.length > 0) {
+            $('#testTplSearchClear').css('display', 'flex');
+        } else {
+            $('#testTplSearchClear').hide();
+        }
+        window.renderTestTemplateCards();
+    });
+
+    $(document).off('click.testTplPicker').on('click.testTplPicker', function(e) {
+        if (!$(e.target).closest('#testTplPickerWrapper').length) {
+            window.closeTestTemplatePicker();
+        }
+    });
+
+    $(document).off('keydown.testTplEsc').on('keydown.testTplEsc', function(e) {
+        if (e.key === 'Escape') {
+            window.closeTestTemplatePicker();
+        }
+    });
+
+    var allList = window.getAllTestTemplatesList();
+    var counts = { all: allList.length, matrix: 0, fresh: 0, urgency: 0, bench: 0, executive: 0, feedback: 0 };
+    allList.forEach(function(tmpl) {
+        var c = tmpl.category || 'feedback';
+        if (counts[c] !== undefined) counts[c]++;
+    });
+    Object.keys(counts).forEach(function(k) {
+        $('#testTplCatCount_' + k).text('(' + counts[k] + ')');
+    });
+    $('#testTplAvailableCountBadge').text(allList.length + ' Available');
+
+    window.renderTestTemplateCards();
+};
+
+window.renderTestTemplateCards = function() {
+    var allList = window.getAllTestTemplatesList();
+    var container = $('#testTplItemsList');
+    var emptyNotice = $('#testTplEmptySearch');
+    if (!container.length) return;
+
+    var cat = window._testActiveTplCategory || 'all';
+    var term = (window._testTplSearchTerm || '').toLowerCase();
+    var selectedId = window._testSelectedTplId || $('#test_template').val() || '';
+
+    var filtered = allList.filter(function(tmpl) {
+        if (cat !== 'all' && tmpl.category !== cat) return false;
+        if (term) {
+            var searchTarget = (
+                (tmpl.name || '') + ' ' +
+                (tmpl.desc || '') + ' ' +
+                (tmpl.badge || '') + ' ' +
+                (tmpl.subject || '')
+            ).toLowerCase();
+            return searchTarget.indexOf(term) !== -1;
+        }
+        return true;
+    });
+
+    container.empty();
+
+    if (filtered.length === 0) {
+        emptyNotice.show();
+        $('#testTplFilteredCountText').text('Showing 0 templates');
+        return;
+    }
+
+    emptyNotice.hide();
+    $('#testTplFilteredCountText').text('Showing ' + filtered.length + ' ' + (filtered.length === 1 ? 'template' : 'templates'));
+
+    var candName = @json($firstCandName ?? 'Candidate');
+    var jobTitle = @json($firstCandDesig ?? 'Specialist');
+    var compName = @json($compName ?? 'Hiring Partner');
+    var candCount = @json($candCount ?? 1);
+    var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    filtered.forEach(function(tmpl) {
+        var isSelected = String(tmpl.id) === String(selectedId);
+        var subjPreview = tmpl.subject || '';
+        if (tmpl.isDynamicMatrix) {
+            subjPreview = candCount > 1
+                ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
+                : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
+        } else {
+            subjPreview = subjPreview
+                .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
+                .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
+                .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
+                .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
+        }
+
+        var cardHtml = '<div class="fwd-tpl-item-card' + (isSelected ? ' is-selected' : '') + '" data-template-id="' + tmpl.id + '" role="option" aria-selected="' + isSelected + '">' +
+            '<div class="fwd-tpl-num-badge">' + (tmpl.icon || '📄') + '</div>' +
+            '<div class="fwd-tpl-item-main">' +
+                '<div class="fwd-tpl-item-header">' +
+                    '<div class="fwd-tpl-item-name">' + tmpl.name + '</div>' +
+                    '<div class="fwd-tpl-item-badges">' +
+                        '<span class="fwd-tpl-badge-pill ' + (tmpl.badgeClass || 'fwd-badge-feedback') + '">' + tmpl.badge + '</span>' +
+                        '<div class="fwd-tpl-item-check">' +
+                            '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<polyline points="20 6 9 17 4 12"></polyline>' +
+                            '</svg>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="fwd-tpl-item-desc">' + tmpl.desc + '</div>' +
+                (subjPreview ? ('<div class="fwd-tpl-item-preview-subj"><strong>Subject:</strong> ' + subjPreview + '</div>') : '') +
+            '</div>' +
+        '</div>';
+
+        var $card = $(cardHtml);
+        $card.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.selectTestTemplate(tmpl.id);
+        });
+        container.append($card);
+    });
+};
+
+window.toggleTestTemplatePicker = function(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    var popover = $('#testTplPopoverDropdown');
+    var trigger = $('#testTplTrigger');
+    if (!popover.length) return;
+
+    if (popover.is(':visible')) {
+        window.closeTestTemplatePicker();
+    } else {
+        popover.css('display', 'flex');
+        trigger.addClass('is-active').attr('aria-expanded', 'true');
+        setTimeout(function() {
+            $('#testTplSearchInput').focus();
+        }, 50);
+    }
+};
+
+window.closeTestTemplatePicker = function() {
+    var popover = $('#testTplPopoverDropdown');
+    var trigger = $('#testTplTrigger');
+    if (popover.length) popover.hide();
+    if (trigger.length) trigger.removeClass('is-active').attr('aria-expanded', 'false');
+};
+
+window.selectTestTemplate = function(templateId, skipChange) {
+    window._testSelectedTplId = String(templateId || '');
+    $('#test_template').val(window._testSelectedTplId);
+
+    var allList = window.getAllTestTemplatesList();
+    var match = allList.find(function(t) { return String(t.id) === String(window._testSelectedTplId); });
+
+    var placeholder = $('#testTplTriggerPlaceholder');
+    var titleEl = $('#testTplTriggerTitle');
+    var metaEl = $('#testTplTriggerMeta');
+    var catBadge = $('#testTplTriggerCategory');
+    var previewSubj = $('#testTplTriggerSubjPreview');
+    var clearBtn = $('#testTplTriggerClear');
+    var iconEl = $('#testTplTriggerIcon');
+
+    if (match) {
+        placeholder.hide();
+        titleEl.text(match.name).show();
+        catBadge.text(match.badge).attr('class', 'fwd-tpl-badge-pill ' + (match.badgeClass || 'fwd-badge-feedback'));
+
+        var candName = @json($firstCandName ?? 'Candidate');
+        var jobTitle = @json($firstCandDesig ?? 'Specialist');
+        var compName = @json($compName ?? 'Hiring Partner');
+        var candCount = @json($candCount ?? 1);
+        var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        var subj = match.subject || '';
+        if (match.isDynamicMatrix) {
+            subj = candCount > 1
+                ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
+                : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
+        } else {
+            subj = subj
+                .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
+                .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
+                .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
+                .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
+                .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
+        }
+        previewSubj.text(subj || 'Template ready');
+        metaEl.show();
+        clearBtn.css('display', 'flex');
+
+        if (match.icon) {
+            iconEl.html('<span style="font-size:16px;">' + match.icon + '</span>');
+        }
+    } else {
+        placeholder.show();
+        titleEl.hide();
+        metaEl.hide();
+        clearBtn.hide();
+        iconEl.html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+    }
+
+    $('#testTplItemsList .fwd-tpl-item-card').each(function() {
+        var cardId = $(this).attr('data-template-id');
+        var isCardSelected = String(cardId) === String(window._testSelectedTplId);
+        $(this).toggleClass('is-selected', isCardSelected).attr('aria-selected', isCardSelected);
+    });
+
+    window.closeTestTemplatePicker();
+
+    if (!skipChange) {
+        window.onTestTemplateChange(window._testSelectedTplId);
+    }
+};
+
+window.clearTestTemplate = function(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    window._testSelectedTplId = '';
+    $('#test_template').val('');
+    $('#testTplTriggerPlaceholder').show();
+    $('#testTplTriggerTitle').hide();
+    $('#testTplTriggerMeta').hide();
+    $('#testTplTriggerClear').hide();
+    $('#testTplTriggerIcon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+    $('#testTplItemsList .fwd-tpl-item-card').removeClass('is-selected').attr('aria-selected', 'false');
+    window.closeTestTemplatePicker();
+    window.onTestTemplateChange('');
+};
+
+window.clearTestTemplateSearch = function() {
+    $('#testTplSearchInput').val('');
+    window._testTplSearchTerm = '';
+    $('#testTplSearchClear').hide();
+    window.renderTestTemplateCards();
+    $('#testTplSearchInput').focus();
+};
+
 // Template change populates Subject and Editor
-window.onTestTemplateChange = function(selectEl) {
-    var template = $(selectEl).val();
+window.onTestTemplateChange = function(selectOrId) {
+    var template = (typeof selectOrId === 'object' && selectOrId !== null) ? $(selectOrId).val() : selectOrId;
+    template = String(template || '');
+
     if (template === '__executive_matrix__') {
         var isMulti = @json($isMulti ?? false);
         var candCount = @json($candCount ?? 0);
@@ -2037,7 +2877,7 @@ window.onTestTemplateChange = function(selectEl) {
         return;
     }
 
-    if (template > 0) {
+    if (template && template !== '0') {
         var id = template;
         var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
         url = url.replace(':id', id);
@@ -2074,6 +2914,8 @@ window.onTestTemplateChange = function(selectEl) {
                     var desc = response.template_description || response.template_body || '';
                     var matrixTableHtml = window.buildTestDynamicMatrixTable ? window.buildTestDynamicMatrixTable() : '';
                     desc = desc
+                        .replace(/\[\{EMAIL_TRACKER\}\]/gi, matrixTableHtml)
+                        .replace(/\[EMAIL_TRACKER\]/gi, matrixTableHtml)
                         .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, matrixTableHtml)
                         .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, matrixTableHtml)
                         .replace(/\[\{MATRIX_TABLE\}\]/gi, matrixTableHtml)
@@ -2100,8 +2942,10 @@ window.onTestTemplateChange = function(selectEl) {
     }
 };
 
-$(document).off('change', '#test_template').on('change', '#test_template', function() {
-    window.onTestTemplateChange(this);
+$(document).ready(function() {
+    window.initTestTemplatePicker();
+    var defaultId = "{{ $isMulti ? '__executive_matrix__' : '1' }}";
+    window.selectTestTemplate(defaultId, false);
 });
 
 // Submit click handler
