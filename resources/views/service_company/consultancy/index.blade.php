@@ -2601,8 +2601,24 @@ $(document).ready(function() {
 
 
         var isStaffingInviteSubmitting = false;
+        var currentInviteIdempotencyKey = null;
+        var currentInviteEmail = null;
 
-        $(document).on('keydown', '#staffing_partners_email', function(e) {
+        function getOrCreateInviteIdempotencyKey(email) {
+            var normalized = (email || '').trim().toLowerCase();
+            if (currentInviteIdempotencyKey && currentInviteEmail === normalized) {
+                return currentInviteIdempotencyKey;
+            }
+            currentInviteEmail = normalized;
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                currentInviteIdempotencyKey = crypto.randomUUID();
+            } else {
+                currentInviteIdempotencyKey = 'idemp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 12);
+            }
+            return currentInviteIdempotencyKey;
+        }
+
+        $(document).off('keydown', '#staffing_partners_email').on('keydown', '#staffing_partners_email', function(e) {
             if (e.which === 13 || e.keyCode === 13) {
                 e.preventDefault();
                 if (!isStaffingInviteSubmitting) {
@@ -2612,7 +2628,7 @@ $(document).ready(function() {
             }
         });
 
-        $(document).on('click', '#submit_staffing_partners', function(e) {
+        $(document).off('click', '#submit_staffing_partners').on('click', '#submit_staffing_partners', function(e) {
             e.preventDefault();
 
             if (isStaffingInviteSubmitting) {
@@ -2625,14 +2641,16 @@ $(document).ready(function() {
                 }
             }
 
-            var staffing_partners_email = $('#staffing_partners_email').val();
-            if (!staffing_partners_email || !staffing_partners_email.trim()) {
+            var staffing_partners_email = ($('#staffing_partners_email').val() || '').trim();
+            if (!staffing_partners_email) {
                 return false;
             }
 
             var id = 0;
             var url = "{{ route('service_company.consultancy.staffing_invitation', 'id') }}";
             url = url.replace(':id', id);
+
+            var idempKey = getOrCreateInviteIdempotencyKey(staffing_partners_email);
 
             isStaffingInviteSubmitting = true;
             var $btn = $('#submit_staffing_partners');
@@ -2641,10 +2659,16 @@ $(document).ready(function() {
             $('.indicator-progress').show();
 
             $.ajax({
-                type: 'GET',
+                type: 'POST',
                 url: url,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}',
+                    'X-Idempotency-Key': idempKey
+                },
                 data: {
-                    'staffing_partners_email': staffing_partners_email.trim()
+                    '_token': '{{ csrf_token() }}',
+                    'staffing_partners_email': staffing_partners_email,
+                    'idempotency_key': idempKey
                 },
                 success: function(response) {
                     isStaffingInviteSubmitting = false;
@@ -2657,17 +2681,24 @@ $(document).ready(function() {
                             title: "Notice",
                             text: response.message,
                             type: "warning",
-                            timer: 2500,
+                            timer: 3000,
                             showConfirmButton: true
                         });
                     }
 
                     if (response.status == "success") {
+                        currentInviteIdempotencyKey = null;
+                        currentInviteEmail = null;
                         $('#staffing_partners_email').val('');
-                        var spartnerAll = response.spartnerDataCnt.spartnerAll;
-                        var sentRequest = response.spartnerDataCnt.sentRequest;
-                        $('#span_spartnerAll').html(spartnerAll);
-                        $('#span_sentRequest').html(sentRequest);
+
+                        var spartnerAll = response.spartnerDataCnt ? response.spartnerDataCnt.spartnerAll : null;
+                        var sentRequest = response.spartnerDataCnt ? response.spartnerDataCnt.sentRequest : null;
+                        if (spartnerAll !== null && spartnerAll !== undefined) {
+                            $('#span_spartnerAll').html(spartnerAll);
+                        }
+                        if (sentRequest !== null && sentRequest !== undefined) {
+                            $('#span_sentRequest').html(sentRequest);
+                        }
 
                         if (typeof ConsultancyListingManager !== 'undefined') {
                             if (ConsultancyListingManager.clearCache) {
@@ -2690,22 +2721,27 @@ $(document).ready(function() {
                             text: response.message,
                             html: true,
                             type: "success",
-                            timer: 1500,
+                            timer: 2000,
                             showConfirmButton: true
                         }, function() {
                             $('.add_staffing_close').click();
                         });
                     }
                 },
-                error: function() {
+                error: function(xhr) {
                     isStaffingInviteSubmitting = false;
                     $btn.prop('disabled', false);
                     $('.indicator-label').show();
                     $('.indicator-progress').hide();
+
+                    var errorMsg = "An error occurred while sending the invitation. Please try again.";
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
                     if (typeof swal !== 'undefined') {
                         swal({
                             title: "Error",
-                            text: "An error occurred while sending the invitation. Please try again.",
+                            text: errorMsg,
                             type: "error"
                         });
                     }

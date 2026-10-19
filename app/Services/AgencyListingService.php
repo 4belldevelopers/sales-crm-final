@@ -41,16 +41,13 @@ class AgencyListingService
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
             $counters = [];
 
-            // 1. All Connected Agencies
-            $clientAll = DB::table('companies')
-                ->select('companies.id')
-                ->leftJoin('staffing_company_relation', 'staffing_company_relation.to_company_id', '=', 'companies.id')
-                ->leftJoin('clients', 'clients.company_id', '=', 'staffing_company_relation.to_company_id')
+            // 1. All Connected Agencies (Optimized: Uses covering index idx_pair without redundant 3-table joins or in-memory collections)
+            $counters['spartnerAll'] = DB::table('staffing_company_relation')
                 ->where('staffing_company_relation.final_status', 1)
                 ->where('staffing_company_relation.from_company_id', $companyId)
-                ->groupBy('staffing_company_relation.to_company_id')
-                ->get();
-            $counters['spartnerAll'] = count($clientAll);
+                ->whereNotNull('to_company_id')
+                ->distinct()
+                ->count('to_company_id');
             $counters['clientAll'] = 0;
 
             // 2. Sent Requests
