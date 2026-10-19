@@ -4542,14 +4542,13 @@ $('.remove_address').click(function(){
     if (!logoUrl) return;
 
     // 1. Immediately apply visual preview in User RAM (zero delay, zero flicker)
-    $('.image-input-wrapper').css({
-      'background-image': 'url(' + logoUrl + ')',
+    $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
+      'background-image': 'url("' + logoUrl + '")',
       'background-size': 'contain',
       'background-repeat': 'no-repeat',
       'background-position': 'center'
-    });
+    }).empty();
     $('#client_preview_remove_btn').show();
-    $('#client_logo_preview .la-building, #client_logo_preview span').hide();
     $('#client_avatar_remove').val(0);
 
     // 2. Direct Base64 Data URI Conversion without Canvas (100% CORS-safe)
@@ -4597,12 +4596,12 @@ $('.remove_address').click(function(){
                       centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
 
         var dataUrl = canvas.toDataURL('image/png');
-        $('.image-input-wrapper').css({
-          'background-image': 'url(' + dataUrl + ')',
+        $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
+          'background-image': 'url("' + dataUrl + '")',
           'background-size': 'contain',
           'background-repeat': 'no-repeat',
           'background-position': 'center'
-        });
+        }).empty();
 
         canvas.toBlob(function (blob) {
           if (blob && window.DataTransfer) {
@@ -4630,6 +4629,25 @@ $('.remove_address').click(function(){
 
   function applyCompanyIntelligenceData(data) {
     if (!data) return;
+
+    // 0. Normalize website URL if entered without scheme
+    var currentWeb = ($('#website').val() || '').trim();
+    if (data.website && (!currentWeb || currentWeb.indexOf('http') === -1)) {
+      $('#website').val(data.website).trigger('input').trigger('change');
+    }
+
+    // Clear any previous validation errors on auto-filled attributes
+    if (typeof clearFieldError === 'function') {
+      clearFieldError($('#client_id'));
+      clearFieldError($('#website'));
+      clearFieldError($('#industry'));
+      clearFieldError($('#industry_display'));
+      clearFieldError($('#company_sizes'));
+      clearFieldError($('#company_type'));
+      clearFieldError($('#founded'));
+    }
+    $('#client_id, #website, #industry, #industry_display, #company_sizes, #company_type, #founded').removeClass('is-invalid');
+    $('#jero_ind_input_box, #jero_ind_select_wrap').removeClass('has-validation-error');
 
     // 1. Company Name (Unconditionally fill on auto-fetch)
     if (data.name) {
@@ -4878,24 +4896,61 @@ $('.remove_address').click(function(){
     var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || '{{ config('services.company_intelligence.url', 'https://jero-company-intelligence.vibhu21m.workers.dev') }}';
     var targetUrl = workerEndpoint.replace(/\/+$/, '') + '/?domain=' + encodeURIComponent(cleanDomain);
 
-    $.ajax({
-      url: targetUrl,
-      type: "GET",
-      dataType: "json",
-      timeout: 15000,
-      success: function (data) {
-        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
-        if (!data || data.error) {
-          console.warn('[CompanyIntelligence] No data or error:', data ? data.error : 'empty');
-          return;
-        }
-        window._companyIntelligenceCache[cleanDomain] = data;
-        applyCompanyIntelligenceData(data);
-      },
-      error: function (xhr, status, err) {
-        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
-        console.warn('[CompanyIntelligence] Request failed:', status, err);
+    var fallbackUrl = '{{ route('service_company.clients.companyIntelligence') }}?domain=' + encodeURIComponent(cleanDomain);
+
+    function handleSuccess(data) {
+      $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+      if (!data || data.error) {
+        console.warn('[CompanyIntelligence] No data or error in payload:', data ? data.error : 'empty');
+        return;
       }
+      window._companyIntelligenceCache[cleanDomain] = data;
+      applyCompanyIntelligenceData(data);
+    }
+
+    function handleFallback() {
+      console.log('[CompanyIntelligence] Direct edge fetch failed. Failing over to local server proxy:', fallbackUrl);
+      fetch(fallbackUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        handleSuccess(data);
+      })
+      .catch(function(err) {
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        console.error('[CompanyIntelligence] All extraction pathways failed:', err);
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+          Swal.fire({
+            icon: 'info',
+            title: 'Extraction Notice',
+            text: 'Could not auto-fill details for ' + cleanDomain + '. Please check the website name or enter details manually.',
+            timer: 3500,
+            showConfirmButton: false
+          });
+        }
+      });
+    }
+
+    // Modern fetch API: Zero jQuery ajaxSetup header injection, 100% immune to CORS preflight failure
+    fetch(targetUrl, {
+      method: 'GET',
+      mode: 'cors',
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    })
+    .then(function(data) {
+      handleSuccess(data);
+    })
+    .catch(function(err) {
+      handleFallback();
     });
 
     // Run non-blocking background domain verification
