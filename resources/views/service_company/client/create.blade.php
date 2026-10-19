@@ -1422,69 +1422,78 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   /* =========================================================================
-     TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR CSS (Pixel-matched to reference)
+     TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR CSS (Pixel-matched to user screenshot)
      ========================================================================= */
   .client-top-nav-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-    padding: 8px 16px !important;
-    margin-bottom: 16px !important;
+    padding: 8px 18px !important;
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
     box-sizing: border-box !important;
     width: 100% !important;
-  }
-
-  .client-header-grid {
+    min-height: 52px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+  }
+
+  .client-header-grid {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     width: 100% !important;
-    gap: 8px !important;
+    gap: 16px !important;
     box-sizing: border-box !important;
   }
 
   .client-header-identity {
+    justify-self: start !important;
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
-    flex: 0 0 auto !important;
-    max-width: 240px !important;
+    min-width: 0 !important;
   }
 
   .client-header-titles {
     min-width: 0 !important;
-    flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
   }
 
   .client-header-title {
-    font-size: 14px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
-    color: #101A46 !important;
+    color: #0f172a !important;
     margin: 0 0 1px 0 !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
+    font-family: Poppins, sans-serif !important;
   }
 
   .client-header-subtitle {
-    font-size: 10px !important;
-    color: #5C6F9F !important;
+    font-size: 11px !important;
+    color: #64748b !important;
     margin: 0 !important;
-    line-height: 1.25 !important;
+    line-height: 1.3 !important;
     font-weight: 400 !important;
-    max-width: 200px !important;
-    white-space: normal !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 320px !important;
+    font-family: Poppins, sans-serif !important;
   }
 
   .client-header-stepper-col {
+    justify-self: center !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: visible !important;
   }
@@ -1495,7 +1504,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     justify-content: center !important;
     gap: 0 !important;
     width: auto !important;
-    max-width: 100% !important;
+    margin: 0 auto !important;
   }
 
   .client-step-item {
@@ -1506,22 +1515,30 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     flex-shrink: 0 !important;
     user-select: none !important;
     padding: 2px 0 !important;
+    text-decoration: none !important;
   }
 
   .client-step-circle {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    min-height: 22px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .client-step-circle svg {
+    display: block !important;
+    margin: auto !important;
   }
 
   .client-step-circle.is-completed {
@@ -1534,14 +1551,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .client-step-circle.is-active {
     background: #ffd428 !important;
-    color: #101A46 !important;
+    color: #0f172a !important;
     border: none !important;
     font-weight: 700 !important;
-    box-shadow: 0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428 !important;
+    box-shadow: none !important;
   }
 
   .client-step-circle.is-upcoming {
-    background: #f8fafc !important;
+    background: #ffffff !important;
     color: #64748b !important;
     border: 1.5px solid #cbd5e1 !important;
     font-weight: 600 !important;
@@ -1549,33 +1566,41 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .client-step-name {
     font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
     transition: color 0.15s ease !important;
+    font-family: Poppins, sans-serif !important;
   }
 
   .client-step-item.is-active .client-step-name {
     font-weight: 700 !important;
-    color: #101A46 !important;
+    color: #0f172a !important;
   }
 
   .client-step-item:hover .client-step-name {
-    color: #101A46 !important;
+    color: #0f172a !important;
   }
 
-  .client-step-line {
-    width: 14px !important;
-    height: 1.5px !important;
-    min-width: 8px !important;
-    background: #e2e8f0 !important;
-    margin: 0 5px !important;
+  .client-step-arrow {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 6px !important;
+    color: #cbd5e1 !important;
     flex-shrink: 0 !important;
-    border-radius: 1px !important;
+    transition: color 0.2s ease !important;
+  }
+
+  .client-step-arrow-svg {
+    width: 12px !important;
+    height: 12px !important;
+    stroke: currentColor !important;
   }
 
   .client-header-actions {
+    justify-self: end !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
@@ -1583,14 +1608,13 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     flex: 0 0 auto !important;
   }
 
-  .client-top-close-btn,
-  .client-top-back-btn {
-    background: #f8fafc !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #334155 !important;
+  .client-top-close-btn {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    color: #0f172a !important;
     font-weight: 600 !important;
     font-size: 12px !important;
-    height: 36px !important;
+    height: 34px !important;
     padding: 0 14px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
@@ -1602,8 +1626,34 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     transition: all 0.15s ease !important;
     flex-shrink: 0 !important;
     text-decoration: none !important;
+    box-sizing: border-box !important;
   }
-  .client-top-close-btn:hover,
+  .client-top-close-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
+  }
+
+  .client-top-back-btn {
+    background: #f8fafc !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+    flex-shrink: 0 !important;
+    text-decoration: none !important;
+  }
   .client-top-back-btn:hover {
     background: #f1f5f9 !important;
     border-color: #94a3b8 !important;
@@ -1617,15 +1667,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1px solid #d4a017 !important;
     color: #10143b !important;
     font-weight: 700 !important;
-    font-size: 12.5px !important;
-    height: 36px !important;
-    padding: 0 18px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1678,7 +1728,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: inline-flex !important;
   }
 
-  /* Completely remove footer action buttons & spacing across all 5 pages */
+  /* Completely remove legacy footer action buttons */
   .client-bottom-actions-row,
   .client-cancel-btn,
   .client-draft-btn,
@@ -1691,70 +1741,517 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     overflow: hidden !important;
   }
 
+  /* =========================================================================
+     GOD-LEVEL STEP 1 (Company Profile & Company Logo) CSS
+     ========================================================================= */
+  .god-level-company-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 7.2fr) minmax(0, 3.8fr) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  @media (max-width: 991.98px) {
+    .god-level-company-layout {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  .god-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    box-sizing: border-box !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .god-card-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .god-card-header-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+  .god-card-header-icon.blue-sky-icon {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+  }
+
+  .god-card-header-titles {
+    min-width: 0 !important;
+  }
+
+  .god-card-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 0 1px 0 !important;
+    line-height: 1.25 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  .god-card-subtitle {
+    font-size: 11px !important;
+    color: #64748b !important;
+    margin: 0 !important;
+    line-height: 1.3 !important;
+    font-weight: 400 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  .god-fields-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px 14px !important;
+  }
+  @media (max-width: 640px) {
+    .god-fields-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  .god-field-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .god-field-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .god-field-label {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  /* Badge Pills (Pixel-perfect match to screenshot) */
+  .god-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 1px 6px !important;
+    border-radius: 9999px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .god-badge-autofilled {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+  }
+  .god-badge-suggested {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+  }
+  .god-badge-notfound {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+  }
+  .god-badge-dot {
+    font-size: 8px !important;
+    line-height: 1 !important;
+  }
+
+  /* Input Boxes */
+  .god-input-box {
+    display: flex !important;
+    align-items: center !important;
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    position: relative !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  .god-input-box:focus-within {
+    border-color: #ffd428 !important;
+    box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
+  }
+  .god-input-box.is-invalid,
+  .god-input-box.has-validation-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+  }
+
+  .god-input-left-icon {
+    color: #94a3b8 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .god-input-left-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .god-native-input {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  .god-native-input::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
+  }
+
+  .god-select-box {
+    padding-right: 28px !important;
+    position: relative !important;
+  }
+  .god-native-select {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .god-input-right-chevron {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #64748b !important;
+    pointer-events: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .god-website-control-row {
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    height: 36px !important;
+    width: 100% !important;
+  }
+  .god-website-input-box {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .god-fetch-btn {
+    background: #ffd428 !important;
+    border: 1px solid #d4a017 !important;
+    color: #10143b !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+    transition: all 0.15s ease !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .god-fetch-btn:hover {
+    background: #f5c400 !important;
+    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.35) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .god-input-clear-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 3px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: all 0.15s ease !important;
+  }
+  .god-input-clear-btn:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+
+  .god-input-external-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #2563eb !important;
+    cursor: pointer !important;
+    padding: 3px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease !important;
+  }
+  .god-input-external-btn:hover {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+  }
+
+  .god-field-helper-note {
+    font-size: 11px !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 4px !important;
+    line-height: 1.35 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  /* Logo Column & Card Styling */
+  .god-logo-column {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .god-logo-preview-box {
+    border: 1.5px dashed #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    padding: 10px !important;
+    min-height: 135px !important;
+    max-height: 135px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+
+  .god-logo-surface {
+    width: 110px !important;
+    height: 110px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: #f8fafc !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.2s ease !important;
+  }
+  .god-logo-surface.has-image {
+    background-color: #ffffff !important;
+  }
+
+  .god-logo-placeholder {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    color: #94a3b8 !important;
+    text-align: center !important;
+    padding: 8px !important;
+  }
+  .god-logo-placeholder .placeholder-title {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+  }
+  .god-logo-placeholder .placeholder-sub {
+    font-size: 9.5px !important;
+    color: #94a3b8 !important;
+  }
+
+  .god-logo-status-banner {
+    width: 100% !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .god-logo-status-banner.is-detected {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+  }
+  .god-logo-status-banner.is-empty {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+  }
+
+  .god-logo-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+    width: 100% !important;
+  }
+
+  .god-logo-btn {
+    flex: 1 1 auto !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .god-change-logo-btn {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+  .god-change-logo-btn:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+  }
+  .god-remove-logo-btn {
+    background: #fff1f2 !important;
+    border: 1.5px solid #fecdd3 !important;
+    color: #ef4444 !important;
+  }
+  .god-remove-logo-btn:hover {
+    background: #fee2e2 !important;
+    border-color: #fda4af !important;
+  }
+
+  .god-logo-formats-note {
+    font-size: 10px !important;
+    color: #64748b !important;
+    line-height: 1.35 !important;
+    text-align: center !important;
+    margin-top: 8px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .god-logo-formats-note svg {
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+  }
+
   /* Responsive Rules: 1400px (15.6-inch laptop), 1200px, 991px, 576px */
   @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      max-width: 220px !important;
+      max-width: 280px !important;
     }
     .client-header-title {
-      font-size: 13.5px !important;
+      font-size: 15px !important;
     }
     .client-header-subtitle {
-      font-size: 9.5px !important;
-      max-width: 180px !important;
+      font-size: 11px !important;
     }
     .client-step-circle {
-      width: 20px !important;
-      height: 20px !important;
-      min-width: 20px !important;
-      min-height: 20px !important;
-      font-size: 10px !important;
+      width: 22px !important;
+      height: 22px !important;
+      min-width: 22px !important;
+      min-height: 22px !important;
+      font-size: 10.5px !important;
     }
-    .client-step-line {
-      width: 12px !important;
+    .client-step-arrow {
       margin: 0 4px !important;
     }
     .client-step-item {
-      gap: 4px !important;
+      gap: 5px !important;
     }
     .client-step-name {
-      font-size: 10.5px !important;
+      font-size: 11px !important;
     }
     .client-top-close-btn,
     .client-top-back-btn {
-      height: 34px !important;
+      height: 32px !important;
       padding: 0 12px !important;
       font-size: 11.5px !important;
     }
     .client-top-next-btn,
     .client-top-submit-btn {
-      height: 34px !important;
+      height: 32px !important;
       padding: 0 14px !important;
       font-size: 11.5px !important;
-    }
-    .client-branding-grid {
-      grid-template-columns: 160px 130px minmax(0, 1fr) !important;
-      gap: 12px !important;
     }
   }
 
   @media (max-width: 1199.98px) {
     .client-header-identity {
-      max-width: 180px !important;
+      max-width: 260px !important;
     }
-    .client-step-line {
-      width: 10px !important;
-      margin: 0 3px !important;
+    .client-step-arrow {
+      margin: 0 4px !important;
     }
     .client-step-name {
-      font-size: 10px !important;
+      font-size: 11.5px !important;
     }
   }
 
   @media (max-width: 991px) {
     .client-header-grid {
+      display: flex !important;
       flex-wrap: wrap !important;
-      gap: 10px !important;
+      gap: 12px !important;
     }
     .client-header-identity {
       max-width: 100% !important;
@@ -1769,7 +2266,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
       width: 100% !important;
       order: 3 !important;
       overflow-x: auto !important;
-      padding-bottom: 2px !important;
+      padding-bottom: 4px !important;
       -webkit-overflow-scrolling: touch !important;
       justify-content: flex-start !important;
     }
@@ -1782,23 +2279,17 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     .client-review-grid-2x2 {
       grid-template-columns: 1fr !important;
     }
-    .client-branding-grid {
-      grid-template-columns: 1fr 1fr !important;
-    }
-    .client-branding-grid > .client-brand-fields {
-      grid-column: 1 / -1 !important;
-    }
   }
 
   @media (max-width: 575.98px) {
     .client-top-nav-card {
-      padding: 8px 10px !important;
+      padding: 12px 14px !important;
     }
     .client-header-title {
-      font-size: 13.5px !important;
+      font-size: 16px !important;
     }
     .client-header-subtitle {
-      display: none !important;
+      font-size: 11.5px !important;
     }
     .client-stepper-wrap {
       overflow-x: auto !important;
@@ -1806,26 +2297,22 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
       justify-content: flex-start !important;
     }
     .client-step-name {
-      display: inline-block !important;
-      font-size: 10px !important;
+      font-size: 11px !important;
     }
     .client-top-close-btn,
     .client-top-back-btn {
-      padding: 0 10px !important;
-      font-size: 11px !important;
-      height: 32px !important;
+      padding: 0 12px !important;
+      font-size: 11.5px !important;
+      height: 34px !important;
     }
     .client-top-next-btn,
     .client-top-submit-btn {
-      padding: 0 12px !important;
-      font-size: 11px !important;
-      height: 32px !important;
+      padding: 0 14px !important;
+      font-size: 11.5px !important;
+      height: 34px !important;
     }
-    .client-branding-grid {
-      grid-template-columns: 1fr !important;
-    }
-    .client-details-grid {
-      grid-template-columns: 1fr !important;
+    .god-card {
+      padding: 18px 16px !important;
     }
   }
 
@@ -3847,15 +4334,21 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
       var input = (event && event.target) ? event.target : document.getElementById('client_logo_input');
       if (input && input.files && input.files[0]) {
          var output = URL.createObjectURL(input.files[0]);
-         $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+         $('#company_logo_box, .client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
             .css({
                'background-image': 'url(' + output + ')',
-               'background-size': 'cover',
+               'background-size': 'contain',
+               'background-repeat': 'no-repeat',
                'background-position': 'center'
             })
+            .addClass('has-image')
             .empty();
          $('#client_avatar_remove').val('0');
-         $('#client_preview_remove_btn').show();
+         $('#client_remove_logo_btn, #client_preview_remove_btn').show();
+         $('#logo_status_banner')
+            .removeClass('is-empty')
+            .addClass('is-detected')
+            .html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Logo uploaded successfully</span>');
          if (typeof updateCompletion === 'function') updateCompletion();
       }
    };
@@ -4542,13 +5035,14 @@ $('.remove_address').click(function(){
     if (!logoUrl) return;
 
     // 1. Immediately apply visual preview in User RAM (zero delay, zero flicker)
-    $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
+    $('#company_logo_box, .client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
       'background-image': 'url("' + logoUrl + '")',
       'background-size': 'contain',
       'background-repeat': 'no-repeat',
       'background-position': 'center'
-    }).empty();
-    $('#client_preview_remove_btn').show();
+    }).addClass('has-image').empty();
+    $('#client_remove_logo_btn, #client_preview_remove_btn').show();
+    $('#logo_status_banner').removeClass('is-empty').addClass('is-detected').html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Logo automatically detected from website</span>');
     $('#client_avatar_remove').val(0);
 
     // 2. Direct Base64 Data URI Conversion without Canvas (100% CORS-safe)
@@ -4596,12 +5090,14 @@ $('.remove_address').click(function(){
                       centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
 
         var dataUrl = canvas.toDataURL('image/png');
-        $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
+        $('#company_logo_box, .client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper, .image-input-wrapper').css({
           'background-image': 'url("' + dataUrl + '")',
           'background-size': 'contain',
           'background-repeat': 'no-repeat',
           'background-position': 'center'
-        }).empty();
+        }).addClass('has-image').empty();
+        $('#client_remove_logo_btn, #client_preview_remove_btn').show();
+        $('#logo_status_banner').removeClass('is-empty').addClass('is-detected').html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Logo automatically detected from website</span>');
 
         canvas.toBlob(function (blob) {
           if (blob && window.DataTransfer) {
@@ -4636,6 +5132,10 @@ $('.remove_address').click(function(){
       $('#website').val(data.website).trigger('input').trigger('change');
     }
 
+    // Dynamic website badge & clear button
+    $('#badge_website').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
+    $('#website_clear_btn').show();
+
     // Clear any previous validation errors on auto-filled attributes
     if (typeof clearFieldError === 'function') {
       clearFieldError($('#client_id'));
@@ -4652,6 +5152,7 @@ $('.remove_address').click(function(){
     // 1. Company Name (Unconditionally fill on auto-fetch)
     if (data.name) {
       $('#client_id').val(data.name).trigger('input').trigger('change');
+      $('#badge_name').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
       if (typeof initials === 'function') {
         var initLetters = initials(data.name) || 'AC';
         $('#client_review_initials').text(initLetters);
@@ -4717,6 +5218,7 @@ $('.remove_address').click(function(){
           $('#jero_ind_kbd').hide();
         }
       }
+      $('#badge_industry').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 4. Company Size
@@ -4733,6 +5235,7 @@ $('.remove_address').click(function(){
           }
         });
       }
+      $('#badge_company_sizes').show().removeClass('god-badge-notfound god-badge-autofilled').addClass('god-badge-suggested').html('<span class="god-badge-dot">●</span> <span>Suggested</span>');
     }
 
     // 5. Company Type
@@ -4745,21 +5248,30 @@ $('.remove_address').click(function(){
           return false;
         }
       });
+      $('#badge_company_type').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 6. Founded Year
     if (data.founded) {
       $('#founded').val(data.founded).trigger('input').trigger('change');
+      $('#badge_founded').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 7. Career Page URL
-    if (data.career_page_url) {
-      $('#career_page_url').val(data.career_page_url).trigger('input').trigger('change');
+    var careerUrl = data.career_page_url || (data.domain ? ('https://' + data.domain + '/jobs') : '');
+    if (careerUrl) {
+      $('#career_page_url').val(careerUrl).trigger('input').trigger('change');
+      $('#badge_career_page_url').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 8. Tax ID / Business Registration
     if (data.tax_id) {
       $('#tax_id').val(data.tax_id).trigger('input').trigger('change');
+      $('#badge_tax_id').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
+      $('#tax_id_helper').hide();
+    } else {
+      $('#badge_tax_id').show().removeClass('god-badge-autofilled god-badge-suggested').addClass('god-badge-notfound').html('<span class="god-badge-dot">●</span> <span>Not found</span>');
+      $('#tax_id_helper').show();
     }
 
     // 9. Company Description (Quill Rich-Text + Hidden Textarea Sync)
@@ -5047,6 +5559,56 @@ $('.remove_address').click(function(){
     var website = ($(this).val() || '').trim();
     if (website && website.length > 3 && website !== window._lastFetchedWebsite) {
       fetchGodLevelCompanyIntelligence(website);
+    }
+  });
+
+  // God-level Logo & Control Action Listeners
+  $(document).on('click', '#client_change_logo_btn', function(e) {
+    e.preventDefault();
+    var fileIn = document.getElementById('client_logo_input');
+    if (fileIn) fileIn.click();
+  });
+
+  $(document).on('click', '#client_remove_logo_btn', function(e) {
+    e.preventDefault();
+    $('#client_logo_input').val('');
+    $('#client_avatar_remove').val('1');
+    $('#company_logo_box')
+      .css('background-image', 'none')
+      .removeClass('has-image')
+      .html('<div class="god-logo-placeholder" id="logo_placeholder"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span class="placeholder-title">Company Logo</span><span class="placeholder-sub">Click Change Logo or auto-fetch</span></div>');
+    $('#logo_status_banner')
+      .removeClass('is-detected')
+      .addClass('is-empty')
+      .html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> <span>No logo detected yet</span>');
+    $(this).hide();
+    $('#client_preview_remove_btn').hide();
+    if (typeof updateCompletion === 'function') updateCompletion();
+  });
+
+  $(document).on('click', '#career_url_open_btn', function(e) {
+    e.preventDefault();
+    var url = ($('#career_page_url').val() || '').trim();
+    if (url) {
+      if (!url.match(/^https?:\/\//i)) url = 'https://' + url;
+      window.open(url, '_blank');
+    }
+  });
+
+  $(document).on('click', '#website_clear_btn', function(e) {
+    e.preventDefault();
+    $('#website').val('').trigger('input').focus();
+    $(this).hide();
+    $('#badge_website').hide();
+  });
+
+  $(document).on('input keyup', '#website', function() {
+    var val = ($(this).val() || '').trim();
+    if (val) {
+      $('#website_clear_btn').show();
+    } else {
+      $('#website_clear_btn').hide();
+      $('#badge_website').hide();
     }
   });
 
@@ -6381,7 +6943,8 @@ $('.remove_address').click(function(){
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
-      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_next_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
       $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     } else if (activeStep < 5) {
       $('body').removeClass('on-step-1 on-review-step').addClass('on-step-' + activeStep);
@@ -6416,7 +6979,8 @@ $('.remove_address').click(function(){
       var s = parseInt($(this).data('step'), 10);
       var $circle = $(this).find('.client-step-circle');
       var $title = $(this).find('.client-step-name');
-      var $nextDivider = $(this).next('.client-step-line');
+      var $nextDivider = $(this).next('.client-step-line, .client-step-arrow');
+      var $nextArrowSvg = $nextDivider.find('.client-step-arrow-svg');
 
       if (s < activeStep) {
         $(this).attr('aria-current', 'false');
@@ -6427,27 +6991,36 @@ $('.remove_address').click(function(){
           'box-shadow': '0 1px 3px rgba(16,185,129,0.25)'
         }).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
         $title.css({ 'color': '#0f172a', 'font-weight': '600' });
-        if ($nextDivider.length) $nextDivider.css('background', '#10b981');
+        if ($nextDivider.length) {
+          $nextDivider.css('color', '#10b981');
+          $nextArrowSvg.css('stroke', '#10b981');
+        }
       } else if (s === activeStep) {
         $(this).attr('aria-current', 'step');
         $circle.removeClass('is-completed is-upcoming').addClass('is-active').css({
           'background': '#ffd428',
           'color': '#0f172a',
           'border': 'none',
-          'box-shadow': '0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428'
+          'box-shadow': 'none'
         }).text(s);
         $title.css({ 'color': '#0f172a', 'font-weight': '700' });
-        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
+        if ($nextDivider.length) {
+          $nextDivider.css('color', '#d4a017');
+          $nextArrowSvg.css('stroke', '#d4a017');
+        }
       } else {
         $(this).attr('aria-current', 'false');
         $circle.removeClass('is-completed is-active').addClass('is-upcoming').css({
-          'background': '#f8fafc',
+          'background': '#ffffff',
           'color': '#64748b',
           'border': '1.5px solid #cbd5e1',
           'box-shadow': 'none'
         }).text(s);
         $title.css({ 'color': '#64748b', 'font-weight': '500' });
-        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
+        if ($nextDivider.length) {
+          $nextDivider.css('color', '#cbd5e1');
+          $nextArrowSvg.css('stroke', '#cbd5e1');
+        }
       }
     });
 
