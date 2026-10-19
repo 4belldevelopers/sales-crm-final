@@ -100,8 +100,8 @@
         <span>Back</span>
       </button>
 
-      <!-- Steps 2-4: Next Page Button (Hidden on step 1, shown on steps 2-4) -->
-      <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn" style="display:none !important;">
+      <!-- Steps 1-4: Next Page Button -->
+      <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
         <span>Next Page</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/>

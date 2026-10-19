@@ -340,7 +340,7 @@
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="tax_id">Tax ID / Business Reg No</label>
-              <span class="god-badge {{ !empty($tax_id) ? 'god-badge-autofilled' : 'god-badge-notfound' }}" id="badge_tax_id">
+              <span class="god-badge {{ !empty($tax_id) ? 'god-badge-autofilled' : 'god-badge-notfound' }}" id="badge_tax_id" style="{{ !empty($tax_id) ? '' : 'display:none;' }}">
                 @if(!empty($tax_id))
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   <span>Auto-filled</span>
@@ -366,7 +366,7 @@
                      value="{{ $tax_id ?? '' }}"
                      placeholder="e.g. EIN, CIN, VAT, LEI">
             </div>
-            <div class="god-field-helper-note" id="tax_id_helper" style="{{ !empty($tax_id) ? 'display:none;' : '' }}">
+            <div class="god-field-helper-note" id="tax_id_helper" style="display:none;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="16" x2="12" y2="12"/>
@@ -376,17 +376,6 @@
             </div>
           </div>
 
-        </div>
-
-        <!-- Step 1 Continuation Footer Button -->
-        <div class="god-step-footer mt-4 pt-2 d-flex justify-content-end align-items-center">
-          <button type="button" class="btn client-top-next-btn client-nav-next god-continue-next-btn" id="continueButton">
-            <span>Continue to Description</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/>
-              <path d="m12 5 7 7-7 7"/>
-            </svg>
-          </button>
         </div>
 
       </section>

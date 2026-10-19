@@ -1427,16 +1427,22 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-top-nav-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 16px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
-    padding: 16px 24px !important;
-    margin-bottom: 20px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    padding: 8px 18px !important;
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
     box-sizing: border-box !important;
     width: 100% !important;
+    min-height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
   }
 
   .client-header-grid {
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
@@ -1445,26 +1451,25 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-header-identity {
+    justify-self: start !important;
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
-    flex: 0 0 auto !important;
-    max-width: 380px !important;
+    gap: 10px !important;
+    min-width: 0 !important;
   }
 
   .client-header-titles {
     min-width: 0 !important;
-    flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
   }
 
   .client-header-title {
-    font-size: 20px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 1px 0 !important;
     line-height: 1.25 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
@@ -1472,20 +1477,23 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-header-subtitle {
-    font-size: 13px !important;
+    font-size: 11px !important;
     color: #64748b !important;
     margin: 0 !important;
-    line-height: 1.35 !important;
+    line-height: 1.3 !important;
     font-weight: 400 !important;
-    white-space: normal !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 320px !important;
     font-family: Poppins, sans-serif !important;
   }
 
   .client-header-stepper-col {
+    justify-self: center !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: visible !important;
   }
@@ -1496,35 +1504,41 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     justify-content: center !important;
     gap: 0 !important;
     width: auto !important;
-    max-width: 100% !important;
+    margin: 0 auto !important;
   }
 
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
-    padding: 4px 0 !important;
+    padding: 2px 0 !important;
     text-decoration: none !important;
   }
 
   .client-step-circle {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    min-height: 28px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 13px !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
     font-family: Poppins, sans-serif !important;
+  }
+  .client-step-circle svg {
+    display: block !important;
+    margin: auto !important;
   }
 
   .client-step-circle.is-completed {
@@ -1551,7 +1565,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-name {
-    font-size: 13px !important;
+    font-size: 11.5px !important;
     font-weight: 500 !important;
     color: #64748b !important;
     line-height: 1.2 !important;
@@ -1573,19 +1587,20 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 10px !important;
+    margin: 0 6px !important;
     color: #cbd5e1 !important;
     flex-shrink: 0 !important;
     transition: color 0.2s ease !important;
   }
 
   .client-step-arrow-svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 12px !important;
+    height: 12px !important;
     stroke: currentColor !important;
   }
 
   .client-header-actions {
+    justify-self: end !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
@@ -1598,14 +1613,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1.5px solid #e2e8f0 !important;
     color: #0f172a !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 7px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1625,14 +1640,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1.5px solid #cbd5e1 !important;
     color: #334155 !important;
     font-weight: 600 !important;
-    font-size: 12.5px !important;
-    height: 38px !important;
-    padding: 0 16px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 14px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1652,15 +1667,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1px solid #d4a017 !important;
     color: #10143b !important;
     font-weight: 700 !important;
-    font-size: 12.5px !important;
-    height: 38px !important;
-    padding: 0 20px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1681,7 +1696,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: none !important;
   }
   body.on-step-1 #client_top_next_btn {
-    display: none !important; /* Step 1 shows Close only in header per screenshot */
+    display: inline-flex !important;
   }
   body.on-step-1 #submitBtn {
     display: none !important;
@@ -1732,7 +1747,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-level-company-layout {
     display: grid !important;
     grid-template-columns: minmax(0, 7.2fr) minmax(0, 3.8fr) !important;
-    gap: 20px !important;
+    gap: 14px !important;
     align-items: stretch !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -1746,26 +1761,27 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 16px !important;
-    padding: 24px 28px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
     box-sizing: border-box !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+    width: 100% !important;
   }
 
   .god-card-header {
     display: flex !important;
     align-items: center !important;
-    gap: 14px !important;
-    margin-bottom: 22px !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
   }
 
   .god-card-header-icon {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1781,19 +1797,19 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .god-card-title {
-    font-size: 18px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    margin: 0 0 3px 0 !important;
+    margin: 0 0 1px 0 !important;
     line-height: 1.25 !important;
     font-family: Poppins, sans-serif !important;
   }
 
   .god-card-subtitle {
-    font-size: 13px !important;
+    font-size: 11px !important;
     color: #64748b !important;
     margin: 0 !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
     font-weight: 400 !important;
     font-family: Poppins, sans-serif !important;
   }
@@ -1801,7 +1817,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-fields-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 20px 22px !important;
+    gap: 10px 14px !important;
   }
   @media (max-width: 640px) {
     .god-fields-grid {
@@ -1819,16 +1835,16 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-field-header {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    margin-bottom: 6px !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
   }
 
   .god-field-label {
-    font-size: 13px !important;
+    font-size: 11.5px !important;
     font-weight: 600 !important;
     color: #0f172a !important;
     margin: 0 !important;
-    line-height: 1.3 !important;
+    line-height: 1.25 !important;
     font-family: Poppins, sans-serif !important;
   }
 
@@ -1836,10 +1852,10 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-badge {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    padding: 2px 8px !important;
+    gap: 3px !important;
+    padding: 1px 6px !important;
     border-radius: 9999px !important;
-    font-size: 11px !important;
+    font-size: 9.5px !important;
     font-weight: 600 !important;
     line-height: 1.2 !important;
     font-family: Poppins, sans-serif !important;
@@ -1857,7 +1873,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     color: #64748b !important;
   }
   .god-badge-dot {
-    font-size: 9px !important;
+    font-size: 8px !important;
     line-height: 1 !important;
   }
 
@@ -1867,10 +1883,10 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center !important;
     background: #ffffff !important;
     border: 1.5px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    padding: 0 12px !important;
-    height: 44px !important;
-    min-height: 44px !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    height: 36px !important;
+    min-height: 36px !important;
     position: relative !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
     box-sizing: border-box !important;
@@ -1891,8 +1907,12 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin-right: 10px !important;
+    margin-right: 8px !important;
     flex-shrink: 0 !important;
+  }
+  .god-input-left-icon svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .god-native-input {
@@ -1900,7 +1920,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     outline: none !important;
     background: transparent !important;
     color: #0f172a !important;
-    font-size: 13.5px !important;
+    font-size: 12px !important;
     font-family: Poppins, sans-serif !important;
     font-weight: 500 !important;
     width: 100% !important;
@@ -1915,7 +1935,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .god-select-box {
-    padding-right: 32px !important;
+    padding-right: 28px !important;
     position: relative !important;
   }
   .god-native-select {
@@ -1923,7 +1943,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     outline: none !important;
     background: transparent !important;
     color: #0f172a !important;
-    font-size: 13.5px !important;
+    font-size: 12px !important;
     font-family: Poppins, sans-serif !important;
     font-weight: 500 !important;
     width: 100% !important;
@@ -1937,7 +1957,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .god-input-right-chevron {
     position: absolute !important;
-    right: 12px !important;
+    right: 10px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     color: #64748b !important;
@@ -1950,8 +1970,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .god-website-control-row {
     display: flex !important;
     align-items: stretch !important;
-    gap: 10px !important;
-    height: 44px !important;
+    gap: 8px !important;
+    height: 36px !important;
     width: 100% !important;
   }
   .god-website-input-box {
@@ -1961,27 +1981,27 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .god-fetch-btn {
     background: #ffd428 !important;
-    border: none !important;
+    border: 1px solid #d4a017 !important;
     color: #10143b !important;
-    font-size: 13px !important;
+    font-size: 11.5px !important;
     font-weight: 700 !important;
-    border-radius: 10px !important;
-    padding: 0 16px !important;
-    height: 44px !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     flex-shrink: 0 !important;
     cursor: pointer !important;
     white-space: nowrap !important;
-    box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
+    box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
     transition: all 0.15s ease !important;
     font-family: Poppins, sans-serif !important;
   }
   .god-fetch-btn:hover {
     background: #f5c400 !important;
-    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.4) !important;
+    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.35) !important;
     transform: translateY(-1px) !important;
   }
 
@@ -1990,7 +2010,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: none !important;
     color: #94a3b8 !important;
     cursor: pointer !important;
-    padding: 4px !important;
+    padding: 3px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2007,7 +2027,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: none !important;
     color: #2563eb !important;
     cursor: pointer !important;
-    padding: 4px !important;
+    padding: 3px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2020,12 +2040,12 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .god-field-helper-note {
-    font-size: 12px !important;
+    font-size: 11px !important;
     color: #64748b !important;
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    margin-top: 6px !important;
+    gap: 5px !important;
+    margin-top: 4px !important;
     line-height: 1.35 !important;
     font-family: Poppins, sans-serif !important;
   }
@@ -2038,10 +2058,11 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .god-logo-preview-box {
     border: 1.5px dashed #cbd5e1 !important;
-    border-radius: 16px !important;
+    border-radius: 10px !important;
     background: #ffffff !important;
-    padding: 24px !important;
-    min-height: 250px !important;
+    padding: 10px !important;
+    min-height: 135px !important;
+    max-height: 135px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2050,9 +2071,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .god-logo-surface {
-    width: 190px !important;
-    height: 190px !important;
-    border-radius: 20px !important;
+    width: 110px !important;
+    height: 110px !important;
+    border-radius: 10px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2060,7 +2081,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     background-repeat: no-repeat !important;
     background-position: center !important;
     background-color: #f8fafc !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
     position: relative !important;
     overflow: hidden !important;
     transition: all 0.2s ease !important;
@@ -2074,33 +2095,33 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 4px !important;
+    gap: 2px !important;
     color: #94a3b8 !important;
     text-align: center !important;
-    padding: 12px !important;
+    padding: 8px !important;
   }
   .god-logo-placeholder .placeholder-title {
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     color: #64748b !important;
-    margin-top: 4px !important;
+    margin-top: 2px !important;
   }
   .god-logo-placeholder .placeholder-sub {
-    font-size: 10.5px !important;
+    font-size: 9.5px !important;
     color: #94a3b8 !important;
   }
 
   .god-logo-status-banner {
     width: 100% !important;
-    border-radius: 8px !important;
-    padding: 9px 12px !important;
-    font-size: 12.5px !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
-    margin-top: 16px !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
     box-sizing: border-box !important;
     text-align: center !important;
     font-family: Poppins, sans-serif !important;
@@ -2116,22 +2137,22 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .god-logo-actions {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: row !important;
     gap: 8px !important;
-    margin-top: 14px !important;
+    margin-top: 8px !important;
     width: 100% !important;
   }
 
   .god-logo-btn {
-    width: 100% !important;
-    height: 42px !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
+    flex: 1 1 auto !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    font-size: 11.5px !important;
     font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     text-decoration: none !important;
@@ -2157,69 +2178,60 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .god-logo-formats-note {
-    font-size: 11.5px !important;
+    font-size: 10px !important;
     color: #64748b !important;
-    line-height: 1.45 !important;
+    line-height: 1.35 !important;
     text-align: center !important;
-    margin-top: 16px !important;
+    margin-top: 8px !important;
     display: flex !important;
     align-items: flex-start !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
     font-family: Poppins, sans-serif !important;
   }
   .god-logo-formats-note svg {
     flex-shrink: 0 !important;
-    margin-top: 2px !important;
-  }
-
-  .god-continue-next-btn {
-    padding: 10px 24px !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    height: 42px !important;
-    border-radius: 10px !important;
-    font-family: Poppins, sans-serif !important;
+    margin-top: 1px !important;
   }
 
   /* Responsive Rules: 1400px (15.6-inch laptop), 1200px, 991px, 576px */
   @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      max-width: 320px !important;
+      max-width: 280px !important;
     }
     .client-header-title {
-      font-size: 18px !important;
+      font-size: 15px !important;
     }
     .client-header-subtitle {
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
     .client-step-circle {
-      width: 26px !important;
-      height: 26px !important;
-      min-width: 26px !important;
-      min-height: 26px !important;
-      font-size: 12px !important;
+      width: 22px !important;
+      height: 22px !important;
+      min-width: 22px !important;
+      min-height: 22px !important;
+      font-size: 10.5px !important;
     }
     .client-step-arrow {
-      margin: 0 6px !important;
+      margin: 0 4px !important;
     }
     .client-step-item {
-      gap: 6px !important;
+      gap: 5px !important;
     }
     .client-step-name {
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
     .client-top-close-btn,
     .client-top-back-btn {
-      height: 36px !important;
-      padding: 0 14px !important;
-      font-size: 12px !important;
+      height: 32px !important;
+      padding: 0 12px !important;
+      font-size: 11.5px !important;
     }
     .client-top-next-btn,
     .client-top-submit-btn {
-      height: 36px !important;
-      padding: 0 16px !important;
-      font-size: 12px !important;
+      height: 32px !important;
+      padding: 0 14px !important;
+      font-size: 11.5px !important;
     }
   }
 
@@ -2237,6 +2249,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   @media (max-width: 991px) {
     .client-header-grid {
+      display: flex !important;
       flex-wrap: wrap !important;
       gap: 12px !important;
     }
@@ -6930,7 +6943,7 @@ $('.remove_address').click(function(){
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
-      $('#client_top_next_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_next_btn').attr('style', 'display: inline-flex !important;').show();
       $('#continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
       $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
     } else if (activeStep < 5) {
