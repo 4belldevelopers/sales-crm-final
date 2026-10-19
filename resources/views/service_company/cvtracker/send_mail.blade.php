@@ -843,6 +843,20 @@
 
       <div class="mm-form-body">
 
+        @if(empty($toChipEmails))
+          <div class="mm-alert-missing-email" style="margin: 16px 24px 0 24px; padding: 12px 16px; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 8px; display: flex; align-items: flex-start; gap: 12px; color: #991B1B;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div style="font-size: 12.5px; line-height: 1.5;">
+              <strong style="font-size: 13px; display: block; margin-bottom: 2px;">Action Required: Candidate Email Missing</strong>
+              This candidate does not have an email address recorded. You must edit the candidate profile in the CV Tracker to provide a valid email before emails can be delivered.
+            </div>
+          </div>
+        @endif
+
         {{-- Hidden fields --}}
         <input type="hidden" value="{{ $jobid }}" name="jobid" id="jobid">
         <input type="hidden" value="{{ $applicationDataID }}" name="applicationDataId" id="applicationDataId">
@@ -904,7 +918,10 @@
                       <span class="badge badge-light-primary ms-1" style="font-size:10px;padding:2px 6px;">Primary</span>
                     </span>
                   @empty
-                    <span style="font-size:12.5px;color:#9CA3AF;">No recipient</span>
+                    <span style="font-size:12.5px;color:#DC2626;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      No email address found for candidate &mdash; please edit profile to add email
+                    </span>
                   @endforelse
                 </div>
               </div>
@@ -1733,11 +1750,98 @@
                 ? window.getCandidateEmailBodyHtml()
                 : ((typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) ? CKEDITOR.instances.editor1mass.getData() : ($('#editor1mass').val() || ''));
 
-            if (!subject || !subject.trim()) {
-                Swal.fire("Warning", "Please enter an email subject.", "warning");
+            var resetBtnState = function() {
                 isSendingEmail = false;
                 $btn.data('sending', false);
                 $btn.prop('disabled', false).removeClass('disabled');
+                $('.indicator-label', $btn).css('display', 'inline-flex');
+                $('.indicator-progress', $btn).hide();
+            };
+
+            // 1. Validate Candidate Email
+            var cleanToEmail = (to_email || '').trim();
+            if (!cleanToEmail) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Candidate Email Missing',
+                    text: 'This candidate does not have an email address recorded. Please edit the candidate\'s profile in the CV Tracker to provide a valid email before sending.',
+                    confirmButtonText: 'Understood'
+                });
+                resetBtnState();
+                return false;
+            }
+
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var toEmailList = cleanToEmail.split(',').map(function(e) { return e.trim(); }).filter(Boolean);
+            for (var i = 0; i < toEmailList.length; i++) {
+                if (!emailRegex.test(toEmailList[i])) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Candidate Email',
+                        text: 'The email address "' + toEmailList[i] + '" is invalid. Please update the candidate\'s profile with a valid email syntax.',
+                        confirmButtonText: 'Fix Email'
+                    });
+                    resetBtnState();
+                    return false;
+                }
+            }
+
+            // 2. Validate Deliverability Cap & CC Emails
+            var ccList = (window._sendMailCcTags && Array.isArray(window._sendMailCcTags)) ? window._sendMailCcTags : [];
+            var totalRecipients = toEmailList.length + ccList.length;
+            if (totalRecipients > 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Recipient Limit Exceeded',
+                    text: 'To protect email deliverability and avoid spam flags, a maximum of 5 recipients (1 To + up to 4 CCs) is permitted. You currently have ' + totalRecipients + ' recipients. Please remove excess CC recipients.',
+                    confirmButtonText: 'Review Recipients'
+                });
+                resetBtnState();
+                return false;
+            }
+
+            for (var c = 0; c < ccList.length; c++) {
+                if (!emailRegex.test(ccList[c])) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid CC Email Address',
+                        text: 'The CC email address "' + ccList[c] + '" is not valid. Please remove or correct it before sending.',
+                        confirmButtonText: 'Fix CC List'
+                    });
+                    resetBtnState();
+                    return false;
+                }
+            }
+
+            // 3. Validate Subject
+            var cleanSubject = (subject || '').trim();
+            if (!cleanSubject) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Subject Line Required',
+                    text: 'Please enter a subject line for your email before sending.',
+                    confirmButtonText: 'Enter Subject'
+                });
+                $('#subject_mass_mail').focus();
+                resetBtnState();
+                return false;
+            }
+
+            // 4. Validate Email Body Content
+            var plainBodyText = (editor1mass || '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (!plainBodyText || plainBodyText.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email Body Empty',
+                    text: 'Your email has no content. Please choose an enterprise email template from the dropdown above or compose your message in the editor before sending.',
+                    confirmButtonText: 'Add Content'
+                });
+                resetBtnState();
                 return false;
             }
 
@@ -1774,8 +1878,23 @@
                     'arr': arr
                 },
                 success: function(response) {
+                    if (response.status === 'error') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cannot Send Email',
+                            text: response.message || 'The email could not be sent. Please check your inputs.',
+                            confirmButtonText: 'Understood'
+                        });
+                        return false;
+                    }
+
                     if (response.status == 'coinCheck') {
-                        Swal.fire("Failed", ` ${response.message}`, "warning").then(function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Insufficient Coins',
+                            text: response.message || 'You do not have enough coins to send this email.',
+                            confirmButtonText: 'Close'
+                        }).then(function() {
                             closeDrawerTargeted();
                         });
                         return false;
@@ -1785,7 +1904,7 @@
                         $btn.removeData('idempotency-key');
                         swalWithBootstrapButtons.fire(
                             'Success!',
-                            'Email has been queued and sent.',
+                            'Email has been queued and sent successfully.',
                             'success'
                         ).then(function() {
                             closeDrawerTargeted();
@@ -1793,7 +1912,16 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    Swal.fire("Error", "An error occurred while sending email. Please try again.", "error");
+                    var errorMsg = 'An unexpected server error occurred while sending email. Please try again.';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Sending Failed',
+                        text: errorMsg,
+                        confirmButtonText: 'OK'
+                    });
                 },
                 complete: function() {
                     /* Intent: Restore button state only after the AJAX request completely resolves */

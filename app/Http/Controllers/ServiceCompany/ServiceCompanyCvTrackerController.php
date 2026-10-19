@@ -7934,7 +7934,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $mailto = array_values(array_unique($mailto));
 
         if (empty($mailto)) {
-            return Reply::dataOnly(['status' => 'error', 'message' => 'No valid candidate recipient email provided.']);
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Candidate recipient email is missing or empty. Please update the candidate profile in the CV Tracker with a valid email address before sending.',
+            ]);
         }
 
         // Strict deliverability cap & format validation (max 5 recipients combined: candidate To + CCs)
@@ -7942,13 +7945,46 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if ($totalRecipients > 5) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included.',
+                'message' => "Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included. Current count: {$totalRecipients}.",
             ]);
         }
-        foreach (array_merge($mailto, $cc) as $email) {
+        foreach ($mailto as $email) {
             if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid email address format: {$email}"]);
+                return Reply::dataOnly(['status' => 'error', 'message' => "Candidate email address '{$email}' is invalid. Please correct it in the candidate profile."]);
             }
+        }
+        foreach ($cc as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "CC email address '{$email}' is invalid. Please check and correct the CC list."]);
+            }
+        }
+
+        // Validate Subject Line
+        $trimmedSubject = trim(strip_tags((string) $subject));
+        if (empty($trimmedSubject)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email subject cannot be empty. Please enter an email subject line before sending.',
+            ]);
+        }
+
+        // Validate Message Body
+        $plainMessage = trim(strip_tags(html_entity_decode((string) $message, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $plainMessage = str_replace(["\xc2\xa0", "\u{00a0}"], '', $plainMessage);
+        if (empty($plainMessage)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email body cannot be empty. Please select an email template or write your message in the editor before sending.',
+            ]);
+        }
+
+        // Check system email notification permission (ID 15: Send Candidate Email)
+        $checkMailPermision = GeneralMethod::mailPermission(15);
+        if (! $checkMailPermision) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Candidate email sending is currently turned OFF in your organization\'s email settings (Notification ID #15). Please enable candidate emails in Settings before sending.',
+            ]);
         }
 
         $attachments = [];
