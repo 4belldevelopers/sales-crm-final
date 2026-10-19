@@ -902,54 +902,80 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   color: #1E293B;
 }
 
-/* Category Filter Tabs / Pills */
+/* Category Filter Tabs / Pills — 100% Visible Multi-Row Flex Layout (God-Level Responsive ATS Design) */
 .fwd-tpl-category-tabs {
   width: 100% !important;
   box-sizing: border-box !important;
-  display: flex;
+  display: flex !important;
+  flex-wrap: wrap !important;
   align-items: center;
-  gap: 6px;
+  gap: 6px 6px;
   padding: 8px 12px;
-  overflow-x: auto;
-  white-space: nowrap;
   border-bottom: 1px solid #F1F5F9;
-  background: #FFFFFF;
-  scrollbar-width: none;
+  background: #F8FAFC;
   flex-shrink: 0;
 }
-.fwd-tpl-category-tabs::-webkit-scrollbar { display: none; }
 .fwd-tpl-cat-btn {
-  background: #F8FAFC;
+  background: #FFFFFF;
   border: 1px solid #E2E8F0;
   color: #475569;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 4px 11px;
-  border-radius: 16px;
+  padding: 3.5px 8.5px;
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
+  gap: 5.5px;
+  line-height: 1.25;
+  transition: all 0.14s ease-in-out;
   user-select: none;
   font-family: 'Poppins', sans-serif;
   flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 .fwd-tpl-cat-btn svg {
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
   color: inherit;
 }
 .fwd-tpl-cat-btn:hover {
   background: #F1F5F9;
   border-color: #CBD5E1;
-  color: #1E293B;
+  color: #0F172A;
+  transform: translateY(-0.5px);
 }
 .fwd-tpl-cat-btn.is-active {
   background: #2563EB;
   border-color: #2563EB;
   color: #FFFFFF;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.24);
+}
+.fwd-tpl-cat-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  background: #F1F5F9;
+  color: #64748B;
+  line-height: 1;
+  transition: all 0.14s ease-in-out;
+}
+.fwd-tpl-cat-btn:hover .fwd-tpl-cat-count {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+.fwd-tpl-cat-btn.is-active .fwd-tpl-cat-count {
+  background: rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  font-weight: 700;
 }
 
 /* Templates List Container */
@@ -1295,37 +1321,45 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
             <!-- Category Filter Tabs / Pills -->
             <div class="fwd-tpl-category-tabs" id="testTplCategoryTabs">
-              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all">
+              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all" title="View all templates">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                All <span id="testTplCatCount_all">(10)</span>
+                <span>All</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_all">10</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix" title="Candidate Comparison Matrix">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-                Matrix <span id="testTplCatCount_matrix">(1)</span>
+                <span>Matrix</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_matrix">1</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh" title="Fresh Shortlisted Candidates">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-                Fresh Shortlist <span id="testTplCatCount_fresh">(2)</span>
+                <span>Fresh Shortlist</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_fresh">2</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="screening">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="screening" title="Q&A, Key Skills &amp; Reason for Change Trackers">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-                Screening &amp; Q&amp;A <span id="testTplCatCount_screening">(2)</span>
+                <span>Screening &amp; Q&amp;A</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_screening">2</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency" title="High Urgency &amp; Priority Roles">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                High Urgency <span id="testTplCatCount_urgency">(1)</span>
+                <span>High Urgency</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_urgency">1</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="bench">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="bench" title="Immediate Bench / C2C Deployment">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                Bench &amp; C2C <span id="testTplCatCount_bench">(1)</span>
+                <span>Bench &amp; C2C</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_bench">1</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="executive">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="executive" title="Executive &amp; Leadership Presentation">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                Executive <span id="testTplCatCount_executive">(1)</span>
+                <span>Executive</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_executive">1</span>
               </button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback">
+              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback" title="Client Feedback &amp; Follow-up">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Follow-up <span id="testTplCatCount_feedback">(2)</span>
+                <span>Follow-up</span>
+                <span class="fwd-tpl-cat-count" id="testTplCatCount_feedback">2</span>
               </button>
             </div>
 
@@ -3062,7 +3096,7 @@ window.initTestTemplatePicker = function() {
         if (counts[c] !== undefined) counts[c]++;
     });
     Object.keys(counts).forEach(function(k) {
-        $('#testTplCatCount_' + k).text('(' + counts[k] + ')');
+        $('#testTplCatCount_' + k).text(counts[k]);
     });
     $('#testTplAvailableCountBadge').text(allList.length + ' Available');
 

@@ -2170,7 +2170,7 @@
                 if (counts[c] !== undefined) counts[c]++;
             });
             Object.keys(counts).forEach(function (key) {
-                $('#fwdTplCatCount_' + key).text('(' + counts[key] + ')');
+                $('#fwdTplCatCount_' + key).text(counts[key]);
             });
 
             $('#fwdTplAvailableCountBadge').text(allList.length + ' Available');
