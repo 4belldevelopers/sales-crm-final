@@ -2545,6 +2545,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return JobCategory::all();
         });
         $this->companyType = GeneralMethod::companyType();
+        $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
         $this->department = cache()->remember('global_td_industries_all', 86400, function () {
             return DB::table('td_industries')
                 ->select('td_industries.ind_id', 'td_industries.ind_name')
@@ -2671,8 +2672,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
-            $client->company_size_from = $from_size;
-            $client->company_sizes = $to_size;
+            $client->company_size_from = (int) $from_size;
+            $client->company_sizes = ((int) $to_size > 0) ? (int) $to_size : null;
         }
         if (isset($request->company_type) && $request->company_type !== '') {
             $client->company_type = $request->company_type;
@@ -3125,6 +3126,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return JobCategory::all();
         });
         $this->companyType = GeneralMethod::companyType();
+        $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
         $this->department = cache()->remember('global_td_industries_all', 86400, function () {
             return DB::table('td_industries')
                 ->select('td_industries.ind_id', 'td_industries.ind_name')
@@ -3336,8 +3338,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
-            $client->company_size_from = $from_size;
-            $client->company_sizes = $to_size;
+            $client->company_size_from = (int) $from_size;
+            $client->company_sizes = ((int) $to_size > 0) ? (int) $to_size : null;
         }
         if (isset($request->company_type) && $request->company_type !== '') {
             $client->company_type = $request->company_type;

@@ -2785,52 +2785,34 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     width: 100%;
     font-family: 'Poppins', sans-serif;
   }
-  .jero-ind-input-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
+  .god-input-box.jero-ind-input-box {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   }
-  .jero-ind-search-icon {
-    position: absolute;
-    left: 12px;
-    color: #94a3b8;
-    pointer-events: none;
-    transition: color 0.2s ease;
-    display: flex;
-    align-items: center;
-    z-index: 2;
+  .god-input-box.jero-ind-input-box:hover {
+    border-color: #94a3b8 !important;
   }
-  .jero-ind-input {
-    width: 100%;
-    padding-left: 36px !important;
-    padding-right: 56px !important;
-    height: 42px !important;
-    font-size: 13px;
-    font-weight: 500;
-    color: #1e293b;
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
-    font-family: inherit;
-    text-overflow: ellipsis;
-  }
-  .jero-ind-input:hover {
-    border-color: #94a3b8;
-  }
-  .jero-ind-input:focus {
+  .god-input-box.jero-ind-input-box:focus-within,
+  .god-input-box.jero-ind-input-box.is-focused,
+  .jero-ind-select-wrap.is-open .god-input-box.jero-ind-input-box {
     border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-    outline: none;
-    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
   }
-  .jero-ind-input.is-invalid,
-  .jero-ind-input-box.has-validation-error .jero-ind-input,
-  .jero-ind-select-wrap.has-validation-error .jero-ind-input {
+  .god-input-box.jero-ind-input-box.is-invalid,
+  .god-input-box.jero-ind-input-box.has-validation-error,
+  .jero-ind-select-wrap.has-validation-error .god-input-box.jero-ind-input-box {
     border-color: #ef4444 !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
     animation: jeroShake 0.3s ease;
   }
   @keyframes jeroShake {
@@ -2838,79 +2820,564 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     20%, 60% { transform: translateX(-4px); }
     40%, 80% { transform: translateX(4px); }
   }
-  .jero-ind-input-box:focus-within .jero-ind-search-icon {
-    color: #2563eb;
+  .jero-ind-search-icon {
+    color: #94a3b8 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: color 0.15s ease !important;
+  }
+  .god-input-box.jero-ind-input-box:focus-within .jero-ind-search-icon,
+  .jero-ind-select-wrap.is-open .jero-ind-search-icon {
+    color: #2563eb !important;
+  }
+  .jero-ind-input {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    outline: none !important;
+    box-shadow: none !important;
+    text-overflow: ellipsis;
+    font-family: inherit;
+  }
+  .jero-ind-input::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 400;
   }
   .jero-ind-kbd {
-    position: absolute;
-    right: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 20px;
-    min-width: 20px;
+    height: 18px;
+    min-width: 18px;
     padding: 0 4px;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #94a3b8;
-    background: #f8fafc;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
     border-radius: 4px;
     pointer-events: none;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
     font-family: inherit;
-    z-index: 2;
+    flex-shrink: 0;
+    margin-right: 4px;
   }
-  .jero-ind-input-box:focus-within .jero-ind-kbd,
-  .jero-ind-input-box.has-value .jero-ind-kbd {
+  .god-input-box.jero-ind-input-box:focus-within .jero-ind-kbd,
+  .god-input-box.jero-ind-input-box.has-value .jero-ind-kbd {
     display: none !important;
   }
   .jero-ind-clear-btn {
-    position: absolute;
-    right: 32px;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: transparent;
     border: none;
     padding: 0;
-    color: #64748b;
+    color: #94a3b8;
     cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     transition: all 0.15s ease;
-    z-index: 5;
+    flex-shrink: 0;
+    margin-right: 4px;
   }
   .jero-ind-clear-btn:hover {
     color: #ef4444;
     background: #fee2e2;
   }
   .jero-ind-chevron {
-    position: absolute;
-    right: 10px;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     color: #94a3b8;
-    pointer-events: auto;
     cursor: pointer;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease;
-    z-index: 4;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+    flex-shrink: 0;
   }
   .jero-ind-chevron:hover {
     color: #1e293b;
-    background: #f1f5f9;
   }
   .jero-ind-select-wrap.is-open .jero-ind-chevron {
     transform: rotate(180deg);
     color: #2563eb;
   }
+
+  /* Elevated Modern Dropdown Container */
   .jero-ind-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    width: max(100%, 460px);
+    max-width: calc(100vw - 32px);
+    z-index: 1060;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.16), 0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    max-height: min(420px, calc(100vh - 140px));
+    animation: jeroDropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+  }
+  .jero-ind-select-wrap.is-open .jero-ind-dropdown,
+  .jero-ind-dropdown.is-open {
+    display: flex !important;
+  }
+  .jero-ind-dropdown.drop-up {
+    top: auto;
+    bottom: calc(100% + 6px);
+    box-shadow: 0 -20px 48px -8px rgba(15, 23, 42, 0.16), 0 -8px 20px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  }
+  @keyframes jeroDropdownFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Tabs Bar */
+  .jero-ind-tabs-wrap {
+    position: relative;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef2f6;
+  }
+  .jero-ind-tabs {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .jero-ind-tabs::-webkit-scrollbar { display: none; }
+  .jero-ind-tab-btn {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 3px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  }
+  .jero-ind-tab-btn:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+  .jero-ind-tab-btn.active {
+    background: #101A46;
+    color: #ffffff;
+    border-color: #101A46;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(16, 26, 70, 0.18);
+  }
+  .jero-ind-tab-btn .tab-count {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+  .jero-ind-tab-btn.active .tab-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+  }
+
+  /* Recent Bar */
+  .jero-ind-recent-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .jero-ind-recent-bar::-webkit-scrollbar { display: none; }
+  .jero-ind-recent-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  .jero-ind-recent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.12s ease;
+  }
+  .jero-ind-recent-chip:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  /* List Container */
+  .jero-ind-list-container {
+    flex: 1 1 auto;
+    min-height: 80px;
+    max-height: 290px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    position: relative;
+    padding: 4px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    box-sizing: border-box;
+  }
+  .jero-ind-list-container::-webkit-scrollbar { width: 5px; }
+  .jero-ind-list-container::-webkit-scrollbar-track { background: #f8fafc; }
+  .jero-ind-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .jero-ind-list-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* Section Header */
+  .jero-ind-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+  }
+  .jero-ind-section-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .jero-ind-sector-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .jero-ind-sector-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+  .jero-ind-section-count {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  /* Single-Line High-Density Item Row */
+  .jero-ind-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    margin: 1px 6px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+  }
+  .jero-ind-item:hover,
+  .jero-ind-item.focused {
+    background: #f1f5f9;
+  }
+  .jero-ind-item.selected {
+    background: #eff6ff;
+  }
+  .jero-ind-item-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .jero-ind-item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    flex-shrink: 0;
+    transition: background 0.12s ease;
+  }
+  .jero-ind-item:hover .jero-ind-item-dot,
+  .jero-ind-item.focused .jero-ind-item-dot,
+  .jero-ind-item.selected .jero-ind-item-dot {
+    background: #2563eb;
+  }
+  .jero-ind-item-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+  .jero-ind-item.selected .jero-ind-item-name {
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .jero-ind-mark {
+    background: #fef08a !important;
+    color: #854d0e !important;
+    font-weight: 700 !important;
+    padding: 0 2px !important;
+    border-radius: 2px !important;
+  }
+  .jero-ind-item-side {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  .jero-ind-search-sector-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: #64748b;
+    white-space: nowrap;
+  }
+  .jero-ind-item-check {
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Empty State with Custom Industry Action */
+  .jero-ind-empty-state {
+    padding: 24px 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .jero-ind-empty-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #eff6ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    margin-bottom: 6px;
+  }
+  .jero-ind-empty-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .jero-ind-empty-sub {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+  .jero-ind-add-custom-btn {
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+  }
+  .jero-ind-add-custom-btn:hover {
+    background: #1d4ed8 !important;
+  }
+
+  /* Footer */
+  .jero-ind-footer {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #eef2f6;
+    font-size: 10.5px;
+    color: #64748b;
+  }
+  .jero-ind-sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #059669;
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .jero-ind-sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    animation: jeroPulseDot 2s infinite;
+  }
+  .jero-ind-footer-hints {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+  }
+  .jero-ind-hint-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .jero-ind-hint-key kbd {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 9.5px;
+    color: #475569;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  }
+
+  /* =========================================================================
+     Search-First Company Type Intelligence Combobox (Rule 17 Isolated)
+     ========================================================================= */
+  .jero-ctype-select-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .jero-ctype-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .jero-ctype-input {
+    cursor: pointer;
+    padding-right: 64px !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #101a46;
+  }
+  .jero-ctype-input:focus {
+    cursor: text;
+  }
+  .jero-ctype-kbd {
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #94a3b8;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .jero-ctype-clear-btn {
+    position: absolute;
+    right: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    border: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .jero-ctype-clear-btn:hover {
+    background: #cbd5e1;
+    color: #0f172a;
+  }
+  .jero-ctype-chevron {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .jero-ctype-select-wrap.is-open .jero-ctype-chevron {
+    transform: translateY(-50%) rotate(180deg);
+    color: #2563eb;
+  }
+  .jero-ctype-dropdown {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
@@ -2923,279 +3390,157 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     overflow: hidden;
     display: none;
     flex-direction: column;
-    max-height: min(380px, calc(100vh - 120px));
+    max-height: min(320px, calc(100vh - 120px));
     animation: jeroDropdownFadeIn 0.15s ease-out;
     box-sizing: border-box;
   }
-  .jero-ind-select-wrap.is-open .jero-ind-dropdown,
-  .jero-ind-dropdown.is-open {
+  .jero-ctype-select-wrap.is-open .jero-ctype-dropdown,
+  .jero-ctype-dropdown.is-open {
     display: flex !important;
   }
-  .jero-ind-dropdown.drop-up {
+  .jero-ctype-dropdown.drop-up {
     top: auto;
     bottom: calc(100% + 5px);
     box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08);
   }
-  @keyframes jeroDropdownFadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .jero-ind-tabs {
-    display: flex;
-    flex-shrink: 0;
-    gap: 4px;
-    padding: 6px 10px;
-    background: #f8fafc;
-    border-bottom: 1px solid #f1f5f9;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .jero-ind-tabs::-webkit-scrollbar { display: none; }
-  .jero-ind-tab-btn {
-    font-size: 11px;
-    font-weight: 500;
-    color: #64748b;
-    background: none;
-    border: none;
-    padding: 4px 9px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.15s ease;
-    font-family: inherit;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .jero-ind-tab-btn:hover {
-    color: #0f172a;
-    background: #f1f5f9;
-  }
-  .jero-ind-tab-btn.active {
-    background: #ffffff;
-    color: #1e293b;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  }
-  .jero-ind-tab-btn .tab-count {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 5px;
-    border-radius: 10px;
-    background: #f1f5f9;
-    color: #64748b;
-  }
-  .jero-ind-tab-btn.active .tab-count {
-    background: #eff6ff;
-    color: #2563eb;
-  }
-  .jero-ind-recent-bar {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #f8fafc;
-    border-bottom: 1px solid #f1f5f9;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .jero-ind-recent-bar::-webkit-scrollbar { display: none; }
-  .jero-ind-recent-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #64748b;
-    flex-shrink: 0;
-  }
-  .jero-ind-recent-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #1e293b;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    padding: 2px 8px;
-    border-radius: 12px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.12s ease;
-  }
-  .jero-ind-recent-chip:hover {
-    background: #eff6ff;
-    border-color: #93c5fd;
-    color: #1d4ed8;
-  }
-  .jero-ind-list-container {
-    flex: 1 1 auto;
-    min-height: 60px;
-    max-height: min(280px, 45vh);
+  .jero-ctype-list-container {
+    max-height: 260px; /* 15.6" screen optimized */
     overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    position: relative;
-    padding: 4px 0;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f8fafc;
+    padding: 6px 0;
     box-sizing: border-box;
   }
-  .jero-ind-list-container::-webkit-scrollbar {
-    width: 7px;
+  .jero-ctype-list-container::-webkit-scrollbar {
+    width: 6px;
   }
-  .jero-ind-list-container::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 4px;
+  .jero-ctype-list-container::-webkit-scrollbar-track {
+    background: transparent;
   }
-  .jero-ind-list-container::-webkit-scrollbar-thumb {
+  .jero-ctype-list-container::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 4px;
+    border-radius: 9999px;
   }
-  .jero-ind-list-container::-webkit-scrollbar-thumb:hover {
+  .jero-ctype-list-container::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
-  .jero-ind-section-header {
+  .jero-ctype-item {
     display: flex;
     align-items: center;
-    padding: 6px 12px;
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #475569;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    pointer-events: none;
-    user-select: none;
+    justify-content: space-between;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+    border-bottom: 1px solid #f8fafc;
+    box-sizing: border-box;
   }
-  .jero-ind-sector-icon {
+  .jero-ctype-item:last-child {
+    border-bottom: none;
+  }
+  .jero-ctype-item:hover,
+  .jero-ctype-item.focused {
+    background: #f1f5f9;
+  }
+  .jero-ctype-item.selected {
+    background: #eff6ff;
+  }
+  .jero-ctype-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .jero-ctype-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jero-ctype-mark {
+    background: #fef08a;
+    color: #854d0e;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 700;
+  }
+  .jero-ctype-item-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.3;
+  }
+  .jero-ctype-item-aliases {
+    font-size: 10.5px;
+    color: #94a3b8;
+    margin-top: 1px;
+    line-height: 1.25;
+  }
+  .jero-ctype-item-side {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  .jero-ctype-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 600;
     border-radius: 4px;
-    margin-right: 6px;
-    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #475569;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
   }
-  .jero-ind-sector-icon svg {
-    width: 12px;
-    height: 12px;
+  .jero-ctype-badge.matched-alias {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
   }
-  .jero-ind-item {
+  .jero-ctype-item-check {
+    display: flex;
+    align-items: center;
+    color: #2563eb;
+  }
+  .jero-ctype-empty-state {
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 12.5px;
+    color: #64748b;
+  }
+  .jero-ctype-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 7px 12px;
-    margin: 1px 6px;
-    border-radius: 6px;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    transition: background 0.12s ease, border-color 0.12s ease;
-  }
-  .jero-ind-item:hover,
-  .jero-ind-item.focused {
-    background: #f1f5f9;
-    border-left-color: #2563eb;
-  }
-  .jero-ind-item.selected {
-    background: #eff6ff;
-    border-left-color: #2563eb;
-  }
-  .jero-ind-item-main {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-  }
-  .jero-ind-item-name {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #1e293b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.35;
-  }
-  .jero-ind-mark {
-    background: #fef08a !important;
-    color: #854d0e !important;
-    font-weight: 700 !important;
-    padding: 0 2px !important;
-    border-radius: 2px !important;
-  }
-  .jero-ind-item-sub {
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
     font-size: 11px;
-    color: #64748b;
-    line-height: 1.25;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
   }
-  .jero-ind-item-side {
+  .jero-ctype-sync-status {
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-shrink: 0;
-  }
-  .jero-ind-badge {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 4px;
-    white-space: nowrap;
-    letter-spacing: 0.2px;
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-  }
-  .jero-ind-item-check {
-    color: #2563eb;
-    display: flex;
-    align-items: center;
-  }
-  .jero-ind-empty-state {
-    padding: 20px 14px;
-    text-align: center;
-    color: #64748b;
-    font-size: 12px;
-  }
-  .jero-ind-footer {
-    display: flex;
-    flex-shrink: 0;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 12px;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    font-size: 10px;
-    color: #64748b;
-  }
-  .jero-ind-sync-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
     color: #059669;
-    font-weight: 600;
+    font-weight: 500;
   }
-  .jero-ind-sync-dot {
+  .jero-ctype-sync-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: #10b981;
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    animation: jeroPulseDot 2s infinite;
   }
-  @keyframes jeroPulseDot {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.3); opacity: 0.7; }
-  }
-  .jero-ind-footer-hint {
+  .jero-ctype-footer-hint {
     color: #94a3b8;
+  }
+  .jero-ctype-input-box.has-validation-error,
+  .jero-ctype-select-wrap.has-validation-error .jero-ctype-input-box {
+    border-color: #f1416c !important;
+    background-color: #fff8f8 !important;
   }
 </style>
 @endpush
@@ -3216,7 +3561,13 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      	$name					= @$client->name;
      	$website				= @$client->website;
      	$industry				= @$client->industry;
-     	$company_sizes			= @$client->company_size_from . '-' . @$client->company_sizes;
+     	$client_size_from       = @$client->company_size_from;
+     	$client_size_to         = @$client->company_sizes;
+     	if (!empty($client_size_from)) {
+     	    $company_sizes		= $client_size_from . '-' . (!empty($client_size_to) ? $client_size_to : '0');
+     	} else {
+     	    $company_sizes		= '';
+     	}
      	$company_type			= @$client->company_type;
      	$founded				= @$client->founded;
      	
@@ -6563,7 +6914,10 @@ $('.remove_address').click(function(){
       industry = $('#industry option:selected').text() || '—';
     }
     var compSizes = $('#company_sizes option:selected').text() || '';
-    var compType = $('#company_type option:selected').text() || '—';
+    var compType = ($('#company_type_display').val() || $('#company_type option:selected').text() || '—').trim();
+    if (!compType || compType === 'Select company type' || compType === 'Select Company Type') {
+      compType = '—';
+    }
     var founded = ($('#founded').val() || '').trim();
 
     // 1. Client Information Card
@@ -6575,8 +6929,8 @@ $('.remove_address').click(function(){
       $('.span_website').html('— <i class="la la-external-link" style="font-size:12px;"></i>').attr('href', 'javascript:void(0);');
     }
     $('.span_industry').text(industry && industry !== 'Select industry' && industry !== 'Select Industry' ? industry : '—');
-    $('.span_company_sizes').text(compSizes && compSizes !== 'Select Company Size' && compSizes !== 'Select company size' ? compSizes + (compSizes.indexOf('employees') === -1 ? ' employees' : '') : '—');
-    $('.span_company_type').text(compType && compType !== 'Select company type' && compType !== 'Select Company Type' ? compType : '—');
+    $('.span_company_sizes').text(compSizes && compSizes !== 'Select Company Size' && compSizes !== 'Select company size' ? (compSizes.indexOf('employee') === -1 ? compSizes + ' employees' : compSizes) : '—');
+    $('.span_company_type').text(compType);
     $('.span_founded').text(founded || '—');
 
     var careerPage = ($('#career_page_url').val() || '').trim();
@@ -6924,8 +7278,8 @@ $('.remove_address').click(function(){
   function clearInlineErrors() {
     $('.is-invalid').removeClass('is-invalid');
     $('.client-inline-error').remove();
-    $('#jero_ind_select_wrap').removeClass('has-validation-error');
-    $('#jero_ind_input_box').removeClass('has-validation-error');
+    $('#jero_ind_select_wrap, #jero_ind_input_box').removeClass('has-validation-error');
+    $('#jero_ctype_select_wrap, #jero_ctype_input_box').removeClass('has-validation-error');
   }
 
   function clearFieldError($field) {
@@ -6935,6 +7289,11 @@ $('.remove_address').click(function(){
       $('#industry_display').removeClass('is-invalid');
       $('#jero_ind_input_box').removeClass('has-validation-error');
       $('#jero_ind_select_wrap').removeClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'company_type' || $field.attr('id') === 'company_type_display') {
+      $('#company_type_display').removeClass('is-invalid');
+      $('#jero_ctype_input_box').removeClass('has-validation-error');
+      $('#jero_ctype_select_wrap').removeClass('has-validation-error');
     }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
@@ -6955,6 +7314,11 @@ $('.remove_address').click(function(){
       $('#industry_display').addClass('is-invalid');
       $('#jero_ind_input_box').addClass('has-validation-error');
       $('#jero_ind_select_wrap').addClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'company_type' || $field.attr('id') === 'company_type_display') {
+      $('#company_type_display').addClass('is-invalid');
+      $('#jero_ctype_input_box').addClass('has-validation-error');
+      $('#jero_ctype_select_wrap').addClass('has-validation-error');
     }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
@@ -9262,6 +9626,478 @@ $('.remove_address').click(function(){
         });
     } else {
         initCacheAndSync();
+        initEventListeners();
+    }
+})();
+</script>
+
+<!-- =========================================================================
+     Search-First Company Type Intelligence Engine (Client-First / 10K Concurrency)
+     Strictly isolated to Client Wizard (Rule 17)
+     ========================================================================= -->
+<script id="jero_company_type_seed_data" type="application/json">
+    {!! json_encode($companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy()) !!}
+</script>
+
+<script>
+(function() {
+    'use strict';
+
+    var taxonomyList = [];
+    var taxonomyMap = new Map();
+    var filteredList = [];
+    var focusedIndex = -1;
+    var isOpen = false;
+
+    // DOM References
+    var wrap = null;
+    var input = null;
+    var hiddenSelect = null;
+    var inputBox = null;
+    var clearBtn = null;
+    var kbd = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function highlightMatch(text, query) {
+        var safeText = escapeHtml(text || '');
+        if (!query) return safeText;
+        var cleanQ = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!cleanQ) return safeText;
+        var regex = new RegExp('(' + cleanQ + ')', 'gi');
+        return safeText.replace(regex, '<mark class="jero-ctype-mark">$1</mark>');
+    }
+
+    function initData() {
+        var seedEl = document.getElementById('jero_company_type_seed_data');
+        if (seedEl && seedEl.textContent) {
+            try {
+                taxonomyList = JSON.parse(seedEl.textContent);
+            } catch (e) {
+                taxonomyList = [];
+            }
+        }
+        taxonomyMap.clear();
+        for (var i = 0; i < taxonomyList.length; i++) {
+            taxonomyMap.set(parseInt(taxonomyList[i].id, 10), taxonomyList[i]);
+        }
+    }
+
+    function getSelectedId() {
+        if (!hiddenSelect) return null;
+        var val = hiddenSelect.value;
+        if (val === '' || val === null || typeof val === 'undefined') return null;
+        return parseInt(val, 10);
+    }
+
+    function filterItems(query) {
+        var clean = (query || '').trim().toLowerCase();
+        if (!clean) {
+            filteredList = taxonomyList.map(function(item) {
+                return { item: item, matchedAlias: null };
+            });
+            return;
+        }
+
+        var results = [];
+        for (var i = 0; i < taxonomyList.length; i++) {
+            var item = taxonomyList[i];
+            var nameMatch = (item.display_name && item.display_name.toLowerCase().indexOf(clean) !== -1) ||
+                            (item.name && item.name.toLowerCase().indexOf(clean) !== -1);
+            var descMatch = item.desc && item.desc.toLowerCase().indexOf(clean) !== -1;
+            var matchedAlias = null;
+
+            if (item.aliases && item.aliases.length) {
+                for (var a = 0; a < item.aliases.length; a++) {
+                    if (item.aliases[a].toLowerCase().indexOf(clean) !== -1) {
+                        matchedAlias = item.aliases[a];
+                        break;
+                    }
+                }
+            }
+
+            if (nameMatch || descMatch || matchedAlias) {
+                results.push({
+                    item: item,
+                    matchedAlias: matchedAlias
+                });
+            }
+        }
+        filteredList = results;
+    }
+
+    function renderList(query) {
+        if (!listContainer) return;
+        if (!filteredList.length) {
+            listContainer.innerHTML = '<div class="jero-ctype-empty-state">' +
+                '<div style="font-weight:600; margin-bottom:4px; color:#1e293b;">No company type found</div>' +
+                '<div style="font-size:11.5px; color:#64748b;">No results matching "' + escapeHtml(query) + '".</div>' +
+                '</div>';
+            return;
+        }
+
+        var selectedId = getSelectedId();
+        var html = '';
+
+        for (var i = 0; i < filteredList.length; i++) {
+            var entry = filteredList[i];
+            var item = entry.item;
+            var isSelected = (selectedId !== null && selectedId === parseInt(item.id, 10));
+            var isFocused = (i === focusedIndex);
+
+            var checkIcon = isSelected ? '<span class="jero-ctype-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+
+            var badgeHtml = '';
+            if (entry.matchedAlias) {
+                badgeHtml = '<span class="jero-ctype-badge matched-alias">Matched: ' + escapeHtml(entry.matchedAlias) + '</span>';
+            } else if (item.badge) {
+                badgeHtml = '<span class="jero-ctype-badge">' + escapeHtml(item.badge) + '</span>';
+            }
+
+            var aliasesPreview = '';
+            if (item.aliases && item.aliases.length && !entry.matchedAlias) {
+                aliasesPreview = '<div class="jero-ctype-item-aliases">' + escapeHtml(item.aliases.slice(0, 4).join(' • ')) + (item.aliases.length > 4 ? ' • ...' : '') + '</div>';
+            }
+
+            html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
+                'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-ctype-item-main">' +
+                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
+                '<div class="jero-ctype-item-desc">' + highlightMatch(item.desc || '', query) + '</div>' +
+                aliasesPreview +
+                '</div>' +
+                '<div class="jero-ctype-item-side">' +
+                badgeHtml +
+                checkIcon +
+                '</div>' +
+                '</div>';
+        }
+
+        listContainer.innerHTML = html;
+        scrollFocusedIntoView();
+    }
+
+    function scrollFocusedIntoView() {
+        if (!listContainer || focusedIndex < 0) {
+            if (input) input.removeAttribute('aria-activedescendant');
+            return;
+        }
+        var items = listContainer.querySelectorAll('.jero-ctype-item');
+        if (items[focusedIndex]) {
+            var item = items[focusedIndex];
+            var itemTop = item.offsetTop;
+            var itemBottom = itemTop + item.offsetHeight;
+            var containerTop = listContainer.scrollTop;
+            var containerBottom = containerTop + listContainer.offsetHeight;
+
+            if (itemTop < containerTop) {
+                listContainer.scrollTop = itemTop;
+            } else if (itemBottom > containerBottom) {
+                listContainer.scrollTop = itemBottom - listContainer.offsetHeight;
+            }
+
+            // WAI-ARIA 1.2: Update aria-activedescendant to the focused option's id
+            if (input && item.id) {
+                input.setAttribute('aria-activedescendant', item.id);
+            }
+        }
+    }
+
+    function updateDropdownPosition() {
+        if (!wrap || !dropdown) return;
+        var rect = wrap.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var dropdownHeight = 300;
+        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+            dropdown.classList.add('drop-up');
+        } else {
+            dropdown.classList.remove('drop-up');
+        }
+    }
+
+    function openDropdown() {
+        if (isOpen) return;
+        isOpen = true;
+        updateDropdownPosition();
+        if (wrap) wrap.classList.add('is-open');
+        if (dropdown) dropdown.style.display = 'flex';
+        if (input) input.setAttribute('aria-expanded', 'true');
+
+        filterItems(input ? input.value : '');
+        var selectedId = getSelectedId();
+        focusedIndex = -1;
+        if (selectedId !== null) {
+            for (var i = 0; i < filteredList.length; i++) {
+                if (parseInt(filteredList[i].item.id, 10) === selectedId) {
+                    focusedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (focusedIndex === -1 && filteredList.length > 0) {
+            focusedIndex = 0;
+        }
+        renderList(input ? input.value : '');
+    }
+
+    function closeDropdown(restoreText) {
+        if (!isOpen) return;
+        isOpen = false;
+        if (wrap) wrap.classList.remove('is-open');
+        if (dropdown) dropdown.style.display = 'none';
+        if (input) input.setAttribute('aria-expanded', 'false');
+        if (input) input.removeAttribute('aria-activedescendant');
+        focusedIndex = -1;
+
+        if (restoreText && input) {
+            var selectedId = getSelectedId();
+            if (selectedId !== null && taxonomyMap.has(selectedId)) {
+                input.value = taxonomyMap.get(selectedId).display_name || taxonomyMap.get(selectedId).name;
+            } else {
+                input.value = '';
+            }
+            updateInputVisualState();
+        }
+    }
+
+    function updateInputVisualState() {
+        var hasVal = input && input.value.trim().length > 0;
+        if (inputBox) {
+            if (hasVal) {
+                inputBox.classList.add('has-value');
+            } else {
+                inputBox.classList.remove('has-value');
+            }
+        }
+        if (clearBtn) clearBtn.style.display = hasVal ? 'flex' : 'none';
+        if (kbd) kbd.style.display = hasVal ? 'none' : 'inline-flex';
+    }
+
+    function selectItem(item) {
+        if (!item) return;
+        if (hiddenSelect) {
+            hiddenSelect.value = item.id;
+            $(hiddenSelect).trigger('change');
+        }
+        if (input) {
+            input.value = item.display_name || item.name;
+        }
+        updateInputVisualState();
+        if (typeof window.clearFieldError === 'function' && hiddenSelect) {
+            window.clearFieldError($(hiddenSelect));
+        }
+        closeDropdown(false);
+    }
+
+    function clearSelection() {
+        if (hiddenSelect) {
+            hiddenSelect.value = '';
+            $(hiddenSelect).trigger('change');
+        }
+        if (input) {
+            input.value = '';
+        }
+        updateInputVisualState();
+        filterItems('');
+        renderList('');
+        if (input) input.focus();
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_ctype_select_wrap');
+        input = document.getElementById('company_type_display');
+        hiddenSelect = document.getElementById('company_type');
+        inputBox = document.getElementById('jero_ctype_input_box');
+        clearBtn = document.getElementById('jero_ctype_clear_btn');
+        kbd = document.getElementById('jero_ctype_kbd');
+        chevron = document.getElementById('jero_ctype_chevron');
+        dropdown = document.getElementById('jero_ctype_dropdown');
+        listContainer = document.getElementById('jero_ctype_list_container');
+
+        if (!wrap || !input || !hiddenSelect) return;
+
+        // Toggle on chevron click
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (isOpen) {
+                    closeDropdown(true);
+                } else {
+                    input.focus();
+                    openDropdown();
+                }
+            });
+        }
+
+        // Focus & Click on input
+        input.addEventListener('focus', function() {
+            openDropdown();
+        });
+        input.addEventListener('click', function() {
+            openDropdown();
+        });
+
+        // Typing in input
+        input.addEventListener('input', function() {
+            if (!isOpen) openDropdown();
+            focusedIndex = 0;
+            filterItems(input.value);
+            renderList(input.value);
+            updateInputVisualState();
+        });
+
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                clearSelection();
+            });
+        }
+
+        // Item selection via click
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-ctype-item');
+                if (!itemEl) return;
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                if (taxonomyMap.has(id)) {
+                    selectItem(taxonomyMap.get(id));
+                }
+            });
+        }
+
+        // Keyboard navigation
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!isOpen) {
+                    openDropdown();
+                    return;
+                }
+                if (filteredList.length > 0) {
+                    focusedIndex = (focusedIndex + 1) % filteredList.length;
+                    renderList(input.value);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!isOpen) {
+                    openDropdown();
+                    return;
+                }
+                if (filteredList.length > 0) {
+                    focusedIndex = (focusedIndex - 1 + filteredList.length) % filteredList.length;
+                    renderList(input.value);
+                }
+            } else if (e.key === 'Home') {
+                if (isOpen && filteredList.length > 0) {
+                    e.preventDefault();
+                    focusedIndex = 0;
+                    renderList(input.value);
+                }
+            } else if (e.key === 'End') {
+                if (isOpen && filteredList.length > 0) {
+                    e.preventDefault();
+                    focusedIndex = filteredList.length - 1;
+                    renderList(input.value);
+                }
+            } else if (e.key === 'Enter') {
+                if (isOpen) {
+                    e.preventDefault();
+                    if (focusedIndex >= 0 && focusedIndex < filteredList.length) {
+                        selectItem(filteredList[focusedIndex].item);
+                    }
+                }
+            } else if (e.key === 'Escape') {
+                if (isOpen) {
+                    e.preventDefault();
+                    closeDropdown(true);
+                }
+            } else if (e.key === 'Tab') {
+                closeDropdown(true);
+            }
+        });
+
+        // Global quick-focus on '/'
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && !isOpen && document.activeElement !== input) {
+                var tag = (document.activeElement && document.activeElement.tagName) ? document.activeElement.tagName.toLowerCase() : '';
+                if (tag !== 'input' && tag !== 'textarea' && !document.activeElement.isContentEditable) {
+                    e.preventDefault();
+                    input.focus();
+                }
+            }
+        });
+
+        // Outside click
+        document.addEventListener('click', function(e) {
+            if (isOpen && wrap && !wrap.contains(e.target)) {
+                closeDropdown(true);
+            }
+        });
+
+        // Window resize / scroll
+        window.addEventListener('resize', function() {
+            if (isOpen) updateDropdownPosition();
+        });
+
+        // External change listener on native select (e.g. from autofill or edit)
+        $(hiddenSelect).on('change', function() {
+            var val = getSelectedId();
+            if (val !== null && taxonomyMap.has(val)) {
+                input.value = taxonomyMap.get(val).display_name || taxonomyMap.get(val).name;
+            } else if (val === null || val === '') {
+                input.value = '';
+            }
+            updateInputVisualState();
+        });
+
+        // Initial visual sync
+        var initId = getSelectedId();
+        if (initId !== null && taxonomyMap.has(initId)) {
+            input.value = taxonomyMap.get(initId).display_name || taxonomyMap.get(initId).name;
+        }
+        updateInputVisualState();
+    }
+
+    // Public API
+    window.JeroCompanyTypeEngine = {
+        selectById: function(id) {
+            var numId = parseInt(id, 10);
+            if (taxonomyMap.has(numId)) {
+                selectItem(taxonomyMap.get(numId));
+            }
+        },
+        selectByName: function(name) {
+            var clean = (name || '').trim().toLowerCase();
+            for (var i = 0; i < taxonomyList.length; i++) {
+                if ((taxonomyList[i].name && taxonomyList[i].name.toLowerCase() === clean) ||
+                    (taxonomyList[i].display_name && taxonomyList[i].display_name.toLowerCase() === clean)) {
+                    selectItem(taxonomyList[i]);
+                    return;
+                }
+            }
+        },
+        clear: clearSelection
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            initData();
+            initEventListeners();
+        });
+    } else {
+        initData();
         initEventListeners();
     }
 })();
