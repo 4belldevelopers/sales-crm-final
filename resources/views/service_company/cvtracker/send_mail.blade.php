@@ -247,23 +247,26 @@
       flex-shrink: 0;
     }
     .mm-header-btn-close {
-      width: 38px;
       height: 38px;
+      padding: 0 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       border-radius: 8px;
-      border: 1px solid #E5E7EB;
+      border: 1.5px solid #E2E8F0;
       background: #FFFFFF;
-      color: #64748B;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
       cursor: pointer;
       transition: all 0.15s ease-in-out;
-      padding: 0;
     }
     .mm-header-btn-close:hover {
-      background: #F8FAFC;
+      background: #F1F5F9;
       border-color: #CBD5E1;
-      color: #1E293B;
+      color: #0F172A;
     }
     .mm-header-btn-send {
       display: inline-flex;
@@ -387,15 +390,17 @@
     .tpl-trigger-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       min-width: 0;
       flex: 1;
     }
 
-    .tpl-trigger-icon-box {
-      width: 32px;
-      height: 32px;
-      border-radius: 7px;
+    .tpl-trigger-icon-box,
+    .tpl-trigger-icon {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
       background: #F5F3FF;
       color: #7C3AED;
       border: 1px solid #EDE9FE;
@@ -406,9 +411,17 @@
       transition: all 0.15s ease;
     }
 
+    .tpl-trigger-icon-box svg,
+    .tpl-trigger-icon svg {
+      width: 17px;
+      height: 17px;
+      display: block;
+    }
+
     .tpl-trigger-content {
       display: flex;
       flex-direction: column;
+      justify-content: center;
       min-width: 0;
       flex: 1;
     }
@@ -417,16 +430,20 @@
       font-size: 13px;
       color: #9CA3AF;
       font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tpl-trigger-title {
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
       color: #1E293B;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      line-height: 1.3;
+      line-height: 1.35;
     }
 
     .tpl-trigger-meta {
@@ -435,7 +452,8 @@
       gap: 6px;
       font-size: 11px;
       color: #64748B;
-      margin-top: 1px;
+      margin-top: 2px;
+      line-height: 1.2;
     }
 
     .tpl-trigger-right {
@@ -800,11 +818,12 @@
           </div>
         </div>
         <div class="mm-header-actions">
-          <button type="button" class="mm-header-btn-close" id="kt_send_mail_showdetail_close" onclick="(function(){ if(typeof window.closeCandidateSendMailDrawer === 'function') { window.closeCandidateSendMailDrawer(); } else if(typeof window.hideCandidateSendMailDrawer === 'function') { window.hideCandidateSendMailDrawer(); } else { $('.sd-mail-overlay').remove(); $('#kt_send_mail_showdetail_drawer').removeClass('drawer-on'); } })()" title="Close">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="mm-header-btn-close" id="kt_send_mail_showdetail_close" onclick="(function(){ if(typeof window.closeCandidateSendMailDrawer === 'function') { window.closeCandidateSendMailDrawer(); } else if(typeof window.hideCandidateSendMailDrawer === 'function') { window.hideCandidateSendMailDrawer(); } else { $('.sd-mail-overlay').remove(); $('#kt_send_mail_showdetail_drawer').removeClass('drawer-on'); } })()" title="Close Drawer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
+            <span>Close</span>
           </button>
           <button type="button" class="mm-header-btn-send" name="btnSubmitSendMail" id="btnSubmitSendMail" value="btnSubmitSendMail">
             <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
@@ -977,21 +996,23 @@
             <div class="tpl-picker-wrapper" id="tplPickerWrapper">
               {{-- Interactive Trigger Card --}}
               <div class="tpl-picker-trigger" id="tplPickerTrigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-                <div class="tpl-trigger-icon" id="tplTriggerIcon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                </div>
-                <div class="tpl-trigger-content">
-                  <span class="tpl-trigger-placeholder" id="tplTriggerPlaceholder">Choose an enterprise email template...</span>
-                  <div class="tpl-trigger-title" id="tplTriggerTitle" style="display:none;"></div>
-                  <div class="tpl-trigger-meta" id="tplTriggerMeta" style="display:none;">
-                    <span id="tplTriggerCategory"></span>
-                    <span>•</span>
-                    <span id="tplTriggerScope"></span>
+                <div class="tpl-trigger-left">
+                  <div class="tpl-trigger-icon-box" id="tplTriggerIcon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div class="tpl-trigger-content">
+                    <span class="tpl-trigger-placeholder" id="tplTriggerPlaceholder">Choose an enterprise email template...</span>
+                    <div class="tpl-trigger-title" id="tplTriggerTitle" style="display:none;"></div>
+                    <div class="tpl-trigger-meta" id="tplTriggerMeta" style="display:none;">
+                      <span id="tplTriggerCategory"></span>
+                      <span>•</span>
+                      <span id="tplTriggerScope"></span>
+                    </div>
                   </div>
                 </div>
                 <div class="tpl-trigger-right">
