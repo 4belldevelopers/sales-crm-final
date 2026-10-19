@@ -4912,10 +4912,15 @@ $('.remove_address').click(function(){
       console.log('[CompanyIntelligence] Direct edge fetch failed. Failing over to local server proxy:', fallbackUrl);
       fetch(fallbackUrl, {
         method: 'GET',
+        credentials: 'same-origin',
         headers: { 'Accept': 'application/json' }
       })
       .then(function(res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        var ct = res.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') === -1) {
+          throw new Error('Non-JSON response received from server proxy');
+        }
         return res.json();
       })
       .then(function(data) {
