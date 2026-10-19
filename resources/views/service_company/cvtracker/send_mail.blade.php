@@ -102,6 +102,25 @@
         if(count($applicationData) > 0){
             $applicationDataID = $applicationData[0]->id;
         }
+
+        /* Authoritative resolution of candidate recipient email(s) with multi-level fallbacks */
+        $rawChipEmails = [];
+        if (!empty($cc_email)) {
+            $rawChipEmails = explode(',', $cc_email);
+        }
+        if (empty(array_filter(array_map('trim', $rawChipEmails))) && !empty($applicationData) && count($applicationData) > 0) {
+            foreach ($applicationData as $cApp) {
+                $candEmailVal = trim((string)($cApp->email ?: ($cApp->secondrary_email ?? '')));
+                if (!empty($candEmailVal)) {
+                    $rawChipEmails[] = $candEmailVal;
+                }
+            }
+        }
+        $toChipEmails = array_values(array_filter(array_map('trim', $rawChipEmails)));
+        if (!empty($toChipEmails) && empty($cc_email)) {
+            $cc_email = implode(', ', $toChipEmails);
+        }
+        $chipColors = ['#DC2626','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777'];
     @endphp
 
     <style>
@@ -247,23 +266,26 @@
       flex-shrink: 0;
     }
     .mm-header-btn-close {
-      width: 38px;
       height: 38px;
+      padding: 0 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       border-radius: 8px;
-      border: 1px solid #E5E7EB;
+      border: 1.5px solid #E2E8F0;
       background: #FFFFFF;
-      color: #64748B;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
       cursor: pointer;
       transition: all 0.15s ease-in-out;
-      padding: 0;
     }
     .mm-header-btn-close:hover {
-      background: #F8FAFC;
+      background: #F1F5F9;
       border-color: #CBD5E1;
-      color: #1E293B;
+      color: #0F172A;
     }
     .mm-header-btn-send {
       display: inline-flex;
@@ -344,10 +366,462 @@
     .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
     #editor1mass { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
     .mm-row-body { align-items: flex-start; }
+
+    /* ========================================================
+       GOD-Level Enterprise Template Picker Styles
+       ======================================================== */
+    .tpl-picker-wrapper {
+      position: relative;
+      width: 100%;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .tpl-picker-trigger {
+      width: 100%;
+      min-height: 48px;
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 9px;
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      box-sizing: border-box;
+    }
+
+    .tpl-picker-trigger:hover {
+      border-color: #CBD5E1;
+      background: #F8FAFC;
+    }
+
+    .tpl-picker-trigger.is-active,
+    .tpl-picker-trigger:focus {
+      border-color: #7C3AED;
+      background: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
+      outline: none;
+    }
+
+    .tpl-trigger-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tpl-trigger-icon-box,
+    .tpl-trigger-icon {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
+      background: #F5F3FF;
+      color: #7C3AED;
+      border: 1px solid #EDE9FE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .tpl-trigger-icon-box svg,
+    .tpl-trigger-icon svg {
+      width: 17px;
+      height: 17px;
+      display: block;
+    }
+
+    .tpl-trigger-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tpl-trigger-placeholder {
+      font-size: 13px;
+      color: #9CA3AF;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tpl-trigger-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1E293B;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.35;
+    }
+
+    .tpl-trigger-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+
+    .tpl-trigger-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .tpl-trigger-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+      white-space: nowrap;
+    }
+
+    .tpl-trigger-clear {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #F1F5F9;
+      color: #64748B;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .tpl-trigger-clear:hover {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    .tpl-trigger-chevron {
+      width: 16px;
+      height: 16px;
+      color: #94A3B8;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+
+    .tpl-picker-trigger.is-active .tpl-trigger-chevron {
+      transform: rotate(180deg);
+      color: #7C3AED;
+    }
+
+    /* Floating Popover Dropdown */
+    .tpl-popover-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.14), 0 6px 12px -2px rgba(15, 23, 42, 0.06);
+      z-index: 1050;
+      display: none;
+      overflow: hidden;
+      animation: tplDropdownFadeIn 0.16s ease-out;
+    }
+
+    @keyframes tplDropdownFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Popover Search Bar */
+    .tpl-search-box {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid #F1F5F9;
+      background: #FAFAFA;
+      position: relative;
+    }
+
+    .tpl-search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .tpl-search-icon {
+      position: absolute;
+      left: 10px;
+      width: 14px;
+      height: 14px;
+      color: #94A3B8;
+      pointer-events: none;
+    }
+
+    .tpl-search-input {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 7px;
+      padding: 7px 30px 7px 32px;
+      font-size: 12px;
+      font-family: 'Poppins', sans-serif;
+      color: #1E293B;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      box-sizing: border-box;
+    }
+
+    .tpl-search-input:focus {
+      border-color: #7C3AED;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+    }
+
+    .tpl-search-clear {
+      position: absolute;
+      right: 8px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      color: #64748B;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* Category Filter Tabs / Pills */
+    .tpl-category-tabs {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      border-bottom: 1px solid #F1F5F9;
+      background: #FFFFFF;
+      scrollbar-width: none;
+    }
+    .tpl-category-tabs::-webkit-scrollbar { display: none; }
+
+    .tpl-cat-btn {
+      background: #F1F5F9;
+      border: 1px solid #E2E8F0;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.12s ease;
+      user-select: none;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .tpl-cat-btn:hover {
+      background: #E2E8F0;
+      color: #1E293B;
+    }
+
+    .tpl-cat-btn.is-active {
+      background: #7C3AED;
+      border-color: #7C3AED;
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Templates List Container */
+    .tpl-items-list {
+      max-height: 290px;
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .tpl-items-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .tpl-items-list::-webkit-scrollbar-track {
+      background: #F8FAFC;
+    }
+    .tpl-items-list::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+
+    /* Template Card Item */
+    .tpl-item-card {
+      padding: 9px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      border: 1px solid transparent;
+      margin-bottom: 3px;
+      user-select: none;
+    }
+
+    .tpl-item-card:hover {
+      background: #F8FAFC;
+      border-color: #E2E8F0;
+    }
+
+    .tpl-item-card.is-selected {
+      background: #F5F3FF;
+      border-color: #DDD6FE;
+    }
+
+    .tpl-num-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #EDE9FE;
+      color: #6D28D9;
+      font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+      letter-spacing: -0.3px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .tpl-item-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tpl-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tpl-item-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #1E293B;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.35;
+    }
+
+    .tpl-item-card.is-selected .tpl-item-name {
+      color: #6D28D9;
+    }
+
+    .tpl-item-preview-subj {
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .tpl-item-badges {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .tpl-badge-pill {
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .tpl-badge-opp { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+    .tpl-badge-int { background: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
+    .tpl-badge-call { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+    .tpl-badge-doc { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+    .tpl-badge-status { background: #FDF2F8; color: #BE185D; border: 1px solid #FBCFE8; }
+
+    .tpl-scope-client {
+      background: #FFFBEB;
+      color: #B45309;
+      border: 1px solid #FDE68A;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .tpl-scope-all {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .tpl-item-check {
+      color: #7C3AED;
+      font-weight: 700;
+      font-size: 13px;
+      margin-left: 4px;
+      display: none;
+    }
+
+    .tpl-item-card.is-selected .tpl-item-check {
+      display: inline-block;
+    }
+
+    /* Popover Footer */
+    .tpl-popover-footer {
+      padding: 7px 12px;
+      background: #FAFAFA;
+      border-top: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    .tpl-empty-search {
+      padding: 24px 16px;
+      text-align: center;
+      color: #94A3B8;
+      font-size: 12px;
+    }
     </style>
 
     <div class="mm-wrap">
-    <form id="form1" onsubmit="return false;">
+    <form id="candidateSendMailForm" class="candidate-send-mail-form" onsubmit="return false;">
       {{-- Header: Modern Design matching 2nd design with icon, title, subtitle, close button & Send Email button --}}
       <div class="mm-header">
         <div class="mm-header-left">
@@ -363,11 +837,12 @@
           </div>
         </div>
         <div class="mm-header-actions">
-          <button type="button" class="mm-header-btn-close" id="kt_send_mail_showdetail_close" onclick="(function(){ if(typeof window.closeCandidateSendMailDrawer === 'function') { window.closeCandidateSendMailDrawer(); } else if(typeof window.hideCandidateSendMailDrawer === 'function') { window.hideCandidateSendMailDrawer(); } else { $('.sd-mail-overlay').remove(); $('#kt_send_mail_showdetail_drawer').removeClass('drawer-on'); } })()" title="Close">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="mm-header-btn-close" id="kt_send_mail_showdetail_close" onclick="(function(){ if(typeof window.closeCandidateSendMailDrawer === 'function') { window.closeCandidateSendMailDrawer(); } else if(typeof window.hideCandidateSendMailDrawer === 'function') { window.hideCandidateSendMailDrawer(); } else { $('.sd-mail-overlay').remove(); $('#kt_send_mail_showdetail_drawer').removeClass('drawer-on'); } })()" title="Close Drawer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
+            <span>Close</span>
           </button>
           <button type="button" class="mm-header-btn-send" name="btnSubmitSendMail" id="btnSubmitSendMail" value="btnSubmitSendMail">
             <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
@@ -386,6 +861,20 @@
       </div>
 
       <div class="mm-form-body">
+
+        @if(empty($toChipEmails))
+          <div class="mm-alert-missing-email" style="margin: 16px 24px 0 24px; padding: 12px 16px; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 8px; display: flex; align-items: flex-start; gap: 12px; color: #991B1B;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div style="font-size: 12.5px; line-height: 1.5;">
+              <strong style="font-size: 13px; display: block; margin-bottom: 2px;">Action Required: Candidate Email Missing</strong>
+              This candidate does not have an email address recorded. You must edit the candidate profile in the CV Tracker to provide a valid email before emails can be delivered.
+            </div>
+          </div>
+        @endif
 
         {{-- Hidden fields --}}
         <input type="hidden" value="{{ $jobid }}" name="jobid" id="jobid">
@@ -417,11 +906,6 @@
         </div>
 
         {{-- To --}}
-        @php
-          $toChipEmails = array_values(array_filter(array_map('trim', explode(',', @$cc_email ?? ''))));
-          // avatar colour palette cycling by index
-          $chipColors = ['#DC2626','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777'];
-        @endphp
         <div class="mm-row" style="align-items:flex-start;">
           <div class="mm-label-col" style="padding-top:10px;">
             <span class="mm-label-icon mm-ic-blue">
@@ -448,7 +932,10 @@
                       <span class="badge badge-light-primary ms-1" style="font-size:10px;padding:2px 6px;">Primary</span>
                     </span>
                   @empty
-                    <span style="font-size:12.5px;color:#9CA3AF;">No recipient</span>
+                    <span style="font-size:12.5px;color:#DC2626;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      No email address found for candidate &mdash; please edit profile to add email
+                    </span>
                   @endforelse
                 </div>
               </div>
@@ -497,22 +984,19 @@
             Template
           </div>
           <div class="mm-field-col">
-            <select name="templatemassmail" id="templatemassmail" class="mm-select">
+            {{-- Hidden native select maintained for 100% backwards compatibility with AJAX & submit handlers --}}
+            <select name="templatemassmail" id="templatemassmail" style="display:none;">
               <option value="">Select Email Template...</option>
               @if (!empty($templateData))
                 @foreach ($templateData as $tdata)
                   @php
                     $tId = $tdata->e_temp_id ?? ($tdata->id ?? '');
                     if (empty($tId)) continue;
-                    // Render all active templates configured in Superadmin
                     if (isset($tdata->status) && (int) $tdata->status !== 1) continue;
 
                     $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
                     $clName = !empty($clientTemp) ? $clientTemp : '';
                     $isSelf = !empty($selfCompany) || empty($clName);
-
-                    // Tenancy / Intent: If there is no client (internal position for My Organization),
-                    // templates where client_required == 1 (configured dynamically in SuperAdmin) are hidden
                     $isClientOnlyTemplate = !empty($tdata->client_required) && (int) $tdata->client_required === 1;
 
                     if ($isSelf && $isClientOnlyTemplate) {
@@ -538,6 +1022,211 @@
                 @endforeach
               @endif
             </select>
+
+            {{-- GOD-Level Enterprise Template Picker UI --}}
+            <div class="tpl-picker-wrapper" id="tplPickerWrapper">
+              {{-- Interactive Trigger Card --}}
+              <div class="tpl-picker-trigger" id="tplPickerTrigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <div class="tpl-trigger-left">
+                  <div class="tpl-trigger-icon-box" id="tplTriggerIcon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div class="tpl-trigger-content">
+                    <span class="tpl-trigger-placeholder" id="tplTriggerPlaceholder">Choose an enterprise email template...</span>
+                    <div class="tpl-trigger-title" id="tplTriggerTitle" style="display:none;"></div>
+                    <div class="tpl-trigger-meta" id="tplTriggerMeta" style="display:none;">
+                      <span id="tplTriggerCategory"></span>
+                      <span>•</span>
+                      <span id="tplTriggerScope"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tpl-trigger-right">
+                  <span class="tpl-trigger-badge" id="tplAvailableCountBadge">0 available</span>
+                  <span class="tpl-trigger-clear" id="tplTriggerClear" title="Clear template selection">&times;</span>
+                  <svg class="tpl-trigger-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
+
+              {{-- Floating Popover Dropdown Panel --}}
+              <div class="tpl-popover-dropdown" id="tplPopoverDropdown">
+                {{-- Real-time Search Box --}}
+                <div class="tpl-search-box">
+                  <div class="tpl-search-input-wrap">
+                    <svg class="tpl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="tpl-search-input" id="tplSearchInput" placeholder="Search templates by title, subject, or role..." autocomplete="off">
+                    <span class="tpl-search-clear" id="tplSearchClear">&times;</span>
+                  </div>
+                </div>
+
+                {{-- Category Filter Pills / Tabs --}}
+                <div class="tpl-category-tabs" id="tplCategoryTabs">
+                  <button type="button" class="tpl-cat-btn is-active" data-category="all">
+                    All <span id="tplCatCount_all">(0)</span>
+                  </button>
+                  <button type="button" class="tpl-cat-btn" data-category="opportunities">
+                    💼 Opportunity <span id="tplCatCount_opportunities">(0)</span>
+                  </button>
+                  <button type="button" class="tpl-cat-btn" data-category="interviews">
+                    📅 Interview <span id="tplCatCount_interviews">(0)</span>
+                  </button>
+                  <button type="button" class="tpl-cat-btn" data-category="screening">
+                    📞 Screening <span id="tplCatCount_screening">(0)</span>
+                  </button>
+                  <button type="button" class="tpl-cat-btn" data-category="documents">
+                    📄 Documents <span id="tplCatCount_documents">(0)</span>
+                  </button>
+                  <button type="button" class="tpl-cat-btn" data-category="updates">
+                    📢 Updates <span id="tplCatCount_updates">(0)</span>
+                  </button>
+                </div>
+
+                {{-- Template Items List --}}
+                <div class="tpl-items-list" id="tplItemsList">
+                  @php
+                    $renderedCount = 0;
+                  @endphp
+                  @if (!empty($templateData))
+                    @foreach ($templateData as $tdata)
+                      @php
+                        $tId = $tdata->e_temp_id ?? ($tdata->id ?? '');
+                        if (empty($tId)) continue;
+                        if (isset($tdata->status) && (int) $tdata->status !== 1) continue;
+
+                        $cName = !empty($companyTemp) ? $companyTemp : (auth()->user()->company->company_name ?? 'Our Company');
+                        $clName = !empty($clientTemp) ? $clientTemp : '';
+                        $isSelf = !empty($selfCompany) || empty($clName);
+                        $isClientOnlyTemplate = !empty($tdata->client_required) && (int) $tdata->client_required === 1;
+
+                        if ($isSelf && $isClientOnlyTemplate) {
+                          continue;
+                        }
+
+                        $jTitle = !empty($job_title) ? $job_title : 'Candidate Application';
+                        $jLoc = !empty($location) ? $location : '';
+
+                        $rawDisplayName = $tdata->display_name ?? ($tdata->template_name ?? '');
+                        $displayName = \App\Helper\GeneralMethod::replaceTemplateVariables(
+                          $rawDisplayName,
+                          [
+                            'company_name' => $cName,
+                            'client_name' => $clName,
+                            'self_company' => $isSelf ? 1 : 0,
+                            'job_location' => $jLoc,
+                            'work_location' => $jLoc,
+                            'job_title' => $jTitle,
+                          ]
+                        );
+
+                        $rawSubject = $tdata->template_subject ?? ($tdata->subject ?? '');
+                        $subjectPreview = \App\Helper\GeneralMethod::replaceTemplateVariables(
+                          $rawSubject,
+                          [
+                            'company_name' => $cName,
+                            'client_name' => $clName,
+                            'self_company' => $isSelf ? 1 : 0,
+                            'job_location' => $jLoc,
+                            'work_location' => $jLoc,
+                            'job_title' => $jTitle,
+                          ]
+                        );
+
+                        // Template Number Tag (e.g. T-1, T-2, T-15)
+                        $tplNum = '';
+                        if (preg_match('/\[TEMPLATE-(\d+)\]/i', $rawDisplayName, $m)) {
+                          $tplNum = 'T-' . $m[1];
+                        } else {
+                          $tplNum = '#' . $tId;
+                        }
+
+                        // Category Categorization
+                        $rawLower = strtolower($rawDisplayName);
+                        if (str_contains($rawLower, 'interview availability') || str_contains($rawLower, 'interview schedule') || str_contains($rawLower, 'interview preparation')) {
+                            $catSlug = 'interviews';
+                            $catLabel = 'Interview';
+                            $catBadgeClass = 'tpl-badge-int';
+                        } elseif (str_contains($rawLower, 'screening') || str_contains($rawLower, 'tried reaching') || str_contains($rawLower, 'interview question')) {
+                            $catSlug = 'screening';
+                            $catLabel = 'Screening & Call';
+                            $catBadgeClass = 'tpl-badge-call';
+                        } elseif (str_contains($rawLower, 'documents required') || str_contains($rawLower, 'resume') || str_contains($rawLower, 'details')) {
+                            $catSlug = 'documents';
+                            $catLabel = 'Documents';
+                            $catBadgeClass = 'tpl-badge-doc';
+                        } elseif (str_contains($rawLower, 'submitted') || str_contains($rawLower, 'status update') || str_contains($rawLower, 'network retention')) {
+                            $catSlug = 'updates';
+                            $catLabel = 'Status Update';
+                            $catBadgeClass = 'tpl-badge-status';
+                        } else {
+                            $catSlug = 'opportunities';
+                            $catLabel = 'Opportunity';
+                            $catBadgeClass = 'tpl-badge-opp';
+                        }
+
+                        $scopeText = $isClientOnlyTemplate ? 'Client Position Only' : 'All Positions';
+                        $renderedCount++;
+                      @endphp
+                      <div class="tpl-item-card"
+                           data-id="{{ $tId }}"
+                           data-name="{{ htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') }}"
+                           data-category="{{ $catSlug }}"
+                           data-category-label="{{ $catLabel }}"
+                           data-scope-text="{{ $scopeText }}"
+                           data-search="{{ strtolower($displayName . ' ' . $subjectPreview . ' ' . $catLabel . ' ' . $tplNum) }}"
+                           tabindex="0"
+                           role="option"
+                           aria-selected="false">
+                        <span class="tpl-num-badge">{{ $tplNum }}</span>
+                        <div class="tpl-item-main">
+                          <div class="tpl-item-header">
+                            <span class="tpl-item-name">{{ $displayName }}</span>
+                            <div class="tpl-item-badges">
+                              <span class="tpl-badge-pill {{ $catBadgeClass }}">{{ $catLabel }}</span>
+                              @if($isClientOnlyTemplate)
+                                <span class="tpl-scope-client" title="Requires an external client assigned to the requisition">🏢 Client Only</span>
+                              @else
+                                <span class="tpl-scope-all" title="Available for internal & client positions">🌐 All Positions</span>
+                              @endif
+                              <span class="tpl-item-check">✓</span>
+                            </div>
+                          </div>
+                          @if(!empty($subjectPreview))
+                            <div class="tpl-item-preview-subj">
+                              <span style="font-weight:500;color:#94A3B8;">Subj:</span> {{ $subjectPreview }}
+                            </div>
+                          @endif
+                        </div>
+                      </div>
+                    @endforeach
+                  @endif
+
+                  <div class="tpl-empty-search" id="tplEmptySearch" style="display:none;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <div>No templates match your search filter</div>
+                  </div>
+                </div>
+
+                {{-- Popover Footer --}}
+                <div class="tpl-popover-footer">
+                  <span id="tplFilteredCountText">Showing {{ $renderedCount }} templates</span>
+                  <span style="font-size:10.5px;color:#94A3B8;">Click to apply template</span>
+                </div>
+              </div>
+            </div>
+
             @if (!empty($selfCompany) || empty($clientTemp))
               <div class="mm-hint">Showing templates for My Organization (Client-required templates are hidden for internal positions)</div>
             @else
@@ -715,6 +1404,233 @@
 
 
 <script>
+    /* ========================================================
+       GOD-Level Enterprise Template Picker Component Logic
+       ======================================================== */
+    (function initTemplatePicker() {
+        var $wrapper = $('#tplPickerWrapper');
+        if (!$wrapper.length) return;
+
+        var $trigger = $('#tplPickerTrigger');
+        var $dropdown = $('#tplPopoverDropdown');
+        var $searchInput = $('#tplSearchInput');
+        var $searchClear = $('#tplSearchClear');
+        var $itemsList = $('#tplItemsList');
+        var $cards = $itemsList.find('.tpl-item-card');
+        var $emptySearch = $('#tplEmptySearch');
+        var $footerCount = $('#tplFilteredCountText');
+        var $availBadge = $('#tplAvailableCountBadge');
+        var $clearBtn = $('#tplTriggerClear');
+        var $placeholder = $('#tplTriggerPlaceholder');
+        var $title = $('#tplTriggerTitle');
+        var $meta = $('#tplTriggerMeta');
+        var $metaCat = $('#tplTriggerCategory');
+        var $metaScope = $('#tplTriggerScope');
+        var $nativeSelect = $('#templatemassmail');
+
+        var currentCategory = 'all';
+        var currentSearch = '';
+
+        function updateCategoryCounts() {
+            var counts = {
+                all: 0,
+                opportunities: 0,
+                interviews: 0,
+                screening: 0,
+                documents: 0,
+                updates: 0
+            };
+
+            $cards.each(function() {
+                var cat = $(this).data('category');
+                counts.all++;
+                if (counts[cat] !== undefined) {
+                    counts[cat]++;
+                }
+            });
+
+            $('#tplCatCount_all').text('(' + counts.all + ')');
+            $('#tplCatCount_opportunities').text('(' + counts.opportunities + ')');
+            $('#tplCatCount_interviews').text('(' + counts.interviews + ')');
+            $('#tplCatCount_screening').text('(' + counts.screening + ')');
+            $('#tplCatCount_documents').text('(' + counts.documents + ')');
+            $('#tplCatCount_updates').text('(' + counts.updates + ')');
+            $availBadge.text(counts.all + ' available');
+        }
+
+        function filterTemplates() {
+            var visibleCount = 0;
+            var q = (currentSearch || '').trim().toLowerCase();
+
+            $cards.each(function() {
+                var $c = $(this);
+                var cat = $c.data('category');
+                var text = $c.data('search') || '';
+
+                var matchCat = (currentCategory === 'all' || cat === currentCategory);
+                var matchSearch = (!q || text.indexOf(q) !== -1);
+
+                if (matchCat && matchSearch) {
+                    $c.show();
+                    visibleCount++;
+                } else {
+                    $c.hide();
+                }
+            });
+
+            if (visibleCount === 0) {
+                $emptySearch.show();
+            } else {
+                $emptySearch.hide();
+            }
+
+            $footerCount.text('Showing ' + visibleCount + ' template' + (visibleCount === 1 ? '' : 's'));
+        }
+
+        function openDropdown() {
+            $dropdown.stop(true, true).fadeIn(140);
+            $trigger.addClass('is-active').attr('aria-expanded', 'true');
+            setTimeout(function() {
+                $searchInput.focus();
+            }, 50);
+        }
+
+        function closeDropdown() {
+            $dropdown.stop(true, true).fadeOut(100);
+            $trigger.removeClass('is-active').attr('aria-expanded', 'false');
+        }
+
+        function selectTemplateCard($card) {
+            if (!$card || !$card.length) return;
+
+            var id = $card.data('id');
+            var name = $card.data('name');
+            var catLabel = $card.data('category-label');
+            var scopeText = $card.data('scope-text');
+
+            $cards.removeClass('is-selected').attr('aria-selected', 'false');
+            $card.addClass('is-selected').attr('aria-selected', 'true');
+
+            $placeholder.hide();
+            $title.text(name).show();
+            $metaCat.text(catLabel);
+            $metaScope.text(scopeText);
+            $meta.show();
+            $clearBtn.show();
+
+            closeDropdown();
+
+            if ($nativeSelect.val() != id) {
+                $nativeSelect.val(id).trigger('change');
+            }
+        }
+
+        function clearSelectedTemplate() {
+            $cards.removeClass('is-selected').attr('aria-selected', 'false');
+            $placeholder.show();
+            $title.text('').hide();
+            $meta.hide();
+            $clearBtn.hide();
+            $nativeSelect.val('');
+        }
+
+        // Trigger click toggle
+        $trigger.off('click').on('click', function(e) {
+            if ($(e.target).closest('#tplTriggerClear').length) return;
+            if ($dropdown.is(':visible')) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        });
+
+        // Trigger keyboard support
+        $trigger.off('keydown').on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!$dropdown.is(':visible')) {
+                    openDropdown();
+                }
+            } else if (e.key === 'Escape') {
+                closeDropdown();
+            }
+        });
+
+        // Clear button click
+        $clearBtn.off('click').on('click', function(e) {
+            e.stopPropagation();
+            clearSelectedTemplate();
+        });
+
+        // Search clear button
+        $searchClear.off('click').on('click', function() {
+            $searchInput.val('');
+            $(this).hide();
+            currentSearch = '';
+            filterTemplates();
+            $searchInput.focus();
+        });
+
+        // Search input keyup/input
+        $searchInput.off('input').on('input', function() {
+            currentSearch = $(this).val();
+            if (currentSearch) {
+                $searchClear.show();
+            } else {
+                $searchClear.hide();
+            }
+            filterTemplates();
+        });
+
+        // Category tab filtering
+        $('#tplCategoryTabs').off('click', '.tpl-cat-btn').on('click', '.tpl-cat-btn', function() {
+            $('#tplCategoryTabs .tpl-cat-btn').removeClass('is-active');
+            $(this).addClass('is-active');
+            currentCategory = $(this).data('category') || 'all';
+            filterTemplates();
+        });
+
+        // Template card click
+        $itemsList.off('click', '.tpl-item-card').on('click', '.tpl-item-card', function() {
+            selectTemplateCard($(this));
+        });
+
+        // Card keyboard navigation
+        $itemsList.off('keydown', '.tpl-item-card').on('keydown', '.tpl-item-card', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectTemplateCard($(this));
+            }
+        });
+
+        // Click outside to close
+        $(document).off('click.tplPicker').on('click.tplPicker', function(e) {
+            if (!$(e.target).closest('#tplPickerWrapper').length) {
+                closeDropdown();
+            }
+        });
+
+        // ESC key to close
+        $(document).off('keydown.tplPicker').on('keydown.tplPicker', function(e) {
+            if (e.key === 'Escape' && $dropdown.is(':visible')) {
+                closeDropdown();
+                $trigger.focus();
+            }
+        });
+
+        // Update counts
+        updateCategoryCounts();
+
+        // Initial sync if native select already has a value
+        var initVal = $nativeSelect.val();
+        if (initVal) {
+            var $targetCard = $cards.filter('[data-id="' + initVal + '"]');
+            if ($targetCard.length) {
+                selectTemplateCard($targetCard);
+            }
+        }
+    })();
+
     $(document).off('change', '#templatemassmail').on('change', '#templatemassmail', function() {
         var template = $(this).val();
         if (!template || parseInt(template, 10) <= 0) {
@@ -791,18 +1707,22 @@
     (function() {
         var isSendingEmail = false;
 
-        $('#form1').off('submit keydown keypress').on('submit keydown keypress', function(e) {
+        $('#candidateSendMailForm, #form1').off('submit keydown keypress').on('submit keydown keypress', function(e) {
             if (e.type === 'submit' || e.which === 13 || e.keyCode === 13) {
                 e.preventDefault();
                 return false;
             }
         });
 
-        $('#form1').off('click', '#btnSubmitSendMail').on('click', '#btnSubmitSendMail', function(e) {
+        $(document).off('click', '#btnSubmitSendMail').on('click', '#btnSubmitSendMail', function(e) {
             e.preventDefault();
             e.stopPropagation();
 
             var $btn = $(this);
+            var $form = $btn.closest('form');
+            if (!$form.length) {
+                $form = $('#candidateSendMailForm');
+            }
 
             if (isSendingEmail || $btn.data('sending') === true || $btn.is(':disabled')) {
                 return false;
@@ -833,26 +1753,123 @@
 
             var rawAppData = <?php echo json_encode($applicationData ?? []); ?>;
             var appList = rawAppData ? (Array.isArray(rawAppData) ? rawAppData : Object.values(rawAppData)) : [];
-            var sid = (appList.length > 0 && appList[0] && appList[0].id) ? appList[0].id : ($('#applicationDataId').val() || 0);
+            var sid = (appList.length > 0 && appList[0] && appList[0].id) ? appList[0].id : ($form.find('#applicationDataId').val() || $('#applicationDataId').val() || 0);
             var arr = [sid];
 
-            var template = $('#templatemassmail').val();
-            var from_email = $('#from_email_mass_mail').val();
-            var to_email = $('#to_email_mass_mail').val();
-            var cc_email = $('#sendmail_panel').val();
-            var subject = $('#subject_mass_mail').val();
-            var jobid = $('#jobid').val();
-            var applicationDataId = $('#applicationDataId').val() || sid;
+            var template = $form.find('#templatemassmail').val() || $('#templatemassmail').val();
+            var from_email = $form.find('#from_email_mass_mail').val() || $('#from_email_mass_mail').val();
+            var to_email = ($form.find('#to_email_mass_mail').val() || $('#to_email_mass_mail').val() || '').trim();
+
+            // Resilient Fallback: If DOM input was empty, recover directly from applicationData in view
+            if (!to_email && appList.length > 0 && appList[0]) {
+                to_email = ((appList[0].email || appList[0].secondrary_email) || '').trim();
+                if (to_email) {
+                    $form.find('#to_email_mass_mail').val(to_email);
+                    $('#to_email_mass_mail').val(to_email);
+                }
+            }
+
+            var cc_email = $form.find('#sendmail_panel').val() || $('#sendmail_panel').val();
+            var subject = $form.find('#subject_mass_mail').val() || $('#subject_mass_mail').val();
+            var jobid = $form.find('#jobid').val() || $('#jobid').val();
+            var applicationDataId = $form.find('#applicationDataId').val() || $('#applicationDataId').val() || sid;
             var attached_cv = 0;
             var editor1mass = (typeof window.getCandidateEmailBodyHtml === 'function')
                 ? window.getCandidateEmailBodyHtml()
                 : ((typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) ? CKEDITOR.instances.editor1mass.getData() : ($('#editor1mass').val() || ''));
 
-            if (!subject || !subject.trim()) {
-                Swal.fire("Warning", "Please enter an email subject.", "warning");
+            var resetBtnState = function() {
                 isSendingEmail = false;
                 $btn.data('sending', false);
                 $btn.prop('disabled', false).removeClass('disabled');
+                $('.indicator-label', $btn).css('display', 'inline-flex');
+                $('.indicator-progress', $btn).hide();
+            };
+
+            // 1. Validate Candidate Email
+            var cleanToEmail = (to_email || '').trim();
+            if (!cleanToEmail) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Candidate Email Missing',
+                    text: 'This candidate does not have an email address recorded. Please edit the candidate\'s profile in the CV Tracker to provide a valid email before sending.',
+                    confirmButtonText: 'Understood'
+                });
+                resetBtnState();
+                return false;
+            }
+
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var toEmailList = cleanToEmail.split(',').map(function(e) { return e.trim(); }).filter(Boolean);
+            for (var i = 0; i < toEmailList.length; i++) {
+                if (!emailRegex.test(toEmailList[i])) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Candidate Email',
+                        text: 'The email address "' + toEmailList[i] + '" is invalid. Please update the candidate\'s profile with a valid email syntax.',
+                        confirmButtonText: 'Fix Email'
+                    });
+                    resetBtnState();
+                    return false;
+                }
+            }
+
+            // 2. Validate Deliverability Cap & CC Emails
+            var ccList = (window._sendMailCcTags && Array.isArray(window._sendMailCcTags)) ? window._sendMailCcTags : [];
+            var totalRecipients = toEmailList.length + ccList.length;
+            if (totalRecipients > 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Recipient Limit Exceeded',
+                    text: 'To protect email deliverability and avoid spam flags, a maximum of 5 recipients (1 To + up to 4 CCs) is permitted. You currently have ' + totalRecipients + ' recipients. Please remove excess CC recipients.',
+                    confirmButtonText: 'Review Recipients'
+                });
+                resetBtnState();
+                return false;
+            }
+
+            for (var c = 0; c < ccList.length; c++) {
+                if (!emailRegex.test(ccList[c])) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid CC Email Address',
+                        text: 'The CC email address "' + ccList[c] + '" is not valid. Please remove or correct it before sending.',
+                        confirmButtonText: 'Fix CC List'
+                    });
+                    resetBtnState();
+                    return false;
+                }
+            }
+
+            // 3. Validate Subject
+            var cleanSubject = (subject || '').trim();
+            if (!cleanSubject) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Subject Line Required',
+                    text: 'Please enter a subject line for your email before sending.',
+                    confirmButtonText: 'Enter Subject'
+                });
+                $('#subject_mass_mail').focus();
+                resetBtnState();
+                return false;
+            }
+
+            // 4. Validate Email Body Content
+            var plainBodyText = (editor1mass || '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (!plainBodyText || plainBodyText.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email Body Empty',
+                    text: 'Your email has no content. Please choose an enterprise email template from the dropdown above or compose your message in the editor before sending.',
+                    confirmButtonText: 'Add Content'
+                });
+                resetBtnState();
                 return false;
             }
 
@@ -889,8 +1906,23 @@
                     'arr': arr
                 },
                 success: function(response) {
+                    if (response.status === 'error') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cannot Send Email',
+                            text: response.message || 'The email could not be sent. Please check your inputs.',
+                            confirmButtonText: 'Understood'
+                        });
+                        return false;
+                    }
+
                     if (response.status == 'coinCheck') {
-                        Swal.fire("Failed", ` ${response.message}`, "warning").then(function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Insufficient Coins',
+                            text: response.message || 'You do not have enough coins to send this email.',
+                            confirmButtonText: 'Close'
+                        }).then(function() {
                             closeDrawerTargeted();
                         });
                         return false;
@@ -900,7 +1932,7 @@
                         $btn.removeData('idempotency-key');
                         swalWithBootstrapButtons.fire(
                             'Success!',
-                            'Email has been queued and sent.',
+                            'Email has been queued and sent successfully.',
                             'success'
                         ).then(function() {
                             closeDrawerTargeted();
@@ -908,7 +1940,16 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    Swal.fire("Error", "An error occurred while sending email. Please try again.", "error");
+                    var errorMsg = 'An unexpected server error occurred while sending email. Please try again.';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Sending Failed',
+                        text: errorMsg,
+                        confirmButtonText: 'OK'
+                    });
                 },
                 complete: function() {
                     /* Intent: Restore button state only after the AJAX request completely resolves */

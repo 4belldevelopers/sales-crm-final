@@ -27,8 +27,9 @@ function getTestLabHtml() {
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Max-Age': '86400',
 };
 
 const SOCIAL_EXCLUDED = {
@@ -103,6 +104,24 @@ export default {
       }), {
         headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
       });
+    }
+
+    // CORS-Safe Image Proxy for Logos (100% Canvas & CORS-Safe)
+    if (url.pathname === '/logo') {
+      const d = sanitizeDomain(url.searchParams.get('domain') || url.searchParams.get('url'));
+      if (!d) return new Response('Missing domain', { status: 400, headers: CORS_HEADERS });
+      try {
+        const imgRes = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=256`);
+        return new Response(imgRes.body, {
+          headers: {
+            ...CORS_HEADERS,
+            'Content-Type': imgRes.headers.get('Content-Type') || 'image/png',
+            'Cache-Control': 'public, max-age=2592000'
+          }
+        });
+      } catch (e) {
+        return new Response('Logo fetch failed', { status: 502, headers: CORS_HEADERS });
+      }
     }
 
     // 2. Parse & Validate Domain Query
@@ -226,12 +245,37 @@ export async function enrichCompany(domain) {
     confidence: {}
   };
 
+  // Parallel fetch logo bytes and convert to Base64 Data URI (100% CORS-proof)
+  async function fetchLogoBase64(d) {
+    try {
+      const resp = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=256`, {
+        cf: { cacheTtl: 2592000, cacheEverything: true }
+      });
+      if (!resp.ok) return null;
+      const buf = await resp.arrayBuffer();
+      let bin = '';
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        bin += String.fromCharCode(bytes[i]);
+      }
+      return `data:image/png;base64,${btoa(bin)}`;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Launch Parallel Extractions with timeouts
-  const [siteResult, gleifResult, wikiResult] = await Promise.allSettled([
+  const [siteResult, gleifResult, wikiResult, logoResult] = await Promise.allSettled([
     fetchWebsiteData(domain),
     fetchGleifData(domain),
-    fetchWikidata(domain)
+    fetchWikidata(domain),
+    fetchLogoBase64(domain)
   ]);
+
+  // Set CORS-proof Base64 logo if fetched successfully
+  if (logoResult.status === 'fulfilled' && logoResult.value) {
+    data.logo = logoResult.value;
+  }
 
   // 1. Process GLEIF Result (Statutory Ground Truth)
   if (gleifResult.status === 'fulfilled' && gleifResult.value) {

@@ -5809,12 +5809,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     {
 
         // echo $request->id; exit;
-        $arr = '';
-        // 		dd($request->jobIdArr[0]);
-        $this->arr = $request->arr;
-        $this->jobIdArr = $request->jobIdArr;
-        $this->applicationDataCount = DB::table('job_applications')->select('*')->whereIn('id', $this->arr)->count();
-        // $this->applicationData			=	DB::table('job_applications')->select('job_applications.id')->whereIn('id', $arr)->get();
+        $rawArr = is_array($request->arr) ? $request->arr : explode(',', (string) $request->arr);
+        $cleanArr = array_values(array_filter(array_map('intval', $rawArr)));
+        $this->arr = $cleanArr;
+        $this->jobIdArr = is_array($request->jobIdArr) ? $request->jobIdArr : (! empty($request->jobIdArr) ? [(int) $request->jobIdArr] : []);
 
         $this->applicationData = DB::table('job_applications')
             ->select(
@@ -5824,6 +5822,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.current_designation',
                 'job_applications.phone',
                 'job_applications.email',
+                'job_applications.secondrary_email',
                 'job_applications.total_exp',
                 'job_applications.rel_exp',
                 'job_applications.ctc',
@@ -5841,7 +5840,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'jobs.id as jobID',
                 'clients.name as client_name'
             )
-            // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
             ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
             ->leftJoin('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
@@ -5849,6 +5847,66 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->whereIn('job_applications.id', $this->arr)->groupBy('job_applications.id')->get();
+
+        // Fallback 1: If $this->arr matched add_job_wise_condidates.id instead of job_applications.id
+        if ($this->applicationData->isEmpty() && ! empty($this->arr)) {
+            $this->applicationData = DB::table('job_applications')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.condidate_type',
+                    'job_applications.current_designation',
+                    'job_applications.phone',
+                    'job_applications.email',
+                    'job_applications.secondrary_email',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.current_ctc_cur',
+                    'job_applications.current_ectc_cur',
+                    'job_applications.current_ctc_mode',
+                    'job_applications.current_ectc_cur',
+                    'job_applications.np_id',
+                    'job_applications.serving_notice_period_mode',
+                    'job_applications.current_company',
+                    'job_applications.skills',
+                    'qualification_master.name as qualification_name',
+                    'jobs.title as job_title',
+                    'jobs.id as jobID',
+                    'clients.name as client_name'
+                )
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                ->leftJoin('jobs', function ($join) {
+                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+                })
+                ->leftjoin('clients', 'clients.id', 'jobs.client_id')
+                ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+                ->whereIn('add_job_wise_condidates.id', $this->arr)->groupBy('job_applications.id')->get();
+        }
+
+        // Fallback 2: Direct lookup without joins to guarantee candidate email availability
+        if ($this->applicationData->isEmpty() && ! empty($this->arr)) {
+            $this->applicationData = DB::table('job_applications')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.condidate_type',
+                    'job_applications.current_designation',
+                    'job_applications.phone',
+                    'job_applications.email',
+                    'job_applications.secondrary_email',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.skills'
+                )
+                ->whereIn('job_applications.id', $this->arr)
+                ->get();
+        }
+
+        $this->applicationDataCount = $this->applicationData->count();
 
         // $this->templateData = DB::table('th_email_template')->select('*')->where('th_email_template.status', 1)->where('th_email_template.temptype', 4)->get();
 
@@ -5884,8 +5942,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->get();
         }
 
-        // Sort naturally by template ID so templates appear in clean ascending order
+        // Sort naturally by template number [TEMPLATE-X] ascending so templates 1 to 15 appear in order
         $this->templateData = $this->templateData->sortBy(function ($item) {
+            $name = $item->display_name ?? ($item->template_name ?? '');
+            if (preg_match('/\[TEMPLATE-(\d+)\]/i', $name, $matches)) {
+                return (int) $matches[1];
+            }
+
             return (int) ($item->e_temp_id ?? ($item->id ?? 0));
         })->values();
 
@@ -5897,7 +5960,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        $i = 0;
         foreach ($this->applicationData as $aval) {
             if ($aval->condidate_type == 'bench_condidate') {
                 $bench_assign = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
@@ -5905,14 +5967,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('bench_assign.bench_applications_id', $aval->id)
                     ->get()->toArray();
                 foreach ($bench_assign as $assign) {
-                    $commonCcArr[$i] = $assign->email;
-                    $i++;
+                    $bMail = trim($assign->email ?? '');
+                    if (! empty($bMail)) {
+                        $commonCcArr[] = $bMail;
+                    }
                 }
             } else {
-                $commonCcArr[$i] = $aval->email;
-                $i++;
+                $cMail = trim((string) ($aval->email ?: ($aval->secondrary_email ?? '')));
+                if (! empty($cMail)) {
+                    $commonCcArr[] = $cMail;
+                }
             }
         }
+        $commonCcArr = array_values(array_unique($commonCcArr));
         $this->cc_email_count = count($commonCcArr);
         $this->cc_email_data = $commonCcArr;
 
@@ -5942,34 +6009,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $jobid = $targetJobId ?: (! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0);
 
         if ($jobid > 0) {
-            $client_loc = DB::table('client_city_jobs')
+            $client_loc_cities = DB::table('client_city_jobs')
                 ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
                 ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                 ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
+                ->select('city_list.city as city_name', 'countries.country_name')
                 ->where('client_city_jobs.job_id', $jobid)
-                ->first();
+                ->get()
+                ->unique('city_name')
+                ->values();
 
-            $country_id = @$client_loc->country_id;
-            if (@$country_id > 0) {
-                $country_name_data = GeneralMethod::getCountryName($country_id);
-                if (! empty($country_name_data)) {
-                    foreach ($country_name_data as $cval) {
-                        $country_name = ucwords($cval['sortname'] ?? '');
-                    }
-                }
-            }
-
-            $city = @$client_loc->city;
-            if (@$client_loc->country_id == 101) {
-                $city = @$client_loc->city_name;
+            if ($client_loc_cities->count() === 1) {
+                $city = $client_loc_cities->first()->city_name;
+                $country_name = $client_loc_cities->first()->country_name;
+                $location = $city.($country_name ? ' | '.$country_name : '');
+            } elseif ($client_loc_cities->count() > 1) {
+                $location = $client_loc_cities->pluck('city_name')->implode(', ');
             }
         }
 
         $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
         $this->jobid = $jobid;
-
-        $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
         $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
         $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
@@ -7093,15 +7153,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('client_city_jobs.job_id', $jobid)
                     ->get();
 
+                // Deduplicate cities by city_name to prevent duplicate location listings and duplicate subject cities
+                $client_loc_cities = $client_loc_cities->unique('city_name')->values();
+
                 if ($client_loc_cities->count() === 1) {
                     $cval = $client_loc_cities->first();
                     $location = $cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name;
-                    $subjectLocation = $location;
+                    $subjectLocation = $cval->city_name;
                 } elseif ($client_loc_cities->count() > 1) {
                     foreach ($client_loc_cities as $key => $cval) {
                         $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
                     }
-                    $subjectLocation = $client_loc_cities->pluck('city_name')->implode(', ');
+                    $subjectLocation = $client_loc_cities->pluck('city_name')->unique()->implode(', ');
                 } elseif (! empty($client_loc_addr->city_name)) {
                     $location = $client_loc_addr->city_name;
                     $subjectLocation = $location;
@@ -7130,17 +7193,89 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $candCtc = $firstApp->ctc ?? '';
             $candEctc = $firstApp->ectc ?? '';
 
-            // Fetch interview questions if attached to this job
+            // 1. Fetch interview questions & topics from the Job Drawer sub-tab (interview_questions table)
             $interview_ques = '';
             if ($jobid > 0) {
-                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
-                if ($interview_questions->count() > 0) {
-                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
-                    $interview_ques .= '<ol>';
-                    foreach ($interview_questions as $row) {
-                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                $interview_rows = DB::table('interview_questions')
+                    ->where('job_id', $jobid)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                if ($interview_rows->isNotEmpty()) {
+                    $hasQuestions = false;
+                    $qHtml = '<div style="margin: 14px 0 18px 0; padding: 14px 18px; background: #F8FAFC; border-left: 4px solid #7C3AED; border-radius: 6px;">';
+                    $qHtml .= '<h4 style="margin: 0 0 10px 0; color: #1E293B; font-size: 14px; font-weight: 700;">Interview Questions &amp; Topics</h4>';
+
+                    foreach ($interview_rows as $iRow) {
+                        $raw = trim($iRow->questions ?? '');
+                        if (empty($raw)) {
+                            continue;
+                        }
+                        $hasQuestions = true;
+                        if (preg_match('/<(?:p|ol|ul|li|div|h[1-6]|table|br)/i', $raw)) {
+                            $qHtml .= '<div style="font-size: 13px; color: #374151; line-height: 1.6;">'.$raw.'</div>';
+                        } else {
+                            $lines = array_filter(array_map('trim', explode("\n", $raw)));
+                            if (count($lines) > 1) {
+                                $qHtml .= '<ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; line-height: 1.6;">';
+                                foreach ($lines as $ln) {
+                                    $qHtml .= '<li style="margin-bottom: 4px;">'.e($ln).'</li>';
+                                }
+                                $qHtml .= '</ol>';
+                            } else {
+                                $qHtml .= '<p style="margin: 0 0 6px 0; font-size: 13px; color: #374151; line-height: 1.6;">'.e($raw).'</p>';
+                            }
+                        }
                     }
-                    $interview_ques .= '</ol><hr />';
+                    $qHtml .= '</div>';
+                    if ($hasQuestions) {
+                        $interview_ques = $qHtml;
+                    }
+                }
+            }
+
+            // 2. Fetch screening questions saved in screening section during job creation / posting
+            $screening_ques = '';
+            if ($jobid > 0) {
+                $screeningList = [];
+
+                // Primary: job_additional_detail (Screening questions added during job creation / posting)
+                $additionalDetails = DB::table('job_additional_detail')
+                    ->where('job_id', $jobid)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                foreach ($additionalDetails as $ad) {
+                    $val = trim($ad->detail_value ?? '');
+                    if (! empty($val)) {
+                        $screeningList[] = $val;
+                    }
+                }
+
+                // Fallback: job_questions joined with questions
+                if (empty($screeningList)) {
+                    $jobQues = DB::table('job_questions')
+                        ->join('questions', 'questions.id', '=', 'job_questions.question_id')
+                        ->where('job_questions.job_id', $jobid)
+                        ->select('questions.question')
+                        ->orderBy('job_questions.id', 'ASC')
+                        ->get();
+                    foreach ($jobQues as $jq) {
+                        $qval = trim($jq->question ?? '');
+                        if (! empty($qval)) {
+                            $screeningList[] = $qval;
+                        }
+                    }
+                }
+
+                if (! empty($screeningList)) {
+                    $screening_ques = '<ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; line-height: 1.6;">';
+                    foreach ($screeningList as $sq) {
+                        $screening_ques .= '<li style="margin-bottom: 6px;">'.e($sq).'</li>';
+                    }
+                    $screening_ques .= '</ol>';
+                } else {
+                    $screening_ques = '<p style="font-size: 13px; color: #64748B; margin: 0; font-style: italic;">Please share your relevant experience, key achievements, and availability for this position.</p>';
                 }
             }
 
@@ -7184,6 +7319,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'company_address' => $address,
                 'no_of_emp' => $companyOrClientName->company_size ?? '',
                 'interview_questions' => $interview_ques,
+                'screening_questions' => $screening_ques,
                 'current_date' => date('d M Y'),
             ];
 
@@ -7860,7 +7996,33 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $mailto = array_values(array_unique($mailto));
 
         if (empty($mailto)) {
-            return Reply::dataOnly(['status' => 'error', 'message' => 'No valid candidate recipient email provided.']);
+            // Resilient Server Fallback: If recipient email was not passed in form payload, recover directly from database
+            $candRec = null;
+            if (! empty($applicationDataId) && (int) $applicationDataId > 0) {
+                $candRec = JobApplication::find((int) $applicationDataId);
+            }
+            if (! $candRec && ! empty($arr) && is_array($arr) && (int) $arr[0] > 0) {
+                $candRec = JobApplication::find((int) $arr[0]);
+                if (! $candRec) {
+                    $wiseRec = DB::table('add_job_wise_condidates')->where('id', (int) $arr[0])->first();
+                    if ($wiseRec && ! empty($wiseRec->job_application_id)) {
+                        $candRec = JobApplication::find((int) $wiseRec->job_application_id);
+                    }
+                }
+            }
+            if ($candRec) {
+                $candDbEmail = trim(strtolower((string) ($candRec->email ?: ($candRec->secondrary_email ?? ''))));
+                if (! empty($candDbEmail) && filter_var($candDbEmail, FILTER_VALIDATE_EMAIL)) {
+                    $mailto[] = $candDbEmail;
+                }
+            }
+        }
+
+        if (empty($mailto)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Candidate recipient email is missing or empty. Please update the candidate profile in the CV Tracker with a valid email address before sending.',
+            ]);
         }
 
         // Strict deliverability cap & format validation (max 5 recipients combined: candidate To + CCs)
@@ -7868,13 +8030,46 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if ($totalRecipients > 5) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included.',
+                'message' => "Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included. Current count: {$totalRecipients}.",
             ]);
         }
-        foreach (array_merge($mailto, $cc) as $email) {
+        foreach ($mailto as $email) {
             if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid email address format: {$email}"]);
+                return Reply::dataOnly(['status' => 'error', 'message' => "Candidate email address '{$email}' is invalid. Please correct it in the candidate profile."]);
             }
+        }
+        foreach ($cc as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "CC email address '{$email}' is invalid. Please check and correct the CC list."]);
+            }
+        }
+
+        // Validate Subject Line
+        $trimmedSubject = trim(strip_tags((string) $subject));
+        if (empty($trimmedSubject)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email subject cannot be empty. Please enter an email subject line before sending.',
+            ]);
+        }
+
+        // Validate Message Body
+        $plainMessage = trim(strip_tags(html_entity_decode((string) $message, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $plainMessage = str_replace(["\xc2\xa0", "\u{00a0}"], '', $plainMessage);
+        if (empty($plainMessage)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email body cannot be empty. Please select an email template or write your message in the editor before sending.',
+            ]);
+        }
+
+        // Check system email notification permission (ID 15: Send Candidate Email)
+        $checkMailPermision = GeneralMethod::mailPermission(15);
+        if (! $checkMailPermision) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Candidate email sending is currently turned OFF in your organization\'s email settings (Notification ID #15). Please enable candidate emails in Settings before sending.',
+            ]);
         }
 
         $attachments = [];
