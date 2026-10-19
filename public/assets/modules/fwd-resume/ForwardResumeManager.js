@@ -1619,9 +1619,14 @@
                         }
                     }
                     if (!personName) {
-                        var prefix = firstEmail.split('@')[0].replace(/[._-]/g, ' ').trim();
-                        if (prefix && prefix.length > 1 && !/^\d+$/.test(prefix)) {
-                            personName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+                        var localPart = firstEmail.split('@')[0];
+                        var cleanPrefix = localPart.replace(/[._-]+/g, ' ').trim();
+                        var genericPrefixes = ['info', 'support', 'admin', 'contact', 'hr', 'careers', 'jobs', 'mail', 'sales', 'team', 'hello', 'candidate'];
+                        if (cleanPrefix && cleanPrefix.length > 1 && !/^\d+$/.test(cleanPrefix) && genericPrefixes.indexOf(cleanPrefix.toLowerCase()) === -1) {
+                            var firstWord = cleanPrefix.split(' ')[0];
+                            if (firstWord && firstWord.length > 1) {
+                                personName = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+                            }
                         }
                     }
                 }
@@ -1632,6 +1637,9 @@
                 .trim();
             var senderName = String(self._companyData && self._companyData.sender_name || '').toLowerCase().trim();
             if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
+                cleanName = '';
+            }
+            if (cleanName && (cleanName.toLowerCase() === 'team member' || cleanName.toLowerCase() === 'client contact' || cleanName.toLowerCase() === 'client')) {
                 cleanName = '';
             }
             return cleanName;
@@ -2501,10 +2509,20 @@
             var skillsExperienceTrackerHtml = self.buildSkillsExperienceTrackerHtml();
             var reasonForChange = (primaryCand && primaryCand.reason_for_job_change) ? primaryCand.reason_for_job_change : 'Seeking professional career growth & new technical challenges.';
 
-            var body = rawBody
-                .replace(/\[\{HR_NAME\}\]/gi, recipientName)
-                .replace(/\{\{HR_NAME\}\}/gi, recipientName)
-                .replace(/\[HR_NAME\]/gi, recipientName)
+            var senderRecruiterName = (self._companyData && self._companyData.sender_name) ? self._companyData.sender_name : 'Recruitment Team';
+            var body = rawBody;
+
+            // Replace opening greeting [HR_NAME] / [{HR_NAME}] with recipientName (Hiring Manager or selected contact)
+            if (/(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i.test(body)) {
+                body = body.replace(/(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i, '<p>Dear ' + recipientName + ',</p>\n');
+            } else if (/(?:^|\n|\r)\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i.test(body)) {
+                body = body.replace(/(?:^|\n|\r)\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i, '<p>Dear ' + recipientName + ',</p>\n');
+            }
+
+            body = body
+                .replace(/\[\{HR_NAME\}\]/gi, senderRecruiterName)
+                .replace(/\{\{HR_NAME\}\}/gi, senderRecruiterName)
+                .replace(/\[HR_NAME\]/gi, senderRecruiterName)
                 .replace(/\[\{RECIPIENT_NAME\}\]/gi, recipientName)
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
@@ -2581,7 +2599,8 @@
             // Circuit-Breaker Fallback: Fetch from server if template body was not preloaded
             var url = self._routes.emailTemplate + '/' + templateId;
             var token = self._csrfToken || $('input[name="_token"]').val();
-            var toEmail = self._emailTags.to.length > 0 ? self._emailTags.to[0] : 'info@jero.co.in';
+            var toEmail = (self._emailTags.to && self._emailTags.to.length > 0) ? self._emailTags.to[0] : '';
+            var recipientName = self.getFirstRecipientName();
             var selectedApplicantListing = self._applicationData.map(function (c) { return c.id; });
             var WijobIdArr = [];
             $('.chk_list_item:checked').each(function () {
@@ -2600,6 +2619,7 @@
                     'template': templateId,
                     'selectedApplicantListing': selectedApplicantListing,
                     'to_email': toEmail,
+                    'recipient_name': recipientName,
                     'mailtype': 1,
                     'WijobIdArr': WijobIdArr
                 },
@@ -2843,9 +2863,14 @@
                         }
                     }
                     if (!personName) {
-                        var prefix = firstEmail.split('@')[0].replace(/[._-]/g, ' ').trim();
-                        if (prefix && prefix.length > 1 && !/^\d+$/.test(prefix)) {
-                            personName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+                        var localPart = firstEmail.split('@')[0];
+                        var cleanPrefix = localPart.replace(/[._-]+/g, ' ').trim();
+                        var genericPrefixes = ['info', 'support', 'admin', 'contact', 'hr', 'careers', 'jobs', 'mail', 'sales', 'team', 'hello', 'candidate'];
+                        if (cleanPrefix && cleanPrefix.length > 1 && !/^\d+$/.test(cleanPrefix) && genericPrefixes.indexOf(cleanPrefix.toLowerCase()) === -1) {
+                            var firstWord = cleanPrefix.split(' ')[0];
+                            if (firstWord && firstWord.length > 1) {
+                                personName = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+                            }
                         }
                     }
                 }
@@ -2862,16 +2887,21 @@
             if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
                 cleanName = '';
             }
+            if (cleanName && (cleanName.toLowerCase() === 'team member' || cleanName.toLowerCase() === 'client contact' || cleanName.toLowerCase() === 'client')) {
+                cleanName = '';
+            }
 
             // Strictly single greeting, NO quotes around the name (e.g. "Dear Shobha,")
-            var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
+            // Default to "Dear Hiring Manager," when no recipient is in To
+            var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Hiring Manager,';
 
             var data = self.getEditorHtml() || '';
+            if (!data) return;
 
-            // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
-            var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+            // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines, wrapper divs)
+            var greetingBlockRegex = /(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
             // Pattern 2: Plain-text or br-separated leading greeting
-            var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
+            var plainGreetingRegex = /(?:^|\n|\r)\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i;
 
             if (greetingBlockRegex.test(data)) {
                 var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');

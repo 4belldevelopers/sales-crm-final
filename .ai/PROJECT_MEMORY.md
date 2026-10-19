@@ -20,6 +20,25 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Forward Resume Recipient Salutation vs Recruiter Sender Separation & Regex Remediation (100% IMPLEMENTED & VERIFIED)**:
+  - **Issue Identified & Audited**:
+    1. **Recruiter Name Conflation with Recipient**: Templates in `th_email_template` stored `[HR_NAME]` in both the opening greeting (`Dear [HR_NAME],`) and the sender signature sign-off (`[{HR_NAME}]`). In `ServiceCompanyCvTrackerController.php` (`email_template`), `$context1['hr_name']` was mapped to the logged-in recruiter `$userName = auth()->user()->name` (e.g. `Vibhanshu Jaiswal`). Consequently, the email defaulted to greeting the recruiter themselves (`Dear Vibhanshu Jaiswal,`) instead of the recipient contact or hiring manager.
+    2. **Catastrophic Lazy Quantifier String Slicing**: In `test_fwd_resume.blade.php`, `greetingPattern` utilized `((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:...|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i`. Because `[A-Za-z0-9\s.'-]+?` was lazy and `[,:]?` was optional, it matched only a single character of the name (`Dear T` or `Dear H` or `Dear V`) and replaced it, leaving orphaned letter fragments (`echNova,ibhanshu Jaiswal,` or `echNova,iring Manager,`) that compounded with each re-render into corrupt stacked strings like `Dear TechNova,echNova,ibhanshu Jaiswal,`.
+    3. **Missing Salutation Fallback**: If no recipient was selected in the `To` field, the frontend returned without updating the greeting, leaving the recruiter's name in place.
+  - **Resolution**:
+    1. **Strict Server-Side Recipient vs Recruiter Separation**:
+       - In `ServiceCompanyCvTrackerController.php` (`email_template` for `mailtype == 1`), introduced recipient salutation resolution: defaults cleanly to `'Hiring Manager'`, or resolves from `$request->recipient_name` / `$request->to_email` contact records (`client_contact_info` / `users`), strictly excluding the recruiter themselves (`$userName`).
+       - Used `limit: 1` regex paragraph replacement to substitute the opening greeting with `<p>Dear ' . $recipientSalutationName . ',</p>\n` prior to `replaceTemplateVariables`, ensuring the bottom sender sign-off retains `[{HR_NAME}]` for the recruiter's actual name, position, company, and phone.
+    2. **Atomic Paragraph Greeting Replacement**:
+       - Replaced buggy substring regex with complete opening paragraph matching: `/(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i` across both `test_fwd_resume.blade.php` and `ForwardResumeManager.js`.
+       - Matches and replaces the entire `<p>...</p>` element from open to close, cleanly consuming and purging any pre-existing corrupted or stacked greetings without leaving trailing character fragments.
+    3. **Client-First Dynamic Tag Synchronization**:
+       - Seeded `_testRecipientNameMap` immediately from preloaded `@json($client_contacts_data)` and `@json($internal_team_data)` on view mount.
+       - Configured `syncFirstRecipientSalutation` in `test_fwd_resume.blade.php` and `ForwardResumeManager.js` to dynamically swap the salutation to `Dear {Contact Name},` whenever a `To` recipient chip is added, and cleanly revert to `Dear Hiring Manager,` when empty or removed.
+       - Guarded against recruiter self-greeting and generic titles (`team member`, `client contact`).
+       - Passed active `to_email` and `recipient_name` dynamically on template switching.
+  - **Verification**: Verified PHP syntax (`php -l`), JavaScript syntax (`node -c`) with 0 errors across all modified files.
+
 - *2026-10-19* — **Forward Resume Default Format Configured to 4.c (Option 46) (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
   - **Requirement**: Set the default selected resume format in Forward Resume drawer to `4.c` (`Option 46`: *Pre-Screened Report + Resume + Highlighted Keywords + Company Branding*).
   - **Resolution**:
