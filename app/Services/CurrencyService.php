@@ -97,82 +97,121 @@ class CurrencyService
     ];
 
     /**
+     * In-memory static cache for the currency JSON dataset.
+     *
+     * @var array<string, mixed>|null
+     */
+    private static ?array $currencyJsonData = null;
+
+    /**
+     * Load full enterprise currency dataset from static JSON file.
+     * Serves 100% of currency metadata and mappings with ZERO MySQL queries.
+     *
+     * @return array<string, mixed>
+     */
+    public static function loadCurrencyJson(): array
+    {
+        if (self::$currencyJsonData !== null) {
+            return self::$currencyJsonData;
+        }
+
+        $resourcesPath = resource_path('data/currencies.json');
+        $publicPath = public_path('country-state-city/currencies.json');
+
+        $filePath = file_exists($resourcesPath) ? $resourcesPath : (file_exists($publicPath) ? $publicPath : null);
+
+        if ($filePath && file_exists($filePath)) {
+            $raw = @file_get_contents($filePath);
+            if ($raw) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && ! empty($decoded['setting_currencies'])) {
+                    return self::$currencyJsonData = $decoded;
+                }
+            }
+        }
+
+        // Defensive fallback if file is missing (e.g. fresh test environment)
+        return self::$currencyJsonData = [
+            'currencies' => [],
+            'master_currencies' => [],
+            'setting_currencies' => [],
+            'key_to_code' => [],
+            'code_to_key' => [],
+            'symbols' => [],
+            'rates_to_inr' => [],
+            'rates_to_usd' => [],
+        ];
+    }
+
+    /**
      * Get all active system currencies indexed by getKey (0 => 'INR', 1 => 'EUR', ...).
-     * Cached in Redis for 24 hours.
+     * Served directly from static JSON / in-memory cache (0% SQL queries).
      *
      * @return array<int, string>
      */
     public static function getCurrencies(): array
     {
-        return Cache::remember('currency_codesww', self::TTL_METADATA, function () {
-            try {
-                $list = DB::table('currencies')
-                    ->orderBy('getKey', 'ASC')
-                    ->pluck('currency_code', 'getKey')
-                    ->toArray();
-
-                return ! empty($list) ? $list : [
-                    0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
-                    6 => 'CAD', 7 => 'AUD', 8 => 'SGD', 9 => 'CHF', 10 => 'NZD', 11 => 'ZAR',
-                ];
-            } catch (\Throwable $e) {
-                return [
-                    0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
-                    6 => 'CAD', 7 => 'AUD', 8 => 'SGD', 9 => 'CHF', 10 => 'NZD', 11 => 'ZAR',
-                ];
+        $data = self::loadCurrencyJson();
+        if (! empty($data['key_to_code'])) {
+            $list = [];
+            for ($i = 0; $i <= 5; $i++) {
+                if (isset($data['key_to_code'][$i])) {
+                    $list[$i] = $data['key_to_code'][$i];
+                }
             }
-        });
+            foreach ($data['key_to_code'] as $k => $c) {
+                $list[(int) $k] = $c;
+            }
+
+            return $list;
+        }
+
+        return [
+            0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED',
+            6 => 'CAD', 7 => 'AUD', 8 => 'SGD', 9 => 'CHF', 10 => 'NZD', 11 => 'ZAR',
+        ];
     }
 
     /**
      * Get reverse mapping of currency code to integer getKey ('INR' => 0, 'USD' => 4, ...).
+     * Served directly from static JSON / in-memory cache (0% SQL queries).
      *
      * @return array<string, int>
      */
     public static function getCurrencyMap(): array
     {
-        return Cache::remember('currency_code_to_key_map', self::TTL_METADATA, function () {
-            $currencies = self::getCurrencies();
-            $map = [];
-            foreach ($currencies as $key => $code) {
-                $map[strtoupper(trim($code))] = (int) $key;
-            }
+        $data = self::loadCurrencyJson();
+        if (! empty($data['code_to_key'])) {
+            return $data['code_to_key'];
+        }
 
-            return $map;
-        });
+        return [
+            'INR' => 0, 'EUR' => 1, 'JPY' => 2, 'GBP' => 3, 'USD' => 4, 'AED' => 5,
+        ];
     }
 
     /**
      * Get currency symbols map ('INR' => '₹', 'USD' => '$', ...).
+     * Served directly from static JSON / in-memory cache (0% SQL queries).
      *
      * @return array<string, string>
      */
     public static function getCurrencySymbols(): array
     {
-        return Cache::remember('currency_symbols_map', self::TTL_METADATA, function () {
-            try {
-                $rows = DB::table('currencies')->select('currency_code', 'currency_symbol')->get();
-                $symbols = [];
-                foreach ($rows as $row) {
-                    $symbols[strtoupper(trim($row->currency_code))] = $row->currency_symbol;
-                }
-                if (! empty($symbols)) {
-                    return $symbols;
-                }
-            } catch (\Throwable $e) {
-                // Fallback for tests / offline
-            }
+        $data = self::loadCurrencyJson();
+        if (! empty($data['symbols'])) {
+            return $data['symbols'];
+        }
 
-            return [
-                'INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ',
-                'CAD' => 'CA$', 'AUD' => 'A$', 'SGD' => 'S$', 'JPY' => '¥', 'CHF' => 'CHF',
-                'NZD' => 'NZ$', 'ZAR' => 'R',
-            ];
-        });
+        return [
+            'INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'AED' => 'د.إ',
+            'CAD' => 'CA$', 'AUD' => 'A$', 'SGD' => 'S$', 'JPY' => '¥', 'CHF' => 'CHF',
+            'NZD' => 'NZ$', 'ZAR' => 'R',
+        ];
     }
 
     /**
-     * Get currency symbol for any currency code (fallback to enterprise meta or symbol map).
+     * Get currency symbol for any currency code (served from JSON with enterprise meta fallback).
      */
     public static function getCurrencySymbol(?string $code): string
     {
@@ -180,9 +219,9 @@ class CurrencyService
             return '$';
         }
         $code = strtoupper(trim($code));
-        $symbols = self::getCurrencySymbols();
-        if (isset($symbols[$code])) {
-            return $symbols[$code];
+        $data = self::loadCurrencyJson();
+        if (isset($data['symbols'][$code])) {
+            return $data['symbols'][$code];
         }
         $meta = GeneralMethod::currencyEnterpriseMeta($code);
         if (! empty($meta['symbol']) && $meta['symbol'] !== $code) {
@@ -194,160 +233,34 @@ class CurrencyService
 
     /**
      * Get all currencies with complete UI metadata (code, name, symbol, flag, search keywords).
+     * Served directly from static JSON (0% SQL queries).
      *
      * @return array<int, array>
      */
     public static function getAllCurrenciesWithMeta(): array
     {
-        return Cache::remember('currencies_all_with_meta', self::TTL_METADATA, function () {
-            try {
-                $rows = DB::table('currencies')
-                    ->orderBy('getKey', 'ASC')
-                    ->get();
+        $data = self::loadCurrencyJson();
+        if (! empty($data['setting_currencies'])) {
+            return $data['setting_currencies'];
+        }
 
-                $result = [];
-                foreach ($rows as $row) {
-                    $code = strtoupper(trim($row->currency_code));
-                    $key = (int) $row->getKey;
-                    $flag = self::CURRENCY_FLAGS[$code] ?? '🌐';
-                    $meta = GeneralMethod::currencyEnterpriseMeta($code);
-
-                    $result[] = [
-                        'key' => $key,
-                        'code' => $code,
-                        'name' => $row->currency_name ?: ($meta['name'] ?? $code),
-                        'symbol' => $row->currency_symbol ?: ($meta['symbol'] ?? ''),
-                        'flag' => $flag,
-                        'label' => $meta['label'] ?? "{$flag} {$code} - {$row->currency_name}",
-                        'keywords' => $meta['keywords'] ?? "{$code} {$row->currency_name}",
-                    ];
-                }
-
-                if (! empty($result)) {
-                    return $result;
-                }
-            } catch (\Throwable $e) {
-                // Fallback for tests / offline
-            }
-
-            $defaults = [
-                0 => ['code' => 'INR', 'name' => 'Indian Rupee', 'symbol' => '₹'],
-                1 => ['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€'],
-                2 => ['code' => 'JPY', 'name' => 'Japanese Yen', 'symbol' => '¥'],
-                3 => ['code' => 'GBP', 'name' => 'British Pound', 'symbol' => '£'],
-                4 => ['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$'],
-                5 => ['code' => 'AED', 'name' => 'UAE Dirham', 'symbol' => 'د.إ'],
-                6 => ['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'CA$'],
-                7 => ['code' => 'AUD', 'name' => 'Australian Dollar', 'symbol' => 'A$'],
-                8 => ['code' => 'SGD', 'name' => 'Singapore Dollar', 'symbol' => 'S$'],
-            ];
-
-            $result = [];
-            foreach ($defaults as $k => $info) {
-                $code = $info['code'];
-                $flag = self::CURRENCY_FLAGS[$code] ?? '🌐';
-                $result[] = [
-                    'key' => $k,
-                    'code' => $code,
-                    'name' => $info['name'],
-                    'symbol' => $info['symbol'],
-                    'flag' => $flag,
-                    'label' => "{$flag} {$code} - {$info['name']}",
-                    'keywords' => "{$code} {$info['name']}",
-                ];
-            }
-
-            return $result;
-        });
+        return [];
     }
 
     /**
-     * Get unified enterprise currency list merging master_currency (Settings) and system currencies.
-     *
-     * Intent: Supplies full world currency choices (113 currencies) matching Company Profile -> Settings
-     * with backward-compatible integer keys, flags, ISO codes, and fuzzy search keywords.
+     * Get unified enterprise currency list (113 unique currencies) matching Company Profile -> Settings.
+     * Served directly from static JSON with 0% MySQL database strain.
      *
      * @return array<string, array{key: int, code: string, name: string, symbol: string, flag: string, label: string, keywords: string, countries: array<string>}>
      */
     public static function getSettingCurrenciesList(): array
     {
-        return Cache::remember('setting_currencies_list_full', self::TTL_METADATA, function () {
-            $master = ReferenceDataCache::masterCurrencies();
-            $flags = self::CURRENCY_FLAGS;
-            $coreMap = [
-                'INR' => 0,
-                'EUR' => 1,
-                'JPY' => 2,
-                'GBP' => 3,
-                'USD' => 4,
-                'AED' => 5,
-            ];
+        $data = self::loadCurrencyJson();
+        if (! empty($data['setting_currencies'])) {
+            return $data['setting_currencies'];
+        }
 
-            $itemsByCode = [];
-            foreach ($coreMap as $cCode => $cKey) {
-                $cMeta = GeneralMethod::currencyEnterpriseMeta($cCode);
-                $cFlag = $flags[$cCode] ?? '🌐';
-                $itemsByCode[$cCode] = [
-                    'key' => $cKey,
-                    'code' => $cCode,
-                    'name' => $cMeta['name'] ?? $cCode,
-                    'symbol' => $cMeta['symbol'] ?? $cCode,
-                    'flag' => $cFlag,
-                    'label' => $cMeta['label'] ?? $cCode,
-                    'keywords' => $cMeta['keywords'] ?? strtolower($cCode),
-                    'countries' => [],
-                ];
-            }
-
-            foreach ($master as $row) {
-                $code = strtoupper(trim($row->code));
-                if (empty($code)) {
-                    continue;
-                }
-
-                if (isset($itemsByCode[$code])) {
-                    $itemsByCode[$code]['countries'][] = $row->country;
-                    $itemsByCode[$code]['keywords'] .= ' '.strtolower($row->country.' '.$row->currency.' '.$row->symbol);
-                } else {
-                    $key = $row->id <= 5 ? (1000 + (int) $row->id) : (int) $row->id;
-                    $cMeta = GeneralMethod::currencyEnterpriseMeta($code);
-                    $cFlag = $flags[$code] ?? '🌐';
-                    $name = (! empty($cMeta['name']) && $cMeta['name'] !== $code) ? $cMeta['name'] : ($row->currency ?: $code);
-                    $symbol = (! empty($cMeta['symbol']) && $cMeta['symbol'] !== $code) ? $cMeta['symbol'] : ($row->symbol ?: $code);
-                    $label = (! empty($cMeta['label']) && $cMeta['label'] !== $code)
-                        ? $cMeta['label']
-                        : ($code.' — '.$row->country.($symbol ? ' ('.$symbol.')' : ''));
-                    $keywords = strtolower(trim($code.' '.$name.' '.$symbol.' '.$row->country.' '.($cMeta['keywords'] ?? '')));
-
-                    $itemsByCode[$code] = [
-                        'key' => $key,
-                        'code' => $code,
-                        'name' => $name,
-                        'symbol' => $symbol,
-                        'flag' => $cFlag,
-                        'label' => $label,
-                        'keywords' => $keywords,
-                        'countries' => [$row->country],
-                    ];
-                }
-            }
-
-            // Priority sorting: Core global business currencies first, followed alphabetically
-            $priorityOrder = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'CAD', 'AUD', 'SGD', 'JPY', 'CHF', 'CNY', 'NZD', 'ZAR'];
-            $sorted = [];
-            foreach ($priorityOrder as $pCode) {
-                if (isset($itemsByCode[$pCode])) {
-                    $sorted[$pCode] = $itemsByCode[$pCode];
-                    unset($itemsByCode[$pCode]);
-                }
-            }
-            ksort($itemsByCode);
-            foreach ($itemsByCode as $code => $item) {
-                $sorted[$code] = $item;
-            }
-
-            return $sorted;
-        });
+        return [];
     }
 
     /**
@@ -466,26 +379,13 @@ class CurrencyService
                 if (is_numeric($curr)) {
                     $key = (int) $curr;
                     // Intent: Check master_currency first since Company Profile -> Settings saves master_currency.id
-                    $code = DB::table('master_currency')->where('id', $key)->value('code');
-                    if ($code) {
-                        return strtoupper(trim($code));
+                    $data = self::loadCurrencyJson();
+                    if (isset($data['master_id_to_code'][$key])) {
+                        return $data['master_id_to_code'][$key];
                     }
-                    $code = DB::table('currencies')->where('getKey', $key)->value('currency_code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                    $currencies = self::getCurrencies();
-                    if (isset($currencies[$key])) {
-                        return $currencies[$key];
-                    }
-                    // Try currencies table id
-                    $code = DB::table('currencies')->where('id', $key)->value('currency_code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                } else {
-                    return strtoupper(trim($curr));
                 }
+
+                return self::resolveCurrencyCode($curr);
             }
 
             // Fallback: check company_career_settings table
@@ -545,9 +445,10 @@ class CurrencyService
     {
         $code = null;
         if (is_numeric($currency)) {
-            try {
-                $code = DB::table('master_currency')->where('id', (int) $currency)->value('code');
-            } catch (\Throwable $e) {
+            $data = self::loadCurrencyJson();
+            $num = (int) $currency;
+            if (isset($data['master_id_to_code'][$num])) {
+                $code = $data['master_id_to_code'][$num];
             }
         }
         if (! $code) {
@@ -607,6 +508,7 @@ class CurrencyService
 
     /**
      * Resolve any currency representation (key or code) to uppercase ISO code.
+     * Serves directly from pre-indexed JSON dictionaries (0% SQL queries).
      */
     public static function resolveCurrencyCode(string|int|null $currency): string
     {
@@ -614,47 +516,31 @@ class CurrencyService
             return self::DEFAULT_CURRENCY;
         }
 
+        $data = self::loadCurrencyJson();
+
         if (is_numeric($currency)) {
             $key = (int) $currency;
-            if ($key >= 1000) {
-                try {
-                    $code = DB::table('master_currency')->where('id', $key - 1000)->value('code');
-                    if ($code) {
-                        return strtoupper(trim($code));
-                    }
-                } catch (\Throwable $e) {
-                }
+            if (isset($data['key_to_code'][$key])) {
+                return $data['key_to_code'][$key];
             }
-
-            $currencies = self::getCurrencies();
-            if (isset($currencies[$key])) {
-                return $currencies[$key];
-            }
-
-            try {
-                $code = DB::table('master_currency')->where('id', $key)->value('code');
-                if ($code) {
-                    return strtoupper(trim($code));
-                }
-            } catch (\Throwable $e) {
-            }
-
-            try {
-                $code = DB::table('currencies')->where('id', $key)->value('currency_code');
-                if ($code) {
-                    return strtoupper(trim($code));
-                }
-            } catch (\Throwable $e) {
+            if ($key >= 1000 && isset($data['key_to_code'][$key - 1000])) {
+                return $data['key_to_code'][$key - 1000];
             }
 
             return self::DEFAULT_CURRENCY;
         }
 
-        return strtoupper(trim((string) $currency));
+        $clean = strtoupper(trim((string) $currency));
+        if (isset($data['code_to_key'][$clean])) {
+            return $clean;
+        }
+
+        return ! empty($clean) ? $clean : self::DEFAULT_CURRENCY;
     }
 
     /**
      * Resolve any currency representation (key or code) to integer getKey.
+     * Serves directly from pre-indexed JSON dictionaries (0% SQL queries).
      */
     public static function resolveCurrencyKey(string|int|null $currency): int
     {
@@ -662,42 +548,20 @@ class CurrencyService
             return self::DEFAULT_CURRENCY_KEY;
         }
 
+        $data = self::loadCurrencyJson();
+
         if (is_numeric($currency)) {
             $num = (int) $currency;
-            if ($num >= 1000) {
+            if (isset($data['key_to_code'][$num])) {
                 return $num;
-            }
-
-            $currencies = self::getCurrencies();
-            if (isset($currencies[$num])) {
-                return $num;
-            }
-
-            try {
-                $code = DB::table('master_currency')->where('id', $num)->value('code');
-                if ($code) {
-                    $map = self::getCurrencyMap();
-                    if (isset($map[strtoupper(trim($code))])) {
-                        return $map[strtoupper(trim($code))];
-                    }
-
-                    return $num <= 5 ? (1000 + $num) : $num;
-                }
-            } catch (\Throwable $e) {
             }
 
             return $num;
         }
 
         $code = strtoupper(trim((string) $currency));
-        $map = self::getCurrencyMap();
-        if (isset($map[$code])) {
-            return $map[$code];
-        }
-
-        $settingList = self::getSettingCurrenciesList();
-        if (isset($settingList[$code])) {
-            return (int) $settingList[$code]['key'];
+        if (isset($data['code_to_key'][$code])) {
+            return (int) $data['code_to_key'][$code];
         }
 
         return self::DEFAULT_CURRENCY_KEY;
@@ -734,7 +598,14 @@ class CurrencyService
             return ($amount / $rateFrom) * $rateTo;
         }
 
-        // Fallback: check currencies table rates directly
+        // Fallback: check currencies.json rates directly (0% SQL queries)
+        $data = self::loadCurrencyJson();
+        $rfFrom = $data['rates_to_usd'][$from] ?? null;
+        $rfTo = $data['rates_to_usd'][$to] ?? null;
+        if ($rfFrom && $rfTo && $rfFrom > 0 && $rfTo > 0) {
+            return ($amount / $rfFrom) * $rfTo;
+        }
+
         $ratesFallback = GeneralMethod::currencyConverter()['usd_based_rates'] ?? [];
         $rfFrom = isset($ratesFallback[$from]) ? (float) $ratesFallback[$from] : 1.0;
         $rfTo = isset($ratesFallback[$to]) ? (float) $ratesFallback[$to] : 1.0;
