@@ -45,17 +45,13 @@
           </div>
         </div>
 
-        <!-- 2-Column Fields Grid (8 Fields Total) -->
+        <!-- 2-Column Fields Grid (Company Website & Name on separate rows) -->
         <div class="god-fields-grid">
 
-          <!-- ROW 1, COL 1: Company Website with Fetch Details Button -->
-          <div class="client-field fv-plugins-icon-container god-field-wrap">
+          <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
+          <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
               <label class="god-field-label" for="website">Company Website</label>
-              <span class="god-badge god-badge-autofilled" id="badge_website" style="{{ !empty($website) ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
 
             <div class="god-website-control-row">
@@ -103,14 +99,10 @@
             </div>
           </div>
 
-          <!-- ROW 1, COL 2: Company Name -->
-          <div class="client-field fv-plugins-icon-container god-field-wrap">
+          <!-- ROW 2 (Full Width): Company Name -->
+          <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
               <label class="god-field-label" for="client_id">Company Name</label>
-              <span class="god-badge god-badge-autofilled" id="badge_name" style="{{ !empty($name) ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -132,14 +124,10 @@
             </div>
           </div>
 
-          <!-- ROW 2, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
+          <!-- ROW 3, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="industry_display">Industry</label>
-              <span class="god-badge god-badge-autofilled" id="badge_industry" style="{{ !empty($industry) ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
 
             <!-- Native select kept synchronized for form POST & validation -->
@@ -201,14 +189,10 @@
             </div>
           </div>
 
-          <!-- ROW 2, COL 2: Company Size -->
+          <!-- ROW 3, COL 2: Company Size -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="company_sizes">Company Size</label>
-              <span class="god-badge god-badge-suggested" id="badge_company_sizes" style="{{ !empty($company_sizes) ? '' : 'display:none;' }}">
-                <span class="god-badge-dot">●</span>
-                <span>Suggested</span>
-              </span>
             </div>
             <div class="god-input-box god-select-box">
               <span class="god-input-left-icon">
@@ -236,14 +220,10 @@
             </div>
           </div>
 
-          <!-- ROW 3, COL 1: Company Type -->
+          <!-- ROW 4, COL 1: Company Type -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="company_type">Company Type</label>
-              <span class="god-badge god-badge-autofilled" id="badge_company_type" style="{{ isset($company_type) && $company_type !== '' ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
             <div class="god-input-box god-select-box">
               <span class="god-input-left-icon">
@@ -271,14 +251,10 @@
             </div>
           </div>
 
-          <!-- ROW 3, COL 2: Founded Year -->
+          <!-- ROW 4, COL 2: Founded Year -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="founded">Founded Year</label>
-              <span class="god-badge god-badge-autofilled" id="badge_founded" style="{{ !empty($founded) ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -300,14 +276,10 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 1: Career / Jobs Page URL with External Link Button -->
+          <!-- ROW 5, COL 1: Career / Jobs Page URL with External Link Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="career_page_url">Career / Jobs Page URL</label>
-              <span class="god-badge god-badge-autofilled" id="badge_career_page_url" style="{{ !empty($career_page_url) ? '' : 'display:none;' }}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Auto-filled</span>
-              </span>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -336,19 +308,10 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 2: Tax ID / Business Reg No with Helper Note -->
+          <!-- ROW 5, COL 2: Tax ID / Business Reg No -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
               <label class="god-field-label" for="tax_id">Tax ID / Business Reg No</label>
-              <span class="god-badge {{ !empty($tax_id) ? 'god-badge-autofilled' : 'god-badge-notfound' }}" id="badge_tax_id" style="{{ !empty($tax_id) ? '' : 'display:none;' }}">
-                @if(!empty($tax_id))
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span>Auto-filled</span>
-                @else
-                  <span class="god-badge-dot">●</span>
-                  <span>Not found</span>
-                @endif
-              </span>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
@@ -365,14 +328,6 @@
                      id="tax_id"
                      value="{{ $tax_id ?? '' }}"
                      placeholder="e.g. EIN, CIN, VAT, LEI">
-            </div>
-            <div class="god-field-helper-note" id="tax_id_helper" style="display:none;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="16" x2="12" y2="12"/>
-                <line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-              <span>Not available from website. You can add this later.</span>
             </div>
           </div>
 

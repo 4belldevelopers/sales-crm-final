@@ -1293,6 +1293,25 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     margin-top: 0 !important;
   }
 
+  /* Remove excessive blank space above footer & fit cleanly on 15.6" screens */
+  #kt_wrapper {
+    min-height: auto !important;
+  }
+  #kt_content,
+  .content.flex-column-fluid,
+  #kt_content > .d-flex.flex-column-fluid {
+    flex: none !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  #kt_footer {
+    margin-top: 14px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    background: transparent !important;
+    border-top: none !important;
+  }
+
   /* Wizard Header Card: Sticky directly below top navbar (#kt_header), exactly 5px upper gap & 5px lower gap */
   .client-top-nav-card {
     background: #fffdf2 !important;
@@ -1442,7 +1461,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   .client-header-grid {
     display: grid !important;
-    grid-template-columns: 1fr auto 1fr !important;
+    grid-template-columns: auto 1fr auto !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
@@ -1480,12 +1499,12 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     font-size: 11px !important;
     color: #64748b !important;
     margin: 0 !important;
-    line-height: 1.3 !important;
+    line-height: 1.35 !important;
     font-weight: 400 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 320px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: 360px !important;
     font-family: Poppins, sans-serif !important;
   }
 
@@ -1510,7 +1529,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 7px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
@@ -1519,22 +1538,23 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-circle {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    min-height: 24px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
     line-height: 1 !important;
-    font-size: 11px !important;
+    font-size: 11.5px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
     font-family: Poppins, sans-serif !important;
+    position: relative !important;
   }
   .client-step-circle svg {
     display: block !important;
@@ -1552,9 +1572,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-step-circle.is-active {
     background: #ffd428 !important;
     color: #0f172a !important;
-    border: none !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 0 2px #ffd428, 0 2px 6px rgba(245, 196, 0, 0.35) !important;
     font-weight: 700 !important;
-    box-shadow: none !important;
   }
 
   .client-step-circle.is-upcoming {
@@ -1587,15 +1607,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 6px !important;
-    color: #cbd5e1 !important;
+    margin: 0 8px !important;
+    color: #94a3b8 !important;
     flex-shrink: 0 !important;
     transition: color 0.2s ease !important;
   }
 
   .client-step-arrow-svg {
-    width: 12px !important;
-    height: 12px !important;
+    width: 14px !important;
+    height: 14px !important;
     stroke: currentColor !important;
   }
 
@@ -1613,9 +1633,9 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1.5px solid #e2e8f0 !important;
     color: #0f172a !important;
     font-weight: 600 !important;
-    font-size: 12px !important;
-    height: 34px !important;
-    padding: 0 14px !important;
+    font-size: 12.5px !important;
+    height: 36px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -1640,14 +1660,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1.5px solid #cbd5e1 !important;
     color: #334155 !important;
     font-weight: 600 !important;
-    font-size: 12px !important;
-    height: 34px !important;
-    padding: 0 14px !important;
+    font-size: 12.5px !important;
+    height: 36px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 5px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1667,15 +1687,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border: 1px solid #d4a017 !important;
     color: #10143b !important;
     font-weight: 700 !important;
-    font-size: 12px !important;
-    height: 34px !important;
-    padding: 0 16px !important;
+    font-size: 12.5px !important;
+    height: 36px !important;
+    padding: 0 18px !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 5px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
@@ -1825,6 +1845,11 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     }
   }
 
+  .god-field-full {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
   .god-field-wrap {
     display: flex !important;
     flex-direction: column !important;
@@ -1848,33 +1873,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     font-family: Poppins, sans-serif !important;
   }
 
-  /* Badge Pills (Pixel-perfect match to screenshot) */
-  .god-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    padding: 1px 6px !important;
-    border-radius: 9999px !important;
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
-    line-height: 1.2 !important;
-    font-family: Poppins, sans-serif !important;
-  }
-  .god-badge-autofilled {
-    background: #dcfce7 !important;
-    color: #15803d !important;
-  }
-  .god-badge-suggested {
-    background: #fef3c7 !important;
-    color: #b45309 !important;
-  }
-  .god-badge-notfound {
-    background: #f1f5f9 !important;
-    color: #64748b !important;
-  }
-  .god-badge-dot {
-    font-size: 8px !important;
-    line-height: 1 !important;
+  /* Completely remove auto-filled / suggested / not found badge text from UI per user request */
+  .god-badge,
+  .god-badge-autofilled,
+  .god-badge-suggested,
+  .god-badge-notfound,
+  .god-field-helper-note,
+  #tax_id_helper {
+    display: none !important;
   }
 
   /* Input Boxes */
@@ -5233,9 +5239,6 @@ $('.remove_address').click(function(){
     if (data.website && (!currentWeb || currentWeb.indexOf('http') === -1)) {
       $('#website').val(data.website).trigger('input').trigger('change');
     }
-
-    // Dynamic website badge & clear button
-    $('#badge_website').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     $('#website_clear_btn').show();
 
     // Clear any previous validation errors on auto-filled attributes
@@ -5254,7 +5257,6 @@ $('.remove_address').click(function(){
     // 1. Company Name (Unconditionally fill on auto-fetch)
     if (data.name) {
       $('#client_id').val(data.name).trigger('input').trigger('change');
-      $('#badge_name').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
       if (typeof initials === 'function') {
         var initLetters = initials(data.name) || 'AC';
         $('#client_review_initials').text(initLetters);
@@ -5266,37 +5268,77 @@ $('.remove_address').click(function(){
       rasterizeAndAttachLogo(data.logo, data.domain);
     }
 
-    // 3. Industry Combobox selection (Token-based multi-keyword + custom fallback)
-    if (data.industry) {
-      var rawInd = data.industry;
+    // 3. Industry Combobox selection (Smart whole-word matching + exact alias prioritization)
+    if (data.industry && String(data.industry).trim().length > 0) {
+      var rawInd = String(data.industry).trim();
+      var indNorm = rawInd.toLowerCase();
       var matchedId = null;
       var matchedName = null;
-      var indNorm = rawInd.toLowerCase().trim();
-      var tokens = indNorm.split(/[\/,&|\s]+/).filter(function(t) { return t.length > 2; });
+      var highestScore = -1;
 
-      $('#industry option').each(function () {
-        var optVal = $(this).val();
-        var optText = $(this).text().toLowerCase().trim();
-        if (!optVal || !optText || optText === 'select industry' || optText === 'select') return;
-
-        if (optText === indNorm) {
-          matchedId = optVal;
-          matchedName = $(this).text().trim();
-          return false;
-        }
-        if (optText.indexOf(indNorm) !== -1 || indNorm.indexOf(optText) !== -1) {
-          matchedId = optVal;
-          matchedName = $(this).text().trim();
-          return false;
-        }
-        for (var i = 0; i < tokens.length; i++) {
-          if (optText.indexOf(tokens[i]) !== -1) {
-            matchedId = optVal;
-            matchedName = $(this).text().trim();
-            return false;
+      // 3a. Check JeroIndustryIntelligenceEngine direct exact name match first
+      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.selectByName === 'function') {
+        try {
+          window.JeroIndustryIntelligenceEngine.selectByName(rawInd);
+          var curSelected = window.JeroIndustryIntelligenceEngine.getSelected();
+          if (curSelected && curSelected.id) {
+            matchedId = curSelected.id;
+            matchedName = curSelected.name;
           }
-        }
-      });
+        } catch (e) {}
+      }
+
+      // 3b. Smart scoring across select options if not already matched
+      if (!matchedId) {
+        var tokens = indNorm.split(/[\/,&|\s]+/).filter(function(t) { return t.length >= 3; });
+
+        $('#industry option').each(function () {
+          var optVal = $(this).val();
+          var rawOptText = $(this).text().trim();
+          var optText = rawOptText.toLowerCase();
+          if (!optVal || !optText || optText === 'select industry' || optText === 'select') return;
+
+          var score = 0;
+          // Exact match gets highest priority
+          if (optText === indNorm) {
+            score = 1000;
+          }
+          // Exact starts-with
+          else if (optText.indexOf(indNorm) === 0 || indNorm.indexOf(optText) === 0) {
+            score = 600;
+          }
+          // Exact substring phrase match
+          else if (optText.indexOf(indNorm) !== -1 || indNorm.indexOf(optText) !== -1) {
+            score = 400;
+          }
+
+          // Whole-word boundary token matches (e.g., \btechnology\b will NOT match "biotechnology")
+          for (var i = 0; i < tokens.length; i++) {
+            var tok = tokens[i];
+            try {
+              var wordRegex = new RegExp('\\b' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+              if (wordRegex.test(optText)) {
+                score += 100;
+              }
+            } catch (err) {}
+          }
+
+          // Information Technology / Tech specific synonym boost: if rawInd mentions IT or tech
+          if (/(information\s+technology|\bit\b|software|tech\b)/i.test(indNorm)) {
+            if (/information\s+technology/i.test(optText)) {
+              score += 250;
+            } else if (/(computer\s+software|software\s+development)/i.test(optText)) {
+              score += 150;
+            }
+          }
+
+          if (score > highestScore && score >= 100) {
+            highestScore = score;
+            matchedId = optVal;
+            matchedName = rawOptText;
+          }
+        });
+      }
 
       if (matchedId && matchedName) {
         $('#industry').val(matchedId).trigger('change');
@@ -5307,7 +5349,7 @@ $('.remove_address').click(function(){
         $('#jero_ind_input_box').addClass('has-value');
         $('#jero_ind_clear_btn').show();
         $('#jero_ind_kbd').hide();
-      } else {
+      } else if (rawInd) {
         if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.commitCustomIndustry === 'function') {
           try { window.JeroIndustryIntelligenceEngine.commitCustomIndustry(rawInd); } catch(e){}
         } else {
@@ -5320,7 +5362,16 @@ $('.remove_address').click(function(){
           $('#jero_ind_kbd').hide();
         }
       }
-      $('#badge_industry').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
+    } else {
+      // If no industry provided in data, reset/clear cleanly so previous entry is NEVER retained
+      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.clear === 'function') {
+        try { window.JeroIndustryIntelligenceEngine.clear(); } catch(e){}
+      }
+      $('#industry').val('').trigger('change');
+      $('#industry_display').val('');
+      $('#jero_ind_input_box').removeClass('has-value');
+      $('#jero_ind_clear_btn').hide();
+      $('#jero_ind_kbd').show();
     }
 
     // 4. Company Size
@@ -5337,7 +5388,6 @@ $('.remove_address').click(function(){
           }
         });
       }
-      $('#badge_company_sizes').show().removeClass('god-badge-notfound god-badge-autofilled').addClass('god-badge-suggested').html('<span class="god-badge-dot">●</span> <span>Suggested</span>');
     }
 
     // 5. Company Type
@@ -5350,30 +5400,22 @@ $('.remove_address').click(function(){
           return false;
         }
       });
-      $('#badge_company_type').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 6. Founded Year
     if (data.founded) {
       $('#founded').val(data.founded).trigger('input').trigger('change');
-      $('#badge_founded').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 7. Career Page URL
     var careerUrl = data.career_page_url || (data.domain ? ('https://' + data.domain + '/jobs') : '');
     if (careerUrl) {
       $('#career_page_url').val(careerUrl).trigger('input').trigger('change');
-      $('#badge_career_page_url').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
     }
 
     // 8. Tax ID / Business Registration
     if (data.tax_id) {
       $('#tax_id').val(data.tax_id).trigger('input').trigger('change');
-      $('#badge_tax_id').show().removeClass('god-badge-notfound god-badge-suggested').addClass('god-badge-autofilled').html('<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span>Auto-filled</span>');
-      $('#tax_id_helper').hide();
-    } else {
-      $('#badge_tax_id').show().removeClass('god-badge-autofilled god-badge-suggested').addClass('god-badge-notfound').html('<span class="god-badge-dot">●</span> <span>Not found</span>');
-      $('#tax_id_helper').show();
     }
 
     // 9. Company Description (Quill Rich-Text + Hidden Textarea Sync)
@@ -5489,19 +5531,23 @@ $('.remove_address').click(function(){
     }
   }
 
-  function fetchGodLevelCompanyIntelligence(website) {
+  function fetchGodLevelCompanyIntelligence(website, forceRefresh) {
     if (!website) return;
     var cleanDomain = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].trim();
     if (!cleanDomain || cleanDomain.length < 3) return;
 
     window._lastFetchedWebsite = website;
 
+    if (forceRefresh) {
+      delete window._companyIntelligenceCache[cleanDomain];
+    }
+
     var $fetchBtn = $('#client_auto_fetch, #client_fetch_side_btn');
     var originalBtnHtml = $fetchBtn.html();
     $fetchBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width:13px;height:13px;"></span> Extracting...');
 
-    // 0ms In-Memory RAM Cache lookup
-    if (window._companyIntelligenceCache[cleanDomain]) {
+    // In-Memory RAM Cache lookup (only when not forced)
+    if (!forceRefresh && window._companyIntelligenceCache[cleanDomain]) {
       applyCompanyIntelligenceData(window._companyIntelligenceCache[cleanDomain]);
       $fetchBtn.prop('disabled', false).html(originalBtnHtml);
       return;
@@ -5652,7 +5698,7 @@ $('.remove_address').click(function(){
       $('#website').focus();
       return false;
     }
-    fetchGodLevelCompanyIntelligence(website);
+    fetchGodLevelCompanyIntelligence(website, true);
     return false;
   });
 
@@ -7306,11 +7352,9 @@ $('.remove_address').click(function(){
     updateCompletion();
     renderContactTable();
     goToWizardStep(1);
-    setTimeout(function () {
-      if (typeof checkDraftPromptOnLoad === 'function') {
-        checkDraftPromptOnLoad();
-      }
-    }, 350);
+    try {
+      localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }});
+    } catch (e) {}
 
     // Deterministic Step Tracking & Non-locking Debounce Engine
     var currentStepNumber = 1;
@@ -7493,9 +7537,6 @@ $('.remove_address').click(function(){
       var nextStep = Math.min(5, currentStep + 1);
       try {
         goToWizardStep(nextStep);
-        if (typeof saveClientDraft === 'function') {
-          saveClientDraft(true);
-        }
       } catch (err) {
         console.error('goToWizardStep navigation error:', err);
       }
@@ -7723,192 +7764,19 @@ $('.remove_address').click(function(){
     });
 
     // =========================================================================
-    // MULTI-TENANT ISOLATED DRAFT PERSISTENCE & CONTROL ENGINE
-    // Strictly tenant-scoped (company_id) per Rule 6 & 9 (Zero cross-tenant leakage)
+    // DRAFT PERSISTENCE ENGINE REMOVED
+    // Auto-save draft feature has been completely removed per user request to
+    // eliminate stale industry / previous entries persisting.
     // =========================================================================
     var DRAFT_STORAGE_KEY = 'jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }};
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }});
+    } catch (e) {}
 
-    function saveClientDraft(silent) {
-      try {
-        var draftData = {
-          timestamp: new Date().toISOString(),
-          timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          currentStep: (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1,
-          name: ($('#client_id').val() || '').trim(),
-          website: ($('#website').val() || '').trim(),
-          industry: ($('#industry').val() || '').trim(),
-          industryDisplay: ($('#industry_display').val() || '').trim(),
-          company_sizes: ($('#company_sizes').val() || '').trim(),
-          company_type: ($('#company_type').val() || '').trim(),
-          founded: ($('#founded').val() || '').trim(),
-          description: (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || ''),
-          tags: (window.clientTagsTagify ? (window.clientTagsTagify.value || []).map(function(t) { return t.value; }) : []),
-          hq_address: ($('input[name="address[]"]').first().val() || '').trim(),
-          hq_city_search: ($('#city_search_0').val() || '').trim(),
-          hq_city_tagify: ($('#kt_tagify_work_location_0').val() || '').trim(),
-          branches: [],
-          contacts: (typeof getContactRowsData === 'function') ? getContactRowsData() : []
-        };
-
-        $('#additional_addresses_container .client-branch-card').each(function() {
-          var $card = $(this);
-          var cid = $card.data('cid') || $card.attr('data-cid');
-          draftData.branches.push({
-            cid: cid,
-            address: ($card.find('input[name="address[]"]').val() || '').trim(),
-            city_search: ($card.find('input[id^="branch_city_search_"]').val() || '').trim(),
-            city_tagify: ($card.find('input[id^="kt_tagify_work_location_"]').val() || '').trim()
-          });
-        });
-
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
-
-        var statusText = 'Draft saved at ' + draftData.timeFormatted;
-        $('#client_draft_status_msg').text(statusText).fadeIn();
-
-        if (!silent && typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-          Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true
-          }).fire({
-            icon: 'success',
-            title: 'Draft saved successfully!'
-          });
-        }
-      } catch (e) {
-        console.warn('saveClientDraft error:', e);
-      }
-    }
-
-    function restoreClientDraft() {
-      try {
-        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-        if (!raw) return;
-        var d = JSON.parse(raw);
-        if (!d) return;
-
-        if (d.name) $('#client_id').val(d.name).trigger('input');
-        if (d.website) $('#website').val(d.website).trigger('input');
-        if (d.industry) {
-          $('#industry').val(d.industry);
-          $('#industry_display').val(d.industryDisplay || d.industry);
-        }
-        if (d.company_sizes) $('#company_sizes').val(d.company_sizes).trigger('change');
-        if (d.company_type) $('#company_type').val(d.company_type).trigger('change');
-        if (d.founded) $('#founded').val(d.founded).trigger('input');
-
-        // Restore Description
-        if (d.description) {
-          $('#kt_docs_tinymce_hidden').val(d.description);
-          if (window.clientDescQuill) {
-            window.clientDescQuill.clipboard.dangerouslyPasteHTML(d.description);
-          }
-        }
-
-        // Restore Tags
-        if (d.tags && Array.isArray(d.tags) && d.tags.length > 0 && window.clientTagsTagify) {
-          window.clientTagsTagify.removeAllTags();
-          window.clientTagsTagify.addTags(d.tags);
-        }
-
-        // Restore HQ Address
-        if (d.hq_address) $('input[name="address[]"]').first().val(d.hq_address).trigger('input');
-        if (d.hq_city_search) $('#city_search_0').val(d.hq_city_search);
-        if (d.hq_city_tagify) $('#kt_tagify_work_location_0').val(d.hq_city_tagify);
-
-        // Restore Branch Addresses
-        if (d.branches && Array.isArray(d.branches) && d.branches.length > 0) {
-          d.branches.forEach(function(b) {
-            $('#btn_add_another_address, .add_address').first().click();
-            var $lastBranch = $('#additional_addresses_container .client-branch-card').last();
-            if (b.address) $lastBranch.find('input[name="address[]"]').val(b.address);
-            if (b.city_search) $lastBranch.find('input[id^="branch_city_search_"]').val(b.city_search);
-            if (b.city_tagify) $lastBranch.find('input[id^="kt_tagify_work_location_"]').val(b.city_tagify);
-          });
-        }
-
-        // Restore Contacts
-        if (d.contacts && Array.isArray(d.contacts) && d.contacts.length > 0) {
-          $('.client-cperson-container:gt(0)').remove();
-          d.contacts.forEach(function(c, idx) {
-            if (idx === 0) {
-              var $c0 = $('.client-cperson-container').first();
-              $c0.find('input[name="cp_name[]"]').val(c.name || '');
-              $c0.find('input[name="cp_email[]"]').val(c.email || '');
-              $c0.find('input[name="cp_number[]"]').val(c.phone || '');
-              $c0.find('input[name="cp_desigination[]"]').val(c.designation || '');
-              $c0.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
-            } else {
-              $('.add_cperson').first().click();
-              var $newC = $('.client-cperson-container').last();
-              $newC.find('input[name="cp_name[]"]').val(c.name || '');
-              $newC.find('input[name="cp_email[]"]').val(c.email || '');
-              $newC.find('input[name="cp_number[]"]').val(c.phone || '');
-              $newC.find('input[name="cp_desigination[]"]').val(c.designation || '');
-              $newC.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
-            }
-          });
-          renderContactTable();
-        }
-
-        if (d.timeFormatted) {
-          $('#client_draft_status_msg').text('Draft restored from ' + d.timeFormatted).fadeIn();
-        }
-
-        if (typeof updateCompletion === 'function') updateCompletion();
-        if (typeof updateAssistantPanel === 'function') updateAssistantPanel();
-
-        if (d.currentStep && d.currentStep > 1) {
-          goToWizardStep(d.currentStep);
-        }
-      } catch (e) {
-        console.warn('restoreClientDraft error:', e);
-      }
-    }
-
-    function checkDraftPromptOnLoad() {
-      try {
-        if (typeof page_event !== 'undefined' && page_event !== 'ADD') return;
-        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-        if (!raw) return;
-        var d = JSON.parse(raw);
-        if (!d || (!d.name && !d.website && !d.hq_address && (!d.contacts || !d.contacts.length))) return;
-
-        var savedTime = d.timeFormatted || (new Date(d.timestamp)).toLocaleTimeString();
-        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-          Swal.fire({
-            title: 'Restore Unsaved Draft?',
-            html: 'We found an unfinished client draft from <b>' + savedTime + '</b>.<br>Would you like to restore where you left off?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Restore Draft',
-            cancelButtonText: 'Discard Draft',
-            confirmButtonColor: '#ffd428',
-            cancelButtonColor: '#e2e8f0',
-            customClass: {
-              confirmButton: 'btn btn-primary text-dark font-weight-bold',
-              cancelButton: 'btn btn-light text-muted font-weight-bold'
-            }
-          }).then(function(result) {
-            if (result.isConfirmed) {
-              restoreClientDraft();
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-              localStorage.removeItem(DRAFT_STORAGE_KEY);
-              $('#client_draft_status_msg').hide();
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('checkDraftPromptOnLoad error:', e);
-      }
-    }
-
-    window.saveClientDraft = saveClientDraft;
-    window.restoreClientDraft = restoreClientDraft;
-    window.checkDraftPromptOnLoad = checkDraftPromptOnLoad;
+    window.saveClientDraft = function () {};
+    window.restoreClientDraft = function () {};
+    window.checkDraftPromptOnLoad = function () {};
 
     // Remove Logo Button Handler
     $(document).on('click', '#client_preview_remove_btn', function (e) {
