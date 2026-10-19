@@ -22,6 +22,29 @@ class ConsultancyPartnershipUpdated implements ShouldBroadcast
 {
     use Dispatchable, SerializesModels;
 
+    /**
+     * Ensure event is only broadcast after open DB transactions commit.
+     * Prevents ghost-tenant updates on DB rollback.
+     */
+    public bool $afterCommit = true;
+
+    /**
+     * Maximum number of attempts before marking broadcast job as failed.
+     * Prevents runaway retry hammering on WebSocket connection outages.
+     */
+    public int $tries = 3;
+
+    /**
+     * Backoff delays in seconds between retries [10s, 30s, 60s].
+     * Prevents rapid hammer loops during transient network or Reverb restarts.
+     */
+    public array $backoff = [10, 30, 60];
+
+    /**
+     * Maximum execution time for the broadcast job in seconds.
+     */
+    public int $timeout = 15;
+
     public function __construct(
         public readonly int $companyId,
         public readonly string $mutationType,
@@ -50,5 +73,20 @@ class ConsultancyPartnershipUpdated implements ShouldBroadcast
             'extra' => $this->extra,
             'timestamp' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Handle permanent broadcast job failure with structured error logging.
+     * Preserves audit visibility without exposing sensitive tokens or secrets.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        \Illuminate\Support\Facades\Log::warning('ConsultancyPartnershipUpdated: WebSocket broadcast permanently failed', [
+            'company_id' => $this->companyId,
+            'mutation_type' => $this->mutationType,
+            'spartnerAll' => $this->spartnerAll,
+            'sentRequest' => $this->sentRequest,
+            'error' => $exception ? $exception->getMessage() : 'Unknown error',
+        ]);
     }
 }
