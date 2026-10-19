@@ -5947,34 +5947,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $jobid = $targetJobId ?: (! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0);
 
         if ($jobid > 0) {
-            $client_loc = DB::table('client_city_jobs')
+            $client_loc_cities = DB::table('client_city_jobs')
                 ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
                 ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                 ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
+                ->select('city_list.city as city_name', 'countries.country_name')
                 ->where('client_city_jobs.job_id', $jobid)
-                ->first();
+                ->get()
+                ->unique('city_name')
+                ->values();
 
-            $country_id = @$client_loc->country_id;
-            if (@$country_id > 0) {
-                $country_name_data = GeneralMethod::getCountryName($country_id);
-                if (! empty($country_name_data)) {
-                    foreach ($country_name_data as $cval) {
-                        $country_name = ucwords($cval['sortname'] ?? '');
-                    }
-                }
-            }
-
-            $city = @$client_loc->city;
-            if (@$client_loc->country_id == 101) {
-                $city = @$client_loc->city_name;
+            if ($client_loc_cities->count() === 1) {
+                $city = $client_loc_cities->first()->city_name;
+                $country_name = $client_loc_cities->first()->country_name;
+                $location = $city.($country_name ? ' | '.$country_name : '');
+            } elseif ($client_loc_cities->count() > 1) {
+                $location = $client_loc_cities->pluck('city_name')->implode(', ');
             }
         }
 
         $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
         $this->jobid = $jobid;
-
-        $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
         $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
         $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
@@ -7098,15 +7091,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('client_city_jobs.job_id', $jobid)
                     ->get();
 
+                // Deduplicate cities by city_name to prevent duplicate location listings and duplicate subject cities
+                $client_loc_cities = $client_loc_cities->unique('city_name')->values();
+
                 if ($client_loc_cities->count() === 1) {
                     $cval = $client_loc_cities->first();
                     $location = $cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name;
-                    $subjectLocation = $location;
+                    $subjectLocation = $cval->city_name;
                 } elseif ($client_loc_cities->count() > 1) {
                     foreach ($client_loc_cities as $key => $cval) {
                         $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
                     }
-                    $subjectLocation = $client_loc_cities->pluck('city_name')->implode(', ');
+                    $subjectLocation = $client_loc_cities->pluck('city_name')->unique()->implode(', ');
                 } elseif (! empty($client_loc_addr->city_name)) {
                     $location = $client_loc_addr->city_name;
                     $subjectLocation = $location;
@@ -7135,17 +7131,89 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $candCtc = $firstApp->ctc ?? '';
             $candEctc = $firstApp->ectc ?? '';
 
-            // Fetch interview questions if attached to this job
+            // 1. Fetch interview questions & topics from the Job Drawer sub-tab (interview_questions table)
             $interview_ques = '';
             if ($jobid > 0) {
-                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
-                if ($interview_questions->count() > 0) {
-                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
-                    $interview_ques .= '<ol>';
-                    foreach ($interview_questions as $row) {
-                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                $interview_rows = DB::table('interview_questions')
+                    ->where('job_id', $jobid)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                if ($interview_rows->isNotEmpty()) {
+                    $hasQuestions = false;
+                    $qHtml = '<div style="margin: 14px 0 18px 0; padding: 14px 18px; background: #F8FAFC; border-left: 4px solid #7C3AED; border-radius: 6px;">';
+                    $qHtml .= '<h4 style="margin: 0 0 10px 0; color: #1E293B; font-size: 14px; font-weight: 700;">Interview Questions &amp; Topics</h4>';
+
+                    foreach ($interview_rows as $iRow) {
+                        $raw = trim($iRow->questions ?? '');
+                        if (empty($raw)) {
+                            continue;
+                        }
+                        $hasQuestions = true;
+                        if (preg_match('/<(?:p|ol|ul|li|div|h[1-6]|table|br)/i', $raw)) {
+                            $qHtml .= '<div style="font-size: 13px; color: #374151; line-height: 1.6;">'.$raw.'</div>';
+                        } else {
+                            $lines = array_filter(array_map('trim', explode("\n", $raw)));
+                            if (count($lines) > 1) {
+                                $qHtml .= '<ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; line-height: 1.6;">';
+                                foreach ($lines as $ln) {
+                                    $qHtml .= '<li style="margin-bottom: 4px;">'.e($ln).'</li>';
+                                }
+                                $qHtml .= '</ol>';
+                            } else {
+                                $qHtml .= '<p style="margin: 0 0 6px 0; font-size: 13px; color: #374151; line-height: 1.6;">'.e($raw).'</p>';
+                            }
+                        }
                     }
-                    $interview_ques .= '</ol><hr />';
+                    $qHtml .= '</div>';
+                    if ($hasQuestions) {
+                        $interview_ques = $qHtml;
+                    }
+                }
+            }
+
+            // 2. Fetch screening questions saved in screening section during job creation / posting
+            $screening_ques = '';
+            if ($jobid > 0) {
+                $screeningList = [];
+
+                // Primary: job_additional_detail (Screening questions added during job creation / posting)
+                $additionalDetails = DB::table('job_additional_detail')
+                    ->where('job_id', $jobid)
+                    ->orderBy('id', 'ASC')
+                    ->get();
+
+                foreach ($additionalDetails as $ad) {
+                    $val = trim($ad->detail_value ?? '');
+                    if (! empty($val)) {
+                        $screeningList[] = $val;
+                    }
+                }
+
+                // Fallback: job_questions joined with questions
+                if (empty($screeningList)) {
+                    $jobQues = DB::table('job_questions')
+                        ->join('questions', 'questions.id', '=', 'job_questions.question_id')
+                        ->where('job_questions.job_id', $jobid)
+                        ->select('questions.question')
+                        ->orderBy('job_questions.id', 'ASC')
+                        ->get();
+                    foreach ($jobQues as $jq) {
+                        $qval = trim($jq->question ?? '');
+                        if (! empty($qval)) {
+                            $screeningList[] = $qval;
+                        }
+                    }
+                }
+
+                if (! empty($screeningList)) {
+                    $screening_ques = '<ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151; line-height: 1.6;">';
+                    foreach ($screeningList as $sq) {
+                        $screening_ques .= '<li style="margin-bottom: 6px;">'.e($sq).'</li>';
+                    }
+                    $screening_ques .= '</ol>';
+                } else {
+                    $screening_ques = '<p style="font-size: 13px; color: #64748B; margin: 0; font-style: italic;">Please share your relevant experience, key achievements, and availability for this position.</p>';
                 }
             }
 
@@ -7189,6 +7257,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'company_address' => $address,
                 'no_of_emp' => $companyOrClientName->company_size ?? '',
                 'interview_questions' => $interview_ques,
+                'screening_questions' => $screening_ques,
                 'current_date' => date('d M Y'),
             ];
 
