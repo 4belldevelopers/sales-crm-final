@@ -1421,18 +1421,20 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <div class="mm-fwd-format-dropdown-wrap" id="test_fwd_format_dropdown_wrap">
             <div class="mm-fwd-format-trigger" id="test_fwd_format_trigger" onclick="toggleTestFwdFormatDropdown(event)">
               <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                <span id="test_fwd_trigger_icon" style="width:28px;height:28px;border-radius:6px;background:#EFF6FF;color:#2563EB;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <span id="test_fwd_trigger_icon" style="width:28px;height:28px;border-radius:6px;background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
                   </svg>
                 </span>
                 <div style="min-width:0;flex:1;">
                   <div id="test_fwd_trigger_title" style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    1.a Original Resume (Default)
+                    4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding (Default)
                   </div>
                   <div id="test_fwd_trigger_desc" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    Download candidate's uploaded resume with no edits or formatting changes.
+                    Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.
                   </div>
                 </div>
               </div>
@@ -1452,8 +1454,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#1E3A8A;">1. Standard Resume Options</span>
                   <span class="mm-fwd-sec-badge" style="background:#DBEAFE; color:#1E40AF;">2 formats</span>
                 </div>
-                <div class="mm-fwd-opt-row is-selected" data-opt-id="1" data-title="1.a Original Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectTestFwdResumeFormat(1, this);">
-                  <div class="mf-radio is-checked">
+                <div class="mm-fwd-opt-row" data-opt-id="1" data-title="1.a Original Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectTestFwdResumeFormat(1, this);">
+                  <div class="mf-radio">
                     <div class="mf-radio-inner"></div>
                   </div>
                   <div class="mf-opt-icon">
@@ -1469,7 +1471,6 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-title">1.a Original Resume</div>
                     <div class="mf-opt-desc">Original candidate resume without any modifications.</div>
                   </div>
-                  <span class="mf-default-badge">Default</span>
                 </div>
                 <div class="mm-fwd-opt-row" data-opt-id="41" data-title="1.b Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="selectTestFwdResumeFormat(41, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
@@ -1585,8 +1586,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Resume with highlighted skills and company branding.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="46" data-title="4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills." onclick="selectTestFwdResumeFormat(46, this);">
-                  <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mm-fwd-opt-row is-selected" data-opt-id="46" data-title="4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills." onclick="selectTestFwdResumeFormat(46, this);">
+                  <div class="mf-radio is-checked">
+                    <div class="mf-radio-inner"></div>
+                  </div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -1599,6 +1602,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-title">4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</div>
                     <div class="mf-opt-desc">Pre-screened report, branded resume, and highlighted job-matching skills.</div>
                   </div>
+                  <span class="mf-default-badge">Default</span>
                 </div>
                 <div class="mm-fwd-opt-row" data-opt-id="47" data-title="4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="selectTestFwdResumeFormat(47, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
@@ -1712,7 +1716,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
             </div>
           </div>
 
-          <input type="hidden" name="attached_cv_format" id="test_fwd_resume_format" value="1">
+          <input type="hidden" name="attached_cv_format" id="test_fwd_resume_format" value="46">
 
           <!-- Hidden by default until user selects a format from the dropdown above -->
           <div id="test_fwd_format_details_section">
@@ -2088,7 +2092,7 @@ window.selectTestFwdResumeFormat = function(optId, el) {
     $('#test_fwd_trigger_title').text(title);
     $('#test_fwd_trigger_desc').text(desc);
 
-    if (optId === 1) {
+    if (optId === 46) {
         $('#test_fwd_trigger_badge').show();
     } else {
         $('#test_fwd_trigger_badge').hide();

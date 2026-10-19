@@ -829,13 +829,22 @@
 
         _resetDrawerForm: function () {
             var self = this;
-            $('#test_fwd_resume_format').val('1');
-            $('#test_fwd_trigger_title').text('1.a Original Resume (Default)');
-            $('#test_fwd_trigger_desc').text("Download candidate's uploaded resume with no edits or formatting changes.");
+            $('#test_fwd_resume_format').val('46');
+            $('#test_fwd_trigger_title').text('4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding (Default)');
+            $('#test_fwd_trigger_desc').text('Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.');
+            $('#test_fwd_trigger_icon').css({ 'background': '#FEF9C3', 'color': '#854D0E' }).html(
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
+                '<polyline points="14 2 14 8 20 8"/>' +
+                '<line x1="9" y1="12" x2="15" y2="12"/>' +
+                '<polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>' +
+                '</svg>'
+            );
+            $('#test_fwd_trigger_badge').show();
             $('.mm-fwd-opt-row').removeClass('is-selected');
-            $('.mm-fwd-opt-row[data-opt-id="1"]').addClass('is-selected');
+            $('.mm-fwd-opt-row[data-opt-id="46"]').addClass('is-selected');
             $('.mf-radio').removeClass('is-checked');
-            $('.mm-fwd-opt-row[data-opt-id="1"] .mf-radio').addClass('is-checked');
+            $('.mm-fwd-opt-row[data-opt-id="46"] .mf-radio').addClass('is-checked');
             $('#test_fwd_format_preview_card').show();
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
@@ -996,7 +1005,7 @@
 
             // Authoritative Freshness: Clear any pre-compiled attachments so fresh notes/skills/ratings are used
             self._compiledAttachments = {};
-            var currentFormat = parseInt($('#test_fwd_resume_format').val(), 10) || 0;
+            var currentFormat = parseInt($('#test_fwd_resume_format').val(), 10) || 46;
             if (currentFormat > 1 && !self._isCompiling) {
                 self.startCompilationForOption(currentFormat);
             }
@@ -1295,7 +1304,7 @@
             $('#test_fwd_trigger_title').text(title);
             $('#test_fwd_trigger_desc').text(desc);
 
-            if (optId === 1) {
+            if (optId === 46) {
                 $('#test_fwd_trigger_badge').show();
             } else {
                 $('#test_fwd_trigger_badge').hide();
