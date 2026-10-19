@@ -20,6 +20,19 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Forward Resume Template Picker UI/UX Remediation & Enterprise SVG Icons Engine (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
+  - **Issue Identified & Audited**:
+    1. **Horizontal Flex Layout Collapse**: `.fwd-tpl-popover-dropdown` was displayed with `popover.css('display', 'flex')` but lacked `flex-direction: column !important`. Its 4 direct children (search box, category tabs, card list, and footer) were collapsed side-by-side into 4 squished horizontal columns. The search box compressed to ~60px, category pills broke, and the footer text fractured into a single-word vertical column.
+    2. **Emoji Artifacts & Platform Inconsistencies**: Category tabs and template cards used raw Unicode emoji characters (`📊`, `🚀`, `📝`, `⚡`, `💼`, `⭐`, `🕒`), violating Rule 14 (clean icon-based enterprise design, NO 3D/emoji) and causing visual misalignment across operating systems.
+    3. **Missing Keyboard Accessibility**: No keyboard navigation between search input and rendered template cards.
+  - **Resolution**:
+    1. **Strict Vertical Stacking Guarantee**: Added `width: 100% !important; box-sizing: border-box !important; flex-direction: column !important;` to `.fwd-tpl-popover-dropdown`, with `width: 100% !important` and `flex-shrink: 0` explicitly applied across search box, category tabs, and footer, and `flex: 1 1 auto; overflow-y: auto; max-height: 290px` to `.fwd-tpl-items-list`.
+    2. **Enterprise SVG Icon System**: Replaced all emojis across category tabs and template cards with crisp Metronic-standard SVG icons. Built dedicated `.fwd-tpl-card-icon` (36×36px rounded square with category theme colors e.g. `#EFF6FF` / `#2563EB` for fresh, `#F5F3FF` / `#7C3AED` for screening, `#EEF2FF` / `#4338CA` for matrix, `#F0FDF4` / `#16A34A` for bench, `#FEF2F2` / `#DC2626` for urgency).
+    3. **Dynamic Trigger Icon**: Trigger icon dynamically updates to the selected template's category SVG and color theme, with 1-click clear (`×`) and subject preview.
+    4. **Keyboard Navigation & Navigation Hints**: Added full keyboard navigation (`ArrowDown`, `ArrowUp`, `Enter`, `Escape`) from the search box to cycle cards with `.is-focused` and press Enter to select. Pinned footer with keyboard helper pills (`[↑↓] Navigate [Enter] Apply`).
+    5. **Dual-Path Parity**: Applied identically across client-first WASM engine (`ForwardResumeManager.js` + `shell.v4.html`) and server fallback Blade (`test_fwd_resume.blade.php`).
+  - **Verification**: Verified PHP syntax (`php -l`), JavaScript syntax (`node -c`) with 0 errors across all touched files.
+
 - *2026-10-19* — **Candidate Screening Q&A & Skills Career Insights Excel Tracker Templates (100% IMPLEMENTED & VERIFIED)**:
   - **Requirements**: Add two enterprise-grade email templates for Forward Resume drawer formatted with rich Excel-styled table trackers:
     1. **Template 76 (`[TEMPLATE-8]`)**: Candidate Telephonic Screening Dossier & Q&A Assessment (`screening` category, badge: `📋 Screening Q&A`, icon `📝`). Includes candidate overview and telephonic screening questions and candidate verified answers stored in the database.
