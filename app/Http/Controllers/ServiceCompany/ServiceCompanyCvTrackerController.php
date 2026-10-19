@@ -7141,6 +7141,47 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         );
         $subject = '';
         $whatlink = '';
+
+        // Universal Safe Email Parser: handles Plain Email, Tagify JSON, and Array without throwing TypeError
+        $parseFirstEmail = function ($input) {
+            if (empty($input)) {
+                return '';
+            }
+            if (is_array($input)) {
+                if (isset($input[0]['value'])) {
+                    return trim($input[0]['value']);
+                }
+                if (isset($input['value'])) {
+                    return trim($input['value']);
+                }
+                if (isset($input[0]) && is_string($input[0])) {
+                    return trim($input[0]);
+                }
+            }
+            if (is_string($input)) {
+                $trimmed = trim($input);
+                if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                    $decoded = json_decode($trimmed, true);
+                    if (is_array($decoded)) {
+                        if (isset($decoded[0]['value'])) {
+                            return trim($decoded[0]['value']);
+                        }
+                        if (isset($decoded['value'])) {
+                            return trim($decoded['value']);
+                        }
+                        if (isset($decoded[0]) && is_string($decoded[0])) {
+                            return trim($decoded[0]);
+                        }
+                    }
+                }
+                $parts = explode(',', $trimmed);
+
+                return trim($parts[0]);
+            }
+
+            return '';
+        };
+
         //  dd((int)$request->mailtype);
         if ((int) $request->mailtype == 1) {
             $companyDetails = Company::leftJoin('users_profile', function ($join) {
@@ -7154,6 +7195,52 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $userName = auth()->user()->name ?? 'HR';
             $userEmail = auth()->user()->email ?? '';
             $userMobile = auth()->user()->mobile ?? (auth()->user()->phone ?? '');
+
+            // Recipient salutation name resolution (God-level Recipient vs Recruiter separation)
+            $recipientSalutationName = 'Hiring Manager';
+            if (! empty($request->recipient_name) && is_string($request->recipient_name)) {
+                $cleanReqName = trim(strip_tags($request->recipient_name));
+                if (! empty($cleanReqName) && strcasecmp($cleanReqName, $userName) !== 0 && strcasecmp($cleanReqName, 'Client Contact') !== 0 && strcasecmp($cleanReqName, 'Team Member') !== 0) {
+                    $recipientSalutationName = $cleanReqName;
+                }
+            } elseif (! empty($request->to_email)) {
+                $firstTo = $parseFirstEmail($request->to_email);
+                if (! empty($firstTo) && filter_var($firstTo, FILTER_VALIDATE_EMAIL)) {
+                    // Do not treat recruiter themselves as recipient
+                    if (strcasecmp($firstTo, $userEmail) !== 0) {
+                        $contactName = DB::table('client_contact_info')
+                            ->where('contact_person_email', $firstTo)
+                            ->value('contact_person_name');
+                        if (! $contactName) {
+                            $contactName = DB::table('users')
+                                ->where('company_id', $company_id)
+                                ->where('email', $firstTo)
+                                ->value('name');
+                        }
+                        if ($contactName && strcasecmp(trim($contactName), $userName) !== 0 && strcasecmp(trim($contactName), 'Client Contact') !== 0 && strcasecmp(trim($contactName), 'Team Member') !== 0) {
+                            $recipientSalutationName = trim($contactName);
+                        }
+                    }
+                }
+            }
+
+            // Replace opening greeting placeholder [HR_NAME] / [{HR_NAME}] with recipient name
+            // (Limit 1 strictly replaces ONLY the opening greeting, leaving the bottom sender signature [{HR_NAME}] intact)
+            if (preg_match('/(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i', $template_description)) {
+                $template_description = preg_replace(
+                    '/(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i',
+                    '<p>Dear '.$recipientSalutationName.',</p>'."\n",
+                    $template_description,
+                    1
+                );
+            } elseif (preg_match('/^\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i', $template_description)) {
+                $template_description = preg_replace(
+                    '/^\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i',
+                    '<p>Dear '.$recipientSalutationName.',</p>'."\n",
+                    $template_description,
+                    1
+                );
+            }
 
             $context1 = [
                 'company_name' => $companyName,
@@ -7193,47 +7280,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context3);
         }
         if ((int) $request->mailtype == 4) {
-
-            // Universal Safe Email Parser: handles Plain Email, Tagify JSON, and Array without throwing TypeError
-            $parseFirstEmail = function ($input) {
-                if (empty($input)) {
-                    return '';
-                }
-                if (is_array($input)) {
-                    if (isset($input[0]['value'])) {
-                        return trim($input[0]['value']);
-                    }
-                    if (isset($input['value'])) {
-                        return trim($input['value']);
-                    }
-                    if (isset($input[0]) && is_string($input[0])) {
-                        return trim($input[0]);
-                    }
-                }
-                if (is_string($input)) {
-                    $trimmed = trim($input);
-                    if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
-                        $decoded = json_decode($trimmed, true);
-                        if (is_array($decoded)) {
-                            if (isset($decoded[0]['value'])) {
-                                return trim($decoded[0]['value']);
-                            }
-                            if (isset($decoded['value'])) {
-                                return trim($decoded['value']);
-                            }
-                            if (isset($decoded[0]) && is_string($decoded[0])) {
-                                return trim($decoded[0]);
-                            }
-                        }
-                    }
-                    $parts = explode(',', $trimmed);
-
-                    return trim($parts[0]);
-                }
-
-                return '';
-            };
-
             $email = $parseFirstEmail($request->from_email) ?: (auth()->user()->email ?? 'notify@jeroworks.com');
             $to_email = $parseFirstEmail($request->to_email) ?: 'candidate@jero.works';
 

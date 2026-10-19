@@ -3387,7 +3387,11 @@ window.onTestTemplateChange = function(selectOrId) {
         var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
         url = url.replace(':id', id);
         var token = "{{ csrf_token() }}";
-        var to_email = ($('#test_to_email').val() || '').trim() || 'info@jero.co.in';
+        var to_email = (window._testEmailTags && window._testEmailTags.to && window._testEmailTags.to.length > 0)
+            ? window._testEmailTags.to[0]
+            : (($('#test_to_email').val() || '').trim());
+        var firstToEmail = to_email ? to_email.toLowerCase() : '';
+        var recipient_name = firstToEmail ? (window._testRecipientNameMap[firstToEmail] || '') : '';
 
         var selectedApplicantListing = [];
         var jqueryarray = @json($applicationData ?? []);
@@ -3411,6 +3415,7 @@ window.onTestTemplateChange = function(selectOrId) {
                 'template': template,
                 'selectedApplicantListing': selectedApplicantListing,
                 'to_email': to_email,
+                'recipient_name': recipient_name,
                 'mailtype': 1,
                 'WijobIdArr': WijobIdArr
             },
@@ -3890,11 +3895,30 @@ window._testEmailTags = {
 
 window._testRecipientNameMap = window._testRecipientNameMap || {};
 
+// Seed recipient name map immediately from preloaded client contacts & internal team
+(function seedTestRecipientNameMap() {
+    var clientList = @json($client_contacts_data ?? []);
+    var teamList = @json($internal_team_data ?? []);
+    [clientList, teamList].forEach(function(list) {
+        if (Array.isArray(list)) {
+            list.forEach(function(item) {
+                if (item && item.email) {
+                    var em = String(item.email).trim().toLowerCase();
+                    var nm = String(item.name || '').replace(/&quot;|&#039;|["']/g, '').trim();
+                    if (em && nm && nm.toLowerCase() !== 'team member' && nm.toLowerCase() !== 'client contact' && nm.toLowerCase() !== 'client') {
+                        window._testRecipientNameMap[em] = nm;
+                    }
+                }
+            });
+        }
+    });
+})();
+
 window.refreshTestRecipientNameMap = function() {
     $('.rcp-contact-item').each(function() {
         var email = ($(this).attr('data-email') || '').trim().toLowerCase();
-        var name = ($(this).attr('data-display-name') || $(this).find('.rcp-name').text() || '').trim();
-        if (email && name && name.toLowerCase() !== 'team member' && name.toLowerCase() !== 'client contact') {
+        var name = ($(this).attr('data-display-name') || $(this).find('.rcp-name').text() || '').replace(/&quot;|&#039;|["']/g, '').trim();
+        if (email && name && name.toLowerCase() !== 'team member' && name.toLowerCase() !== 'client contact' && name.toLowerCase() !== 'client') {
             window._testRecipientNameMap[email] = name;
         }
     });
@@ -3904,41 +3928,66 @@ window.syncFirstRecipientSalutation = function() {
     window.refreshTestRecipientNameMap();
     var toList = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to : [];
 
-    if (!toList || toList.length === 0) {
-        var data = window.getTestFwdEditorHtml();
-        var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
-        if (quotedGreeting.test(data)) {
-            window.setTestFwdEditorHtml(data.replace(quotedGreeting, function(m, p1, p2) {
-                return p1 + 'Client' + p2;
-            }));
+    var personName = '';
+    if (toList && toList.length > 0) {
+        var firstEmail = (toList[0] || '').trim().toLowerCase();
+        if (firstEmail) {
+            personName = window._testRecipientNameMap[firstEmail] || '';
+            // If not in map, try inferring a name from email prefix (e.g. shobha.k -> Shobha)
+            if (!personName) {
+                var localPart = firstEmail.split('@')[0];
+                var cleanPrefix = localPart.replace(/[._-]+/g, ' ').trim();
+                var genericPrefixes = ['info', 'support', 'admin', 'contact', 'hr', 'careers', 'jobs', 'mail', 'sales', 'team', 'hello', 'candidate'];
+                if (cleanPrefix && cleanPrefix.length > 1 && !/^\d+$/.test(cleanPrefix) && genericPrefixes.indexOf(cleanPrefix.toLowerCase()) === -1) {
+                    var firstWord = cleanPrefix.split(' ')[0];
+                    if (firstWord && firstWord.length > 1) {
+                        personName = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+                    }
+                }
+            }
         }
-        return;
     }
 
-    var firstEmail = (toList[0] || '').trim().toLowerCase();
-    if (!firstEmail) return;
+    // Clean name: strictly remove any double quotes, single quotes, html entities
+    var cleanName = String(personName || '')
+        .replace(/&quot;|&#039;|["']/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    var personName = window._testRecipientNameMap[firstEmail];
-    if (!personName) return;
+    // Guard against greeting the recruiter themselves (logged-in user)
+    var senderName = "{{ strtolower(trim(auth()->user()->name ?? '')) }}";
+    if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
+        cleanName = '';
+    }
+    // Also ignore generic role names
+    if (cleanName && (cleanName.toLowerCase() === 'team member' || cleanName.toLowerCase() === 'client contact' || cleanName.toLowerCase() === 'client')) {
+        cleanName = '';
+    }
 
-    // Format requested by user: Dear Shobha,
-    var cleanName = String(personName || '').replace(/&quot;|&#039;|["']/g, '').trim();
-    var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
+    // Target greeting: strictly single greeting with NO quotes around the name (e.g. "Dear Shobha,")
+    // If no to recipient or name is not known, default to "Dear Hiring Manager,"
+    var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Hiring Manager,';
 
     var data = window.getTestFwdEditorHtml();
-    var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
+    if (!data) return;
 
-    if (greetingPattern.test(data)) {
-        var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
-            var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
-            var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
-            return pOpen + targetGreeting + pClose;
-        });
+    // Pattern 1: Matches any existing opening greeting paragraph(s) (including stacked/corrupted lines)
+    var greetingParagraphRegex = /(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+    // Pattern 2: Plain-text or br-separated leading greeting
+    var plainGreetingRegex = /(?:^|\n|\r)\s*(?:Dear|Hi|Hello)\b[^\r\n<]*(?:<br\s*\/?>|\r?\n)?/i;
+
+    if (greetingParagraphRegex.test(data)) {
+        var updated = data.replace(greetingParagraphRegex, '<p>' + targetGreeting + '</p>\n');
+        if (updated !== data) {
+            window.setTestFwdEditorHtml(updated);
+        }
+    } else if (plainGreetingRegex.test(data)) {
+        var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
         if (updated !== data) {
             window.setTestFwdEditorHtml(updated);
         }
     } else if (data.trim() !== '') {
-        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p>' + data);
+        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p>\n' + data);
     } else {
         window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p><p><br></p>');
     }
