@@ -20,6 +20,22 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Forward Resume Template Picker Subject Line Suggestion Removal (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
+  - **Requirement**: Completely remove the inline subject line suggestion box (`✉ Subject: ...`) from the enterprise email templates dropdown in Forward Resume drawer.
+  - **Audit & Resolution**:
+    1. **Template Card Rendering**:
+       - In both `ForwardResumeManager.js` (`renderTemplateItems`) and `test_fwd_resume.blade.php` (`renderTestTemplateCards`), completely removed the `.fwd-tpl-item-preview-subj` DOM node and unused `subjPreview` string manipulation loop overhead.
+       - Each template card now cleanly presents its category icon, template name, category pill badge, checkmark, and description with optimal vertical rhythm and zero clutter.
+    2. **Trigger Bar & Search Field Alignment**:
+       - Streamlined the template trigger bar to show the selected template name and category badge, hiding the redundant subject preview span and separator dot (the email subject field directly below already displays and allows editing the subject line).
+       - Updated search input placeholder from `Search templates by title, subject, or scenario...` to `Search templates by title, category, or scenario...`.
+    3. **Fail-Safe CSS Rules**:
+       - Added `.fwd-tpl-item-preview-subj { display: none !important; }` in both `test_fwd_resume.blade.php` and `shell.v4.html` to guarantee zero chance of subject preview box appearing.
+    4. **Dual Engine Parity & Tenancy Isolation**:
+       - Preserved underlying template `subject` metadata so selecting a template continues to seamlessly populate the `#test_subject` form input.
+       - Maintained 100% parity across both Client-First WASM drawer engine (`ForwardResumeManager.js`) and Server fallback view (`test_fwd_resume.blade.php`).
+  - **Verification**: Verified PHP syntax (`php -l`), JavaScript syntax (`node -c`) with 0 errors across all modified files.
+
 - *2026-10-19* — **Forward Resume Recipient Salutation vs Recruiter Sender Separation & Regex Remediation (100% IMPLEMENTED & VERIFIED)**:
   - **Issue Identified & Audited**:
     1. **Recruiter Name Conflation with Recipient**: Templates in `th_email_template` stored `[HR_NAME]` in both the opening greeting (`Dear [HR_NAME],`) and the sender signature sign-off (`[{HR_NAME}]`). In `ServiceCompanyCvTrackerController.php` (`email_template`), `$context1['hr_name']` was mapped to the logged-in recruiter `$userName = auth()->user()->name` (e.g. `Vibhanshu Jaiswal`). Consequently, the email defaulted to greeting the recruiter themselves (`Dear Vibhanshu Jaiswal,`) instead of the recipient contact or hiring manager.

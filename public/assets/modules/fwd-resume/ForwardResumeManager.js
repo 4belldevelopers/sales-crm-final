@@ -2267,30 +2267,8 @@
             emptyNotice.hide();
             $('#fwdTplFilteredCountText').text('Showing ' + filtered.length + ' ' + (filtered.length === 1 ? 'template' : 'templates'));
 
-            var primaryCand = self._applicationData[0] || {};
-            var candName = primaryCand.full_name || 'Candidate';
-            var jobTitle = primaryCand.job_title || primaryCand.current_designation || 'Position';
-            var compName = self._companyData.companyName || 'Hiring Partner';
-            var candCount = self._applicationData.length || 1;
-            var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
             filtered.forEach(function (tmpl) {
                 var isSelected = String(tmpl.id) === String(selectedId);
-                var subjPreview = tmpl.subject || '';
-                if (tmpl.isDynamicMatrix) {
-                    subjPreview = candCount > 1
-                        ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
-                        : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
-                } else {
-                    subjPreview = subjPreview
-                        .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
-                        .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
-                        .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
-                        .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
-                        .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
-                        .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
-                }
-
                 var catClass = tmpl.category || 'feedback';
                 var iconHtml = self.getTemplateIconSvg(tmpl, 18);
 
@@ -2309,15 +2287,6 @@
                             '</div>' +
                         '</div>' +
                         '<div class="fwd-tpl-item-desc">' + escapeHtml(tmpl.desc) + '</div>' +
-                        (subjPreview ? (
-                            '<div class="fwd-tpl-item-preview-subj">' +
-                                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">' +
-                                    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>' +
-                                '</svg>' +
-                                '<span style="font-weight:600;color:#64748B;">Subject:</span>' +
-                                '<span class="fwd-tpl-subj-text">' + escapeHtml(subjPreview) + '</span>' +
-                            '</div>'
-                        ) : '') +
                     '</div>' +
                 '</div>';
 
