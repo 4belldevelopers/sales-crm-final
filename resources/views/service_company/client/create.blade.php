@@ -4527,24 +4527,55 @@ $('.remove_address').click(function(){
   var formValidationInstance = null;
 
 
-  $(document).on('change', '#website', function() { 
-      clientDomainRegisterChk();
-  });
-
-
- 
-  // In-memory RAM cache for domain verification (prevents repeat network requests)
+  // In-memory RAM cache for domain verification & company intelligence (0ms repeat latency)
   window._clientDomainCheckCache = window._clientDomainCheckCache || {};
   window._companyIntelligenceCache = window._companyIntelligenceCache || {};
   window._lastCheckedWebsite = '';
+  window._lastFetchedWebsite = '';
 
   /* =========================================================================
      GOD-LEVEL COMPANY INTELLIGENCE & AUTO-FILL ENGINE (CLIENT-FIRST / USER RAM)
      100% Free • Aspect-Ratio Preserving Logo Rasterizer • 21-Box Contract
      ========================================================================= */
+
   function rasterizeAndAttachLogo(logoUrl, domain) {
     if (!logoUrl) return;
 
+    // 1. Immediately apply visual preview in User RAM (zero delay, zero flicker)
+    $('.image-input-wrapper').css({
+      'background-image': 'url(' + logoUrl + ')',
+      'background-size': 'contain',
+      'background-repeat': 'no-repeat',
+      'background-position': 'center'
+    });
+    $('#client_preview_remove_btn').show();
+    $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+    $('#client_avatar_remove').val(0);
+
+    // 2. Direct Base64 Data URI Conversion without Canvas (100% CORS-safe)
+    if (logoUrl.startsWith('data:')) {
+      try {
+        var arr = logoUrl.split(','), mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/png',
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+        var blob = new Blob([u8arr], { type: mime });
+        if (window.DataTransfer) {
+          var dt = new DataTransfer();
+          var file = new File([blob], (domain ? domain.replace(/[^a-z0-9]/gi, '_') : 'client') + '_logo.png', { type: mime });
+          dt.items.add(file);
+          var fileInput = document.getElementById('client_logo_input');
+          if (fileInput) {
+            fileInput.files = dt.files;
+          }
+        }
+        if (typeof populateReviewSummaries === 'function') populateReviewSummaries();
+        return;
+      } catch (err) {
+        console.warn('[LogoAttachment] Base64 blob convert fallback:', err);
+      }
+    }
+
+    // 3. Fallback: Canvas rasterizer with error catching
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function () {
@@ -4556,7 +4587,6 @@ $('.remove_address').click(function(){
         var ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
 
-        // Aspect-ratio preserving letterbox (contain)
         var hRatio = size / img.width;
         var vRatio = size / img.height;
         var ratio  = Math.min(hRatio, vRatio);
@@ -4573,10 +4603,7 @@ $('.remove_address').click(function(){
           'background-repeat': 'no-repeat',
           'background-position': 'center'
         });
-        $('#client_preview_remove_btn').show();
-        $('#client_logo_preview .la-building, #client_logo_preview span').hide();
 
-        // Convert to Blob and attach via DataTransfer to native file input
         canvas.toBlob(function (blob) {
           if (blob && window.DataTransfer) {
             var dt = new DataTransfer();
@@ -4590,19 +4617,13 @@ $('.remove_address').click(function(){
           }
         }, 'image/png');
 
-        if (typeof populateReviewSummaries === 'function') {
-          populateReviewSummaries();
-        }
+        if (typeof populateReviewSummaries === 'function') populateReviewSummaries();
       } catch (e) {
-        $('.image-input-wrapper').css('background-image', 'url(' + logoUrl + ')');
-        $('#client_preview_remove_btn').show();
-        $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+        console.warn('[LogoAttachment] Canvas rasterization skipped due to CORS:', e);
       }
     };
     img.onerror = function () {
-      $('.image-input-wrapper').css('background-image', 'url(' + logoUrl + ')');
-      $('#client_preview_remove_btn').show();
-      $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+      console.warn('[LogoAttachment] Image load error for logo:', logoUrl);
     };
     img.src = logoUrl;
   }
@@ -4610,34 +4631,69 @@ $('.remove_address').click(function(){
   function applyCompanyIntelligenceData(data) {
     if (!data) return;
 
-    // 1. Company Name
-    if (data.name && (!$('#client_id').val() || $('#client_id').val() === 'Jeroworks')) {
-      $('#client_id').val(data.name).trigger('input');
+    // 1. Company Name (Unconditionally fill on auto-fetch)
+    if (data.name) {
+      $('#client_id').val(data.name).trigger('input').trigger('change');
+      if (typeof initials === 'function') {
+        var initLetters = initials(data.name) || 'AC';
+        $('#client_review_initials').text(initLetters);
+      }
     }
 
-    // 2. Logo (in-memory canvas rasterization)
+    // 2. Logo (in-memory preview + canvas / DataTransfer file attachment)
     if (data.logo) {
       rasterizeAndAttachLogo(data.logo, data.domain);
     }
 
-    // 3. Industry Combobox selection
+    // 3. Industry Combobox selection (Token-based multi-keyword + custom fallback)
     if (data.industry) {
-      var matchedVal = null;
-      var dataIndNorm = data.industry.toLowerCase().trim();
+      var rawInd = data.industry;
+      var matchedId = null;
+      var matchedName = null;
+      var indNorm = rawInd.toLowerCase().trim();
+      var tokens = indNorm.split(/[\/,&|\s]+/).filter(function(t) { return t.length > 2; });
+
       $('#industry option').each(function () {
+        var optVal = $(this).val();
         var optText = $(this).text().toLowerCase().trim();
-        if (optText && (optText === dataIndNorm || optText.indexOf(dataIndNorm) !== -1 || dataIndNorm.indexOf(optText) !== -1)) {
-          matchedVal = $(this).val();
+        if (!optVal || !optText || optText === 'select industry' || optText === 'select') return;
+
+        if (optText === indNorm) {
+          matchedId = optVal;
+          matchedName = $(this).text().trim();
           return false;
         }
+        if (optText.indexOf(indNorm) !== -1 || indNorm.indexOf(optText) !== -1) {
+          matchedId = optVal;
+          matchedName = $(this).text().trim();
+          return false;
+        }
+        for (var i = 0; i < tokens.length; i++) {
+          if (optText.indexOf(tokens[i]) !== -1) {
+            matchedId = optVal;
+            matchedName = $(this).text().trim();
+            return false;
+          }
+        }
       });
-      if (matchedVal) {
-        $('#industry').val(matchedVal).trigger('change');
+
+      if (matchedId && matchedName) {
+        $('#industry').val(matchedId).trigger('change');
         if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.selectById === 'function') {
-          window.JeroIndustryIntelligenceEngine.selectById(matchedVal);
+          try { window.JeroIndustryIntelligenceEngine.selectById(matchedId); } catch(e){}
+        }
+        $('#industry_display').val(matchedName);
+        $('#jero_ind_input_box').addClass('has-value');
+        $('#jero_ind_clear_btn').show();
+        $('#jero_ind_kbd').hide();
+      } else {
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.commitCustomIndustry === 'function') {
+          try { window.JeroIndustryIntelligenceEngine.commitCustomIndustry(rawInd); } catch(e){}
         } else {
-          var selText = $('#industry option:selected').text();
-          $('#industry_display').val(selText);
+          var $sel = $('#industry');
+          $sel.append(new Option(rawInd, rawInd, true, true));
+          $sel.val(rawInd).trigger('change');
+          $('#industry_display').val(rawInd);
           $('#jero_ind_input_box').addClass('has-value');
           $('#jero_ind_clear_btn').show();
           $('#jero_ind_kbd').hide();
@@ -4647,14 +4703,26 @@ $('.remove_address').click(function(){
 
     // 4. Company Size
     if (data.company_sizes) {
-      $('#company_sizes').val(data.company_sizes).trigger('change');
+      var sizeVal = String(data.company_sizes).trim();
+      if ($('#company_sizes option[value="' + sizeVal + '"]').length) {
+        $('#company_sizes').val(sizeVal).trigger('change');
+      } else {
+        $('#company_sizes option').each(function () {
+          var v = $(this).val();
+          if (v && (v.indexOf(sizeVal) !== -1 || sizeVal.indexOf(v) !== -1)) {
+            $('#company_sizes').val(v).trigger('change');
+            return false;
+          }
+        });
+      }
     }
 
     // 5. Company Type
     if (data.company_type) {
-      var compTypeNorm = data.company_type.toLowerCase();
+      var compTypeNorm = data.company_type.toLowerCase().trim();
       $('#company_type option').each(function () {
-        if ($(this).text().toLowerCase().indexOf(compTypeNorm) !== -1) {
+        var txt = $(this).text().toLowerCase().trim();
+        if (txt && (txt === compTypeNorm || txt.indexOf(compTypeNorm) !== -1 || compTypeNorm.indexOf(txt) !== -1)) {
           $('#company_type').val($(this).val()).trigger('change');
           return false;
         }
@@ -4663,30 +4731,35 @@ $('.remove_address').click(function(){
 
     // 6. Founded Year
     if (data.founded) {
-      $('#founded').val(data.founded).trigger('input');
+      $('#founded').val(data.founded).trigger('input').trigger('change');
     }
 
     // 7. Career Page URL
     if (data.career_page_url) {
-      $('#career_page_url').val(data.career_page_url).trigger('input');
+      $('#career_page_url').val(data.career_page_url).trigger('input').trigger('change');
     }
 
     // 8. Tax ID / Business Registration
     if (data.tax_id) {
-      $('#tax_id').val(data.tax_id).trigger('input');
+      $('#tax_id').val(data.tax_id).trigger('input').trigger('change');
     }
 
-    // 9. Company Description (Quill + Textarea)
+    // 9. Company Description (Quill Rich-Text + Hidden Textarea Sync)
     if (data.description) {
-      var currentDesc = (typeof getClientDescriptionText === 'function') ? getClientDescriptionText() : ($('#kt_docs_tinymce_hidden').val() || '');
-      if (!currentDesc || currentDesc.length < 10) {
+      if (typeof window.setClientDescriptionContent === 'function') {
+        window.setClientDescriptionContent(data.description);
+      } else {
         if (window.clientDescQuill) {
           window.clientDescQuill.root.innerHTML = data.description;
         }
-        $('#kt_docs_tinymce_hidden').val(data.description);
+        $('#kt_docs_tinymce_hidden').val(data.description).trigger('input');
         var plainText = data.description.replace(/<[^>]+>/g, '').trim();
-        $('#client_desc_count').text(plainText.length);
+        $('#client_desc_count').text(Math.min(plainText.length, 2000));
+        if ($('#client_preview_description').length) {
+          $('#client_preview_description').text(plainText.substring(0, 180));
+        }
       }
+      $('.client-editor-box').removeClass('is-invalid');
     }
 
     // 10. Service Offerings (Tagify)
@@ -4694,7 +4767,7 @@ $('.remove_address').click(function(){
       var tagsToAdd = data.tags.filter(function (t) { return typeof t === 'string' && t.trim().length > 0; });
       if (tagsToAdd.length) {
         if (window.clientTagsTagify && typeof window.clientTagsTagify.addTags === 'function') {
-          window.clientTagsTagify.addTags(tagsToAdd);
+          try { window.clientTagsTagify.addTags(tagsToAdd); } catch(e){}
         } else {
           var currentVal = $('#tags').val();
           var existingArr = [];
@@ -4708,31 +4781,40 @@ $('.remove_address').click(function(){
 
     // 11. Headquarters Location (City & Full Address)
     if (data.city) {
-      if (typeof selectCityForAddress === 'function') {
-        selectCityForAddress(0, data.city, data.city);
+      var displayCity = data.city;
+      if (data.country_name && displayCity.indexOf(data.country_name) === -1) {
+        displayCity += ', ' + data.country_name;
       }
+      $('#city_search_0').val(displayCity).trigger('input');
+      $('#kt_tagify_work_location_0').val(JSON.stringify([{ value: displayCity }]));
+      $('#city_err_0').hide();
+      $('#city_search_0').removeClass('is-invalid');
     }
     if (data.address) {
       $('#address_0').val(data.address).trigger('input');
-      $('#address_char_count_0').text(data.address.length);
+      $('#address_char_count_0').text(Math.min(data.address.length, 500));
+      $('#address_err_0').hide();
+      $('#address_0').removeClass('is-invalid');
     }
 
     // 12. Contact Person
-    if (data.cp_email || data.cp_name) {
+    if (data.cp_email || data.cp_name || data.domain) {
+      var cName = data.cp_name || 'Talent Acquisition Team';
+      var cDesig = data.cp_desigination || 'Head of Talent Acquisition';
+      var cEmail = data.cp_email || ('careers@' + (data.domain || 'company.com'));
+      var cPhone = data.cp_number || '';
+      var cCalling = data.calling_code || '+91';
+
       var $firstContainer = $('.client-cperson-container').first();
-      var existingName = $firstContainer.find('input[name="cp_name[]"]').val();
-      var existingEmail = $firstContainer.find('input[name="cp_email[]"]').val();
-      if (!existingName && !existingEmail) {
-        $firstContainer.find('input[name="cp_name[]"]').val(data.cp_name || 'Talent Acquisition Team');
-        $firstContainer.find('input[name="cp_desigination[]"]').val(data.cp_desigination || 'Head of Talent Acquisition');
-        $firstContainer.find('input[name="cp_email[]"]').val(data.cp_email || '');
-        $firstContainer.find('input[name="cp_number[]"]').val(data.cp_number || '');
-        if (data.calling_code) {
-          $firstContainer.find('input[name="calling_code[]"]').val(data.calling_code);
-        }
-        if (typeof renderContactTable === 'function') {
-          renderContactTable();
-        }
+      if ($firstContainer.length) {
+        $firstContainer.find('input[name="cp_name[]"]').val(cName);
+        $firstContainer.find('input[name="cp_desigination[]"]').val(cDesig);
+        $firstContainer.find('input[name="cp_email[]"]').val(cEmail);
+        $firstContainer.find('input[name="cp_number[]"]').val(cPhone);
+        $firstContainer.find('input[name="calling_code[]"]').val(cCalling);
+      }
+      if (typeof renderContactTable === 'function') {
+        try { renderContactTable(); } catch(e){}
       }
     }
 
@@ -4746,18 +4828,18 @@ $('.remove_address').click(function(){
     if (data.facebook_url)  { $('#facebook_url').val(data.facebook_url).trigger('input'); $('#extended_socials_collapse').show(); }
     if (data.instagram_url) { $('#instagram_url').val(data.instagram_url).trigger('input'); $('#extended_socials_collapse').show(); }
 
-    // 14. Synchronize Step 1 Assistant Panel & Review Summaries
+    // 14. Synchronize Wizard State & Completion Meter
     if (window.clientWizardUi) {
       if (typeof window.clientWizardUi.updateAssistantPanel === 'function') {
-        window.clientWizardUi.updateAssistantPanel();
+        try { window.clientWizardUi.updateAssistantPanel(); } catch(e){}
       }
       if (typeof window.clientWizardUi.updateCompletion === 'function') {
-        window.clientWizardUi.updateCompletion();
+        try { window.clientWizardUi.updateCompletion(); } catch(e){}
       }
     }
-    if (typeof populateReviewSummaries === 'function') {
-      populateReviewSummaries();
-    }
+    if (typeof updateAssistantPanel === 'function') { try { updateAssistantPanel(); } catch(e){} }
+    if (typeof updateCompletion === 'function') { try { updateCompletion(); } catch(e){} }
+    if (typeof populateReviewSummaries === 'function') { try { populateReviewSummaries(); } catch(e){} }
 
     // 15. Success Feedback Toast
     if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
@@ -4778,7 +4860,9 @@ $('.remove_address').click(function(){
   function fetchGodLevelCompanyIntelligence(website) {
     if (!website) return;
     var cleanDomain = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].trim();
-    if (!cleanDomain) return;
+    if (!cleanDomain || cleanDomain.length < 3) return;
+
+    window._lastFetchedWebsite = website;
 
     var $fetchBtn = $('#client_auto_fetch, #client_fetch_side_btn');
     var originalBtnHtml = $fetchBtn.html();
@@ -4791,7 +4875,7 @@ $('.remove_address').click(function(){
       return;
     }
 
-    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || '{{ config('services.company_intelligence.url', 'http://127.0.0.1:8787') }}';
+    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || '{{ config('services.company_intelligence.url', 'https://jero-company-intelligence.vibhu21m.workers.dev') }}';
     var targetUrl = workerEndpoint.replace(/\/+$/, '') + '/?domain=' + encodeURIComponent(cleanDomain);
 
     $.ajax({
@@ -4813,86 +4897,98 @@ $('.remove_address').click(function(){
         console.warn('[CompanyIntelligence] Request failed:', status, err);
       }
     });
+
+    // Run non-blocking background domain verification
+    clientDomainRegisterChk(true);
   }
 
   window.fetchGodLevelCompanyIntelligence = fetchGodLevelCompanyIntelligence;
 
-  function clientDomainRegisterChk(){
+  // Non-blocking duplicate domain check (does not freeze UI or wipe input)
+  function clientDomainRegisterChk(silent){
     var website = ($('#website').val() || '').trim();
     if (!website) return false;
 
-    // Skip redundant check if website hasn't changed and is already verified
     if (website === window._lastCheckedWebsite && window._clientDomainCheckCache[website]) {
-        fetchGodLevelCompanyIntelligence(website);
-        return false;
+      return false;
     }
 
-    // Fast-path: Instant User RAM cache lookup (0ms latency, 0 server requests)
     if (window._clientDomainCheckCache[website]) {
-        var response = window._clientDomainCheckCache[website];
-        if (response.status === 'fail') {
-            Swal.fire("Warning", response.message, "warning");
-            $('.updatefrm').prop("disabled", true);
-            $('#website').val('');
-            if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
-                formValidationInstance.revalidateField('website');
-            }
-        } else {
-            $("#client_id").val(response.clientName);
-            if (response.logo_url) {
-                $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
-            }
-            if (window.clientWizardUi) {
-                window.clientWizardUi.updateAssistantPanel();
-                window.clientWizardUi.updateCompletion();
-            }
-            fetchGodLevelCompanyIntelligence(website);
-        }
-        return false;
+      var response = window._clientDomainCheckCache[website];
+      if (response.status === 'fail' && !silent) {
+        if (typeof Swal !== 'undefined') Swal.fire("Notice", response.message, "warning");
+      }
+      return false;
     }
 
-    $('.page-loader').css('display', 'flex');
-
-    // Lean AJAX payload: sends only website and check_client_id (zero form/file serialization overhead)
     $.ajax({
-        url: "{{route('client-domain-register-chk')}}",
-        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-        type: "POST",
-        data: {
-            website: website,
-            check_client_id: "{{ @$client->id }}"
-        },
-        success: function(response) {
-            $('.page-loader').css('display', 'none');
-            window._lastCheckedWebsite = website;
-            window._clientDomainCheckCache[website] = response;
+      url: "{{route('client-domain-register-chk')}}",
+      headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+      type: "POST",
+      data: {
+        website: website,
+        check_client_id: "{{ @$client->id }}"
+      },
+      success: function(response) {
+        window._lastCheckedWebsite = website;
+        window._clientDomainCheckCache[website] = response;
 
-            if (response.status === 'fail') {
-                Swal.fire("Warning", response.message, "warning");
-                $('.updatefrm').prop("disabled", true);
-                $('#website').val('');
-                if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
-                    formValidationInstance.revalidateField('website');
-                }
-            } else {
-                $("#client_id").val(response.clientName);
-                if (response.logo_url) {
-                    $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
-                }
-                if (window.clientWizardUi) {
-                    window.clientWizardUi.updateAssistantPanel();
-                    window.clientWizardUi.updateCompletion();
-                }
-                fetchGodLevelCompanyIntelligence(website);
-            }
-        },
-        error: function() {
-            $('.page-loader').css('display', 'none');
+        if (response.status === 'fail' && !silent) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire("Notice", response.message, "warning");
+          }
         }
+      },
+      error: function() {
+        // Non-blocking fallback: never halt the page
+      }
     });
 
     return false;
   }
+
+  // 1. Enter key in website input triggers immediate auto-fill & suppresses form submit
+  $(document).on('keydown', '#website', function(e) {
+    if (e.which === 13 || e.keyCode === 13 || e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      var website = ($(this).val() || '').trim();
+      if (website && website.length > 2) {
+        fetchGodLevelCompanyIntelligence(website);
+      }
+      return false;
+    }
+  });
+
+  // 2. Fetch Details button click triggers auto-fill
+  $(document).on('click', '#client_auto_fetch, #client_fetch_side_btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var website = ($('#website').val() || '').trim();
+    if (!website) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          text: 'Please enter a company website URL first.',
+          icon: 'info',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('Please enter a company website URL first.');
+      }
+      $('#website').focus();
+      return false;
+    }
+    fetchGodLevelCompanyIntelligence(website);
+    return false;
+  });
+
+  // 3. Website input change / blur triggers auto-fill if not already fetched
+  $(document).on('change', '#website', function() { 
+    var website = ($(this).val() || '').trim();
+    if (website && website.length > 3 && website !== window._lastFetchedWebsite) {
+      fetchGodLevelCompanyIntelligence(website);
+    }
+  });
 
 </script>
 {{-- Note: demo/v7/js/add-clients.js removed for Service Company per Rule 17 (Blade Isolation). Navigation & validation are self-contained below. --}}
@@ -6720,10 +6816,10 @@ $('.remove_address').click(function(){
       updateCompletion();
     });
 
-    $('#client_auto_fetch, #client_review_details').on('click', function () {
-      if ($('#website').val()) {
-        clientDomainRegisterChk();
-        fetchGodLevelCompanyIntelligence($('#website').val());
+    $('#client_review_details').on('click', function () {
+      var w = ($('#website').val() || '').trim();
+      if (w) {
+        fetchGodLevelCompanyIntelligence(w);
       } else {
         Swal.fire({ text: 'Enter a website URL first.', icon: 'info', confirmButtonText: 'Ok' });
       }
