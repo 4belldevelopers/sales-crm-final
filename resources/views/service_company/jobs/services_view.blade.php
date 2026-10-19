@@ -34,17 +34,21 @@
         })
         ->values();
     $selectedSalaryMode = isset($commercial['sal_mode']) ? (int) $commercial['sal_mode'] : 0;
-    $selectedCurrency = isset($commercial['salary_currency']) ? (int) $commercial['salary_currency'] : 4;
-    $availableCurrencies = collect($currency ?? [])->filter(function ($currencyCode) {
-        return trim((string) $currencyCode) !== '';
-    });
-    if ($availableCurrencies->isEmpty()) {
-        $availableCurrencies = collect(\App\Helper\GeneralMethod::currency())->filter(function ($currencyCode) {
-            return trim((string) $currencyCode) !== '';
-        });
-    }
-    if (! $availableCurrencies->has($selectedCurrency) && $availableCurrencies->isNotEmpty()) {
-        $selectedCurrency = (int) $availableCurrencies->keys()->first();
+    // Intent: Authoritatively inherit tenant default currency configured in Company Profile -> Settings (per GLOBAL_CURRENCY_AND_MARKETPLACE_GOD_LEVEL_SPECIFICATION Tier 3 auto-inheritance rule).
+    $tenantDefaultCurrencyKey = isset($defaultCurrencyKey)
+        ? (int) $defaultCurrencyKey
+        : \App\Services\CurrencyService::getTenantCurrencyKey($commercial['company_id'] ?? auth()->user()->company_id ?? null);
+    $savedCurrency = (isset($commercial['salary_currency']) && $commercial['salary_currency'] !== '' && $commercial['salary_currency'] !== null)
+        ? (int) $commercial['salary_currency']
+        : null;
+    // Intent: If commercial has no saved currency, or retains legacy unconfigured default USD (4) while tenant default is different, authoritatively inherit tenant default currency.
+    $selectedCurrency = ($savedCurrency === null || ($savedCurrency === 4 && $tenantDefaultCurrencyKey !== 4))
+        ? $tenantDefaultCurrencyKey
+        : $savedCurrency;
+    // Intent: Load unified 113 currencies list per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD
+    $currenciesToRender = !empty($currencyList) ? $currencyList : \App\Services\CurrencyService::getSettingCurrenciesList();
+    if (empty($currenciesToRender)) {
+        $currenciesToRender = !empty($currency) ? $currency : \App\Helper\GeneralMethod::currency();
     }
     $selectedReplacementPeriod = (int) ($commercial['replacement_period_days'] ?? 90);
     $selectedReplacementType = (string) ($commercial['replacement_type'] ?? 'free_replacement');
@@ -103,12 +107,12 @@
             <div class="cev3-section">
                 <div class="cev3-section-head"><span class="cev3-section-number">2</span><div><h4 class="cev3-section-title">Default Pricing</h4><p class="cev3-section-copy" data-default-pricing-copy>{{ $selectedCommercialModel === 1 ? 'Set the default fixed fee and how it will be charged.' : 'Set the default pricing for all experience ranges.' }}</p></div></div>
                 <div class="cev3-default-pricing-card">
-                    <div class="cev3-default-currency"><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
+                    <div class="cev3-default-currency"><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach($currenciesToRender as $cItem)@php if (is_array($cItem)) { $optKey = $cItem['key']; $optCode = $cItem['code']; $optLabel = $cItem['label'] ?? ($optCode . ' — ' . ($cItem['name'] ?? '')); $optKeywords = $cItem['keywords'] ?? strtolower($optCode); } else { $optKey = $loop->index; $optCode = $cItem; $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($cItem); $optLabel = $cMeta['label'] ?? $cItem; $optKeywords = $cMeta['keywords'] ?? strtolower($cItem); } $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey); @endphp<option value="{{ $optKey }}" data-code="{{ $optCode }}" data-search="{{ $optKeywords }}" {{ $isSelected ? 'selected' : '' }}>{{ $optLabel }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
                     <div class="cev3-default-rate"><label class="cev3-label" for="commercial_default_rate" data-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee Amount' }}</label><div class="cev3-rate-wrap"><input type="number" id="commercial_default_rate" class="cev3-control" data-fallback-rate="{{ $fallbackDefaultRate }}" step="0.01" min="0" value="{{ $defaultRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div><p class="cev3-help" data-rate-help>{{ $selectedCommercialModel === 2 ? 'Changing this rate updates every experience range.' : 'The default amount used for each successful placement.' }}</p></div>
                     <div class="cev3-default-applied"><label class="cev3-label" for="commercial_salary_mode">Applied On</label><select id="commercial_salary_mode" name="sal_mode" class="cev3-control" data-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select><p class="cev3-help">Choose the billing period.</p></div>
                     <div class="cev3-fixed-only cev3-fixed-trigger-field"><label class="cev3-label">Fee Charged On</label><select class="cev3-control" data-fixed-fee-trigger>@foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)<option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>{{ $triggerValue === 'candidate_joined' ? 'Per Successful Hire' : $triggerLabel }}</option>@endforeach</select><p class="cev3-help">When the fixed fee becomes chargeable.</p></div>
                     <div class="cev3-fixed-only cev3-fixed-frequency-field"><label class="cev3-label">Billing Frequency</label><select class="cev3-control" data-fixed-fee-frequency>@foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)<option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>{{ $frequencyLabel }}</option>@endforeach</select><p class="cev3-help">How often this fee is billed.</p></div>
-                    <div class="cev3-free-only cev3-no-fee-summary"><span class="cev3-no-fee-icon" aria-hidden="true">◇</span><div><strong>No Fee Applicable</strong><p>This agreement is configured as Free / No Fee. No pricing will be applied.</p></div><dl><div><dt>Pricing Model</dt><dd>Free / No Fee</dd></div><div><dt>Fee Amount</dt><dd>{{ $availableCurrencies->get($selectedCurrency, 'Currency') }} 0</dd></div><div><dt>Currency</dt><dd>Not Applicable</dd></div><div><dt>Billing Frequency</dt><dd>Not Applicable</dd></div></dl></div>
+                    <div class="cev3-free-only cev3-no-fee-summary"><span class="cev3-no-fee-icon" aria-hidden="true">◇</span><div><strong>No Fee Applicable</strong><p>This agreement is configured as Free / No Fee. No pricing will be applied.</p></div><dl><div><dt>Pricing Model</dt><dd>Free / No Fee</dd></div><div><dt>Fee Amount</dt><dd>{{ \App\Services\CurrencyService::resolveCurrencyCode($selectedCurrency) }} 0</dd></div><div><dt>Currency</dt><dd>Not Applicable</dd></div><div><dt>Billing Frequency</dt><dd>Not Applicable</dd></div></dl></div>
                 </div>
             </div>
         </section>
@@ -125,7 +129,7 @@
                         <div class="cev3-range-row" data-experience-range>
                             <span class="cev3-rate-name">{{ $range['label'] }}</span>
                             <span class="cev3-free-only cev3-no-fee-note">No fee applicable</span>
-                            <select class="cev3-control cev3-standard-pricing-field" data-range-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select>
+                            <select class="cev3-control cev3-standard-pricing-field" data-range-currency>@foreach($currenciesToRender as $cItem)@php if (is_array($cItem)) { $optKey = $cItem['key']; $optCode = $cItem['code']; $optKeywords = $cItem['keywords'] ?? strtolower($optCode); } else { $optKey = $loop->index; $optCode = $cItem; $optKeywords = strtolower($cItem); } $isSelected = ($selectedCurrency === (int) $optKey || (string) $selectedCurrency === (string) $optKey); @endphp<option value="{{ $optKey }}" data-code="{{ $optCode }}" data-search="{{ $optKeywords }}" {{ $isSelected ? 'selected' : '' }}>{{ $optCode }}</option>@endforeach</select>
                             <div class="cev3-rate-wrap cev3-standard-pricing-field"><input type="number" class="cev3-control" data-range-rate step="0.01" min="0" value="{{ $rangeRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div>
                             <select class="cev3-control cev3-percentage-only" data-range-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select>
                             <select class="cev3-control cev3-fixed-only" data-range-fixed-trigger>@foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)<option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>{{ $triggerValue === 'candidate_joined' ? 'Per Successful Hire' : $triggerLabel }}</option>@endforeach</select>

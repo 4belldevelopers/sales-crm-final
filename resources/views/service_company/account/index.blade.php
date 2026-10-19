@@ -1,6 +1,7 @@
 @extends('layouts.service_company_layout')
 <?php
 use App\Helper\GeneralMethod;
+
 // dd("jd");
 $productAllowCompany = GeneralMethod::companiesType();
 ?>
@@ -2720,8 +2721,23 @@ input[type="radio"]:checked {
     // Presentation-only values sourced from AccountSettingsService's existing cached account payload.
     $cv2FulltimeActive = (bool) (@$fullTimeStatus->status);
     $cv2ContractActive = (bool) (@$contractStatus->status);
+    $tenantDefaultCurrencyCode = \App\Services\CurrencyService::getTenantCurrency(@$account->id ?? auth()->user()->company_id ?? null);
+    $tenantDefaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey(@$account->id ?? auth()->user()->company_id ?? null);
     $cv2Currency = optional($currencyArr->firstWhere('id', @$account->currency));
-    $cv2CurrencyCode = $cv2Currency->code ?: 'USD';
+    $cv2CurrencyCode = $cv2Currency->code ?: $tenantDefaultCurrencyCode;
+    $systemCurrencies = \App\Helper\GeneralMethod::currency();
+
+    $fulltimeSalaryCurrency = isset($fullTimeStatus->salary_currency) ? (int) $fullTimeStatus->salary_currency : null;
+    if ($fulltimeSalaryCurrency === null || ($fulltimeSalaryCurrency === 4 && $tenantDefaultCurrencyKey !== 4)) {
+        $fulltimeSalaryCurrency = $tenantDefaultCurrencyKey;
+    }
+    $contractSalaryCurrency = isset($contractStatus->salary_currency) ? (int) $contractStatus->salary_currency : null;
+    if ($contractSalaryCurrency === null || ($contractSalaryCurrency === 4 && $tenantDefaultCurrencyKey !== 4)) {
+        $contractSalaryCurrency = $tenantDefaultCurrencyKey;
+    }
+
+    $cv2FulltimeCurrencyCode = $systemCurrencies[$fulltimeSalaryCurrency] ?? $cv2CurrencyCode;
+    $cv2ContractCurrencyCode = $systemCurrencies[$contractSalaryCurrency] ?? $cv2CurrencyCode;
   @endphp
   <div class="commercials-v2">
     <h4 class="cv2-section-title">Your Services</h4>
@@ -2729,12 +2745,12 @@ input[type="radio"]:checked {
     <div class="cv2-services">
       <section class="cv2-service">
         <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Fulltime Hiring Services <span id="f_status_badge" class="cv2-badge {{ $cv2FulltimeActive ? '' : 'is-off' }}">{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Permanent staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id)) }}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ $cv2FulltimeActive ? 'checked' : '' }} /></label><span id="f_text" class="cv2-switch-text">{{ $cv2FulltimeActive ? 'ON' : 'OFF' }}</span></div></div>
-        <div class="cv2-service-main class_change_fulltime {{ $cv2FulltimeActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Rate Basis</div><div class="cv2-fact-value">One-time (upon joining)</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$fullTimeCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-service-main class_change_fulltime {{ $cv2FulltimeActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Rate Basis</div><div class="cv2-fact-value">One-time (upon joining)</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2FulltimeCurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$fullTimeCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</b></div></div></div>
         <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$fullTimeCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="2">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
       </section>
       <section class="cv2-service">
         <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M8 11h8M8 15h5"/></svg></span><div><h4>Contract Hiring Services <span id="c_status_badge" class="cv2-badge {{ $cv2ContractActive ? '' : 'is-off' }}">{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Contract staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id)) }}" type="checkbox" value="{{ @$contractStatus->status }}" {{ $cv2ContractActive ? 'checked' : '' }} /></label><span id="c_text" class="cv2-switch-text">{{ $cv2ContractActive ? 'ON' : 'OFF' }}</span></div></div>
-        <div class="cv2-service-main class_change_contract {{ $cv2ContractActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Billing</div><div class="cv2-fact-value">{{ [0 => 'Annual', 1 => 'Monthly', 2 => 'Hourly'][@$contractStatus->sal_mode] ?? 'Configured' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$contractStatus->salary_currency] ?? $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$contractCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-service-main class_change_contract {{ $cv2ContractActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Billing</div><div class="cv2-fact-value">{{ [0 => 'Annual', 1 => 'Monthly', 2 => 'Hourly'][@$contractStatus->sal_mode] ?? 'Configured' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2ContractCurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$contractCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</b></div></div></div>
         <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$contractCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="1">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
       </section>
     </div>

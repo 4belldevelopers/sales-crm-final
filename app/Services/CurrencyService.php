@@ -172,6 +172,27 @@ class CurrencyService
     }
 
     /**
+     * Get currency symbol for any currency code (fallback to enterprise meta or symbol map).
+     */
+    public static function getCurrencySymbol(?string $code): string
+    {
+        if (empty($code)) {
+            return '$';
+        }
+        $code = strtoupper(trim($code));
+        $symbols = self::getCurrencySymbols();
+        if (isset($symbols[$code])) {
+            return $symbols[$code];
+        }
+        $meta = GeneralMethod::currencyEnterpriseMeta($code);
+        if (! empty($meta['symbol']) && $meta['symbol'] !== $code) {
+            return $meta['symbol'];
+        }
+
+        return $code.' ';
+    }
+
+    /**
      * Get all currencies with complete UI metadata (code, name, symbol, flag, search keywords).
      *
      * @return array<int, array>
@@ -237,6 +258,95 @@ class CurrencyService
             }
 
             return $result;
+        });
+    }
+
+    /**
+     * Get unified enterprise currency list merging master_currency (Settings) and system currencies.
+     *
+     * Intent: Supplies full world currency choices (113 currencies) matching Company Profile -> Settings
+     * with backward-compatible integer keys, flags, ISO codes, and fuzzy search keywords.
+     *
+     * @return array<string, array{key: int, code: string, name: string, symbol: string, flag: string, label: string, keywords: string, countries: array<string>}>
+     */
+    public static function getSettingCurrenciesList(): array
+    {
+        return Cache::remember('setting_currencies_list_full', self::TTL_METADATA, function () {
+            $master = ReferenceDataCache::masterCurrencies();
+            $flags = self::CURRENCY_FLAGS;
+            $coreMap = [
+                'INR' => 0,
+                'EUR' => 1,
+                'JPY' => 2,
+                'GBP' => 3,
+                'USD' => 4,
+                'AED' => 5,
+            ];
+
+            $itemsByCode = [];
+            foreach ($coreMap as $cCode => $cKey) {
+                $cMeta = GeneralMethod::currencyEnterpriseMeta($cCode);
+                $cFlag = $flags[$cCode] ?? '🌐';
+                $itemsByCode[$cCode] = [
+                    'key' => $cKey,
+                    'code' => $cCode,
+                    'name' => $cMeta['name'] ?? $cCode,
+                    'symbol' => $cMeta['symbol'] ?? $cCode,
+                    'flag' => $cFlag,
+                    'label' => $cMeta['label'] ?? $cCode,
+                    'keywords' => $cMeta['keywords'] ?? strtolower($cCode),
+                    'countries' => [],
+                ];
+            }
+
+            foreach ($master as $row) {
+                $code = strtoupper(trim($row->code));
+                if (empty($code)) {
+                    continue;
+                }
+
+                if (isset($itemsByCode[$code])) {
+                    $itemsByCode[$code]['countries'][] = $row->country;
+                    $itemsByCode[$code]['keywords'] .= ' '.strtolower($row->country.' '.$row->currency.' '.$row->symbol);
+                } else {
+                    $key = $row->id <= 5 ? (1000 + (int) $row->id) : (int) $row->id;
+                    $cMeta = GeneralMethod::currencyEnterpriseMeta($code);
+                    $cFlag = $flags[$code] ?? '🌐';
+                    $name = (! empty($cMeta['name']) && $cMeta['name'] !== $code) ? $cMeta['name'] : ($row->currency ?: $code);
+                    $symbol = (! empty($cMeta['symbol']) && $cMeta['symbol'] !== $code) ? $cMeta['symbol'] : ($row->symbol ?: $code);
+                    $label = (! empty($cMeta['label']) && $cMeta['label'] !== $code)
+                        ? $cMeta['label']
+                        : ($code.' — '.$row->country.($symbol ? ' ('.$symbol.')' : ''));
+                    $keywords = strtolower(trim($code.' '.$name.' '.$symbol.' '.$row->country.' '.($cMeta['keywords'] ?? '')));
+
+                    $itemsByCode[$code] = [
+                        'key' => $key,
+                        'code' => $code,
+                        'name' => $name,
+                        'symbol' => $symbol,
+                        'flag' => $cFlag,
+                        'label' => $label,
+                        'keywords' => $keywords,
+                        'countries' => [$row->country],
+                    ];
+                }
+            }
+
+            // Priority sorting: Core global business currencies first, followed alphabetically
+            $priorityOrder = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'CAD', 'AUD', 'SGD', 'JPY', 'CHF', 'CNY', 'NZD', 'ZAR'];
+            $sorted = [];
+            foreach ($priorityOrder as $pCode) {
+                if (isset($itemsByCode[$pCode])) {
+                    $sorted[$pCode] = $itemsByCode[$pCode];
+                    unset($itemsByCode[$pCode]);
+                }
+            }
+            ksort($itemsByCode);
+            foreach ($itemsByCode as $code => $item) {
+                $sorted[$code] = $item;
+            }
+
+            return $sorted;
         });
     }
 
@@ -355,14 +465,18 @@ class CurrencyService
                 $curr = $company->currency;
                 if (is_numeric($curr)) {
                     $key = (int) $curr;
-                    $currencies = self::getCurrencies();
-                    if (isset($currencies[$key])) {
-                        return $currencies[$key];
-                    }
-                    // Try master_currency table
+                    // Intent: Check master_currency first since Company Profile -> Settings saves master_currency.id
                     $code = DB::table('master_currency')->where('id', $key)->value('code');
                     if ($code) {
                         return strtoupper(trim($code));
+                    }
+                    $code = DB::table('currencies')->where('getKey', $key)->value('currency_code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                    $currencies = self::getCurrencies();
+                    if (isset($currencies[$key])) {
+                        return $currencies[$key];
                     }
                     // Try currencies table id
                     $code = DB::table('currencies')->where('id', $key)->value('currency_code');
@@ -425,17 +539,28 @@ class CurrencyService
     /**
      * Set tenant platform currency and synchronize across all settings.
      *
-     * @param  string|int  $currency  Code ('USD') or getKey (4)
+     * @param  string|int  $currency  Code ('USD') or getKey (4) or master_currency id
      */
     public static function setTenantCurrency(int $companyId, string|int $currency): void
     {
-        $code = self::resolveCurrencyCode($currency);
-        $key = self::resolveCurrencyKey($currency);
+        $code = null;
+        if (is_numeric($currency)) {
+            try {
+                $code = DB::table('master_currency')->where('id', (int) $currency)->value('code');
+            } catch (\Throwable $e) {
+            }
+        }
+        if (! $code) {
+            $code = self::resolveCurrencyCode($currency);
+        }
+        $code = strtoupper(trim($code));
+        $key = self::resolveCurrencyKey($code);
+        $companyCurrencyVal = is_numeric($currency) ? (int) $currency : $code;
 
         DB::table('companies')
             ->where('id', $companyId)
             ->update([
-                'currency' => $code,
+                'currency' => $companyCurrencyVal,
                 'updated_at' => now(),
             ]);
 
@@ -450,11 +575,11 @@ class CurrencyService
             Log::warning('Could not sync company_career_settings currency: '.$e->getMessage());
         }
 
-        // Sync default commercials salary_currency
+        // Sync default commercials salary_currency for Contract (1) and Fulltime (2)
         try {
             DB::table('commericials')
                 ->where('company_id', $companyId)
-                ->where('commtype', 1)
+                ->whereIn('commtype', [1, 2])
                 ->update(['salary_currency' => $key]);
         } catch (\Throwable $e) {
             Log::warning('Could not sync commercials salary_currency: '.$e->getMessage());
@@ -471,9 +596,13 @@ class CurrencyService
     {
         Cache::forget("tenant_default_currency:{$companyId}");
         Cache::forget("tenant_default_currency_key:{$companyId}");
+        Cache::forget("tenant_default_currency_symbol:{$companyId}");
         Cache::forget("tenant_currency_code:{$companyId}");
+        Cache::forget("tenant:{$companyId}:currency_bench_show_mode");
+        Cache::forget("tenant_defaults_payload:{$companyId}");
         Cache::forget("company_career_settings:{$companyId}");
         Cache::forget("tenant_career_meta:{$companyId}");
+        Cache::forget("account_settings:company:{$companyId}");
     }
 
     /**
@@ -486,9 +615,39 @@ class CurrencyService
         }
 
         if (is_numeric($currency)) {
-            $currencies = self::getCurrencies();
+            $key = (int) $currency;
+            if ($key >= 1000) {
+                try {
+                    $code = DB::table('master_currency')->where('id', $key - 1000)->value('code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
 
-            return $currencies[(int) $currency] ?? self::DEFAULT_CURRENCY;
+            $currencies = self::getCurrencies();
+            if (isset($currencies[$key])) {
+                return $currencies[$key];
+            }
+
+            try {
+                $code = DB::table('master_currency')->where('id', $key)->value('code');
+                if ($code) {
+                    return strtoupper(trim($code));
+                }
+            } catch (\Throwable $e) {
+            }
+
+            try {
+                $code = DB::table('currencies')->where('id', $key)->value('currency_code');
+                if ($code) {
+                    return strtoupper(trim($code));
+                }
+            } catch (\Throwable $e) {
+            }
+
+            return self::DEFAULT_CURRENCY;
         }
 
         return strtoupper(trim((string) $currency));
@@ -504,13 +663,44 @@ class CurrencyService
         }
 
         if (is_numeric($currency)) {
-            return (int) $currency;
+            $num = (int) $currency;
+            if ($num >= 1000) {
+                return $num;
+            }
+
+            $currencies = self::getCurrencies();
+            if (isset($currencies[$num])) {
+                return $num;
+            }
+
+            try {
+                $code = DB::table('master_currency')->where('id', $num)->value('code');
+                if ($code) {
+                    $map = self::getCurrencyMap();
+                    if (isset($map[strtoupper(trim($code))])) {
+                        return $map[strtoupper(trim($code))];
+                    }
+
+                    return $num <= 5 ? (1000 + $num) : $num;
+                }
+            } catch (\Throwable $e) {
+            }
+
+            return $num;
         }
 
         $code = strtoupper(trim((string) $currency));
         $map = self::getCurrencyMap();
+        if (isset($map[$code])) {
+            return $map[$code];
+        }
 
-        return $map[$code] ?? self::DEFAULT_CURRENCY_KEY;
+        $settingList = self::getSettingCurrenciesList();
+        if (isset($settingList[$code])) {
+            return (int) $settingList[$code]['key'];
+        }
+
+        return self::DEFAULT_CURRENCY_KEY;
     }
 
     /**

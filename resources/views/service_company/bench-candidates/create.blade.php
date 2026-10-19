@@ -11,7 +11,7 @@
 
 @php 	
 	$country_code =  GeneralMethod::countryCodeFun();
-  $currency_code =  GeneralMethod::defaultCurrency();
+  $currency_code =  $tenantDefaultCurrency ?? GeneralMethod::defaultCurrency();
 
   $phone_code = $country_code;
   $second_phone_code = $country_code;
@@ -1194,26 +1194,40 @@ if($snp_mode== 1){
                       <select id="pay_rate_currency" name="pay_rate_currency" class="form-select form-select-solid br-currency-select" data-control="select2" data-placeholder="Search currency...">
                           @php
                               $current_ctc_cur = @$application->pay_rate_currency;
+                              $candidateCurCode = ($current_ctc_cur !== null && $current_ctc_cur !== '')
+                                  ? \App\Services\CurrencyService::resolveCurrencyCode($current_ctc_cur)
+                                  : null;
+                              $activePayCurCode = $candidateCurCode ?: ($currency_code ?: 'INR');
+                              $currenciesToRender = !empty($currencyList) ? $currencyList : (isset($currency) ? $currency : []);
+                          @endphp
+                          @foreach($currenciesToRender as $cItem)
+                              @php
+                                  if (is_array($cItem)) {
+                                      $optKey = $cItem['key'];
+                                      $optCode = $cItem['code'];
+                                      $optLabel = $cItem['label'];
+                                      $optKeywords = $cItem['keywords'];
+                                  } else {
+                                      $optKey = $loop->index;
+                                      $optCode = $cItem;
+                                      $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($cItem);
+                                      $optLabel = $cMeta['label'];
+                                      $optKeywords = $cMeta['keywords'];
+                                  }
 
-                              foreach($currency as $key => $val){
                                   $sel = '';
-                                  if($current_ctc_cur === null || $current_ctc_cur === ''){
-                                      if($currency_code == $val){
+                                  if ($current_ctc_cur === null || $current_ctc_cur === '') {
+                                      if (strtoupper($activePayCurCode) === strtoupper($optCode)) {
                                           $sel = 'selected="selected"';
                                       }
                                   } else {
-                                      if((string)$current_ctc_cur === (string)$key || (string)$current_ctc_cur === (string)$val){
+                                      if ((string)$current_ctc_cur === (string)$optKey || strtoupper($candidateCurCode) === strtoupper($optCode)) {
                                           $sel = 'selected="selected"';
                                       }
                                   }
-
-                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
-                                  $entLabel = $cMeta['label'];
-                                  $keywords = $cMeta['keywords'];
-
-                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';
-                              }
-                          @endphp
+                              @endphp
+                              <option value="{{ $optKey }}" data-code="{{ $optCode }}" data-search="{{ $optKeywords }}" {!! $sel !!}>{{ $optLabel }}</option>
+                          @endforeach
                       </select>
                     </div>
                   </div>
@@ -1232,40 +1246,47 @@ if($snp_mode== 1){
                     <select name="bill_rate_currency" id="bill_rate_currency">
                         @php
                             $current_ectc_cur = @$application->bill_rate_currency;
-                            foreach($currency as $key => $val){
-                              $sel = '';
-                              if($current_ectc_cur === null || $current_ectc_cur === ''){
-                                  if($currency_code == $val){
-                                      $sel = 'selected="selected"';
-                                  }
-                              } else {
-                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
-                                      $sel = 'selected="selected"';
-                                  }
-                              }
-
-                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-                            }
+                            $candidateBillCurCode = ($current_ectc_cur !== null && $current_ectc_cur !== '')
+                                ? \App\Services\CurrencyService::resolveCurrencyCode($current_ectc_cur)
+                                : null;
+                            $activeBillCurCode = $candidateBillCurCode ?: ($currency_code ?: 'INR');
                         @endphp
+                        @foreach($currenciesToRender as $cItem)
+                            @php
+                                $optKey = is_array($cItem) ? $cItem['key'] : $loop->index;
+                                $optCode = is_array($cItem) ? $cItem['code'] : $cItem;
+                                $sel = '';
+                                if ($current_ectc_cur === null || $current_ectc_cur === '') {
+                                    if (strtoupper($activeBillCurCode) === strtoupper($optCode)) {
+                                        $sel = 'selected="selected"';
+                                    }
+                                } else {
+                                    if ((string)$current_ectc_cur === (string)$optKey || strtoupper($candidateBillCurCode) === strtoupper($optCode)) {
+                                        $sel = 'selected="selected"';
+                                    }
+                                }
+                            @endphp
+                            <option value="{{ $optKey }}" data-code="{{ $optCode }}" {!! $sel !!}>{{ $optCode }}</option>
+                        @endforeach
                     </select>
                     <select name="current_th_cur" id="current_th_cur">
-                        @php
-                            $current_ectc_cur = @$application->bill_rate_currency;
-                            foreach($currency as $key => $val){
-                              $sel = '';
-                              if($current_ectc_cur === null || $current_ectc_cur === ''){
-                                  if($currency_code == $val){
-                                      $sel = 'selected="selected"';
-                                  }
-                              } else {
-                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
-                                      $sel = 'selected="selected"';
-                                  }
-                              }
-
-                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-                            }
-                        @endphp
+                        @foreach($currenciesToRender as $cItem)
+                            @php
+                                $optKey = is_array($cItem) ? $cItem['key'] : $loop->index;
+                                $optCode = is_array($cItem) ? $cItem['code'] : $cItem;
+                                $sel = '';
+                                if ($current_ectc_cur === null || $current_ectc_cur === '') {
+                                    if (strtoupper($activeBillCurCode) === strtoupper($optCode)) {
+                                        $sel = 'selected="selected"';
+                                    }
+                                } else {
+                                    if ((string)$current_ectc_cur === (string)$optKey || strtoupper($candidateBillCurCode) === strtoupper($optCode)) {
+                                        $sel = 'selected="selected"';
+                                    }
+                                }
+                            @endphp
+                            <option value="{{ $optKey }}" data-code="{{ $optCode }}" {!! $sel !!}>{{ $optCode }}</option>
+                        @endforeach
                     </select>
                   </div>
 
@@ -2325,14 +2346,14 @@ if($snp_mode== 1){
         'AED' => 3.67
     ];
 
-    $currencyKeys = $currencyConverterData['getKey'] ?? [
+    $currencyKeys = !empty($currency) ? $currency : ($currencyConverterData['getKey'] ?? [
         0 => 'INR',
         1 => 'EUR',
         2 => 'JPY',
         3 => 'GBP',
         4 => 'USD',
         5 => 'AED'
-    ];
+    ]);
 @endphp
 
 @push('footer-script')
@@ -3569,7 +3590,7 @@ $(document).ready(function () {
             width: '100%',
             dropdownParent: $(document.body),
             dropdownCssClass: 'br-currency-select2-dropdown',
-            placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+            placeholder: 'Search currency (e.g. USD, CAD, INR, Euro, $)...',
             minimumResultsForSearch: 0,
             matcher: function (params, data) {
                 if ($.trim(params.term) === '') {
@@ -5766,7 +5787,7 @@ function handleTalentSubmissionSuccess(response) {
 }
 
 // Relationship Manager Comments templates keyed by id
-var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+var recruiterNoteTemplates = @json(collect($recruiterNoteTemplates ?? [])->keyBy('id'));
 
 // Helper to convert HTML templates cleanly to readable plain text in native textarea
 function formatTemplateToPlainText(html) {
