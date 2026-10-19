@@ -20,6 +20,24 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Forward Resume Template Picker Category Tabs 100% Visibility & Responsive Redesign (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
+  - **Issue Identified & Audited**:
+    - The category tabs bar (`.fwd-tpl-category-tabs`) utilized `overflow-x: auto; white-space: nowrap;` with suppressed scrollbars (`scrollbar-width: none; ::-webkit-scrollbar { display: none; }`).
+    - Across standard 1366×768 (15.6") laptop screens and drawer widths (~680px - 750px), the 8 descriptive category tabs (~870px combined width) overflowed, causing Tab 7 (`Executive`) and Tab 8 (`Follow-up`) to be completely cut off and hidden outside the visible viewport with zero visual scroll cue for desktop mouse users.
+  - **Resolution**:
+    1. **100% Visible Multi-Row Flex-Wrap Architecture**:
+       - Replaced `overflow-x: auto; white-space: nowrap;` with `display: flex !important; flex-wrap: wrap !important; gap: 6px 6px; padding: 8px 12px; background: #F8FAFC;`.
+       - All 8 categories are now 100% immediately visible on screen simultaneously at a single glance without horizontal clipping or scroll requirements.
+    2. **Dedicated Counter Micro-Badges**:
+       - Redesigned category pill buttons (`.fwd-tpl-cat-btn`) to compact Metronic standards (height ~27px, `font-size: 11px`, `border-radius: 6px`).
+       - Separated the category name and count into a dedicated micro-badge (`.fwd-tpl-cat-count`), removing raw unformatted text parentheses:
+         - Inactive state: soft grey badge (`background: #F1F5F9; color: #64748B;`).
+         - Active state: translucent white badge (`background: rgba(255, 255, 255, 0.28); color: #FFFFFF;`).
+    3. **Dual-Path Parity & Sizing**:
+       - Applied across both client-first WASM shell (`shell.v4.html` + `ForwardResumeManager.js`) and server fallback Blade (`test_fwd_resume.blade.php`).
+       - Preserved viewport containment on 768px height screens with `.fwd-tpl-items-list` max height remaining at 280px with internal vertical scrolling.
+  - **Verification**: Verified PHP syntax (`php -l`), JavaScript syntax (`node -c`) with 0 errors across all modified files.
+
 - *2026-10-19* — **Forward Resume Template Picker UI/UX Remediation & Enterprise SVG Icons Engine (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
   - **Issue Identified & Audited**:
     1. **Horizontal Flex Layout Collapse**: `.fwd-tpl-popover-dropdown` was displayed with `popover.css('display', 'flex')` but lacked `flex-direction: column !important`. Its 4 direct children (search box, category tabs, card list, and footer) were collapsed side-by-side into 4 squished horizontal columns. The search box compressed to ~60px, category pills broke, and the footer text fractured into a single-word vertical column.
