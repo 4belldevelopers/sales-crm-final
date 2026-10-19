@@ -6,15 +6,17 @@
 
 @include('service_company.cvtracker._forward_resume_engine') 
 
-<link rel="stylesheet" href="{{ asset('assets/modules/fwd-resume/quill/quill.snow.css') }}">
-<script src="{{ asset('assets/modules/fwd-resume/quill/quill.min.js') }}"></script>
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
-window.testFwdQuill = null;
+if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
+    CKEDITOR.tools.enableHtml5Elements(document);
+}
 
 window.getTestFwdEditorHtml = function() {
-    if (window.testFwdQuill && window.testFwdQuill.root) {
-        var html = window.testFwdQuill.root.innerHTML || '';
-        return (html === '<p><br></p>') ? '' : html;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) {
+        try {
+            return CKEDITOR.instances.test_editor1.getData() || '';
+        } catch(e) {}
     }
     return $('#test_editor1').val() || '';
 };
@@ -22,84 +24,98 @@ window.getTestFwdEditorHtml = function() {
 window.setTestFwdEditorHtml = function(html, callback) {
     var cleanHtml = (html === null || html === undefined) ? '' : String(html);
     $('#test_editor1').val(cleanHtml);
-
-    if (window.testFwdQuill && window.testFwdQuill.root) {
-        window.testFwdQuill.root.innerHTML = cleanHtml;
-        if (callback) callback();
-        return;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) {
+        var inst = CKEDITOR.instances.test_editor1;
+        if (inst.status === 'ready' || inst.instanceReady) {
+            try {
+                inst.setData(cleanHtml, function() {
+                    if (callback) callback();
+                });
+                return;
+            } catch(e) {
+                console.warn('[ForwardResume] CKEditor setData error:', e);
+            }
+        } else {
+            inst.on('instanceReady', function() {
+                try {
+                    inst.setData(cleanHtml, function() {
+                        if (callback) callback();
+                    });
+                } catch(e) {}
+            });
+            return;
+        }
     }
     if (callback) callback();
 };
 
 window.insertTestFwdEditorHtml = function(html) {
     if (!html) return;
-    if (window.testFwdQuill && window.testFwdQuill.root) {
-        var range = window.testFwdQuill.getSelection(true);
-        var idx = range ? range.index : window.testFwdQuill.getLength();
-        window.testFwdQuill.clipboard.dangerouslyPasteHTML(idx, html);
-        $('#test_editor1').val(window.getTestFwdEditorHtml());
-        return;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) {
+        var inst = CKEDITOR.instances.test_editor1;
+        try {
+            inst.insertHtml(html);
+            $('#test_editor1').val(inst.getData());
+            return;
+        } catch(e) {
+            console.warn('[ForwardResume] CKEditor insertHtml notice:', e);
+        }
     }
     var current = $('#test_editor1').val() || '';
     $('#test_editor1').val(current ? (current + '<br>' + html) : html);
 };
 
 function initTestFwdEditor() {
-    var quillContainer = document.getElementById('test_editor_quill');
-    if (!quillContainer) return;
-
-    if (window.testFwdQuill && window.testFwdQuill.root && quillContainer.contains(window.testFwdQuill.root)) {
+    if (typeof CKEDITOR === 'undefined') {
+        setTimeout(initTestFwdEditor, 60);
+        return;
+    }
+    var editorElement = document.getElementById('test_editor1');
+    if (!editorElement) {
+        setTimeout(initTestFwdEditor, 60);
         return;
     }
 
-    if (typeof Quill === 'undefined') {
-        setTimeout(initTestFwdEditor, 50);
-        return;
+    if (CKEDITOR.instances && CKEDITOR.instances.test_editor1) {
+        try {
+            CKEDITOR.instances.test_editor1.destroy(true);
+        } catch(destroyErr) {}
     }
 
     try {
-        var existingContent = $('#test_editor1').val() || '';
-        quillContainer.innerHTML = '';
-        window.testFwdQuill = new Quill('#test_editor_quill', {
-            theme: 'snow',
-            placeholder: 'Compose executive email presentation...',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'align': [] }],
-                    ['link', 'clean']
-                ]
+        var editorInstance = CKEDITOR.replace('test_editor1', {
+            height: 260,
+            width: '100%',
+            allowedContent: true,
+            removePlugins: 'elementspath',
+            resize_enabled: false
+        });
+
+        editorInstance.on('instanceReady', function() {
+            if (window.syncFirstRecipientSalutation) {
+                window.syncFirstRecipientSalutation();
             }
         });
 
-        if (existingContent) {
-            window.testFwdQuill.root.innerHTML = existingContent;
-        }
-
-        window.testFwdQuill.on('text-change', function () {
-            var html = window.getTestFwdEditorHtml();
-            $('#test_editor1').val(html);
+        editorInstance.on('change', function() {
+            try {
+                $('#test_editor1').val(editorInstance.getData());
+            } catch(e) {}
         });
-
-        if (window.syncFirstRecipientSalutation) {
-            window.syncFirstRecipientSalutation();
-        }
     } catch(err) {
-        console.warn('[ForwardResume] Blade Quill init warning:', err);
+        console.warn('[ForwardResume] CKEditor init error:', err);
     }
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initTestFwdEditor, 30);
+    setTimeout(initTestFwdEditor, 40);
 } else {
     document.addEventListener('DOMContentLoaded', initTestFwdEditor);
 }
 $(document).ready(function() {
-    setTimeout(initTestFwdEditor, 50);
+    setTimeout(initTestFwdEditor, 60);
 });
+setTimeout(initTestFwdEditor, 250);
 </script>
 
 <div class="main_container" id="test_main_container">
@@ -413,33 +429,6 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
 .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
-.mm-editor-wrap .ql-toolbar.ql-snow {
-  border: none !important;
-  border-bottom: 1px solid #E2E8F0 !important;
-  background: #F8FAFC;
-  padding: 8px 12px;
-  font-family: 'Poppins', sans-serif;
-}
-.mm-editor-wrap .ql-container.ql-snow {
-  border: none !important;
-  font-family: 'Poppins', sans-serif;
-  font-size: 13px;
-  color: #1E293B;
-  min-height: 220px;
-}
-.mm-editor-wrap .ql-editor {
-  min-height: 220px;
-  max-height: 480px;
-  overflow-y: auto;
-  line-height: 1.6;
-  padding: 12px 14px;
-}
-.mm-editor-wrap .ql-editor.ql-blank::before {
-  color: #94A3B8;
-  font-style: normal;
-  left: 14px;
-  right: 14px;
-}
 #test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
@@ -765,9 +754,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         </div>
         <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
           <div class="mm-tag-list" id="test_to_email_tags"></div>
-          <input type="text" class="mm-tag-input" id="test_to_email_input" placeholder="Type recipient email and press Enter...">
+          <input type="text" class="mm-tag-input" id="test_to_email_input" placeholder="Type recipient email and press Enter..." autocomplete="email" inputmode="email" maxlength="254">
           <a href="javascript:;" class="mm-add-email-btn test_to_email_panel" onclick="openTestEmailRecipientDrawer('to'); return false;">+ Add Email</a>
         </div>
+        <div id="test_to_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="to_email" id="test_to_email" value="">
         <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Type email address and press Enter or comma, or click "+ Add Email"</span>
@@ -787,9 +777,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       <div class="mm-field-col">
         <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
           <div class="mm-tag-list" id="test_cc_email_tags"></div>
-          <input type="text" class="mm-tag-input" id="test_cc_email_input" placeholder="Type CC email and press Enter...">
+          <input type="text" class="mm-tag-input" id="test_cc_email_input" placeholder="Type CC email and press Enter..." autocomplete="email" inputmode="email" maxlength="254">
           <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel" onclick="openTestEmailRecipientDrawer('cc'); return false;">+ Add Email</a>
         </div>
+        <div id="test_cc_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}">
         <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
       </div>
@@ -1281,8 +1272,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           </button>
         </div>
         <div class="mm-editor-wrap">
-          <div id="test_editor_quill" style="min-height:220px;"></div>
-          <textarea id="test_editor1" name="editor1" rows="10" style="display:none;">{{ @$template_body }}</textarea>
+          <textarea id="test_editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
         </div>
       </div>
     </div>
@@ -2136,15 +2126,17 @@ window.onTestFwdSubmitClick = async function (e) {
 
     // Commit any typed text in the tag inputs
     if (typeof processTestTagInputText === 'function') {
-        var pendingTo = ($('#test_to_email_input').val() || '').trim();
+        var pendingTo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($('#test_to_email_input').val()) : ($('#test_to_email_input').val() || '').trim();
         if (pendingTo) {
             processTestTagInputText('to', pendingTo);
             $('#test_to_email_input').val('');
+            $('#test_to_email_typo_hint').slideUp(100, function() { $(this).empty(); });
         }
-        var pendingCc = ($('#test_cc_email_input').val() || '').trim();
+        var pendingCc = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($('#test_cc_email_input').val()) : ($('#test_cc_email_input').val() || '').trim();
         if (pendingCc) {
             processTestTagInputText('cc', pendingCc);
             $('#test_cc_email_input').val('');
+            $('#test_cc_email_typo_hint').slideUp(100, function() { $(this).empty(); });
         }
     }
 
@@ -2154,14 +2146,15 @@ window.onTestFwdSubmitClick = async function (e) {
     var cc_email = ccList.join(', ');
     var subject  = ($('#test_subject').val() || '').trim();
 
-    var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    var emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
+    // 1. Validate Candidate/Client Recipient Email (To)
     if (toList.length === 0) {
         $('#test_to_email_tag_box').css('border-color', '#EF4444');
         $('#test_to_email_input').focus();
         Swal.fire({
             title: 'Recipient Email Required',
-            text: 'Please enter at least one valid recipient email address in the "To" field.',
+            text: 'Please enter at least one valid recipient email address in the "To" field before sending.',
             icon: 'warning',
             confirmButtonColor: '#0D9488'
         });
@@ -2169,12 +2162,15 @@ window.onTestFwdSubmitClick = async function (e) {
     }
 
     for (var ti = 0; ti < toList.length; ti++) {
-        if (!emailRegex.test(toList[ti])) {
+        var isSyntaxValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(toList[ti]) : emailRegex.test(toList[ti]);
+        if (!isSyntaxValid) {
             $('#test_to_email_tag_box').css('border-color', '#EF4444');
             $('#test_to_email_input').focus();
+            var typo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(toList[ti]) : null;
+            var typoMsg = typo ? ('<br><br>Did you mean <strong>' + $('<div>').text(typo).html() + '</strong>?') : '';
             Swal.fire({
-                title: 'Invalid Email Address',
-                html: 'The recipient email address <code>' + $('<div>').text(toList[ti]).html() + '</code> is invalid.',
+                title: 'Invalid Recipient Email',
+                html: 'The recipient email address <code>' + $('<div>').text(toList[ti]).html() + '</code> is invalid.' + typoMsg,
                 icon: 'warning',
                 confirmButtonColor: '#0D9488'
             });
@@ -2183,14 +2179,18 @@ window.onTestFwdSubmitClick = async function (e) {
     }
     $('#test_to_email_tag_box').css('border-color', '#E5E7EB');
 
+    // 2. Validate CC Email Addresses
     if (ccList.length > 0) {
         for (var ci = 0; ci < ccList.length; ci++) {
-            if (!emailRegex.test(ccList[ci])) {
+            var isCcSyntaxValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(ccList[ci]) : emailRegex.test(ccList[ci]);
+            if (!isCcSyntaxValid) {
                 $('#test_cc_email_tag_box').css('border-color', '#EF4444');
                 $('#test_cc_email_input').focus();
+                var ccTypo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(ccList[ci]) : null;
+                var ccTypoMsg = ccTypo ? ('<br><br>Did you mean <strong>' + $('<div>').text(ccTypo).html() + '</strong>?') : '';
                 Swal.fire({
                     title: 'Invalid CC Email Address',
-                    html: 'The CC email address <code>' + $('<div>').text(ccList[ci]).html() + '</code> is invalid.',
+                    html: 'The CC email address <code>' + $('<div>').text(ccList[ci]).html() + '</code> is invalid.' + ccTypoMsg,
                     icon: 'warning',
                     confirmButtonColor: '#0D9488'
                 });
@@ -2200,24 +2200,25 @@ window.onTestFwdSubmitClick = async function (e) {
         $('#test_cc_email_tag_box').css('border-color', '#E5E7EB');
     }
 
-    // Client-Side Enforcement: Maximum 5 total recipients (To + CC combined)
+    // 3. Client-Side Enforcement: Maximum 5 total recipients (To + CC combined)
     var totalRecipients = toList.length + ccList.length;
     var MAX_TEST_TOTAL_RECIPIENTS = 5;
     if (totalRecipients > MAX_TEST_TOTAL_RECIPIENTS) {
         Swal.fire({
             title: 'Recipient Limit Exceeded',
-            text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed to maintain high email deliverability. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TEST_TOTAL_RECIPIENTS) + ' recipient(s).',
+            text: 'To protect email deliverability and avoid spam flags, a maximum of ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) is permitted. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TEST_TOTAL_RECIPIENTS) + ' recipient(s).',
             icon: 'warning',
             confirmButtonColor: '#0D9488'
         });
         return;
     }
 
+    // 4. Validate Subject Line
     if (!subject) {
         $('#test_subject').css('border-color', '#EF4444').focus();
         Swal.fire({
-            title: 'Subject Required',
-            text: 'Please enter an email subject before forwarding resumes.',
+            title: 'Subject Line Required',
+            text: 'Please enter an email subject line before forwarding resumes.',
             icon: 'warning',
             confirmButtonColor: '#0D9488'
         });
@@ -2225,13 +2226,19 @@ window.onTestFwdSubmitClick = async function (e) {
     }
     $('#test_subject').css('border-color', '#E5E7EB');
 
-    // Validate Email Body (Mandatory)
+    // 5. Validate Email Body (Mandatory)
     var editor1 = window.getTestFwdEditorHtml();
-    var textOnly = $('<div>').html(editor1).text().trim().replace(/[\s\u00A0]+/g, '');
-    if (!textOnly && editor1.indexOf('<img') === -1) {
+    var plainBodyText = (editor1 || '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!plainBodyText && editor1.indexOf('<img') === -1) {
         Swal.fire({
-            title: 'Email Message Required',
-            text: 'Email message body cannot be blank. Please enter a message before sending.',
+            title: 'Email Body Empty',
+            text: 'Your email has no content. Please choose an email template or compose your message in the editor before sending.',
             icon: 'warning',
             confirmButtonColor: '#0D9488'
         });
@@ -2573,7 +2580,95 @@ window.syncFirstRecipientSalutation = function() {
     }
 };
 
-var emailTagRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || {
+    domainTypos: {
+        'gmil.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gamil.com': 'gmail.com',
+        'gmial.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gmajl.com': 'gmail.com', 'gnail.com': 'gmail.com',
+        'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cpm': 'gmail.com', 'gmail.comm': 'gmail.com',
+        'gmail.coom': 'gmail.com', 'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yhaoo.com': 'yahoo.com',
+        'yaho.co.in': 'yahoo.co.in', 'yahoo.con': 'yahoo.com', 'hotmial.com': 'hotmail.com',
+        'hotmaill.com': 'hotmail.com', 'hotmaik.com': 'hotmail.com', 'hotmali.com': 'hotmail.com',
+        'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outllok.com': 'outlook.com',
+        'redifmail.com': 'rediffmail.com', 'rediffmai.com': 'rediffmail.com', 'rediffmal.com': 'rediffmail.com',
+        'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com'
+    },
+    cleanDeterministic: function (val) {
+        if (!val || typeof val !== 'string') return '';
+        var cleaned = val.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                         .trim()
+                         .replace(/^mailto:\s*/i, '')
+                         .replace(/^<+|>+$/g, '')
+                         .replace(/^"+|"+$/g, '')
+                         .replace(/^'+|'+$/g, '')
+                         .replace(/[.,;:]+$/, '')
+                         .trim();
+        return cleaned;
+    },
+    validateSyntax: function (email) {
+        if (!email || typeof email !== 'string') return false;
+        var trimmed = email.trim();
+        if (trimmed.length === 0 || trimmed.length > 254) return false;
+        if ((trimmed.match(/@/g) || []).length !== 1) return false;
+        var parts = trimmed.split('@');
+        var local = parts[0];
+        var domain = parts[1];
+        if (!local || !domain) return false;
+        if (local.length > 64) return false;
+        if (local.startsWith('.') || local.endsWith('.') || local.indexOf('..') !== -1) return false;
+        if (domain.startsWith('.') || domain.endsWith('.') || domain.startsWith('-') || domain.endsWith('-')) return false;
+        if (domain.indexOf('..') !== -1) return false;
+        var rfcPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+        return rfcPattern.test(trimmed);
+    },
+    suggestCorrection: function (email) {
+        if (!email || typeof email !== 'string') return null;
+        var raw = email.trim();
+        if (raw.indexOf(',') !== -1) {
+            raw = raw.replace(/,/g, '.');
+        }
+        var atMatches = raw.match(/@/g) || [];
+        if (atMatches.length !== 1) return null;
+        var parts = raw.split('@');
+        var local = parts[0].trim();
+        var domain = (parts[1] || '').trim().toLowerCase();
+        if (!local || !domain) return null;
+        if (this.domainTypos[domain]) {
+            return local + '@' + this.domainTypos[domain];
+        }
+        var tldFixes = {
+            'con': 'com', 'cpm': 'com', 'comm': 'com', 'cmo': 'com', 'ocm': 'com',
+            'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+        };
+        var dParts = domain.split('.');
+        if (dParts.length >= 2) {
+            var last = dParts[dParts.length - 1];
+            if (tldFixes[last]) {
+                dParts[dParts.length - 1] = tldFixes[last];
+                var suggestedDomain = dParts.join('.');
+                if (suggestedDomain !== domain) {
+                    return local + '@' + suggestedDomain;
+                }
+            }
+        }
+        return null;
+    },
+    renderTypoPill: function (containerSelector, suggestedEmail, targetInputSelector) {
+        var $hint = $(containerSelector);
+        if (!$hint.length) return;
+        if (suggestedEmail) {
+            $hint.html(
+                '<div class="d-inline-flex align-items-center bg-light-primary text-primary px-2 py-1 rounded fs-8 fw-semibold mt-1" style="background:#EFF6FF;color:#2563EB;padding:4px 8px;border-radius:6px;font-size:11.5px;font-family:\'Poppins\',sans-serif;display:inline-flex;align-items:center;">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' +
+                    '<span>Did you mean <strong>' + $('<div>').text(suggestedEmail).html() + '</strong>?</span>' +
+                    '<button type="button" class="apply-email-fix" data-target="' + targetInputSelector + '" data-suggestion="' + $('<div>').text(suggestedEmail).html() + '" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;margin-left:8px;text-decoration:underline;padding:0;font-size:11.5px;font-family:\'Poppins\',sans-serif;">Apply</button>' +
+                '</div>'
+            ).slideDown(150);
+        } else {
+            $hint.slideUp(100, function () { $(this).empty(); });
+        }
+    }
+};
+
 var MAX_TEST_TOTAL_RECIPIENTS = 5;
 
 function getTestTotalRecipientsCount() {
@@ -2590,7 +2685,7 @@ window.renderTestTags = function(target) {
 
     $container.empty();
     list.forEach(function(email, idx) {
-        var isValid = emailTagRegex.test(email);
+        var isValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(email) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         var $tag = $(
             '<span class="mm-email-tag' + (isValid ? '' : ' is-invalid') + '" title="' + $('<div>').text(email).html() + '">' +
               '<span class="mm-email-tag-text">' + $('<div>').text(email).html() + '</span>' +
@@ -2612,10 +2707,12 @@ window.renderTestTags = function(target) {
     var $badge = $('#test_fwd_recipients_badge');
     if ($badge.length) {
         $badge.text(totalRecipients + ' / ' + MAX_TEST_TOTAL_RECIPIENTS + ' Recipients (Max)');
-        if (totalRecipients >= MAX_TEST_TOTAL_RECIPIENTS) {
+        if (totalRecipients > MAX_TEST_TOTAL_RECIPIENTS) {
             $badge.css({ 'background': '#FEE2E2', 'color': '#DC2626', 'border-color': '#FCA5A5' });
+        } else if (totalRecipients === MAX_TEST_TOTAL_RECIPIENTS) {
+            $badge.css({ 'background': '#FEF3C7', 'color': '#B45309', 'border-color': '#FDE68A' });
         } else {
-            $badge.css({ 'background': '#F1F5F9', 'color': '#475569', 'border-color': '#E2E8F0' });
+            $badge.css({ 'background': '#DCFCE7', 'color': '#15803D', 'border-color': '#BBF7D0' });
         }
     }
 
@@ -2627,8 +2724,14 @@ window.renderTestTags = function(target) {
 
 window.addTestEmailTag = function(target, email) {
     if (!email) return false;
-    email = String(email).trim();
+    email = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(email) : String(email).trim();
     if (!email) return false;
+
+    var suggestion = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(email) : null;
+    if (suggestion && suggestion.toLowerCase() !== email.toLowerCase()) {
+        var hintSelector = (target === 'to') ? '#test_to_email_typo_hint' : '#test_cc_email_typo_hint';
+        window.JeroEmailBoxEngine.renderTypoPill(hintSelector, suggestion, (target === 'to') ? '#test_to_email_input' : '#test_cc_email_input');
+    }
 
     if (!window._testEmailTags[target]) window._testEmailTags[target] = [];
     var lower = email.toLowerCase();
@@ -2675,7 +2778,9 @@ window.removeTestEmailByAddress = function(target, email) {
 
 window.processTestTagInputText = function(target, text) {
     if (!text) return;
-    var items = String(text).split(/[\s,;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+    var items = String(text).split(/[\s,;]+/).map(function(s) {
+        return window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(s) : s.trim();
+    }).filter(Boolean);
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (getTestTotalRecipientsCount() >= MAX_TEST_TOTAL_RECIPIENTS) {
@@ -2696,12 +2801,24 @@ window.processTestTagInputText = function(target, text) {
 function setupTestTagInput(target) {
     var $box = (target === 'to') ? $('#test_to_email_tag_box') : $('#test_cc_email_tag_box');
     var $input = (target === 'to') ? $('#test_to_email_input') : $('#test_cc_email_input');
+    var hintSelector = (target === 'to') ? '#test_to_email_typo_hint' : '#test_cc_email_typo_hint';
+
+    $input.off('input').on('input', function() {
+        var raw = $(this).val();
+        var cleaned = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+        var suggestion = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(cleaned) : null;
+        if (suggestion && suggestion.toLowerCase() !== cleaned.toLowerCase()) {
+            window.JeroEmailBoxEngine.renderTypoPill(hintSelector, suggestion, (target === 'to') ? '#test_to_email_input' : '#test_cc_email_input');
+        } else {
+            $(hintSelector).slideUp(100, function() { $(this).empty(); });
+        }
+    });
 
     $input.off('focus blur keydown paste').on('focus', function() {
         $box.addClass('is-focused');
     }).on('blur', function() {
         $box.removeClass('is-focused');
-        var val = $(this).val().trim();
+        var val = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($(this).val()) : $(this).val().trim();
         if (val) {
             processTestTagInputText(target, val);
             $(this).val('');
@@ -2735,6 +2852,25 @@ function setupTestTagInput(target) {
         removeTestEmailTag(t, idx);
     });
 }
+
+$(document).off('click', '.apply-email-fix').on('click', '.apply-email-fix', function(e) {
+    e.preventDefault();
+    var targetSel = $(this).attr('data-target');
+    var suggestion = $(this).attr('data-suggestion');
+    var isTo = (targetSel && targetSel.indexOf('to') !== -1);
+    var targetType = isTo ? 'to' : 'cc';
+    var hintSel = isTo ? '#test_to_email_typo_hint' : '#test_cc_email_typo_hint';
+
+    if (suggestion) {
+        if (typeof addTestEmailTag === 'function') {
+            addTestEmailTag(targetType, suggestion);
+        } else if (window.ForwardResumeManager && typeof window.ForwardResumeManager.addEmailTag === 'function') {
+            window.ForwardResumeManager.addEmailTag(targetType, suggestion);
+        }
+        $(targetSel).val('');
+        $(hintSel).slideUp(100, function() { $(this).empty(); });
+    }
+});
 
 // ══════════════════════════════════════════════════════════════════════════════
 // RECIPIENT DRAWER CONTROLLER

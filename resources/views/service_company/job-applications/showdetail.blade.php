@@ -9185,6 +9185,9 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
           }
         }
       });
+      if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+      }
       $('.fwd-resume-overlay').remove();
     };
   }
