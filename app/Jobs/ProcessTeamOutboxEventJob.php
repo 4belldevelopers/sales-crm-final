@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Helper\GeneralMethod;
+use App\Services\MailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,8 +17,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Intent: Decoupled Outbox Worker for Team Member mutations.
  * Claims pending sys_outbox_events for aggregate_type 'TeamMember',
- * keeps Elasticsearch indices in sync, guarantees event delivery,
- * and marks outbox records as COMPLETED.
+ * delivers asynchronous emails outside of database transactions,
+ * keeps Elasticsearch indices in sync, guarantees at-least-once event delivery,
+ * and marks outbox records as COMPLETED or DEAD_LETTER.
  */
 class ProcessTeamOutboxEventJob implements ShouldQueue
 {
@@ -43,11 +45,18 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
             return;
         }
 
-        // Batch processing if called without specific ID
+        // Batch processing if called without specific ID (scheduler / sweeper)
         $events = DB::table('sys_outbox_events')
             ->where('aggregate_type', 'TeamMember')
-            ->where('status', 'PENDING')
+            ->where(function ($q) {
+                $q->whereIn('status', ['PENDING', 'FAILED'])
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', 'PROCESSING')
+                            ->where('locked_at', '<', now()->subMinutes(5));
+                    });
+            })
             ->where('available_at', '<=', now())
+            ->where('attempts', '<', $this->tries)
             ->orderBy('id', 'asc')
             ->limit(25)
             ->pluck('id')
@@ -60,35 +69,67 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
 
     protected function processEvent(int $eventId): void
     {
-        DB::beginTransaction();
+        $claimed = DB::table('sys_outbox_events')
+            ->where('id', $eventId)
+            ->where('aggregate_type', 'TeamMember')
+            ->where(function ($q) {
+                $q->whereIn('status', ['PENDING', 'FAILED'])
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', 'PROCESSING')
+                            ->where('locked_at', '<', now()->subMinutes(5));
+                    });
+            })
+            ->update([
+                'status' => 'PROCESSING',
+                'locked_at' => now(),
+                'attempts' => DB::raw('attempts + 1'),
+            ]);
+
+        if (! $claimed) {
+            return;
+        }
+
+        $event = DB::table('sys_outbox_events')->where('id', $eventId)->first();
+        if (! $event) {
+            return;
+        }
+
         try {
-            $event = DB::table('sys_outbox_events')
-                ->where('id', $eventId)
-                ->where('aggregate_type', 'TeamMember')
-                ->whereIn('status', ['PENDING', 'PROCESSING'])
-                ->lockForUpdate()
-                ->first();
+            $payload = json_decode($event->payload, true) ?: [];
+            $targetUserId = (int) ($event->aggregate_id ?: ($payload['user_id'] ?? 0));
+            $eventType = $event->event_type;
 
-            if (! $event) {
-                DB::rollBack();
+            // 1. Deliver email asynchronously if this event requires it (e.g. team_member.invited, team_member.resend_invitation)
+            if (in_array($eventType, ['team_member.invited', 'team_member.resend_invitation', 'team_member.created']) && ! empty($payload['email_data'])) {
+                $emailData = $payload['email_data'];
+                $to = $emailData['to'] ?? ($payload['email'] ?? null);
+                $subject = $payload['email_subject'] ?? 'Account Credential';
+                $view = $payload['email_template'] ?? 'email.team.create-account';
+                $senderName = $payload['sender_name'] ?? '';
+                $fromAddress = $payload['from_address'] ?? '';
+                $companyId = (int) ($event->tenant_id ?: ($payload['company_id'] ?? 0));
 
-                return;
+                if (! empty($to)) {
+                    $mailService = app(MailService::class);
+                    $result = $mailService->sendEmail(
+                        $to,
+                        $subject,
+                        $view,
+                        (object) $emailData,
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $companyId
+                    );
+
+                    if ($result !== true) {
+                        throw new \RuntimeException('Mail sending failed: '.(is_string($result) ? $result : 'unknown error'));
+                    }
+                }
             }
 
-            // Mark PROCESSING
-            DB::table('sys_outbox_events')
-                ->where('id', $eventId)
-                ->update([
-                    'status' => 'PROCESSING',
-                    'locked_at' => now(),
-                    'attempts' => DB::raw('attempts + 1'),
-                ]);
-
-            DB::commit();
-
-            $targetUserId = (int) $event->aggregate_id;
-
-            // 1. Synchronize to Elasticsearch if user exists
+            // 2. Synchronize to Elasticsearch if user exists
             if ($targetUserId > 0) {
                 try {
                     GeneralMethod::userIndexingupload($targetUserId);
@@ -98,7 +139,7 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
                 }
             }
 
-            // 2. Mark COMPLETED
+            // 3. Mark COMPLETED
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
@@ -108,16 +149,20 @@ class ProcessTeamOutboxEventJob implements ShouldQueue
                 ]);
 
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error("ProcessTeamOutboxEventJob failed for event {$eventId}: ".$e->getMessage());
+
+            $finalStatus = ($event->attempts >= $this->tries) ? 'DEAD_LETTER' : 'FAILED';
+            $backoffSeconds = $this->backoff * max(1, $event->attempts);
 
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
-                    'status' => 'FAILED',
+                    'status' => $finalStatus,
                     'last_error' => substr($e->getMessage(), 0, 1000),
-                    'available_at' => now()->addSeconds(30),
+                    'available_at' => now()->addSeconds($backoffSeconds),
                 ]);
+
+            throw $e;
         }
     }
 }

@@ -667,30 +667,30 @@
                         <div class="team-stat-ico ico-blue"><i class="fa-solid fa-user-group"></i></div>
                         <div>
                             <div class="team-stat-label">Total Members</div>
-                            <div class="team-stat-value">{{ $teamCounts['total'] }}</div>
+                            <div class="team-stat-value" id="stat-total-members">{{ $teamCounts['total'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
                         <div class="team-stat-ico ico-green"><i class="fa-solid fa-user-check"></i></div>
                         <div>
                             <div class="team-stat-label">Active Members</div>
-                            <div class="team-stat-value">{{ $teamCounts['active'] }}</div>
+                            <div class="team-stat-value" id="stat-active-members">{{ $teamCounts['active'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
                         <div class="team-stat-ico ico-amber"><i class="fa-solid fa-user-xmark"></i></div>
                         <div>
                             <div class="team-stat-label">Inactive Members</div>
-                            <div class="team-stat-value">{{ $teamCounts['inactive'] }}</div>
+                            <div class="team-stat-value" id="stat-inactive-members">{{ $teamCounts['inactive'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
                         <div class="team-stat-ico ico-purple"><i class="fa-solid fa-crown"></i></div>
                         <div>
                             <div class="team-stat-label">Captain / TRM</div>
-                            <div class="team-stat-value">{{ $teamCounts['captain'] + $teamCounts['trm'] }}</div>
-                            <div class="team-stat-sub">Captain {{ $teamCounts['captain'] }} &nbsp;•&nbsp; TRM
-                                {{ $teamCounts['trm'] }}</div>
+                            <div class="team-stat-value" id="stat-captain-trm">{{ $teamCounts['captain'] + $teamCounts['trm'] }}</div>
+                            <div class="team-stat-sub">Captain <span id="stat-captain-sub">{{ $teamCounts['captain'] }}</span> &nbsp;•&nbsp; TRM
+                                <span id="stat-trm-sub">{{ $teamCounts['trm'] }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -698,10 +698,10 @@
                 <div class="card team-main-card">
                     {{-- Status tabs --}}
                     <div class="team-tabs">
-                        <a class="team-tab active" data-status="all">All Members ({{ $teamCounts['total'] }})</a>
-                        <a class="team-tab" data-status="active">Active ({{ $teamCounts['active'] }})</a>
-                        <a class="team-tab" data-status="inactive">Inactive ({{ $teamCounts['inactive'] }})</a>
-                        <a class="team-tab" data-status="invited">Invited ({{ $teamCounts['invited'] }})</a>
+                        <a class="team-tab active" data-status="all">All Members (<span id="tab-count-all">{{ $teamCounts['total'] }}</span>)</a>
+                        <a class="team-tab" data-status="active">Active (<span id="tab-count-active">{{ $teamCounts['active'] }}</span>)</a>
+                        <a class="team-tab" data-status="inactive">Inactive (<span id="tab-count-inactive">{{ $teamCounts['inactive'] }}</span>)</a>
+                        <a class="team-tab" data-status="invited">Invited (<span id="tab-count-invited">{{ $teamCounts['invited'] }}</span>)</a>
                     </div>
 
                     <div class="card-body pt-3 px-5">
@@ -1100,8 +1100,11 @@
                     if ($ws.length) {
                         $ws.prop('checked', parseInt(e.working_status, 10) === 1);
                     }
-                } else if (e.action === 'team_member.created' || e.action === 'team_member.deleted') {
-                    // Member added or removed: asynchronously reload team records for current page
+                } else if (e.action === 'team_member.created' || e.action === 'team_member.invited' || e.action === 'team_member.deleted') {
+                    // Member added, invited, or removed: purge L1/L2 and reload team records
+                    if (window.JeroTeamLocalStore) {
+                        window.JeroTeamLocalStore.purge();
+                    }
                     fetchTeams(window.teamState.currentPage || 1);
                 }
             }
@@ -1638,8 +1641,10 @@
 
                 // Reset form
                 $('#inviteForm')[0].reset();
+                $('#inviteForm').removeData('idempotency-key');
                 $('#inviteMsg').hide().text('');
                 $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
+                isInviteSubmitting = false;
                 // Open
                 $('#inviteOverlay, #inviteDrawer').addClass('open');
                 document.body.style.overflow = 'hidden';
@@ -1648,6 +1653,7 @@
             function closeInviteDrawer() {
                 $('#inviteOverlay, #inviteDrawer').removeClass('open');
                 document.body.style.overflow = '';
+                isInviteSubmitting = false;
             }
 
             $('#openInviteDrawer').on('click', openInviteDrawer);
@@ -1655,7 +1661,11 @@
             $('#inviteOverlay').on('click', closeInviteDrawer);
             $(document).on('keydown', function(e) { if (e.key === 'Escape') closeInviteDrawer(); });
 
-            $('#inviteSubmitBtn').on('click', function() {
+            var isInviteSubmitting = false;
+            $('#inviteSubmitBtn').on('click', function(e) {
+                e.preventDefault();
+                if (isInviteSubmitting) return;
+
                 var name  = $.trim($('#inviteName').val());
                 var email = $.trim($('#inviteEmail').val());
                 var role  = $('#inviteRole').val();
@@ -1670,24 +1680,35 @@
                     showInviteMsg('Please select a role.', 'error'); return;
                 }
 
+                isInviteSubmitting = true;
                 var $btn = $(this);
                 $btn.addClass('loading').prop('disabled', true);
                 $('#inviteMsg').hide();
 
-                var formData = new FormData($('#inviteForm')[0]);
+                // Stable idempotency key: maintained across in-flight retries of the same form submission
+                var $form = $('#inviteForm');
+                var idempotencyKey = $form.data('idempotency-key');
+                if (!idempotencyKey) {
+                    idempotencyKey = generateIdempotencyKey('invite_' + email.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                    $form.data('idempotency-key', idempotencyKey);
+                }
+
+                var formData = new FormData($form[0]);
 
                 $.ajax({
                     url: '{{ route("service_company.team.store") }}?_token={{ csrf_token() }}',
                     type: 'POST',
                     headers: {
-                        'X-Idempotency-Key': generateIdempotencyKey('invite_' + ($('#inviteEmail').val() || ''))
+                        'X-Idempotency-Key': idempotencyKey
                     },
                     data: formData,
                     processData: false,
                     contentType: false,
                     success: function(response) {
+                        isInviteSubmitting = false;
                         $btn.removeClass('loading').prop('disabled', false);
                         if (response.msgType === 'success') {
+                            $form.removeData('idempotency-key');
                             if (window.JeroTeamLocalStore) {
                                 window.JeroTeamLocalStore.purge();
                             }
@@ -1698,9 +1719,14 @@
                             showInviteMsg(response.message || 'Something went wrong.', 'error');
                         }
                     },
-                    error: function() {
+                    error: function(xhr) {
+                        isInviteSubmitting = false;
                         $btn.removeClass('loading').prop('disabled', false);
-                        showInviteMsg('Server error. Please try again.', 'error');
+                        var msg = 'Server error. Please try again.';
+                        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        showInviteMsg(msg, 'error');
                     }
                 });
             });
@@ -2420,6 +2446,25 @@
 						$('#teamsListajax').html(response.html);
 						$('#paginationTeams').html(response.pagination);
 						updateTeamSelectedCount();
+
+						if (response.counts) {
+							$('#stat-total-members').text(response.counts.total);
+							$('#stat-active-members').text(response.counts.active);
+							$('#stat-inactive-members').text(response.counts.inactive);
+							if ($('#stat-captain-trm').length) {
+								$('#stat-captain-trm').text((response.counts.captain || 0) + (response.counts.trm || 0));
+							}
+							if ($('#stat-captain-sub').length) {
+								$('#stat-captain-sub').text(response.counts.captain || 0);
+							}
+							if ($('#stat-trm-sub').length) {
+								$('#stat-trm-sub').text(response.counts.trm || 0);
+							}
+							$('#tab-count-all').text(response.counts.total);
+							$('#tab-count-active').text(response.counts.active);
+							$('#tab-count-inactive').text(response.counts.inactive);
+							$('#tab-count-invited').text(response.counts.invited);
+						}
 					},
 					error: function(xhr, status) {
 						if (status !== 'abort') {

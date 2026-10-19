@@ -23,8 +23,13 @@ Schedule::command('outbox:process-reverb --limit=100')
     ->withoutOverlapping(2)
     ->runInBackground();
 
+// Team Member Transactional Outbox Dispatcher
+Schedule::command('team:process-outbox --limit=25')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->runInBackground();
+
 Schedule::command('apptracker:prune-outbox --days=7')
     ->dailyAt('03:30')
     ->withoutOverlapping(10)
     ->runInBackground();
-
