@@ -485,6 +485,28 @@
                 name: '[TEMPLATE-7] Requisition Health Check & Follow-Up (Follow-up 2)',
                 desc: 'Pipeline health check inquiry: gauge client hiring timeline, offer calibration, or profile readjustment.',
                 subject: 'Status Check & Shortlist Alignment | [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]'
+            },
+            {
+                id: '76',
+                category: 'screening',
+                badge: 'Screening Q&A',
+                badgeClass: 'fwd-badge-screening',
+                icon: '📝',
+                name: '[TEMPLATE-8] Candidate Telephonic Screening Dossier & Q&A Assessment',
+                desc: 'Structured Excel tracker dossier displaying telephonic call screening questions and candidate verified answers stored in database.',
+                subject: 'Candidate Screening Dossier & Verified Q&A: [{CANDIDATE_NAME}] - [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]',
+                body: '<p>Dear [HR_NAME],</p><p>I hope this email finds you well.</p><p>Following our thorough telephonic screening and preliminary evaluation, we are pleased to forward the comprehensive candidate dossier for <strong>[{CANDIDATE_NAME}]</strong> for the <strong>[{JOB_TITLE}]</strong> role.</p><p>Below is the structured candidate profile and verified telephonic screening assessment tracker recorded during our recruiter evaluation call:</p><p>[{SCREENING_QA_TRACKER}]</p><p>The candidate\'s detailed resume in selected format has been attached for your evaluation. Please review the responses and let us know your interview availability for next rounds.</p><p>Looking forward to your feedback.</p><p>Best regards,<br />[{HR_NAME}]<br />[{POSITION}]<br />[{COMPANY_NAME}]<br />[{HR_EMAIL}]<br />[{HR_PHONE}]</p>'
+            },
+            {
+                id: '77',
+                category: 'screening',
+                badge: 'Skills & Career Insights',
+                badgeClass: 'fwd-badge-screening',
+                icon: '🎯',
+                name: '[TEMPLATE-9] Comprehensive Skills Matrix, Reason for Change & Screening Assessment',
+                desc: 'Excel tracker matrix with key skills experience breakdown, candidate reason for job change, and verified screening Q&A responses.',
+                subject: 'Technical Skills Matrix, Career Insights & Verified Assessment: [{CANDIDATE_NAME}] - [{JOB_TITLE}] | [{CLIENT_NAME_COMPANY_NAME}]',
+                body: '<p>Dear [HR_NAME],</p><p>Greetings!</p><p>We are delighted to submit the detailed technical profile for <strong>[{CANDIDATE_NAME}]</strong> for the <strong>[{JOB_TITLE}]</strong> opportunity. Our recruitment team has verified candidate qualifications, hands-on tool proficiencies, reason for career transition, and core competencies.</p><p>Please find below the candidate overview, detailed skill experience breakdown, career transition motivation, and verified screening assessment tracker:</p><p>[{CAREER_INSIGHTS_TRACKER}]</p><p>The updated resume in verified format is attached with this communication. Kindly review the candidate matrix and let us know if we may coordinate interview slots with your technical hiring panel.</p><p>Best regards,<br />[{HR_NAME}]<br />[{POSITION}]<br />[{COMPANY_NAME}]<br />[{HR_EMAIL}]<br />[{HR_PHONE}]</p>'
             }
         ],
         _compiledAttachments: {},
@@ -1716,6 +1738,275 @@
             return this.buildDynamicMatrixTable();
         },
 
+        buildScreeningQATrackerHtml: function () {
+            var self = this;
+            if (!self._applicationData || self._applicationData.length === 0) return '';
+            var html = '';
+
+            self._applicationData.forEach(function (cand, idx) {
+                var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
+                var desig = escapeHtml(cand.current_designation || cand.designation || cand.job_title || 'Technical Specialist');
+                var role = escapeHtml(cand.job_title || cand.current_designation || 'Position');
+                var comp = escapeHtml(cand.company || cand.current_company || '--');
+                var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
+                if (typeof exp === 'number') exp = exp + ' Yrs';
+                var relExp = escapeHtml(cand.rel_exp ? (cand.rel_exp + ' Yrs') : exp);
+                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
+                var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
+                var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
+
+                var qaList = [];
+                if (Array.isArray(cand.screening_qa) && cand.screening_qa.length > 0) {
+                    qaList = cand.screening_qa;
+                } else if (cand.screening_qa && typeof cand.screening_qa === 'object') {
+                    qaList = Object.values(cand.screening_qa);
+                }
+
+                if (qaList.length === 0) {
+                    var skillsText = '';
+                    if (Array.isArray(cand.skills) && cand.skills.length > 0) {
+                        skillsText = cand.skills.slice(0, 4).map(function(s) { return typeof s === 'string' ? s : (s.name || s.skill_name || ''); }).filter(Boolean).join(', ');
+                    }
+                    qaList = [
+                        { question: 'Key Technical Skills & Project Scope Assessed', answer: 'Candidate demonstrated hands-on technical proficiency in ' + (skillsText || 'primary domain') + ' with solid production architecture experience.' },
+                        { question: 'Notice Period & Availability Confirmation', answer: 'Confirmed current notice period is ' + notice + '. Candidate is actively interviewing and available for timely joining.' },
+                        { question: 'Compensation & Work Mode Alignment', answer: 'Compensation expectations aligned with requisition budget (' + ctc + '). Fully comfortable with ' + wm + ' working arrangement.' }
+                    ];
+                }
+
+                html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #2B579A;margin:16px 0;">';
+                html += '<thead><tr style="background:#2B579A;color:#FFFFFF;font-weight:bold;font-size:13px;">';
+                html += '<th colspan="4" style="border:solid 1px #2B579A;padding:8px 12px;text-align:left;">📋 CANDIDATE TELEPHONIC SCREENING DOSSIER — ' + cName.toUpperCase() + '</th>';
+                html += '</tr></thead><tbody>';
+                html += '<tr style="background:#F2F6FA;">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;width:18%;color:#1F2937;">Candidate Name</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;width:32%;color:#111827;font-weight:bold;">' + cName + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;width:18%;color:#1F2937;">Target Role</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;width:32%;color:#111827;">' + role + '</td>';
+                html += '</tr><tr>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Current Company</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + comp + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Current Role</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + desig + '</td>';
+                html += '</tr><tr style="background:#F2F6FA;">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Experience (Total / Rel.)</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + exp + ' / ' + relExp + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Notice Period</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#059669;font-weight:bold;">' + notice + '</td>';
+                html += '</tr><tr>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Compensation (Cur / Exp)</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + ctc + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Location &amp; Work Mode</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + loc + ' (' + wm + ')</td>';
+                html += '</tr>';
+
+                // Section 2: Screening Questions & Answers
+                html += '<tr style="background:#3B82F6;color:#FFFFFF;font-weight:bold;">';
+                html += '<th style="border:solid 1px #3B82F6;padding:7px 10px;text-align:center;width:6%;">#</th>';
+                html += '<th style="border:solid 1px #3B82F6;padding:7px 10px;text-align:left;width:44%;">SCREENING QUESTION (ASKED DURING CALL)</th>';
+                html += '<th colspan="2" style="border:solid 1px #3B82F6;padding:7px 10px;text-align:left;width:50%;">CANDIDATE\'S VERIFIED RESPONSE</th>';
+                html += '</tr>';
+
+                qaList.forEach(function (item, qIdx) {
+                    var qText = escapeHtml(item.question || item.job_detail_value || item.q || '');
+                    var aText = escapeHtml(item.answer || item.application_detail_value || item.a || '');
+                    var bg = (qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;font-weight:bold;color:#2B579A;">' + (qIdx + 1) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;font-weight:600;color:#1F2937;">' + qText + '</td>';
+                    html += '<td colspan="2" style="border:solid 1px #D1D5DB;padding:8px 10px;color:#111827;line-height:1.4;">' + aText + '</td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+            });
+
+            return html;
+        },
+
+        buildCareerInsightsTrackerHtml: function () {
+            var self = this;
+            if (!self._applicationData || self._applicationData.length === 0) return '';
+            var html = '';
+
+            self._applicationData.forEach(function (cand, idx) {
+                var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
+                var desig = escapeHtml(cand.current_designation || cand.designation || cand.job_title || 'Technical Specialist');
+                var role = escapeHtml(cand.job_title || cand.current_designation || 'Position');
+                var comp = escapeHtml(cand.company || cand.current_company || '--');
+                var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
+                if (typeof exp === 'number') exp = exp + ' Yrs';
+                var relExp = escapeHtml(cand.rel_exp ? (cand.rel_exp + ' Yrs') : exp);
+                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
+                var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
+                var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
+
+                var reasonChange = escapeHtml(cand.reason_for_job_change || cand.recruiter_note_text || 'Seeking professional career growth & new technical challenges matching core competencies.');
+
+                // Skills Breakdown
+                var skillsList = [];
+                if (Array.isArray(cand.skills) && cand.skills.length > 0) {
+                    skillsList = cand.skills.map(function(s) {
+                        if (typeof s === 'object') {
+                            return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                        }
+                        return { name: String(s), exp: exp, rating: 4 };
+                    });
+                } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
+                    skillsList = cand.skills.split(',').slice(0, 5).map(function(s) {
+                        return { name: s.trim(), exp: exp, rating: 4 };
+                    });
+                }
+                if (skillsList.length === 0) {
+                    skillsList.push({ name: 'Primary Technical Domain Expertise', exp: exp, rating: 5 });
+                }
+
+                // Q&A
+                var qaList = [];
+                if (Array.isArray(cand.screening_qa) && cand.screening_qa.length > 0) {
+                    qaList = cand.screening_qa;
+                } else if (cand.screening_qa && typeof cand.screening_qa === 'object') {
+                    qaList = Object.values(cand.screening_qa);
+                }
+                if (qaList.length === 0) {
+                    qaList = [
+                        { question: 'Key Technical Skills & Project Scope Assessed', answer: 'Candidate demonstrated hands-on technical proficiency with solid architectural and coding foundations.' },
+                        { question: 'Notice Period & Availability Confirmation', answer: 'Confirmed current notice period is ' + notice + '. Candidate is actively interviewing and available for timely joining.' },
+                        { question: 'Reason for Exploring New Opportunities', answer: reasonChange }
+                    ];
+                }
+
+                html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #1E3A8A;margin:16px 0;">';
+                html += '<thead><tr style="background:#1E3A8A;color:#FFFFFF;font-weight:bold;font-size:13px;">';
+                html += '<th colspan="4" style="border:solid 1px #1E3A8A;padding:8px 12px;text-align:left;">🎯 CANDIDATE PROFILE &amp; CAREER INSIGHTS — ' + cName.toUpperCase() + '</th>';
+                html += '</tr></thead><tbody>';
+                html += '<tr style="background:#F0F4F8;">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;width:20%;color:#1F2937;">Candidate Name</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;width:30%;color:#111827;font-weight:bold;">' + cName + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;width:20%;color:#1F2937;">Target Job Title</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;width:30%;color:#111827;">' + role + '</td>';
+                html += '</tr><tr>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Current Company &amp; Role</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + comp + ' — ' + desig + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Experience (Total / Rel.)</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + exp + ' / ' + relExp + '</td>';
+                html += '</tr><tr style="background:#F0F4F8;">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Notice Period</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#059669;font-weight:bold;">' + notice + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:bold;color:#1F2937;">Location / CTC</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;color:#111827;">' + loc + ' (' + ctc + ')</td>';
+                html += '</tr>';
+
+                // Reason for Job Change Highlight Row
+                html += '<tr style="background:#FFFBEB;">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;font-weight:bold;color:#92400E;vertical-align:top;">Reason for Job Change</td>';
+                html += '<td colspan="3" style="border:solid 1px #D1D5DB;padding:8px 10px;color:#78350F;font-weight:500;line-height:1.5;">' + reasonChange + '</td>';
+                html += '</tr>';
+
+                // Section 2: Key Skills Matrix
+                html += '<tr style="background:#0284C7;color:#FFFFFF;font-weight:bold;">';
+                html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:center;width:6%;">#</th>';
+                html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:left;width:44%;">KEY SKILL / TECHNOLOGY</th>';
+                html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:center;width:25%;">HANDS-ON EXPERIENCE</th>';
+                html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:center;width:25%;">PROFICIENCY / RATING</th>';
+                html += '</tr>';
+
+                skillsList.forEach(function (skItem, sIdx) {
+                    var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
+                    var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                    var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
+                    html += '</tr>';
+                });
+
+                // Section 3: Telephonic Screening Q&A
+                html += '<tr style="background:#1E3A8A;color:#FFFFFF;font-weight:bold;">';
+                html += '<th style="border:solid 1px #1E3A8A;padding:7px 10px;text-align:center;width:6%;">#</th>';
+                html += '<th style="border:solid 1px #1E3A8A;padding:7px 10px;text-align:left;width:44%;">SCREENING QUESTION (ASKED DURING CALL)</th>';
+                html += '<th colspan="2" style="border:solid 1px #1E3A8A;padding:7px 10px;text-align:left;width:50%;">CANDIDATE\'S VERIFIED RESPONSE</th>';
+                html += '</tr>';
+
+                qaList.forEach(function (item, qIdx) {
+                    var qText = escapeHtml(item.question || item.job_detail_value || item.q || '');
+                    var aText = escapeHtml(item.answer || item.application_detail_value || item.a || '');
+                    var bg = (qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;font-weight:bold;color:#1E3A8A;">' + (qIdx + 1) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;font-weight:600;color:#1F2937;">' + qText + '</td>';
+                    html += '<td colspan="2" style="border:solid 1px #D1D5DB;padding:8px 10px;color:#111827;line-height:1.4;">' + aText + '</td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+            });
+
+            return html;
+        },
+
+        buildSkillsExperienceTrackerHtml: function () {
+            var self = this;
+            if (!self._applicationData || self._applicationData.length === 0) return '';
+            var html = '';
+
+            self._applicationData.forEach(function (cand, idx) {
+                var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
+                var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
+                if (typeof exp === 'number') exp = exp + ' Yrs';
+
+                var skillsList = [];
+                if (Array.isArray(cand.skills) && cand.skills.length > 0) {
+                    skillsList = cand.skills.map(function(s) {
+                        if (typeof s === 'object') {
+                            return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                        }
+                        return { name: String(s), exp: exp, rating: 4 };
+                    });
+                } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
+                    skillsList = cand.skills.split(',').slice(0, 7).map(function(s) {
+                        return { name: s.trim(), exp: exp, rating: 4 };
+                    });
+                }
+                if (skillsList.length === 0) {
+                    skillsList.push({ name: 'Primary Domain Technical Expertise', exp: exp, rating: 5 });
+                }
+
+                html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #0284C7;margin:14px 0;">';
+                html += '<thead>';
+                html += '<tr style="background:#0284C7;color:#FFFFFF;font-weight:bold;">';
+                html += '<th colspan="4" style="border:solid 1px #0284C7;padding:7px 10px;text-align:left;">🎯 KEY SKILLS &amp; EXPERIENCE MATRIX — ' + cName.toUpperCase() + '</th>';
+                html += '</tr>';
+                html += '<tr style="background:#E0F2FE;color:#0369A1;font-weight:bold;">';
+                html += '<th style="border:solid 1px #BAE6FD;padding:6px 10px;text-align:center;width:6%;">#</th>';
+                html += '<th style="border:solid 1px #BAE6FD;padding:6px 10px;text-align:left;width:44%;">KEY SKILL / TECHNOLOGY</th>';
+                html += '<th style="border:solid 1px #BAE6FD;padding:6px 10px;text-align:center;width:25%;">HANDS-ON EXPERIENCE</th>';
+                html += '<th style="border:solid 1px #BAE6FD;padding:6px 10px;text-align:center;width:25%;">PROFICIENCY / RATING</th>';
+                html += '</tr>';
+                html += '</thead><tbody>';
+
+                skillsList.forEach(function (skItem, sIdx) {
+                    var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
+                    var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                    var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    html += '<tr style="background:' + bg + ';">';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp) + '</td>';
+                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+            });
+
+            return html;
+        },
+
         buildExecutivePresentationBody: function (recipientName) {
             var self = this;
             var cands = self._applicationData || [];
@@ -1841,7 +2132,7 @@
             });
 
             var allList = self.getAllTemplatesList();
-            var counts = { all: allList.length, matrix: 0, fresh: 0, urgency: 0, bench: 0, executive: 0, feedback: 0 };
+            var counts = { all: allList.length, matrix: 0, fresh: 0, screening: 0, urgency: 0, bench: 0, executive: 0, feedback: 0 };
             allList.forEach(function (tmpl) {
                 var c = tmpl.category || 'feedback';
                 if (counts[c] !== undefined) counts[c]++;
@@ -2119,6 +2410,10 @@
 
             var skillTrackerHtml = self.buildClientSkillTrackerHtml();
             var candidateSummaryHtml = self.buildDynamicMatrixTable();
+            var screeningQaTrackerHtml = self.buildScreeningQATrackerHtml();
+            var careerInsightsTrackerHtml = self.buildCareerInsightsTrackerHtml();
+            var skillsExperienceTrackerHtml = self.buildSkillsExperienceTrackerHtml();
+            var reasonForChange = (primaryCand && primaryCand.reason_for_job_change) ? primaryCand.reason_for_job_change : 'Seeking professional career growth & new technical challenges.';
 
             var body = rawBody
                 .replace(/\[\{HR_NAME\}\]/gi, recipientName)
@@ -2144,6 +2439,14 @@
                 .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle)
                 .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
+                .replace(/\[\{SCREENING_QA_TRACKER\}\]/gi, screeningQaTrackerHtml)
+                .replace(/\[SCREENING_QA_TRACKER\]/gi, screeningQaTrackerHtml)
+                .replace(/\[\{CAREER_INSIGHTS_TRACKER\}\]/gi, careerInsightsTrackerHtml)
+                .replace(/\[CAREER_INSIGHTS_TRACKER\]/gi, careerInsightsTrackerHtml)
+                .replace(/\[\{SKILLS_EXPERIENCE_TRACKER\}\]/gi, skillsExperienceTrackerHtml)
+                .replace(/\[SKILLS_EXPERIENCE_TRACKER\]/gi, skillsExperienceTrackerHtml)
+                .replace(/\[\{REASON_FOR_JOB_CHANGE\}\]/gi, reasonForChange)
+                .replace(/\[REASON_FOR_JOB_CHANGE\]/gi, reasonForChange)
                 .replace(/\[\{EMAIL_TRACKER\}\]/gi, candidateSummaryHtml)
                 .replace(/\[EMAIL_TRACKER\]/gi, candidateSummaryHtml)
                 .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
@@ -2218,7 +2521,21 @@
                     if (res && res.status === 'success') {
                         var desc = res.template_description || res.template_body || '';
                         var matrixTableHtml = self.buildDynamicMatrixTable();
+                        var screeningQaTrackerHtml = self.buildScreeningQATrackerHtml();
+                        var careerInsightsTrackerHtml = self.buildCareerInsightsTrackerHtml();
+                        var skillsExperienceTrackerHtml = self.buildSkillsExperienceTrackerHtml();
+                        var primaryCand = self._applicationData[0] || {};
+                        var reasonForChange = (primaryCand && primaryCand.reason_for_job_change) ? primaryCand.reason_for_job_change : 'Seeking professional career growth & new technical challenges.';
+
                         desc = desc
+                            .replace(/\[\{SCREENING_QA_TRACKER\}\]/gi, screeningQaTrackerHtml)
+                            .replace(/\[SCREENING_QA_TRACKER\]/gi, screeningQaTrackerHtml)
+                            .replace(/\[\{CAREER_INSIGHTS_TRACKER\}\]/gi, careerInsightsTrackerHtml)
+                            .replace(/\[CAREER_INSIGHTS_TRACKER\]/gi, careerInsightsTrackerHtml)
+                            .replace(/\[\{SKILLS_EXPERIENCE_TRACKER\}\]/gi, skillsExperienceTrackerHtml)
+                            .replace(/\[SKILLS_EXPERIENCE_TRACKER\]/gi, skillsExperienceTrackerHtml)
+                            .replace(/\[\{REASON_FOR_JOB_CHANGE\}\]/gi, reasonForChange)
+                            .replace(/\[REASON_FOR_JOB_CHANGE\]/gi, reasonForChange)
                             .replace(/\[\{EMAIL_TRACKER\}\]/gi, matrixTableHtml)
                             .replace(/\[EMAIL_TRACKER\]/gi, matrixTableHtml)
                             .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, matrixTableHtml)

@@ -20,6 +20,29 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Candidate Screening Q&A & Skills Career Insights Excel Tracker Templates (100% IMPLEMENTED & VERIFIED)**:
+  - **Requirements**: Add two enterprise-grade email templates for Forward Resume drawer formatted with rich Excel-styled table trackers:
+    1. **Template 76 (`[TEMPLATE-8]`)**: Candidate Telephonic Screening Dossier & Q&A Assessment (`screening` category, badge: `📋 Screening Q&A`, icon `📝`). Includes candidate overview and telephonic screening questions and candidate verified answers stored in the database.
+    2. **Template 77 (`[TEMPLATE-9]`)**: Comprehensive Skills Matrix, Reason for Change & Screening Assessment (`screening` category, badge: `🎯 Skills & Career Insights`, icon `🎯`). Includes key skills experience breakdown, candidate reason for job change (`job_applications.reason_for_job_change`), and verified screening answers from the database.
+    - Preserves attached resume format selection.
+    - Zero-SQL CQRS read principles: reads from Elasticsearch (`ats_candidate_job_question`) / Redis where possible, batch DB fallback with multi-tenant L2 cache (`tenant:{$companyId}:cand_qa:{$aId}`).
+    - Dual-path parity: client-first WASM/micro-JSON loader (`ForwardResumeManager.js` + `shell.v4.html`) and server fallback (`ServiceCompanyCvTrackerController.php` + `test_fwd_resume.blade.php`).
+    - Total templates expand from 8 to 10 (`All (10)`).
+  - **Resolution**:
+    1. **Database & Elasticsearch Seeding**:
+       - Seeded IDs 76 & 77 into `th_email_template` (`temptype = 1`, `status = 1`, `client_required = 0`) and synced to Elasticsearch cluster index `ats_th_email_template`.
+    2. **Backend Controller & Multi-Tenant L2 Caching**:
+       - In `ServiceCompanyCvTrackerController@test_fwd_resume_data`: added Dragonfly L2 multi-tenant caching for candidate screening Q&A (`tenant:{$companyId}:cand_qa:{$aId}`) and hydrated candidates with `screening_qa` and `reason_for_job_change`.
+       - In `ServiceCompanyCvTrackerController@email_template`: added null-safe joins for jobs, clients, and companies, token replacements for `[{SCREENING_QA_TRACKER}]`, `[{CAREER_INSIGHTS_TRACKER}]`, `[{SKILLS_EXPERIENCE_TRACKER}]`, and `[{REASON_FOR_JOB_CHANGE}]`.
+       - Built 3 rich Microsoft Office / Excel HTML table tracker generators: `buildScreeningQATrackerHtml()`, `buildCareerInsightsTrackerHtml()`, and `buildSkillsExperienceTrackerHtml()`.
+    3. **Client-First V4.1 Engine (`ForwardResumeManager.js` & `shell.v4.html`)**:
+       - Added `.fwd-badge-screening` badge CSS and category tab `📝 Screening & Q&A (2)`, updating total count to `(10)`.
+       - Added templates 76 & 77 to `_canonicalTemplates` and client-side tracker generators matching the server-side output.
+       - Token replacement support in both client-first renderer and AJAX fallback.
+    4. **Server Fallback View Parity (`test_fwd_resume.blade.php`)**:
+       - Added matching CSS, category tab, tracker generator helpers, canonical templates, and token replacements.
+  - **Verification**: Verified via PHP test harness `scratch/verify_templates_76_77.php` with 100% green output, PHP syntax clean (`php -l`), and zero JavaScript errors.
+
 - *2026-10-19* — **Forward Resume God-Level Card-Trigger Template Picker & 8-Template Enterprise Suite (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
   - **Requirements**:
     1. Redesign Forward Resume email templates dropdown at a "God-Level" replacing the plain HTML `<select>` across both the client-first V4.1 micro-JSON loader and server AJAX fallback paths.
@@ -85,7 +108,6 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 
 - *2026-10-19* — **Enterprise Currency Synchronization & Settings Integration Standard (100% IMPLEMENTED, VERIFIED & DOCUMENTED)**:
   - **Requirement**: Synchronize the 113 world currencies available in Company Profile Settings (`service_company/account`) with In-House Talent rates/compensation dropdowns (`service_company/bench-candidates/create`), pre-select the tenant's default currency on creation, preserve saved currencies on edit, convert rates cleanly to INR, and author an architectural standard doc for replicating across all modules.
->>>>>>> 7c7ec0941b86e7aa90d33823848532675ca59d04
   - **Resolution**:
     1. **Authoritative JSON Data Stores (`currencies.json`)**: Compiled 132 `master_currency` rows, 6 core `currencies`, 113 unified unique currencies, and pre-indexed resolution dictionaries (`key_to_code`, `code_to_key`, `master_id_to_code`, `symbols`, `rates_to_inr`, `rates_to_usd`) into `resources/data/currencies.json` and `public/country-state-city/currencies.json`.
     2. **Zero-SQL Serving Engine (`CurrencyService::loadCurrencyJson`)**: Memoized in PHP worker RAM with fallback loading. Refactored `getCurrencies()`, `getCurrencyMap()`, `getCurrencySymbols()`, `getSettingCurrenciesList()`, `getAllCurrenciesWithMeta()`, `resolveCurrencyCode()`, and `resolveCurrencyKey()` to execute with **0% MySQL reads** (< 0.05ms lookup time).
