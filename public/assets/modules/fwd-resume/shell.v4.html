@@ -237,22 +237,9 @@
   max-height: 280px !important;
   overflow-y: auto !important;
 }
-.mm-editor-wrap .ql-editor {
-  min-height: 180px !important;
-  padding: 12px 14px !important;
-  font-family: 'Poppins', sans-serif !important;
-  font-size: 13px !important;
-  line-height: 1.6 !important;
-  color: #334155 !important;
-}
-.mm-editor-wrap .ql-editor.ql-blank::before {
-  color: #94A3B8 !important;
-  font-style: normal !important;
-  font-family: 'Poppins', sans-serif !important;
-  font-size: 13px !important;
-}
+.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
-#test_editor1 { width: 100% !important; min-height: 180px; padding: 12px 14px; border: none; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
+#test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
 .mm-add-email-btn:hover { color: #1d4ed8; }
@@ -546,12 +533,13 @@
         </div>
         <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
           <div class="mm-tag-list" id="test_to_email_tag_list"></div>
-          <input type="text" id="test_to_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="off" />
+          <input type="text" id="test_to_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="email" inputmode="email" maxlength="254" />
           <button type="button" class="mm-add-email-btn" id="test_btn_add_to_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('to');">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Recipient
           </button>
         </div>
+        <div id="test_to_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="to_email" id="test_to_email" value="" />
         <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Press Enter or comma to add multiple email addresses.</span>
@@ -571,12 +559,13 @@
       <div class="mm-field-col">
         <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
           <div class="mm-tag-list" id="test_cc_email_tag_list"></div>
-          <input type="text" id="test_cc_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="off" />
+          <input type="text" id="test_cc_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="email" inputmode="email" maxlength="254" />
           <button type="button" class="mm-add-email-btn" id="test_btn_add_cc_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('cc');">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Recipient
           </button>
         </div>
+        <div id="test_cc_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="cc_email" id="test_cc_email" value="" />
         <div class="mm-hint">Optional. Carbon-copy team members or client contacts (Shares the 5-recipient quota).</div>
       </div>
@@ -990,8 +979,7 @@
           </button>
         </div>
         <div class="mm-editor-wrap" id="test_editor_wrap">
-          <div id="test_editor_quill"></div>
-          <textarea id="test_editor1" name="editor1" rows="8" style="display:none;"></textarea>
+          <textarea id="test_editor1" name="editor1" rows="10"></textarea>
         </div>
       </div>
     </div>
