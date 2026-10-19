@@ -157,6 +157,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('email-themes', [SuperAdminCompanyController::class,'emailThemes'])->name('company.emailthemes');
     Route::any('email-themes/update/{id}', [SuperAdminCompanyController::class,'emailThemesupdate'])->name('company.emailThemesupdate');	 
     Route::post('email-themes/add-edit', [SuperAdminCompanyController::class,'addEditemailThemesupdate'])->name('company.addEditemailThemesupdate');
+    Route::post('email-themes/toggle-status', [SuperAdminCompanyController::class,'toggleEmailTemplateStatus'])->name('company.emailThemesToggleStatus');
+    Route::post('email-themes/toggle-client-required', [SuperAdminCompanyController::class,'toggleEmailTemplateClientRequired'])->name('company.emailThemesToggleClientRequired');
+    Route::post('email-themes/bulk-status', [SuperAdminCompanyController::class,'bulkUpdateEmailTemplateStatus'])->name('company.emailThemesBulkStatus');
 
 
      Route::get('whatsapp-themes', [SuperAdminCompanyController::class,'whatsappThemes'])->name('company.whatsappthemes');

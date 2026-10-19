@@ -13,20 +13,20 @@ $hasContacts = count($contactsList) > 0;
   <div class="client-step-layout client-contact-layout">
     <div class="client-main-column">
       <!-- Contact Person Card -->
-      <div class="card client-contact-main-card mb-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;">
+      <div class="card client-contact-main-card mb-4" style="background:#ffffff; border:1.5px solid #F6DF83; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); overflow:hidden;">
         <!-- Header bar matching screenshots -->
-        <div class="card-header border-0 py-4 px-6 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f1f5f9 !important;">
+        <div class="card-header border-0 py-4 px-6 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f8fafc !important;">
           <div class="d-flex align-items-center">
-            <div style="width:40px; height:40px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
-              <i class="la la-users" style="font-size:22px; color:#ca8a04;"></i>
+            <div style="width:38px; height:38px; border-radius:10px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; margin-right:12px; flex-shrink:0;">
+              <i class="la la-users" style="font-size:20px; color:#ca8a04;"></i>
             </div>
             <div>
-              <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Contact Person</h3>
-              <p style="font-size:12px; color:#64748b; margin:0;">Add key contacts for this client organization.</p>
+              <h3 style="font-size:15px; font-weight:700; color:#101A46; margin:0 0 2px 0;">Contact Person</h3>
+              <p style="font-size:12px; color:#5C6F9F; margin:0;">Add key contacts for this client organization.</p>
             </div>
           </div>
-          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" style="background:#ffd428 !important; border:none !important; color:#1e293b !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,212,40,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
-            <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#1e293b;"></i> Add Contact Person
+          <button type="button" class="btn btn-warning client-add-contact-btn" id="client_open_contact_drawer" style="background:#FFD21F !important; border:none !important; color:#101A46 !important; font-weight:700 !important; font-size:13px !important; padding:9px 18px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(255,210,31,0.3) !important; display:inline-flex; align-items:center; gap:6px;">
+            <i class="la la-plus" style="font-size:14px; font-weight:bold; color:#101A46;"></i> Add Contact Person
           </button>
         </div>
 
@@ -238,6 +238,95 @@ if ($page_event == 'EDIT' && $hasContacts) {
       <input type="hidden" name="contactPersonId" id="contactPersonId" value="<?php echo @$contactPersonId; ?>" />
       <button type="button" class="add_cperson d-none" aria-hidden="true"></button>
       <button type="button" class="remove_cperson d-none" aria-hidden="true"></button>
+
+      <!-- ==============================================================
+           Official Social Profiles & Accounts Card (21-Box Contract)
+           ============================================================== -->
+      <div class="card client-social-profiles-card mt-4 mb-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); padding:20px 22px;">
+        <div class="d-flex align-items-center mb-4" style="gap:12px; justify-content:flex-start; text-align:left;">
+          <div style="width:36px; height:36px; border-radius:9px; background:#eff6ff; display:inline-flex; align-items:center; justify-content:center; color:#2563eb; flex-shrink:0;">
+            <i class="la la-share-alt" style="font-size:18px; color:#2563eb;"></i>
+          </div>
+          <div style="text-align:left;">
+            <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Official Social Profiles &amp; Accounts</h3>
+            <p style="font-size:11.5px; color:#64748b; margin:0;">Verified company presence channels and billing correspondence email.</p>
+          </div>
+        </div>
+
+        <!-- 2x2 Grid for Core Social Channels & AP Email -->
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px;">
+          <!-- LinkedIn Company URL -->
+          <div class="client-field fv-plugins-icon-container">
+            <label class="form-label" for="linkedin_url" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">LinkedIn Company Page</label>
+            <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+              <span class="input-group-text" style="background:#fff; border:none; color:#0a66c2; padding-left:12px; padding-right:8px;"><i class="la la-linkedin" style="font-size:16px;"></i></span>
+              <input type="url" class="form-control form-control-solid" name="linkedin_url" id="linkedin_url" value="<?php echo @$linkedin_url ?? ''; ?>" placeholder="https://linkedin.com/company/example" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+            </div>
+          </div>
+
+          <!-- Twitter / X Profile -->
+          <div class="client-field fv-plugins-icon-container">
+            <label class="form-label" for="twitter_url" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">Twitter / X Profile</label>
+            <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+              <span class="input-group-text" style="background:#fff; border:none; color:#0f172a; padding-left:12px; padding-right:8px;"><i class="la la-twitter" style="font-size:16px;"></i></span>
+              <input type="text" class="form-control form-control-solid" name="twitter_url" id="twitter_url" value="<?php echo @$twitter_url ?? ''; ?>" placeholder="https://x.com/example" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+            </div>
+          </div>
+
+          <!-- GitHub Profile -->
+          <div class="client-field fv-plugins-icon-container">
+            <label class="form-label" for="github_url" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">GitHub Organization</label>
+            <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+              <span class="input-group-text" style="background:#fff; border:none; color:#24292f; padding-left:12px; padding-right:8px;"><i class="la la-github" style="font-size:16px;"></i></span>
+              <input type="url" class="form-control form-control-solid" name="github_url" id="github_url" value="<?php echo @$github_url ?? ''; ?>" placeholder="https://github.com/example" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+            </div>
+          </div>
+
+          <!-- Accounts Payable Email -->
+          <div class="client-field fv-plugins-icon-container">
+            <label class="form-label" for="ap_email" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">Accounts Payable (Billing) Email</label>
+            <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
+              <span class="input-group-text" style="background:#fff; border:none; color:#059669; padding-left:12px; padding-right:8px;"><i class="la la-envelope" style="font-size:16px;"></i></span>
+              <input type="email" class="form-control form-control-solid" name="ap_email" id="ap_email" value="<?php echo @$ap_email ?? ''; ?>" placeholder="billing@example.com" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Toggle for Extended Social Profiles -->
+        <div class="mt-3 pt-3 border-top" style="border-color:#f1f5f9 !important;">
+          <a href="javascript:void(0);" onclick="$('#extended_socials_collapse').slideToggle(200);" style="font-size:11.5px; color:#2563eb; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+            <i class="la la-plus-circle"></i> <span>Extended Social Profiles (YouTube, Facebook, Instagram)</span>
+          </a>
+          <div id="extended_socials_collapse" style="display:none; margin-top:12px;">
+            <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;">
+              <!-- YouTube -->
+              <div>
+                <label class="form-label" for="youtube_url" style="font-size:11.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">YouTube</label>
+                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:38px;">
+                  <span class="input-group-text" style="background:#fff; border:none; color:#ef4444; padding-left:10px; padding-right:6px;"><i class="la la-youtube" style="font-size:15px;"></i></span>
+                  <input type="url" class="form-control form-control-solid" name="youtube_url" id="youtube_url" value="<?php echo @$youtube_url ?? ''; ?>" placeholder="https://youtube.com/@example" style="border:none; height:100%; font-size:12px; color:#1e293b; background-color:#ffffff;">
+                </div>
+              </div>
+              <!-- Facebook -->
+              <div>
+                <label class="form-label" for="facebook_url" style="font-size:11.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Facebook</label>
+                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:38px;">
+                  <span class="input-group-text" style="background:#fff; border:none; color:#1877f2; padding-left:10px; padding-right:6px;"><i class="la la-facebook" style="font-size:15px;"></i></span>
+                  <input type="url" class="form-control form-control-solid" name="facebook_url" id="facebook_url" value="<?php echo @$facebook_url ?? ''; ?>" placeholder="https://facebook.com/example" style="border:none; height:100%; font-size:12px; color:#1e293b; background-color:#ffffff;">
+                </div>
+              </div>
+              <!-- Instagram -->
+              <div>
+                <label class="form-label" for="instagram_url" style="font-size:11.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">Instagram</label>
+                <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:38px;">
+                  <span class="input-group-text" style="background:#fff; border:none; color:#e1306c; padding-left:10px; padding-right:6px;"><i class="la la-instagram" style="font-size:15px;"></i></span>
+                  <input type="url" class="form-control form-control-solid" name="instagram_url" id="instagram_url" value="<?php echo @$instagram_url ?? ''; ?>" placeholder="https://instagram.com/example" style="border:none; height:100%; font-size:12px; color:#1e293b; background-color:#ffffff;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Right Sidebar matching screenshots (switches dynamically between empty & populated states) -->

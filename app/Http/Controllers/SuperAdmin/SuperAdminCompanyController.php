@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Enums\BenchSubmissionState;
+use App\Enums\ClaimCapacity;
+use App\Enums\MarketModState;
+use App\Enums\MarketPubState;
 use App\Helper\Files;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
@@ -26,10 +30,6 @@ use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
-use App\Enums\BenchSubmissionState;
-use App\Enums\ClaimCapacity;
-use App\Enums\MarketModState;
-use App\Enums\MarketPubState;
 use App\Services\AgencyCommercialTermsService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
@@ -4668,97 +4668,154 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function emailThemes()
     {
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must_not' => [
-                            [
-                                'term' => [
-                                    'temptype' => 9,
+        $templates = collect();
+
+        // CQRS: Elasticsearch strictly for reads
+        try {
+            $params = [
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'body' => [
+                    'size' => 10000,
+                    'query' => [
+                        'bool' => [
+                            'must_not' => [
+                                [
+                                    'term' => [
+                                        'temptype' => 9,
+                                    ],
                                 ],
                             ],
                         ],
                     ],
                 ],
-            ],
+            ];
+
+            $response = $this->elasticService->getClient()->search($params);
+
+            $templates = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+        } catch (\Exception $e) {
+            \Log::error('ES search error in emailThemes: '.$e->getMessage());
+        }
+
+        // Resilient fallback to MySQL if ES empty or failed
+        if ($templates->isEmpty()) {
+            $templates = DB::table('th_email_template')
+                ->where('temptype', '!=', 9)
+                ->orderBy('e_temp_id', 'ASC')
+                ->get();
+        } else {
+            // Natural sort by e_temp_id ascending
+            $templates = $templates->sortBy(function ($t) {
+                return (int) ($t->e_temp_id ?? $t->id ?? 0);
+            })->values();
+        }
+
+        $this->th_email_template = $templates;
+
+        // Calculate KPI Metrics for Header Cards and Filter Tabs
+        $this->kpi = [
+            'total' => $templates->count(),
+            'active' => $templates->where('status', 1)->count(),
+            'inactive' => $templates->where('status', 0)->count(),
+            'send_mail' => $templates->where('temptype', 4)->count(),
+            'interview_mail' => $templates->where('temptype', 3)->count(),
+            'mass_mail' => $templates->where('temptype', 2)->count(),
+            'forward_mail' => $templates->where('temptype', 1)->count(),
+            'system_mail' => $templates->whereIn('temptype', [5, 6, 7, 8])->count(),
         ];
-
-        $response = $this->elasticService->getClient()->search($params);
-
-        $this->th_email_template = collect($response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
-
-        // $this->th_email_template =  isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
 
         return view('super-admin.emailthemes.index', $this->data);
     }
 
     public function emailThemesupdate(Request $request, $Id)
     {
-        // dd($Id);
+        $template = null;
 
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['e_temp_id' => (int) $Id]],
+        if ((int) $Id > 0) {
+            try {
+                $params = [
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'body' => [
+                        'size' => 1,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['e_temp_id' => (int) $Id]],
+                                ],
+                            ],
                         ],
                     ],
-                ],
-            ],
-        ];
+                ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        $this->th_email_template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+                $response = $this->elasticService->getClient()->search($params);
+                $template = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+            } catch (\Exception $e) {
+                \Log::error('ES search error in emailThemesupdate: '.$e->getMessage());
+            }
+
+            // Resilient fallback to MySQL
+            if (! $template) {
+                $template = DB::table('th_email_template')->where('e_temp_id', (int) $Id)->first();
+            }
+        }
+
+        $this->th_email_template = $template;
+        $this->tokenId = (int) $Id;
 
         return view('super-admin.emailthemes.add-edit', $this->data);
     }
 
     public function addEditemailThemesupdate(Request $request)
     {
-        // dd($request->tokenId);
-        if ($request->tokenId == 0) {
-            //  dd($request->all());
+        $tempForInterviewVal = (int) ($request->tempForInterview_is ?: 1);
+        $statusVal = (int) ($request->status_is ?? 1);
+        $temptypeVal = (int) ($request->temptype_is ?? 1);
+        $clientRequiredVal = (int) ($request->client_required_is ?? ($request->client_required ?? 0));
+
+        if ((int) $request->tokenId == 0) {
             $values = [
                 'template_name' => $request->template,
                 'display_name' => $request->template,
                 'template_subject' => $request->subject,
                 'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'temptype' => $request->temptype_is,
-                'curr_date' => date('Y-m-d'),
+                'status' => $statusVal,
+                'temptype' => $temptypeVal,
+                'tempForInterview' => $tempForInterviewVal,
+                'client_required' => $clientRequiredVal,
+                'curr_date' => now(),
             ];
             $e_temp_id = DB::table('th_email_template')->insertGetId($values);
 
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $e_temp_id,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $e_temp_id,
-                        'e_temp_id' => $e_temp_id,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'tempForInterview' => 1,
-                        'temptype' => $request->temptype_is,
-                        'curr_date' => now()->toIso8601String(),
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $e_temp_id,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $e_temp_id,
+                            'e_temp_id' => (int) $e_temp_id,
+                            'template_name' => $request->template,
+                            'display_name' => $request->template,
+                            'template_subject' => $request->subject,
+                            'template_description' => $request->editor1,
+                            'status' => $statusVal,
+                            'tempForInterview' => $tempForInterviewVal,
+                            'client_required' => $clientRequiredVal,
+                            'temptype' => $temptypeVal,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
                     ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('ES insert error: '.$e->getMessage());
+            }
 
         } else {
             $values = [
@@ -4766,34 +4823,164 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'display_name' => $request->template,
                 'template_subject' => $request->subject,
                 'template_description' => $request->editor1,
-                'status' => $request->status_is,
-                'temptype' => $request->temptype_is,
+                'status' => $statusVal,
+                'temptype' => $temptypeVal,
+                'tempForInterview' => $tempForInterviewVal,
+                'client_required' => $clientRequiredVal,
+                'curr_date' => now(),
             ];
             DB::table('th_email_template')->where('e_temp_id', '=', $request->tokenId)->update($values);
-            $response = $this->elasticService->getClient()->update([
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'id' => $request->tokenId,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $request->tokenId,
-                        'e_temp_id' => $request->tokenId,
-                        'template_name' => $request->template,
-                        'display_name' => $request->template,
-                        'template_subject' => $request->subject,
-                        'template_description' => $request->editor1,
-                        'status' => $request->status_is,
-                        'temptype' => $request->temptype_is,
+
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $request->tokenId,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'id' => (int) $request->tokenId,
+                            'e_temp_id' => (int) $request->tokenId,
+                            'template_name' => $request->template,
+                            'display_name' => $request->template,
+                            'template_subject' => $request->subject,
+                            'template_description' => $request->editor1,
+                            'status' => $statusVal,
+                            'temptype' => $temptypeVal,
+                            'tempForInterview' => $tempForInterviewVal,
+                            'client_required' => $clientRequiredVal,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
                     ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('ES update error: '.$e->getMessage());
+            }
 
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        return Reply::successWithData('Email template saved successfully.', [
+            'status' => 'success',
+            'url' => route('superadmin.company.emailthemes'),
+        ]);
 
+    }
+
+    public function toggleEmailTemplateStatus(Request $request)
+    {
+        $id = (int) $request->id;
+        $status = (int) $request->status;
+
+        if (! $id) {
+            return Reply::error('Invalid template ID.');
+        }
+
+        DB::table('th_email_template')->where('e_temp_id', $id)->update([
+            'status' => $status,
+            'curr_date' => now(),
+        ]);
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'id' => (string) $id,
+                'retry_on_conflict' => 5,
+                'refresh' => true,
+                'body' => [
+                    'doc' => [
+                        'status' => $status,
+                        'curr_date' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ES toggle status error: '.$e->getMessage());
+        }
+
+        return Reply::successWithData('Template status updated successfully.', [
+            'id' => $id,
+            'template_status' => $status,
+            'status_text' => $status == 1 ? 'Active' : 'Inactive',
+        ]);
+    }
+
+    public function toggleEmailTemplateClientRequired(Request $request)
+    {
+        $id = (int) $request->id;
+        $clientRequired = (int) $request->client_required;
+
+        if (! $id) {
+            return Reply::error('Invalid template ID.');
+        }
+
+        DB::table('th_email_template')->where('e_temp_id', $id)->update([
+            'client_required' => $clientRequired,
+            'curr_date' => now(),
+        ]);
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'id' => (string) $id,
+                'retry_on_conflict' => 5,
+                'refresh' => true,
+                'body' => [
+                    'doc' => [
+                        'client_required' => $clientRequired,
+                        'curr_date' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ES toggle client_required error: '.$e->getMessage());
+        }
+
+        return Reply::successWithData('Template client requirement updated successfully.', [
+            'id' => $id,
+            'client_required' => $clientRequired,
+            'status_text' => $clientRequired == 1 ? 'Client Required' : 'All Positions',
+        ]);
+    }
+
+    public function bulkUpdateEmailTemplateStatus(Request $request)
+    {
+        $ids = (array) $request->ids;
+        $status = (int) $request->status;
+
+        if (empty($ids)) {
+            return Reply::error('No templates selected.');
+        }
+
+        DB::table('th_email_template')->whereIn('e_temp_id', $ids)->update([
+            'status' => $status,
+            'curr_date' => now(),
+        ]);
+
+        foreach ($ids as $id) {
+            try {
+                $this->elasticService->getClient()->update([
+                    'index' => ELASTIC_EMAIL_TEMPLATE,
+                    'id' => (string) $id,
+                    'retry_on_conflict' => 5,
+                    'refresh' => true,
+                    'body' => [
+                        'doc' => [
+                            'status' => $status,
+                            'curr_date' => now()->toIso8601String(),
+                        ],
+                        'doc_as_upsert' => true,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                // log
+            }
+        }
+
+        return Reply::success('Bulk status updated successfully.');
     }
 
     public function featuresList()
@@ -6234,21 +6421,28 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         if ((int) $request->mailtype == 1) {
             $companyDetails = Company::join('users_profile', 'users_profile.company_id', 'companies.id')->select('users_profile.designation', 'companies.company_name')
                 ->where('users_profile.user_id', auth()->user()->id)->where('users_profile.company_id', auth()->user()->company_id)->first();
-            // dd($companyDetails->designation);
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
+            $compName = $companyDetails->company_name ?? ($company_name->company_name ?? 'Our Company');
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
 
-            //	dd($template_description);
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{POSITION}]'], [$companyDetails->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $companyDetails->designation], $template_description);
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{HR_PHONE}]', '{{HR_PHONE}}', '[{HR_NAME}]', '{{HR_NAME}}', '[{HR_EMAIL}]', '{{HR_EMAIL}}', '[{POSITION}]', '{{POSITION}}'],
+                [$compName, $compName, auth()->user()->mobile, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, auth()->user()->email, $companyDetails->designation ?? 'Recruitment Team', $companyDetails->designation ?? 'Recruitment Team'],
+                $template_description
+            );
         }
         if ((int) $request->mailtype == 2) {
-            // dd($company_name->company_name, auth()->user()->phone, auth()->user()->name, auth()->user()->email);
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
-            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect To Wahtsapp</a>';
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]'], ['aaaaaa', auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink], $template_description);
+            $compName = $company_name->company_name ?? 'Our Company';
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '[{HR_PHONE}]', '{{HR_PHONE}}', '[{HR_NAME}]', '{{HR_NAME}}', '[{HR_EMAIL}]', '{{HR_EMAIL}}', '[{WHAT_LINK}]', '{{WHAT_LINK}}'],
+                [$compName, $compName, auth()->user()->mobile, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, auth()->user()->email, $whatlink, $whatlink],
+                $template_description
+            );
         }
         if ((int) $request->mailtype == 3) {
-
-            $subject = str_replace(['[{COMPANY_NAME}]'], 'aaaaaaa', $templateData->template_subject);
+            $compName = $company_name->company_name ?? 'Our Company';
+            $subject = str_replace(['[{COMPANY_NAME}]', '{{COMPANY_NAME}}', '<br>'], [$compName, $compName, ''], $templateData->template_subject ?? '');
         }
         if ((int) $request->mailtype == 4) {
 
@@ -6265,33 +6459,89 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             if (@$country_id > 0) {
                 $country_name = GeneralMethod::getCountryName($country_id);
                 foreach ($country_name as $cval) {
-                    $country_name = ucwords($cval['sortname']);
+                    $country_name = ucwords($cval['sortname'] ?? '');
                 }
             }
 
-            $city = substr(@$client_loc->city, 0, 6);
+            $city = substr(@$client_loc->city ?? '', 0, 6);
             if (@$client_loc->country_id == 101) {
-                $city = substr(@$client_loc->city_name, 0, 6);
+                $city = substr(@$client_loc->city_name ?? '', 0, 6);
             }
             $jobs = Job::withoutGlobalScopes()->find($jobid);
 
-            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
-            $location = $city.' | '.$country_name;
+            $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName = $companyOrClientName->client ?: '';
+            $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
+            $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
-            // dd($templateData->template_subject);
-            if ($templateData->tempForInterview == 1) {
-                $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]'], [$companyOrClientName->company, $jobs->title, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 2) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]'], [$companyOrClientName->client, $jobs->title, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 3) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]', '[{JOB_LOCATION}]'], [$companyOrClientName->client, $companyOrClientName->company, $location], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 4) {
-                //  Documents Required | [{COMPANY_NAME}]
-                $subject = str_replace(['[{COMPANY_NAME}]'], [$companyOrClientName->company], $templateData->template_subject);
+            $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
+            $candName = ! empty($firstApp->full_name) ? ucwords(strtolower($firstApp->full_name)) : 'Candidate';
+
+            $interview_ques = '';
+            if ($jobid > 0) {
+                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
+                if ($interview_questions->count() > 0) {
+                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3><ol>';
+                    foreach ($interview_questions as $row) {
+                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                    }
+                    $interview_ques .= '</ol><hr />';
+                }
             }
 
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]'], [$companyOrClientName->company, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $companyOrClientName->client, $jobs->title, $location, $companyOrClientName->client_website, $jobs->job_description, $companyOrClientName->company_website, $companyOrClientName->company_description, $companyOrClientName->client_description, $companyOrClientName->company_size, $applicationData[0]->full_name], $template_description);
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+
+            $templateContext = [
+                'company_name' => $compName,
+                'client_name' => $cliName,
+                'self_company' => $isSelf ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
+                'job_title' => $jobs->title ?? 'Candidate Application',
+                'job_location' => $location,
+                'work_location' => $location,
+                'candidate_name' => $candName,
+                'candidate_email' => $firstApp->email ?? '',
+                'candidate_phone' => $firstApp->phone ?? '',
+                'job_description' => $jobs->job_description ?? '',
+                'work_shift' => $jobs->work_shifts ?? '',
+                'hr_name' => auth()->user()->name,
+                'hr_email' => auth()->user()->email,
+                'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+                'what_link' => $whatlink,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'company_address' => $client_loc->address ?? '',
+                'no_of_emp' => $companyOrClientName->company_size ?? '',
+                'interview_questions' => $interview_ques,
+                'current_date' => date('d M Y'),
+            ];
+
+            // Dedicated Subject context prevents HTML tags and list numbering from leaking into subject line
+            $cleanSubjectLoc = strip_tags(str_replace(['<br>', '<br/>', '<br />'], ' ', $location));
+            $cleanSubjectLoc = preg_replace('/^\s*1\)\s*/', '', $cleanSubjectLoc);
+
+            $templateSubjectContext = $templateContext;
+            $templateSubjectContext['job_location'] = $cleanSubjectLoc;
+            $templateSubjectContext['work_location'] = $cleanSubjectLoc;
+            $templateSubjectContext['location'] = $cleanSubjectLoc;
+
+            $subject = GeneralMethod::replaceTemplateVariables($templateData->template_subject ?? '', $templateSubjectContext);
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
 
         }
 
@@ -11510,7 +11760,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 // Multi-Tenant Atomic Cache Invalidation
                 Cache::forget("company_jobs_{$rowdata->company_id}");
                 Cache::forget("job_details_{$jobId}");
-                Cache::forget("marketplace_public_jobs");
+                Cache::forget('marketplace_public_jobs');
 
                 // Legacy mail permission & notification
                 $checkMailPermision = GeneralMethod::mailPermission(28);
@@ -11568,7 +11818,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
                     Cache::forget("company_jobs_{$compJob->company_id}");
                     Cache::forget("job_details_{$jobId}");
-                    Cache::forget("marketplace_public_jobs");
+                    Cache::forget('marketplace_public_jobs');
                 }
             }
 
@@ -12007,7 +12257,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function boostkeywordadd(Request $request)
     {
-        $boostkeywords = DB::table('boostkeywords')->where('company_id',$request->keyword_compant_id)->delete();
+        $boostkeywords = DB::table('boostkeywords')->where('company_id', $request->keyword_compant_id)->delete();
         $tags = request('tags');
         $tags_key = json_decode($tags, true);
         if (\request('tags') != '') {

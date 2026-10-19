@@ -3815,50 +3815,299 @@ END:VCALENDAR";
         }
     }
 
-    public static function companyOrClientName($id = '')
+    public static function companyOrClientName($id = '', $jobId = null)
     {
-        $company_id = auth()->user()->company_id;
+        $company_id = auth()->check() ? (int) (auth()->user()->company_id ?? 0) : 0;
 
-        $strAdded = DB::table('clients')
-            ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
-            ->join('companies', 'companies.id', '=', 'clients.company_id')
-            ->where('clients.id', $id)
-            ->first();
-        $companyOrclientName = '';
-        if ($strAdded) {
+        $tenantCompany = (auth()->check() && ! empty(auth()->user()->company->company_name))
+            ? auth()->user()->company->company_name
+            : 'Our Company';
 
-            if ($strAdded->company_id != $company_id) {
-                $companyOrclientName = $strAdded->company_name;
-            } else {
-                if ($strAdded->self_company == 0) {
-                    $companyOrclientName = $strAdded->name;
-                } else {
-                    $companyOrclientName = $strAdded->company_name;
-                }
-
-            }
-
-            if ($strAdded->self_company == 1) {
-                $companyOrclientName = $strAdded->company_name;
-            } else {
-                $companyOrclientName = $strAdded->name;
-            }
-
-            $data = [
-                'companyOrclientName' => (@$companyOrclientName) ? $companyOrclientName : '',
-                'selfCompany' => (@$strAdded->self_company) ? @$strAdded->self_company : '',
-                'company' => ($strAdded->company_name) ? @$strAdded->company_name : '',
-                'client' => ($strAdded->name) ? @$strAdded->name : '',
-                'company_website' => ($strAdded->company_website) ? @$strAdded->company_website : '',
-                'client_website' => ($strAdded->client_website) ? @$strAdded->client_website : '',
-                'company_description' => ($strAdded->company_description) ? @$strAdded->company_description : '',
-                'client_description' => ($strAdded->client_description) ? @$strAdded->client_description : '',
-                'company_size' => ($strAdded->company_sizes) ? @$strAdded->company_sizes : $strAdded->company_size,
-            ];
-
-            return (object) $data;
+        // 1. Direct Client Job Detection via Job ID or Recommendation Relation
+        $jobRow = null;
+        if (! empty($jobId)) {
+            $jobRow = DB::table('jobs')->where('id', $jobId)->first();
         }
 
+        if ($jobRow && $company_id > 0) {
+            $recRel = DB::table('recommendation_relation')
+                ->where('job_id', $jobRow->id)
+                ->where('to_company_id', $company_id)
+                ->where(function ($q) {
+                    $q->whereNull('final_status')
+                        ->orWhereNotIn('final_status', [2, 3]);
+                })
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $isDirectClientJob = ($recRel !== null) || ((int) $jobRow->company_id !== $company_id);
+
+            if ($isDirectClientJob) {
+                $directCompanyId = $recRel ? (int) $recRel->from_company_id : (int) $jobRow->company_id;
+                $directCompany = DB::table('companies')->where('id', $directCompanyId)->first();
+
+                if ($directCompany) {
+                    return (object) [
+                        'companyOrclientName' => $directCompany->company_name,
+                        'selfCompany' => 0,
+                        'is_direct_client' => 1,
+                        'company' => $tenantCompany,
+                        'client' => $directCompany->company_name,
+                        'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+                        'client_website' => $directCompany->website ?? '',
+                        'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+                        'client_description' => $directCompany->description ?? '',
+                        'company_size' => $directCompany->company_size ?? '50-200',
+                    ];
+                }
+            }
+        }
+
+        // 2. Client Record Lookup (Internal Client vs My Organization)
+        $clientId = ! empty($id) ? $id : ($jobRow->client_id ?? null);
+        $strAdded = null;
+        if (! empty($clientId)) {
+            $strAdded = DB::table('clients')
+                ->select('companies.company_name', 'companies.company_size', 'clients.company_sizes', 'companies.description as company_description', 'clients.description as client_description', 'clients.name', 'clients.self_company', 'clients.website as client_website', 'companies.website as company_website', 'clients.company_id')
+                ->join('companies', 'companies.id', '=', 'clients.company_id')
+                ->where('clients.id', $clientId)
+                ->first();
+        }
+
+        if ($strAdded) {
+            // Direct client company check if client record was created by another company
+            if ($company_id > 0 && (int) $strAdded->company_id !== $company_id) {
+                return (object) [
+                    'companyOrclientName' => $strAdded->company_name,
+                    'selfCompany' => 0,
+                    'is_direct_client' => 1,
+                    'company' => $tenantCompany,
+                    'client' => $strAdded->company_name,
+                    'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+                    'client_website' => $strAdded->company_website ?? '',
+                    'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+                    'client_description' => $strAdded->company_description ?? '',
+                    'company_size' => $strAdded->company_sizes ?: $strAdded->company_size,
+                ];
+            }
+
+            $isSelf = ((int) $strAdded->self_company === 1);
+            $clientName = $isSelf ? '' : ($strAdded->name ?? '');
+
+            return (object) [
+                'companyOrclientName' => $isSelf ? $tenantCompany : ($clientName ?: $tenantCompany),
+                'selfCompany' => $isSelf ? 1 : 0,
+                'is_direct_client' => 0,
+                'company' => $tenantCompany,
+                'client' => $clientName,
+                'company_website' => ($strAdded->company_website) ? @$strAdded->company_website : '',
+                'client_website' => $isSelf ? '' : (($strAdded->client_website) ? @$strAdded->client_website : ''),
+                'company_description' => ($strAdded->company_description) ? @$strAdded->company_description : '',
+                'client_description' => $isSelf ? '' : (($strAdded->client_description) ? @$strAdded->client_description : ''),
+                'company_size' => ($strAdded->company_sizes) ? @$strAdded->company_sizes : $strAdded->company_size,
+            ];
+        }
+
+        return (object) [
+            'companyOrclientName' => $tenantCompany,
+            'selfCompany' => 1,
+            'is_direct_client' => 0,
+            'company' => $tenantCompany,
+            'client' => '',
+            'company_website' => (auth()->check() && ! empty(auth()->user()->company->website)) ? auth()->user()->company->website : '',
+            'client_website' => '',
+            'company_description' => (auth()->check() && ! empty(auth()->user()->company->description)) ? auth()->user()->company->description : '',
+            'client_description' => '',
+            'company_size' => (auth()->check() && ! empty(auth()->user()->company->company_size)) ? auth()->user()->company->company_size : '50-200',
+        ];
+    }
+
+    /**
+     * Intent: Authoritatively replace all dynamic email template variables.
+     * Supports legacy [{TOKEN}], modern {{TOKEN}}, and bracket [TOKEN] syntax.
+     * Ensures COMPANY_NAME is never overwritten by CLIENT_NAME, and all
+     * candidate, job, client, and recruiter variables resolve accurately.
+     *
+     * @param  string  $text
+     * @return string
+     */
+    public static function replaceTemplateVariables($text, array $context = [])
+    {
+        if (empty($text) || ! is_string($text)) {
+            return (string) $text;
+        }
+
+        // 1. Authoritative Company vs Client Separation
+        $companyName = trim((string) ($context['company_name'] ?? ($context['company'] ?? '')));
+        if (empty($companyName)) {
+            $companyName = (auth()->check() && ! empty(auth()->user()->company->company_name))
+                ? auth()->user()->company->company_name
+                : 'Our Company';
+        }
+
+        $clientName = trim((string) ($context['client_name'] ?? ($context['client'] ?? '')));
+
+        // Check if this is an internal / self-company opportunity
+        $isSelfCompany = (! empty($context['self_company']) && (int) $context['self_company'] === 1)
+            || empty($clientName)
+            || (strcasecmp($clientName, $companyName) === 0)
+            || ($clientName === '[Client Name]');
+
+        if ($isSelfCompany) {
+            $clientDisplay = '[Client Name]';
+            $clientCompanyName = '[Client Name]';
+            $clientNameCompanyName = $companyName;
+            $clientWebsite = '';
+            $clientDescription = '';
+        } else {
+            $clientDisplay = $clientName;
+            $clientCompanyName = $clientName;
+            $clientNameCompanyName = "{$clientName} ({$companyName})";
+            $clientWebsite = (string) ($context['client_website'] ?? '');
+            $clientDescription = (string) ($context['client_description'] ?? '');
+        }
+
+        // 2. Candidate Info
+        $candidateName = (string) ($context['candidate_name'] ?? ($context['full_name'] ?? ''));
+        $candidateEmail = (string) ($context['candidate_email'] ?? ($context['to_email'] ?? ''));
+        $candidatePhone = (string) ($context['candidate_phone'] ?? ($context['candidate_mobile'] ?? ''));
+        $candidateComment = (string) ($context['candidate_comment'] ?? ($context['comments'] ?? ($context['comment'] ?? '')));
+        $totalExperience = (string) ($context['total_experience'] ?? ($context['experience'] ?? ($context['total_exp'] ?? '')));
+        $highestQualification = (string) ($context['highest_qualification'] ?? ($context['qualification'] ?? ''));
+        $currentLocation = (string) ($context['current_location'] ?? ($context['candidate_location'] ?? ($context['city'] ?? '')));
+        $primarySkills = (string) ($context['primary_skills'] ?? ($context['skills'] ?? ''));
+        $noticePeriod = (string) ($context['notice_period'] ?? ($context['np_id'] ?? ''));
+        $currentCtc = (string) ($context['current_ctc'] ?? ($context['ctc'] ?? ''));
+        $expectedCtc = (string) ($context['expected_ctc'] ?? ($context['ectc'] ?? ''));
+        $candidateId = (string) ($context['candidate_id'] ?? ($context['applicant_id'] ?? ''));
+
+        // 3. Job Info
+        $jobId = (string) ($context['job_id'] ?? ($context['jobId'] ?? ''));
+        $jobTitle = (string) ($context['job_title'] ?? ($context['title'] ?? 'Candidate Application'));
+        $jobLocation = (string) ($context['job_location'] ?? ($context['location'] ?? ($context['work_location'] ?? '')));
+        $jobDescription = (string) ($context['job_description'] ?? '');
+        $jobType = (string) ($context['job_type'] ?? ($context['employment_type'] ?? ''));
+        $salaryAmount = (string) ($context['salary_amount'] ?? ($context['salary'] ?? ''));
+        $workShift = (string) ($context['work_shift'] ?? ($context['work_shifts'] ?? ''));
+        $jobLink = (string) ($context['job_link'] ?? '');
+        $numberOfVacancies = (string) ($context['number_of_vacancies'] ?? ($context['total_positions'] ?? ($context['vacancies'] ?? '')));
+
+        // 4. Recruiter / HR Info
+        $hrName = (string) ($context['hr_name'] ?? (auth()->check() ? auth()->user()->name : 'HR Team'));
+        $hrEmail = (string) ($context['hr_email'] ?? (auth()->check() ? auth()->user()->email : ''));
+        $hrPhone = (string) ($context['hr_phone'] ?? ($context['hr_mobile'] ?? (auth()->check() ? (auth()->user()->mobile ?: (auth()->user()->phone ?? '')) : '')));
+        $whatLink = (string) ($context['what_link'] ?? '');
+        if (empty($whatLink) && ! empty($hrPhone)) {
+            $cleanPhone = preg_replace('/[^0-9]/', '', $hrPhone);
+            if (! empty($cleanPhone)) {
+                $whatLink = '<a href="https://wa.me/'.$cleanPhone.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.$cleanPhone.'">Connect on WhatsApp</a>';
+            }
+        }
+        $position = (string) ($context['position'] ?? ($context['designation'] ?? ($context['hr_position'] ?? 'Recruitment Department')));
+
+        // 5. Company & Client Organization Details
+        $companyWebsite = (string) ($context['company_website'] ?? '');
+        $companyDescription = (string) ($context['company_description'] ?? '');
+        $companyAddress = (string) ($context['company_address'] ?? ($context['address'] ?? ''));
+        $noOfEmp = (string) ($context['no_of_emp'] ?? ($context['company_size'] ?? ''));
+
+        // 6. Interview & Offer Details
+        $interviewDateTime = (string) ($context['interview_date_time'] ?? ($context['dateTime'] ?? ''));
+        $interviewMode = (string) ($context['interview_mode'] ?? '');
+        $interviewLink = (string) ($context['interview_link'] ?? ($context['videoUrl'] ?? ''));
+        $interviewLinkUrl = (string) ($context['interview_link_url'] ?? ($context['videoUrlInter'] ?? ''));
+        $interviewQuestions = (string) ($context['interview_questions'] ?? ($context['interview_ques'] ?? ''));
+        $interviewLevel = (string) ($context['interview_level'] ?? '');
+        $textSet = (string) ($context['text_set'] ?? '');
+        $otherDescription = (string) ($context['other_description'] ?? ($context['otherDetails'] ?? ''));
+        $offerLetterLink = (string) ($context['offer_letter_link'] ?? ($context['url'] ?? ''));
+        $offerLetterLinkCopy = (string) ($context['offer_letter_link_copy'] ?? ($context['urlcopy'] ?? ''));
+        $joiningDate = (string) ($context['joining_date'] ?? ($context['start_date_time'] ?? ''));
+        $currencyVal = (string) ($context['currency'] ?? '');
+        $salaryModeVal = (string) ($context['salary_mode'] ?? '');
+        $managerName = (string) ($context['manager_name'] ?? '');
+
+        // 7. Partnership & Vendor Details
+        $vendorCompanyName = (string) ($context['vendor_company_name'] ?? ($context['vendor_company'] ?? $companyName));
+        $currentDate = (string) ($context['current_date'] ?? ($context['date'] ?? date('d M Y')));
+        $emailTracker = (string) ($context['email_tracker'] ?? ($context['candidate_tracker'] ?? ($context['tracker'] ?? '')));
+
+        $replaceMap = [
+            'COMPANY_NAME' => $companyName,
+            'CLIENT_NAME' => $clientDisplay,
+            'CLIENT_COMPANY_NAME' => $clientCompanyName,
+            'CLIENT_NAME_COMPANY_NAME' => $clientNameCompanyName,
+            'JOB_TITLE' => $jobTitle,
+            'JOB_LOCATION' => $jobLocation,
+            'WORK_LOCATION' => $jobLocation,
+            'LOCATION' => $jobLocation,
+            'POSITION' => $position,
+            'CANDIDATE_NAME' => $candidateName,
+            'CANDIDATE_EMAIL' => $candidateEmail,
+            'CANDIDATE_PHONE' => $candidatePhone,
+            'CANDIDATE_COMMENT' => $candidateComment,
+            'TOTAL_EXPERIENCE' => $totalExperience,
+            'EXPERIENCE' => $totalExperience,
+            'EXPERENCE' => $totalExperience,
+            'HIGHEST_QUALIFICATION' => $highestQualification,
+            'QUALIFICATION' => $highestQualification,
+            'CURRENT_LOCATION' => $currentLocation,
+            'PRIMARY_SKILLS' => $primarySkills,
+            'NOTICE_PERIOD' => $noticePeriod,
+            'CURRENT_CTC' => $currentCtc,
+            'EXPECTED_CTC' => $expectedCtc,
+            'CANDIDATE_ID' => $candidateId,
+            'JOB_ID' => $jobId,
+            'JOB_DESCRIPTION' => $jobDescription,
+            'JOB_TYPE' => $jobType,
+            'JOB_LINK' => $jobLink,
+            'NUMBER_OF_VACANCIES' => $numberOfVacancies,
+            'SALARY_AMOUNT' => $salaryAmount,
+            'SALARY_MODE' => $salaryModeVal,
+            'CURRENCY' => $currencyVal,
+            'WORK_SHIFT' => $workShift,
+            'HR_NAME' => $hrName,
+            'HR_EMAIL' => $hrEmail,
+            'HR_PHONE' => $hrPhone,
+            'WHAT_LINK' => $whatLink,
+            'COMPANY_WEBSITE' => $companyWebsite,
+            'CLIENT_WEBSITE' => $clientWebsite,
+            'WEBSITE' => (! empty($clientWebsite) && ! $isSelfCompany) ? $clientWebsite : $companyWebsite,
+            'COMPANY_DESCRIPTION' => $companyDescription,
+            'CLIENT_DESCRIPTION' => $clientDescription,
+            'COMPANY_ADDRESS' => $companyAddress,
+            'NO_OF_EMP' => $noOfEmp,
+            'INTERVIEW_DATE_TIME' => $interviewDateTime,
+            'INTERVIEW_MODE' => $interviewMode,
+            'INTERVIEW_LINK' => $interviewLink,
+            'INTERVIEW_LINK_URL' => $interviewLinkUrl,
+            'INTERVIEW_QUESTIONS' => $interviewQuestions,
+            'INTERVIEW_LEVEL' => $interviewLevel,
+            'TEXT_SET' => $textSet,
+            'OTHER_DESCRIPTION' => $otherDescription,
+            'OFFER_LETTER_LINK' => $offerLetterLink,
+            'OFFER_LETTER_LINK_COPY' => $offerLetterLinkCopy,
+            'START_DATE_TIME' => $joiningDate,
+            'JOINING_DATE' => $joiningDate,
+            'MANAGER_NAME' => $managerName,
+            'VENDOR_COMPANY_NAME' => $vendorCompanyName,
+            'CURRENTDATE' => $currentDate,
+            'TODAY_DATE' => $currentDate,
+            'DATE' => $currentDate,
+            'EMAIL_TRACKER' => $emailTracker,
+            'CANDIDATE_TRACKER' => $emailTracker,
+        ];
+
+        // Replace [{TOKEN}], {{TOKEN}}, and [TOKEN] safely
+        foreach ($replaceMap as $key => $val) {
+            $text = str_replace(
+                ['[{'.$key.'}]', '{{'.$key.'}}', '['.$key.']'],
+                $val,
+                $text
+            );
+        }
+
+        return $text;
     }
 
     public static function baseCompany()

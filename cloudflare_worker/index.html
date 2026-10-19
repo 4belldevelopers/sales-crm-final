@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JERO God-Level Company Intelligence — Interactive Test Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+      color: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .title-text h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .title-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .badge-free {
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .input-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px 0 46px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: #94a3b8;
+    }
+    .btn-fetch {
+      height: 48px;
+      padding: 0 24px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .btn-fetch:hover { opacity: 0.95; }
+    .btn-fetch:disabled { opacity: 0.6; cursor: not-allowed; }
+    .preset-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .preset-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .preset-btn {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    /* Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 992px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title i { font-size: 17px; color: var(--primary); }
+    .card-step-badge {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    /* Fields Grid */
+    .fields-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .fields-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .field-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #0f172a;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      word-break: break-word;
+      transition: all 0.2s;
+    }
+    .field-box.filled {
+      background: #ffffff;
+      border-color: #93c5fd;
+      color: #1e3a8a;
+      font-weight: 500;
+    }
+    .field-box.empty {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .field-textarea {
+      min-height: 80px;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+    /* Logo Preview Box */
+    .logo-preview-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+    .logo-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1.5px dashed #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .logo-avatar img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .tag-chip {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    /* Diagnostics Sidebar */
+    .stat-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .stat-val {
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .source-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #1e40af;
+      margin: 3px 2px;
+    }
+    pre.json-viewer {
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      overflow-x: auto;
+      max-height: 380px;
+      font-family: Consolas, Monaco, monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Header Card -->
+  <div class="header-card">
+    <div class="header-title-row">
+      <div class="title-left">
+        <div class="title-icon"><i class="la la-brain"></i></div>
+        <div class="title-text">
+          <h1>JERO God-Level Company Intelligence — Interactive Test Lab</h1>
+          <p>Extracts all 21 core CRM boxes with 100% free open-source infrastructure (GLEIF + Wikidata + X.509 TLS + Schema.org)</p>
+        </div>
+      </div>
+      <div class="badge-free">
+        <i class="la la-check-circle"></i> 100% Free & Zero Cloud API Cost
+      </div>
+    </div>
+
+    <!-- URL Input Form -->
+    <div class="input-section">
+      <div class="search-wrap">
+        <i class="la la-globe search-icon"></i>
+        <input type="text" id="domain_input" class="search-input" placeholder="Enter company domain or website (e.g. stripe.com, razorpay.com, infosys.com)" value="stripe.com" onkeydown="if(event.key === 'Enter') runExtraction();">
+      </div>
+      <button type="button" class="btn-fetch" id="fetch_btn" onclick="runExtraction()">
+        <i class="la la-magic"></i> <span>Fetch Details</span>
+      </button>
+    </div>
+
+    <!-- 1-Click Preset Buttons -->
+    <div class="preset-chips">
+      <span class="preset-label">Test with popular domains:</span>
+      <button class="preset-btn" onclick="testDomain('stripe.com')">stripe.com</button>
+      <button class="preset-btn" onclick="testDomain('razorpay.com')">razorpay.com</button>
+      <button class="preset-btn" onclick="testDomain('infosys.com')">infosys.com</button>
+      <button class="preset-btn" onclick="testDomain('spotify.com')">spotify.com</button>
+      <button class="preset-btn" onclick="testDomain('github.com')">github.com</button>
+      <button class="preset-btn" onclick="testDomain('airbnb.com')">airbnb.com</button>
+    </div>
+  </div>
+
+  <!-- Main Output Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column: The 5 Wizard Tabs -->
+    <div class="wizard-steps-column">
+
+      <!-- STEP 1: Basic Information (7 Boxes) -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-building"></i> Step 1: Basic Information</div>
+          <span class="card-step-badge">7 Boxes</span>
+        </div>
+
+        <!-- Logo Preview Box (Box 2) -->
+        <div class="logo-preview-container">
+          <div class="logo-avatar" id="logo_avatar">
+            <i class="la la-image" style="font-size:24px; color:#cbd5e1;"></i>
+          </div>
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:#0f172a; margin-bottom:2px;">[Box 2] Company Logo</div>
+            <div style="font-size:11px; color:#64748b;" id="logo_url_sub">512×512 High-Res Transparent PNG</div>
+          </div>
+        </div>
+
+        <div class="fields-grid-2">
+          <!-- Box 1 -->
+          <div class="field-group">
+            <label class="field-label">[Box 1] Company Name</label>
+            <div class="field-box" id="box_name">—</div>
+          </div>
+          <!-- Box 3 -->
+          <div class="field-group">
+            <label class="field-label">[Box 3] Industry</label>
+            <div class="field-box" id="box_industry">—</div>
+          </div>
+        </div>
+
+        <div class="fields-grid-3">
+          <!-- Box 4 -->
+          <div class="field-group">
+            <label class="field-label">[Box 4] Company Size</label>
+            <div class="field-box" id="box_company_sizes">—</div>
+          </div>
+          <!-- Box 5 -->
+          <div class="field-group">
+            <label class="field-label">[Box 5] Company Type</label>
+            <div class="field-box" id="box_company_type">—</div>
+          </div>
+          <!-- Box 6 -->
+          <div class="field-group">
+            <label class="field-label">[Box 6] Founded Year</label>
+            <div class="field-box" id="box_founded">—</div>
+          </div>
+        </div>
+
+        <!-- Box 7 -->
+        <div class="field-group">
+          <label class="field-label">[Box 7] Career Page URL</label>
+          <div class="field-box" id="box_career_page_url">—</div>
+        </div>
+      </div>
+
+      <!-- STEP 2: About Client (2 Boxes) -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-file-text-o"></i> Step 2: About Client & Services</div>
+          <span class="card-step-badge">2 Boxes</span>
+        </div>
+
+        <!-- Box 8 -->
+        <div class="field-group" style="margin-bottom:14px;">
+          <label class="field-label">[Box 8] Company Description (Quill Editor) <span id="box_desc_stats" style="font-size:11px; color:#2563eb; font-weight:600; margin-left:8px;"></span></label>
+          <div class="field-box field-textarea" id="box_description" style="line-height:1.6; white-space:pre-wrap;">—</div>
+        </div>
+
+        <!-- Box 9 -->
+        <div class="field-group">
+          <label class="field-label">[Box 9] Service Offerings Tags</label>
+          <div class="field-box" id="box_tags" style="min-height:44px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">—</div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Headquarters Location (2 Boxes) -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-map-marker"></i> Step 3: Headquarters Location</div>
+          <span class="card-step-badge">2 Boxes</span>
+        </div>
+
+        <div class="fields-grid-2">
+          <!-- Box 10 -->
+          <div class="field-group">
+            <label class="field-label">[Box 10] Headquarters City</label>
+            <div class="field-box" id="box_city">—</div>
+          </div>
+          <!-- Country helper -->
+          <div class="field-group">
+            <label class="field-label">Country & Dial Code</label>
+            <div class="field-box" id="box_country">—</div>
+          </div>
+        </div>
+
+        <!-- Box 11 -->
+        <div class="field-group">
+          <label class="field-label">[Box 11] Full Headquarters Address</label>
+          <div class="field-box" id="box_address">—</div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Key Contacts & Social Media (9 Boxes) -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-users"></i> Step 4: Key Contacts & Social Media</div>
+          <span class="card-step-badge">9 Boxes</span>
+        </div>
+
+        <div class="fields-grid-2">
+          <!-- Box 12 -->
+          <div class="field-group">
+            <label class="field-label">[Box 12] Contact Person Name</label>
+            <div class="field-box" id="box_cp_name">—</div>
+          </div>
+          <!-- Box 16 -->
+          <div class="field-group">
+            <label class="field-label">[Box 16] Contact Designation</label>
+            <div class="field-box" id="box_cp_desigination">—</div>
+          </div>
+        </div>
+
+        <div class="fields-grid-3">
+          <!-- Box 13 -->
+          <div class="field-group">
+            <label class="field-label">[Box 13] Contact Email</label>
+            <div class="field-box" id="box_cp_email">—</div>
+          </div>
+          <!-- Box 14 -->
+          <div class="field-group">
+            <label class="field-label">[Box 14] Calling Code</label>
+            <div class="field-box" id="box_calling_code">—</div>
+          </div>
+          <!-- Box 15 -->
+          <div class="field-group">
+            <label class="field-label">[Box 15] Contact Phone</label>
+            <div class="field-box" id="box_cp_number">—</div>
+          </div>
+        </div>
+
+        <div class="fields-grid-3">
+          <!-- Box 17 -->
+          <div class="field-group">
+            <label class="field-label">[Box 17] LinkedIn URL</label>
+            <div class="field-box" id="box_linkedin_url">—</div>
+          </div>
+          <!-- Box 18 -->
+          <div class="field-group">
+            <label class="field-label">[Box 18] Twitter / X Profile</label>
+            <div class="field-box" id="box_twitter_url">—</div>
+          </div>
+          <!-- Box 19 -->
+          <div class="field-group">
+            <label class="field-label">[Box 19] GitHub Profile</label>
+            <div class="field-box" id="box_github_url">—</div>
+          </div>
+        </div>
+
+        <div class="fields-grid-3" style="margin-top:14px;">
+          <div class="field-group">
+            <label class="field-label">YouTube Channel</label>
+            <div class="field-box" id="box_youtube_url">—</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Facebook Profile</label>
+            <div class="field-box" id="box_facebook_url">—</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Instagram Profile</label>
+            <div class="field-box" id="box_instagram_url">—</div>
+          </div>
+        </div>
+
+        <!-- Box 20 -->
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label">[Box 20] Accounts Payable (AP) Invoicing Email</label>
+          <div class="field-box" id="box_ap_email">—</div>
+        </div>
+      </div>
+
+      <!-- STEP 5: Commercial Terms & Tax (1 Box) -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-balance-scale"></i> Step 5: Commercial Terms & Review</div>
+          <span class="card-step-badge">1 Box</span>
+        </div>
+
+        <!-- Box 21 -->
+        <div class="field-group">
+          <label class="field-label">[Box 21] Tax ID / CIN / GSTIN / EIN</label>
+          <div class="field-box" id="box_tax_id">—</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Live Diagnostics & Raw JSON Inspector -->
+    <div class="diagnostics-column">
+      <!-- Live Metrics Card -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-dashboard"></i> Live Extraction Telemetry</div>
+        </div>
+        <div class="stat-badge">
+          <span>Execution Latency</span>
+          <span class="stat-val" id="diag_latency">— ms</span>
+        </div>
+        <div class="stat-badge">
+          <span>Boxes Populated</span>
+          <span class="stat-val" id="diag_fill_count">0 / 21</span>
+        </div>
+        <div class="stat-badge">
+          <span>Fill Rate</span>
+          <span class="stat-val" id="diag_fill_pct">0%</span>
+        </div>
+
+        <div style="margin-top:14px;">
+          <div style="font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px;">Sources Triggered:</div>
+          <div id="diag_sources_list">
+            <span style="color:#94a3b8; font-style:italic;">No run yet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw JSON Payload -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title"><i class="la la-code"></i> Raw JSON Output</div>
+        </div>
+        <pre class="json-viewer" id="json_preview">// Enter a website above and click "Fetch Details"</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function testDomain(domain) {
+  document.getElementById('domain_input').value = domain;
+  runExtraction();
+}
+
+async function runExtraction() {
+  const domain = document.getElementById('domain_input').value.trim();
+  if (!domain) {
+    alert('Please enter a valid company website domain');
+    return;
+  }
+
+  const btn = document.getElementById('fetch_btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="la la-spinner la-spin"></i> <span>Extracting...</span>';
+
+  try {
+    const res = await fetch(`/?domain=${encodeURIComponent(domain)}`);
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    renderData(data);
+  } catch (err) {
+    console.error(err);
+    alert('Failed to connect to extraction engine API: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="la la-magic"></i> <span>Fetch Details</span>';
+  }
+}
+
+function setField(id, val, link = false) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  if (val && val !== 'null' && val !== '—') {
+    if (link) {
+      el.innerHTML = `<a href="${val}" target="_blank" style="color:#2563eb; text-decoration:none;">${val} <i class="la la-external-link"></i></a>`;
+    } else {
+      el.textContent = val;
+    }
+    el.className = 'field-box filled';
+    return 1;
+  } else {
+    el.textContent = '—';
+    el.className = 'field-box empty';
+    return 0;
+  }
+}
+
+function renderData(d) {
+  let filledCount = 0;
+
+  // Box 1: Name
+  filledCount += setField('box_name', d.name);
+
+  // Box 2: Logo
+  const logoAvatar = document.getElementById('logo_avatar');
+  if (d.logo) {
+    logoAvatar.innerHTML = `<img src="${d.logo}" alt="Logo" onerror="this.onerror=null; this.src='https://icons.duckduckgo.com/ip3/${d.domain}.ico';">`;
+    document.getElementById('logo_url_sub').textContent = d.logo;
+    filledCount++;
+  } else {
+    logoAvatar.innerHTML = '<i class="la la-image" style="font-size:24px; color:#cbd5e1;"></i>';
+  }
+
+  // Box 3: Industry
+  filledCount += setField('box_industry', d.industry);
+
+  // Box 4: Size
+  filledCount += setField('box_company_sizes', d.company_sizes ? `${d.company_sizes} employees` : null);
+
+  // Box 5: Type
+  filledCount += setField('box_company_type', d.company_type);
+
+  // Box 6: Founded
+  filledCount += setField('box_founded', d.founded);
+
+  // Box 7: Career Page
+  filledCount += setField('box_career_page_url', d.career_page_url, true);
+
+  // Box 8: Description
+  filledCount += setField('box_description', d.description);
+  const descStats = document.getElementById('box_desc_stats');
+  if (descStats) {
+    if (d.description) {
+      const words = d.description.trim().split(/\s+/).length;
+      descStats.textContent = `(${d.description.length} chars, ${words} words)`;
+    } else {
+      descStats.textContent = '';
+    }
+  }
+
+  // Box 9: Tags
+  const tagsEl = document.getElementById('box_tags');
+  if (d.tags && d.tags.length > 0) {
+    tagsEl.innerHTML = d.tags.map(t => `<span class="tag-chip"><i class="la la-tag"></i> ${t}</span>`).join('');
+    tagsEl.className = 'field-box filled';
+    filledCount++;
+  } else {
+    tagsEl.textContent = '—';
+    tagsEl.className = 'field-box empty';
+  }
+
+  // Box 10: City
+  filledCount += setField('box_city', d.city);
+  document.getElementById('box_country').textContent = `${d.country_name || '—'} (${d.calling_code || '—'})`;
+
+  // Box 11: Address
+  filledCount += setField('box_address', d.address);
+
+  // Box 12: Contact Name
+  filledCount += setField('box_cp_name', d.cp_name);
+
+  // Box 13: Contact Email
+  filledCount += setField('box_cp_email', d.cp_email);
+
+  // Box 14: Calling Code
+  filledCount += setField('box_calling_code', d.calling_code);
+
+  // Box 15: Phone
+  filledCount += setField('box_cp_number', d.cp_number);
+
+  // Box 16: Designation
+  filledCount += setField('box_cp_desigination', d.cp_desigination);
+
+  // Box 17: LinkedIn
+  filledCount += setField('box_linkedin_url', d.linkedin_url, true);
+
+  // Box 18: Twitter
+  filledCount += setField('box_twitter_url', d.twitter_url, true);
+
+  // Box 19: GitHub
+  filledCount += setField('box_github_url', d.github_url, true);
+
+  // Extra Socials: YouTube, Facebook, Instagram
+  setField('box_youtube_url', d.youtube_url, true);
+  setField('box_facebook_url', d.facebook_url, true);
+  setField('box_instagram_url', d.instagram_url, true);
+
+  // Box 20: AP Email
+  filledCount += setField('box_ap_email', d.ap_email);
+
+  // Box 21: Tax ID
+  filledCount += setField('box_tax_id', d.tax_id);
+
+  // Diagnostics
+  document.getElementById('diag_latency').textContent = `${d.latency_ms} ms`;
+  document.getElementById('diag_fill_count').textContent = `${filledCount} / 21`;
+  const pct = Math.round((filledCount / 21) * 100);
+  document.getElementById('diag_fill_pct').textContent = `${pct}%`;
+
+  // Sources Pill List
+  const sourcesContainer = document.getElementById('diag_sources_list');
+  if (d.sources_used) {
+    let pills = '';
+    if (d.sources_used.tls) pills += `<span class="source-pill"><i class="la la-lock"></i> TLS X.509</span>`;
+    if (d.sources_used.gleif) pills += `<span class="source-pill"><i class="la la-balance-scale"></i> GLEIF Registry</span>`;
+    if (d.sources_used.wikidata) pills += `<span class="source-pill"><i class="la la-database"></i> Wikidata API</span>`;
+    if (d.sources_used.crawled_pages) pills += `<span class="source-pill"><i class="la la-sitemap"></i> Sub-page Crawl (${d.sources_used.crawled_pages.length})</span>`;
+    if (d.sources_used.logo_cdn) pills += `<span class="source-pill"><i class="la la-image"></i> Google Favicon CDN</span>`;
+    sourcesContainer.innerHTML = pills || '<span style="color:#94a3b8;">None</span>';
+  }
+
+  // Raw JSON
+  document.getElementById('json_preview').textContent = JSON.stringify(d, null, 2);
+}
+
+// Auto-run first test on page load
+window.addEventListener('DOMContentLoaded', () => {
+  runExtraction();
+});
+</script>
+</body>
+</html>

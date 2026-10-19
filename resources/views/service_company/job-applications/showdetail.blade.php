@@ -145,7 +145,7 @@
 /* ===== PROFILE OVERVIEW: heading 13px, body 12px ===== */
 /* Inline here (not candidates-details.css) so browser cache never blocks delivery. */
 #kt_activitiesApplication #personal_details .card-title{font-size:13px!important;font-weight:700!important;}
-#kt_activitiesApplication #personal_details .summary-text{font-size:12px!important;line-height:1.7!important;}
+#kt_activitiesApplication #personal_details .summary-text,#kt_activitiesApplication #personal_details .reason-summary-text{font-size:12px!important;line-height:1.7!important;}
 #kt_activitiesApplication #personal_details .skills-thead{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-name-cell{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-exp-cell{font-size:12px!important;}
@@ -517,14 +517,17 @@
 #kt_activitiesApplication .cdr-skill-plain{background:#f8fafc;color:#64748b;border-color:#e2e8f0;}
 /* "+N More" counter tag */
 #kt_activitiesApplication .cdr-skill-tag.cdr-skill-more{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;font-size:10.5px;}
-/* Recruiter Notes drawer */
-#jw-recruiter-note-drawer .rn-section{margin-bottom:16px;}
-#jw-recruiter-note-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
-#jw-recruiter-note-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
-#jw-recruiter-note-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
+/* Recruiter Notes, Reason for Job Change & Visa drawers */
+#jw-recruiter-note-drawer .rn-section, #jw-reason-drawer .rn-section, #jw-visa-drawer .rn-section{margin-bottom:16px;}
+#jw-recruiter-note-drawer .rn-label, #jw-reason-drawer .rn-label, #jw-visa-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+#jw-recruiter-note-drawer .rn-label span, #jw-reason-drawer .rn-label span, #jw-visa-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
+#jw-recruiter-note-drawer .rn-select, #jw-reason-drawer .rn-select, #jw-visa-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
 #jw-recruiter-note-drawer .rn-editor{min-height:220px;max-height:400px;border:1.5px solid #e4e6ef;border-radius:8px;padding:12px 14px;font-size:12px;font-family:'Poppins',sans-serif;line-height:1.75;color:#181c32;background:#f8f9fb;outline:none;overflow-y:auto;word-break:break-word;}
 #jw-recruiter-note-drawer .rn-editor:focus{border-color:#3e97ff;background:#fff;}
 #jw-recruiter-note-drawer .rn-editor:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
+#jw-reason-drawer #jw_reason_for_change_editor{font-family:'Poppins',sans-serif;font-size:12px;color:#181c32;border:1.5px solid #e4e6ef;border-radius:8px;padding:10px 12px;line-height:1.6;background:#f8f9fb;}
+#jw-reason-drawer #jw_reason_for_change_editor:focus{border-color:#d97706;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(217,119,6,0.1);}
+#jw-visa-drawer .visa-chip-btn.active{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important;}
 /* Interview Slots empty state */
 #kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
 #kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
@@ -537,459 +540,506 @@
 .book-btn-addslot{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#64748b;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .18s;}
 .book-btn-addslot:hover{background:#eff6ff;border-color:#3e97ff;color:#3e97ff;}
 
-/* ===== REDESIGNED COMPENSATION SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .comp-card {
+/* ===== STANDARDIZED PROFILE OVERVIEW CARDS (Master Standard: Recruiter Comments) ===== */
+#kt_activitiesApplication #personal_details .cardshow {
   background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  padding: 24px;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
+  margin-bottom: 0 !important;
 }
-#kt_activitiesApplication .comp-header {
+
+#kt_activitiesApplication #personal_details .card-header-sidebar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin: -24px -24px 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #f0f4f8;
+  background: #fff;
+  position: relative;
 }
-#kt_activitiesApplication .comp-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #FFF4E5;
-  color: #EA580C;
+
+#kt_activitiesApplication #personal_details .card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
+
+#kt_activitiesApplication #personal_details .card-icon svg {
+  width: 18px;
+  height: 18px;
 }
-#kt_activitiesApplication .comp-items-list {
+
+#kt_activitiesApplication #personal_details .card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+}
+
+/* Master Recruiter Comments text & empty note style */
+#kt_activitiesApplication #personal_details .po-recruiter-note-text {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #334155;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .po-no-notes {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== COMPENSATION DETAILS ===== */
+#kt_activitiesApplication #personal_details .comp-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .comp-item-row {
+
+#kt_activitiesApplication #personal_details .comp-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 11px 0;
-  border-bottom: 1px solid #F1F5F9;
-  min-height: 48px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  min-height: 42px;
 }
-#kt_activitiesApplication .comp-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .comp-item-row:last-child {
   border-bottom: none;
 }
-#kt_activitiesApplication .comp-item-left {
+
+#kt_activitiesApplication #personal_details .comp-item-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
-#kt_activitiesApplication .comp-row-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+
+#kt_activitiesApplication #personal_details .comp-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-row-icon svg {
-  width: 17px;
-  height: 17px;
+
+#kt_activitiesApplication #personal_details .comp-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .comp-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .comp-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .comp-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .comp-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .comp-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .comp-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .comp-icon-amber {
-  background: #FEF3C7;
-  color: #D97706;
+
+#kt_activitiesApplication #personal_details .comp-icon-amber {
+  background: #fef3c7;
+  color: #d97706;
 }
-#kt_activitiesApplication .comp-icon-red {
-  background: #FEE2E2;
-  color: #DC2626;
+
+#kt_activitiesApplication #personal_details .comp-icon-red {
+  background: #fee2e2;
+  color: #dc2626;
 }
-#kt_activitiesApplication .comp-icon-mint {
-  background: #DCFCE7;
+
+#kt_activitiesApplication #personal_details .comp-icon-mint {
+  background: #dcfce7;
   color: #059669;
 }
-#kt_activitiesApplication .comp-label {
-  font-size: 13.5px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .comp-label {
+  font-size: 12px;
+  color: #64748b;
   font-weight: 500;
   white-space: nowrap;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .comp-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   text-align: right;
   white-space: nowrap;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-curr-symbol {
-  font-weight: 700 !important;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .comp-curr-symbol {
+  font-weight: 600 !important;
+  color: #0f172a;
   margin-right: 2px;
   display: inline-block;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
-#kt_activitiesApplication .comp-badge-purple {
+
+#kt_activitiesApplication #personal_details .comp-badge-purple {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 14px;
-  background: #EDE9FE;
-  color: #6D28D9;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-badge-green {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px;
-  background: #DCFCE7;
-  color: #16A34A;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-badge-gray {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 14px;
-  background: #F1F5F9;
-  color: #64748B;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 20px;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-}
-#kt_activitiesApplication .comp-comments-box {
-  background: #F4F8FC;
-  border: 1px solid #E2E8F0;
+  padding: 3px 10px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 12px;
-  padding: 14px 16px;
-  margin-top: 14px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-badge-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-badge-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  line-height: 1.3;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .comp-comments-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
-#kt_activitiesApplication .comp-comments-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #DBEAFE;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .comp-comments-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #dbeafe;
+  color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .comp-comments-content {
+
+#kt_activitiesApplication #personal_details .comp-comments-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+#kt_activitiesApplication #personal_details .comp-comments-content {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .comp-comments-label {
-  font-size: 12px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .comp-comments-label {
+  font-size: 11px;
+  color: #64748b;
   font-weight: 500;
   margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .comp-comments-text {
-  font-size: 13.5px;
-  color: #0F172A;
-  font-weight: 700;
-  line-height: 1.3;
+
+#kt_activitiesApplication #personal_details .comp-comments-text {
+  font-size: 12px;
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1.35;
   word-break: break-word;
   font-family: 'Poppins', sans-serif;
 }
 
-/* ===== REDESIGNED OWNERSHIP SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .own-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
-  overflow: hidden;
-  font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
-}
-#kt_activitiesApplication .own-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-#kt_activitiesApplication .own-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #F5F3FF;
-  color: #7C3AED;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-#kt_activitiesApplication .own-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
-}
-#kt_activitiesApplication .own-items-list {
+/* ===== OWNERSHIP SECTION ===== */
+#kt_activitiesApplication #personal_details .own-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .own-item-row {
+
+#kt_activitiesApplication #personal_details .own-item-row {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 13px 0;
-  border-bottom: 1px solid #F1F5F9;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
-#kt_activitiesApplication .own-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .own-item-row:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
-#kt_activitiesApplication .own-row-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+
+#kt_activitiesApplication #personal_details .own-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
-#kt_activitiesApplication .own-row-icon svg {
-  width: 19px;
-  height: 19px;
+
+#kt_activitiesApplication #personal_details .own-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .own-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .own-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .own-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .own-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .own-icon-amber {
-  background: #FEF3C7;
-  color: #D97706;
+
+#kt_activitiesApplication #personal_details .own-icon-amber {
+  background: #fef3c7;
+  color: #d97706;
 }
-#kt_activitiesApplication .own-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .own-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .own-item-body {
+
+#kt_activitiesApplication #personal_details .own-item-body {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .own-label {
-  font-size: 13px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .own-label {
+  font-size: 11.5px;
+  color: #64748b;
   font-weight: 500;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
 }
-#kt_activitiesApplication .own-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .own-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
-  line-height: 1.3;
+  line-height: 1.35;
   word-break: break-word;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
-#kt_activitiesApplication .own-datetime-pill {
+
+#kt_activitiesApplication #personal_details .own-datetime-pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: #F4F8FC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 8px 14px;
-  margin-top: 4px;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  margin-top: 3px;
   max-width: 100%;
   flex-wrap: wrap;
 }
-#kt_activitiesApplication .own-dt-item {
+
+#kt_activitiesApplication #personal_details .own-dt-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #0F172A;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .own-dt-item svg {
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .own-dt-item svg {
+  color: #64748b;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .own-dt-sep {
-  color: #CBD5E1;
+
+#kt_activitiesApplication #personal_details .own-dt-sep {
+  color: #cbd5e1;
   font-weight: 400;
-  font-size: 13px;
+  font-size: 11.5px;
   user-select: none;
 }
 
-/* ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== */
-#kt_activitiesApplication .cnt-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 14px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
-  padding: 20px 22px;
-  overflow: hidden;
-  font-family: 'Poppins', sans-serif;
-  margin-bottom: 16px;
-}
-#kt_activitiesApplication .cnt-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-#kt_activitiesApplication .cnt-hdr-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #EFF6FF;
-  color: #2563EB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-#kt_activitiesApplication .cnt-hdr-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.3;
-  font-family: 'Poppins', sans-serif;
-  letter-spacing: -0.01em;
-}
-#kt_activitiesApplication .cnt-items-list {
+/* ===== CONTACT DETAILS SECTION ===== */
+#kt_activitiesApplication #personal_details .cnt-items-list {
   display: flex;
   flex-direction: column;
 }
-#kt_activitiesApplication .cnt-item-row {
+
+#kt_activitiesApplication #personal_details .cnt-item-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 13px 0;
-  border-bottom: 1px solid #F1F5F9;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
-#kt_activitiesApplication .cnt-item-row:last-child {
+
+#kt_activitiesApplication #personal_details .cnt-item-row:last-child {
   border-bottom: none;
 }
-#kt_activitiesApplication .cnt-row-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+
+#kt_activitiesApplication #personal_details .cnt-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-#kt_activitiesApplication .cnt-row-icon svg {
-  width: 19px;
-  height: 19px;
+
+#kt_activitiesApplication #personal_details .cnt-row-icon svg {
+  width: 15px;
+  height: 15px;
 }
-#kt_activitiesApplication .cnt-icon-blue {
-  background: #EFF6FF;
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-icon-purple {
-  background: #F5F3FF;
-  color: #7C3AED;
+
+#kt_activitiesApplication #personal_details .cnt-icon-purple {
+  background: #f5f3ff;
+  color: #7c3aed;
 }
-#kt_activitiesApplication .cnt-icon-green {
-  background: #DCFCE7;
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .cnt-icon-green {
+  background: #dcfce7;
+  color: #16a34a;
 }
-#kt_activitiesApplication .cnt-icon-amber {
-  background: #FFF7ED;
-  color: #EA580C;
+
+#kt_activitiesApplication #personal_details .cnt-icon-amber {
+  background: #fff7ed;
+  color: #ea580c;
 }
-#kt_activitiesApplication .cnt-item-body {
+
+#kt_activitiesApplication #personal_details .cnt-item-body {
   flex: 1;
   min-width: 0;
 }
-#kt_activitiesApplication .cnt-label {
-  font-size: 13px;
-  color: #64748B;
+
+#kt_activitiesApplication #personal_details .cnt-label {
+  font-size: 11.5px;
+  color: #64748b;
   font-weight: 500;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   font-family: 'Poppins', sans-serif;
   line-height: 1.2;
 }
-#kt_activitiesApplication .cnt-value {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
-  line-height: 1.3;
+  line-height: 1.35;
   word-break: break-all;
 }
-#kt_activitiesApplication .cnt-val-link {
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-val-link {
+  color: #0f172a;
   text-decoration: none;
   transition: color .15s ease;
 }
-#kt_activitiesApplication .cnt-val-link:hover {
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-val-link:hover {
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-phone-val {
+
+#kt_activitiesApplication #personal_details .cnt-phone-val {
   display: inline-flex;
   align-items: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F172A;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-copy-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-flag-box {
+  display: inline-flex;
+  align-items: center;
+  width: 20px;
+  height: 15px;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-dial-code {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+#kt_activitiesApplication #personal_details .cnt-phone-val .phone-digits {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+#kt_activitiesApplication #personal_details .cnt-copy-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
-  color: #64748B;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -998,86 +1048,143 @@
   padding: 0;
   transition: all .15s ease;
 }
-#kt_activitiesApplication .cnt-copy-btn:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  color: #0F172A;
+
+#kt_activitiesApplication #personal_details .cnt-copy-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #2563eb;
 }
-#kt_activitiesApplication .cnt-whatsapp-banner {
+
+#kt_activitiesApplication #personal_details .cnt-whatsapp-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin-top: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
   text-decoration: none;
   transition: all .18s ease;
   cursor: pointer;
 }
-#kt_activitiesApplication .cnt-whatsapp-banner:hover {
-  background: #DCFCE7;
-  border-color: #86EFAC;
+
+#kt_activitiesApplication #personal_details .cnt-whatsapp-banner:hover {
+  background: #dcfce7;
+  border-color: #86efac;
 }
-#kt_activitiesApplication .cnt-wa-left {
+
+#kt_activitiesApplication #personal_details .cnt-wa-left {
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-wa-sep {
+
+#kt_activitiesApplication #personal_details .cnt-wa-sep {
   width: 1px;
-  height: 18px;
-  background: #86EFAC;
-  margin: 0 12px;
+  height: 14px;
+  background: #86efac;
+  margin: 0 10px;
 }
-#kt_activitiesApplication .cnt-wa-text {
-  font-size: 14px;
+
+#kt_activitiesApplication #personal_details .cnt-wa-text {
+  font-size: 12px;
   font-weight: 600;
-  color: #15803D;
+  color: #15803d;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-wa-arrow {
-  color: #16A34A;
+
+#kt_activitiesApplication #personal_details .cnt-wa-arrow {
+  color: #16a34a;
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-linkedin-banner {
+
+#kt_activitiesApplication #personal_details .cnt-linkedin-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  border-radius: 12px;
-  padding: 12px 18px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 8px 12px;
   margin-top: 8px;
   text-decoration: none;
   transition: all .18s ease;
   cursor: pointer;
 }
-#kt_activitiesApplication .cnt-linkedin-banner:hover {
-  background: #DBEAFE;
-  border-color: #93C5FD;
+
+#kt_activitiesApplication #personal_details .cnt-linkedin-banner:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
-#kt_activitiesApplication .cnt-li-left {
+
+#kt_activitiesApplication #personal_details .cnt-li-left {
   display: flex;
   align-items: center;
 }
-#kt_activitiesApplication .cnt-li-sep {
+
+#kt_activitiesApplication #personal_details .cnt-li-sep {
   width: 1px;
-  height: 18px;
-  background: #93C5FD;
-  margin: 0 12px;
+  height: 14px;
+  background: #93c5fd;
+  margin: 0 10px;
 }
-#kt_activitiesApplication .cnt-li-text {
-  font-size: 14px;
+
+#kt_activitiesApplication #personal_details .cnt-li-text {
+  font-size: 12px;
   font-weight: 600;
-  color: #1D4ED8;
+  color: #1d4ed8;
   font-family: 'Poppins', sans-serif;
 }
-#kt_activitiesApplication .cnt-li-arrow {
-  color: #2563EB;
+
+#kt_activitiesApplication #personal_details .cnt-li-arrow {
+  color: #2563eb;
   display: flex;
   align-items: center;
+}
+
+/* ===== OTHER DETAILS & AGENCY / RM DETAILS STANDARDIZATION ===== */
+#kt_activitiesApplication #personal_details .agency-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 16px;
+}
+
+#kt_activitiesApplication #personal_details .agency-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .agency-value {
+  font-size: 12px;
+  color: #0f172a;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .agency-value a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+#kt_activitiesApplication #personal_details .agency-value a:hover {
+  text-decoration: underline;
+}
+
+#kt_activitiesApplication #personal_details .rm-details h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#kt_activitiesApplication #personal_details .rm-contact-item {
+  font-size: 12px;
+  color: #475569;
+  font-family: 'Poppins', sans-serif;
 }
 </style>
 
@@ -1340,7 +1447,7 @@
       @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
 
       @else
-        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal {{ $dnone }}" title="Send email to candidate">
+        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal" title="Send email to candidate">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <polyline points="3 7 12 13 21 7"/>
@@ -3411,9 +3518,36 @@
               </div>
               <h3 class="card-title">Professional Summary</h3>
             </div>
-            <p class="summary-text">{{@$application->careersummary}}</p>
-            {{-- <span class="word-count-badge">184 / 200 Words</span> --}}
+            @if(!empty(trim((string)@$application->careersummary)))
+              <p class="summary-text" style="font-size:12px; line-height:1.65; color:#334155; margin:0;">{{@$application->careersummary}}</p>
+            @else
+              <p class="po-no-notes" style="font-size:12px; font-style:italic; color:#94a3b8; margin:0;">No professional summary provided.</p>
+            @endif
           </section>
+
+          <!-- ===== REASON FOR JOB CHANGE CARD (Rule 14, Rule 17) ===== -->
+          <section class="cardshow" id="reason_for_job_change_card">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #fffbeb; color: #d97706;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a4.5 4.5 0 0 0 4.5-4.5v0a4.5 4.5 0 0 0-4.5-4.5H11"/><polyline points="14 6 11 10 14 14"/><circle cx="6" cy="5" r="3"/>
+                </svg>
+              </div>
+              <h3 class="card-title">Reason for Job Change</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editReasonForChange" id="btn_edit_reason_change" title="Edit Reason for Job Change">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
+            </div>
+            @if(!empty(@$application->reason_for_job_change))
+              <p class="reason-summary-text reason-change-display-text" id="drawer_reason_display_text" style="margin:0; color:#334155; line-height:1.65; word-break:break-word;">{{ @$application->reason_for_job_change }}</p>
+            @else
+              <p class="reason-summary-text reason-change-display-text text-muted" id="drawer_reason_display_text" style="margin:0; font-style:italic; color:#94a3b8; line-height:1.65;">No reason for job change specified.</p>
+            @endif
+          </section>
+
          @if($application->condidate_type !='other')
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -3818,7 +3952,7 @@
 
         <aside class="content-sidebar">
 
-          <section class="cardshow" style="margin-bottom:16px;">
+          <section class="cardshow">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-primary-50, #eef2ff); color: var(--color-primary-600, #4f46e5);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -3870,14 +4004,14 @@
           @endphp
 
           <section class="cardshow comp-card">
-            <div class="comp-header">
-              <div class="comp-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #fff7ed; color: #ea580c;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="comp-hdr-title">Compensation Details</h3>
+              <h3 class="card-title">Compensation Details</h3>
             </div>
 
             <div class="comp-items-list">
@@ -3967,18 +4101,18 @@
                 <span class="comp-value">{{ @$application->employmentType ?: 'Full Time' }}</span>
               </div>
 
-              {{-- 6. Offer in Hand (if condidate_type == 'other') --}}
+              {{-- 6. Any Offer from other organization (if condidate_type == 'other') --}}
               @if($application->condidate_type=='other')
                 <div class="comp-item-row">
                   <div class="comp-item-left">
-                    <div class="comp-row-icon comp-icon-mint" title="Offer in Hand">
+                    <div class="comp-row-icon comp-icon-mint" title="Any Offer from other organization">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <path d="m9 15 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <span class="comp-label">Offer in Hand</span>
+                    <span class="comp-label">Any Offer from other organization</span>
                   </div>
                   <span class="{{ $hasOfferInHand ? 'comp-badge-green' : 'comp-badge-gray' }}">{{ ucwords(@$application->oh ?: 'No') }}</span>
                 </div>
@@ -4032,13 +4166,13 @@
           @endphp
 
           <section class="cardshow own-card">
-            <div class="own-header">
-              <div class="own-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #f5f3ff; color: #7c3aed;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
-              <h3 class="own-hdr-title">Ownership</h3>
+              <h3 class="card-title">Ownership</h3>
             </div>
 
             <div class="own-items-list">
@@ -4137,14 +4271,14 @@
           <!-- ===== REDESIGNED CONTACT DETAILS SECTION (Rule 14, Rule 17, Rule 18) ===== -->
           @if($application->condidate_type=='other')
           <section class="cardshow cnt-card">
-            <div class="cnt-header">
-              <div class="cnt-hdr-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <h3 class="cnt-hdr-title">Contact Details</h3>
+              <h3 class="card-title">Contact Details</h3>
             </div>
 
             <div class="cnt-items-list">
@@ -4214,12 +4348,18 @@
                 <div class="cnt-item-body">
                   <div class="cnt-label">Contact Number-1</div>
                   <div class="cnt-phone-val">
-                    <span id="firstPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
-                    <span>{{ @$application->phone ?: '-' }}</span>
+                    @if(!empty(@$application->phone))
+                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone) !!}
+                    @else
+                      -
+                    @endif
                   </div>
                 </div>
                 @if(!empty(@$application->phone))
-                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->phone) }}', this)" title="Copy Phone Number">
+                  @php
+                    $copyPhone1 = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                  @endphp
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone1) }}', this)" title="Copy Phone Number">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -4238,12 +4378,18 @@
                 <div class="cnt-item-body">
                   <div class="cnt-label">Contact Number-2</div>
                   <div class="cnt-phone-val">
-                    <span id="secondPhoneDisplay" style="display:inline-flex;align-items:center;margin-right:4px;"></span>
-                    <span>{{ !empty(@$application->secondary_mobile) ? @$application->secondary_mobile : '-' }}</span>
+                    @if(!empty(@$application->secondary_mobile))
+                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile) !!}
+                    @else
+                      -
+                    @endif
                   </div>
                 </div>
                 @if(!empty(@$application->secondary_mobile))
-                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes(@$application->secondary_mobile) }}', this)" title="Copy Secondary Phone">
+                  @php
+                    $copyPhone2 = GeneralMethod::formatContactPhoneForTel(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile);
+                  @endphp
+                  <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone2) }}', this)" title="Copy Secondary Phone">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -4255,7 +4401,11 @@
 
             {{-- 5. WhatsApp & LinkedIn Actions --}}
             @if(!empty(@$application->phone))
-              <a href="https://api.whatsapp.com/send?phone=91{{ @$application->phone }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
+              @php
+                $waPhone = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                $waDigits = ltrim($waPhone, '+');
+              @endphp
+              <a href="https://api.whatsapp.com/send?phone={{ $waDigits }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
                 <div class="cnt-wa-left">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -4298,67 +4448,77 @@
               </a>
             @endif
           </section>
+
+          <!-- ===== VISA STATUS & WORK AUTHORIZATION CARD (Rule 14, Rule 17) ===== -->
+          @php
+            $rawVisa = trim((string) @$application->visastatu);
+            $visaMeta = \App\Services\VisaResolutionService::resolve($rawVisa);
+          @endphp
+          <section class="cardshow" id="visa_status_card">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: #eff6ff; color: #2563eb;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="3"/>
+                  <circle cx="9" cy="10" r="2"/>
+                  <line x1="15" y1="8" x2="17" y2="8"/>
+                  <line x1="15" y1="12" x2="17" y2="12"/>
+                  <line x1="7" y1="16" x2="17" y2="16"/>
+                </svg>
+              </div>
+              <h3 class="card-title">Visa Status &amp; Work Authorization</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editVisaStatus" id="btn_edit_visa_status" title="Edit Visa Status & Work Authorization">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
+            </div>
+
+            <div id="visa_card_populated" class="{{ $visaMeta['has_visa'] ? '' : 'd-none' }}" style="margin-top: 10px;">
+              <div class="comp-list" style="display:flex; flex-direction:column; gap:8px;">
+                {{-- Work Authorization / Status --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa / Work Status</span>
+                  <span class="badge fw-bold" id="visa_display_badge" style="{{ $visaMeta['badge_style'] }} font-size:11.5px; padding:4px 9px; border-radius:6px;">
+                    {{ $visaMeta['name'] }}
+                  </span>
+                </div>
+
+                {{-- Visa Country --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa Country</span>
+                  <span class="comp-value fw-semibold" id="visa_display_country" style="font-size:12px; color:#1e293b;">
+                    {{ $visaMeta['country_display'] }}
+                  </span>
+                </div>
+
+                {{-- Visa Type / Category --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f1f5f9;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Visa Type</span>
+                  <span class="comp-value" id="visa_display_type" style="font-size:12px; color:#334155; max-width:65%; text-align:right;">
+                    {{ $visaMeta['type'] }}
+                  </span>
+                </div>
+
+                {{-- Work Authorization Eligibility --}}
+                <div class="comp-row" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
+                  <span class="comp-label" style="font-size:12px; font-weight:500; color:#64748b;">Work Authorization</span>
+                  <span class="comp-value fw-medium" id="visa_display_eligibility" style="font-size:12px; color:#0f766e;">
+                    <i class="fa-solid fa-shield-check me-1" style="color:#0d9488; font-size:11px;"></i>{{ $visaMeta['eligibility'] }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p class="po-no-notes text-muted {{ $visaMeta['has_visa'] ? 'd-none' : '' }}" id="visa_empty_display" style="font-size:12px; font-style:italic; color:#94a3b8; margin:8px 0 0;">
+              No visa or work authorization details recorded yet.
+            </p>
+          </section>
           @else
             <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
             <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
           @endif
 
-
-          @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <h3 class="card-title">Other Details</h3>
-            </div>
-             <div class="comp-list">
-                @if(!empty(@$application->dob))
-                <div class="comp-row">
-                  <span class="comp-label">Date of Birth</span>
-                  <span class="comp-value">{{ date('d M Y', strtotime(@$application->dob)) }}</span>
-                </div>
-                @endif
-                <div class="comp-row">
-                  <span class="comp-label">Offer Amount</span>
-                   @php
-                        $offerAmont = "Confidential";
-                          $allow =  GeneralMethod::confidentialAmontShow($jobId);
-                        @endphp
-
-                        @if($allow)
-                          @if(@$application->offer_amount > 0)
-                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
-                          @endif
-                        @else
-                          <span class="comp-value">{{ $offerAmont }}</span>
-                        @endif
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Joining Date</span>
-                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Visa Status</span>
-                  <span class="comp-value">{{@$application->visastatu}}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Reference Name</span>
-                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
-                </div>
-                 <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
-                </div>
-             </div>
-          </section>
-          @endif
 
           @if(@$application->condidate_type=='bench_condidate')
 
@@ -4911,6 +5071,250 @@
         </div>
       </div>{{-- /#jw-recruiter-note-drawer --}}
 
+      {{-- DRAWER 5: Reason for Job Change --}}
+      <div class="jw-side-drawer" id="jw-reason-drawer">
+        <div class="jw-drawer-backdrop editReasonCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#fffbeb;color:#d97706;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a4.5 4.5 0 0 0 4.5-4.5v0a4.5 4.5 0 0 0-4.5-4.5H11"/><polyline points="14 6 11 10 14 14"/><circle cx="6" cy="5" r="3"/>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Reason for Job Change</div>
+              <div class="jw-drawer-subtitle">Select a scenario template or enter a custom reason</div>
+            </div>
+            <button type="button" class="jw-drawer-close editReasonCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body reason-drawer-body d-none">
+            <input type="hidden" id="reason_app_id" value="{{ @$application->id }}">
+
+            {{-- Template Selector --}}
+            <div class="rn-section" id="reason-template-wrap">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="rn-label mb-0" for="reason_template_select_drawer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Select Reason Template <span>(Pre-fills reason)</span>
+                </label>
+                <button type="button" class="btn btn-sm btn-light-warning py-0 px-2" id="btn_save_custom_reason_drawer" title="Save current text as a custom reusable template" style="font-size:10.5px;height:22px;line-height:20px;border-radius:4px;font-weight:500;">
+                  <i class="fa-solid fa-plus me-1" style="font-size:9px;"></i> Save as Custom
+                </button>
+              </div>
+              <select class="rn-select" id="reason_template_select_drawer">
+                <option value="">-- Select Template (or type custom below) --</option>
+                <optgroup label="Growth & Role Progression">
+                  <option value="reason_growth">Career Growth</option>
+                  <option value="reason_better_opp">Better Career Opportunity</option>
+                  <option value="reason_higher_comp">Higher Compensation</option>
+                  <option value="reason_better_role_tech">Better Role / Technology</option>
+                  <option value="reason_higher_resp">Higher Responsibility</option>
+                </optgroup>
+                <optgroup label="Stability & Organizational Shifts">
+                  <option value="reason_seeking_stability">Seeking Stability</option>
+                  <option value="reason_proj_ending">Current Project/Contract Ending</option>
+                  <option value="reason_restructuring">Company Restructuring / Layoff</option>
+                  <option value="reason_org_changes">Organizational Changes</option>
+                  <option value="reason_mgmt_change">Management / Team Change</option>
+                </optgroup>
+                <optgroup label="Availability & Logistics">
+                  <option value="reason_immediate_joiner">Looking for Immediate Joiner Opportunity</option>
+                  <option value="reason_notice_constraints">Notice Period / Joining Constraints</option>
+                  <option value="reason_relocation">Relocation</option>
+                  <option value="reason_commute_issue">Work Location / Commute Issue</option>
+                  <option value="reason_wfh_hybrid">Work-from-Home / Hybrid Requirement</option>
+                  <option value="reason_international">International Opportunity</option>
+                </optgroup>
+                <optgroup label="Personal & Life Milestones">
+                  <option value="reason_medical">Medical Emergency</option>
+                  <option value="reason_personal">Personal Reasons</option>
+                  <option value="reason_career_break">Career Break</option>
+                  <option value="reason_role_misalign">Role Misalignment</option>
+                  <option value="reason_other">Other</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {{-- Textarea editor --}}
+            <div class="rn-section mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="rn-label mb-0" for="jw_reason_for_change_editor">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  Candidate Reason Details
+                </label>
+                <span class="text-muted" id="reason_drawer_char_counter" style="font-size:11px; font-weight:500;">
+                  {{ strlen(@$application->reason_for_job_change ?? '') }} / 250
+                </span>
+              </div>
+              <textarea id="jw_reason_for_change_editor" class="form-control" rows="4" maxlength="250" placeholder="Specify candidate's transition driver or pick from standard recruitment scenarios...">{{ @$application->reason_for_job_change }}</textarea>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="reason-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editReasonCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-reason-drawer --}}
+
+      {{-- DRAWER 6: Visa Status & Work Authorization --}}
+      <div class="jw-side-drawer" id="jw-visa-drawer">
+        <div class="jw-drawer-backdrop editVisaCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#eff6ff;color:#2563eb;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="3"/>
+                <circle cx="9" cy="10" r="2"/>
+                <line x1="15" y1="8" x2="17" y2="8"/>
+                <line x1="15" y1="12" x2="17" y2="12"/>
+                <line x1="7" y1="16" x2="17" y2="16"/>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Visa Status &amp; Work Authorization</div>
+              <div class="jw-drawer-subtitle">Update legal right-to-work status and visa categorization</div>
+            </div>
+            <button type="button" class="jw-drawer-close editVisaCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body visa-drawer-body d-none">
+            <input type="hidden" id="visa_app_id" value="{{ @$application->id }}">
+
+            {{-- Quick Filter Chips --}}
+            <div class="rn-section" style="margin-bottom:14px;">
+              <label class="rn-label mb-2">
+                <i class="fa-solid fa-bolt text-warning me-1"></i> Quick Filter Region
+              </label>
+              <div class="d-flex flex-wrap gap-1" id="visa_region_chips">
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn active" data-region="all" style="font-size:11px; font-weight:600; border-radius:6px;">🌐 All</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United States" style="font-size:11px; font-weight:600; border-radius:6px;">🇺🇸 US</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Canada" style="font-size:11px; font-weight:600; border-radius:6px;">🇨🇦 Canada</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="India" style="font-size:11px; font-weight:600; border-radius:6px;">🇮🇳 India</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United Kingdom" style="font-size:11px; font-weight:600; border-radius:6px;">🇬🇧 UK</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="United Arab Emirates" style="font-size:11px; font-weight:600; border-radius:6px;">🇦🇪 UAE</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Singapore" style="font-size:11px; font-weight:600; border-radius:6px;">🇸🇬 SG</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="Australia" style="font-size:11px; font-weight:600; border-radius:6px;">🇦🇺 AU</button>
+                <button type="button" class="btn btn-sm btn-light py-1 px-2 border visa-chip-btn" data-region="European Union" style="font-size:11px; font-weight:600; border-radius:6px;">🇪🇺 EU</button>
+              </div>
+            </div>
+
+            {{-- Work Authorization Select --}}
+            <div class="rn-section" style="margin-bottom:16px;">
+              <label class="rn-label" for="visa_select_drawer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Select Work Authorization / Visa
+              </label>
+              <select class="rn-select" id="visa_select_drawer" style="width:100%; border-radius:8px; border:1.5px solid #e4e6ef; font-size:12px; color:#181c32; padding:8px 10px; background:#f8f9fb;">
+                <option value="">-- None / Clear Visa Status --</option>
+                <optgroup label="United States (US)" data-region="United States">
+                  <option value="US Citizen" {{ in_array($rawVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']) ? 'selected' : '' }}>US Citizen (USC)</option>
+                  <option value="Green Card" {{ in_array($rawVisa, ['Green Card', 'Permanent Resident (Green Card)']) ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                  <option value="GC-EAD" {{ in_array($rawVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']) ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                  <option value="H1B" {{ in_array($rawVisa, ['H1B', 'H-1B', 'H1-B']) ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                  <option value="H-4 EAD" {{ in_array($rawVisa, ['H-4 EAD', 'H4-EAD', 'H4 EAD']) ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                  <option value="L-2 EAD" {{ in_array($rawVisa, ['L-2 EAD', 'L2-EAD', 'L2 EAD']) ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                  <option value="TN Permit" {{ in_array($rawVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']) ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                  <option value="OPT-EAD" {{ in_array($rawVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']) ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                  <option value="CPT" {{ $rawVisa === 'CPT' ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                  <option value="E-3" {{ in_array($rawVisa, ['E-3', 'E3']) ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                  <option value="O-1" {{ in_array($rawVisa, ['O-1', 'O1']) ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                  <option value="L1" {{ in_array($rawVisa, ['L1', 'L-1']) ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                  <option value="Other US EAD" {{ in_array($rawVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']) ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                </optgroup>
+                <optgroup label="Canada (CA)" data-region="Canada">
+                  <option value="Canadian Citizen" {{ $rawVisa === 'Canadian Citizen' ? 'selected' : '' }}>Canadian Citizen</option>
+                  <option value="Canada PR" {{ in_array($rawVisa, ['Canada PR', 'Canadian Permanent Resident']) ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                  <option value="Canada Open Work Permit" {{ in_array($rawVisa, ['Canada Open Work Permit', 'PGWP']) ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                  <option value="Canada Closed Work Permit" {{ in_array($rawVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']) ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                </optgroup>
+                <optgroup label="India (IN)" data-region="India">
+                  <option value="Indian Citizen" {{ $rawVisa === 'Indian Citizen' ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                  <option value="OCI / PIO" {{ in_array($rawVisa, ['OCI / PIO', 'OCI', 'PIO']) ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                  <option value="India Work Visa" {{ in_array($rawVisa, ['India Work Visa', 'Employment Visa (India)']) ? 'selected' : '' }}>India Employment Visa</option>
+                </optgroup>
+                <optgroup label="United Kingdom (UK)" data-region="United Kingdom">
+                  <option value="UK Citizen" {{ in_array($rawVisa, ['UK Citizen', 'British Citizen']) ? 'selected' : '' }}>British Citizen</option>
+                  <option value="UK ILR" {{ in_array($rawVisa, ['UK ILR', 'Indefinite Leave to Remain']) ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                  <option value="UK Skilled Worker" {{ in_array($rawVisa, ['UK Skilled Worker', 'Tier 2']) ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                  <option value="UK Graduate Visa" {{ $rawVisa === 'UK Graduate Visa' ? 'selected' : '' }}>UK Graduate Visa</option>
+                </optgroup>
+                <optgroup label="United Arab Emirates (Dubai / UAE)" data-region="United Arab Emirates">
+                  <option value="UAE Golden Visa" {{ in_array($rawVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']) ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                  <option value="UAE Green Visa" {{ in_array($rawVisa, ['UAE Green Visa', 'Green Visa']) ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                  <option value="UAE Employment Visa" {{ in_array($rawVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']) ? 'selected' : '' }}>UAE Employment Residence Visa</option>
+                  <option value="UAE Freelance Visa" {{ in_array($rawVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']) ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                  <option value="UAE National" {{ in_array($rawVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']) ? 'selected' : '' }}>UAE / GCC National</option>
+                  <option value="GCC Iqama" {{ in_array($rawVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']) ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                </optgroup>
+                <optgroup label="Singapore (SG)" data-region="Singapore">
+                  <option value="Singapore Citizen" {{ $rawVisa === 'Singapore Citizen' ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                  <option value="Singapore PR" {{ in_array($rawVisa, ['Singapore PR', 'Singapore Permanent Resident']) ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                  <option value="Singapore EP" {{ in_array($rawVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']) ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                  <option value="Singapore S Pass" {{ in_array($rawVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']) ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                  <option value="Singapore ONE Pass" {{ in_array($rawVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']) ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                  <option value="Singapore LOC / DP" {{ in_array($rawVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']) ? 'selected' : '' }}>Singapore LOC / Dependant Pass</option>
+                </optgroup>
+                <optgroup label="Australia & New Zealand" data-region="Australia">
+                  <option value="Australia Citizen / PR" {{ in_array($rawVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']) ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                  <option value="Australia TSS 482" {{ in_array($rawVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']) ? 'selected' : '' }}>Australia TSS Visa (Subclass 482)</option>
+                  <option value="Australia Skilled 189/190" {{ in_array($rawVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']) ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189/190)</option>
+                  <option value="Australia Graduate 485" {{ in_array($rawVisa, ['Australia Graduate 485', 'Subclass 485']) ? 'selected' : '' }}>Australia Graduate Visa (Subclass 485)</option>
+                  <option value="New Zealand Citizen / PR" {{ in_array($rawVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']) ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                </optgroup>
+                <optgroup label="European Union (EU)" data-region="European Union">
+                  <option value="EU Citizen" {{ in_array($rawVisa, ['EU Citizen', 'EU / EEA Citizen']) ? 'selected' : '' }}>EU / EEA Citizen</option>
+                  <option value="EU Blue Card" {{ $rawVisa === 'EU Blue Card' ? 'selected' : '' }}>EU Blue Card</option>
+                  <option value="Germany - Opportunity Card / Work Visa" {{ $rawVisa === 'Germany - Opportunity Card / Work Visa' ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                  <option value="Netherlands - Highly Skilled Migrant" {{ $rawVisa === 'Netherlands - Highly Skilled Migrant' ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                  <option value="Ireland - Critical Skills Employment Permit" {{ $rawVisa === 'Ireland - Critical Skills Employment Permit' ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
+                  <option value="Authorized Work Permit" {{ in_array($rawVisa, ['Authorized Work Permit']) ? 'selected' : '' }}>Authorized Work Permit</option>
+                  <option value="Requires Sponsorship" {{ in_array($rawVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']) ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {{-- Custom Override Input --}}
+            <div class="rn-section">
+              <label class="rn-label" for="visa_custom_input">
+                <i class="fa-solid fa-pen-to-square me-1" style="font-size:11px;color:#a1a5b7;"></i>
+                Custom / Unlisted Visa Status <span>(Optional)</span>
+              </label>
+              <input type="text" id="visa_custom_input" class="form-control" maxlength="100" placeholder="e.g. France Talent Passport, Japan Engineer Visa, etc." style="font-size:12px; border-radius:8px; border:1.5px solid #e4e6ef; background:#f8f9fb; padding:8px 12px; color:#181c32;">
+            </div>
+
+            {{-- Live Preview Box --}}
+            <div class="p-3 mt-3 rounded border" style="background:#f8fafc; border-color:#e2e8f0;">
+              <div class="fw-bold text-gray-700 mb-1" style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Resolved Card Preview</div>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-muted" style="font-size:11px;">Status:</span>
+                <span id="preview_visa_name" class="fw-bold" style="font-size:11.5px; color:#2563eb;">{{ $visaMeta['name'] }}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-muted" style="font-size:11px;">Country:</span>
+                <span id="preview_visa_country" class="fw-semibold" style="font-size:11.5px; color:#1e293b;">{{ $visaMeta['country_display'] }}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="text-muted" style="font-size:11px;">Type:</span>
+                <span id="preview_visa_type" style="font-size:11px; color:#64748b;">{{ $visaMeta['type'] }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="visa-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editVisaCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-visa-drawer --}}
+
     </div>{{-- /#personal_details tab-pane --}}
 
 
@@ -5024,55 +5428,24 @@ setTimeout(() => {
    $( document ).ready(function() {
 
      
-      const firstSavedCountryCode  = @json($application->phone_code ?? 'in');
-      const secondSavedCountryCode = @json($application->second_phone_code ?? 'in');
-      const firstPhoneDisplayDiv = document.getElementById("firstPhoneDisplay");
-      const secondPhoneDisplayDiv = document.getElementById("secondPhoneDisplay");
-
-        const flagDiv = document.createElement("div");
-        flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
-
-        const secondflagDiv = document.createElement("div");
-        secondflagDiv.className = `iti__flag iti__${secondSavedCountryCode}`;
-        // Get the dial code for the selected country code
-        const dialCode = countryDialCodes[firstSavedCountryCode] || ""; // Default to empty string if not found
-        const seconddialCode = countryDialCodes[secondSavedCountryCode] || ""; // Default to empty string if not found
-
-        // Create a span to display the dial code
-        const dialCodeSpan = document.createElement("span");
-        dialCodeSpan.textContent = dialCode;
-
-        const seconddialCodeSpan = document.createElement("span");
-        seconddialCodeSpan.textContent = seconddialCode;
-
-        // Append the flag and the dial code to the display div
-        firstPhoneDisplayDiv.appendChild(flagDiv);
-        firstPhoneDisplayDiv.appendChild(dialCodeSpan);
-
-        // Append the flag and the dial code to the display div
-        secondPhoneDisplayDiv.appendChild(secondflagDiv);
-        secondPhoneDisplayDiv.appendChild(seconddialCodeSpan);
-
-
-
         setTimeout(() => {
-        // alert("k");
-        $('.iti__flag-container').each(function(index) {
-            var cnt = $(this).attr('data-row');
-            const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
-            var calling_code = $(this).attr('data-code');
-            
-            const flagDiv = document.createElement("div");
-            flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
+            $('.iti__flag-container').each(function(index) {
+                var cnt = $(this).attr('data-row');
+                const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
+                if (!flagContainer) return;
+                var calling_code = $(this).attr('data-code');
+                
+                const flagDiv = document.createElement("div");
+                flagDiv.className = `iti__flag iti__${calling_code}`;
 
-            const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
-            const dialCodeSpan = document.createElement("span");
-            dialCodeSpan.textContent = dialCode;
-            // Append the flag and dial code
-            flagContainer.appendChild(flagDiv);
-            flagContainer.appendChild(dialCodeSpan);
-        });
-    }, 2000);
+                const dialCode = (typeof countryDialCodes !== 'undefined' && countryDialCodes[calling_code]) ? countryDialCodes[calling_code] : (calling_code ? (calling_code.startsWith('+') ? calling_code : '+' + calling_code) : "");
+                const dialCodeSpan = document.createElement("span");
+                dialCodeSpan.textContent = dialCode;
+                // Append the flag and dial code
+                flagContainer.appendChild(flagDiv);
+                flagContainer.appendChild(dialCodeSpan);
+            });
+        }, 2000);
 
     // Intent: Phase 2 Lazy loading Notes tab on click
     var _notesTabLoaded = false;
@@ -5382,10 +5755,83 @@ setTimeout(() => {
 
    });
   
-  $('.sendmaimodal').click(function(){
+  // Client-First In-Memory RAM Store for Candidate Send Mail Drawer
+  var CandidateSendMailRamStore = (function() {
+      var _store = {};
+      var _ttl = 15 * 60 * 1000; // 15-minute memory ceiling
 
-        // Trigger hidden toggle — KTDrawer binds to this on createInstances()
-        $('#kt_send_mail_sd_toggle').trigger('click');
+      return {
+          buildKey: function(candidateId, jobId) {
+              return 'send_mail_' + (candidateId || 0) + '_' + (jobId || 0);
+          },
+          get: function(key) {
+              var item = _store[key];
+              if (!item) return null;
+              if (Date.now() - item.timestamp > _ttl) {
+                  delete _store[key];
+                  return null;
+              }
+              return item;
+          },
+          set: function(key, viewHtml, fingerprint) {
+              _store[key] = {
+                  view: viewHtml,
+                  fingerprint: fingerprint || '',
+                  timestamp: Date.now()
+              };
+          },
+          clear: function() {
+              _store = {};
+          }
+      };
+  })();
+
+  $(document).off('click.sendMailDrawer').on('click.sendMailDrawer', '.sendmaimodal', function(e){
+        e.preventDefault();
+
+        // Safe extraction of current candidate identity & job context (Immutable Candidate Context)
+        var sid = parseInt('{{ (int)@$application->id }}', 10);
+        var jid = parseInt('{{ (int)@$jobId }}', 10) || 0;
+        var arr = [sid];
+        var jobIdArr = [jid];
+
+        // 1. Synchronously open Send Email Drawer (0ms perceived latency, outside Candidate Drawer stacking context)
+        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+        if (drawerEl) {
+            drawerEl.style.removeProperty('display');
+            drawerEl.style.setProperty('z-index', '1000050', 'important');
+            if (!drawerEl.classList.contains('drawer')) {
+                drawerEl.classList.add('drawer', 'drawer-end');
+            }
+            drawerEl.classList.add('drawer-on');
+            drawerEl.style.transform = 'none';
+
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) {
+                    drawer.shown = true;
+                }
+            }
+
+            if (typeof window.showCandidateSendMailOverlay === 'function') {
+                window.showCandidateSendMailOverlay();
+            }
+        }
+
+        // Fast-path: Check Client-First RAM Store (0ms perceived time, 0 server strain)
+        var cacheKey = CandidateSendMailRamStore.buildKey(sid, jid);
+        var cached = CandidateSendMailRamStore.get(cacheKey);
+        if (cached && cached.view) {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+                try { CKEDITOR.instances['editor1mass'].destroy(true); } catch(e) {}
+            }
+            $('#application_send_mail_body_content').html(cached.view);
+            $('#kt_activities_scroll').removeAttr('style');
+            if (typeof window.initCandidateEmailEditor === 'function') {
+                setTimeout(window.initCandidateEmailEditor, 50);
+            }
+            return;
+        }
 
         $('#application_send_mail_body_content').html(
             '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
@@ -5393,40 +5839,35 @@ setTimeout(() => {
         );
         $('#application_mass_mail_body_content').html('');
         $('#application_fwd_resume_body_content').html('');
-        var id        	=	{{ @$jobId }};
-        var sid        	=	{{ @$application->id }};
-        var arr 		=	[sid];
-        var jobIdArr = [id];
-        $('.chk_list_item:checked').each(function () {
-            
-            var jobId = $(this).attr('data-jobId');
-            arr.push($(this).val());
-            jobIdArr.push(jobId);
+
+        var url = "{{ route('service_company.cvtracker.send_mail', ':id') }}";
+        url = url.replace(':id', jid > 0 ? jid : 0);
+        var token = "{{ csrf_token() }}";
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {'_token': token, '_method': 'POST', 'arr': arr, 'jobIdArr': jobIdArr},
+            cache: false,
+            success: function (response) {
+                if (response && response.status == "success") {
+                    CandidateSendMailRamStore.set(cacheKey, response.view, response.fingerprint || '');
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+                        try { CKEDITOR.instances['editor1mass'].destroy(true); } catch(e) {}
+                    }
+                    $('#application_send_mail_body_content').html(response.view);
+                    $('#kt_activities_scroll').removeAttr('style');
+                    if (typeof window.initCandidateEmailEditor === 'function') {
+                        setTimeout(window.initCandidateEmailEditor, 50);
+                    }
+                }
+            },
+            error: function() {
+                $('#application_send_mail_body_content').html(
+                    '<div class="p-8 text-center text-danger">Failed to load email compose form. Please try again.</div>'
+                );
+            }
         });
-
-        console.log(jobIdArr);
-
-        var id        	=	jobIdArr[0];
-        var url       	=	"{{ route('service_company.cvtracker.send_mail',':id') }}";
-        url         	=	url.replace(':id', id);
-        var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-        var token       =	"{{ csrf_token() }}";
-
-      
-          $.ajax({
-                type		: 'POST',
-                url			: url,
-                data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr},
-                cache		: false,
-                success 	: function (response) {
-                                    if (response.status == "success") {
-                                        $('#application_send_mail_body_content').html(response.view);
-                                        
-                                        $('#kt_activities_scroll').removeAttr('style');
-                                    }
-                        }
-          });
-              
   });
 
 
@@ -6004,68 +6445,383 @@ setTimeout(() => {
         });
     });
 
+    // ===== REASON FOR JOB CHANGE DRAWER LOGIC (Rule 14, Rule 17) =====
+    var jwReasonTemplates = {
+        'reason_growth': 'Looking for upward career growth and clear advancement pathways that are currently constrained in the current organizational setup.',
+        'reason_better_opp': 'Actively exploring better career opportunities with broader scope, progressive work culture, and advanced technical exposure.',
+        'reason_higher_comp': 'Seeking competitive compensation aligned with current market standards, proven capabilities, and overall industry experience.',
+        'reason_better_role_tech': 'Seeking transition to modern technology stacks, product architecture, and more hands-on technical challenges.',
+        'reason_higher_resp': 'Prepared to take on higher technical ownership, cross-functional project leadership, and larger team responsibilities.',
+        'reason_seeking_stability': 'Looking for long-term organizational stability, financial soundness, and sustainable project continuity.',
+        'reason_proj_ending': 'Current project/contract engagement is approaching successful completion, actively looking for the next long-term role.',
+        'reason_restructuring': 'Impacted by organizational restructuring and company-wide downsizing; actively available for immediate placement.',
+        'reason_org_changes': 'Recent strategic changes in company direction and organizational priorities have prompted seeking a better-aligned opportunity.',
+        'reason_mgmt_change': 'Recent internal team restructuring and leadership changes have resulted in realignment of roles and priorities.',
+        'reason_immediate_joiner': 'Available as an immediate joiner with zero notice period constraints, looking for immediate onboarding.',
+        'reason_notice_constraints': 'Currently serving notice period and actively seeking roles aligned with current availability and joining timeline.',
+        'reason_relocation': 'Relocating to the target location for personal/family reasons, seeking a local or remote opportunity.',
+        'reason_commute_issue': 'Looking for an opportunity closer to residence or with reduced commute time to enhance day-to-day productivity.',
+        'reason_wfh_hybrid': 'Seeking a structured hybrid or remote work arrangement to optimize productivity and achieve healthy work-life balance.',
+        'reason_international': 'Actively exploring international opportunities, cross-border projects, or roles offering visa sponsorship.',
+        'reason_medical': 'Took necessary time to attend to family medical priorities; the situation is fully resolved and ready for full-time commitment.',
+        'reason_personal': 'Seeking a career transition due to personal commitments while remaining dedicated to professional growth.',
+        'reason_career_break': 'Returning to the active workforce after a planned career break with refreshed skills and high enthusiasm.',
+        'reason_role_misalign': 'Current day-to-day responsibilities have diverged from the original job profile; looking for a role matching core strengths.',
+        'reason_other': 'Exploring new opportunities to better align personal career milestones with long-term professional aspirations.'
+    };
 
-</script> 
-<!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
-<div id="kt_send_mail_sd_toggle" style="display:none;"></div>
-<div id="kt_send_mail_showdetail_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-    data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
-    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close">
-    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-        <div class="card-header px-5 py-0 flex-shrink-0">
-            <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
-            <div class="card-toolbar">
-                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-                        </svg>
-                    </span>
-                </button>
-            </div>
-        </div>
-        <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
-    </div>
-</div>
-<!--end::Send Mail - Drawer-->
-<script>
-(function() {
-    if (typeof KTDrawer !== 'undefined') {
-        KTDrawer.createInstances();
-    }
-
-    // Manual overlay for the send-mail drawer (avoids conflicts with parent drawer overlay)
-    var $overlay = null;
-
-    function showSendMailOverlay() {
-        if ($overlay) return;
-        $overlay = $('<div class="sd-mail-overlay"></div>').css({
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            zIndex: 109, cursor: 'pointer'
-        }).appendTo('body');
-        $overlay.on('click', hideSendMailDrawer);
-    }
-
-    function hideSendMailDrawer() {
-        if ($overlay) { $overlay.remove(); $overlay = null; }
-        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
-        if (drawerEl && typeof KTDrawer !== 'undefined') {
-            var drawer = KTDrawer.getInstance(drawerEl);
-            if (drawer) { drawer.hide(); }
+    function loadCustomReasonTemplates() {
+        try {
+            var raw = localStorage.getItem('jero_custom_reason_templates');
+            if (raw) {
+                var customs = JSON.parse(raw);
+                if (Array.isArray(customs) && customs.length > 0) {
+                    $('#reason_template_select_drawer optgroup[data-custom="true"]').remove();
+                    var $optgroup = $('<optgroup label="Custom Saved Templates" data-custom="true"></optgroup>');
+                    customs.forEach(function(item, idx) {
+                        var valKey = 'custom_' + idx;
+                        jwReasonTemplates[valKey] = item.text;
+                        $optgroup.append($('<option>', { value: valKey, text: '★ ' + item.title }));
+                    });
+                    $('#reason_template_select_drawer').append($optgroup);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load custom reason templates from localStorage:', e);
         }
     }
 
-    $(document).off('click.sdMailModal').on('click.sdMailModal', '.sendmaimodal', function() {
-        showSendMailOverlay();
+    $(document).on('click', '.editReasonForChange', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-reason-drawer').addClass('jw-drawer-open');
+        $('.reason-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
+        loadCustomReasonTemplates();
+
+        var currentText = $('#drawer_reason_display_text').hasClass('text-muted') ? '' : $('#drawer_reason_display_text').text().trim();
+        if (currentText && currentText !== 'No reason for job change specified.') {
+            $('#jw_reason_for_change_editor').val(currentText);
+        }
+        var count = ($('#jw_reason_for_change_editor').val() || '').length;
+        $('#reason_drawer_char_counter').text(count + ' / 250');
     });
 
-    $(document).off('click.sdMailClose').on('click.sdMailClose', '#kt_send_mail_showdetail_close', function() {
-        hideSendMailDrawer();
+    $(document).on('click', '.editReasonCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-reason-drawer').removeClass('jw-drawer-open');
+        $('.reason-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
     });
+
+    $(document).on('change', '#reason_template_select_drawer', function() {
+        var key = $(this).val();
+        if (key && jwReasonTemplates[key]) {
+            var text = jwReasonTemplates[key];
+            if (text.length > 250) text = text.substring(0, 250);
+            $('#jw_reason_for_change_editor').val(text);
+            $('#reason_drawer_char_counter').text(text.length + ' / 250');
+        }
+    });
+
+    $(document).on('input keyup paste', '#jw_reason_for_change_editor', function() {
+        var len = $(this).val().length;
+        $('#reason_drawer_char_counter').text(len + ' / 250');
+    });
+
+    $(document).on('click', '#btn_save_custom_reason_drawer', function(e) {
+        e.preventDefault();
+        var currentVal = ($('#jw_reason_for_change_editor').val() || '').trim();
+        if (!currentVal) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Empty Reason', 'Please enter a reason before saving it as a custom template.', 'info');
+            } else {
+                alert('Please enter a reason before saving it as a custom template.');
+            }
+            return;
+        }
+
+        var templateName = prompt('Enter a short title for this custom reason template:', currentVal.substring(0, 30));
+        if (!templateName || !templateName.trim()) return;
+
+        try {
+            var customs = [];
+            var raw = localStorage.getItem('jero_custom_reason_templates');
+            if (raw) customs = JSON.parse(raw);
+            if (!Array.isArray(customs)) customs = [];
+
+            customs.unshift({ title: templateName.trim(), text: currentVal });
+            localStorage.setItem('jero_custom_reason_templates', JSON.stringify(customs.slice(0, 20)));
+            loadCustomReasonTemplates();
+            if (typeof toastr !== 'undefined') {
+                toastr.success('Custom template "' + templateName.trim() + '" saved successfully!');
+            }
+        } catch (err) {
+            console.error('Failed to save custom template:', err);
+        }
+    });
+
+    $(document).on('click', '#reason-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var reason = $('#jw_reason_for_change_editor').val();
+        var appId  = $('#reason_app_id').val();
+
+        $.ajax({
+            url: '{{ route('service_company.job-applications.reasonForChangeUpdate') }}?_token={{ csrf_token() }}',
+            type: 'POST',
+            data: { appId: appId, reason_for_job_change: reason },
+            success: function(response) {
+                if (response.status) {
+                    var trimmed = (reason || '').trim();
+                    if (trimmed) {
+                        $('#drawer_reason_display_text')
+                            .removeClass('text-muted')
+                            .css({ 'font-style': 'normal', 'color': '#334155' })
+                            .text(trimmed);
+                    } else {
+                        $('#drawer_reason_display_text')
+                            .addClass('text-muted')
+                            .css({ 'font-style': 'italic', 'color': '#94a3b8' })
+                            .text('No reason for job change specified.');
+                    }
+
+                    if (typeof drawerCandidateVars !== 'undefined') {
+                        drawerCandidateVars.jobChangeReason = trimmed || 'career advancement';
+                    }
+
+                    // Invalidate caches if available
+                    var wId = $('#job_wise_id').val() || null;
+                    var cId = appId;
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+
+                    $('#jw-reason-drawer').removeClass('jw-drawer-open');
+                    $('.reason-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
+                    if (document.activeElement) { document.activeElement.blur(); }
+
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Success', 'Reason for job change updated successfully!', 'success');
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.success('Reason for job change updated successfully!');
+                        }
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', response.message || 'Could not update reason.', 'warning');
+                    }
+                }
+            },
+            error: function(xhr) {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                var msg = 'Something went wrong. Please try again.';
+                try { var r = JSON.parse(xhr.responseText); if (r && r.message) msg = r.message; } catch(e) {}
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Warning', msg, 'warning');
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(msg);
+                }
+            }
+        });
+    });
+
+    // ===== VISA STATUS & WORK AUTHORIZATION DRAWER LOGIC (Rule 14, Rule 17) =====
+    $(document).on('click', '.editVisaStatus', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-visa-drawer').addClass('jw-drawer-open');
+        $('.visa-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
+    });
+
+    $(document).on('click', '.editVisaCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#jw-visa-drawer').removeClass('jw-drawer-open');
+        $('.visa-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
+    });
+
+    // Quick filter chips for regions
+    $(document).on('click', '.visa-chip-btn', function(e) {
+        e.preventDefault();
+        var region = $(this).data('region');
+        $('.visa-chip-btn').removeClass('active');
+        $(this).addClass('active');
+
+        if (region === 'all') {
+            $('#visa_select_drawer optgroup').show();
+        } else {
+            $('#visa_select_drawer optgroup').each(function() {
+                var grpRegion = $(this).data('region');
+                if (grpRegion === region) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    });
+
+    // Live preview update
+    function updateVisaDrawerPreview() {
+        var selectedVal = $('#visa_custom_input').val().trim() || $('#visa_select_drawer').val() || '';
+        if (!selectedVal) {
+            $('#preview_visa_name').text('Not Specified').css('color', '#94a3b8');
+            $('#preview_visa_country').text('Not Specified');
+            $('#preview_visa_type').text('Not Specified');
+            return;
+        }
+
+        // Basic client-side resolution for preview
+        var country = 'Global 🌐';
+        var selOpt = $('#visa_select_drawer option:selected');
+        var optGroup = selOpt.closest('optgroup').attr('label') || '';
+
+        if (optGroup.indexOf('United States') !== -1) country = 'United States 🇺🇸';
+        else if (optGroup.indexOf('Canada') !== -1) country = 'Canada 🇨🇦';
+        else if (optGroup.indexOf('India') !== -1) country = 'India 🇮🇳';
+        else if (optGroup.indexOf('United Kingdom') !== -1) country = 'United Kingdom 🇬🇧';
+        else if (optGroup.indexOf('Emirates') !== -1) country = 'United Arab Emirates 🇦🇪';
+        else if (optGroup.indexOf('Singapore') !== -1) country = 'Singapore 🇸🇬';
+        else if (optGroup.indexOf('Australia') !== -1) country = 'Australia 🇦🇺';
+        else if (optGroup.indexOf('European') !== -1) country = 'European Union 🇪🇺';
+
+        $('#preview_visa_name').text(selectedVal).css('color', '#2563eb');
+        $('#preview_visa_country').text(country);
+        $('#preview_visa_type').text(selOpt.text() || selectedVal);
+    }
+
+    $(document).on('change', '#visa_select_drawer', function() {
+        if ($(this).val()) {
+            $('#visa_custom_input').val('');
+        }
+        updateVisaDrawerPreview();
+    });
+
+    $(document).on('input keyup paste', '#visa_custom_input', function() {
+        if ($(this).val().trim()) {
+            $('#visa_select_drawer').val('');
+        }
+        updateVisaDrawerPreview();
+    });
+
+    // Save Visa Status via AJAX
+    $(document).on('click', '#visa-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var visaVal = ($('#visa_custom_input').val() || '').trim() || $('#visa_select_drawer').val() || '';
+        var appId   = $('#visa_app_id').val();
+
+        $.ajax({
+            url: '{{ route('service_company.job-applications.visaStatusUpdate') }}?_token={{ csrf_token() }}',
+            type: 'POST',
+            data: { appId: appId, visastatu: visaVal },
+            success: function(response) {
+                if (response.status) {
+                    var r = response.resolved || {};
+                    if (r.has_visa) {
+                        $('#visa_card_populated').removeClass('d-none');
+                        $('#visa_empty_display').addClass('d-none');
+
+                        $('#visa_display_badge')
+                            .text(r.name || visaVal)
+                            .attr('style', (r.badge_style || 'background:#eff6ff; color:#1d4ed8;') + ' font-size:11.5px; padding:4px 9px; border-radius:6px;');
+                        $('#visa_display_country').text(r.country_display || r.country || '—');
+                        $('#visa_display_type').text(r.type || '—');
+                        $('#visa_display_eligibility').html('<i class="fa-solid fa-shield-check me-1" style="color:#0d9488; font-size:11px;"></i>' + (r.eligibility || 'Authorized to Work'));
+                    } else {
+                        $('#visa_card_populated').addClass('d-none');
+                        $('#visa_empty_display').removeClass('d-none');
+                    }
+
+                    // Invalidate caches if available
+                    var wId = $('#job_wise_id').val() || null;
+                    var cId = appId;
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+
+                    $('#jw-visa-drawer').removeClass('jw-drawer-open');
+                    $('.visa-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
+                    if (document.activeElement) { document.activeElement.blur(); }
+
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Success', 'Visa Status & Work Authorization updated successfully!', 'success');
+                        } else if (typeof toastr !== 'undefined') {
+                            toastr.success('Visa Status & Work Authorization updated successfully!');
+                        }
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Warning', response.message || 'Could not update visa status.', 'warning');
+                    }
+                }
+            },
+            error: function(xhr) {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                var msg = 'Something went wrong. Please try again.';
+                try { var res = JSON.parse(xhr.responseText); if (res && res.message) msg = res.message; } catch(e) {}
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Warning', msg, 'warning');
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(msg);
+                }
+            }
+        });
+    });
+
+</script> 
+<!--begin::Send Mail - Drawer Defensive Guard (Authoritative Drawer lives in layout root DOM) -->
+<script>
+(function() {
+    // If #kt_send_mail_showdetail_drawer is not yet in document.body, append it to body to ensure zero stacking context trap
+    if (!document.getElementById('kt_send_mail_showdetail_drawer')) {
+        var drawerHtml = 
+            '<div id="kt_send_mail_sd_toggle" style="display:none;"></div>' +
+            '<div id="kt_send_mail_showdetail_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"' +
+            '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
+            '    data-kt-drawer-width="{default:\'95%\', \'lg\': \'85%\', \'xl\': \'1100px\'}" data-kt-drawer-direction="end"' +
+            '    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close"' +
+            '    style="z-index: 1000050 !important; scrollbar-gutter: stable;">' +
+            '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
+            '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>' +
+            '  </div>' +
+            '</div>';
+        $('body').append(drawerHtml);
+    }
+    if (typeof KTDrawer !== 'undefined') {
+        KTDrawer.createInstances();
+    }
 })();
 </script>
+<!--end::Send Mail - Drawer Defensive Guard -->
 
 <!--begin::Send Whatsapp - Drawer (hidden toggle pattern) -->
 <div id="kt_send_whatsapp_sd_toggle" style="display:none;"></div>
@@ -8275,6 +9031,54 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   #kt_test_fwd_resume_drawer_clientapp {
     z-index: 1000050 !important;
   }
+  .fwd-resume-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000045 !important;
+    cursor: pointer;
+  }
+  #kt_send_mail_showdetail_drawer {
+    z-index: 1000050 !important;
+  }
+  #kt_send_mail_showdetail_drawer:not(.drawer-on) {
+    display: none !important;
+    transform: translateX(100%) !important;
+  }
+  .sd-mail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000045 !important;
+    cursor: pointer;
+  }
+  /* Metronic Communication Action Button Styling for Candidate Drawer Header */
+  .cdr-btn-email {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1E40AF !important;
+    background: #EFF6FF !important;
+    border: 1px solid #DBEAFE !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease-in-out !important;
+  }
+  .cdr-btn-email:hover {
+    background: #DBEAFE !important;
+    color: #1D4ED8 !important;
+    border-color: #BFDBFE !important;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
+  }
+  .cdr-btn-email svg {
+    width: 15px !important;
+    height: 15px !important;
+    stroke: currentColor !important;
+  }
   /* Preserve smooth horizontal scrolling for Candidate Drawer action bar on 15.6" screens */
   #kt_activitiesApplication .cdr-topbar-group {
     scrollbar-width: none;
@@ -8288,160 +9092,154 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 <script>
 /**
  * Forward Resume Launcher for Candidate Drawer (Rule 1, Rule 3, Rule 7, Rule 15, Rule 17)
- * Authoritative Client-First execution: auto-selects ONLY the currently open candidate
- * and launches the existing Forward Resume workflow (ForwardResumeManager V4.1 with circuit-breaker fallback).
+ * Authoritative Client-First execution: delegates directly to layout's window.openCandidateForwardResume.
+ * Preserves complete lifecycle isolation between Candidate Drawer and Forward Resume Drawer.
  */
 (function() {
-  function ensureForwardResumeDrawerShell() {
-    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-    if (!drawerEl) {
-      var shellMarkup = 
-        '<div id="kt_test_fwd_resume_drawer_toggle" style="display:none;"></div>' +
-        '<div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"' +
-        '    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"' +
-        '    data-kt-drawer-width="{default:\'90%\', \'lg\': \'80%\'}" data-kt-drawer-direction="end"' +
-        '    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"' +
-        '    style="z-index: 1000050 !important;">' +
-        '  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">' +
-        '    <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">' +
-        '      <div class="d-flex align-items-center py-1"><h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3></div>' +
-        '      <div class="card-toolbar">' +
-        '        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_test_fwd_resume_drawer_close">' +
-        '          <span class="svg-icon svg-icon-1"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>' +
-        '        </button>' +
-        '      </div>' +
-        '    </div>' +
-        '    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>' +
-        '  </div>' +
-        '</div>';
-      $('body').append(shellMarkup);
-      drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-      if (typeof KTDrawer !== 'undefined') {
-        KTDrawer.createInstances();
-      }
-    }
-    if (drawerEl) {
-      drawerEl.style.setProperty('z-index', '1000050', 'important');
-    }
-    return drawerEl;
-  }
-
-  function ensureForwardResumeManager() {
-    if (window.ForwardResumeManager) {
-      return Promise.resolve(window.ForwardResumeManager);
-    }
-    return new Promise(function(resolve, reject) {
-      var existing = document.getElementById('fwd_resume_manager_script');
-      if (existing) {
-        if (window.ForwardResumeManager) return resolve(window.ForwardResumeManager);
-        existing.addEventListener('load', function() { resolve(window.ForwardResumeManager); });
-        existing.addEventListener('error', function(e) { reject(e); });
+  if (typeof window.openCandidateForwardResume !== 'function' || !window.CandidateForwardResumeRamStore) {
+    window.openCandidateForwardResume = function(candidateId, jobId) {
+      if (typeof parent !== 'undefined' && typeof parent.openCandidateForwardResume === 'function') {
+        parent.openCandidateForwardResume(candidateId, jobId);
         return;
       }
-      var s = document.createElement('script');
-      s.id = 'fwd_resume_manager_script';
-      s.src = "{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}";
-      s.onload = function() { resolve(window.ForwardResumeManager); };
-      s.onerror = function(err) { reject(err); };
-      document.body.appendChild(s);
-    });
-  }
+      if (!candidateId) return;
+      var candArr = [parseInt(candidateId, 10)];
+      var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-  window.openCandidateForwardResume = function(candidateId, jobId) {
-    if (!candidateId) {
-      console.warn('[CDR-FWD] Candidate ID is missing.');
-      return;
-    }
+      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                     document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (drawerEl) {
+        drawerEl.style.removeProperty('display');
+        drawerEl.style.setProperty('z-index', '1000050', 'important');
+        if (!drawerEl.classList.contains('drawer')) {
+          drawerEl.classList.add('drawer', 'drawer-end');
+        }
+        drawerEl.classList.add('drawer-on');
+        drawerEl.style.transform = 'none';
 
-    var candArr = [parseInt(candidateId, 10)];
-    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
-
-    var drawerEl = ensureForwardResumeDrawerShell();
-
-    ensureForwardResumeManager().then(function(mgr) {
-      if (mgr && typeof mgr.initRoutes === 'function' && (!mgr._routes || !mgr._routes.data)) {
-        mgr.initRoutes({
-          shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
-          engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
-          data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
-          recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
-          intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
-          send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
-          quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
-          emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
-          legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
-        });
+        if (typeof KTDrawer !== 'undefined') {
+          var drawer = KTDrawer.getInstance(drawerEl);
+          if (drawer) {
+            drawer.shown = true;
+          }
+        }
       }
 
-      // Enforce clean state: isolate strictly to current candidate
-      if (mgr) {
-        mgr._currentCandidateIds = candArr;
-        mgr._currentJobIdArr = jobArr;
-        mgr._compiledAttachments = {};
-        mgr._recipientsCache = null;
-        mgr.open(candArr, jobArr, {});
-      }
-    }).catch(function(err) {
-      console.warn('[CDR-FWD] V4.1 Engine initialization error, triggering fallback:', err);
-      if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.show(); } else { $(drawerEl).addClass('drawer-on'); }
-      } else if (drawerEl) {
-        $(drawerEl).addClass('drawer-on');
-      }
-
-      var bodyContainer = $('#application_test_fwd_resume_body_content');
-      if (bodyContainer.length) {
-        bodyContainer.html(
-          '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
-          '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
+      var $body = $('#application_test_fwd_resume_body_content');
+      if ($body.length) {
+        $body.html(
+          '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+          '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
+          '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+          '</div>'
         );
-
         var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
         var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
 
         $.ajax({
           type: 'POST',
           url: url,
-          data: {
-            '_token': "{{ csrf_token() }}",
-            'arr': candArr,
-            'jobIdArr': jobArr,
-            'matchMap': {}
-          },
           cache: false,
+          data: {
+            _token: "{{ csrf_token() }}",
+            arr: candArr,
+            jobIdArr: jobArr,
+            matchMap: {}
+          },
           success: function(response) {
             if (response && response.status === 'success' && response.view) {
-              bodyContainer.html(response.view);
+              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+              }
+              $body.html(response.view);
             } else {
-              bodyContainer.html('<div class="p-8 text-center text-danger">' + ((response && response.message) || 'Failed to initialize Forward Resume') + '</div>');
+              var errMsg = (response && response.message) ? response.message : 'Failed to initialize Forward Resume';
+              $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
             }
           },
           error: function() {
-            bodyContainer.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
+            $body.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
           }
         });
       }
-    });
-  };
+    };
+  }
 
-  $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
-    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
-      window.ForwardResumeManager.close();
-    } else {
-      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-      if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) drawer.hide();
+  if (typeof window.closeCandidateForwardResume !== 'function') {
+    window.closeCandidateForwardResume = function() {
+      if (typeof parent !== 'undefined' && typeof parent.closeCandidateForwardResume === 'function') {
+        parent.closeCandidateForwardResume();
+        return;
       }
-      if (drawerEl) {
-        $(drawerEl).removeClass('drawer-on');
+      var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+      drawerIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('drawer-on');
+          el.style.removeProperty('transform');
+          el.style.removeProperty('display');
+          if (typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(el);
+            if (drawer) drawer.shown = false;
+          }
+        }
+      });
+      $('.fwd-resume-overlay').remove();
+    };
+  }
+
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof window.closeCandidateForwardResume === 'function') {
+      window.closeCandidateForwardResume();
+    }
+  });
+
+  $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      var el = document.getElementById('kt_test_fwd_resume_drawer') ||
+               document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+               document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeCandidateForwardResume === 'function') {
+          window.closeCandidateForwardResume();
+        }
       }
     }
   });
 
+  // Sibling Isolation: Candidate Send Email Drawer Close delegation & ESC handler (Rule 3, Rule 17)
+  $(document).off('click.sendMailClose').on('click.sendMailClose', '#kt_send_mail_showdetail_close', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof window.closeCandidateSendMailDrawer === 'function') {
+      window.closeCandidateSendMailDrawer();
+    }
+  });
+
+  $(document).off('keydown.sendMailEsc').on('keydown.sendMailEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_sendmail_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeSendMailRecipientDrawer === 'function') {
+          window.closeSendMailRecipientDrawer();
+        }
+        return;
+      }
+      var el = document.getElementById('kt_send_mail_showdetail_drawer');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeCandidateSendMailDrawer === 'function') {
+          window.closeCandidateSendMailDrawer();
+        }
+      }
+    }
+  });
+})();
   window.copyContactText = function(text, btnEl) {
     if (!text || text === '-') return;
     function showCopied(btn) {

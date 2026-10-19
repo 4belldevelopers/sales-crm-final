@@ -979,6 +979,301 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ]);
     }
 
+    /** Updates reason_for_job_change in both MySQL (write store) and Elasticsearch (read store). */
+    public function reasonForChangeUpdate(Request $request)
+    {
+        $appId = (int) $request->appId;
+        $reason = mb_substr(trim($request->reason_for_job_change ?? ''), 0, 255);
+        $companyId = (int) auth()->user()->company_id;
+
+        // Verify candidate exists
+        $app = DB::table('job_applications')->where('id', $appId)->first();
+        if (! $app) {
+            return response()->json(['status' => false, 'message' => 'Candidate application not found.'], 404);
+        }
+
+        // Authorize: candidate belongs to tenant, or tenant is thirdparty, or has active pipeline record, or admin
+        $isAuthorized = auth()->user()->hasRole('admin')
+            || (int) $app->company_id === $companyId
+            || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+            || DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                })->exists();
+
+        if (! $isAuthorized) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized candidate update.'], 403);
+        }
+
+        // 1. Single Source of Truth: Update MySQL transactional write store
+        DB::table('job_applications')
+            ->where('id', $appId)
+            ->update([
+                'reason_for_job_change' => $reason,
+                'updated_at' => now(),
+            ]);
+
+        // 2. Synchronize Elasticsearch read store (ELASTIC_CANDIDATES via updateByQuery)
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $this->elasticService->getClient()->updateByQuery([
+                    'index' => ELASTIC_CANDIDATES,
+                    'conflicts' => 'proceed',
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['candidate_id' => (int) $appId]],
+                                    ['term' => ['id' => (int) $appId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        'script' => [
+                            'source' => 'ctx._source.reason_for_job_change = params.reason',
+                            'lang' => 'painless',
+                            'params' => ['reason' => $reason],
+                        ],
+                    ],
+                ]);
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('reasonForChangeUpdate ELASTIC_CANDIDATES update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CANDIDATES_BENCH if present
+        try {
+            if (defined('ELASTIC_CANDIDATES_BENCH') && $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CANDIDATES_BENCH, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES_BENCH,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['reason_for_job_change' => $reason],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES_BENCH]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('reasonForChangeUpdate ELASTIC_CANDIDATES_BENCH update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CAREER_APPLY if present (Career Page candidates)
+        try {
+            if (defined('ELASTIC_CAREER_APPLY') && $this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CAREER_APPLY,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['reason_for_job_change' => $reason],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CAREER_APPLY]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('reasonForChangeUpdate ELASTIC_CAREER_APPLY update failed: '.$e->getMessage());
+        }
+
+        // 3. Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([$appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
+        $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs with full reason payload
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $appId,
+                time(),
+                'reason_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ['reason_for_job_change' => $reason]
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+        }
+
+        return response()->json([
+            'status' => true,
+            'candidate_id' => (int) $appId,
+            'wise_ids' => array_map('intval', $wiseIds),
+            'reason_for_job_change' => $reason,
+        ]);
+    }
+
+    /** Updates visastatu in both MySQL (write store) and Elasticsearch (read store). */
+    public function visaStatusUpdate(Request $request)
+    {
+        $appId = (int) $request->appId;
+        $visaStatus = mb_substr(trim($request->visastatu ?? ''), 0, 255);
+        $companyId = (int) auth()->user()->company_id;
+
+        // Verify candidate exists
+        $app = DB::table('job_applications')->where('id', $appId)->first();
+        if (! $app) {
+            return response()->json(['status' => false, 'message' => 'Candidate application not found.'], 404);
+        }
+
+        // Authorize: candidate belongs to tenant, or tenant is thirdparty, or has active pipeline record, or admin
+        $isAuthorized = auth()->user()->hasRole('admin')
+            || (int) $app->company_id === $companyId
+            || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+            || DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                })->exists();
+
+        if (! $isAuthorized) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized candidate update.'], 403);
+        }
+
+        // 1. Single Source of Truth: Update MySQL transactional write store
+        DB::table('job_applications')
+            ->where('id', $appId)
+            ->update([
+                'visastatu' => $visaStatus,
+                'updated_at' => now(),
+            ]);
+
+        // 2. Synchronize Elasticsearch read store (ELASTIC_CANDIDATES via updateByQuery)
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $this->elasticService->getClient()->updateByQuery([
+                    'index' => ELASTIC_CANDIDATES,
+                    'conflicts' => 'proceed',
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['candidate_id' => (int) $appId]],
+                                    ['term' => ['id' => (int) $appId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        'script' => [
+                            'source' => 'ctx._source.visastatu = params.visa',
+                            'lang' => 'painless',
+                            'params' => ['visa' => $visaStatus],
+                        ],
+                    ],
+                ]);
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CANDIDATES update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CANDIDATES_BENCH if present
+        try {
+            if (defined('ELASTIC_CANDIDATES_BENCH') && $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CANDIDATES_BENCH, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES_BENCH,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['visastatu' => $visaStatus],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES_BENCH]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CANDIDATES_BENCH update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CAREER_APPLY if present (Career Page candidates)
+        try {
+            if (defined('ELASTIC_CAREER_APPLY') && $this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CAREER_APPLY,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['visastatu' => $visaStatus],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CAREER_APPLY]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('visaStatusUpdate ELASTIC_CAREER_APPLY update failed: '.$e->getMessage());
+        }
+
+        // 3. Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([$appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
+        $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $appId,
+                time(),
+                'visa_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ['visastatu' => $visaStatus]
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+        }
+
+        $resolved = \App\Services\VisaResolutionService::resolve($visaStatus);
+
+        return response()->json([
+            'status' => true,
+            'candidate_id' => (int) $appId,
+            'wise_ids' => array_map('intval', $wiseIds),
+            'visastatu' => $visaStatus,
+            'resolved' => $resolved,
+        ]);
+    }
+
     public function clientCandidateList(Request $request)
     {
         $startTime = microtime(true);
@@ -8361,9 +8656,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
             ->whereIn('clients.id', $clientId)->get()->toArray() : [];
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null);
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null, $jobId);
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
 
         // $assignDataFinal = array_udiff($mergedData, $assignDataclient, function ($a, $b) {
@@ -8682,13 +8977,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $job_id)->get();
 
         $job = Job::withoutGlobalScopes()->find($request->jobId);
+        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id ?? null, $job->id ?? $request->jobId);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id);
+        $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+        $cliName = $companyOrClientName->client ?: '';
+        $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
+        $jobTitleClean = $job_applications->title ?? ($job->title ?? '');
 
-        $template_subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CLIENT_NAME}]'], [$companyOrClientName->company, $job_title, $companyOrClientName->client], $dataRow->template_subject);
-
-        $template_subject = str_replace('[{JOB_TITLE}]', $job_title, $template_subject);
-        $template_subject = str_replace('[{COMPANY_NAME}]', $client_name, $template_subject);
         $InterviewMode = '';
         if (@$request->interview_mode == 1) {
             $InterviewMode = 'Telephonic';
@@ -8703,25 +8998,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $dateTime = date('d-M-Y', strtotime($request->interviewDate)).' '.$interviewTime.' ('.$timezone.')';
 
-        // if($dataRow->tempForInterview==1){
-        //      $template_subject =	"Interview Confirmation || $job->title || $companyOrClientName->company | $dateTime | $InterviewMode Interview";
-        // }elseif($dataRow->tempForInterview==2){
-        //      $template_subject =	"Interview Confirmation || $job->title || $companyOrClientName->client | $dateTime | $InterviewMode Interview";
-        // }elseif($dataRow->tempForInterview==3){
-        //      $template_subject =	"Interview Confirmation ||  $job->title || $companyOrClientName->client | Payroll $companyOrClientName->company";
-        // }
-
-        $template_description = $dataRow->template_description;
-        // $template_description = str_replace("[{JOB_TITLE}]", $job_title, $template_description);
-        // $template_description = str_replace("[{COMPANY_NAME}]", $client_name, $template_description);
-        // $template_description = str_replace("[{CANDIDATE_NAME}]", $full_name, $template_description);
-
+        $template_description = $dataRow->template_description ?? '';
         $jobid = @$job_applications->jobId;
 
         $videoUrl = '';
         $videoUrlInter = '';
         $text_set = '';
         $interview_level = '';
+        $otherDetails = '';
         if (! empty(@$request->interview_mode)) {
             if (@$request->interview_mode == 1) {
                 $videoUrl = '**Telephonic** : ...........';
@@ -8762,24 +9046,65 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
             $interview_ques .= '<ol>';
             foreach ($interview_questions as $row) {
-                $interview_ques .= '<li>'.$row->questions.'</i>';
+                $interview_ques .= '<li>'.$row->questions.'</li>';
             }
             $interview_ques .= '</ol><hr />';
-
         }
-        // dd($interview_ques);
 
+        $templateContext = [
+            'company_name' => $compName,
+            'client_name' => $cliName,
+            'self_company' => $isSelf ? 1 : 0,
+            'position' => auth()->user()->designation ?? 'Recruitment Department',
+            'job_title' => $jobTitleClean,
+            'job_id' => $job_id,
+            'job_location' => $location,
+            'work_location' => $location,
+            'candidate_name' => $full_name,
+            'candidate_email' => $job_applications->email ?? '',
+            'candidate_phone' => $job_applications->phone ?? '',
+            'interview_mode' => $InterviewMode,
+            'interview_date_time' => $dateTime,
+            'interview_link' => $videoUrl,
+            'interview_link_url' => $videoUrlInter,
+            'interview_level' => $interview_level,
+            'text_set' => $text_set,
+            'other_description' => $otherDetails,
+            'interview_questions' => $interview_ques,
+            'job_description' => $job->job_description ?? '',
+            'company_description' => $companyOrClientName->company_description ?? '',
+            'client_description' => $companyOrClientName->client_description ?? '',
+            'company_website' => $companyOrClientName->company_website ?? '',
+            'client_website' => $companyOrClientName->client_website ?? '',
+            'hr_name' => auth()->user()->name,
+            'hr_email' => auth()->user()->email,
+            'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+            'current_date' => date('d M Y'),
+        ];
+
+        // Clean subject location & sanitize subject
+        $cleanSubjectLoc = strip_tags(str_replace(['<br>', '<br/>', '<br />'], ' ', $location));
+        $cleanSubjectLoc = preg_replace('/^\s*1\)\s*/', '', $cleanSubjectLoc);
+
+        $templateSubjectContext = $templateContext;
+        $templateSubjectContext['job_location'] = $cleanSubjectLoc;
+        $templateSubjectContext['work_location'] = $cleanSubjectLoc;
+        $templateSubjectContext['location'] = $cleanSubjectLoc;
+
+        $template_subject = GeneralMethod::replaceTemplateVariables($dataRow->template_subject ?? '', $templateSubjectContext);
+        $template_subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $template_subject);
+        $template_subject = preg_replace('/<br\s*\/?>/i', ' ', $template_subject);
+        $template_subject = strip_tags($template_subject);
+        $template_subject = html_entity_decode($template_subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $template_subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $template_subject);
+        $template_subject = preg_replace('/\|\s*1\)\s*/u', '| ', $template_subject);
+        $template_subject = preg_replace('/^\s*1\)\s*/u', '', $template_subject);
+        $template_subject = preg_replace('/\s+/u', ' ', $template_subject);
+        $template_subject = preg_replace('/\|\s*\|+/u', '|', $template_subject);
+        $template_subject = trim($template_subject, " \t\n\r\0\x0B|\xc2\xa0");
+
+        $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
         $template_description = str_replace('[{VIDEOURL}]', $videoUrl, $template_description);
-        if ($dataRow->tempForInterview == 1) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->company, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $videoUrl, $otherDetails, $location,	auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-        } elseif ($dataRow->tempForInterview == 2) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{COMPANY_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->client, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->client_website, $job->job_description, $companyOrClientName->company_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $companyOrClientName->company, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-        } elseif ($dataRow->tempForInterview == 3) {
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->client, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->client_website, $job->job_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-
-            $template_description = str_replace(['[{CANDIDATE_NAME}]', '[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]'], [$full_name, $companyOrClientName->company, $job_title, $job_id, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $videoUrl, $otherDetails, $videoUrlInter, $interview_level, $text_set, $interview_ques], $template_description);
-
-        }
 
         $to_email = $job_applications->email;
         $cc_email = $this->user->email;
@@ -9672,7 +9997,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($request->all());
 
         $job = Job::withoutGlobalScopes()->find($request->jobId);
-        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id ?? null, $job->id ?? $request->jobId);
         $subject = @$request->subject;
 
         $cc = (@$request->cc_email) ? @$request->cc_email : '';
@@ -11103,7 +11428,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // dd($recommendedDataList);
 
-            $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id);
+            $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id ?? null, $wise_c->job_id ?? null);
 
             // dd($companyOrClientName);
 

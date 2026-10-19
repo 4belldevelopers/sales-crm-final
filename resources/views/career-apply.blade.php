@@ -2288,6 +2288,471 @@ textarea.has-validation-error:focus,
     text-decoration: underline;
     cursor: pointer;
 }
+
+/* ============================================================================
+   JERO ATS - REASON FOR JOB CHANGE DEDICATED CARD & TEMPLATE ENGINE
+   Client-First • 0% Server Strain • 100% In-Memory Browser RAM
+   ============================================================================ */
+.fs.reason-change-card,
+.reason-change-card,
+#reason_job_change_section {
+    overflow: visible !important;
+    position: relative;
+    z-index: 25;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+    margin-bottom: 20px;
+}
+.reason-change-card.has-open-dropdown,
+.reason-change-card:has(.reason-template-dropdown.is-open),
+#reason_job_change_section.has-open-dropdown,
+#reason_job_change_section:has(.reason-template-dropdown.is-open) {
+    position: relative !important;
+    z-index: 1070 !important;
+}
+.reason-change-card .candidate-card-header,
+#reason_job_change_section .candidate-card-header {
+    min-height: 58px !important;
+    padding: 12px 18px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
+    background: #ffffff !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.reason-change-card .candidate-card-title,
+#reason_job_change_section .candidate-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.reason-change-card .candidate-card-icon--reason,
+#reason_job_change_section .candidate-card-icon--reason {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex-basis: 40px !important;
+    border-radius: 8px !important;
+    border: 0 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #F59E0B, #D97706) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28) !important;
+}
+.reason-change-card .candidate-card-icon--reason i {
+    font-size: 16px !important;
+    color: #ffffff !important;
+}
+.reason-change-card .candidate-card-title strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
+}
+.reason-change-card .candidate-card-title small {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+    font-family: 'Poppins', sans-serif;
+}
+.reason-change-card .candidate-card-body {
+    padding: 18px !important;
+}
+.reason-template-field {
+    position: relative;
+}
+.reason-template-dropdown {
+    position: relative;
+    width: 100%;
+}
+.reason-template-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.reason-template-trigger:hover,
+.reason-template-dropdown.is-open .reason-template-trigger {
+    border-color: #f59e0b;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+.reason-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+.reason-trigger-icon {
+    font-size: 14px;
+    color: #d97706;
+    flex-shrink: 0;
+}
+.reason-trigger-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.reason-trigger-arrow {
+    font-size: 12px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+.reason-template-dropdown.is-open .reason-trigger-arrow {
+    transform: rotate(180deg);
+    color: #d97706;
+}
+.reason-template-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14), 0 4px 12px rgba(15, 23, 42, 0.06);
+    padding: 10px 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+.reason-template-dropdown.is-open .reason-template-menu {
+    display: block !important;
+}
+.reason-template-menu::-webkit-scrollbar {
+    width: 6px;
+}
+.reason-template-menu::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+}
+.reason-template-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.reason-menu-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 10;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.reason-search-box {
+    position: relative;
+    flex: 1;
+}
+.reason-search-box i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 12px;
+}
+.reason-search-input {
+    width: 100%;
+    height: 34px;
+    padding: 6px 10px 6px 30px;
+    font-size: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.15s ease;
+}
+.reason-search-input:focus {
+    border-color: #f59e0b;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+.btn-new-custom-reason {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px dashed #fcd34d;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+.btn-new-custom-reason:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+.reason-category-section {
+    margin-bottom: 12px;
+}
+.reason-category-section:last-child {
+    margin-bottom: 2px;
+}
+.reason-category-heading {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.reason-cat--growth {
+    background: #eff6ff;
+    color: #1e40af;
+    border-left: 3px solid #2563eb;
+}
+.reason-cat--stability {
+    background: #f5f3ff;
+    color: #5b21b6;
+    border-left: 3px solid #7c3aed;
+}
+.reason-cat--logistics {
+    background: #ecfdf5;
+    color: #065f46;
+    border-left: 3px solid #059669;
+}
+.reason-cat--personal {
+    background: #fff1f2;
+    color: #9f1239;
+    border-left: 3px solid #e11d48;
+}
+.reason-cat--custom {
+    background: #fffbeb;
+    color: #92400e;
+    border-left: 3px solid #d97706;
+}
+.reason-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #ffffff;
+}
+.reason-card-item:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+.reason-card-item.is-selected {
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
+}
+.reason-card-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.reason-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.reason-cat--growth .reason-card-icon { background: #dbeafe; color: #1d4ed8; }
+.reason-cat--stability .reason-card-icon { background: #ede9fe; color: #6d28d9; }
+.reason-cat--logistics .reason-card-icon { background: #d1fae5; color: #047857; }
+.reason-cat--personal .reason-card-icon { background: #ffe4e6; color: #be123c; }
+.reason-cat--custom .reason-card-icon { background: #fef3c7; color: #b45309; }
+.reason-card-text {
+    flex: 1;
+    min-width: 0;
+}
+.reason-card-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.3;
+}
+.reason-card-subtitle {
+    display: block;
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 2px;
+    line-height: 1.35;
+}
+.reason-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+}
+.reason-card-check {
+    color: #cbd5e1;
+    font-size: 14px;
+    transition: color 0.15s ease;
+}
+.reason-card-item.is-selected .reason-card-check {
+    color: #d97706;
+}
+.btn-delete-custom-reason {
+    color: #ef4444;
+    font-size: 12px;
+    background: transparent;
+    border: none;
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-delete-custom-reason:hover {
+    background: #fee2e2;
+}
+.reason-textarea {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
+    color: #0f172a;
+    line-height: 1.5;
+    background: #ffffff;
+    resize: vertical;
+    outline: none;
+    transition: all 0.15s ease;
+}
+.reason-textarea:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+.reason-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.reason-context-tag {
+    display: flex;
+    align-items: center;
+    font-size: 11.5px;
+    color: #475569;
+}
+.reason-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.reason-char-counter {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+.reason-char-counter.is-warning {
+    color: #f59e0b;
+    font-weight: 600;
+}
+.reason-char-counter.is-limit-reached {
+    color: #ef4444;
+    font-weight: 700;
+}
+/* Mini modal for custom template */
+.custom-reason-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+.custom-reason-modal-backdrop.is-open {
+    display: flex !important;
+}
+.custom-reason-modal {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalPopIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+.custom-reason-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.custom-reason-modal-header h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.custom-reason-modal-body {
+    padding: 16px 18px;
+}
+.custom-reason-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
 </style>
 </head>
 <body class="career-apply-page bg-light" style="background-color: #f8fafc !important;">
@@ -3471,7 +3936,7 @@ textarea.has-validation-error:focus,
                       </div>
                     </div>
                     <div class="candidate-offer-field">
-                      <strong>Offer in Hand</strong>
+                      <strong>Any Offer from other organization</strong>
                       <div class="rg">
                         <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
                         <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>
@@ -3551,10 +4016,6 @@ textarea.has-validation-error:focus,
                       </select>
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Reason for Job Change <span class="candidate-optional-label">(Optional)</span></label>
-                    <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
-                  </div>
                 </div>
                 <input type="text" id="calender" name="calender" hidden>              </div>
             </div>
@@ -3575,6 +4036,693 @@ textarea.has-validation-error:focus,
                 </div>
               </div>
             </div>
+
+            @php
+              $reasonCategories = [
+                'growth' => [
+                  'label' => 'Growth & Role Progression',
+                  'class' => 'reason-cat--growth',
+                  'icon' => 'fa-solid fa-arrow-trend-up',
+                  'items' => [
+                    [
+                      'id' => 'reason_better_opp',
+                      'title' => 'Better Career Opportunity',
+                      'subtitle' => 'Seeking career progression, broader scope & advanced technical exposure.',
+                      'icon' => 'fa-solid fa-briefcase',
+                      'text' => 'Actively exploring better career opportunities with broader scope, progressive work culture, and advanced technical exposure.',
+                    ],
+                    [
+                      'id' => 'reason_higher_comp',
+                      'title' => 'Higher Compensation',
+                      'subtitle' => 'Looking for remuneration commensurate with industry benchmark and current skillset.',
+                      'icon' => 'fa-solid fa-coins',
+                      'text' => 'Seeking competitive compensation aligned with current market standards, proven capabilities, and overall industry experience.',
+                    ],
+                    [
+                      'id' => 'reason_growth',
+                      'title' => 'Career Growth',
+                      'subtitle' => 'Seeking upward career advancement not currently available in existing hierarchy.',
+                      'icon' => 'fa-solid fa-chart-line',
+                      'text' => 'Looking for upward career growth and clear advancement pathways that are currently constrained in the current organizational setup.',
+                    ],
+                    [
+                      'id' => 'reason_better_role_tech',
+                      'title' => 'Better Role / Technology',
+                      'subtitle' => 'Targeting modern technologies, modernized architecture & hands-on depth.',
+                      'icon' => 'fa-solid fa-laptop-code',
+                      'text' => 'Seeking transition to modern technology stacks, product architecture, and more hands-on technical challenges.',
+                    ],
+                    [
+                      'id' => 'reason_higher_resp',
+                      'title' => 'Higher Responsibility',
+                      'subtitle' => 'Ready for elevated architectural, project, or cross-functional team leadership.',
+                      'icon' => 'fa-solid fa-people-roof',
+                      'text' => 'Prepared to take on higher technical ownership, cross-functional project leadership, and larger team responsibilities.',
+                    ],
+                  ],
+                ],
+                'stability' => [
+                  'label' => 'Stability & Organizational Shifts',
+                  'class' => 'reason-cat--stability',
+                  'icon' => 'fa-solid fa-building-shield',
+                  'items' => [
+                    [
+                      'id' => 'reason_proj_ending',
+                      'title' => 'Current Project/Contract Ending',
+                      'subtitle' => 'Current engagement, client deliverable, or fixed-term contract nearing completion.',
+                      'icon' => 'fa-solid fa-hourglass-end',
+                      'text' => 'Current project/contract engagement is approaching successful completion, actively looking for the next long-term role.',
+                    ],
+                    [
+                      'id' => 'reason_restructuring',
+                      'title' => 'Company Restructuring / Layoff',
+                      'subtitle' => 'Impacted by corporate restructuring, team downsizing, or budget reprioritization.',
+                      'icon' => 'fa-solid fa-network-wired',
+                      'text' => 'Impacted by organizational restructuring and company-wide downsizing; actively available for immediate placement.',
+                    ],
+                    [
+                      'id' => 'reason_org_changes',
+                      'title' => 'Organizational Changes',
+                      'subtitle' => 'Recent structural shifts and business pivots in current company.',
+                      'icon' => 'fa-solid fa-arrows-split-up-and-left',
+                      'text' => 'Recent strategic changes in company direction and organizational priorities have prompted seeking a better-aligned opportunity.',
+                    ],
+                    [
+                      'id' => 'reason_mgmt_change',
+                      'title' => 'Management / Team Change',
+                      'subtitle' => 'Recent internal reporting changes affecting role focus.',
+                      'icon' => 'fa-solid fa-users-gear',
+                      'text' => 'Recent internal team restructuring and leadership changes have resulted in realignment of roles and priorities.',
+                    ],
+                    [
+                      'id' => 'reason_seeking_stability',
+                      'title' => 'Seeking Stability',
+                      'subtitle' => 'Prioritizing long-term organizational continuity and predictable roadmap.',
+                      'icon' => 'fa-solid fa-shield-halved',
+                      'text' => 'Looking for long-term organizational stability, financial soundness, and sustainable project continuity.',
+                    ],
+                  ],
+                ],
+                'logistics' => [
+                  'label' => 'Availability & Logistics',
+                  'class' => 'reason-cat--logistics',
+                  'icon' => 'fa-solid fa-map-location-dot',
+                  'items' => [
+                    [
+                      'id' => 'reason_immediate_joiner',
+                      'title' => 'Looking for Immediate Joiner Opportunity',
+                      'subtitle' => 'Zero or minimal notice constraints, prepared for immediate onboarding.',
+                      'icon' => 'fa-solid fa-bolt',
+                      'text' => 'Available as an immediate joiner with zero notice period constraints, looking for immediate onboarding.',
+                    ],
+                    [
+                      'id' => 'reason_notice_constraints',
+                      'title' => 'Notice Period / Joining Constraints',
+                      'subtitle' => 'Serving notice or negotiating buyout for fast joining.',
+                      'icon' => 'fa-regular fa-calendar-check',
+                      'text' => 'Currently serving notice period and actively seeking roles aligned with current availability and joining timeline.',
+                    ],
+                    [
+                      'id' => 'reason_relocation',
+                      'title' => 'Relocation',
+                      'subtitle' => 'Moving to target city/region for personal or family reasons.',
+                      'icon' => 'fa-solid fa-truck-ramp-box',
+                      'text' => 'Relocating to the target location for personal/family reasons, seeking a local or remote opportunity.',
+                    ],
+                    [
+                      'id' => 'reason_commute_issue',
+                      'title' => 'Work Location / Commute Issue',
+                      'subtitle' => 'Substantial travel time or excessive commute in current arrangement.',
+                      'icon' => 'fa-solid fa-bus-simple',
+                      'text' => 'Looking for an opportunity closer to residence or with reduced commute time to enhance day-to-day productivity.',
+                    ],
+                    [
+                      'id' => 'reason_wfh_hybrid',
+                      'title' => 'Work-from-Home / Hybrid Requirement',
+                      'subtitle' => 'Seeking hybrid balance or structured remote arrangement.',
+                      'icon' => 'fa-solid fa-house-laptop',
+                      'text' => 'Seeking a structured hybrid or remote work arrangement to optimize productivity and achieve healthy work-life balance.',
+                    ],
+                    [
+                      'id' => 'reason_international',
+                      'title' => 'International Opportunity',
+                      'subtitle' => 'Exploring global employment, overseas relocation, or cross-border projects.',
+                      'icon' => 'fa-solid fa-earth-americas',
+                      'text' => 'Actively exploring international opportunities, cross-border projects, or roles offering visa sponsorship.',
+                    ],
+                  ],
+                ],
+                'personal' => [
+                  'label' => 'Personal & Life Milestones',
+                  'class' => 'reason-cat--personal',
+                  'icon' => 'fa-solid fa-heart-pulse',
+                  'items' => [
+                    [
+                      'id' => 'reason_medical',
+                      'title' => 'Medical Emergency',
+                      'subtitle' => 'Addressed medical or family health priorities, now fully resolved.',
+                      'icon' => 'fa-solid fa-kit-medical',
+                      'text' => 'Took necessary time to attend to family medical priorities; the situation is fully resolved and ready for full-time commitment.',
+                    ],
+                    [
+                      'id' => 'reason_personal',
+                      'title' => 'Personal Reasons',
+                      'subtitle' => 'Personal commitments or life milestone prompting career transition.',
+                      'icon' => 'fa-solid fa-user-clock',
+                      'text' => 'Seeking a career transition due to personal commitments while remaining dedicated to professional growth.',
+                    ],
+                    [
+                      'id' => 'reason_career_break',
+                      'title' => 'Career Break',
+                      'subtitle' => 'Returning to active workforce following planned sabbatical or learning period.',
+                      'icon' => 'fa-solid fa-battery-half',
+                      'text' => 'Returning to the active workforce after a planned career break with refreshed skills and high enthusiasm.',
+                    ],
+                    [
+                      'id' => 'reason_role_misalign',
+                      'title' => 'Role Misalignment',
+                      'subtitle' => 'Day-to-day duties divergent from original job description.',
+                      'icon' => 'fa-solid fa-shuffle',
+                      'text' => 'Current day-to-day responsibilities have diverged from the original job profile; looking for a role matching core strengths.',
+                    ],
+                    [
+                      'id' => 'reason_other',
+                      'title' => 'Other',
+                      'subtitle' => 'Specific unique reason or tailored transition circumstances.',
+                      'icon' => 'fa-solid fa-ellipsis',
+                      'text' => 'Exploring new opportunities to better align personal career milestones with long-term professional aspirations.',
+                    ],
+                  ],
+                ],
+              ];
+
+              $defaultReasonId = 'reason_growth';
+              $defaultReasonTitle = 'Career Growth';
+              $defaultReasonIcon = 'fa-solid fa-chart-line';
+              $defaultReasonText = 'Looking for upward career growth and clear advancement pathways that are currently constrained in the current organizational setup.';
+
+              $existingReason = old('reason_for_job_change', @$application->reason_for_job_change);
+              $hasExplicitReason = !is_null($existingReason) && $existingReason !== '';
+              $hasCustomExistingReason = $hasExplicitReason && ($existingReason !== $defaultReasonText);
+              $selectedReasonTitle = $hasCustomExistingReason ? 'Custom / Existing Reason Populated' : $defaultReasonTitle;
+              $selectedReasonIcon = $hasCustomExistingReason ? 'fa-solid fa-route' : $defaultReasonIcon;
+              $initialReasonValue = $hasExplicitReason ? $existingReason : $defaultReasonText;
+            @endphp
+
+            <!-- Reason for Job Change Card (Dedicated Career Transition Component) -->
+            <div class="fs candidate-card reason-change-card" id="reason_job_change_section">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--reason"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
+                  <div>
+                    <strong>Reason for Job Change</strong>
+                    <small>Specify candidate's transition driver or pick from standard recruitment scenarios.</small>
+                  </div>
+                </div>
+                <div class="d-none d-sm-flex align-items-center">
+                  <span class="badge" style="background:#fffbeb; color:#b45309; font-weight:600; font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid #fde68a;">
+                    <i class="fa-solid fa-compass me-1" style="font-size:10px; color:#d97706;"></i> Career Transition
+                  </span>
+                </div>
+              </div>
+
+              <div class="fsc candidate-card-body">
+                <div class="fg fv-row reason-template-field mb-3">
+                  <label class="form-label fw-semibold text-gray-800 fs-7 mb-1 d-flex align-items-center justify-content-between">
+                    <span>Select Predefined Reason Template <span class="text-muted fw-normal fs-8">(Click dropdown to select categorized scenario)</span></span>
+                  </label>
+
+                  <div class="reason-template-dropdown" id="reason_template_dropdown">
+                    <div class="reason-template-trigger" id="reason_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="window.toggleReasonTemplateDropdown(event);">
+                      <div class="reason-trigger-left">
+                        <i class="{{ $selectedReasonIcon }} reason-trigger-icon" id="reason_trigger_icon"></i>
+                        <span class="reason-trigger-label" id="selected_reason_template_label">{{ $selectedReasonTitle }}</span>
+                      </div>
+                      <i class="fa-solid fa-chevron-down reason-trigger-arrow"></i>
+                    </div>
+
+                    <div class="reason-template-menu" id="reason_template_menu" role="listbox">
+                      <div class="reason-menu-toolbar">
+                        <div class="reason-search-box">
+                          <i class="fa-solid fa-magnifying-glass"></i>
+                          <input type="text" class="reason-search-input" id="reason_template_search" placeholder="Type to search reasons &amp; scenarios..." autocomplete="off">
+                        </div>
+                        <button type="button" class="btn-new-custom-reason" id="btn_open_custom_reason_modal" onclick="window.openCustomReasonModal(event);">
+                          <i class="fa-solid fa-plus me-1"></i> Custom Template
+                        </button>
+                      </div>
+
+                      {{-- Custom Templates Section (Populated via JS from localStorage) --}}
+                      <div class="reason-category-section reason-cat--custom-wrapper" id="custom_reasons_container" style="display:none;">
+                        <div class="reason-category-heading reason-cat--custom">
+                          <i class="fa-solid fa-star me-2"></i>
+                          <span>My Custom Templates</span>
+                        </div>
+                        <div id="custom_reasons_list"></div>
+                      </div>
+
+                      @foreach($reasonCategories as $catKey => $category)
+                      <div class="reason-category-section" data-cat-key="{{ $catKey }}">
+                        <div class="reason-category-heading {{ $category['class'] }}">
+                          <i class="{{ $category['icon'] }} me-2"></i>
+                          <span>{{ $category['label'] }}</span>
+                        </div>
+                        @foreach($category['items'] as $item)
+                        @php
+                          $isItemDefault = ($item['id'] === $defaultReasonId);
+                          $isItemSelected = $hasExplicitReason
+                            ? ($existingReason === $item['text'])
+                            : $isItemDefault;
+                        @endphp
+                        <div class="reason-card-item {{ $isItemSelected ? 'is-selected' : '' }}" data-reason-id="{{ $item['id'] }}" data-reason-title="{{ $item['title'] }}" data-reason-text="{{ $item['text'] }}" role="option" tabindex="0" onclick="window.selectReasonTemplate(this, event);">
+                          <div class="reason-card-left">
+                            <span class="reason-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="reason-card-text">
+                              <strong class="reason-card-title">{{ $item['title'] }}</strong>
+                              <small class="reason-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <div class="reason-card-actions">
+                            <span class="reason-card-check">
+                              <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                          </div>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endforeach
+
+                      <div id="reason_no_results" style="display:none; text-align:center; padding:16px; color:#94a3b8; font-size:12px;">
+                        <i class="fa-regular fa-face-meh mb-1" style="font-size:18px;"></i>
+                        <div>No matching scenario found. Try a different keyword or create a custom template.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="fg fv-row reason-editor-field">
+                  <label class="form-label fw-semibold text-gray-800 fs-7 mb-1 d-flex align-items-center justify-content-between">
+                    <span>Reason for Job Change <span class="candidate-optional-label text-muted fw-normal fs-8">(Optional &mdash; edit or refine text before saving)</span></span>
+                  </label>
+                  <textarea id="reason_for_job_change" name="reason_for_job_change" rows="3" maxlength="250" class="reason-textarea" placeholder="Enter reason for job change or select a template above...">{{ $initialReasonValue }}</textarea>
+                  
+                  <div class="reason-footer">
+                    <div class="reason-context-tag">
+                      <i class="fa-solid fa-circle-info me-1" style="color:#d97706;"></i>
+                      <span>Candidate transition details shared with hiring managers &amp; interviewers.</span>
+                    </div>
+                    <div class="reason-footer-actions">
+                      <button type="button" class="btn btn-sm btn-link text-muted p-0" id="btn_clear_reason" onclick="window.clearReasonForJobChange(event);" style="font-size:11.5px; text-decoration:none;">
+                        <i class="fa-solid fa-eraser me-1"></i> Clear
+                      </button>
+                      <span class="reason-char-counter" id="reason_char_counter">0 / 250 characters</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Reason Modal Backdrop & Dialog -->
+            <div class="custom-reason-modal-backdrop" id="custom_reason_modal_backdrop" onclick="window.handleCustomReasonModalBackdrop(event);">
+              <div class="custom-reason-modal" onclick="event.stopPropagation();">
+                <div class="custom-reason-modal-header">
+                  <h5><i class="fa-solid fa-pen-to-square me-2" style="color:#d97706;"></i>Create Custom Reason Template</h5>
+                  <button type="button" class="btn-close" style="font-size:12px;" onclick="window.closeCustomReasonModal(event);" aria-label="Close"></button>
+                </div>
+                <div class="custom-reason-modal-body">
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-gray-800 fs-7 mb-1">Template Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-solid" id="modal_custom_reason_title" maxlength="60" placeholder="e.g. Client Project Budget Freeze" autocomplete="off" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-gray-800 fs-7 mb-1">Category <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-solid" id="modal_custom_reason_category">
+                      <option value="growth">Growth &amp; Role Progression</option>
+                      <option value="stability">Stability &amp; Organizational Shifts</option>
+                      <option value="logistics">Availability &amp; Logistics</option>
+                      <option value="personal">Personal &amp; Life Milestones</option>
+                    </select>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label fw-semibold text-gray-800 fs-7 mb-1">Reason Narrative <span class="text-danger">*</span></label>
+                    <textarea class="form-control form-control-solid" id="modal_custom_reason_text" rows="3" maxlength="250" placeholder="Enter standard statement that will be populated into the candidate's reason for change..."></textarea>
+                    <small class="text-muted d-block mt-1" style="font-size:11px;">Saved templates are reusable across all candidate creation forms in your organization.</small>
+                  </div>
+                </div>
+                <div class="custom-reason-modal-footer">
+                  <button type="button" class="btn btn-sm btn-light" onclick="window.closeCustomReasonModal(event);">Cancel</button>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn_save_custom_reason" onclick="window.saveCustomReasonTemplate(event);">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Template
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <script id="jero_job_change_isolated_engine">
+            (function () {
+                'use strict';
+
+                var companyId = @json((int) (@$company_id ?: 0));
+                var storageKey = 'jero_job_change_custom_templates_' + companyId;
+
+                function getCustomTemplates() {
+                    try {
+                        var raw = localStorage.getItem(storageKey);
+                        return raw ? JSON.parse(raw) : [];
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function saveCustomTemplates(arr) {
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify(arr));
+                    } catch (e) {
+                        console.warn('Failed to save custom templates to localStorage', e);
+                    }
+                }
+
+                function updateCharCounter() {
+                    var el = document.getElementById('reason_for_job_change');
+                    var counter = document.getElementById('reason_char_counter');
+                    if (!el || !counter) return;
+                    var len = (el.value || '').length;
+                    counter.textContent = len + ' / 250 characters';
+                    if (len >= 250) {
+                        counter.classList.add('is-limit-reached');
+                        counter.classList.remove('is-warning');
+                    } else if (len >= 220) {
+                        counter.classList.add('is-warning');
+                        counter.classList.remove('is-limit-reached');
+                    } else {
+                        counter.classList.remove('is-warning', 'is-limit-reached');
+                    }
+                }
+
+                window.toggleReasonTemplateDropdown = function (e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    var dd = document.getElementById('reason_template_dropdown');
+                    var card = document.getElementById('reason_job_change_section');
+                    var trigger = document.getElementById('reason_template_trigger');
+                    if (!dd) return;
+
+                    var isOpen = dd.classList.contains('is-open');
+                    if (isOpen) {
+                        dd.classList.remove('is-open');
+                        if (card) card.classList.remove('has-open-dropdown');
+                        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                    } else {
+                        var otherDd = document.getElementById('custom_template_dropdown');
+                        if (otherDd) otherDd.classList.remove('is-open');
+
+                        dd.classList.add('is-open');
+                        if (card) card.classList.add('has-open-dropdown');
+                        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+                        var search = document.getElementById('reason_template_search');
+                        if (search) {
+                            setTimeout(function() { search.focus(); }, 50);
+                        }
+                    }
+                };
+
+                window.selectReasonTemplate = function (el, e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    if (!el) return;
+                    var text = el.getAttribute('data-reason-text') || '';
+                    var title = el.getAttribute('data-reason-title') || '';
+                    var iconEl = el.querySelector('.reason-card-icon i');
+                    var iconClass = iconEl ? iconEl.className : 'fa-solid fa-route';
+
+                    var textarea = document.getElementById('reason_for_job_change');
+                    if (textarea) {
+                        textarea.value = text;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+
+                    var label = document.getElementById('selected_reason_template_label');
+                    if (label) label.textContent = title;
+
+                    var triggerIcon = document.getElementById('reason_trigger_icon');
+                    if (triggerIcon) triggerIcon.className = iconClass + ' reason-trigger-icon';
+
+                    var allItems = document.querySelectorAll('#reason_template_menu .reason-card-item');
+                    allItems.forEach(function (item) { item.classList.remove('is-selected'); });
+                    el.classList.add('is-selected');
+
+                    var dd = document.getElementById('reason_template_dropdown');
+                    var card = document.getElementById('reason_job_change_section');
+                    var trigger = document.getElementById('reason_template_trigger');
+                    if (dd) dd.classList.remove('is-open');
+                    if (card) card.classList.remove('has-open-dropdown');
+                    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+
+                    updateCharCounter();
+                };
+
+                window.clearReasonForJobChange = function (e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    var textarea = document.getElementById('reason_for_job_change');
+                    if (textarea) {
+                        textarea.value = '';
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    var label = document.getElementById('selected_reason_template_label');
+                    if (label) label.textContent = 'Select or Pick Predefined Reason...';
+
+                    var triggerIcon = document.getElementById('reason_trigger_icon');
+                    if (triggerIcon) triggerIcon.className = 'fa-solid fa-route reason-trigger-icon';
+
+                    var allItems = document.querySelectorAll('#reason_template_menu .reason-card-item');
+                    allItems.forEach(function (item) { item.classList.remove('is-selected'); });
+
+                    updateCharCounter();
+                };
+
+                window.openCustomReasonModal = function (e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    var backdrop = document.getElementById('custom_reason_modal_backdrop');
+                    if (backdrop) backdrop.classList.add('is-open');
+                    var input = document.getElementById('modal_custom_reason_title');
+                    if (input) {
+                        input.value = '';
+                        setTimeout(function() { input.focus(); }, 50);
+                    }
+                    var txt = document.getElementById('modal_custom_reason_text');
+                    if (txt) txt.value = '';
+                };
+
+                window.closeCustomReasonModal = function (e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    var backdrop = document.getElementById('custom_reason_modal_backdrop');
+                    if (backdrop) backdrop.classList.remove('is-open');
+                };
+
+                window.handleCustomReasonModalBackdrop = function (e) {
+                    if (e.target && e.target.id === 'custom_reason_modal_backdrop') {
+                        window.closeCustomReasonModal();
+                    }
+                };
+
+                window.saveCustomReasonTemplate = function (e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    var titleEl = document.getElementById('modal_custom_reason_title');
+                    var catEl = document.getElementById('modal_custom_reason_category');
+                    var textEl = document.getElementById('modal_custom_reason_text');
+
+                    var title = titleEl ? titleEl.value.trim() : '';
+                    var cat = catEl ? catEl.value : 'growth';
+                    var text = textEl ? textEl.value.trim() : '';
+
+                    if (!title) {
+                        alert('Please enter a template title.');
+                        if (titleEl) titleEl.focus();
+                        return;
+                    }
+                    if (!text) {
+                        alert('Please enter the reason text.');
+                        if (textEl) textEl.focus();
+                        return;
+                    }
+
+                    var newTpl = {
+                        id: 'custom_' + Date.now(),
+                        title: title,
+                        category: cat,
+                        subtitle: 'Custom organization template.',
+                        icon: 'fa-solid fa-star',
+                        text: text
+                    };
+
+                    var list = getCustomTemplates();
+                    list.unshift(newTpl);
+                    saveCustomTemplates(list);
+
+                    renderCustomTemplates();
+                    window.closeCustomReasonModal();
+
+                    var textarea = document.getElementById('reason_for_job_change');
+                    if (textarea) {
+                        textarea.value = text;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    var label = document.getElementById('selected_reason_template_label');
+                    if (label) label.textContent = title;
+                    var triggerIcon = document.getElementById('reason_trigger_icon');
+                    if (triggerIcon) triggerIcon.className = 'fa-solid fa-star reason-trigger-icon';
+
+                    updateCharCounter();
+
+                    if (window.toastr) {
+                        toastr.success('Custom reason template saved successfully.');
+                    }
+                };
+
+                window.deleteCustomReasonTemplate = function (id, e) {
+                    if (e) {
+                        if (typeof e.preventDefault === 'function') e.preventDefault();
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
+                    if (!confirm('Are you sure you want to delete this custom template?')) {
+                        return;
+                    }
+                    var list = getCustomTemplates();
+                    var filtered = list.filter(function (t) { return t.id !== id; });
+                    saveCustomTemplates(filtered);
+                    renderCustomTemplates();
+                    if (window.toastr) {
+                        toastr.info('Custom template deleted.');
+                    }
+                };
+
+                function renderCustomTemplates() {
+                    var container = document.getElementById('custom_reasons_container');
+                    var listEl = document.getElementById('custom_reasons_list');
+                    if (!container || !listEl) return;
+
+                    var list = getCustomTemplates();
+                    if (list.length === 0) {
+                        container.style.display = 'none';
+                        listEl.innerHTML = '';
+                        return;
+                    }
+
+                    container.style.display = 'block';
+                    var html = '';
+                    list.forEach(function (item) {
+                        html += '<div class="reason-card-item" data-reason-id="' + item.id + '" data-reason-title="' + escapeHtml(item.title) + '" data-reason-text="' + escapeHtml(item.text) + '" role="option" tabindex="0" onclick="window.selectReasonTemplate(this, event);">' +
+                            '<div class="reason-card-left">' +
+                                '<span class="reason-card-icon" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-star"></i></span>' +
+                                '<div class="reason-card-text">' +
+                                    '<strong class="reason-card-title">' + escapeHtml(item.title) + '</strong>' +
+                                    '<small class="reason-card-subtitle">' + escapeHtml(item.subtitle || '') + '</small>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="reason-card-actions">' +
+                                '<button type="button" class="btn-delete-custom-reason" title="Delete custom template" onclick="window.deleteCustomReasonTemplate(\'' + item.id + '\', event);"><i class="fa-solid fa-trash-can"></i></button>' +
+                                '<span class="reason-card-check"><i class="fa-solid fa-circle-check"></i></span>' +
+                            '</div>' +
+                        '</div>';
+                    });
+                    listEl.innerHTML = html;
+                }
+
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;');
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    renderCustomTemplates();
+                    updateCharCounter();
+
+                    var textarea = document.getElementById('reason_for_job_change');
+                    if (textarea) {
+                        textarea.addEventListener('input', updateCharCounter);
+                        textarea.addEventListener('change', updateCharCounter);
+                    }
+
+                    var search = document.getElementById('reason_template_search');
+                    if (search) {
+                        search.addEventListener('input', function () {
+                            var query = (search.value || '').toLowerCase().trim();
+                            var items = document.querySelectorAll('#reason_template_menu .reason-card-item');
+                            var visibleCount = 0;
+
+                            items.forEach(function (item) {
+                                var title = (item.getAttribute('data-reason-title') || '').toLowerCase();
+                                var text = (item.getAttribute('data-reason-text') || '').toLowerCase();
+                                var match = !query || title.indexOf(query) !== -1 || text.indexOf(query) !== -1;
+                                item.style.display = match ? 'flex' : 'none';
+                                if (match) visibleCount++;
+                            });
+
+                            var sections = document.querySelectorAll('#reason_template_menu .reason-category-section');
+                            sections.forEach(function (sec) {
+                                var visibleItems = sec.querySelectorAll('.reason-card-item:not([style*="display: none"])');
+                                sec.style.display = visibleItems.length > 0 ? 'block' : 'none';
+                            });
+
+                            var noResults = document.getElementById('reason_no_results');
+                            if (noResults) {
+                                noResults.style.display = (visibleCount === 0 && query) ? 'block' : 'none';
+                            }
+                        });
+                    }
+
+                    document.addEventListener('click', function (e) {
+                        var dd = document.getElementById('reason_template_dropdown');
+                        if (dd && dd.classList.contains('is-open')) {
+                            if (!dd.contains(e.target)) {
+                                dd.classList.remove('is-open');
+                                var card = document.getElementById('reason_job_change_section');
+                                if (card) card.classList.remove('has-open-dropdown');
+                                var trigger = document.getElementById('reason_template_trigger');
+                                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                            }
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (e) {
+                        if (e.key === 'Escape') {
+                            var dd = document.getElementById('reason_template_dropdown');
+                            if (dd && dd.classList.contains('is-open')) {
+                                dd.classList.remove('is-open');
+                                var card = document.getElementById('reason_job_change_section');
+                                if (card) card.classList.remove('has-open-dropdown');
+                                var trigger = document.getElementById('reason_template_trigger');
+                                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                            }
+                            window.closeCustomReasonModal();
+                        }
+                    });
+                });
+            })();
+            </script>
 
             <!-- Skills Details -->
             <div class="fs se-card job-skills-card candidate-card">

@@ -8903,12 +8903,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $cId = (int) $fAtt->candidate_id;
                 $filename = $fAtt->filename ?: "JERO_Candidate_{$cId}.pdf";
                 if (! empty($r2Key) && Storage::disk('r2')->exists($r2Key)) {
-                    $storedName = 'bench_fwd_'.$cId.'_'.uniqid().'.pdf';
-                    file_put_contents($tempDir.'/'.$storedName, Storage::disk('r2')->get($r2Key));
+                    // ARCH-01 Compliance: Stream directly from R2 without writing to server disk
                     $attachments[] = [
-                        'path' => $tempDir.'/'.$storedName,
+                        'path' => $r2Key,
+                        'r2_key' => $r2Key,
                         'filename' => $filename,
-                        'is_local' => true,
+                        'size' => (int) ($fAtt->file_size_bytes ?? 0),
+                        'is_local' => false,
                         'options' => [],
                     ];
                     $handledMap[$cId] = true;
@@ -8955,13 +8956,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         $cObj = $candidates->get((int) $cId) ?: $candidate;
                         $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) ($cObj->full_name ?? 'Candidate')));
                         $customFilename = 'JERO_'.$candName.'_'.$cId.'.pdf';
-                        $storedName = 'bench_fwd_'.$cId.'_'.uniqid().'.pdf';
-                        file_put_contents($tempDir.'/'.$storedName, $binData);
 
+                        // In-memory byte attachment (0 local disk I/O)
                         $attachments[] = [
-                            'path' => $tempDir.'/'.$storedName,
+                            'data' => $binData,
+                            'size' => strlen($binData),
                             'filename' => $customFilename,
-                            'is_local' => true,
+                            'is_local' => false,
                             'options' => [],
                         ];
                         $handledMap[$cId] = true;
@@ -9004,12 +9005,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     if (! empty($r2Key)) {
                         try {
                             if (\Storage::disk('r2')->exists($r2Key)) {
-                                $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
-                                file_put_contents($tempDir.'/'.$storedName, \Storage::disk('r2')->get($r2Key));
                                 $attachments[] = [
-                                    'path' => $tempDir.'/'.$storedName,
+                                    'path' => $r2Key,
+                                    'r2_key' => $r2Key,
                                     'filename' => $customName,
-                                    'is_local' => true,
+                                    'size' => (int) \Storage::disk('r2')->size($r2Key),
+                                    'is_local' => false,
                                     'options' => [],
                                 ];
                                 $attachedThisCand = true;
@@ -9021,21 +9022,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
                     // 3b. Remote HTTP fetch fallback
                     if (! $attachedThisCand && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
-                        try {
-                            $resp = Http::timeout(25)->get($hashname);
-                            if ($resp->successful()) {
-                                $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
-                                file_put_contents($tempDir.'/'.$storedName, $resp->body());
-                                $attachments[] = [
-                                    'path' => $tempDir.'/'.$storedName,
-                                    'filename' => $customName,
-                                    'is_local' => true,
-                                    'options' => [],
-                                ];
-                                $attachedThisCand = true;
-                            }
-                        } catch (\Throwable $remoteErr) {
-                        }
+                        $attachments[] = [
+                            'path' => $hashname,
+                            'filename' => $customName,
+                            'is_local' => false,
+                            'options' => [],
+                        ];
+                        $attachedThisCand = true;
                     }
 
                     if (! $attachedThisCand) {
@@ -9065,13 +9058,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // 4. Strict 6 MB email deliverability ceiling guard
         $totalBytes = 0;
         foreach ($attachments as $att) {
-            if (! empty($att['path']) && file_exists($att['path'])) {
+            if (! empty($att['size'])) {
+                $totalBytes += (int) $att['size'];
+            } elseif (! empty($att['data'])) {
+                $totalBytes += strlen($att['data']);
+            } elseif (! empty($att['r2_key'])) {
+                try {
+                    $totalBytes += (int) Storage::disk('r2')->size($att['r2_key']);
+                } catch (\Throwable $r2SizeErr) {
+                }
+            } elseif (! empty($att['path']) && file_exists($att['path'])) {
                 $totalBytes += filesize($att['path']);
             }
         }
 
         if ($totalBytes > 6 * 1024 * 1024) {
-            // Clean up temporary files created for this request
+            // Clean up temporary files created for this request (local fallbacks only)
             foreach ($attachments as $att) {
                 if (! empty($att['is_local']) && ! empty($att['path']) && file_exists($att['path'])) {
                     @unlink($att['path']);

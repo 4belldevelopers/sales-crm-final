@@ -3,7 +3,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "worker": "node cloudflare_worker/server.js",
+        "worker:test": "node cloudflare_worker/test_runner.js"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",

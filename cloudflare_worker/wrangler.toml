@@ -1,0 +1,11 @@
+name = "jero-company-intelligence"
+main = "worker.js"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+# Enable Cloudflare Edge Cache
+[triggers]
+crons = []

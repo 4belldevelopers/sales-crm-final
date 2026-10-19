@@ -988,7 +988,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
 <!--begin::Test Fwd Resume Drawer - ClientApp-->
 <div id="kt_test_fwd_resume_drawer_clientapp" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume-clientapp"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
     data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
     data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_clientapp" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close_clientapp">
     <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
@@ -1991,15 +1991,24 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	});
 
 	$(document).on('click', '#kt_test_fwd_resume_drawer_close_clientapp', function() {
-		if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-			try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+		if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+			window.ForwardResumeManager.close();
+		} else if (typeof window.closeTestFwdResumeDrawer === 'function') {
+			window.closeTestFwdResumeDrawer();
+		} else {
+			if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+				try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+			}
+			var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+			if (drawerEl) {
+				if (typeof KTDrawer !== 'undefined') {
+					var drawer = KTDrawer.getInstance(drawerEl);
+					if (drawer) { drawer.hide(); } else { drawerEl.classList.remove('drawer-on'); }
+				} else {
+					drawerEl.classList.remove('drawer-on');
+				}
+			}
 		}
-		var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-		if (drawerEl && typeof KTDrawer !== 'undefined') {
-			var drawer = KTDrawer.getInstance(drawerEl);
-			if (drawer) { drawer.hide(); }
-		}
-		$('#application_test_fwd_resume_body_content').html('');
 	});
 
 </script>

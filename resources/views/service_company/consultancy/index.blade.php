@@ -2600,7 +2600,24 @@ $(document).ready(function() {
 
 
 
-        $(document).on('click', '#submit_staffing_partners', function() {
+        var isStaffingInviteSubmitting = false;
+
+        $(document).on('keydown', '#staffing_partners_email', function(e) {
+            if (e.which === 13 || e.keyCode === 13) {
+                e.preventDefault();
+                if (!isStaffingInviteSubmitting) {
+                    $('#submit_staffing_partners').click();
+                }
+                return false;
+            }
+        });
+
+        $(document).on('click', '#submit_staffing_partners', function(e) {
+            e.preventDefault();
+
+            if (isStaffingInviteSubmitting) {
+                return false;
+            }
 
             if ($("#add_staffing_partners_form").length && typeof $("#add_staffing_partners_form").valid === 'function') {
                 if (!$("#add_staffing_partners_form").valid()) {
@@ -2609,39 +2626,44 @@ $(document).ready(function() {
             }
 
             var staffing_partners_email = $('#staffing_partners_email').val();
+            if (!staffing_partners_email || !staffing_partners_email.trim()) {
+                return false;
+            }
+
             var id = 0;
             var url = "{{ route('service_company.consultancy.staffing_invitation', 'id') }}";
             url = url.replace(':id', id);
-            $('#submit_staffing_partners').prop('disabled', true);
+
+            isStaffingInviteSubmitting = true;
+            var $btn = $('#submit_staffing_partners');
+            $btn.prop('disabled', true);
             $('.indicator-label').hide();
             $('.indicator-progress').show();
-            $.ajax({
 
+            $.ajax({
                 type: 'GET',
                 url: url,
                 data: {
-                    'staffing_partners_email': staffing_partners_email
+                    'staffing_partners_email': staffing_partners_email.trim()
                 },
                 success: function(response) {
-                    $('#submit_staffing_partners').prop('disabled', false);
+                    isStaffingInviteSubmitting = false;
+                    $btn.prop('disabled', false);
                     $('.indicator-label').show();
                     $('.indicator-progress').hide();
-                    $('#staffing_partners_email').val('');
+
                     if (response.status == "warning") {
                         swal({
-                            title: "Failed!",
+                            title: "Notice",
                             text: response.message,
                             type: "warning",
-                            timer: 2000,
+                            timer: 2500,
                             showConfirmButton: true
-                        }, function() {
-                            //location.reload();
                         });
-
                     }
 
                     if (response.status == "success") {
-
+                        $('#staffing_partners_email').val('');
                         var spartnerAll = response.spartnerDataCnt.spartnerAll;
                         var sentRequest = response.spartnerDataCnt.sentRequest;
                         $('#span_spartnerAll').html(spartnerAll);
@@ -2672,20 +2694,23 @@ $(document).ready(function() {
                             showConfirmButton: true
                         }, function() {
                             $('.add_staffing_close').click();
-                            //location.reload();
                         });
-
                     }
                 },
                 error: function() {
-                    $('#submit_staffing_partners').prop('disabled', false);
+                    isStaffingInviteSubmitting = false;
+                    $btn.prop('disabled', false);
                     $('.indicator-label').show();
                     $('.indicator-progress').hide();
+                    if (typeof swal !== 'undefined') {
+                        swal({
+                            title: "Error",
+                            text: "An error occurred while sending the invitation. Please try again.",
+                            type: "error"
+                        });
+                    }
                 }
-
             });
-
-
         });
 
         $(document).ready(function() {

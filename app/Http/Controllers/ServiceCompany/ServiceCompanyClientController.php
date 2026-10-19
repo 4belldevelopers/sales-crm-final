@@ -2683,6 +2683,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->tags = $tags;
         }
 
+        $detailData = [
+            'career_page_url' => $request->career_page_url ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'ap_email' => $request->ap_email ?? null,
+            'tax_id' => $request->tax_id ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+        ];
+        $filteredDetail = array_filter($detailData);
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
+        }
+
         // Handle logo upload outside database transaction
         $timeStamp = time();
         if ($request->hasFile('logo')) {
@@ -3337,6 +3353,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $tags = array_column($tags, 'value');
             $tags = implode(',', $tags);
             $client->tags = $tags;
+        }
+
+        $detailData = [
+            'career_page_url' => $request->career_page_url ?? null,
+            'linkedin_url' => $request->linkedin_url ?? null,
+            'twitter_url' => $request->twitter_url ?? null,
+            'github_url' => $request->github_url ?? null,
+            'ap_email' => $request->ap_email ?? null,
+            'tax_id' => $request->tax_id ?? null,
+            'youtube_url' => $request->youtube_url ?? null,
+            'facebook_url' => $request->facebook_url ?? null,
+            'instagram_url' => $request->instagram_url ?? null,
+        ];
+        $filteredDetail = array_filter($detailData);
+        if (! empty($filteredDetail)) {
+            $client->detail = json_encode($filteredDetail);
         }
 
         // Handle logo upload outside database transaction
