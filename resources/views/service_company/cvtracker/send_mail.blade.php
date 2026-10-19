@@ -102,6 +102,25 @@
         if(count($applicationData) > 0){
             $applicationDataID = $applicationData[0]->id;
         }
+
+        /* Authoritative resolution of candidate recipient email(s) with multi-level fallbacks */
+        $rawChipEmails = [];
+        if (!empty($cc_email)) {
+            $rawChipEmails = explode(',', $cc_email);
+        }
+        if (empty(array_filter(array_map('trim', $rawChipEmails))) && !empty($applicationData) && count($applicationData) > 0) {
+            foreach ($applicationData as $cApp) {
+                $candEmailVal = trim((string)($cApp->email ?: ($cApp->secondrary_email ?? '')));
+                if (!empty($candEmailVal)) {
+                    $rawChipEmails[] = $candEmailVal;
+                }
+            }
+        }
+        $toChipEmails = array_values(array_filter(array_map('trim', $rawChipEmails)));
+        if (!empty($toChipEmails) && empty($cc_email)) {
+            $cc_email = implode(', ', $toChipEmails);
+        }
+        $chipColors = ['#DC2626','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777'];
     @endphp
 
     <style>
@@ -802,7 +821,7 @@
     </style>
 
     <div class="mm-wrap">
-    <form id="form1" onsubmit="return false;">
+    <form id="candidateSendMailForm" class="candidate-send-mail-form" onsubmit="return false;">
       {{-- Header: Modern Design matching 2nd design with icon, title, subtitle, close button & Send Email button --}}
       <div class="mm-header">
         <div class="mm-header-left">
@@ -887,11 +906,6 @@
         </div>
 
         {{-- To --}}
-        @php
-          $toChipEmails = array_values(array_filter(array_map('trim', explode(',', @$cc_email ?? ''))));
-          // avatar colour palette cycling by index
-          $chipColors = ['#DC2626','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777'];
-        @endphp
         <div class="mm-row" style="align-items:flex-start;">
           <div class="mm-label-col" style="padding-top:10px;">
             <span class="mm-label-icon mm-ic-blue">
@@ -1693,18 +1707,22 @@
     (function() {
         var isSendingEmail = false;
 
-        $('#form1').off('submit keydown keypress').on('submit keydown keypress', function(e) {
+        $('#candidateSendMailForm, #form1').off('submit keydown keypress').on('submit keydown keypress', function(e) {
             if (e.type === 'submit' || e.which === 13 || e.keyCode === 13) {
                 e.preventDefault();
                 return false;
             }
         });
 
-        $('#form1').off('click', '#btnSubmitSendMail').on('click', '#btnSubmitSendMail', function(e) {
+        $(document).off('click', '#btnSubmitSendMail').on('click', '#btnSubmitSendMail', function(e) {
             e.preventDefault();
             e.stopPropagation();
 
             var $btn = $(this);
+            var $form = $btn.closest('form');
+            if (!$form.length) {
+                $form = $('#candidateSendMailForm');
+            }
 
             if (isSendingEmail || $btn.data('sending') === true || $btn.is(':disabled')) {
                 return false;
@@ -1735,16 +1753,26 @@
 
             var rawAppData = <?php echo json_encode($applicationData ?? []); ?>;
             var appList = rawAppData ? (Array.isArray(rawAppData) ? rawAppData : Object.values(rawAppData)) : [];
-            var sid = (appList.length > 0 && appList[0] && appList[0].id) ? appList[0].id : ($('#applicationDataId').val() || 0);
+            var sid = (appList.length > 0 && appList[0] && appList[0].id) ? appList[0].id : ($form.find('#applicationDataId').val() || $('#applicationDataId').val() || 0);
             var arr = [sid];
 
-            var template = $('#templatemassmail').val();
-            var from_email = $('#from_email_mass_mail').val();
-            var to_email = $('#to_email_mass_mail').val();
-            var cc_email = $('#sendmail_panel').val();
-            var subject = $('#subject_mass_mail').val();
-            var jobid = $('#jobid').val();
-            var applicationDataId = $('#applicationDataId').val() || sid;
+            var template = $form.find('#templatemassmail').val() || $('#templatemassmail').val();
+            var from_email = $form.find('#from_email_mass_mail').val() || $('#from_email_mass_mail').val();
+            var to_email = ($form.find('#to_email_mass_mail').val() || $('#to_email_mass_mail').val() || '').trim();
+
+            // Resilient Fallback: If DOM input was empty, recover directly from applicationData in view
+            if (!to_email && appList.length > 0 && appList[0]) {
+                to_email = ((appList[0].email || appList[0].secondrary_email) || '').trim();
+                if (to_email) {
+                    $form.find('#to_email_mass_mail').val(to_email);
+                    $('#to_email_mass_mail').val(to_email);
+                }
+            }
+
+            var cc_email = $form.find('#sendmail_panel').val() || $('#sendmail_panel').val();
+            var subject = $form.find('#subject_mass_mail').val() || $('#subject_mass_mail').val();
+            var jobid = $form.find('#jobid').val() || $('#jobid').val();
+            var applicationDataId = $form.find('#applicationDataId').val() || $('#applicationDataId').val() || sid;
             var attached_cv = 0;
             var editor1mass = (typeof window.getCandidateEmailBodyHtml === 'function')
                 ? window.getCandidateEmailBodyHtml()
