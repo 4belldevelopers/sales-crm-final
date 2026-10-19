@@ -83,9 +83,12 @@ class QueueNotificationMailService implements ShouldQueue
     public function handle(NotificationMailService $notificationMailService)
     {
         // Tenancy-scoped idempotency key (company_id + normalized recipient + subject hash)
-        $idempotencyKey = 'ats:mail_sent:comp_'.$this->company_id.':'.md5(strtolower(trim($this->email)).':'.$this->subject);
+        $normalizedRecipient = strtolower(trim((string) $this->email));
+        $recipientSubjectHash = md5($normalizedRecipient.':'.$this->subject);
+        $idempotencyKey = 'ats:mail_sent:comp_'.$this->company_id.':'.$recipientSubjectHash;
+        $lockKey = 'lock:mail_send:comp_'.$this->company_id.':'.$recipientSubjectHash;
 
-        // If an identical notification was successfully sent within the last 45 seconds, suppress duplicate send
+        // If an identical notification was successfully sent recently, suppress duplicate send
         if (cache()->has($idempotencyKey)) {
             \Illuminate\Support\Facades\Log::info('QueueNotificationMailService: duplicate delivery suppressed', [
                 'company_id' => $this->company_id,
@@ -96,21 +99,41 @@ class QueueNotificationMailService implements ShouldQueue
             return;
         }
 
-        $notificationMailService->sendEmail(
-            $this->email,
-            $this->subject,
-            $this->view,
-            $this->data,
-            $this->attachments,
-            $this->fromAddress,
-            $this->senderName,
-            $this->cc,
-            $this->company_id,
-            $this->replyTo
-        );
+        $lock = cache()->lock($lockKey, 30);
+        if (! $lock->get()) {
+            \Illuminate\Support\Facades\Log::info('QueueNotificationMailService: concurrent execution suppressed by lock', [
+                'company_id' => $this->company_id,
+                'email' => $this->email,
+                'subject' => $this->subject,
+            ]);
 
-        // Mark as sent for 45 seconds to guard against duplicate queued copies
-        cache()->put($idempotencyKey, true, 45);
+            return;
+        }
+
+        try {
+            // Re-check idempotency key after acquiring lock to guard against race condition
+            if (cache()->has($idempotencyKey)) {
+                return;
+            }
+
+            $notificationMailService->sendEmail(
+                $this->email,
+                $this->subject,
+                $this->view,
+                $this->data,
+                $this->attachments,
+                $this->fromAddress,
+                $this->senderName,
+                $this->cc,
+                $this->company_id,
+                $this->replyTo
+            );
+
+            // Mark as sent for 300 seconds (5 min) to guard against duplicate queued copies
+            cache()->put($idempotencyKey, true, 300);
+        } finally {
+            optional($lock)->release();
+        }
     }
 
     /**

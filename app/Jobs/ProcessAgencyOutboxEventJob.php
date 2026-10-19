@@ -117,7 +117,7 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
                 }
             }
 
-            if ($invitationId > 0 && ($eventType === 'AGENCY_REQUEST_SENT' || $eventType === 'BULK_AGENCY_REQUIREMENT_SENT')) {
+            if ($invitationId > 0 && ($eventType === 'AGENCY_REQUEST_SENT' || $eventType === 'BULK_AGENCY_REQUIREMENT_SENT' || $eventType === 'AGENCY_INVITATION_SENT')) {
                 try {
                     GeneralMethod::clientRequestIndexElastic($invitationId);
                 } catch (\Throwable $e) {
