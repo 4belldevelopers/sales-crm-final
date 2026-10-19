@@ -152,10 +152,12 @@
               <div class="god-input-box jero-ind-input-box {{ $selectedIndName ? 'has-value' : '' }}" id="jero_ind_input_box">
                 <span class="god-input-left-icon jero-ind-search-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                    <line x1="9" y1="6" x2="9" y2="6.01"/>
-                    <line x1="15" y1="6" x2="15" y2="6.01"/>
-                    <path d="M10 22v-4h4v4"/>
+                    <path d="M3 21h18"/>
+                    <path d="M5 21V7l8-4v18"/>
+                    <path d="M19 21V11l-6-4"/>
+                    <path d="M9 9h1"/>
+                    <path d="M9 13h1"/>
+                    <path d="M9 17h1"/>
                   </svg>
                 </span>
                 <input type="text"
@@ -212,14 +214,17 @@
               </span>
               <select name="company_sizes" class="god-native-select" id="company_sizes">
                 <option value="">Select company size</option>
+                <option value="1-1"          {{ @$company_sizes == '1-1'          ? 'selected' : '' }}>1 employee (Solo / Self-employed)</option>
+                <option value="2-10"         {{ @$company_sizes == '2-10'         ? 'selected' : '' }}>2–10 employees</option>
                 <option value="1-10"         {{ @$company_sizes == '1-10'         ? 'selected' : '' }}>1–10 employees</option>
                 <option value="11-50"        {{ @$company_sizes == '11-50'        ? 'selected' : '' }}>11–50 employees</option>
                 <option value="51-200"       {{ @$company_sizes == '51-200'       ? 'selected' : '' }}>51–200 employees</option>
                 <option value="201-500"      {{ @$company_sizes == '201-500'      ? 'selected' : '' }}>201–500 employees</option>
                 <option value="501-1000"     {{ @$company_sizes == '501-1000'     ? 'selected' : '' }}>501–1,000 employees</option>
-                <option value="1001-5000"    {{ @$company_sizes == '1001-5000'    ? 'selected' : '' }}>1,001–5,000</option>
+                <option value="1001-5000"    {{ @$company_sizes == '1001-5000'    ? 'selected' : '' }}>1,001–5,000 employees</option>
                 <option value="5001-10000"   {{ @$company_sizes == '5001-10000'   ? 'selected' : '' }}>5,001–10,000 employees</option>
-                <option value="10000-999999" {{ @$company_sizes == '10000-999999' ? 'selected' : '' }}>10,000+ employees</option>
+                <option value="10001-50000"  {{ @$company_sizes == '10001-50000'  ? 'selected' : '' }}>10,001–50,000 employees</option>
+                <option value="50001-0"      {{ in_array(@$company_sizes, ['50001-0', '50001-', '10000-999999']) ? 'selected' : '' }}>50,000+ employees</option>
               </select>
               <span class="god-input-right-chevron">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -227,34 +232,83 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 1: Company Type -->
+          <!-- ROW 4, COL 1: Company Type (Search-First Dual-Layer Intelligence Combobox) -->
+          @php
+            $companyTypeTaxonomy = $companyTypeTaxonomy ?? \App\Helper\GeneralMethod::companyTypeTaxonomy();
+            $selectedCompTypeName = '';
+            if (isset($company_type) && $company_type !== '') {
+              foreach($companyTypeTaxonomy as $tItem) {
+                if ((string)$tItem['id'] === (string)$company_type) {
+                  $selectedCompTypeName = $tItem['display_name'];
+                  break;
+                }
+              }
+              if (!$selectedCompTypeName && isset($companyType[$company_type])) {
+                $selectedCompTypeName = $companyType[$company_type];
+              }
+            }
+          @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_type">Company Type</label>
+              <label class="god-field-label" for="company_type_display">Company Type</label>
             </div>
-            <div class="god-input-box god-select-box">
-              <span class="god-input-left-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
-                  <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
-                  <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
-                  <path d="M10 6h4"/>
-                  <path d="M10 10h4"/>
-                  <path d="M10 14h4"/>
-                  <path d="M10 18h4"/>
-                </svg>
-              </span>
-              <select class="god-native-select" name="company_type" id="company_type">
-                <option value="">Select company type</option>
-                @if(!empty($companyType))
-                  @foreach($companyType as $key => $val)
-                    <option value="{{ $key }}" {{ $key == $company_type ? 'selected="selected"' : '' }}>{{ ucwords($val) }}</option>
-                  @endforeach
-                @endif
-              </select>
-              <span class="god-input-right-chevron">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-              </span>
+
+            <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
+            <select name="company_type" id="company_type" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
+              <option value="">Select company type</option>
+              @if(!empty($companyType))
+                @foreach($companyType as $key => $val)
+                  <option value="{{ $key }}" {{ (string)$key === (string)$company_type ? 'selected="selected"' : '' }}>{{ ucwords($val) }}</option>
+                @endforeach
+              @endif
+            </select>
+
+            <!-- God-Level Enterprise Company Type Combobox -->
+            <div class="jero-ctype-select-wrap god-ctype-wrap" id="jero_ctype_select_wrap">
+              <div class="god-input-box jero-ctype-input-box {{ $selectedCompTypeName ? 'has-value' : '' }}" id="jero_ctype_input_box">
+                <span class="god-input-left-icon jero-ctype-search-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                    <path d="M10 6h4"/>
+                    <path d="M10 10h4"/>
+                    <path d="M10 14h4"/>
+                    <path d="M10 18h4"/>
+                  </svg>
+                </span>
+                <input type="text"
+                       class="god-native-input jero-ctype-input"
+                       id="company_type_display"
+                       placeholder="Select company type (e.g. LLC, GmbH, Pvt Ltd, Inc)"
+                       autocomplete="off"
+                       spellcheck="false"
+                       role="combobox"
+                       aria-expanded="false"
+                       aria-haspopup="listbox"
+                       aria-autocomplete="list"
+                       aria-controls="jero_ctype_dropdown"
+                       value="{{ htmlspecialchars($selectedCompTypeName) }}">
+                <kbd class="jero-ctype-kbd" id="jero_ctype_kbd" title="Press / to search" style="{{ $selectedCompTypeName ? 'display:none;' : '' }}">/</kbd>
+                <button type="button" class="god-input-clear-btn jero-ctype-clear-btn" id="jero_ctype_clear_btn" aria-label="Clear company type" title="Clear selection" style="{{ $selectedCompTypeName ? 'display:flex;' : 'display:none;' }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="god-input-right-chevron jero-ctype-chevron" id="jero_ctype_chevron" title="Toggle company type list" role="button" aria-label="Toggle company type list" tabindex="-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
+
+              <!-- Dropdown Menu Container (Search-First) -->
+              <div class="jero-ctype-dropdown" id="jero_ctype_dropdown" style="display:none;" role="listbox" aria-label="Company Types">
+                <div class="jero-ctype-list-container" id="jero_ctype_list_container"></div>
+                <div class="jero-ctype-footer">
+                  <div class="jero-ctype-sync-status">
+                    <span class="jero-ctype-sync-dot"></span>
+                    <span>Global Business Classification</span>
+                  </div>
+                  <span class="jero-ctype-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
+                </div>
+              </div>
             </div>
           </div>
 

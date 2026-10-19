@@ -1021,18 +1021,105 @@ END:VCALENDAR";
 
     public static function companyType()
     {
+        // Intent: Normalized corporate legal form labels (IDs 0–7 preserved for backward DB/ES compatibility).
+        // Tenancy Note: Global static lookup — zero MySQL reads on request path.
         $array = [
-            0 => 'Private',
-            1 => 'Public',
-            2 => 'Joint-Venture',
-            3 => 'Partnership Firm',
-            4 => 'One Person',
+            0 => 'Private Limited / Privately Held',
+            1 => 'Publicly Listed Corporation',
+            2 => 'Joint Venture / Consortium',
+            3 => 'Partnership / LLP',
+            4 => 'One Person Company (OPC)',
             5 => 'Sole Proprietorship',
-            6 => 'Branch Office',
-            7 => 'Non-Government Organization',
+            6 => 'Branch / Regional Office',
+            7 => 'Non-Profit / NGO',
+            8 => 'Government & State-Owned (SOE)',
         ];
 
         return $array;
+    }
+
+    /**
+     * Get structured global company type taxonomy with searchable jurisdiction aliases and keywords.
+     * Tenancy Note: Global static lookup (0% MySQL reads).
+     *
+     * @return array<int, array{id: int, name: string, display_name: string, desc: string, aliases: array<string>, badge: string}>
+     */
+    public static function companyTypeTaxonomy(): array
+    {
+        return [
+            [
+                'id' => 0,
+                'name' => 'Private',
+                'display_name' => 'Private Limited / Privately Held',
+                'desc' => 'Privately owned commercial entity with statutory limited liability.',
+                'aliases' => ['LLC', 'Ltd', 'Pvt Ltd', 'GmbH', 'BV', 'SAS', 'Srl', 'Pty Ltd', 'Private Company', 'Inc (Private)', 'Closed Corp'],
+                'badge' => 'Commercial',
+            ],
+            [
+                'id' => 1,
+                'name' => 'Public',
+                'display_name' => 'Publicly Listed Corporation',
+                'desc' => 'Publicly traded commercial corporation listed on an active stock exchange.',
+                'aliases' => ['Plc', 'Inc', 'AG', 'SA', 'Corp', 'Listed', 'Public Company', 'Stock Exchange', 'IPO', 'Joint Stock'],
+                'badge' => 'Listed',
+            ],
+            [
+                'id' => 2,
+                'name' => 'Joint-Venture',
+                'display_name' => 'Joint-Venture / Consortium',
+                'desc' => 'Commercial venture formed collaboratively by two or more parent firms.',
+                'aliases' => ['JV', 'Joint Venture', 'Consortium', 'Strategic Alliance', 'Syndicate'],
+                'badge' => 'Joint Venture',
+            ],
+            [
+                'id' => 3,
+                'name' => 'Partnership Firm',
+                'display_name' => 'Partnership / LLP',
+                'desc' => 'Professional partnership entity with shared or limited partner liability.',
+                'aliases' => ['LLP', 'LP', 'Partnership', 'General Partnership', 'Limited Partnership', 'Law Firm', 'Consulting Firm'],
+                'badge' => 'Partnership',
+            ],
+            [
+                'id' => 4,
+                'name' => 'One Person',
+                'display_name' => 'One Person Company (OPC)',
+                'desc' => 'Registered single-founder corporate entity with limited liability.',
+                'aliases' => ['OPC', 'Single-Member LLC', 'Sole Director', 'EURL', 'Solo Corp'],
+                'badge' => 'Single Founder',
+            ],
+            [
+                'id' => 5,
+                'name' => 'Sole Proprietorship',
+                'display_name' => 'Sole Proprietorship',
+                'desc' => 'Unincorporated business owned and managed by a single individual.',
+                'aliases' => ['Sole Trader', 'Individual Proprietor', 'Self-Employed', 'Proprietorship', 'Independent Contractor'],
+                'badge' => 'Individual',
+            ],
+            [
+                'id' => 6,
+                'name' => 'Branch Office',
+                'display_name' => 'Branch / Regional Office',
+                'desc' => 'Operational branch, regional outpost, or overseas representative office.',
+                'aliases' => ['Branch Office', 'Liaison Office', 'Regional Office', 'Representative Office', 'Subsidiary Branch'],
+                'badge' => 'Office',
+            ],
+            [
+                'id' => 7,
+                'name' => 'Non-Government Organization',
+                'display_name' => 'Non-Government Organization (NGO)',
+                'desc' => 'Charitable foundation, registered non-profit trust, or social organization.',
+                'aliases' => ['NGO', 'Non-Profit', '501(c)(3)', 'Charity', 'Trust', 'Society', 'Foundation', 'Section 8', 'NPO'],
+                'badge' => 'Non-Profit',
+            ],
+            [
+                'id' => 8,
+                'name' => 'Government & State-Owned Enterprise (SOE)',
+                'display_name' => 'Government & State-Owned Enterprise (SOE)',
+                'desc' => 'State-owned enterprise, public sector undertaking, or municipal agency.',
+                'aliases' => ['Government', 'Public Sector', 'SOE', 'PSU', 'Crown Corp', 'Municipal', 'Statutory Body', 'Department', 'Ministry'],
+                'badge' => 'Public Sector',
+            ],
+        ];
     }
 
     public static function parentCompanyType()
