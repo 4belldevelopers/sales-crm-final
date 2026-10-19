@@ -16097,7 +16097,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
         $this->salaryMode = GeneralMethod::salaryMode();
-        $this->currency = GeneralMethod::currency();
+        // 1. Unified Setting Currencies List (113 currencies, cached 24h in Redis) per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD
+        $this->currencyList = \App\Services\CurrencyService::getSettingCurrenciesList();
+        // 2. Backward-compatible [key => code] array for legacy view bindings
+        $this->currency = array_column($this->currencyList, 'code', 'key');
+        // 3. Organization's configured default currency from Settings
+        $this->tenantDefaultCurrency = \App\Services\CurrencyService::getTenantCurrency($company_id);
+        $this->defaultCurrencyCode = $this->tenantDefaultCurrency;
+        $this->defaultCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
         $this->replacementPeriods = self::COMMERCIAL_REPLACEMENT_PERIODS;
         $this->replacementTypes = self::COMMERCIAL_REPLACEMENT_TYPES;
         $this->replacementEligibility = self::COMMERCIAL_REPLACEMENT_ELIGIBILITY;
@@ -16121,7 +16128,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commericials = DB::table('commericials')
             ->where('commtype', $id)
             ->where('company_id', $company_id)
-            ->orderBy('commtype', 'asc')
+            ->orderBy('id', 'desc')
             ->get()
             ->map(function ($commericial) {
                 $commericial_details = DB::table('commericial_details')
@@ -16146,6 +16153,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     ->pluck('country_id')
                     ->toArray();
 
+                $salaryCurrency = $commericial->salary_currency;
+                // Intent: Inherit tenant default currency if commercial currency is unconfigured or legacy USD default (4) while tenant default is different.
+                if ($salaryCurrency === null || ($salaryCurrency == 4 && $this->defaultCurrencyKey !== 4)) {
+                    $salaryCurrency = $this->defaultCurrencyKey;
+                }
+
                 return [
                     'id' => $commericial->id,
                     'company_id' => $commericial->company_id,
@@ -16153,7 +16166,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'commtype' => $commericial->commtype,
                     'status' => $commericial->status,
                     'sal_mode' => $commericial->sal_mode,
-                    'salary_currency' => $commericial->salary_currency,
+                    'salary_currency' => $salaryCurrency,
                     'replacement_period_days' => $commericial->replacement_period_days,
                     'replacement_type' => $commericial->replacement_type,
                     'replacement_eligibility' => $commericial->replacement_eligibility,
@@ -16195,7 +16208,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commType = $request->commType;
         $sal_mode = $request->sal_mode;
         $main_status = ($request->main_status) ? $request->main_status : 0;
-        $salary_currency = $request->salary_currency;
+        // Intent: Resolve canonical integer key for MySQL INT(11) persistence per CURRENCY_MANAGEMENT_AND_SYNCHRONIZATION_STANDARD Step 3
+        $salary_currency = \App\Services\CurrencyService::resolveCurrencyKey($request->salary_currency);
 
         // Intent: accept only the controller-defined commercial policy values for this tenant's service record.
         $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS) ? (int) $request->replacement_period_days : 90;

@@ -32,6 +32,7 @@ use App\Models\SysIdempotencyKey;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
 use App\Services\BenchTalentHeroAnalytics;
+use App\Services\CurrencyService;
 use App\Services\ElasticService;
 use App\Services\ForwardResumeUploadService;
 use App\Services\MailService;
@@ -1248,7 +1249,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->qualification = Cache::rememberForever('qualification_master_list', function () {
             return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
         });
-        $this->currency = GeneralMethod::currency();
+        $this->currencyList = CurrencyService::getSettingCurrenciesList();
+        $this->currency = array_column($this->currencyList, 'code', 'key');
+        $this->tenantDefaultCurrency = CurrencyService::getTenantCurrency($companyId);
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->countries = Cache::rememberForever('country_list_json', function () {
             return GeneralMethod::getAllCountryList();
@@ -1651,11 +1654,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $benchApplication->bill_rate_amount = $request->filled('bill_rate_amount') ? $request->bill_rate_amount : ($request->filled('bill_annual') ? round($request->bill_annual / 2080, 2) : 0);
             }
 
-            $currencyList = GeneralMethod::currency();
-
-            $ecurrency = $currencyList[$request->bill_rate_currency] ?? 'INR';
+            $ecurrency = CurrencyService::resolveCurrencyCode($request->bill_rate_currency);
             $econvertedAmount = (float) $request->bill_annual;
-            if ($request->bill_rate_currency > 0) {
+            if ($ecurrency !== 'INR' && $econvertedAmount > 0) {
                 $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
             }
 
@@ -1664,9 +1665,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $benchApplication->ectc_monthly = @$ectcdivided->monthly;
             $benchApplication->ectc_hourly = @$ectcdivided->hourly;
 
-            $payCurrencyCode = $currencyList[$request->pay_rate_currency] ?? 'INR';
+            $payCurrencyCode = CurrencyService::resolveCurrencyCode($request->pay_rate_currency);
             $convertedAmount = (float) $request->pay_annual;
-            if ($request->pay_rate_currency > 0) {
+            if ($payCurrencyCode !== 'INR' && $convertedAmount > 0) {
                 $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $payCurrencyCode);
             }
 
@@ -2266,8 +2267,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->company_name = @$country->company_name;
 
         $this->page_event = 'EDIT';
+        $this->currencyList = CurrencyService::getSettingCurrenciesList();
+        $this->currency = array_column($this->currencyList, 'code', 'key');
+        $this->tenantDefaultCurrency = CurrencyService::getTenantCurrency($company_id);
+
         if (config('feature.talents_v2_enabled')) {
-            $this->currency = GeneralMethod::currency();
             $this->salaryMode = GeneralMethod::salaryMode();
             $this->countries = Cache::rememberForever('country_list_json', fn () => GeneralMethod::getAllCountryList());
             $this->statelist = GeneralMethod::statelist($this->application->country);
@@ -2275,7 +2279,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $this->job_additional_detail = [];
             $this->cities = [];
         } else {
-            $this->currency = GeneralMethod::currency();
             $this->salaryMode = GeneralMethod::salaryMode();
             $this->countries = GeneralMethod::getAllCountryList();
             $this->statelist = GeneralMethod::statelist($this->application->country);
@@ -2430,8 +2433,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->editColumn('Salary', function ($row) use ($currencySymbole) {
 
                 $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode = '';
-                $pay_rate_currency = $currencySymbole[@$row->pay_rate_currency];
-                $bill_rate_currency = $currencySymbole[@$row->bill_rate_currency];
+                $payCurCode = CurrencyService::resolveCurrencyCode(@$row->pay_rate_currency);
+                $billCurCode = CurrencyService::resolveCurrencyCode(@$row->bill_rate_currency);
+                $pay_rate_currency = $currencySymbole[$payCurCode] ?? ($currencySymbole[@$row->pay_rate_currency] ?? CurrencyService::getCurrencySymbol($payCurCode));
+                $bill_rate_currency = $currencySymbole[$billCurCode] ?? ($currencySymbole[@$row->bill_rate_currency] ?? CurrencyService::getCurrencySymbol($billCurCode));
                 $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->pay_rate_amount);
                 $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
 
@@ -2759,11 +2764,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->company_id = $this->user->company_id;
 
         $pay_rate_currency = $pay_rate_amount = $pay_rate_mode = $bill_rate_amount = $bill_rate_currency = $bill_rate_mode = $country = $this->row_country_name = '';
-        $pay_rate_currency = $currencySymbole[$this->benchApplication->pay_rate_currency];
+        $payCurCode = CurrencyService::resolveCurrencyCode($this->benchApplication->pay_rate_currency);
+        $billCurCode = CurrencyService::resolveCurrencyCode($this->benchApplication->bill_rate_currency);
+        $pay_rate_currency = $currencySymbole[$payCurCode] ?? ($currencySymbole[$this->benchApplication->pay_rate_currency] ?? CurrencyService::getCurrencySymbol($payCurCode));
         $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($this->benchApplication->pay_rate_amount);
         $pay_rate_mode = substr($salaryMode[$this->benchApplication->pay_rate_mode], 0, 1);
         $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($this->benchApplication->bill_rate_amount);
-        $bill_rate_currency = $currencySymbole[$this->benchApplication->bill_rate_currency];
+        $bill_rate_currency = $currencySymbole[$billCurCode] ?? ($currencySymbole[$this->benchApplication->bill_rate_currency] ?? CurrencyService::getCurrencySymbol($billCurCode));
         $bill_rate_mode = substr($salaryMode[$this->benchApplication->bill_rate_mode], 0, 1);
         $this->pay_rate_amount = @$pay_rate_currency.@$pay_rate_amount.'/'.@$pay_rate_mode;
         $this->bill_rate_amount = @$bill_rate_currency.@$bill_rate_amount.'/'.@$bill_rate_mode;
@@ -4012,11 +4019,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $abailabilty = $npArr[$rowdata->serving_notice_period_mode].'<br>'.$npDate;
                 $qualification = @$rowdata->qualification_name.'<br>'.mb_substr($rowdata->skills, 0, 12);
 
-                $currency = GeneralMethod::currency();
-                $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode =
-                '';
-                $pay_rate_currency = $currency[@$rowdata->pay_rate_currency];
-                $bill_rate_currency = $currency[@$rowdata->bill_rate_currency];
+                $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode = '';
+                $pay_rate_currency = CurrencyService::resolveCurrencyCode(@$rowdata->pay_rate_currency);
+                $bill_rate_currency = CurrencyService::resolveCurrencyCode(@$rowdata->bill_rate_currency);
                 $pay_rate_mode = $salaryMode[@$rowdata->pay_rate_mode];
                 $bill_rate_mode = $salaryMode[@$rowdata->bill_rate_mode];
                 $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($rowdata->pay_rate_amount);
@@ -8500,8 +8505,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             // Commercials (Exact rate and commercial model entered during add talent)
             $comissionType = (int) (@$cand->comission_type ?? 0);
             $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
-            $currCode = $currencyList[$currId] ?? 'INR';
-            $sym = $currSymbolMap[$currCode] ?? ($currCode.' ');
+            $currCode = CurrencyService::resolveCurrencyCode($currId);
+            $sym = $currSymbolMap[$currCode] ?? CurrencyService::getCurrencySymbol($currCode);
 
             if ($comissionType === 1) {
                 $candCommercialsFormatted = 'Free Service';
@@ -9587,8 +9592,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // Commercials
         $comissionType = (int) (@$cand->comission_type ?? 0);
         $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
-        $currCode = $currencyList[$currId] ?? 'INR';
-        $sym = $currSymbolMap[$currCode] ?? ($currCode.' ');
+        $currCode = CurrencyService::resolveCurrencyCode($currId);
+        $sym = $currSymbolMap[$currCode] ?? CurrencyService::getCurrencySymbol($currCode);
 
         if ($comissionType === 1) {
             $candCommercialsFormatted = 'Free Service';

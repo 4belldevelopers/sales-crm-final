@@ -753,6 +753,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         }
         if (! empty(@$request->currency)) {
             $company->currency = @$request->currency;
+            // Intent: Authoritatively synchronize tenant currency and hiring services commercials across database and caches.
+            \App\Services\CurrencyService::setTenantCurrency($company_id, $request->currency);
         }
         if (! empty(@$request->time_format)) {
             $company->time_format = @$request->time_format;
@@ -859,6 +861,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         }
 
         $default_rates = DB::table('default_rates')->first();
+        $tenantInitCurrencyKey = \App\Services\CurrencyService::getTenantCurrencyKey($company_id);
         if (! DB::table('commericials')->where('rateType', 1)->where('company_id', $company_id)->exists()) {
 
             $status = 0;
@@ -870,7 +873,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 $status = 0; // Product Company
             }
 
-            $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 0, 'salary_currency' => 4, 'status' => $status];
+            $value = ['company_id' => $company_id, 'rateType' => 1, 'commtype' => 1, 'sal_mode' => 0, 'salary_currency' => $tenantInitCurrencyKey, 'status' => $status];
 
             $commericialId = DB::table('commericials')->insertGetId($value);
             $rate = @$default_rates->rates_fixed;
@@ -925,7 +928,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             } else {
                 $status = 0; // Product Company
             }
-            $value = ['company_id' => $company_id, 'rateType' => 2, 'commtype' => 2, 'status' => $status];
+            $value = ['company_id' => $company_id, 'rateType' => 2, 'commtype' => 2, 'sal_mode' => 0, 'salary_currency' => $tenantInitCurrencyKey, 'status' => $status];
             $commericialId = DB::table('commericials')->insertGetId($value);
             $rate = @$default_rates->rates_perecentage;
             for ($i = 0; $i < 10; $i++) {
