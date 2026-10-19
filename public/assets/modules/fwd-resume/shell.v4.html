@@ -53,7 +53,7 @@
   border: 1px solid #CBD5E1;
   border-radius: 8px;
   box-shadow: 0 16px 36px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
-  max-height: min(850px, calc(100vh - 180px));
+  max-height: min(440px, calc(100vh - 220px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 8px;
@@ -201,9 +201,58 @@
   white-space: nowrap;
 }
 
-.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+.mm-editor-wrap { width: 100%; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; background: #FFFFFF; transition: border-color 0.15s, box-shadow 0.15s; }
+.mm-editor-wrap:focus-within { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+.mm-editor-wrap .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background: #F8FAFC !important;
+  padding: 6px 10px !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.mm-editor-wrap .ql-toolbar .ql-formats {
+  margin-right: 8px !important;
+}
+.mm-editor-wrap .ql-toolbar button {
+  width: 26px !important;
+  height: 26px !important;
+  padding: 3px !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+.mm-editor-wrap .ql-toolbar button:hover {
+  background: #E2E8F0 !important;
+  color: #1E293B !important;
+}
+.mm-editor-wrap .ql-toolbar button.ql-active {
+  background: #EFF6FF !important;
+  color: #2563EB !important;
+}
+.mm-editor-wrap .ql-container.ql-snow {
+  border: none !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
+  color: #1E293B !important;
+  min-height: 180px !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+}
+.mm-editor-wrap .ql-editor {
+  min-height: 180px !important;
+  padding: 12px 14px !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  color: #334155 !important;
+}
+.mm-editor-wrap .ql-editor.ql-blank::before {
+  color: #94A3B8 !important;
+  font-style: normal !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
+}
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
-#test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
+#test_editor1 { width: 100% !important; min-height: 180px; padding: 12px 14px; border: none; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
 .mm-add-email-btn:hover { color: #1d4ed8; }
@@ -443,7 +492,7 @@
       </div>
     </div>
     <div class="mm-header-actions">
-      <button type="button" class="mm-header-btn-cancel" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.close();">Close</button>
+      <button type="button" class="mm-header-btn-cancel" id="kt_test_fwd_resume_drawer_close" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.close();">Close</button>
       <button type="button" class="mm-header-btn-send" name="btnTestSubmit" id="btnTestSubmit" value="btnTestSubmit" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.submit(event);">
         <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -940,8 +989,9 @@
             Insert Executive Matrix Table
           </button>
         </div>
-        <div class="mm-editor-wrap">
-          <textarea id="test_editor1" name="editor1" rows="10"></textarea>
+        <div class="mm-editor-wrap" id="test_editor_wrap">
+          <div id="test_editor_quill"></div>
+          <textarea id="test_editor1" name="editor1" rows="8" style="display:none;"></textarea>
         </div>
       </div>
     </div>
@@ -973,7 +1023,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         </div>
         <div class="rcp-tab-info">
-          <div class="rcp-tab-title">Internal Team</div>
+          <div class="rcp-tab-title">My Organization</div>
           <div class="rcp-tab-sub" id="test_rcp_internal_count">Active members</div>
         </div>
       </div>

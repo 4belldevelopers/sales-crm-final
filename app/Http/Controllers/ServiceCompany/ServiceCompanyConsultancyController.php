@@ -266,6 +266,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                         } elseif ($performanceFilter === 'low') {
                             return $score === 0;
                         }
+
                         return true;
                     }));
                     $total = count($data);
@@ -331,143 +332,152 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         if (! $lock->get()) {
             return Reply::dataOnly([
                 'status' => 'warning',
-                'message' => 'An invitation request for this email is currently being processed. Please wait a moment.'
+                'message' => 'An invitation request for this email is currently being processed. Please wait a moment.',
+            ]);
+        }
+
+        // Cooldown Protection: Prevent duplicate invitations to the same email within 30 seconds
+        $cooldownKey = 'cooldown:staffing_invite:comp_'.$company_id.':'.md5(strtolower(trim($staffing_partners_email)));
+        if (cache()->has($cooldownKey)) {
+            return Reply::dataOnly([
+                'status' => 'warning',
+                'message' => 'An invitation was recently sent to this email. Please allow a moment before sending another.',
             ]);
         }
 
         try {
 
-        $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
+            $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
 
-        $exists = DB::table('users')->select('*')->where('root_user', '=', 0)->where('email', $staffing_partners_email)->first();
-        if ($exists) {
-            $message = 'Use the company’s main email ID to add them as a Staffing Partner, not an employee’s email ID.';
-
-            return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-        }
-
-        if (empty($staffing_partners_email) || $staffing_partners_email == '') {
-            $message = 'Email can not be empty, please enter email';
-
-            return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-        }
-
-        // DELETE ALL OLD INVITATION
-
-        DB::table('staffing_company_invitation')
-            ->where('staffing_company_invitation.from_company_id', $company_id)
-            ->where('staffing_company_invitation.to_email', $staffing_partners_email)
-            ->where('staffing_company_invitation.to_invitation_status', '!=', 1)
-            ->delete();
-
-        // CASE 1. NOT REGISTER 						=> SEND REGISTRATION REQUEST
-        // CASE 2. DO NOT SEND INTERNAL TEAM MEMBER
-        // CASE 3. ALREADY REGISTER 					=> SEND STAFFING PARTNER REQUEST
-        // CASE 4.
-
-        $userRowCount = User::where('email', $staffing_partners_email)->count();
-        $userRow = User::where('email', $staffing_partners_email)->first();
-
-        if ($userRowCount > 0) {
-
-            if ($userRow->company_id == $company_id) {											// CASE 2. DO NOT SEND INTERNAL TEAM MEMBER
-                $message = 'Can not send internal team member';
+            $exists = DB::table('users')->select('*')->where('root_user', '=', 0)->where('email', $staffing_partners_email)->first();
+            if ($exists) {
+                $message = 'Use the company’s main email ID to add them as a Staffing Partner, not an employee’s email ID.';
 
                 return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-            } else {
-                // CHECK ALREADY LINKED
-                $staffingRowCount = DB::table('staffing_company_relation')
-                    ->where('from_company_id', $company_id)
-                    ->where('to_company_id', $userRow->company_id)
-                    ->where('final_status', 1)
-                    ->count();
-                if ($staffingRowCount > 0) {														// CASE 3. ALREADY REGISTER 	=> SEND STAFFING PARTNER REQUEST
+            }
 
-                    $message = 'Agency already added';
+            if (empty($staffing_partners_email) || $staffing_partners_email == '') {
+                $message = 'Email can not be empty, please enter email';
+
+                return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
+            }
+
+            // DELETE ALL OLD INVITATION
+
+            DB::table('staffing_company_invitation')
+                ->where('staffing_company_invitation.from_company_id', $company_id)
+                ->where('staffing_company_invitation.to_email', $staffing_partners_email)
+                ->where('staffing_company_invitation.to_invitation_status', '!=', 1)
+                ->delete();
+
+            // CASE 1. NOT REGISTER 						=> SEND REGISTRATION REQUEST
+            // CASE 2. DO NOT SEND INTERNAL TEAM MEMBER
+            // CASE 3. ALREADY REGISTER 					=> SEND STAFFING PARTNER REQUEST
+            // CASE 4.
+
+            $userRowCount = User::where('email', $staffing_partners_email)->count();
+            $userRow = User::where('email', $staffing_partners_email)->first();
+
+            if ($userRowCount > 0) {
+
+                if ($userRow->company_id == $company_id) {											// CASE 2. DO NOT SEND INTERNAL TEAM MEMBER
+                    $message = 'Can not send internal team member';
 
                     return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
-
                 } else {
-
-                    $from_company_id = $company_id;
-                    $to_company_id = $userRow->company_id;
-
-                    // CHECK CLIENT INVITATION SENT OR NOT
-                    $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
-                        ->where('from_company_id', $from_company_id)
-                        ->where('to_company_id', $to_company_id)
-                        ->where('to_invitation_status', '!=', -1)
+                    // CHECK ALREADY LINKED
+                    $staffingRowCount = DB::table('staffing_company_relation')
+                        ->where('from_company_id', $company_id)
+                        ->where('to_company_id', $userRow->company_id)
+                        ->where('final_status', 1)
                         ->count();
+                    if ($staffingRowCount > 0) {														// CASE 3. ALREADY REGISTER 	=> SEND STAFFING PARTNER REQUEST
 
-                    if ($clientInvitationCounter == 0) {		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
+                        $message = 'Agency already added';
 
-                        // INVITATION
-                        $staffing_company_invitation = [
-                            'from_client_id' => $clientRow->id,
-                            'from_company_id' => $company_id,
-                            'from_user_id' => $userId,
-                            'from_status' => 1,
-                            'from_created_at' => date('Y-m-d'),
-                            'to_company_id' => $userRow->company_id,
-                            'to_email' => $staffing_partners_email,
-                            'to_status' => 0,
-                            // 'job_id'			=>
-                        ];
-                        DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
-                        $invitationId = DB::getPdo()->lastInsertId();
-                        $this->agencyListingService->clearCompanyStatsCache($company_id);
-                        $this->agencyListingService->clearUserConsultancyCache($userId);
-                        $Companies = Company::find(auth()->user()->company_id);
+                        return Reply::dataOnly(['status' => 'warning', 'message' => $message]);
 
-                        GeneralMethod::clientRequestIndexElastic($invitationId);
+                    } else {
 
-                        $encode = base64_encode($invitationId);
-                        $reqdate = date('d M Y');
-                        $Url = url('/invitation-company-register/'.$encode);
-                        $to = $staffing_partners_email;
-                        $cc = 'abu@4bell.com';
-                        $subject = "Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
-                        $message = '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
+                        $from_company_id = $company_id;
+                        $to_company_id = $userRow->company_id;
 
-                        $attachments = [];
-                        $cc = [];
-                        $basecompany = GeneralMethod::baseCompany();
-                        $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                        $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                        $checkMailPermision = GeneralMethod::mailPermission(40);
-                        if ($checkMailPermision) {
-                            $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
-                            $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
-                            $template_description = $mailTypeSubject->body_description;
+                        // CHECK CLIENT INVITATION SENT OR NOT
+                        $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
+                            ->where('from_company_id', $from_company_id)
+                            ->where('to_company_id', $to_company_id)
+                            ->where('to_invitation_status', '!=', -1)
+                            ->count();
 
-                            $AcceptInvite = '<a href="'.$Url.'" rel="noopener"
+                        if ($clientInvitationCounter == 0) {		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
+
+                            // INVITATION
+                            $staffing_company_invitation = [
+                                'from_client_id' => $clientRow->id,
+                                'from_company_id' => $company_id,
+                                'from_user_id' => $userId,
+                                'from_status' => 1,
+                                'from_created_at' => date('Y-m-d'),
+                                'to_company_id' => $userRow->company_id,
+                                'to_email' => $staffing_partners_email,
+                                'to_status' => 0,
+                                // 'job_id'			=>
+                            ];
+                            DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
+                            $invitationId = DB::getPdo()->lastInsertId();
+                            $this->agencyListingService->clearCompanyStatsCache($company_id);
+                            $this->agencyListingService->clearUserConsultancyCache($userId);
+                            $Companies = Company::find(auth()->user()->company_id);
+
+                            GeneralMethod::clientRequestIndexElastic($invitationId);
+
+                            $encode = base64_encode($invitationId);
+                            $reqdate = date('d M Y');
+                            $Url = url('/invitation-company-register/'.$encode);
+                            $to = $staffing_partners_email;
+                            $cc = 'abu@4bell.com';
+                            $subject = "Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
+                            $message = '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
+
+                            $attachments = [];
+                            $cc = [];
+                            $basecompany = GeneralMethod::baseCompany();
+                            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                            $checkMailPermision = GeneralMethod::mailPermission(40);
+                            if ($checkMailPermision) {
+                                $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
+                                $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
+                                $template_description = $mailTypeSubject->body_description;
+
+                                $AcceptInvite = '<a href="'.$Url.'" rel="noopener"
 																					style="text-decoration:none;display:inline-block;text-align:center;padding:0.75575rem 1.3rem;font-size:0.925rem;line-height:1.5;border-radius:0.35rem;color:#ffffff;background-color:#009EF7;border:0px;margin-right:0.75rem!important;font-weight:600!important;outline:none!important;vertical-align:middle">Accept
 																					Invite
 																				</a>';
-                            $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
+                                $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
 
-                            $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
+                                $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
 
-                            $message = $template_description;
-                            $data = [
-                                'message' => $message,
-                            ];
+                                $message = $template_description;
+                                $data = [
+                                    'message' => $message,
+                                ];
 
-                            QueueNotificationMailService::dispatch(
-                                $staffing_partners_email,
-                                $subject,
-                                'email.common.index',
-                                (object) $data,
-                                $attachments,
-                                $fromAddress,
-                                $senderName,
-                                $cc,
-                                $company_id
-                            )->onConnection('emails');
+                                QueueNotificationMailService::dispatch(
+                                    $staffing_partners_email,
+                                    $subject,
+                                    'email.common.index',
+                                    (object) $data,
+                                    $attachments,
+                                    $fromAddress,
+                                    $senderName,
+                                    $cc,
+                                    $company_id
+                                )->onConnection('emails');
+                            }
+
                         }
-
-                    }
-                    $message = 'An invitation has been sent to'.$staffing_partners_email.'<br>
+                        $message = 'An invitation has been sent to'.$staffing_partners_email.'<br>
 						Please ask the agency to check their email and accept the invitation.<br>
 						Once accepted, they can proceed with either of the following:<br>
 						<ul>
@@ -475,118 +485,122 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 						<li>If already registered, accept the request from the <b>Client Request tab</b> </li>
 						</ul><br>
 						After completing these steps, they will be able to start collaborating with your organization.';
-                    $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+                        $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
-                    try {
-                        \App\Events\ConsultancyPartnershipUpdated::dispatch(
-                            $company_id,
-                            'invitation_sent',
-                            $spartnerDataCnt['spartnerAll'] ?? null,
-                            $spartnerDataCnt['sentRequest'] ?? null
-                        );
-                    } catch (\Throwable $e) {}
+                        try {
+                            \App\Events\ConsultancyPartnershipUpdated::dispatch(
+                                $company_id,
+                                'invitation_sent',
+                                $spartnerDataCnt['spartnerAll'] ?? null,
+                                $spartnerDataCnt['sentRequest'] ?? null
+                            );
+                        } catch (\Throwable $e) {
+                        }
+                        cache()->put($cooldownKey, true, 30);
 
-                    return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
+                        return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
+                    }
                 }
-            }
 
-        } else { //  CASE 1. NOT REGISTER => SEND REGISTRATION REQUEST
+            } else { //  CASE 1. NOT REGISTER => SEND REGISTRATION REQUEST
 
-            $staffing_company_invitation = [
-                'from_client_id' => $clientRow->id,
-                'from_company_id' => $company_id,
-                'from_user_id' => $userId,
-                'from_status' => 1,
-                'from_created_at' => date('Y-m-d'),
-                // 'to_company_id'		=>,
-                'to_email' => $staffing_partners_email,
-                'to_status' => 0,
-                // 'job_id'			=>
-            ];
-            $Companies = Company::find(auth()->user()->company_id);
+                $staffing_company_invitation = [
+                    'from_client_id' => $clientRow->id,
+                    'from_company_id' => $company_id,
+                    'from_user_id' => $userId,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+                    // 'to_company_id'		=>,
+                    'to_email' => $staffing_partners_email,
+                    'to_status' => 0,
+                    // 'job_id'			=>
+                ];
+                $Companies = Company::find(auth()->user()->company_id);
 
-            DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
-            $invitationId = DB::getPdo()->lastInsertId();
-            $this->agencyListingService->clearCompanyStatsCache($company_id);
-            $this->agencyListingService->clearUserConsultancyCache($userId);
+                DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
+                $invitationId = DB::getPdo()->lastInsertId();
+                $this->agencyListingService->clearCompanyStatsCache($company_id);
+                $this->agencyListingService->clearUserConsultancyCache($userId);
 
-            GeneralMethod::clientRequestIndexElastic($invitationId);
+                GeneralMethod::clientRequestIndexElastic($invitationId);
 
-            $encode = base64_encode($invitationId);
-            $reqdate = date('d M Y');
-            $Url = url('/invitation-company-register/'.$encode);
-            $to = $staffing_partners_email;
-            $cc = 'abu@4bell.com';
-            $subject = "Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
-            $message = '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
-            $from = 'vibhanshu@4bell.com';
+                $encode = base64_encode($invitationId);
+                $reqdate = date('d M Y');
+                $Url = url('/invitation-company-register/'.$encode);
+                $to = $staffing_partners_email;
+                $cc = 'abu@4bell.com';
+                $subject = "Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
+                $message = '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
+                $from = 'vibhanshu@4bell.com';
 
-            // dd($Companies);
-            $data = [
-                'to' => $staffing_partners_email,
-                'url' => $Url,
-                'company_name' => $Companies->company_name,
-            ];
-            $cc_team = [$staffing_partners_email];
-            $attachments = [];
-            $cc = [];
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $checkMailPermision = GeneralMethod::mailPermission(40);
-            if ($checkMailPermision) {
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
-                $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
-                $template_description = $mailTypeSubject->body_description;
+                // dd($Companies);
+                $data = [
+                    'to' => $staffing_partners_email,
+                    'url' => $Url,
+                    'company_name' => $Companies->company_name,
+                ];
+                $cc_team = [$staffing_partners_email];
+                $attachments = [];
+                $cc = [];
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                $checkMailPermision = GeneralMethod::mailPermission(40);
+                if ($checkMailPermision) {
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
+                    $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
+                    $template_description = $mailTypeSubject->body_description;
 
-                $AcceptInvite = '<a href="'.$Url.'" rel="noopener"
+                    $AcceptInvite = '<a href="'.$Url.'" rel="noopener"
 															style="text-decoration:none;display:inline-block;text-align:center;padding:0.75575rem 1.3rem;font-size:0.925rem;line-height:1.5;border-radius:0.35rem;color:#ffffff;background-color:#009EF7;border:0px;margin-right:0.75rem!important;font-weight:600!important;outline:none!important;vertical-align:middle">Accept
 															Invite
 														</a>';
-                $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
+                    $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
 
-                $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
+                    $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
 
-                $message = $template_description;
-                $data = [
-                    'message' => $message,
-                ];
+                    $message = $template_description;
+                    $data = [
+                        'message' => $message,
+                    ];
 
-                QueueNotificationMailService::dispatch(
-                    $staffing_partners_email,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $company_id
-                )->onConnection('emails');
+                    QueueNotificationMailService::dispatch(
+                        $staffing_partners_email,
+                        $subject,
+                        'email.common.index',
+                        (object) $data,
+                        $attachments,
+                        $fromAddress,
+                        $senderName,
+                        $cc,
+                        $company_id
+                    )->onConnection('emails');
+                }
+
+                // $result = $this->mailService->sendEmail($staffing_partners_email, $subject,'email.staffing-partners.accept-invite',(object) $data, $attachments, $fromAddress, $senderName,$cc);
+
+                // Mail::to($staffing_partners_email)->send(new AcceptInviteMail((object) $data));
+
+                // $sendEmail			=	GeneralMethod::sentEmailUsingSMTP($to, $cc, $subject, $message, $from);
+
+                $message = 'Invitation request has been sent on email !';
+
+                $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+                try {
+                    \App\Events\ConsultancyPartnershipUpdated::dispatch(
+                        $company_id,
+                        'invitation_sent',
+                        $spartnerDataCnt['spartnerAll'] ?? null,
+                        $spartnerDataCnt['sentRequest'] ?? null
+                    );
+                } catch (\Throwable $e) {
+                }
+                cache()->put($cooldownKey, true, 30);
+
+                return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
+
             }
-
-            // $result = $this->mailService->sendEmail($staffing_partners_email, $subject,'email.staffing-partners.accept-invite',(object) $data, $attachments, $fromAddress, $senderName,$cc);
-
-            // Mail::to($staffing_partners_email)->send(new AcceptInviteMail((object) $data));
-
-            // $sendEmail			=	GeneralMethod::sentEmailUsingSMTP($to, $cc, $subject, $message, $from);
-
-            $message = 'Invitation request has been sent on email !';
-
-            $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
-
-            try {
-                \App\Events\ConsultancyPartnershipUpdated::dispatch(
-                    $company_id,
-                    'invitation_sent',
-                    $spartnerDataCnt['spartnerAll'] ?? null,
-                    $spartnerDataCnt['sentRequest'] ?? null
-                );
-            } catch (\Throwable $e) {}
-
-            return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
-
-        }
 
         } finally {
             $lock->release();

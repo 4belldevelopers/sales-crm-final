@@ -59,12 +59,70 @@ class QueueNotificationMailService implements ShouldQueue
     }
 
     /**
+     * Maximum number of attempts before marking job as failed.
+     * Prevents infinite runaway retry loops.
+     */
+    public int $tries = 3;
+
+    /**
+     * Backoff delays in seconds between retries [15s, 60s, 180s].
+     * Prevents rapid hammer loops during transient network or SMTP timeouts.
+     */
+    public array $backoff = [15, 60, 180];
+
+    /**
+     * Maximum execution time for the job in seconds.
+     */
+    public int $timeout = 60;
+
+    /**
      * Execute the job.
      *
      * @return void
      */
     public function handle(NotificationMailService $notificationMailService)
     {
-        $notificationMailService->sendEmail($this->email, $this->subject, $this->view, $this->data, $this->attachments, $this->fromAddress, $this->senderName, $this->cc, $this->company_id, $this->replyTo);
+        // Tenancy-scoped idempotency key (company_id + normalized recipient + subject hash)
+        $idempotencyKey = 'ats:mail_sent:comp_'.$this->company_id.':'.md5(strtolower(trim($this->email)).':'.$this->subject);
+
+        // If an identical notification was successfully sent within the last 45 seconds, suppress duplicate send
+        if (cache()->has($idempotencyKey)) {
+            \Illuminate\Support\Facades\Log::info('QueueNotificationMailService: duplicate delivery suppressed', [
+                'company_id' => $this->company_id,
+                'email' => $this->email,
+                'subject' => $this->subject,
+            ]);
+
+            return;
+        }
+
+        $notificationMailService->sendEmail(
+            $this->email,
+            $this->subject,
+            $this->view,
+            $this->data,
+            $this->attachments,
+            $this->fromAddress,
+            $this->senderName,
+            $this->cc,
+            $this->company_id,
+            $this->replyTo
+        );
+
+        // Mark as sent for 45 seconds to guard against duplicate queued copies
+        cache()->put($idempotencyKey, true, 45);
+    }
+
+    /**
+     * Handle job failure with structured error logging.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        \Illuminate\Support\Facades\Log::error('QueueNotificationMailService permanently failed', [
+            'company_id' => $this->company_id,
+            'email' => $this->email,
+            'subject' => $this->subject,
+            'error' => $exception ? $exception->getMessage() : 'Unknown error',
+        ]);
     }
 }

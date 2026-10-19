@@ -587,23 +587,156 @@
 
 <style>
   /* Interview Schedule drawer shell — scoped so it never collides with page-local styles. */
-  #interview_schedule_drawer .isd-shell-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid #eef0f4; flex-wrap:wrap; flex-shrink:0; font-family:'Poppins',sans-serif; }
-  #interview_schedule_drawer .isd-shell-topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
-  #interview_schedule_drawer .isd-shell-topbar-ico { width:48px; height:48px; border-radius:12px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:22px; }
-  #interview_schedule_drawer .isd-shell-topbar-title { font-size:16px; font-weight:700; color:#181c32; line-height:1.3; }
-  #interview_schedule_drawer .isd-shell-topbar-sub { font-size:11.5px; font-weight:400; color:#7e8299; margin-top:1px; }
-  #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }
-  #interview_schedule_drawer .isd-shell-btn-cancel { border:1px solid #e4e6ef; background:#fff; color:#3f4254; border-radius:8px; padding:9px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:500; cursor:pointer; }
-  #interview_schedule_drawer .isd-shell-btn-cancel:hover { background:#f8f9fb; }
-  #interview_schedule_drawer .isd-shell-btn-back { border:1px solid #e4e6ef; background:#fff; color:#3e97ff; border-radius:8px; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; }
-  #interview_schedule_drawer .isd-shell-btn-back:hover { background:#f5f9ff; }
-  #interview_schedule_drawer .isd-shell-btn-primary { border:none; background:#3e97ff; color:#fff; border-radius:8px; padding:8px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; text-align:left; line-height:1.3; }
-  #interview_schedule_drawer .isd-shell-btn-primary small { display:block; font-size:10px; font-weight:400; opacity:.85; }
-  #interview_schedule_drawer .isd-shell-btn-primary:hover { filter:brightness(.94); }
-  #interview_schedule_drawer .isd-shell-btn-primary:disabled { background:#c2c9d6 !important; cursor:not-allowed; }
-  #interview_schedule_drawer .isd-shell-divider { width:1px; height:22px; background:#e4e6ef; }
-  #interview_schedule_drawer .isd-shell-close { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#7e8299; cursor:pointer; flex-shrink:0; }
-  #interview_schedule_drawer .isd-shell-close:hover { background:#f8f9fb; color:#f64e60; }
+  #interview_schedule_drawer .isd-shell-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid #eef0f4;
+    background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 60%, #FEF9C3 100%);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #FEF3C7;
+    border: 1.5px solid #FDE68A;
+    color: #181C32;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #181c32;
+    line-height: 1.25;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-sub {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: #7e8299;
+    margin-top: 2px;
+  }
+  #interview_schedule_drawer .isd-shell-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #interview_schedule_drawer .isd-shell-btn-cancel {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-cancel:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+  }
+  #interview_schedule_drawer .isd-shell-btn-back {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #3e97ff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-back:hover {
+    background: #f5f9ff;
+    border-color: #3e97ff;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary {
+    border: none;
+    background: #F59E0B;
+    color: #ffffff !important;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary,
+  #interview_schedule_drawer .isd-shell-btn-primary span,
+  #interview_schedule_drawer .isd-shell-btn-primary i,
+  #interview_schedule_drawer .isd-shell-btn-primary .indicator-label,
+  #interview_schedule_drawer .isd-shell-btn-primary .indicator-progress {
+    color: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary svg {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover {
+    background: #D97706;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, .28);
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover span,
+  #interview_schedule_drawer .isd-shell-btn-primary:hover i {
+    color: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover svg {
+    stroke: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled {
+    background: #c2c9d6 !important;
+    color: #ffffff !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+  }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled span,
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled i,
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+  #interview_schedule_drawer .isd-shell-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 15px;
+    transition: all .15s ease;
+  }
+  #interview_schedule_drawer .isd-shell-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+  }
 
   /* This drawer is opened from *inside* the already-open Job Details drawer
      (#kt_activitiesApplication, z-index 999999) — it must render above it,
@@ -619,37 +752,94 @@
      it — that clamping broke the Select-Interviewer picker drawer nested
      inside this one, since both had "huge" but effectively-equal z-indices). */
   #interview_schedule_drawer { z-index: 1000000 !important; }
-  /* KTDrawer sets height via inline style at runtime (full viewport height,
-     same as every other drawer in the app). That's fine when content is long,
-     but this drawer's content is often shorter than the screen, leaving a
-     large blank white gap below it. Cap it to content height instead, with
-     the viewport as a ceiling so it still scrolls normally for long content. */
-  #interview_schedule_drawer { height: auto !important; max-height: 100vh !important; bottom: auto !important; }
-  #interview_schedule_drawer > .d-flex.flex-column { height: auto !important; max-height: 100vh !important; }
-  #interview_schedule_drawer #app_interview_schedule_content { flex-grow: 0 !important; max-height: calc(100vh - 76px) !important; }
+  /* Enforce single internal scrollbar and zero footer blank void */
+  #interview_schedule_drawer,
+  #interview_schedule_drawer.drawer,
+  #interview_schedule_drawer.drawer-on {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12) !important;
+  }
+  #interview_schedule_drawer > .d-flex.flex-column {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  #interview_schedule_drawer .isd-shell-topbar {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    height: 65px !important;
+    min-height: 65px !important;
+    max-height: 65px !important;
+  }
+  #interview_schedule_drawer #app_interview_schedule_content {
+    flex: 1 1 auto !important;
+    height: calc(100vh - 65px) !important;
+    max-height: calc(100vh - 65px) !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: #fbfbfd !important;
+  }
+  /* Candidate Send Email Drawer & Dedicated Overlay (Rule 3, Rule 17) */
+  #kt_send_mail_showdetail_drawer {
+    z-index: 1000050 !important;
+  }
+  #kt_send_mail_showdetail_drawer:not(.drawer-on) {
+    display: none !important;
+    transform: translateX(100%) !important;
+  }
+  .sd-mail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000045 !important;
+    cursor: pointer;
+  }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
     data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
-    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'85%', 'xl':'80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close"
+    style="overflow: hidden !important;">
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
-        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar-clock"></i></span>
+        <span class="isd-shell-topbar-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181C32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <polygon points="12 12 10 16 13 16 12 20 16 15 13 15 14 12" fill="#181C32"></polygon>
+          </svg>
+        </span>
         <div>
-          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
-          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
+          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Schedule Interview</div>
+          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidates to the interview panel</div>
         </div>
       </div>
       <div class="isd-shell-topbar-right">
-        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
+        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;"><i class="ti ti-arrow-left me-1"></i> Back</button>
         <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
         <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
-          <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
-          <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+          <span class="indicator-label d-inline-flex align-items-center gap-2" style="color:#ffffff !important;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <span style="color:#ffffff !important;">Schedule Interview</span>
+            <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;color:#ffffff !important;"></i>
+          </span>
+          <span class="indicator-progress" style="display:none;color:#ffffff !important;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2" style="border-color:#ffffff;border-right-color:transparent;"></span></span>
         </button>
-        <span class="isd-shell-divider"></span>
         <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
       </div>
     </div>
@@ -664,12 +854,14 @@
   window.isdShellSetStep = function(step){
     if (step === 'email') {
       $('#interview_schedule_drawer_title').text('Interview Schedule Email');
+      $('#interview_schedule_drawer_subtitle').text('Review and customize the email invitation');
       $('#interview_schedule_drawer_back').show();
-      $('#interview_schedule_drawer_primary .indicator-label').html('Send Email');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<i class="ti ti-mail" style="font-size:15px;color:#ffffff !important;"></i> <span style="color:#ffffff !important;">Send Email</span> <i class="ti ti-arrow-right" style="font-size:15px;margin-left:2px;color:#ffffff !important;"></i>');
     } else {
-      $('#interview_schedule_drawer_title').text('Interview Schedule');
+      $('#interview_schedule_drawer_title').text('Schedule Interview');
+      $('#interview_schedule_drawer_subtitle').text('Schedule and invite candidates to the interview panel');
       $('#interview_schedule_drawer_back').hide();
-      $('#interview_schedule_drawer_primary .indicator-label').html('Schedule Interview<small>Confirm &amp; send invitations</small>');
+      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span style="color:#ffffff !important;">Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;color:#ffffff !important;"></i>');
     }
   };
   $(document).on('click', '#interview_schedule_drawer_back', function(){
@@ -697,6 +889,7 @@
     if (!el.classList.contains('drawer')) el.classList.add('drawer', 'drawer-end');
     el.classList.add('drawer-on');
     el.style.transform = 'none';
+    el.style.overflow = 'hidden';
   };
 </script>
 <!--end::Interview Schedule drawer-->
@@ -733,6 +926,28 @@
     style="z-index: 10050 !important; scrollbar-gutter: stable;">
   <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
     <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="bench_fwd_resume_body_content"></div>
+  </div>
+</div>
+<!-- Candidate Forward Resume Drawer (Engine 2) -->
+<div id="kt_test_fwd_resume_drawer_toggle_hidden" style="display:none;"></div>
+<div id="kt_test_fwd_resume_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"
+    style="z-index: 1000050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
+  </div>
+</div>
+<!-- Candidate Send Email Drawer -->
+<div id="kt_send_mail_sd_toggle" style="display:none;"></div>
+<div id="kt_send_mail_showdetail_drawer" class="drawer drawer-end bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close"
+    style="z-index: 1000050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
   </div>
 </div>
 <!-- Bench Candidate Download Resume Center Drawer (Engine 1-B) -->
@@ -953,7 +1168,7 @@
           </span>
         </div>
       </div>
-      <div class="card-body position-relative px-0 py-0" id="application_send_mail_body_content"></div>
+      <div class="card-body position-relative px-0 py-0" id="legacy_application_send_mail_body_content"></div>
     </div>
   </div>
 </div>
@@ -2412,7 +2627,7 @@ $(document).ready(function(){
                   url += '?' + query.join('&');
               }
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
@@ -2983,6 +3198,327 @@ $( document ).ready(function() {
     });
   };
 
+  // Client-First In-Memory RAM Store for Standard Candidate Forward Resume (Rule 3, Rule 5, Rule 6, Rule 15, Rule 17)
+  // Mirroring BenchForwardResumeRamStore: Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
+  var CandidateForwardResumeRamStore = (function() {
+    var _store = {};
+    var _ttl = 15 * 60 * 1000; // 15 minute local memory ceiling
+
+    function buildKey(candArr, jobIdArr) {
+      var cArr = (Array.isArray(candArr) ? candArr : [candArr]).map(Number).filter(Boolean);
+      cArr.sort(function(a, b) { return a - b; });
+      var jArr = (Array.isArray(jobIdArr) ? jobIdArr : (jobIdArr ? [jobIdArr] : [])).map(Number).filter(Boolean);
+      jArr.sort(function(a, b) { return a - b; });
+      return 'cdr_fwd_' + cArr.join('_') + (jArr.length ? ('_j' + jArr.join('_')) : '');
+    }
+
+    return {
+      buildKey: buildKey,
+      get: function(key) {
+        var item = _store[key];
+        if (!item) return null;
+        if (Date.now() - item.ts > _ttl) {
+          delete _store[key];
+          return null;
+        }
+        return item;
+      },
+      set: function(key, viewHtml, fingerprint) {
+        _store[key] = {
+          view: viewHtml,
+          fingerprint: fingerprint || '',
+          ts: Date.now()
+        };
+      },
+      invalidate: function(candidateId) {
+        if (!candidateId) {
+          _store = {};
+          return;
+        }
+        var needle = String(candidateId);
+        for (var k in _store) {
+          if (k.indexOf(needle) !== -1) {
+            delete _store[k];
+          }
+        }
+      },
+      clear: function() {
+        _store = {};
+      }
+    };
+  })();
+  window.CandidateForwardResumeRamStore = CandidateForwardResumeRamStore;
+
+  function showCandidateFwdResumeOverlay() {
+    if ($('.fwd-resume-overlay').length > 0) return;
+    $('<div class="fwd-resume-overlay"></div>').css({
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 1000045,
+      cursor: 'pointer'
+    }).appendTo('body').on('click', function(e) {
+      e.preventDefault();
+      closeCandidateForwardResume();
+    });
+  }
+
+  function hideCandidateFwdResumeOverlay() {
+    $('.fwd-resume-overlay').remove();
+  }
+
+  // Dedicated Overlay & Lifecycle Management for Candidate Send Email Drawer (Rule 3, Rule 17)
+  window.showCandidateSendMailOverlay = function() {
+    if ($('.sd-mail-overlay').length > 0) return;
+    $('<div class="sd-mail-overlay"></div>').css({
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 1000045,
+      cursor: 'pointer'
+    }).appendTo('body').on('click', function(e) {
+      e.preventDefault();
+      window.closeCandidateSendMailDrawer();
+    });
+  };
+
+  window.hideCandidateSendMailOverlay = function() {
+    $('.sd-mail-overlay').remove();
+  };
+
+  window.closeCandidateSendMailDrawer = function() {
+    var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+    if (drawerEl) {
+      drawerEl.classList.remove('drawer-on');
+      drawerEl.style.removeProperty('transform');
+      drawerEl.style.removeProperty('display');
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) drawer.shown = false;
+      }
+    }
+    window.hideCandidateSendMailOverlay();
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1mass']) {
+      try { CKEDITOR.instances['editor1mass'].destroy(true); } catch (e) {}
+    }
+    if (typeof window.closeCandidateEmailRecipientDrawer === 'function') {
+      try { window.closeCandidateEmailRecipientDrawer(); } catch (e) {}
+    }
+    if (typeof window.closeSendMailRecipientDrawer === 'function') {
+      try { window.closeSendMailRecipientDrawer(); } catch (e) {}
+    }
+    $('#kt_sendmail_recipient_drawer').css('display', 'none');
+    $('#kt_sendmail_recipient_overlay').css('display', 'none');
+  };
+  window.hideCandidateSendMailDrawer = window.closeCandidateSendMailDrawer;
+
+  window.closeCandidateForwardResume = function() {
+    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+    drawerIds.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('drawer-on');
+        el.style.removeProperty('transform');
+        el.style.removeProperty('display');
+        if (typeof KTDrawer !== 'undefined') {
+          var drawer = KTDrawer.getInstance(el);
+          if (drawer) drawer.shown = false;
+        }
+      }
+    });
+    hideCandidateFwdResumeOverlay();
+    if (typeof _testFwdGlobalToken !== 'undefined') {
+      _testFwdGlobalToken++;
+    }
+    if (typeof _testFwdIsCompiling !== 'undefined') {
+      _testFwdIsCompiling = false;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+      try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+    }
+    if (typeof closeTestEmailRecipientDrawer === 'function') {
+      try { closeTestEmailRecipientDrawer(); } catch (e) {}
+    }
+    $('#kt_test_recipient_drawer').css('display', 'none');
+    $('#kt_test_recipient_drawer_overlay').css('display', 'none');
+    if (typeof window.closeTestFwdFormatDropdown === 'function') {
+      try { window.closeTestFwdFormatDropdown(); } catch (e) {}
+    }
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+      try { window.ForwardResumeManager.closeFormatDropdown(); } catch (e) {}
+    }
+  };
+
+  window.openCandidateForwardResume = function(candidateId, jobId) {
+    if (!candidateId) return;
+
+    var candArr = Array.isArray(candidateId) ? candidateId : [candidateId];
+    if (candArr.length === 0) return;
+    var primaryCandId = candArr[0];
+    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
+
+    // 1. Immediately ensure drawer element and open synchronously (0ms perceived latency)
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (drawerEl) {
+      drawerEl.style.removeProperty('display');
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.transform = 'none';
+
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) {
+          drawer.shown = true;
+        }
+      }
+
+      showCandidateFwdResumeOverlay();
+    }
+
+    var $body = $('#application_test_fwd_resume_body_content');
+    if (!$body.length) return;
+
+    var firstJobId = jobArr.length > 0 ? jobArr[0] : (primaryCandId || 0);
+    var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
+
+    // 2. Fast-path: Check Client-First RAM Store (0ms perceived time, 0 server strain)
+    var cacheKey = CandidateForwardResumeRamStore.buildKey(candArr, jobArr);
+    var cached = CandidateForwardResumeRamStore.get(cacheKey);
+
+    if (cached && cached.view) {
+      if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+      }
+      // 0ms Instant Hydration from Browser RAM
+      $body.html(cached.view);
+
+      // SWR (Stale-While-Revalidate): Fire background verification with fingerprint
+      $.ajax({
+        type: 'POST',
+        url: url,
+        cache: false,
+        data: {
+          _token: "{{ csrf_token() }}",
+          arr: candArr,
+          jobIdArr: jobArr,
+          fingerprint: cached.fingerprint || '',
+          matchMap: {}
+        },
+        success: function (res) {
+          if (res && res.status === 'success' && res.view && res.fingerprint && res.fingerprint !== cached.fingerprint) {
+            CandidateForwardResumeRamStore.set(cacheKey, res.view, res.fingerprint);
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+              try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+            }
+            $body.html(res.view);
+          }
+        },
+        error: function() {
+          // Silent fallback: cached view remains active
+        }
+      });
+      return;
+    }
+
+    // 3. Cache Miss: Show loading spinner and fetch authoritative view from server
+    $body.html(
+      '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+      '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
+      '    <span class="visually-hidden">Loading...</span>' +
+      '  </div>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+      '</div>'
+    );
+
+    $.ajax({
+      type: 'POST',
+      url: url,
+      cache: false,
+      data: {
+        _token: "{{ csrf_token() }}",
+        arr: candArr,
+        jobIdArr: jobArr,
+        matchMap: {}
+      },
+      success: function(response) {
+        if (response && response.status === 'success' && response.view) {
+          CandidateForwardResumeRamStore.set(cacheKey, response.view, response.fingerprint || '');
+          if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+            try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+          }
+          $body.html(response.view);
+        } else {
+          var errMsg = (response && response.message) ? response.message : 'Failed to load forward resume drawer.';
+          $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+        }
+      },
+      error: function(xhr) {
+        var errMsg = 'Failed to load candidate forward resume details. Please try again.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errMsg = xhr.responseJSON.message;
+        }
+        $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+      }
+    });
+  };
+
+  // Close event delegation
+  $(document).off('click.fwdResumeClose').on('click.fwdResumeClose', '#kt_test_fwd_resume_drawer_close, .mm-header-btn-cancel, #kt_test_fwd_resume_drawer_close_aptk, #kt_test_fwd_resume_drawer_close_clientapp', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    closeCandidateForwardResume();
+  });
+
+  $(document).off('keydown.fwdResumeEsc').on('keydown.fwdResumeEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_test_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof closeTestEmailRecipientDrawer === 'function') {
+          closeTestEmailRecipientDrawer();
+        }
+        return;
+      }
+      var el = document.getElementById('kt_test_fwd_resume_drawer') ||
+               document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+               document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCandidateForwardResume();
+      }
+    }
+  });
+
+  // Send Email Drawer Close event delegation & ESC handler (Rule 3, Rule 17)
+  $(document).off('click.sendMailClose').on('click.sendMailClose', '#kt_send_mail_showdetail_close', function(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    closeCandidateSendMailDrawer();
+  });
+
+  $(document).off('keydown.sendMailEsc').on('keydown.sendMailEsc', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      if ($('#kt_sendmail_recipient_drawer').is(':visible')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.closeSendMailRecipientDrawer === 'function') {
+          window.closeSendMailRecipientDrawer();
+        }
+        return;
+      }
+      var el = document.getElementById('kt_send_mail_showdetail_drawer');
+      if (el && el.classList.contains('drawer-on')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCandidateSendMailDrawer();
+      }
+    }
+  });
+
   // Client-First In-Memory RAM Store for In-House Talent Download Resume Center (Rule 3, Rule 5, Rule 6, Rule 15, Rule 17)
   // Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
   var BenchDownloadResumeRamStore = (function() {
@@ -3340,14 +3876,23 @@ $( document ).ready(function() {
       drawerId = drawerId || 'kt_activitiesApplication';
       if (drawerId === 'kt_activitiesApplication') {
           window.__activeCandidateDrawerId = null;
+          if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+              try { window.ForwardResumeManager.close(); } catch(e) {}
+          } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
+              try { window.closeTestFwdResumeDrawer(); } catch(e) {}
+          }
+          if (typeof window.closeCandidateSendMailDrawer === 'function') {
+              try { window.closeCandidateSendMailDrawer(); } catch(e) {}
+          }
       }
       var drawerEl = document.getElementById(drawerId);
       if (drawerEl) {
+          drawerEl.classList.remove('drawer-on');
+          drawerEl.style.removeProperty('transform');
+          drawerEl.style.removeProperty('z-index');
           var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
           if (drawer) {
               drawer.hide();
-          } else {
-              drawerEl.classList.remove('drawer-on');
           }
       }
       $('.custom-cand-drawer-overlay').remove();
@@ -3731,6 +4276,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
 
           // 5. Broadcast to other recruiter tabs if local action
@@ -3806,6 +4352,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
 
           // 4. Invalidate drawer cache for this candidate so future drawer opens fetch fresh comments
@@ -3927,6 +4474,7 @@ $( document ).ready(function() {
                   if (window.ForwardResumeManager) {
                       window.ForwardResumeManager._compiledAttachments = {};
                       window.ForwardResumeManager._recipientsCache = null;
+                      window.ForwardResumeManager._recipientsCacheKey = null;
                   }
               });
       }
@@ -3970,6 +4518,7 @@ $( document ).ready(function() {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;
+              window.ForwardResumeManager._recipientsCacheKey = null;
           }
           window.purgeCandidateDrawerCaches(false);
       }
@@ -4189,7 +4738,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -4213,7 +4762,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',

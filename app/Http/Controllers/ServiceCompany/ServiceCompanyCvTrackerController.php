@@ -2775,13 +2775,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     // If candidate's current currency differs from target job currency, convert CTC and ECTC.
                     // If identical, preserve exact values without conversion drift.
                     $targetJobCurKey = \App\Services\CurrencyService::getJobCurrencyKey($jobRow);
-                    $candCurKey      = $applicationRow->current_ctc_cur ?? null;
-                    $sourceCtc       = (float) ($applicationRow->ctc ?? 0);
-                    $sourceEctc      = (float) ($applicationRow->ectc ?? 0);
+                    $candCurKey = $applicationRow->current_ctc_cur ?? null;
+                    $sourceCtc = (float) ($applicationRow->ctc ?? 0);
+                    $sourceEctc = (float) ($applicationRow->ectc ?? 0);
 
-                    $finalCtc        = $sourceCtc;
-                    $finalEctc       = $sourceEctc;
-                    $finalCurKey     = $candCurKey;
+                    $finalCtc = $sourceCtc;
+                    $finalEctc = $sourceEctc;
+                    $finalCurKey = $candCurKey;
 
                     if ($targetJobCurKey !== null) {
                         $finalCurKey = (int) $targetJobCurKey;
@@ -3606,74 +3606,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        $companyId = auth()->user()->company_id;
+        $companyId = (int) auth()->user()->company_id;
 
-        // 1. Internal Team Contacts (Users of the company)
-        $assignDataone = DB::table('users')
-            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->where('users.company_id', '=', $companyId)
-            ->where('users.status', '=', 'active')
-            ->where('users.working_status', '=', 1)
-            ->select(
-                'users.id',
-                'users.email',
-                'users.name',
-                'users.image',
-                'users_profile.designation as display_name',
-                'roles.display_name as role_name',
-                'users.working_status',
-                'companies.company_name'
-            )->groupBy('users.id')->get()->toArray();
-
-        // 2. Client Contacts
-        $clientId = [];
-        if (! empty($this->jobIdArr)) {
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('clients.self_company', 0)
-                ->pluck('jobs.client_id')->toArray();
-        }
-        if (empty($clientId) && ! empty($request->id)) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row && ! empty($client_row->client_id)) {
-                $clientId[] = $client_row->client_id;
-            }
-        }
-        if (empty($clientId)) {
-            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-        }
-
-        $assignDataclient = [];
-        if (! empty($clientId)) {
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select(
-                    'client_contact_info.id',
-                    'client_contact_info.contact_person_email as email',
-                    'client_contact_info.contact_person_name as name',
-                    'client_contact_info.contact_person_designation as display_name',
-                    'clients.name as company_name'
-                )
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-        }
-
-        if ($request->id >= 1) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row) {
-                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-                $this->to_email_from_count = count($ccInfo);
-                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+        // Resolve Job Context and Authorized Recipients strictly scoped to Job Posting Type
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
             }
         }
 
-        $assignData = array_merge($assignDataclient, $assignDataone);
-        $this->internal_team_data = $assignDataone;
-        $this->client_contacts_data = $assignDataclient;
-        $this->cc_email_assignData = (object) $assignData;
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->to_email_from_data = $recipientsData['default_to_emails'];
+        $this->to_email_from_count = count($recipientsData['default_to_emails']);
+        $this->cc_email_assignData = (object) array_merge($this->client_contacts_data, $this->internal_team_data);
 
         $view = view('service_company.cvtracker.test_fwd_resume', $this->data)->render();
 
@@ -4269,76 +4225,64 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->to_email_from_data = [];
         $this->cc_email_data = [];
 
-        $companyId = auth()->user()->company_id;
+        $companyId = (int) auth()->user()->company_id;
 
-        $assignDataone = DB::table('users')
-            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->where('users.company_id', '=', $companyId)
-            ->where('users.status', '=', 'active')
-            ->where('users.working_status', '=', 1)
-            ->select(
-                'users.id',
-                'users.email',
-                'users.name',
-                'users.image',
-                'users_profile.designation as display_name',
-                'roles.display_name as role_name',
-                'users.working_status',
-                'companies.company_name'
-            )->groupBy('users.id')->get()->toArray();
-
-        $clientId = [];
-        if (! empty($this->jobIdArr)) {
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('clients.self_company', 0)
-                ->pluck('jobs.client_id')->toArray();
-        }
-        if (empty($clientId) && ! empty($request->id)) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row && ! empty($client_row->client_id)) {
-                $clientId[] = $client_row->client_id;
-            }
-        }
-        if (empty($clientId)) {
-            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-        }
-
-        $assignDataclient = [];
-        if (! empty($clientId)) {
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select(
-                    'client_contact_info.id',
-                    'client_contact_info.contact_person_email as email',
-                    'client_contact_info.contact_person_name as name',
-                    'client_contact_info.contact_person_designation as display_name',
-                    'clients.name as company_name'
-                )
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-        }
-
-        if ($request->id >= 1) {
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row) {
-                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-                $this->to_email_from_count = count($ccInfo);
-                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+        // Resolve Job Context and Authorized Recipients strictly scoped to Job Posting Type
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
             }
         }
 
-        $assignData = array_merge($assignDataclient, $assignDataone);
-        $this->internal_team_data = $assignDataone;
-        $this->client_contacts_data = $assignDataclient;
-        $this->cc_email_assignData = (object) $assignData;
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->to_email_from_data = $recipientsData['default_to_emails'];
+        $this->to_email_from_count = count($recipientsData['default_to_emails']);
+        $this->cc_email_assignData = (object) array_merge($this->client_contacts_data, $this->internal_team_data);
+
+        // Authoritative Fingerprint for SWR Zero-Stale-Data (Rule 3, Rule 5, Rule 6)
+        $fingerprintComponents = [];
+        foreach ($this->applicationData as $candItem) {
+            $fingerprintComponents[] = implode(':', [
+                $candItem->id ?? '',
+                $candItem->full_name ?? '',
+                $candItem->skills ?? '',
+                $candItem->resume ?? '',
+                $candItem->rating ?? '',
+                $candItem->ctc ?? '',
+                $candItem->ectc ?? '',
+                $candItem->np_id ?? '',
+            ]);
+        }
+        $fingerprintComponents[] = $companyId.':'.($targetJobId ?? 0).':'.($this->job_type ?? '').':'.count($this->client_contacts_data).':'.count($this->internal_team_data);
+        $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
+
+        $clientFingerprint = trim((string) $request->input('fingerprint', ''));
+        if ($clientFingerprint !== '' && $clientFingerprint === $authoritativeFingerprint) {
+            return Reply::dataOnly([
+                'status' => 'unmodified',
+                'fingerprint' => $authoritativeFingerprint,
+                'message' => 'Candidate data is current and authoritative.',
+            ]);
+        }
 
         $view = view('service_company.cvtracker.test_fwd_resume', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'fingerprint' => $authoritativeFingerprint,
+        ]);
     }
 
     /**
@@ -4504,16 +4448,41 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $candidates = $dbCandidates;
         }
 
-        // Fetch Skill Experience
-        $appIds = collect($candidates)->pluck('id')->toArray();
+        // Fetch Skill Experience with Dragonfly L2 Multi-Tenant Caching (CQRS-01 Compliance)
+        // Intent: Prevent redundant MySQL joins on candidate_job_skill_exp during repeated warm drawer opens.
+        // Tenancy: Keys are strictly isolated by company_id (fwd_cand_skills:{companyId}:{candidateId}) with 300s TTL.
+        $appIds = collect($candidates)->pluck('id')->filter()->unique()->values()->toArray();
         $cjseSkills = collect();
         if (! empty($appIds)) {
-            $cjseSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
-                ->select('candidate_job_skill_exp.candidate_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                ->get()
-                ->groupBy('candidate_id');
+            $cachedSkills = [];
+            $missingIds = [];
+
+            foreach ($appIds as $aId) {
+                $cacheKey = "fwd_cand_skills:{$companyId}:{$aId}";
+                $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                if ($cached !== null) {
+                    $cachedSkills[$aId] = collect($cached)->map(fn ($r) => (object) $r);
+                } else {
+                    $missingIds[] = $aId;
+                }
+            }
+
+            if (! empty($missingIds)) {
+                $freshSkills = DB::table('candidate_job_skill_exp')
+                    ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                    ->whereIn('candidate_job_skill_exp.candidate_id', $missingIds)
+                    ->select('candidate_job_skill_exp.candidate_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+                    ->get()
+                    ->groupBy('candidate_id');
+
+                foreach ($missingIds as $mId) {
+                    $candSkills = $freshSkills->get($mId, collect())->toArray();
+                    \Illuminate\Support\Facades\Cache::put("fwd_cand_skills:{$companyId}:{$mId}", $candSkills, 300);
+                    $cachedSkills[$mId] = collect($candSkills)->map(fn ($r) => (object) $r);
+                }
+            }
+
+            $cjseSkills = collect($cachedSkills);
         }
 
         $formattedCandidates = [];
@@ -4745,71 +4714,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     }
 
     /**
-     * V4.1 Lazy-Loaded Recipient Directory Endpoint with 15-minute Redis Cache
+     * V4.1 Job-Context-Aware Recipient Directory Endpoint
      *
-     * Intent: Serves internal team and client contacts on demand when recruiter clicks
-     * "+ Add Recipient". Completely decouples 4-table SQL joins from drawer open.
+     * Intent: Serves dynamically filtered internal team and client contacts strictly scoped
+     * to the job posting type (My Organization, Internal Client, or Direct Client).
+     * Tenancy & Isolation: Strictly prevents any cross-job or cross-tenant contact leakage.
      */
     public function fwd_recipients(Request $request)
     {
-        $companyId = (int) auth()->user()->company_id;
+        $user = auth()->user();
+        $companyId = (int) $user->company_id;
         $jobIdArr = is_array($request->jobIdArr) ? $request->jobIdArr : [];
+        $targetJobId = ! empty($jobIdArr) ? (int) $jobIdArr[0] : (int) ($request->job_id ?: $request->id);
+        $candidateIds = is_array($request->arr) ? $request->arr : [];
 
-        $cacheKey = "tenant:{$companyId}:fwd_recipients_dir";
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 900, function () use ($companyId, $jobIdArr) {
-            // Internal Team
-            $team = DB::table('users')
-                ->leftJoin('role_user', 'role_user.user_id', '=', 'users.id')
-                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-                ->leftJoin('roles', 'roles.id', '=', 'role_user.role_id')
-                ->where('users.company_id', '=', $companyId)
-                ->where('users.status', '=', 'active')
-                ->where('users.working_status', '=', 1)
-                ->select(
-                    'users.id',
-                    'users.email',
-                    'users.name',
-                    'users_profile.designation as display_name',
-                    'roles.display_name as role_name'
-                )
-                ->groupBy('users.id')
-                ->get()
-                ->toArray();
+        $recipientAuth = app(\App\Services\ForwardResumeAuthorizationService::class);
 
-            // Client Contacts
-            $clientId = [];
-            if (! empty($jobIdArr)) {
-                $clientId = DB::table('jobs')
-                    ->whereIn('jobs.id', $jobIdArr)
-                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                    ->where('clients.self_company', 0)
-                    ->pluck('jobs.client_id')
-                    ->toArray();
-            }
-            if (empty($clientId)) {
-                $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
-            }
-
-            $clients = [];
-            if (! empty($clientId)) {
-                $clients = DB::table('clients')
-                    ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                    ->select(
-                        'client_contact_info.id',
-                        'client_contact_info.contact_person_email as email',
-                        'client_contact_info.contact_person_name as name',
-                        'client_contact_info.contact_person_designation as display_name',
-                        'clients.name as company_name'
-                    )
-                    ->whereIn('clients.id', $clientId)
-                    ->get()
-                    ->toArray();
-            }
-
-            return [
-                'internal_team' => $team,
-                'client_contacts' => $clients,
-            ];
+        // Redis cache strictly scoped per job ID (60s TTL) to eliminate redundant queries while ensuring zero stale data across jobs
+        $cacheKey = "tenant:{$companyId}:job:".($targetJobId ?: 'none').':fwd_recipients_dir';
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($recipientAuth, $user, $targetJobId, $candidateIds) {
+            return $recipientAuth->resolveAuthorizedRecipients($user, $targetJobId, $candidateIds);
         });
 
         return response()->json(['status' => 'success', 'data' => $data]);
@@ -5918,8 +5842,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'clients.name as client_name'
             )
             // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('jobs', function ($join) {
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+            ->leftJoin('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
             })
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
@@ -5935,22 +5859,37 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'query' => [
                     'bool' => [
                         'must' => [
-                            ['term' => ['status' => 1]], // OK
-                            ['match' => ['temptype' => 4]],    // TEXT field
+                            ['term' => ['status' => 1]],
+                            ['match' => ['temptype' => 4]],
                         ],
                     ],
                 ],
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $this->templateData = collect($response['hits']['hits'] ?? [])
+                ->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+        } catch (\Throwable $e) {
+            $this->templateData = collect();
+        }
 
-        $this->templateData = collect(value: $response['hits']['hits'] ?? [])
-            ->map(function ($hit) {
-                return (object) $hit['_source'];
-            });
+        if ($this->templateData->isEmpty()) {
+            $this->templateData = DB::table('th_email_template')
+                ->where('status', 1)
+                ->where('temptype', 4)
+                ->get();
+        }
 
-        $this->userdata = $this->user;
+        // Sort naturally by template ID so templates appear in clean ascending order
+        $this->templateData = $this->templateData->sortBy(function ($item) {
+            return (int) ($item->e_temp_id ?? ($item->id ?? 0));
+        })->values();
+
+        $this->userdata = $this->user ?: auth()->user();
 
         $this->to_email_from_count = $this->cc_email_count = 0;
         $this->to_email_from_data = [];
@@ -5958,139 +5897,108 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        if ($request->id >= 1) {
-            // dd($request->id );
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            // CLIENT CONTACT INFO
-            $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-            $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-            if ($ccInfoCount > 0) {
-                $i = 0;
-                foreach ($ccInfo as $ccVal) {
-                    $commonFromArr[$i] = $ccVal->contact_person_email;
+        $i = 0;
+        foreach ($this->applicationData as $aval) {
+            if ($aval->condidate_type == 'bench_condidate') {
+                $bench_assign = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->select('users.id', 'users.email', 'users.name')
+                    ->where('bench_assign.bench_applications_id', $aval->id)
+                    ->get()->toArray();
+                foreach ($bench_assign as $assign) {
+                    $commonCcArr[$i] = $assign->email;
                     $i++;
                 }
+            } else {
+                $commonCcArr[$i] = $aval->email;
+                $i++;
             }
-            $this->to_email_from_count = $ccInfoCount;
-            $this->to_email_from_data = $commonFromArr;
-
-            // HR ASSIGN JOB
-            $assignCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.email')->whereIn('job_assign.job_id', $this->jobIdArr)->count();
-
-            // $company_id 			=	auth()->user()->company_id;
-            // dd($applicationDataSection->company_id , auth()->user()->company_id);
-
-            $assignDataone = DB::table('users')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'users.company_id')
-                ->where('users.company_id', '=', auth()->user()->company_id)
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->groupBy('users.id')->get()->toArray();
-
-            $assignDatatwo = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->whereIn('job_assign.job_id', $this->jobIdArr)->get()->toArray();
-
-            $mergedData = array_udiff($assignDataone, $assignDatatwo, function ($a, $b) {
-                return $a->id <=> $b->id; // Compare by 'id' field
-            });
-
-            $i = 0;
-
-            foreach ($this->applicationData as $aval) {
-
-                // dd($aval);
-                if ($aval->condidate_type == 'bench_condidate') {
-
-                    $bench_assign = DB::table(table: 'bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.id', 'users.email', 'users.name')
-                        ->where('bench_assign.bench_applications_id', $aval->id)
-                        ->get()->toArray();
-                    foreach ($bench_assign as $assign) {
-                        $commonCcArr[$i] = $assign->email;
-                        $i++;
-                    }
-                    // dd($aval->candidate_id,$commonCcArr);
-                } else {
-                    $commonCcArr[$i] = $aval->email;
-                    $i++;
-                }
-
-            }
-
-            // foreach ($this->applicationData as $aval) {
-            // 	$commonCcArr[$i] = $aval->email;
-            // 	$i++;
-            // }
-
-            $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->whereIn('jobs.id', $this->jobIdArr)
-                ->where('clients.self_company', 0)->pluck('jobs.client_id')->toArray();
-
-            $assignDataclient = DB::table('clients')
-                ->leftjoin('companies', 'companies.id', 'clients.company_id')
-                ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
-                ->whereIn('clients.id', $clientId)->get()->toArray();
-            $assignData = array_merge($assignDataclient, $assignDataone);
-            $this->cc_email_count = count($commonCcArr);
-            $this->cc_email_data = $commonCcArr;
-            $this->cc_email_assignData = (object) $assignData;
         }
+        $this->cc_email_count = count($commonCcArr);
+        $this->cc_email_data = $commonCcArr;
+
+        // Authoritative Job-Context-Aware Recipient Resolution (My Organization vs Internal Client vs Direct Client)
+        $targetJobId = null;
+        if (! empty($this->jobIdArr) && is_array($this->jobIdArr) && (int) $this->jobIdArr[0] > 0) {
+            $targetJobId = (int) $this->jobIdArr[0];
+        } elseif (! empty($request->id) && (int) $request->id > 0) {
+            $targetJobId = (int) $request->id;
+        } elseif (! empty($this->arr)) {
+            $firstCand = DB::table('job_applications')->whereIn('id', (array) $this->arr)->first();
+            if ($firstCand && ! empty($firstCand->job_id)) {
+                $targetJobId = (int) $firstCand->job_id;
+            }
+        }
+
+        $recipientAuth = app(ForwardResumeAuthorizationService::class);
+        $recipientsData = $recipientAuth->resolveAuthorizedRecipients(auth()->user(), $targetJobId, (array) $this->arr);
+
+        $this->internal_team_data = $recipientsData['internal_team'];
+        $this->client_contacts_data = $recipientsData['client_contacts'];
+        $this->job_type = $recipientsData['job_type'];
+        $this->cc_email_assignData = (object) $recipientsData['internal_team'];
 
         $country_id = $country_name = '';
-        $jobid = (int) $request->jobIdArr[0];
-        $client_loc = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-            ->where('client_location_jobs.job_id', $jobid)
-            ->first();
+        $city = '';
+        $jobid = $targetJobId ?: (! empty($request->jobIdArr[0]) ? (int) $request->jobIdArr[0] : 0);
 
-        $client_loc = DB::table('client_city_jobs')
-            ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-            ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)
-            ->first();
+        if ($jobid > 0) {
+            $client_loc = DB::table('client_city_jobs')
+                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city', 'countries.id as country_id', 'city_list.city as city_name')
+                ->where('client_city_jobs.job_id', $jobid)
+                ->first();
 
-        $country_id = @$client_loc->country_id;
-        if (@$country_id > 0) {
-            $country_name = GeneralMethod::getCountryName($country_id);
-            foreach ($country_name as $cval) {
-                $country_name = ucwords($cval['sortname']);
+            $country_id = @$client_loc->country_id;
+            if (@$country_id > 0) {
+                $country_name_data = GeneralMethod::getCountryName($country_id);
+                if (! empty($country_name_data)) {
+                    foreach ($country_name_data as $cval) {
+                        $country_name = ucwords($cval['sortname'] ?? '');
+                    }
+                }
+            }
+
+            $city = @$client_loc->city;
+            if (@$client_loc->country_id == 101) {
+                $city = @$client_loc->city_name;
             }
         }
 
-        $city = @$client_loc->city;
-        if (@$client_loc->country_id == 101) {
-            $city = @$client_loc->city_name;
-        }
-        $jobs = Job::withoutGlobalScopes()->find($jobid);
-
+        $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
         $this->jobid = $jobid;
 
-        //  dd( $jobs);
+        $location = trim($city.($country_name ? ' | '.$country_name : ''));
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
-
-        $location = $city.' | '.$country_name;
-
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
+        $this->job_title = ($jobs && $jobs->title) ? $jobs->title : 'Candidate Application';
+
         $this->location = ($location) ? $location : '';
-        $this->job_title = ($jobs->title) ? $jobs->title : '';
+
+        // Tenancy / Intent: If there is no client (Direct or Internal client), position is only for My Organization:
+        // Filter out templates where client_required == 1 (configured dynamically in SuperAdmin)
+        $hasClient = (! empty($this->clientTemp) && (int) $this->selfCompany !== 1);
+        if (! $hasClient && ! empty($this->templateData)) {
+            $this->templateData = $this->templateData->filter(function ($tdata) {
+                return empty($tdata->client_required) || (int) $tdata->client_required !== 1;
+            })->values();
+        }
+
+        $fingerprint = md5(json_encode([
+            'job_id' => $targetJobId,
+            'cand_ids' => $this->arr,
+            'job_type' => $this->job_type,
+            'internal_count' => count($this->internal_team_data),
+            'client_count' => count($this->client_contacts_data),
+        ]));
 
         $view = view('service_company.cvtracker.send_mail', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly(['status' => 'success', 'view' => $view, 'fingerprint' => $fingerprint]);
 
     }
 
@@ -6355,12 +6263,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         //  dd( $jobs);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
         $location = $city.' | '.$country_name;
 
-        $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
-        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
+        $this->selfCompany = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) ? 1 : 0;
+        $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : (auth()->user()->company->company_name ?? 'Our Company');
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';
         $this->location = ($location) ? $location : '';
         $this->job_title = ($jobs->title) ? $jobs->title : '';
@@ -6484,7 +6392,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $applicationDataCount = count($applicationData);
 
-        $template = (int) $request->template;
+        $template = (int) ($request->template ?: ($request->id ?: 0));
         $templateData = null;
 
         try {
@@ -6738,12 +6646,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$rel_exp.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$current_ctc_cur.' '.@$ctc.'/'.$current_ctc_mode.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$current_ectc_cur.' '.@$ectc.'/'.$current_ctc_mode.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords((@$appData->comment)).'<o:p></o:p></span></p></td>
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords((string) (@$appData->comment ?? '')).'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.$np.'<o:p></o:p></span></p></td>
 				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.@$appData->current_company.'<o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="'.ucwords($row_city_name).'">'.ucwords(substr($row_city_name, 0, 50)).'</a>,
-				<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="'.ucwords($row_state_name).' | '.strtoupper($row_country_name).'">'.ucfirst(substr($row_state_name, 0, 50)).' , '.strtoupper(substr($row_country_name, 0, 10)).'</span><o:p></o:p></span></p></td>
-				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(substr(@$appData->qualification_name, 0, 10)).'<o:p></o:p></span></p></td>				
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="'.ucwords((string) ($row_city_name ?? '')).'">'.ucwords(substr((string) ($row_city_name ?? ''), 0, 50)).'</a>,
+				<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="'.ucwords((string) ($row_state_name ?? '')).' | '.strtoupper((string) ($row_country_name ?? '')).'">'.ucfirst(substr((string) ($row_state_name ?? ''), 0, 50)).' , '.strtoupper(substr((string) ($row_country_name ?? ''), 0, 10)).'</span><o:p></o:p></span></p></td>
+				<td valign="bottom" style="border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt; border-right:solid windowtext 1.0pt;background:white;padding:1.5pt 2.25pt 1.5pt 2.25pt; height:15.75pt;overflow:hidden"> <p class="MsoNormal"><span style="font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif">'.ucwords(substr((string) (@$appData->qualification_name ?? ''), 0, 10)).'<o:p></o:p></span></p></td>				
 
 				</tr>';
 
@@ -7062,115 +6970,183 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $userEmail = auth()->user()->email ?? '';
             $userMobile = auth()->user()->mobile ?? (auth()->user()->phone ?? '');
 
-            $subject = str_replace(
-                ['[{CURRENTDATE}]', '[{JOB_TITLE}]', '[{CLIENT_NAME_COMPANY_NAME}]', '<br>'],
-                [date('d M Y'), @$job_title, $client_company_name, ''],
-                $templateData->template_subject ?? ''
-            );
-
-            $template_description = str_replace(
-                ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[HR_NAME]', '[{HR_EMAIL}]', '[{POSITION}]'],
-                [$companyName, $userMobile, $userName, $userName, $userEmail, $userDesignation],
-                $template_description
-            );
+            $context1 = [
+                'company_name' => $companyName,
+                'client_company_name' => $client_company_name ?? $companyName,
+                'client_name_company_name' => $client_company_name ?? $companyName,
+                'job_title' => @$job_title ?? '',
+                'current_date' => date('d M Y'),
+                'hr_phone' => $userMobile,
+                'hr_name' => $userName,
+                'hr_email' => $userEmail,
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context1);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context1);
+            $template_description = str_replace(['[{POSITION}]', '{{POSITION}}', '[POSITION]'], $userDesignation, $template_description);
         }
         if ((int) $request->mailtype == 2) {
-            // dd($company_name->company_name, auth()->user()->phone, auth()->user()->name, auth()->user()->email);
-            $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$company_name->company_name, ''], $templateData->template_subject);
-            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect To Wahtsapp</a>';
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]'], [$company_name->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink], $template_description);
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+            $context2 = [
+                'company_name' => $company_name->company_name ?? 'Our Company',
+                'hr_phone' => auth()->user()->mobile ?? (auth()->user()->phone ?? ''),
+                'hr_name' => auth()->user()->name ?? 'Recruiter',
+                'hr_email' => auth()->user()->email ?? '',
+                'what_link' => $whatlink,
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context2);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context2);
         }
         if ((int) $request->mailtype == 3) {
-
-            $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$company_name->company_name, ''], $templateData->template_subject);
+            $context3 = [
+                'company_name' => $company_name->company_name ?? 'Our Company',
+            ];
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $context3);
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $context3);
         }
         if ((int) $request->mailtype == 4) {
 
-            $email = '0';
-            if (! empty($request->from_email)) {
-                $from = $request->from_email;
-                $from = json_decode($from, true);
-                $from = array_column($from, 'value');
-                $from = implode(',', $from);
+            // Universal Safe Email Parser: handles Plain Email, Tagify JSON, and Array without throwing TypeError
+            $parseFirstEmail = function ($input) {
+                if (empty($input)) {
+                    return '';
+                }
+                if (is_array($input)) {
+                    if (isset($input[0]['value'])) {
+                        return trim($input[0]['value']);
+                    }
+                    if (isset($input['value'])) {
+                        return trim($input['value']);
+                    }
+                    if (isset($input[0]) && is_string($input[0])) {
+                        return trim($input[0]);
+                    }
+                }
+                if (is_string($input)) {
+                    $trimmed = trim($input);
+                    if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                        $decoded = json_decode($trimmed, true);
+                        if (is_array($decoded)) {
+                            if (isset($decoded[0]['value'])) {
+                                return trim($decoded[0]['value']);
+                            }
+                            if (isset($decoded['value'])) {
+                                return trim($decoded['value']);
+                            }
+                            if (isset($decoded[0]) && is_string($decoded[0])) {
+                                return trim($decoded[0]);
+                            }
+                        }
+                    }
+                    $parts = explode(',', $trimmed);
 
-                $email = explode(',', $from);
-                $email = $email[0];
+                    return trim($parts[0]);
+                }
+
+                return '';
+            };
+
+            $email = $parseFirstEmail($request->from_email) ?: (auth()->user()->email ?? 'notify@jeroworks.com');
+            $to_email = $parseFirstEmail($request->to_email) ?: 'candidate@jero.works';
+
+            $jobid = (int) ($request->jobID ?? ($request->jobid ?? 0));
+            $job_application_id = 0;
+            if (! empty($selectedApplicantListing) && is_array($selectedApplicantListing)) {
+                $job_application_id = (int) ($selectedApplicantListing[0] ?? 0);
+            } elseif (! empty($request->applicationDataId)) {
+                $job_application_id = (int) $request->applicationDataId;
             }
 
-            $to_email = '0';
-            if (! empty($request->to_email)) {
-                $to = $request->to_email;
-                $to = json_decode($to, true);
-                $to = array_column($to, 'value');
-                $to = implode(',', $to);
-
-                $to_email = explode(',', $to);
-                $to_email = $to_email[0];
-            }
-            $jobid = $request->jobID;
-            $job_application_id = $selectedApplicantListing[0];
-            $job_wise_condidates = DB::table('add_job_wise_condidates')->select('add_job_wise_condidates.id')->where('job_application_id', $job_application_id)->where('job_id', $jobid)->first();
-
-            $wise_condidateId = $job_wise_condidates->id;
-
-            $country_id = $country_name = '';
-
-            $client_loc = DB::table('client_location_jobs')
-                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-                ->where('client_location_jobs.job_id', $jobid)
-                ->first();
-            $address = @$client_loc->address;
-            // dd($address);
-            $client_loc = DB::table('client_city_jobs')
-                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city', 'countries.id as country_id', 'countries.country_name', 'city_list.city as city_name', 'state_list.state as state_name')
-                ->where('client_city_jobs.job_id', $jobid)
-                ->get();
-
-            // dd($client_loc);
-
-            // $country_id = @$client_loc->country_id;
-            $location = '';
-
-            if (count($client_loc) > 0) {
-                // $country_name = GeneralMethod::getCountryName($country_id);
-                foreach ($client_loc as $key => $cval) {
-                    $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
-                    // $country_name = ucwords($cval['sortname']);
+            $wise_condidateId = $job_application_id;
+            if ($job_application_id > 0 && $jobid > 0) {
+                $job_wise_condidates = DB::table('add_job_wise_condidates')
+                    ->select('id')
+                    ->where('job_application_id', $job_application_id)
+                    ->where('job_id', $jobid)
+                    ->first();
+                if ($job_wise_condidates && ! empty($job_wise_condidates->id)) {
+                    $wise_condidateId = $job_wise_condidates->id;
                 }
             }
-            // dd($location);
 
-            // $city = substr(@$client_loc->city, 0, 30);
-            // if (@$client_loc->country_id == 101) {
-            // 	$city = substr(@$client_loc->city_name, 0, 30);
-            // }
-            $jobs = Job::withoutGlobalScopes()->find($jobid);
+            $jobs = ($jobid > 0) ? Job::withoutGlobalScopes()->find($jobid) : null;
+            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id ?? null, $jobid);
 
-            $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
+            $country_id = $country_name = '';
+            $address = '';
+            $location = '';
+            $subjectLocation = '';
 
-            // //  dd($companyOrClientName);
+            if ($jobid > 0) {
+                $client_loc_addr = DB::table('client_location_jobs')
+                    ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
+                    ->where('client_location_jobs.job_id', $jobid)
+                    ->first();
+                $address = @$client_loc_addr->address ?: '';
 
-            //  $location = $city.' | '.$country_name;
+                $client_loc_cities = DB::table('client_city_jobs')
+                    ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->where('client_city_jobs.job_id', $jobid)
+                    ->get();
 
-            // dd($templateData->template_subject);
-            if ($templateData->tempForInterview == 1) {
-                $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->company, $jobs->title, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 2) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->client, $jobs->title, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 3) {
-                $subject = str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]', '[{JOB_LOCATION}]', '<br>'], [$companyOrClientName->client, $companyOrClientName->company, $location, ''], $templateData->template_subject);
-            } elseif ($templateData->tempForInterview == 4) {
-                //  Documents Required | [{COMPANY_NAME}]
-                $subject = str_replace(['[{COMPANY_NAME}]', '<br>'], [$companyOrClientName->company, ''], $templateData->template_subject);
+                if ($client_loc_cities->count() === 1) {
+                    $cval = $client_loc_cities->first();
+                    $location = $cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name;
+                    $subjectLocation = $location;
+                } elseif ($client_loc_cities->count() > 1) {
+                    foreach ($client_loc_cities as $key => $cval) {
+                        $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
+                    }
+                    $subjectLocation = $client_loc_cities->pluck('city_name')->implode(', ');
+                } elseif (! empty($client_loc_addr->city_name)) {
+                    $location = $client_loc_addr->city_name;
+                    $subjectLocation = $location;
+                }
             }
+
+            $compName = $companyOrClientName->company ?: (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName = $companyOrClientName->client ?: '';
+            $isSelf = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName);
+            $jobTitle = $jobs->title ?? 'Candidate Application';
+
+            // Tenancy / Intent: If position has no client (internal position for My Organization),
+            // templates configured in SuperAdmin as Client Positions Only (client_required == 1) cannot be used.
+            $isClientOnlyTemplate = ! empty($templateData->client_required) && (int) $templateData->client_required === 1;
+
+            if ($isSelf && $isClientOnlyTemplate) {
+                return Reply::error('This template is only available for client positions. For internal organization positions, please select a template applicable to your organization.');
+            }
+
+            $firstApp = ! empty($applicationData) ? (is_array($applicationData) ? ($applicationData[0] ?? null) : $applicationData->first()) : null;
+            $candName = ! empty($firstApp->full_name) ? ucwords(strtolower($firstApp->full_name)) : 'Candidate';
+            $candEmail = $firstApp->email ?? '';
+            $candPhone = $firstApp->phone ?? '';
+            $candSkills = $firstApp->skills ?? '';
+            $candNp = $firstApp->np_id ?? '';
+            $candCtc = $firstApp->ctc ?? '';
+            $candEctc = $firstApp->ectc ?? '';
+
+            // Fetch interview questions if attached to this job
+            $interview_ques = '';
+            if ($jobid > 0) {
+                $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $jobid)->get();
+                if ($interview_questions->count() > 0) {
+                    $interview_ques .= '<h3><strong>Job Interview Questions</strong></h3>';
+                    $interview_ques .= '<ol>';
+                    foreach ($interview_questions as $row) {
+                        $interview_ques .= '<li>'.$row->questions.'</li>';
+                    }
+                    $interview_ques .= '</ol><hr />';
+                }
+            }
+
             $dataMail = [
-                'status' => 1, // or whatever status you want
-                'created_at' => now(), // optional, if using timestamps manually
+                'status' => 1,
+                'created_at' => now(),
                 'updated_at' => now(),
             ];
 
@@ -7178,26 +7154,63 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $userId = auth()->user()->id;
             $companyId = auth()->user()->company_id;
+            $whatlink = '<a href="https://wa.me/'.auth()->user()->mobile.'" rel="noreferrer noopener" target="_blank" title="https://wa.me/'.auth()->user()->mobile.'">Connect on WhatsApp</a>';
+
+            $templateContext = [
+                'company_name' => $compName,
+                'client_name' => $cliName,
+                'self_company' => $isSelf ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
+                'job_title' => $jobTitle,
+                'job_location' => $location,
+                'work_location' => $location,
+                'candidate_name' => $candName,
+                'candidate_email' => $candEmail,
+                'candidate_phone' => $candPhone,
+                'primary_skills' => $candSkills,
+                'notice_period' => $candNp,
+                'current_ctc' => $candCtc,
+                'expected_ctc' => $candEctc,
+                'job_description' => $jobs->job_description ?? '',
+                'work_shift' => $jobs->work_shifts ?? '',
+                'hr_name' => auth()->user()->name,
+                'hr_email' => auth()->user()->email,
+                'hr_phone' => auth()->user()->mobile ?: (auth()->user()->phone ?? ''),
+                'what_link' => $whatlink,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'company_address' => $address,
+                'no_of_emp' => $companyOrClientName->company_size ?? '',
+                'interview_questions' => $interview_ques,
+                'current_date' => date('d M Y'),
+            ];
+
+            // Dedicated Subject context prevents HTML tags and list numbering from leaking into subject line
+            $templateSubjectContext = $templateContext;
+            $templateSubjectContext['job_location'] = $subjectLocation ?: $location;
+            $templateSubjectContext['work_location'] = $subjectLocation ?: $location;
+            $templateSubjectContext['location'] = $subjectLocation ?: $location;
+
+            $subject = GeneralMethod::replaceTemplateVariables($templateData->template_subject ?? '', $templateSubjectContext);
+
+            // GOD-Level Subject Sanitization
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext);
+
             $interested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(1).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
             $notInterested = url('/candidate-mail-response/'.encrypt($wise_condidateId)).'/'.encrypt(2).'/'.encrypt($email).'/'.encrypt($to_email).'/'.encrypt($subject).'/'.encrypt($userId).'/'.encrypt($companyId).'/'.encrypt($insertId);
-
-            $additional = '<div style="margin-top: 20px;">
-						<!-- Interested Button -->
-						<a href="'.$interested.'" 
-						style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; font-size: 14px;">
-							Interested
-						</a>
-
-						<!-- Not Interested Button -->
-						<a href="'.$notInterested.'" 
-						style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; font-size: 14px; margin-left: 10px;">
-							Not Interested
-						</a>
-					</div>';
-
-            //    $template_description = $additional.$template_description;
-
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{WHAT_LINK}]', '[{CLIENT_NAME}]', '[{JOB_TITLE}]', '[{JOB_LOCATION}]', '[{CLIENT_WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_WEBSITE}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{NO_OF_EMP}]', '[{CANDIDATE_NAME}]', '[{WORK_SHIFT}]', '[{COMPANY_ADDRESS}]'], [$companyOrClientName->company, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $whatlink, $companyOrClientName->client, $jobs->title, $location, $companyOrClientName->client_website, $jobs->job_description, $companyOrClientName->company_website, $companyOrClientName->company_description, $companyOrClientName->client_description, $companyOrClientName->company_size, ucwords(strtolower($applicationData[0]->full_name)), $jobs->work_shifts, $address], $template_description);
 
         }
         if ((int) $request->mailtype == 7) {
@@ -7238,10 +7251,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $Urlcopy = '<a href="'.$link.'" style="text-decoration:none;color: #009EF7">'.$link.'</a>';
 
-            // dd($offerId,$job_applications->full_name);
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy], $template_description);
-
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext7 = [
+                'company_name' => $companyDetails->company_name ?? 'Our Company',
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext7);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [@$Url, @$Urlcopy], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext7);
 
         }
         if ((int) $request->mailtype == 8) {
@@ -7299,9 +7318,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $JOB_TYPE = ($job_applications->employment_type == 1) ? 'Contract' : 'Full-time';
             // dd($offerId,$job_applications->full_name);
             $designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{CANDIDATE_ID}]', '[{JOB_ID}]', '[{START_DATE_TIME}]', '[{CURRENCY}]', '[{SALARY_AMOUNT}]', '[{SALARY_MODE}]', '[{JOB_TYPE}]', '[{MANAGER_NAME}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy, @$job_applications->id, @$job_applications->jobId, date('d M Y', strtotime(@$job_applications->joined_date)), $CURRENCY_SELCT, $SALARY_AMOUNT, $SALARY_MODE, $JOB_TYPE, @$users->contact_person_name], $template_description);
 
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext8 = [
+                'company_name' => $companyDetails->company_name ?? 'Our Company',
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+                'candidate_id' => @$job_applications->id,
+                'job_id' => @$job_applications->jobId,
+                'start_date_time' => date('d M Y', strtotime(@$job_applications->joined_date)),
+                'joining_date' => date('d M Y', strtotime(@$job_applications->joined_date)),
+                'currency' => $CURRENCY_SELCT,
+                'salary_amount' => $SALARY_AMOUNT,
+                'salary_mode' => $SALARY_MODE,
+                'job_type' => $JOB_TYPE,
+                'manager_name' => @$users->contact_person_name,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext8);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]'], [@$Url, @$Urlcopy], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext8);
 
         }
         if ((int) $request->mailtype == 9) {
@@ -7374,7 +7410,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $template_description = str_replace([], [], $template_description);
             // dd($job_applications);
-            $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id);
+            $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id ?? null, $job_applications->jobId ?? (int) @$request->jobID);
             $InterviewMode = '';
             $dateTime = '';
             $videoUrl = '';
@@ -7455,10 +7491,62 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $location = ucwords(@$addressName).' | '.ucwords(@$city).' | '.ucwords(@$country_name);
 
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{CANDIDATE_NAME}]', '[{JOB_TITLE}]', '[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{CANDIDATE_ID}]', '[{JOB_ID}]', '[{JOINING_DATE}]', '[{CURRENCY}]', '[{SALARY_AMOUNT}]', '[{SALARY_MODE}]', '[{JOB_TYPE}]', '[{MANAGER_NAME}]', '[{CLIENT_NAME}]', '[{INTERVIEW_MODE}]', '[{INTERVIEW_DATE_TIME}]', '[{WEBSITE}]', '[{JOB_DESCRIPTION}]', '[{COMPANY_DESCRIPTION}]', '[{CLIENT_DESCRIPTION}]', '[{INTERVIEW_LINK}]', '[{OTHER_DESCRIPTION}]', '[{WORK_LOCATION}]', '[{HR_NAME}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{INTERVIEW_QUESTIONS}]', '[{CLIENT_WEBSITE}]'], [$companyDetails->company_name, @$job_applications->full_name, @$designation, @$Url, @$Urlcopy, @$job_applications->id, @$job_applications->jobId, date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)), $CURRENCY_SELCT, $SALARY_AMOUNT, $SALARY_MODE, $JOB_TYPE, @$users->contact_person_name, $companyOrClientName->client, $InterviewMode, $dateTime, $companyOrClientName->company_website, $job->job_description, $companyOrClientName->company_description, $companyOrClientName->client_description, $videoUrl, $otherDetails, $location, auth()->user()->name, $videoUrlInter, $interview_level, $text_set, $interview_ques, $companyOrClientName->client_website], $template_description);
+            $compName9 = $companyDetails->company_name ?? (auth()->user()->company->company_name ?? 'Our Company');
+            $cliName9 = $companyOrClientName->client ?: '';
+            $isSelf9 = (! empty($companyOrClientName->selfCompany) && (int) $companyOrClientName->selfCompany === 1) || empty($cliName9);
 
-            $subject = str_replace(['[{COMPANY_NAME}]', '[{JOB_TITLE}]', '[{CANDIDATE_NAME}]', '<br>'], [$companyDetails->company_name, @$designation, @$job_applications->full_name, ''], $templateData->template_subject);
+            $templateContext9 = [
+                'company_name' => $compName9,
+                'client_name' => $cliName9,
+                'self_company' => $isSelf9 ? 1 : 0,
+                'position' => auth()->user()->designation ?? 'Recruitment Department',
+                'candidate_name' => @$job_applications->full_name,
+                'job_title' => @$designation,
+                'offer_letter_link' => @$Url,
+                'offer_letter_link_copy' => @$Urlcopy,
+                'candidate_id' => @$job_applications->id,
+                'job_id' => @$job_applications->jobId,
+                'joining_date' => date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)),
+                'start_date_time' => date('d M Y H:i: A', strtotime(@$job_applications->of_joined_date)),
+                'currency' => $CURRENCY_SELCT,
+                'salary_amount' => $SALARY_AMOUNT,
+                'salary_mode' => $SALARY_MODE,
+                'job_type' => $JOB_TYPE,
+                'manager_name' => @$users->contact_person_name,
+                'interview_mode' => $InterviewMode,
+                'interview_date_time' => $dateTime,
+                'company_website' => $companyOrClientName->company_website ?? '',
+                'client_website' => $companyOrClientName->client_website ?? '',
+                'company_description' => $companyOrClientName->company_description ?? '',
+                'client_description' => $companyOrClientName->client_description ?? '',
+                'interview_link' => $videoUrl,
+                'interview_link_url' => $videoUrlInter,
+                'other_description' => $otherDetails,
+                'work_location' => $location,
+                'job_location' => $location,
+                'job_description' => $job->job_description ?? '',
+                'hr_name' => auth()->user()->name,
+                'interview_level' => $interview_level,
+                'text_set' => $text_set,
+                'interview_questions' => $interview_ques,
+            ];
+            $template_description = GeneralMethod::replaceTemplateVariables($template_description, $templateContext9);
+            $template_description = str_replace(['[{OFFER_LETTER_LINK}]', '[{OFFER_LETTER_LINK_COPY}]', '[{INTERVIEW_LINK_URL}]', '[{INTERVIEW_LEVEL}]', '[{TEXT_SET}]', '[{OTHER_DESCRIPTION}]'], [@$Url, @$Urlcopy, $videoUrlInter, $interview_level, $text_set, $otherDetails], $template_description);
+            $subject = GeneralMethod::replaceTemplateVariables(str_replace('<br>', '', $templateData->template_subject ?? ''), $templateContext9);
 
+        }
+
+        if (! empty($subject)) {
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
         }
 
         return Reply::dataOnly([
@@ -7482,6 +7570,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $cc = $request->cc_email;
 
         $subject = $request->subject;
+        if (! empty($subject)) {
+            $subject = str_replace(["\xc2\xa0", '&nbsp;', '&amp;'], [' ', ' ', '&'], $subject);
+            $subject = preg_replace('/<br\s*\/?>/i', ' ', $subject);
+            $subject = strip_tags($subject);
+            $subject = html_entity_decode($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $subject = str_replace(["\xc2\xa0", "\u{00a0}"], ' ', $subject);
+            $subject = preg_replace('/\|\s*1\)\s*/u', '| ', $subject);
+            $subject = preg_replace('/^\s*1\)\s*/u', '', $subject);
+            $subject = preg_replace('/\s+/u', ' ', $subject);
+            $subject = preg_replace('/\|\s*\|+/u', '|', $subject);
+            $subject = trim($subject, " \t\n\r\0\x0B|\xc2\xa0");
+        }
         $attached_cv = $request->attached_cv;
         $message = $request->editor1;
         $arr = $request->arr;
@@ -7763,6 +7863,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'error', 'message' => 'No valid candidate recipient email provided.']);
         }
 
+        // Strict deliverability cap & format validation (max 5 recipients combined: candidate To + CCs)
+        $totalRecipients = count($mailto) + count($cc);
+        if ($totalRecipients > 5) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient limit exceeded. To maintain high deliverability, a maximum of 5 recipients (To & CC combined) can be included.',
+            ]);
+        }
+        foreach (array_merge($mailto, $cc) as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid email address format: {$email}"]);
+            }
+        }
+
         $attachments = [];
         if ($attached_cv == 1 && ! empty($arr)) {
             $resumeRowCount = DB::table('documents')->select('*')->whereIn('documents.documentable_id', $arr)->count();
@@ -7780,14 +7894,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $company_id = (int) auth()->user()->company_id;
         $company_name = DB::table('companies')->select('companies.company_name')->where('id', '=', $company_id)->first();
 
-        /* Intent: Idempotency lock & deduplication guard to prevent duplicate emails, coin deductions, and queue dispatches from concurrent or repeated requests */
+        /* Intent: Idempotency lock & deduplication guard supporting client-generated UUID keys */
         /* Tenancy: Scoped by company_id, application_id, job_id, recipient, and subject */
         $appId = ! empty($applicationDataId) ? (int) $applicationDataId : (! empty($arr) && is_array($arr) ? (int) $arr[0] : 0);
         $jobIdVal = ! empty($jobid) ? (int) $jobid : 0;
+        $clientKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
         $toHash = md5(implode(',', $mailto));
         $subjectHash = md5(trim((string) $subject));
-        $idempotencyKey = "send_candidate_mail_lock:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
-        $recentSendKey = "send_candidate_mail_recent:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+        $idempotencyKey = $clientKey ? "send_candidate_mail_lock:{$company_id}:{$clientKey}" : "send_candidate_mail_lock:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+        $recentSendKey = $clientKey ? "send_candidate_mail_recent:{$company_id}:{$clientKey}" : "send_candidate_mail_recent:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
 
         if (Cache::has($recentSendKey)) {
             \Log::info('Idempotency guard: skipped recent duplicate candidate email request', [
@@ -7828,11 +7943,29 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         if (count($mailto) > 0) {
+            $jobRecord = ($jobIdVal > 0) ? Job::withoutGlobalScopes()->find($jobIdVal) : null;
+            $consultantName = auth()->user()->name ?: ($company_name->company_name ?? 'Hiring Team');
+            $tenantCompanyName = $company_name->company_name ?? auth()->user()->company->company_name ?? 'Company';
+
+            // Server-side dual-stage HTML sanitization: allow standard rich text tags, strip scripts/iframes/event handlers
+            $cleanMessage = strip_tags((string) $message, '<p><br><hr><strong><b><em><i><u><ul><ol><li><a><table><thead><tbody><tfoot><tr><td><th><caption><colgroup><col><span><div><h1><h2><h3><h4><h5><h6>');
+            $cleanMessage = preg_replace('/<([a-z][a-z0-9]*)[^>]*?(\bon\w+\s*=[^>]*?)(>|$)/i', '<$1$3', $cleanMessage);
+            $cleanMessage = preg_replace('/href\s*=\s*["\']\s*javascript:[^"\']*["\']/i', 'href="#"', $cleanMessage);
+
             foreach ($mailto as $email) {
                 $eventId = 7;
-                $condi = JobApplication::where('job_applications.email', '=', $email)->first();
+                $condi = ($appId > 0) ? JobApplication::find($appId) : JobApplication::where('email', $email)->first();
                 $name = ($condi) ? $condi->full_name : '';
-                $data = ['message' => $message, 'subject' => $subject, 'company_name' => $company_name->company_name ?? '', 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'condidate_name' => $name];
+                $position = $jobRecord->title ?? ($condi->current_designation ?? 'Candidate Application');
+
+                $data = [
+                    'message' => $cleanMessage,
+                    'subject' => $subject,
+                    'company_name' => $tenantCompanyName,
+                    'consultant_name' => $consultantName,
+                    'position' => $position,
+                    'condidate_name' => $name,
+                ];
 
                 $validMail = true;
 

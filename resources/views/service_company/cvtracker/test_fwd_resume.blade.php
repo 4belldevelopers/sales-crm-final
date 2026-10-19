@@ -6,55 +6,100 @@
 
 @include('service_company.cvtracker._forward_resume_engine') 
 
-<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('assets/modules/fwd-resume/quill/quill.snow.css') }}">
+<script src="{{ asset('assets/modules/fwd-resume/quill/quill.min.js') }}"></script>
 <script>
-if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
-    CKEDITOR.tools.enableHtml5Elements(document);
-}
+window.testFwdQuill = null;
 
-function initTestFwdCkEditor() {
-    if (typeof CKEDITOR === 'undefined') {
-        setTimeout(initTestFwdCkEditor, 100);
+window.getTestFwdEditorHtml = function() {
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        var html = window.testFwdQuill.root.innerHTML || '';
+        return (html === '<p><br></p>') ? '' : html;
+    }
+    return $('#test_editor1').val() || '';
+};
+
+window.setTestFwdEditorHtml = function(html, callback) {
+    var cleanHtml = (html === null || html === undefined) ? '' : String(html);
+    $('#test_editor1').val(cleanHtml);
+
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        window.testFwdQuill.root.innerHTML = cleanHtml;
+        if (callback) callback();
         return;
     }
-    var editorElement = document.getElementById('test_editor1');
-    if (!editorElement) {
-        setTimeout(initTestFwdCkEditor, 100);
+    if (callback) callback();
+};
+
+window.insertTestFwdEditorHtml = function(html) {
+    if (!html) return;
+    if (window.testFwdQuill && window.testFwdQuill.root) {
+        var range = window.testFwdQuill.getSelection(true);
+        var idx = range ? range.index : window.testFwdQuill.getLength();
+        window.testFwdQuill.clipboard.dangerouslyPasteHTML(idx, html);
+        $('#test_editor1').val(window.getTestFwdEditorHtml());
         return;
     }
-    if (CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try {
-            CKEDITOR.instances['test_editor1'].destroy(true);
-        } catch(destroyErr) {}
+    var current = $('#test_editor1').val() || '';
+    $('#test_editor1').val(current ? (current + '<br>' + html) : html);
+};
+
+function initTestFwdEditor() {
+    var quillContainer = document.getElementById('test_editor_quill');
+    if (!quillContainer) return;
+
+    if (window.testFwdQuill && window.testFwdQuill.root && quillContainer.contains(window.testFwdQuill.root)) {
+        return;
     }
+
+    if (typeof Quill === 'undefined') {
+        setTimeout(initTestFwdEditor, 50);
+        return;
+    }
+
     try {
-        CKEDITOR.config.height = 300;
-        CKEDITOR.config.width = '100%';
-        CKEDITOR.replace('test_editor1', {
-            height: 300,
-            width: '100%',
-            on: {
-                instanceReady: function() {
-                    if (window.syncFirstRecipientSalutation) {
-                        window.syncFirstRecipientSalutation();
-                    }
-                }
+        var existingContent = $('#test_editor1').val() || '';
+        quillContainer.innerHTML = '';
+        window.testFwdQuill = new Quill('#test_editor_quill', {
+            theme: 'snow',
+            placeholder: 'Compose executive email presentation...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'clean']
+                ]
             }
         });
+
+        if (existingContent) {
+            window.testFwdQuill.root.innerHTML = existingContent;
+        }
+
+        window.testFwdQuill.on('text-change', function () {
+            var html = window.getTestFwdEditorHtml();
+            $('#test_editor1').val(html);
+        });
+
+        if (window.syncFirstRecipientSalutation) {
+            window.syncFirstRecipientSalutation();
+        }
     } catch(err) {
-        console.warn('CKEditor test init error:', err);
+        console.warn('[ForwardResume] Blade Quill init warning:', err);
     }
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initTestFwdCkEditor, 50);
+    setTimeout(initTestFwdEditor, 30);
 } else {
-    document.addEventListener('DOMContentLoaded', initTestFwdCkEditor);
+    document.addEventListener('DOMContentLoaded', initTestFwdEditor);
 }
 $(document).ready(function() {
-    setTimeout(initTestFwdCkEditor, 100);
+    setTimeout(initTestFwdEditor, 50);
 });
-setTimeout(initTestFwdCkEditor, 250);
 </script>
 
 <div class="main_container" id="test_main_container">
@@ -218,7 +263,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   border: 1px solid #CBD5E1;
   border-radius: 8px;
   box-shadow: 0 16px 36px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
-  max-height: min(850px, calc(100vh - 180px));
+  max-height: min(440px, calc(100vh - 220px));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 8px;
@@ -368,6 +413,33 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
 .mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+.mm-editor-wrap .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background: #F8FAFC;
+  padding: 8px 12px;
+  font-family: 'Poppins', sans-serif;
+}
+.mm-editor-wrap .ql-container.ql-snow {
+  border: none !important;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: #1E293B;
+  min-height: 220px;
+}
+.mm-editor-wrap .ql-editor {
+  min-height: 220px;
+  max-height: 480px;
+  overflow-y: auto;
+  line-height: 1.6;
+  padding: 12px 14px;
+}
+.mm-editor-wrap .ql-editor.ql-blank::before {
+  color: #94A3B8;
+  font-style: normal;
+  left: 14px;
+  right: 14px;
+}
 #test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
@@ -557,6 +629,30 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 }
 
 /* Recipient Drawer Styles */
+#kt_test_recipient_drawer {
+  width: 490px;
+  max-width: 100vw;
+  height: 100vh;
+  background: #FFFFFF !important;
+  font-family: 'Poppins', sans-serif;
+  z-index: 1000060 !important;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  display: none;
+}
+@media (max-width: 576px) {
+  #kt_test_recipient_drawer { width: 100vw !important; }
+}
+.test-rcp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1000055 !important;
+  cursor: pointer;
+  display: none;
+}
 .rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
 .rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
 .rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
@@ -670,7 +766,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
           <div class="mm-tag-list" id="test_to_email_tags"></div>
           <input type="text" class="mm-tag-input" id="test_to_email_input" placeholder="Type recipient email and press Enter...">
-          <a href="javascript:;" class="mm-add-email-btn test_to_email_panel">+ Add Email</a>
+          <a href="javascript:;" class="mm-add-email-btn test_to_email_panel" onclick="openTestEmailRecipientDrawer('to'); return false;">+ Add Email</a>
         </div>
         <input type="hidden" name="to_email" id="test_to_email" value="">
         <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
@@ -692,7 +788,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
           <div class="mm-tag-list" id="test_cc_email_tags"></div>
           <input type="text" class="mm-tag-input" id="test_cc_email_input" placeholder="Type CC email and press Enter...">
-          <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel">+ Add Email</a>
+          <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel" onclick="openTestEmailRecipientDrawer('cc'); return false;">+ Add Email</a>
         </div>
         <input type="hidden" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}">
         <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
@@ -1185,7 +1281,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           </button>
         </div>
         <div class="mm-editor-wrap">
-          <textarea id="test_editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
+          <div id="test_editor_quill" style="min-height:220px;"></div>
+          <textarea id="test_editor1" name="editor1" rows="10" style="display:none;">{{ @$template_body }}</textarea>
         </div>
       </div>
     </div>
@@ -1195,13 +1292,19 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 </div>
 
 {{-- Enterprise Add Email Recipient Drawer --}}
-<div id="kt_test_recipient_drawer_toggle" style="display:none;"></div>
-<div id="kt_test_recipient_drawer" class="bg-white shadow" data-kt-drawer="true" data-kt-drawer-name="recipient-drawer-test" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '490px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_test_recipient_drawer_toggle" data-kt-drawer-close="#kt_test_recipient_drawer_close">
+<div class="test-rcp-overlay" id="kt_test_recipient_drawer_overlay" onclick="closeTestEmailRecipientDrawer()"></div>
+<div id="kt_test_recipient_drawer" class="bg-white shadow">
   <div class="rcp-container">
     <div class="rcp-header">
       <div class="rcp-header-left">
         <h3 class="rcp-header-title">Add Email Recipient</h3>
-        <p class="rcp-header-subtitle">Choose a contact from your internal team or client company.</p>
+        <p class="rcp-header-subtitle">
+          @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
+            Choose a contact from your organization or client company.
+          @else
+            Choose a contact from your organization.
+          @endif
+        </p>
       </div>
       <button type="button" class="rcp-close-btn" id="kt_test_recipient_drawer_close" onclick="closeTestEmailRecipientDrawer()" title="Close drawer">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1211,25 +1314,27 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </button>
     </div>
 
-    <div class="rcp-tabs-wrap">
+    <div class="rcp-tabs-wrap" id="test_rcp_tabs_wrap">
       <div class="rcp-tab-card active" id="test_rcp_tab_internal" data-tab="internal">
         <div class="rcp-tab-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         </div>
         <div class="rcp-tab-info">
-          <div class="rcp-tab-title">Internal Team</div>
+          <div class="rcp-tab-title">My Organization</div>
           <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} active</div>
         </div>
       </div>
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
       <div class="rcp-tab-card" id="test_rcp_tab_client" data-tab="client">
         <div class="rcp-tab-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
         </div>
         <div class="rcp-tab-info">
           <div class="rcp-tab-title">Client Contacts</div>
-          <div class="rcp-tab-sub">{{ count($client_contacts_data ?? []) }} available</div>
+          <div class="rcp-tab-sub">{{ count($client_contacts_data) }} available</div>
         </div>
       </div>
+      @endif
     </div>
 
     <div class="rcp-search-wrap">
@@ -1270,16 +1375,33 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No active internal team members found.</div>
         @endif
       </div>
+      @if(!empty($client_contacts_data) && count($client_contacts_data) > 0)
       <div id="test_rcp_section_client" style="display:none;">
-        @if(!empty($client_contacts_data))
           @foreach($client_contacts_data as $ccUser)
-            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? '') }}">
+            @php
+              $roleTag = $ccUser->role_tag ?? '';
+              $badgeBg = '#DCFCE7';
+              $badgeColor = '#15803D';
+              if ($roleTag === 'Hiring Manager') {
+                  $badgeBg = '#EEF2FF';
+                  $badgeColor = '#4F46E5';
+              } elseif (str_contains($roleTag, 'Agency Added By')) {
+                  $badgeBg = '#FEF3C7';
+                  $badgeColor = '#D97706';
+              }
+            @endphp
+            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? ($ccUser->company_name ?? '')) }}">
               <div style="display:flex;align-items:center;min-width:0;flex:1;">
                 <div class="rcp-avatar" style="background:#DCFCE7;color:#15803D;">{{ strtoupper(substr($ccUser->name ?? 'C', 0, 1)) }}</div>
                 <div class="rcp-info">
-                  <div class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</span>
+                    @if(!empty($roleTag))
+                      <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:{{ $badgeBg }};color:{{ $badgeColor }};font-weight:600;">{{ $roleTag }}</span>
+                    @endif
+                  </div>
                   <div class="rcp-email">{{ $ccUser->email }}</div>
-                  <div class="rcp-role">{{ $ccUser->company_name ?? 'Client' }}</div>
+                  <div class="rcp-role">{{ $ccUser->display_name ?: ($ccUser->company_name ?? 'Client') }}</div>
                 </div>
               </div>
               <button type="button" class="rcp-toggle-btn test-rcp-toggle-btn" data-email="{{ $ccUser->email }}">
@@ -1288,8 +1410,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
               </button>
             </div>
           @endforeach
-        @endif
       </div>
+      @endif
     </div>
 
     <div class="rcp-footer">
@@ -1416,28 +1538,34 @@ $(document).off('click.fwdFormatDismiss').on('click.fwdFormatDismiss', function(
 });
 
 window.closeTestFwdResumeDrawer = function() {
+    if (typeof window.closeCandidateForwardResume === 'function') {
+        window.closeCandidateForwardResume();
+        return;
+    }
     _testFwdGlobalToken++;
     _testFwdIsCompiling = false;
     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
         try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
     }
-    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.hide(); }
+    var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
+    drawerIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('drawer-on');
+            el.style.removeProperty('transform');
+            el.style.removeProperty('display');
+            if (typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(el);
+                if (drawer) {
+                    drawer.shown = false;
+                }
+            }
+        }
+    });
+    $('.fwd-resume-overlay').remove();
+    if (typeof closeTestEmailRecipientDrawer === 'function') {
+        closeTestEmailRecipientDrawer();
     }
-    var drawerAptkEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
-    if (drawerAptkEl && typeof KTDrawer !== 'undefined') {
-        var drawerAptk = KTDrawer.getInstance(drawerAptkEl);
-        if (drawerAptk) { drawerAptk.hide(); }
-    }
-    var drawerClientAppEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-    if (drawerClientAppEl && typeof KTDrawer !== 'undefined') {
-        var drawerClientApp = KTDrawer.getInstance(drawerClientAppEl);
-        if (drawerClientApp) { drawerClientApp.hide(); }
-    }
-    closeTestEmailRecipientDrawer();
-    $('#application_test_fwd_resume_body_content').html('');
 };
 
 function formatBytes(bytes) {
@@ -1894,23 +2022,7 @@ window.insertTestMatrixTableIntoEditor = function() {
         if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
         return;
     }
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        var inst = CKEDITOR.instances['test_editor1'];
-        try {
-            inst.insertHtml(tableHtml);
-            $('#test_editor1').val(inst.getData());
-            if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
-            return;
-        } catch(e) {
-            console.warn('CKEditor insertHtml notice:', e);
-        }
-    }
-    var currentVal = $('#test_editor1').val() || '';
-    var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
-    $('#test_editor1').val(updatedVal);
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
-    }
+    window.insertTestFwdEditorHtml(tableHtml);
     if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
 };
 
@@ -1929,14 +2041,9 @@ window.onTestTemplateChange = function(selectEl) {
         $('#test_subject').val(subj);
 
         var execBody = window.buildTestExecutivePresentation ? window.buildTestExecutivePresentation() : '';
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            try {
-                CKEDITOR.instances['test_editor1'].setData(execBody, function() {
-                    if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
-                });
-            } catch(e) {}
-        }
-        $('#test_editor1').val(execBody);
+        window.setTestFwdEditorHtml(execBody, function() {
+            if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+        });
         return;
     }
 
@@ -1983,14 +2090,9 @@ window.onTestTemplateChange = function(selectEl) {
                         .replace(/\[MATRIX_TABLE\]/gi, matrixTableHtml);
 
                     $('#test_subject').val(response.subject || '');
-                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                        try {
-                            CKEDITOR.instances['test_editor1'].setData(desc, function() {
-                                if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
-                            });
-                        } catch(e) {}
-                    }
-                    $('#test_editor1').val(desc);
+                    window.setTestFwdEditorHtml(desc, function() {
+                        if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+                    });
                     setTimeout(function() {
                         if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
                     }, 100);
@@ -2003,10 +2105,7 @@ window.onTestTemplateChange = function(selectEl) {
             }
         });
     } else {
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            try { CKEDITOR.instances['test_editor1'].setData(''); } catch(e) {}
-        }
-        $('#test_editor1').val('');
+        window.setTestFwdEditorHtml('');
         $('#test_subject').val('');
     }
 };
@@ -2127,7 +2226,7 @@ window.onTestFwdSubmitClick = async function (e) {
     $('#test_subject').css('border-color', '#E5E7EB');
 
     // Validate Email Body (Mandatory)
-    var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) ? CKEDITOR.instances.test_editor1.getData() : ($('#test_editor1').val() || '');
+    var editor1 = window.getTestFwdEditorHtml();
     var textOnly = $('<div>').html(editor1).text().trim().replace(/[\s\u00A0]+/g, '');
     if (!textOnly && editor1.indexOf('<img') === -1) {
         Swal.fire({
@@ -2360,7 +2459,12 @@ window.onTestFwdSubmitClick = async function (e) {
             if (response.status === 'success') {
                 window._testFwdCompiledAttachments = {};
                 window._testFwdR2UploadedUuids = [];
-                if (typeof window.closeTestFwdResumeDrawer === 'function') {
+                if (window.CandidateForwardResumeRamStore && typeof window.CandidateForwardResumeRamStore.clear === 'function') {
+                    window.CandidateForwardResumeRamStore.clear();
+                }
+                if (typeof window.closeCandidateForwardResume === 'function') {
+                    try { window.closeCandidateForwardResume(); } catch(e) {}
+                } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
                     try { window.closeTestFwdResumeDrawer(); } catch(e) {}
                 }
                 if (typeof window.resetCvTrackerSelection === 'function') {
@@ -2430,15 +2534,12 @@ window.syncFirstRecipientSalutation = function() {
     var toList = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to : [];
 
     if (!toList || toList.length === 0) {
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-            var editor = CKEDITOR.instances['test_editor1'];
-            var data = editor.getData() || '';
-            var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
-            if (quotedGreeting.test(data)) {
-                editor.setData(data.replace(quotedGreeting, function(m, p1, p2) {
-                    return p1 + 'Client' + p2;
-                }));
-            }
+        var data = window.getTestFwdEditorHtml();
+        var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
+        if (quotedGreeting.test(data)) {
+            window.setTestFwdEditorHtml(data.replace(quotedGreeting, function(m, p1, p2) {
+                return p1 + 'Client' + p2;
+            }));
         }
         return;
     }
@@ -2449,40 +2550,26 @@ window.syncFirstRecipientSalutation = function() {
     var personName = window._testRecipientNameMap[firstEmail];
     if (!personName) return;
 
-    // Format requested by user: Dear "Shobha"
-    var targetGreeting = 'Dear "' + personName + '",';
+    // Format requested by user: Dear Shobha,
+    var cleanName = String(personName || '').replace(/&quot;|&#039;|["']/g, '').trim();
+    var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-        var editor = CKEDITOR.instances['test_editor1'];
-        var data = editor.getData() || '';
+    var data = window.getTestFwdEditorHtml();
+    var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
 
-        var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
-
-        if (greetingPattern.test(data)) {
-            var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
-                var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
-                var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
-                return pOpen + targetGreeting + pClose;
-            });
-            if (updated !== data) {
-                editor.setData(updated);
-            }
-        } else if (data.trim() !== '') {
-            editor.setData('<p>' + targetGreeting + '</p>' + data);
-        } else {
-            editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
+    if (greetingPattern.test(data)) {
+        var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
+            var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
+            var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
+            return pOpen + targetGreeting + pClose;
+        });
+        if (updated !== data) {
+            window.setTestFwdEditorHtml(updated);
         }
+    } else if (data.trim() !== '') {
+        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p>' + data);
     } else {
-        var $ta = $('#test_editor1');
-        var val = $ta.val() || '';
-        var rawPattern = /(^(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Client|[A-Za-z0-9\s.'-]+?)([,:]?)/im;
-        if (rawPattern.test(val)) {
-            $ta.val(val.replace(rawPattern, targetGreeting));
-        } else if (val.trim()) {
-            $ta.val(targetGreeting + '\n\n' + val);
-        } else {
-            $ta.val(targetGreeting + '\n\n');
-        }
+        window.setTestFwdEditorHtml('<p>' + targetGreeting + '</p><p><br></p>');
     }
 };
 
@@ -2693,29 +2780,24 @@ window.openTestEmailRecipientDrawer = function(target) {
     $('#test_rcp_search_input').val('');
     applyTestRcpSearch();
 
-    var drawerEl = document.getElementById('kt_test_recipient_drawer');
-    if (drawerEl) {
-        if (drawerEl.parentElement !== document.body) {
-            $('body > #kt_test_recipient_drawer').not(drawerEl).remove();
-            document.body.appendChild(drawerEl);
-        }
-        if (typeof KTDrawer !== 'undefined') {
-            var drawer = KTDrawer.getInstance(drawerEl);
-            if (!drawer) {
-                KTDrawer.createInstances();
-                drawer = KTDrawer.getInstance(drawerEl);
-            }
-            if (drawer) { drawer.show(); }
-        }
+    // Automatically switch to client contacts for 'to' field (if eligible client contacts exist) and internal team for 'cc' field
+    var hasClientTab = $('#test_rcp_tab_client').length > 0 && $('#test_rcp_tab_client').is(':visible');
+    if (_testCurrentRcpTarget === 'to' && hasClientTab) {
+        $('#test_rcp_tab_client').trigger('click');
+    } else {
+        $('#test_rcp_tab_internal').trigger('click');
     }
+
+    // Clean up any stale orphaned recipient drawers appended to body by legacy scripts
+    $('body > #kt_test_recipient_drawer').not('#application_test_fwd_resume_body_content #kt_test_recipient_drawer').remove();
+
+    $('#kt_test_recipient_drawer_overlay').css('display', 'block');
+    $('#kt_test_recipient_drawer').css('display', 'block');
 };
 
 window.closeTestEmailRecipientDrawer = function() {
-    var drawerEl = document.getElementById('kt_test_recipient_drawer');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.hide(); }
-    }
+    $('#kt_test_recipient_drawer').css('display', 'none');
+    $('#kt_test_recipient_drawer_overlay').css('display', 'none');
 };
 
 $(document).off('click', '.test_to_email_panel').on('click', '.test_to_email_panel', function(e) {

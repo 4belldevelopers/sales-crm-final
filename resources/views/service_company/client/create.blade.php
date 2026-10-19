@@ -270,21 +270,31 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-info-step .client-main-column > .client-section-card > .card-body {
     flex: 1 1 auto !important;
   }
-  .client-info-step .client-branding-grid {
-    display: grid !important;
-    grid-template-columns: 180px 140px minmax(0, 1fr) !important;
-    gap: 16px !important;
-    align-items: stretch !important;
+  .client-info-step .client-identity-logo-row {
+    transition: all 0.2s ease;
   }
-  .client-info-step .client-logo-upload,
   .client-info-step .client-logo-preview {
-    height: 100% !important;
-    min-height: 152px !important;
+    height: auto !important;
+    min-height: auto !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
+  }
+  .client-info-step .client-logo-preview .image-input-outline {
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .client-info-step .client-logo-preview .image-input-outline:hover {
+    border-color: #2563eb !important;
+    background-color: #eff6ff !important;
+  }
+  .client-suggestion-status {
+    color: #10b981 !important;
+    transition: color 0.2s ease;
+  }
+  .client-suggestion-status.is-missing {
+    color: #cbd5e1 !important;
   }
   .client-info-step .client-side-column > .client-helper-card {
     min-height: 0 !important;
@@ -1411,89 +1421,72 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     margin-top: 0 !important;
   }
 
-  .client-header-grid {
-    display: grid !important;
-    grid-template-columns: 200px 1fr 240px !important;
-    align-items: center !important;
+  /* =========================================================================
+     TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR CSS (Pixel-matched to reference)
+     ========================================================================= */
+  .client-top-nav-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    padding: 8px 16px !important;
+    margin-bottom: 16px !important;
+    box-sizing: border-box !important;
     width: 100% !important;
-    height: 100% !important;
-    gap: 12px !important;
+  }
+
+  .client-header-grid {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
     box-sizing: border-box !important;
   }
 
   .client-header-identity {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .client-header-back-btn {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    border-radius: 50% !important;
-    border: 1.5px solid #fde047 !important;
-    background: #ffffff !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-    cursor: pointer !important;
-    color: #0a1647 !important;
-    flex-shrink: 0 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-    transition: all 0.15s ease !important;
-  }
-  .client-header-back-btn:hover {
-    background: #fef08a !important;
-    border-color: #ffd428 !important;
-    color: #0a1647 !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
+    max-width: 240px !important;
   }
 
   .client-header-titles {
     min-width: 0 !important;
     flex: 1 1 auto !important;
-    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
   }
 
   .client-header-title {
-    font-size: 17px !important;
-    font-weight: 800 !important;
-    color: #0a1647 !important;
-    margin: 0 0 2px 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #101A46 !important;
+    margin: 0 0 1px 0 !important;
     line-height: 1.2 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
   }
 
   .client-header-subtitle {
-    font-size: 11px !important;
-    color: #5b6b8b !important;
+    font-size: 10px !important;
+    color: #5C6F9F !important;
     margin: 0 !important;
     line-height: 1.25 !important;
-    font-weight: 500 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    font-weight: 400 !important;
+    max-width: 200px !important;
+    white-space: normal !important;
   }
 
   .client-header-stepper-col {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .client-stepper-wrap {
@@ -1501,7 +1494,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
   }
 
   .client-step-item {
@@ -1515,15 +1509,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
 
   .client-step-circle {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 13px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1534,75 +1528,71 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     background: #10b981 !important;
     color: #ffffff !important;
     border: none !important;
-    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25) !important;
   }
 
   .client-step-circle.is-active {
     background: #ffd428 !important;
-    color: #0a1647 !important;
+    color: #101A46 !important;
     border: none !important;
-    font-weight: 800 !important;
-    box-shadow: 0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428 !important;
   }
 
   .client-step-circle.is-upcoming {
-    background: #ffffff !important;
-    color: #0a1647 !important;
-    border: 1.5px solid #fde047 !important;
-    box-shadow: none !important;
-  }
-
-  .client-step-text {
-    display: block !important;
-    line-height: 1.15 !important;
-    flex-shrink: 0 !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
+    border: 1.5px solid #cbd5e1 !important;
+    font-weight: 600 !important;
   }
 
   .client-step-name {
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    color: #0a1647 !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
+    transition: color 0.15s ease !important;
   }
 
-  .client-step-sub {
-    font-size: 9.5px !important;
-    color: #5b6b8b !important;
-    line-height: 1.1 !important;
-    white-space: nowrap !important;
+  .client-step-item.is-active .client-step-name {
+    font-weight: 700 !important;
+    color: #101A46 !important;
+  }
+
+  .client-step-item:hover .client-step-name {
+    color: #101A46 !important;
   }
 
   .client-step-line {
-    width: 20px !important;
-    height: 2px !important;
-    min-width: 12px !important;
-    background: #ffd428 !important;
-    margin: 0 6px !important;
+    width: 14px !important;
+    height: 1.5px !important;
+    min-width: 8px !important;
+    background: #e2e8f0 !important;
+    margin: 0 5px !important;
     flex-shrink: 0 !important;
+    border-radius: 1px !important;
   }
 
   .client-header-actions {
-    width: 240px !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 8px !important;
-    flex-shrink: 0 !important;
+    flex: 0 0 auto !important;
   }
 
-  .client-top-secondary-btn {
-    background: #ffffff !important;
+  .client-top-close-btn,
+  .client-top-back-btn {
+    background: #f8fafc !important;
     border: 1.5px solid #cbd5e1 !important;
-    color: #0a1647 !important;
-    font-weight: 700 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 16px !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    height: 36px !important;
+    padding: 0 14px !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1610,190 +1600,232 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
-    line-height: 1 !important;
     flex-shrink: 0 !important;
     text-decoration: none !important;
   }
-  .client-top-secondary-btn:hover {
-    background: #f8fafc !important;
+  .client-top-close-btn:hover,
+  .client-top-back-btn:hover {
+    background: #f1f5f9 !important;
     border-color: #94a3b8 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
   }
 
-  .client-top-next-btn {
-    background: #ffd428 !important;
-    border: none !important;
-    color: #0a1647 !important;
-    font-weight: 800 !important;
-    font-size: 13px !important;
-    height: 38px !important;
+  .client-top-next-btn,
+  .client-top-submit-btn {
+    background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+    border: 1px solid #d4a017 !important;
+    color: #10143b !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    height: 36px !important;
     padding: 0 18px !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
+    box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
     flex-shrink: 0 !important;
   }
-  .client-top-next-btn:hover {
-    background: #f5c400 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
-  }
-
-  .client-top-submit-btn {
-    background: #ffd428 !important;
-    border: none !important;
-    color: #0a1647 !important;
-    font-weight: 800 !important;
-    font-size: 13px !important;
-    height: 38px !important;
-    padding: 0 18px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(255, 212, 40, 0.4) !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.15s ease !important;
-    flex-shrink: 0 !important;
-  }
+  .client-top-next-btn:hover,
   .client-top-submit-btn:hover {
     background: #f5c400 !important;
-    color: #0a1647 !important;
-    box-shadow: 0 2px 6px rgba(255, 212, 40, 0.5) !important;
+    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.4) !important;
+    transform: translateY(-1px);
   }
 
-  /* Wizard Navigation Button Visibility in Header Actions */
-  /* Step 1: Show Close, Hide Back */
-  #client_top_close_btn {
-    display: inline-flex !important;
-  }
-  #client_top_back_btn {
-    display: none !important;
-  }
-
-  /* Steps 2-5: Show Back, Hide Close */
-  body.on-step-2 #client_top_close_btn,
-  body.on-step-3 #client_top_close_btn,
-  body.on-step-4 #client_top_close_btn,
-  body.on-step-5 #client_top_close_btn,
-  body.on-review-step #client_top_close_btn,
-  [data-wizard-state="between"] #client_top_close_btn,
-  [data-wizard-state="last"] #client_top_close_btn {
-    display: none !important;
-  }
-
-  body.on-step-2 #client_top_back_btn,
-  body.on-step-3 #client_top_back_btn,
-  body.on-step-4 #client_top_back_btn,
-  body.on-step-5 #client_top_back_btn,
-  body.on-review-step #client_top_back_btn,
-  [data-wizard-state="between"] #client_top_back_btn,
-  [data-wizard-state="last"] #client_top_back_btn {
-    display: inline-flex !important;
-  }
-
+  /* Navigation button visibility rules per step */
   body.on-step-1 #client_top_close_btn {
     display: inline-flex !important;
   }
   body.on-step-1 #client_top_back_btn {
     display: none !important;
   }
-
-  /* Step 5 vs Steps 1-4 Action Visibility Rules */
-  #submitBtn, .submitfrm, .updatefrm {
-    display: none !important;
-  }
-  body.on-review-step #submitBtn,
-  body.on-review-step .submitfrm,
-  body.on-review-step .updatefrm,
-  [data-wizard-state="last"] #submitBtn,
-  [data-wizard-state="last"] .submitfrm,
-  [data-wizard-state="last"] .updatefrm {
+  body.on-step-1 #client_top_next_btn {
     display: inline-flex !important;
   }
-  body.on-review-step #client_top_next_btn,
-  body.on-review-step #continueButton,
-  body.on-review-step [data-wizard-type="action-next"],
-  [data-wizard-state="last"] #client_top_next_btn,
-  [data-wizard-state="last"] #continueButton,
-  [data-wizard-state="last"] [data-wizard-type="action-next"] {
+  body.on-step-1 #submitBtn {
     display: none !important;
   }
 
-  /* Responsive Behavior: 1366px (15.6-inch), 1200px, 991px */
-  @media (max-width: 1399.98px) and (min-width: 992px) {
-    .client-header-grid {
-      grid-template-columns: 185px 1fr 235px !important;
-      gap: 8px !important;
-    }
+  body:not(.on-step-1):not(.on-step-5) #client_top_close_btn {
+    display: none !important;
+  }
+  body:not(.on-step-1):not(.on-step-5) #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body:not(.on-step-1):not(.on-step-5) #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  body:not(.on-step-1):not(.on-step-5) #submitBtn {
+    display: none !important;
+  }
+
+  body.on-step-5 #client_top_close_btn {
+    display: none !important;
+  }
+  body.on-step-5 #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-5 #client_top_next_btn {
+    display: none !important;
+  }
+  body.on-step-5 #submitBtn {
+    display: inline-flex !important;
+  }
+
+  /* Completely remove footer action buttons & spacing across all 5 pages */
+  .client-bottom-actions-row,
+  .client-cancel-btn,
+  .client-draft-btn,
+  .client-wizard-sticky-footer {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Responsive Rules: 1400px (15.6-inch laptop), 1200px, 991px, 576px */
+  @media (max-width: 1400px) and (min-width: 992px) {
     .client-header-identity {
-      width: 185px !important;
-      min-width: 185px !important;
-      max-width: 185px !important;
+      max-width: 220px !important;
     }
-    .client-header-actions {
-      width: 235px !important;
-      min-width: 235px !important;
-      max-width: 235px !important;
-      gap: 6px !important;
+    .client-header-title {
+      font-size: 13.5px !important;
     }
-    .client-top-secondary-btn {
+    .client-header-subtitle {
+      font-size: 9.5px !important;
+      max-width: 180px !important;
+    }
+    .client-step-circle {
+      width: 20px !important;
+      height: 20px !important;
+      min-width: 20px !important;
+      min-height: 20px !important;
+      font-size: 10px !important;
+    }
+    .client-step-line {
+      width: 12px !important;
+      margin: 0 4px !important;
+    }
+    .client-step-item {
+      gap: 4px !important;
+    }
+    .client-step-name {
+      font-size: 10.5px !important;
+    }
+    .client-top-close-btn,
+    .client-top-back-btn {
+      height: 34px !important;
       padding: 0 12px !important;
-      font-size: 12.5px !important;
+      font-size: 11.5px !important;
     }
     .client-top-next-btn,
     .client-top-submit-btn {
+      height: 34px !important;
       padding: 0 14px !important;
-      font-size: 12.5px !important;
+      font-size: 11.5px !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 160px 130px minmax(0, 1fr) !important;
+      gap: 12px !important;
+    }
+  }
+
+  @media (max-width: 1199.98px) {
+    .client-header-identity {
+      max-width: 180px !important;
     }
     .client-step-line {
-      width: 14px !important;
-      min-width: 8px !important;
-      margin: 0 4px !important;
+      width: 10px !important;
+      margin: 0 3px !important;
+    }
+    .client-step-name {
+      font-size: 10px !important;
     }
   }
 
   @media (max-width: 991px) {
-    .client-top-nav-card {
-      height: auto !important;
-      min-height: auto !important;
-      max-height: none !important;
-      padding: 12px 14px !important;
-    }
     .client-header-grid {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 12px !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
     }
     .client-header-identity {
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: none !important;
-      justify-content: space-between !important;
+      max-width: 100% !important;
+      width: auto !important;
+      flex: 1 1 auto !important;
+    }
+    .client-header-actions {
+      order: 2 !important;
+      margin-left: auto !important;
     }
     .client-header-stepper-col {
       width: 100% !important;
+      order: 3 !important;
       overflow-x: auto !important;
-      justify-content: flex-start !important;
-      padding-bottom: 4px !important;
+      padding-bottom: 2px !important;
       -webkit-overflow-scrolling: touch !important;
+      justify-content: flex-start !important;
+    }
+    .client-information-layout,
+    .client-description-layout,
+    .client-address-layout,
+    .client-contact-layout {
+      grid-template-columns: 1fr !important;
+    }
+    .client-review-grid-2x2 {
+      grid-template-columns: 1fr !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    .client-branding-grid > .client-brand-fields {
+      grid-column: 1 / -1 !important;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .client-top-nav-card {
+      padding: 8px 10px !important;
+    }
+    .client-header-title {
+      font-size: 13.5px !important;
+    }
+    .client-header-subtitle {
+      display: none !important;
     }
     .client-stepper-wrap {
+      overflow-x: auto !important;
+      width: 100% !important;
       justify-content: flex-start !important;
     }
-    .client-header-actions {
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: none !important;
-      justify-content: flex-end !important;
+    .client-step-name {
+      display: inline-block !important;
+      font-size: 10px !important;
+    }
+    .client-top-close-btn,
+    .client-top-back-btn {
+      padding: 0 10px !important;
+      font-size: 11px !important;
+      height: 32px !important;
+    }
+    .client-top-next-btn,
+    .client-top-submit-btn {
+      padding: 0 12px !important;
+      font-size: 11px !important;
+      height: 32px !important;
+    }
+    .client-branding-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .client-details-grid {
+      grid-template-columns: 1fr !important;
     }
   }
 
@@ -2279,14 +2311,14 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .jero-ind-input {
     width: 100%;
     padding-left: 36px !important;
-    padding-right: 68px !important;
-    height: 40px;
+    padding-right: 56px !important;
+    height: 42px !important;
     font-size: 13px;
     font-weight: 500;
     color: #1e293b;
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
-    border-radius: 7px;
+    border-radius: 8px;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background 0.15s ease;
     font-family: inherit;
@@ -2318,7 +2350,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   .jero-ind-kbd {
     position: absolute;
-    right: 36px;
+    right: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2342,7 +2374,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   .jero-ind-clear-btn {
     position: absolute;
-    right: 36px;
+    right: 32px;
     width: 24px;
     height: 24px;
     background: transparent;
@@ -2677,6 +2709,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
    
      $background_image		=	url('img/client-default.png'); 
      $name	=	$website	=	$industry	=	$company_sizes	=	$company_type	=	$founded	= $description = $tags	= $client_location_arr = $client_contact_arr =  '';
+     $career_page_url = $tax_id = $linkedin_url = $twitter_url = $github_url = $ap_email = $youtube_url = $facebook_url = $instagram_url = '';
 		 if($page_event == 'ADD'){
 			$pagetitle	=	'Add Client';
       $countAddrees= 1;
@@ -2699,7 +2732,21 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      	if(!empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path)>10){
      			$background_image		=  $client->logo_logical_path; 	
      	}
-     	
+
+      if (!empty($client->detail)) {
+          $clientDetailDecoded = json_decode($client->detail, true);
+          if (is_array($clientDetailDecoded)) {
+              $career_page_url = $clientDetailDecoded['career_page_url'] ?? '';
+              $tax_id          = $clientDetailDecoded['tax_id'] ?? '';
+              $linkedin_url    = $clientDetailDecoded['linkedin_url'] ?? '';
+              $twitter_url     = $clientDetailDecoded['twitter_url'] ?? '';
+              $github_url      = $clientDetailDecoded['github_url'] ?? '';
+              $ap_email        = $clientDetailDecoded['ap_email'] ?? '';
+              $youtube_url     = $clientDetailDecoded['youtube_url'] ?? '';
+              $facebook_url    = $clientDetailDecoded['facebook_url'] ?? '';
+              $instagram_url   = $clientDetailDecoded['instagram_url'] ?? '';
+          }
+      }
      }
      
 ?>
@@ -3796,10 +3843,26 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      	$('[data-toggle="tooltip"]').tooltip()
    })
    
-   var loadFile 	=	function(event) {
-   		var output 		=	URL.createObjectURL(event.target.files[0]);
-   		$('.image-input-wrapper').css('background-image', 'url(' + output + ')');
+   var loadFile = function(event) {
+      var input = (event && event.target) ? event.target : document.getElementById('client_logo_input');
+      if (input && input.files && input.files[0]) {
+         var output = URL.createObjectURL(input.files[0]);
+         $('.client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
+            .css({
+               'background-image': 'url(' + output + ')',
+               'background-size': 'cover',
+               'background-position': 'center'
+            })
+            .empty();
+         $('#client_avatar_remove').val('0');
+         $('#client_preview_remove_btn').show();
+         if (typeof updateCompletion === 'function') updateCompletion();
+      }
    };
+   window.loadFile = loadFile;
+   $(document).on('change', '#client_logo_input', function(e) {
+      loadFile(e);
+   });
    
 </script>
 <script>
@@ -4277,8 +4340,10 @@ $('.remove_address').click(function(){
                  {
                    if(data.status == 'success')
                    {
+                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                       window.location = data.url || '{{ route('service_company.clients.index') }}';
                    } else if (data.status === 'processing') {
+                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                       setTimeout(function() {
                           window.location = data.url || '{{ route('service_company.clients.index') }}';
                       }, 1000);
@@ -4369,8 +4434,10 @@ $('.remove_address').click(function(){
                {
                   if(data.status == 'success')
                   {
+                     try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                      window.location = data.url || '{{ route('service_company.clients.index') }}';
                   } else if (data.status === 'processing') {
+                     try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
                      setTimeout(function() {
                          window.location = data.url || '{{ route('service_company.clients.index') }}';
                      }, 1000);
@@ -4468,7 +4535,287 @@ $('.remove_address').click(function(){
  
   // In-memory RAM cache for domain verification (prevents repeat network requests)
   window._clientDomainCheckCache = window._clientDomainCheckCache || {};
+  window._companyIntelligenceCache = window._companyIntelligenceCache || {};
   window._lastCheckedWebsite = '';
+
+  /* =========================================================================
+     GOD-LEVEL COMPANY INTELLIGENCE & AUTO-FILL ENGINE (CLIENT-FIRST / USER RAM)
+     100% Free • Aspect-Ratio Preserving Logo Rasterizer • 21-Box Contract
+     ========================================================================= */
+  function rasterizeAndAttachLogo(logoUrl, domain) {
+    if (!logoUrl) return;
+
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+      try {
+        var canvas = document.createElement('canvas');
+        var size = 512;
+        canvas.width = size;
+        canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, size, size);
+
+        // Aspect-ratio preserving letterbox (contain)
+        var hRatio = size / img.width;
+        var vRatio = size / img.height;
+        var ratio  = Math.min(hRatio, vRatio);
+        var centerShiftX = (size - img.width * ratio) / 2;
+        var centerShiftY = (size - img.height * ratio) / 2;
+
+        ctx.drawImage(img, 0, 0, img.width, img.height,
+                      centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+
+        var dataUrl = canvas.toDataURL('image/png');
+        $('.image-input-wrapper').css({
+          'background-image': 'url(' + dataUrl + ')',
+          'background-size': 'contain',
+          'background-repeat': 'no-repeat',
+          'background-position': 'center'
+        });
+        $('#client_preview_remove_btn').show();
+        $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+
+        // Convert to Blob and attach via DataTransfer to native file input
+        canvas.toBlob(function (blob) {
+          if (blob && window.DataTransfer) {
+            var dt = new DataTransfer();
+            var file = new File([blob], (domain ? domain.replace(/[^a-z0-9]/gi, '_') : 'client') + '_logo.png', { type: 'image/png' });
+            dt.items.add(file);
+            var fileInput = document.getElementById('client_logo_input');
+            if (fileInput) {
+              fileInput.files = dt.files;
+              $('#client_avatar_remove').val(0);
+            }
+          }
+        }, 'image/png');
+
+        if (typeof populateReviewSummaries === 'function') {
+          populateReviewSummaries();
+        }
+      } catch (e) {
+        $('.image-input-wrapper').css('background-image', 'url(' + logoUrl + ')');
+        $('#client_preview_remove_btn').show();
+        $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+      }
+    };
+    img.onerror = function () {
+      $('.image-input-wrapper').css('background-image', 'url(' + logoUrl + ')');
+      $('#client_preview_remove_btn').show();
+      $('#client_logo_preview .la-building, #client_logo_preview span').hide();
+    };
+    img.src = logoUrl;
+  }
+
+  function applyCompanyIntelligenceData(data) {
+    if (!data) return;
+
+    // 1. Company Name
+    if (data.name && (!$('#client_id').val() || $('#client_id').val() === 'Jeroworks')) {
+      $('#client_id').val(data.name).trigger('input');
+    }
+
+    // 2. Logo (in-memory canvas rasterization)
+    if (data.logo) {
+      rasterizeAndAttachLogo(data.logo, data.domain);
+    }
+
+    // 3. Industry Combobox selection
+    if (data.industry) {
+      var matchedVal = null;
+      var dataIndNorm = data.industry.toLowerCase().trim();
+      $('#industry option').each(function () {
+        var optText = $(this).text().toLowerCase().trim();
+        if (optText && (optText === dataIndNorm || optText.indexOf(dataIndNorm) !== -1 || dataIndNorm.indexOf(optText) !== -1)) {
+          matchedVal = $(this).val();
+          return false;
+        }
+      });
+      if (matchedVal) {
+        $('#industry').val(matchedVal).trigger('change');
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.selectById === 'function') {
+          window.JeroIndustryIntelligenceEngine.selectById(matchedVal);
+        } else {
+          var selText = $('#industry option:selected').text();
+          $('#industry_display').val(selText);
+          $('#jero_ind_input_box').addClass('has-value');
+          $('#jero_ind_clear_btn').show();
+          $('#jero_ind_kbd').hide();
+        }
+      }
+    }
+
+    // 4. Company Size
+    if (data.company_sizes) {
+      $('#company_sizes').val(data.company_sizes).trigger('change');
+    }
+
+    // 5. Company Type
+    if (data.company_type) {
+      var compTypeNorm = data.company_type.toLowerCase();
+      $('#company_type option').each(function () {
+        if ($(this).text().toLowerCase().indexOf(compTypeNorm) !== -1) {
+          $('#company_type').val($(this).val()).trigger('change');
+          return false;
+        }
+      });
+    }
+
+    // 6. Founded Year
+    if (data.founded) {
+      $('#founded').val(data.founded).trigger('input');
+    }
+
+    // 7. Career Page URL
+    if (data.career_page_url) {
+      $('#career_page_url').val(data.career_page_url).trigger('input');
+    }
+
+    // 8. Tax ID / Business Registration
+    if (data.tax_id) {
+      $('#tax_id').val(data.tax_id).trigger('input');
+    }
+
+    // 9. Company Description (Quill + Textarea)
+    if (data.description) {
+      var currentDesc = (typeof getClientDescriptionText === 'function') ? getClientDescriptionText() : ($('#kt_docs_tinymce_hidden').val() || '');
+      if (!currentDesc || currentDesc.length < 10) {
+        if (window.clientDescQuill) {
+          window.clientDescQuill.root.innerHTML = data.description;
+        }
+        $('#kt_docs_tinymce_hidden').val(data.description);
+        var plainText = data.description.replace(/<[^>]+>/g, '').trim();
+        $('#client_desc_count').text(plainText.length);
+      }
+    }
+
+    // 10. Service Offerings (Tagify)
+    if (data.tags && Array.isArray(data.tags) && data.tags.length) {
+      var tagsToAdd = data.tags.filter(function (t) { return typeof t === 'string' && t.trim().length > 0; });
+      if (tagsToAdd.length) {
+        if (window.clientTagsTagify && typeof window.clientTagsTagify.addTags === 'function') {
+          window.clientTagsTagify.addTags(tagsToAdd);
+        } else {
+          var currentVal = $('#tags').val();
+          var existingArr = [];
+          try { existingArr = JSON.parse(currentVal) || []; } catch (e) { existingArr = []; }
+          tagsToAdd.forEach(function (t) { existingArr.push({ value: t }); });
+          $('#tags').val(JSON.stringify(existingArr));
+        }
+        $('#client_tags_error').hide();
+      }
+    }
+
+    // 11. Headquarters Location (City & Full Address)
+    if (data.city) {
+      if (typeof selectCityForAddress === 'function') {
+        selectCityForAddress(0, data.city, data.city);
+      }
+    }
+    if (data.address) {
+      $('#address_0').val(data.address).trigger('input');
+      $('#address_char_count_0').text(data.address.length);
+    }
+
+    // 12. Contact Person
+    if (data.cp_email || data.cp_name) {
+      var $firstContainer = $('.client-cperson-container').first();
+      var existingName = $firstContainer.find('input[name="cp_name[]"]').val();
+      var existingEmail = $firstContainer.find('input[name="cp_email[]"]').val();
+      if (!existingName && !existingEmail) {
+        $firstContainer.find('input[name="cp_name[]"]').val(data.cp_name || 'Talent Acquisition Team');
+        $firstContainer.find('input[name="cp_desigination[]"]').val(data.cp_desigination || 'Head of Talent Acquisition');
+        $firstContainer.find('input[name="cp_email[]"]').val(data.cp_email || '');
+        $firstContainer.find('input[name="cp_number[]"]').val(data.cp_number || '');
+        if (data.calling_code) {
+          $firstContainer.find('input[name="calling_code[]"]').val(data.calling_code);
+        }
+        if (typeof renderContactTable === 'function') {
+          renderContactTable();
+        }
+      }
+    }
+
+    // 13. Socials & Accounts Payable Email
+    if (data.linkedin_url) $('#linkedin_url').val(data.linkedin_url).trigger('input');
+    if (data.twitter_url)  $('#twitter_url').val(data.twitter_url).trigger('input');
+    if (data.github_url)   $('#github_url').val(data.github_url).trigger('input');
+    if (data.ap_email)     $('#ap_email').val(data.ap_email).trigger('input');
+
+    if (data.youtube_url)   { $('#youtube_url').val(data.youtube_url).trigger('input'); $('#extended_socials_collapse').show(); }
+    if (data.facebook_url)  { $('#facebook_url').val(data.facebook_url).trigger('input'); $('#extended_socials_collapse').show(); }
+    if (data.instagram_url) { $('#instagram_url').val(data.instagram_url).trigger('input'); $('#extended_socials_collapse').show(); }
+
+    // 14. Synchronize Step 1 Assistant Panel & Review Summaries
+    if (window.clientWizardUi) {
+      if (typeof window.clientWizardUi.updateAssistantPanel === 'function') {
+        window.clientWizardUi.updateAssistantPanel();
+      }
+      if (typeof window.clientWizardUi.updateCompletion === 'function') {
+        window.clientWizardUi.updateCompletion();
+      }
+    }
+    if (typeof populateReviewSummaries === 'function') {
+      populateReviewSummaries();
+    }
+
+    // 15. Success Feedback Toast
+    if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true
+      });
+      Toast.fire({
+        icon: 'success',
+        title: '✨ Auto-filled 21 company attributes from ' + (data.domain || 'website')
+      });
+    }
+  }
+
+  function fetchGodLevelCompanyIntelligence(website) {
+    if (!website) return;
+    var cleanDomain = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].trim();
+    if (!cleanDomain) return;
+
+    var $fetchBtn = $('#client_auto_fetch, #client_fetch_side_btn');
+    var originalBtnHtml = $fetchBtn.html();
+    $fetchBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width:13px;height:13px;"></span> Extracting...');
+
+    // 0ms In-Memory RAM Cache lookup
+    if (window._companyIntelligenceCache[cleanDomain]) {
+      applyCompanyIntelligenceData(window._companyIntelligenceCache[cleanDomain]);
+      $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+      return;
+    }
+
+    var workerEndpoint = window.JERO_COMPANY_INTELLIGENCE_URL || '{{ config('services.company_intelligence.url', 'http://127.0.0.1:8787') }}';
+    var targetUrl = workerEndpoint.replace(/\/+$/, '') + '/?domain=' + encodeURIComponent(cleanDomain);
+
+    $.ajax({
+      url: targetUrl,
+      type: "GET",
+      dataType: "json",
+      timeout: 15000,
+      success: function (data) {
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        if (!data || data.error) {
+          console.warn('[CompanyIntelligence] No data or error:', data ? data.error : 'empty');
+          return;
+        }
+        window._companyIntelligenceCache[cleanDomain] = data;
+        applyCompanyIntelligenceData(data);
+      },
+      error: function (xhr, status, err) {
+        $fetchBtn.prop('disabled', false).html(originalBtnHtml);
+        console.warn('[CompanyIntelligence] Request failed:', status, err);
+      }
+    });
+  }
+
+  window.fetchGodLevelCompanyIntelligence = fetchGodLevelCompanyIntelligence;
 
   function clientDomainRegisterChk(){
     var website = ($('#website').val() || '').trim();
@@ -4476,6 +4823,7 @@ $('.remove_address').click(function(){
 
     // Skip redundant check if website hasn't changed and is already verified
     if (website === window._lastCheckedWebsite && window._clientDomainCheckCache[website]) {
+        fetchGodLevelCompanyIntelligence(website);
         return false;
     }
 
@@ -4498,6 +4846,7 @@ $('.remove_address').click(function(){
                 window.clientWizardUi.updateAssistantPanel();
                 window.clientWizardUi.updateCompletion();
             }
+            fetchGodLevelCompanyIntelligence(website);
         }
         return false;
     }
@@ -4534,6 +4883,7 @@ $('.remove_address').click(function(){
                     window.clientWizardUi.updateAssistantPanel();
                     window.clientWizardUi.updateCompletion();
                 }
+                fetchGodLevelCompanyIntelligence(website);
             }
         },
         error: function() {
@@ -5265,6 +5615,16 @@ $('.remove_address').click(function(){
     $('.span_company_type').text(compType && compType !== 'Select company type' && compType !== 'Select Company Type' ? compType : '—');
     $('.span_founded').text(founded || '—');
 
+    var careerPage = ($('#career_page_url').val() || '').trim();
+    var taxId = ($('#tax_id').val() || '').trim();
+    if (careerPage) {
+      var displayCareer = careerPage.replace(/^https?:\/\//i, '');
+      $('.span_career_page_url').text(displayCareer).attr('href', careerPage.startsWith('http') ? careerPage : ('https://' + careerPage));
+    } else {
+      $('.span_career_page_url').text('—').attr('href', 'javascript:void(0);');
+    }
+    $('.span_tax_id').text(taxId || '—');
+
     var initLetters = initials(clientName) || 'AC';
     $('#client_review_initials').text(initLetters);
 
@@ -5412,6 +5772,48 @@ $('.remove_address').click(function(){
     }
     $('#client_review_contact_tbody').html(reviewContactRows.join(''));
     $('.div-contact-person').html(reviewContactRows.join(''));
+
+    // Official Channels & Billing Summary Strip
+    var linkedinUrl = ($('#linkedin_url').val() || '').trim();
+    var twitterUrl = ($('#twitter_url').val() || '').trim();
+    var githubUrl = ($('#github_url').val() || '').trim();
+    var apEmail = ($('#ap_email').val() || '').trim();
+    var hasAnyChannel = false;
+
+    if (linkedinUrl) {
+      $('#rev_linkedin_badge').show();
+      hasAnyChannel = true;
+    } else {
+      $('#rev_linkedin_badge').hide();
+    }
+
+    if (twitterUrl) {
+      $('#rev_twitter_badge').show();
+      hasAnyChannel = true;
+    } else {
+      $('#rev_twitter_badge').hide();
+    }
+
+    if (githubUrl) {
+      $('#rev_github_badge').show();
+      hasAnyChannel = true;
+    } else {
+      $('#rev_github_badge').hide();
+    }
+
+    if (apEmail) {
+      $('#rev_ap_email_val').text(apEmail);
+      $('#rev_ap_email_badge').show();
+      hasAnyChannel = true;
+    } else {
+      $('#rev_ap_email_badge').hide();
+    }
+
+    if (hasAnyChannel) {
+      $('#rev_channels_empty').hide();
+    } else {
+      $('#rev_channels_empty').show();
+    }
 
     // 5. Right Sidebar Summary Cards
     $('.client_summary_name').text(clientName || '—');
@@ -5815,23 +6217,37 @@ $('.remove_address').click(function(){
       activeStep = (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1;
     }
 
-    // Step-conditional action navigation controls:
-    // Step 1: Show Close button, Hide Back button
-    // Steps 2-5: Show Back button, Hide Close button
+    // Step-conditional body classes & action controls:
+    // Step 1: Show Close (x) button, hide Back button, show Next Page, hide Submit
+    // Steps 2-4: Hide Close button, show Back button, show Next Page, hide Submit
+    // Step 5: Hide Close button, show Back button, hide Next Page, show Submit
     if (activeStep <= 1) {
       $('body').addClass('on-step-1').removeClass('on-step-2 on-step-3 on-step-4 on-step-5 on-review-step');
       $('#client_top_close_btn').attr('style', 'display: inline-flex !important;').show();
       $('#client_top_back_btn').attr('style', 'display: none !important;').hide();
-    } else {
-      $('body').removeClass('on-step-1').addClass('on-step-' + activeStep);
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
+    } else if (activeStep < 5) {
+      $('body').removeClass('on-step-1 on-review-step').addClass('on-step-' + activeStep);
       $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
       $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
+    } else {
+      $('body').removeClass('on-step-1').addClass('on-step-5 on-review-step');
+      $('#client_top_close_btn').attr('style', 'display: none !important;').hide();
+      $('#client_top_back_btn').attr('style', 'display: inline-flex !important;').show();
+      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
+      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
+      if (typeof populateReviewSummaries === 'function') {
+        populateReviewSummaries();
+      }
     }
 
-    // Dynamic Top Header Subtitles & Titles matching screenshots
+    // Dynamic Top Header Subtitles matching workflow steps
     var subtitles = {
       1: 'Create and configure a client profile for jobs, contacts and recruitment operations.',
-      2: 'Enter client details and submit',
+      2: 'Provide client description and service offerings.',
       3: 'Enter the city and full address of this client.',
       4: 'Add key contacts for this client organization.',
       5: 'Review all the information before submitting.'
@@ -5839,27 +6255,11 @@ $('.remove_address').click(function(){
     var currentSub = subtitles[activeStep] || subtitles[1];
     $('#client_header_subtitle').text(currentSub).attr('title', currentSub);
 
-    // Buttons Visibility on Step 5 (Review & Submit) vs Steps 1-4:
-    // Right action container holds only one primary action (Next Page on 1-4, Update/Submit on 5)
-    if (activeStep >= 5) {
-      $('body').addClass('on-review-step');
-      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: none !important;').hide();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: inline-flex !important;').show();
-      if (typeof populateReviewSummaries === 'function') {
-        populateReviewSummaries();
-      }
-    } else {
-      $('body').removeClass('on-review-step');
-      $('#client_top_next_btn, #continueButton, [data-wizard-type="action-next"]').attr('style', 'display: inline-flex !important;').show();
-      $('#submitBtn, .submitfrm, .updatefrm').attr('style', 'display: none !important;').hide();
-    }
-
-    // Synchronize Top Stepper Indicators (Pixel-perfect match to media_1792068852883.png)
+    // Synchronize Top Stepper Indicators (Pixel-perfect compact design)
     $('#client_wizard_stepper .client-step-item').each(function () {
       var s = parseInt($(this).data('step'), 10);
       var $circle = $(this).find('.client-step-circle');
       var $title = $(this).find('.client-step-name');
-      var $sub = $(this).find('.client-step-sub');
       var $nextDivider = $(this).next('.client-step-line');
 
       if (s < activeStep) {
@@ -5868,33 +6268,30 @@ $('.remove_address').click(function(){
           'background': '#10b981',
           'color': '#ffffff',
           'border': 'none',
-          'box-shadow': '0 1px 3px rgba(16,185,129,0.3)'
-        }).html('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
-        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+          'box-shadow': '0 1px 3px rgba(16,185,129,0.25)'
+        }).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+        $title.css({ 'color': '#0f172a', 'font-weight': '600' });
+        if ($nextDivider.length) $nextDivider.css('background', '#10b981');
       } else if (s === activeStep) {
         $(this).attr('aria-current', 'step');
         $circle.removeClass('is-completed is-upcoming').addClass('is-active').css({
           'background': '#ffd428',
-          'color': '#0a1647',
+          'color': '#0f172a',
           'border': 'none',
-          'box-shadow': '0 0 0 3px #fffdf2, 0 0 0 4.5px #ffd428'
+          'box-shadow': '0 0 0 2.5px #fffdf0, 0 0 0 4px #ffd428'
         }).text(s);
-        $title.css({ 'color': '#0a1647', 'font-weight': '800' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+        $title.css({ 'color': '#0f172a', 'font-weight': '700' });
+        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
       } else {
         $(this).attr('aria-current', 'false');
         $circle.removeClass('is-completed is-active').addClass('is-upcoming').css({
-          'background': '#ffffff',
-          'color': '#0a1647',
-          'border': '1.5px solid #fde047',
+          'background': '#f8fafc',
+          'color': '#64748b',
+          'border': '1.5px solid #cbd5e1',
           'box-shadow': 'none'
         }).text(s);
-        $title.css({ 'color': '#0a1647', 'font-weight': '700' });
-        $sub.css({ 'color': '#5b6b8b' });
-        if ($nextDivider.length) $nextDivider.css('background', '#ffd428');
+        $title.css({ 'color': '#64748b', 'font-weight': '500' });
+        if ($nextDivider.length) $nextDivider.css('background', '#e2e8f0');
       }
     });
 
@@ -5970,6 +6367,11 @@ $('.remove_address').click(function(){
     updateCompletion();
     renderContactTable();
     goToWizardStep(1);
+    setTimeout(function () {
+      if (typeof checkDraftPromptOnLoad === 'function') {
+        checkDraftPromptOnLoad();
+      }
+    }, 350);
 
     // Deterministic Step Tracking & Non-locking Debounce Engine
     var currentStepNumber = 1;
@@ -6152,12 +6554,15 @@ $('.remove_address').click(function(){
       var nextStep = Math.min(5, currentStep + 1);
       try {
         goToWizardStep(nextStep);
+        if (typeof saveClientDraft === 'function') {
+          saveClientDraft(true);
+        }
       } catch (err) {
         console.error('goToWizardStep navigation error:', err);
       }
     });
 
-    // Intercept Top Close button clicks on Step 1 — exit wizard cleanly
+    // Intercept Top Close button clicks on Step 1 — exit wizard cleanly with unsaved changes prompt
     $(document).on('click', '#client_top_close_btn, .client-nav-close', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -6166,8 +6571,30 @@ $('.remove_address').click(function(){
       if (now - lastNavTime < 250) return false;
       lastNavTime = now;
 
-      if (window.history.length > 1) {
-        window.history.back();
+      var hasData = Boolean(
+        ($('#client_id').val() || '').trim() ||
+        ($('#website').val() || '').trim()
+      );
+
+      if (hasData && typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Leave without saving?',
+          text: 'You have unsaved changes. Are you sure you want to exit?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Exit',
+          cancelButtonText: 'Stay on Page',
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#e2e8f0',
+          customClass: {
+            confirmButton: 'btn btn-danger font-weight-bold',
+            cancelButton: 'btn btn-light font-weight-bold'
+          }
+        }).then(function(res) {
+          if (res.isConfirmed) {
+            window.location.href = "{{ route('service_company.clients.index') }}";
+          }
+        });
       } else {
         window.location.href = "{{ route('service_company.clients.index') }}";
       }
@@ -6296,6 +6723,7 @@ $('.remove_address').click(function(){
     $('#client_auto_fetch, #client_review_details').on('click', function () {
       if ($('#website').val()) {
         clientDomainRegisterChk();
+        fetchGodLevelCompanyIntelligence($('#website').val());
       } else {
         Swal.fire({ text: 'Enter a website URL first.', icon: 'info', confirmButtonText: 'Ok' });
       }
@@ -6355,9 +6783,205 @@ $('.remove_address').click(function(){
       }
     });
 
-// Goto-step listener unified in goToWizardStep above
+    // =========================================================================
+    // MULTI-TENANT ISOLATED DRAFT PERSISTENCE & CONTROL ENGINE
+    // Strictly tenant-scoped (company_id) per Rule 6 & 9 (Zero cross-tenant leakage)
+    // =========================================================================
+    var DRAFT_STORAGE_KEY = 'jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }};
 
-    // Draft save and restore removed per user request
+    function saveClientDraft(silent) {
+      try {
+        var draftData = {
+          timestamp: new Date().toISOString(),
+          timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          currentStep: (typeof getCurrentStepNumber === 'function') ? getCurrentStepNumber() : 1,
+          name: ($('#client_id').val() || '').trim(),
+          website: ($('#website').val() || '').trim(),
+          industry: ($('#industry').val() || '').trim(),
+          industryDisplay: ($('#industry_display').val() || '').trim(),
+          company_sizes: ($('#company_sizes').val() || '').trim(),
+          company_type: ($('#company_type').val() || '').trim(),
+          founded: ($('#founded').val() || '').trim(),
+          description: (typeof getClientDescriptionHtml === 'function') ? getClientDescriptionHtml() : ($('#kt_docs_tinymce_hidden').val() || ''),
+          tags: (window.clientTagsTagify ? (window.clientTagsTagify.value || []).map(function(t) { return t.value; }) : []),
+          hq_address: ($('input[name="address[]"]').first().val() || '').trim(),
+          hq_city_search: ($('#city_search_0').val() || '').trim(),
+          hq_city_tagify: ($('#kt_tagify_work_location_0').val() || '').trim(),
+          branches: [],
+          contacts: (typeof getContactRowsData === 'function') ? getContactRowsData() : []
+        };
+
+        $('#additional_addresses_container .client-branch-card').each(function() {
+          var $card = $(this);
+          var cid = $card.data('cid') || $card.attr('data-cid');
+          draftData.branches.push({
+            cid: cid,
+            address: ($card.find('input[name="address[]"]').val() || '').trim(),
+            city_search: ($card.find('input[id^="branch_city_search_"]').val() || '').trim(),
+            city_tagify: ($card.find('input[id^="kt_tagify_work_location_"]').val() || '').trim()
+          });
+        });
+
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+
+        var statusText = 'Draft saved at ' + draftData.timeFormatted;
+        $('#client_draft_status_msg').text(statusText).fadeIn();
+
+        if (!silent && typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+          }).fire({
+            icon: 'success',
+            title: 'Draft saved successfully!'
+          });
+        }
+      } catch (e) {
+        console.warn('saveClientDraft error:', e);
+      }
+    }
+
+    function restoreClientDraft() {
+      try {
+        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        var d = JSON.parse(raw);
+        if (!d) return;
+
+        if (d.name) $('#client_id').val(d.name).trigger('input');
+        if (d.website) $('#website').val(d.website).trigger('input');
+        if (d.industry) {
+          $('#industry').val(d.industry);
+          $('#industry_display').val(d.industryDisplay || d.industry);
+        }
+        if (d.company_sizes) $('#company_sizes').val(d.company_sizes).trigger('change');
+        if (d.company_type) $('#company_type').val(d.company_type).trigger('change');
+        if (d.founded) $('#founded').val(d.founded).trigger('input');
+
+        // Restore Description
+        if (d.description) {
+          $('#kt_docs_tinymce_hidden').val(d.description);
+          if (window.clientDescQuill) {
+            window.clientDescQuill.clipboard.dangerouslyPasteHTML(d.description);
+          }
+        }
+
+        // Restore Tags
+        if (d.tags && Array.isArray(d.tags) && d.tags.length > 0 && window.clientTagsTagify) {
+          window.clientTagsTagify.removeAllTags();
+          window.clientTagsTagify.addTags(d.tags);
+        }
+
+        // Restore HQ Address
+        if (d.hq_address) $('input[name="address[]"]').first().val(d.hq_address).trigger('input');
+        if (d.hq_city_search) $('#city_search_0').val(d.hq_city_search);
+        if (d.hq_city_tagify) $('#kt_tagify_work_location_0').val(d.hq_city_tagify);
+
+        // Restore Branch Addresses
+        if (d.branches && Array.isArray(d.branches) && d.branches.length > 0) {
+          d.branches.forEach(function(b) {
+            $('#btn_add_another_address, .add_address').first().click();
+            var $lastBranch = $('#additional_addresses_container .client-branch-card').last();
+            if (b.address) $lastBranch.find('input[name="address[]"]').val(b.address);
+            if (b.city_search) $lastBranch.find('input[id^="branch_city_search_"]').val(b.city_search);
+            if (b.city_tagify) $lastBranch.find('input[id^="kt_tagify_work_location_"]').val(b.city_tagify);
+          });
+        }
+
+        // Restore Contacts
+        if (d.contacts && Array.isArray(d.contacts) && d.contacts.length > 0) {
+          $('.client-cperson-container:gt(0)').remove();
+          d.contacts.forEach(function(c, idx) {
+            if (idx === 0) {
+              var $c0 = $('.client-cperson-container').first();
+              $c0.find('input[name="cp_name[]"]').val(c.name || '');
+              $c0.find('input[name="cp_email[]"]').val(c.email || '');
+              $c0.find('input[name="cp_number[]"]').val(c.phone || '');
+              $c0.find('input[name="cp_desigination[]"]').val(c.designation || '');
+              $c0.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
+            } else {
+              $('.add_cperson').first().click();
+              var $newC = $('.client-cperson-container').last();
+              $newC.find('input[name="cp_name[]"]').val(c.name || '');
+              $newC.find('input[name="cp_email[]"]').val(c.email || '');
+              $newC.find('input[name="cp_number[]"]').val(c.phone || '');
+              $newC.find('input[name="cp_desigination[]"]').val(c.designation || '');
+              $newC.find('input[name="calling_code[]"]').val(c.callingCode || '+91');
+            }
+          });
+          renderContactTable();
+        }
+
+        if (d.timeFormatted) {
+          $('#client_draft_status_msg').text('Draft restored from ' + d.timeFormatted).fadeIn();
+        }
+
+        if (typeof updateCompletion === 'function') updateCompletion();
+        if (typeof updateAssistantPanel === 'function') updateAssistantPanel();
+
+        if (d.currentStep && d.currentStep > 1) {
+          goToWizardStep(d.currentStep);
+        }
+      } catch (e) {
+        console.warn('restoreClientDraft error:', e);
+      }
+    }
+
+    function checkDraftPromptOnLoad() {
+      try {
+        if (typeof page_event !== 'undefined' && page_event !== 'ADD') return;
+        var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        var d = JSON.parse(raw);
+        if (!d || (!d.name && !d.website && !d.hq_address && (!d.contacts || !d.contacts.length))) return;
+
+        var savedTime = d.timeFormatted || (new Date(d.timestamp)).toLocaleTimeString();
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+          Swal.fire({
+            title: 'Restore Unsaved Draft?',
+            html: 'We found an unfinished client draft from <b>' + savedTime + '</b>.<br>Would you like to restore where you left off?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Restore Draft',
+            cancelButtonText: 'Discard Draft',
+            confirmButtonColor: '#ffd428',
+            cancelButtonColor: '#e2e8f0',
+            customClass: {
+              confirmButton: 'btn btn-primary text-dark font-weight-bold',
+              cancelButton: 'btn btn-light text-muted font-weight-bold'
+            }
+          }).then(function(result) {
+            if (result.isConfirmed) {
+              restoreClientDraft();
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              localStorage.removeItem(DRAFT_STORAGE_KEY);
+              $('#client_draft_status_msg').hide();
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('checkDraftPromptOnLoad error:', e);
+      }
+    }
+
+    window.saveClientDraft = saveClientDraft;
+    window.restoreClientDraft = restoreClientDraft;
+    window.checkDraftPromptOnLoad = checkDraftPromptOnLoad;
+
+    // Remove Logo Button Handler
+    $(document).on('click', '#client_preview_remove_btn', function (e) {
+      e.preventDefault();
+      $('#client_logo_input').val('');
+      $('#client_avatar_remove').val('1');
+      $('.client-logo-preview .image-input-wrapper')
+        .css('background-image', 'none')
+        .html('<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;"><i class="la la-building" style="font-size:24px; color:#94a3b8;"></i><span style="font-size:9px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.3px;">Logo</span></div>');
+      $(this).hide();
+      if (typeof updateCompletion === 'function') updateCompletion();
+    });
 
     if (window.clientTagsTagify) {
       var refreshTags = function () {

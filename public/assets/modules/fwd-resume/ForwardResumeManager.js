@@ -146,9 +146,17 @@
             if (!Array.isArray(ids) || ids.length === 0) return [];
             var db = await self.init();
             if (!db) return [];
-            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curTenant = parseInt(
+                window.companyId ||
+                window.authCompanyId ||
+                (window.PlacedListingStore && window.PlacedListingStore.companyId) ||
+                $('meta[name="company-id"]').attr('content') ||
+                $('body').attr('data-company-id') ||
+                0,
+                10
+            );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
-            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
 
             return new Promise(function (resolve) {
                 try {
@@ -189,9 +197,17 @@
             if (!Array.isArray(candidates) || candidates.length === 0) return;
             var db = await self.init();
             if (!db) return;
-            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curTenant = parseInt(
+                window.companyId ||
+                window.authCompanyId ||
+                (window.PlacedListingStore && window.PlacedListingStore.companyId) ||
+                $('meta[name="company-id"]').attr('content') ||
+                $('body').attr('data-company-id') ||
+                0,
+                10
+            );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
-            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
 
             try {
                 var tx = db.transaction(['candidates'], 'readwrite');
@@ -269,6 +285,8 @@
         _routes: {
             shell: '/assets/modules/fwd-resume/shell.v4.html',
             engine: '/assets/modules/fwd-resume/engine.v4.js',
+            quillJs: '/assets/modules/fwd-resume/quill/quill.min.js',
+            quillCss: '/assets/modules/fwd-resume/quill/quill.snow.css',
             data: '/service_company/cvtracker/test_fwd_resume_data',
             recipients: '/service_company/cvtracker/fwd_recipients',
             intent: '/service_company/cvtracker/test_fwd_resume_intent',
@@ -282,7 +300,10 @@
         _shellHtml: '',
         _engineLoading: false,
         _engineLoaded: false,
+        _quill: null,
+        _quillLoading: false,
         _recipientsCache: null,
+        _recipientsCacheKey: null,
         _recipientsCacheTime: 0,
         _applicationData: [],
         _companyData: { companyName: 'Hiring Partner', companyLogo: '' },
@@ -347,6 +368,7 @@
                         .catch(function (e) { console.warn('Prewarm shell error:', e); });
                 }
                 self._loadEngineScript();
+                self._loadQuill();
             });
         },
 
@@ -383,14 +405,60 @@
             document.head.appendChild(script);
         },
 
+        _loadQuill: function (callback) {
+            var self = this;
+            if (window.Quill) {
+                if (callback) callback();
+                return;
+            }
+            if (self._quillLoading) {
+                var checkInterval = setInterval(function () {
+                    if (window.Quill) {
+                        clearInterval(checkInterval);
+                        if (callback) callback();
+                    }
+                }, 30);
+                return;
+            }
+            self._quillLoading = true;
+
+            // 1. Inject Quill CSS if not present
+            if (!document.getElementById('jero_quill_css')) {
+                var link = document.createElement('link');
+                link.id = 'jero_quill_css';
+                link.rel = 'stylesheet';
+                link.href = self._routes.quillCss || '/assets/modules/fwd-resume/quill/quill.snow.css';
+                document.head.appendChild(link);
+            }
+
+            // 2. Inject Quill JS
+            var script = document.createElement('script');
+            script.src = self._routes.quillJs || '/assets/modules/fwd-resume/quill/quill.min.js';
+            script.async = true;
+            script.onload = function () {
+                self._quillLoading = false;
+                if (callback) callback();
+            };
+            script.onerror = function (e) {
+                self._quillLoading = false;
+                console.error('Failed to load Quill editor script:', e);
+            };
+            document.head.appendChild(script);
+        },
+
         open: function (candidateIds, jobIdArr, matchMap) {
             var startTime = performance.now();
             var self = this;
+
             self._currentCandidateIds = candidateIds || [];
             self._currentJobIdArr = jobIdArr || [];
             self._currentMatchMap = matchMap || {};
             self._confirmedMissing = false;
             self._compiledAttachments = {};
+            // Invalidate recipient directory cache on drawer open to guarantee fresh, job-isolated contacts
+            self._recipientsCache = null;
+            self._recipientsCacheKey = null;
+            self._recipientsCacheTime = 0;
             self._draftState = 'HYDRATING';
             self._lastOpenedTime = Date.now();
 
@@ -398,13 +466,35 @@
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
                            document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
                            document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (!drawer) {
-                    KTDrawer.createInstances();
-                    drawer = KTDrawer.getInstance(drawerEl);
+            if (drawerEl) {
+                drawerEl.style.removeProperty('display');
+                drawerEl.style.setProperty('z-index', '1000050', 'important');
+                if (!drawerEl.classList.contains('drawer')) {
+                    drawerEl.classList.add('drawer', 'drawer-end');
                 }
-                if (drawer) { drawer.show(); }
+                drawerEl.classList.add('drawer-on');
+                drawerEl.style.transform = 'none';
+
+                if (typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) {
+                        drawer.shown = true;
+                    }
+                }
+
+                // Show dedicated Forward Resume overlay (isolated from parent Candidate Drawer)
+                if ($('.fwd-resume-overlay').length === 0) {
+                    $('<div class="fwd-resume-overlay"></div>').css({
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.4)',
+                        zIndex: 1000045,
+                        cursor: 'pointer'
+                    }).appendTo('body').on('click', function (e) {
+                        e.preventDefault();
+                        self.close();
+                    });
+                }
             }
 
             var container = $('#application_test_fwd_resume_body_content');
@@ -412,6 +502,8 @@
 
             // 2. Client Shell Injection (< 5ms)
             if (!container.find('#test_form1').length) {
+                self._quill = null;
+                self._editorInitialized = false;
                 if (self._shellHtml) {
                     container.html(self._shellHtml);
                     self._afterShellInjected();
@@ -424,6 +516,8 @@
                         .then(function (res) { return res.text(); })
                         .then(function (html) {
                             self._shellHtml = html;
+                            self._quill = null;
+                            self._editorInitialized = false;
                             container.html(html);
                             self._afterShellInjected();
                         })
@@ -503,7 +597,7 @@
 
         _afterShellInjected: function () {
             var self = this;
-            self._initCkEditor();
+            self._initEditor();
             self._setupTagInput('to');
             self._setupTagInput('cc');
             self._initRecipientDrawerEvents();
@@ -511,24 +605,17 @@
 
         _resetDrawerForm: function () {
             var self = this;
-            $('#test_fwd_resume_format').val('0');
-            $('#test_fwd_format_trigger_title').text('Select Resume Format...');
-            $('#test_fwd_format_trigger_desc').text('Choose how resumes should be formatted and presented to the client');
-            $('.test-fwd-format-card').removeClass('is-active').css({
-                'border-color': '#E5E7EB',
-                'background': '#FFFFFF'
-            });
-            $('.test-fwd-format-card .test-fwd-format-radio-dot').css({
-                'border-color': '#D1D5DB',
-                'background': '#FFFFFF'
-            }).html('');
-            $('#test_fwd_format_preview_card').hide();
+            $('#test_fwd_resume_format').val('1');
+            $('#test_fwd_trigger_title').text('1.a Original Resume (Default)');
+            $('#test_fwd_trigger_desc').text("Download candidate's uploaded resume with no edits or formatting changes.");
+            $('.mm-fwd-opt-row').removeClass('is-selected');
+            $('.mm-fwd-opt-row[data-opt-id="1"]').addClass('is-selected');
+            $('.mf-radio').removeClass('is-checked');
+            $('.mm-fwd-opt-row[data-opt-id="1"] .mf-radio').addClass('is-checked');
+            $('#test_fwd_format_preview_card').show();
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].setData(''); } catch (e) {}
-            }
-            $('#test_editor1').val('');
+            self.setEditorHtml('');
             self._emailTags = { to: [], cc: [] };
             self._renderTags('to');
             self._renderTags('cc');
@@ -544,6 +631,121 @@
                 $(btn).find('.indicator-progress').hide();
                 $(btn).find('.indicator-label').show();
             }
+        },
+
+        _initEditor: function () {
+            var self = this;
+            self._loadQuill(function () {
+                self._initQuillEditor();
+            });
+        },
+
+        _initQuillEditor: function () {
+            var self = this;
+            var quillContainer = document.getElementById('test_editor_quill');
+            if (!quillContainer) {
+                self._initCkEditor();
+                return;
+            }
+
+            if (self._quill && self._quill.root && quillContainer.contains(self._quill.root)) {
+                self._editorInitialized = true;
+                return;
+            }
+
+            self._quill = null;
+            self._editorInitialized = false;
+
+            try {
+                quillContainer.innerHTML = '';
+                self._quill = new Quill('#test_editor_quill', {
+                    theme: 'snow',
+                    placeholder: 'Compose executive email presentation...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['link', 'clean']
+                        ]
+                    }
+                });
+
+                self._quill.on('text-change', function () {
+                    var html = self.getEditorHtml();
+                    $('#test_editor1').val(html);
+                });
+
+                self._editorInitialized = true;
+                self.syncFirstRecipientSalutation();
+            } catch (err) {
+                console.warn('[ForwardResume] Quill initialization warning:', err);
+                self._initCkEditor();
+            }
+        },
+
+        getEditorHtml: function () {
+            var self = this;
+            if (self._quill && self._quill.root) {
+                var html = self._quill.root.innerHTML || '';
+                if (html === '<p><br></p>') return '';
+                return html;
+            }
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { return CKEDITOR.instances['test_editor1'].getData() || ''; } catch (e) {}
+            }
+            return $('#test_editor1').val() || '';
+        },
+
+        setEditorHtml: function (html, callback) {
+            var self = this;
+            var cleanHtml = (html === null || html === undefined) ? '' : String(html);
+            $('#test_editor1').val(cleanHtml);
+
+            if (self._quill && self._quill.root) {
+                self._quill.root.innerHTML = cleanHtml;
+                if (callback) callback();
+                return;
+            }
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try {
+                    CKEDITOR.instances['test_editor1'].setData(cleanHtml, callback);
+                    return;
+                } catch (e) {}
+            }
+
+            if (callback) callback();
+        },
+
+        insertHtmlToEditor: function (html) {
+            var self = this;
+            if (!html) return;
+
+            if (self._quill && self._quill.root) {
+                var range = self._quill.getSelection(true);
+                var index = range ? range.index : self._quill.getLength();
+                self._quill.clipboard.dangerouslyPasteHTML(index, html);
+                $('#test_editor1').val(self.getEditorHtml());
+                return;
+            }
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                var inst = CKEDITOR.instances['test_editor1'];
+                try {
+                    inst.insertHtml(html);
+                    $('#test_editor1').val(inst.getData());
+                    return;
+                } catch (e) {
+                    console.warn('CKEditor insertHtml notice:', e);
+                }
+            }
+
+            var currentVal = $('#test_editor1').val() || '';
+            var updatedVal = currentVal ? (currentVal + '<br>' + html) : html;
+            $('#test_editor1').val(updatedVal);
         },
 
         _initCkEditor: function () {
@@ -644,14 +846,9 @@
             // Populate Executive Presentation Body into Editor
             if (self._applicationData.length > 0) {
                 var initialBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
-                $('#test_editor1').val(initialBody);
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try {
-                        CKEDITOR.instances['test_editor1'].setData(initialBody, function () {
-                            self.syncFirstRecipientSalutation();
-                        });
-                    } catch (e) {}
-                }
+                self.setEditorHtml(initialBody, function () {
+                    self.syncFirstRecipientSalutation();
+                });
             }
 
             // Render Candidate Roster Cards
@@ -749,6 +946,7 @@
                 missingBanner.hide();
             }
 
+            $('#test_fwd_format_preview_card').show();
             self.updateCumulativeSize();
         },
 
@@ -1395,23 +1593,7 @@
                 if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
                 return;
             }
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                var inst = CKEDITOR.instances['test_editor1'];
-                try {
-                    inst.insertHtml(tableHtml);
-                    $('#test_editor1').val(inst.getData());
-                    if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
-                    return;
-                } catch(e) {
-                    console.warn('CKEditor insertHtml notice:', e);
-                }
-            }
-            var currentVal = $('#test_editor1').val() || '';
-            var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
-            $('#test_editor1').val(updatedVal);
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
-            }
+            self.insertHtmlToEditor(tableHtml);
             if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
         },
 
@@ -1439,8 +1621,19 @@
             var sub = rawSubject
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
+                .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[COMPANY_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_NAME\}\}/gi, companyName)
+                .replace(/\[CLIENT_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
+                .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle);
             $('#test_subject').val(sub);
 
@@ -1450,11 +1643,23 @@
 
             var body = rawBody
                 .replace(/\[\{HR_NAME\}\]/gi, recipientName)
+                .replace(/\{\{HR_NAME\}\}/gi, recipientName)
                 .replace(/\[\{RECIPIENT_NAME\}\]/gi, recipientName)
                 .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
                 .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\{\{CANDIDATE_NAME\}\}/gi, candidateName)
+                .replace(/\[CANDIDATE_NAME\]/gi, candidateName)
                 .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{COMPANY_NAME\}\}/gi, companyName)
+                .replace(/\[COMPANY_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_NAME\}\}/gi, companyName)
+                .replace(/\[CLIENT_NAME\]/gi, companyName)
+                .replace(/\[\{CLIENT_COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\{\{CLIENT_COMPANY_NAME\}\}/gi, companyName)
                 .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\{\{JOB_TITLE\}\}/gi, jobTitle)
+                .replace(/\[JOB_TITLE\]/gi, jobTitle)
                 .replace(/\[\{POSITION\}\]/gi, jobTitle)
                 .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
                 .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
@@ -1462,16 +1667,12 @@
                 .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, candidateSummaryHtml)
                 .replace(/\[\{MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
                 .replace(/\[MATRIX_TABLE\]/gi, candidateSummaryHtml)
-                .replace(/\[\{DATE\}\]/gi, dateStr);
+                .replace(/\[\{DATE\}\]/gi, dateStr)
+                .replace(/\{\{DATE\}\}/gi, dateStr);
 
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try {
-                    CKEDITOR.instances['test_editor1'].setData(body, function () {
-                        self.syncFirstRecipientSalutation();
-                    });
-                } catch (e) {}
-            }
-            $('#test_editor1').val(body);
+            self.setEditorHtml(body, function () {
+                self.syncFirstRecipientSalutation();
+            });
             setTimeout(function () { self.syncFirstRecipientSalutation(); }, 50);
             return true;
         },
@@ -1479,10 +1680,7 @@
         onTemplateChange: function (templateId) {
             var self = this;
             if (!templateId) {
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try { CKEDITOR.instances['test_editor1'].setData(''); } catch (e) {}
-                }
-                $('#test_editor1').val('');
+                self.setEditorHtml('');
                 $('#test_subject').val('');
                 return;
             }
@@ -1494,14 +1692,9 @@
                     : ('Forwarded Candidate Profile: ' + (self._applicationData[0] ? (self._applicationData[0].full_name || 'Candidate') : 'Candidate') + ' - ' + (self._applicationData[0] ? (self._applicationData[0].designation || 'Specialist') : 'Specialist'));
                 $('#test_subject').val(subj);
                 var execBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try {
-                        CKEDITOR.instances['test_editor1'].setData(execBody, function () {
-                            self.syncFirstRecipientSalutation();
-                        });
-                    } catch (e) {}
-                }
-                $('#test_editor1').val(execBody);
+                self.setEditorHtml(execBody, function () {
+                    self.syncFirstRecipientSalutation();
+                });
                 return;
             }
 
@@ -1539,16 +1732,10 @@
                     if (res && res.status === 'success') {
                         var desc = res.template_description || res.template_body || '';
                         $('#test_subject').val(res.subject || '');
-                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                            try {
-                                CKEDITOR.instances['test_editor1'].setData(desc, function () {
-                                    self.syncFirstRecipientSalutation();
-                                });
-                            } catch (e) {}
-                        }
-                        $('#test_editor1').val(desc);
+                        self.setEditorHtml(desc, function () {
+                            self.syncFirstRecipientSalutation();
+                        });
                         setTimeout(function () { self.syncFirstRecipientSalutation(); }, 100);
-                    }
                 },
                 error: function (xhr) {
                     console.error('Failed to load email template:', xhr);
@@ -1758,26 +1945,23 @@
             // Strictly single greeting, NO quotes around the name (e.g. "Dear Shobha,")
             var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                var editor = CKEDITOR.instances['test_editor1'];
-                var data = editor.getData() || '';
+            var data = self.getEditorHtml() || '';
 
-                // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
-                var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
-                // Pattern 2: Plain-text or br-separated leading greeting
-                var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
+            // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
+            var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+            // Pattern 2: Plain-text or br-separated leading greeting
+            var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
 
-                if (greetingBlockRegex.test(data)) {
-                    var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
-                    if (updated !== data) editor.setData(updated);
-                } else if (plainGreetingRegex.test(data)) {
-                    var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
-                    if (updated !== data) editor.setData(updated);
-                } else if (data.trim() !== '') {
-                    editor.setData('<p>' + targetGreeting + '</p>\n' + data);
-                } else {
-                    editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
-                }
+            if (greetingBlockRegex.test(data)) {
+                var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
+                if (updated !== data) self.setEditorHtml(updated);
+            } else if (plainGreetingRegex.test(data)) {
+                var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
+                if (updated !== data) self.setEditorHtml(updated);
+            } else if (data.trim() !== '') {
+                self.setEditorHtml('<p>' + targetGreeting + '</p>\n' + data);
+            } else {
+                self.setEditorHtml('<p>' + targetGreeting + '</p><p><br></p>');
             }
         },
 
@@ -1789,9 +1973,9 @@
             $('#test_rcp_search_input').val('');
             self.filterRecipients('');
 
-            // Automatically switch to client contacts for 'to' field (forward resume goes to clients)
-            // and internal team for 'cc' field.
-            if (self._currentRcpTarget === 'to') {
+            // Automatically switch to client contacts for 'to' field only if client contacts exist
+            var hasClientTab = $('#test_rcp_tab_client').length > 0 && $('#test_rcp_tab_client').is(':visible');
+            if (self._currentRcpTarget === 'to' && hasClientTab) {
                 self.switchRecipientTab('client');
             } else {
                 self.switchRecipientTab('internal');
@@ -1799,35 +1983,25 @@
 
             var drawerEl = document.getElementById('kt_test_recipient_drawer');
             if (drawerEl) {
-                if (drawerEl.parentElement !== document.body) {
-                    $('body > #kt_test_recipient_drawer').not(drawerEl).remove();
-                    document.body.appendChild(drawerEl);
-                }
-                if (typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (!drawer) {
-                        KTDrawer.createInstances();
-                        drawer = KTDrawer.getInstance(drawerEl);
-                    }
-                    if (drawer) drawer.show();
-                }
+                $('#kt_test_recipient_drawer_overlay').css('display', 'block');
+                $(drawerEl).css('display', 'block');
             }
 
             self._loadRecipients();
         },
 
         closeRecipientDrawer: function () {
-            var drawerEl = document.getElementById('kt_test_recipient_drawer');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) drawer.hide();
-            }
+            $('#kt_test_recipient_drawer').css('display', 'none');
+            $('#kt_test_recipient_drawer_overlay').css('display', 'none');
         },
 
         _loadRecipients: function () {
             var self = this;
+            var targetJobId = (self._currentJobIdArr && self._currentJobIdArr.length) ? self._currentJobIdArr[0] : 0;
+            var cacheKey = 'job_' + targetJobId;
             var now = Date.now();
-            if (self._recipientsCache && (now - self._recipientsCacheTime < 15 * 60 * 1000)) {
+
+            if (self._recipientsCache && self._recipientsCacheKey === cacheKey && (now - self._recipientsCacheTime < 5 * 60 * 1000)) {
                 self._renderRecipientsList(self._recipientsCache);
                 return;
             }
@@ -1836,11 +2010,17 @@
             $.ajax({
                 url: self._routes.recipients,
                 type: 'POST',
-                data: { '_token': token },
+                data: {
+                    '_token': token,
+                    'jobIdArr': self._currentJobIdArr || [],
+                    'job_id': targetJobId,
+                    'arr': self._currentCandidateIds || []
+                },
                 dataType: 'json',
                 success: function (res) {
                     if (res && res.status === 'success') {
                         self._recipientsCache = res;
+                        self._recipientsCacheKey = cacheKey;
                         self._recipientsCacheTime = Date.now();
                         self._renderRecipientsList(res);
                     }
@@ -1855,13 +2035,15 @@
             var self = this;
             var internalWrap = $('#test_rcp_section_internal');
             var clientWrap = $('#test_rcp_section_client');
+            var clientTab = $('#test_rcp_tab_client');
+            var internalTab = $('#test_rcp_tab_internal');
 
             var payload = (data && data.data) ? data.data : (data || {});
             var internalTeam = payload.internal_team || payload.internal_team_data || [];
             var clientContacts = payload.client_contacts || payload.client_contacts_data || [];
 
-            $('#test_rcp_internal_count').text(internalTeam.length + ' active members');
-            $('#test_rcp_client_count').text(clientContacts.length + ' available contacts');
+            $('#test_rcp_internal_count').text(internalTeam.length + ' active');
+            $('#test_rcp_client_count').text(clientContacts.length + ' available');
 
             internalWrap.empty();
             clientWrap.empty();
@@ -1887,8 +2069,21 @@
             }
 
             if (clientContacts.length === 0) {
-                clientWrap.html('<div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No client contacts found.</div>');
+                // If job has NO client contacts (e.g. My Organization job), hide the Client Contacts tab completely!
+                if (clientTab.length) {
+                    clientTab.hide();
+                }
+                if (internalTab.length) {
+                    internalTab.show();
+                    self.switchRecipientTab('internal');
+                }
+                clientWrap.hide();
+                $('.rcp-header-subtitle').text('Choose a contact from your organization.');
             } else {
+                if (clientTab.length) {
+                    clientTab.show();
+                }
+                $('.rcp-header-subtitle').text('Choose a contact from your organization or client company.');
                 clientContacts.forEach(function (user) {
                     clientWrap.append(self._buildContactItemHtml(user, 'client'));
                 });
@@ -1906,9 +2101,20 @@
             var name = user.name || (type === 'internal' ? 'Team Member' : 'Client Contact');
             var email = user.email || '';
             var role = user.display_name || user.role_name || user.company_name || '';
+            var roleTag = user.role_tag || (type === 'internal' ? 'Active' : '');
             var initial = (name.charAt(0) || 'U').toUpperCase();
             var avatarBg = type === 'internal' ? '#EFF6FF' : '#DCFCE7';
             var avatarColor = type === 'internal' ? '#2563EB' : '#15803D';
+
+            var badgeBg = '#DCFCE7';
+            var badgeColor = '#15803D';
+            if (roleTag === 'Hiring Manager') {
+                badgeBg = '#EEF2FF';
+                badgeColor = '#4F46E5';
+            } else if (roleTag.indexOf('Agency Added By') !== -1) {
+                badgeBg = '#FEF3C7';
+                badgeColor = '#D97706';
+            }
 
             return (
                 '<div class="rcp-contact-item" data-name="' + escapeHtml(name.toLowerCase()) + '" data-display-name="' + escapeHtml(name) + '" data-email="' + escapeHtml(email.toLowerCase()) + '" data-role="' + escapeHtml(role.toLowerCase()) + '">' +
@@ -1920,7 +2126,7 @@
                     '<div class="rcp-info">' +
                       '<div style="display:flex;align-items:center;gap:6px;">' +
                         '<span class="rcp-name">' + escapeHtml(name) + '</span>' +
-                        (type === 'internal' ? '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D;font-weight:600;">Active</span>' : '') +
+                        (roleTag ? '<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:600;">' + escapeHtml(roleTag) + '</span>' : '') +
                       '</div>' +
                       '<div class="rcp-email">' + escapeHtml(email) + '</div>' +
                       '<div class="rcp-role">' + escapeHtml(role) + '</div>' +
@@ -1935,6 +2141,9 @@
         },
 
         switchRecipientTab: function (tab) {
+            if (tab === 'client' && (!($('#test_rcp_tab_client').is(':visible')) || $('#test_rcp_tab_client').length === 0)) {
+                tab = 'internal';
+            }
             $('#test_rcp_tab_internal, #test_rcp_tab_client').removeClass('active');
             $('#test_rcp_tab_' + tab).addClass('active');
             if (tab === 'internal') {
@@ -1944,7 +2153,7 @@
                 $('#test_rcp_section_internal').hide();
                 $('#test_rcp_section_client').show();
             }
-            this.filterRecipients($('#test_rcp_search_input').val());
+            this.filterRecipients($('#test_rcp_search_input').val() || '');
         },
 
         filterRecipients: function (query) {
@@ -2114,9 +2323,7 @@
             $('#test_subject').css('border-color', '#E5E7EB');
 
             // Validate Body
-            var editorData = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1'])
-                ? CKEDITOR.instances['test_editor1'].getData()
-                : ($('#test_editor1').val() || '');
+            var editorData = self.getEditorHtml();
             var textOnly = $('<div>').html(editorData).text().trim().replace(/[\s\u00A0]+/g, '');
             if (!textOnly && editorData.indexOf('<img') === -1) {
                 Swal.fire({
@@ -2313,6 +2520,18 @@
                                     uploadedAttachmentUuids.push(res.value.attachment_id);
                                 }
                             });
+
+                            // SEC-01 Attestation Guard: Abort dispatch if any attachment upload failed
+                            if (filesToInitiate.length > 0 && uploadedAttachmentUuids.length < filesToInitiate.length) {
+                                restoreBtn();
+                                Swal.fire({
+                                    title: 'Attachment Upload Failed',
+                                    text: 'Failed to securely upload candidate attachments to cloud storage. Please check your network connection and try again.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#0D9488'
+                                });
+                                return;
+                            }
                         }
                     }
                 } catch (prepErr) {
@@ -2410,17 +2629,38 @@
             var self = this;
             self._compileToken++;
             self._isCompiling = false;
-            var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                           document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                           document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) drawer.hide();
+            var drawerIds = [
+                'kt_test_fwd_resume_drawer',
+                'kt_test_fwd_resume_drawer_aptk',
+                'kt_test_fwd_resume_drawer_clientapp'
+            ];
+            drawerIds.forEach(function (id) {
+                var drawerEl = document.getElementById(id);
+                if (drawerEl) {
+                    drawerEl.classList.remove('drawer-on');
+                    drawerEl.style.removeProperty('transform');
+                    drawerEl.style.removeProperty('display');
+                    if (typeof KTDrawer !== 'undefined') {
+                        var drawer = KTDrawer.getInstance(drawerEl);
+                        if (drawer) {
+                            drawer.shown = false;
+                        }
+                    }
+                }
+            });
+
+            // Cleanly remove dedicated Forward Resume overlay — leaves Candidate Drawer overlay 100% intact
+            $('.fwd-resume-overlay').remove();
+
+            if (typeof self.closeFormatDropdown === 'function') {
+                self.closeFormatDropdown();
             }
-            if (drawerEl) {
-                drawerEl.classList.remove('drawer-on');
+            if (typeof self.closeRecipientDrawer === 'function') {
+                self.closeRecipientDrawer();
             }
-            self.closeRecipientDrawer();
+            if (typeof self._resetDrawerForm === 'function') {
+                self._resetDrawerForm();
+            }
         }
     };
 
@@ -2436,7 +2676,7 @@
     }
 
     // Dismiss custom format dropdown when clicking outside
-    $(document).on('click', function (e) {
+    $(document).off('click.fwdResumeFormat').on('click.fwdResumeFormat', function (e) {
         if (!$(e.target).closest('#test_fwd_format_dropdown_wrap').length) {
             if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
                 window.ForwardResumeManager.closeFormatDropdown();
@@ -2444,60 +2684,28 @@
         }
     });
 
-    // Dismiss Forward Resume drawer when clicking anywhere outside
-    $(document).on('click', function (e) {
-        var mgr = window.ForwardResumeManager;
-        if (!mgr) return;
-
-        // Ignore clicks within 250ms of drawer opening to prevent closing from the trigger click
-        if (Date.now() - (mgr._lastOpenedTime || 0) < 250) {
-            return;
-        }
-
-        var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                       document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                       document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-        if (!drawerEl || !drawerEl.classList.contains('drawer-on')) {
-            return;
-        }
-
-        var rcpEl = document.getElementById('kt_test_recipient_drawer');
-
-        // Check if event originated inside the main drawer or recipient drawer using composedPath if available
-        var path = (e.originalEvent && typeof e.originalEvent.composedPath === 'function') ? e.originalEvent.composedPath() : null;
-        if (path && Array.isArray(path)) {
-            if (path.includes(drawerEl) || (rcpEl && path.includes(rcpEl))) {
-                return;
+    // Listen for drawer hidden event (whether closed via close button, backdrop click, or ESC key)
+    $(document).on('kt.drawer.hidden hidden.kt.drawer kt.drawer.after.hidden', '#kt_test_fwd_resume_drawer, #kt_test_fwd_resume_drawer_aptk, #kt_test_fwd_resume_drawer_clientapp', function () {
+        if (window.ForwardResumeManager) {
+            if (typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+                window.ForwardResumeManager.closeFormatDropdown();
+            }
+            if (typeof window.ForwardResumeManager.closeRecipientDrawer === 'function') {
+                window.ForwardResumeManager.closeRecipientDrawer();
+            }
+            if (typeof window.ForwardResumeManager._resetDrawerForm === 'function') {
+                window.ForwardResumeManager._resetDrawerForm();
             }
         }
-
-        // Direct DOM ancestry check
-        if (drawerEl.contains(e.target) || $(e.target).closest(drawerEl).length) {
-            return;
+        // Maintain body attributes for parent Candidate Drawer if it is still active
+        if ($('#kt_activitiesApplication').hasClass('drawer-on')) {
+            document.body.setAttribute('data-kt-drawer', 'on');
+            document.body.setAttribute('data-kt-drawer-activitiesApplication', 'on');
+        } else if ($('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
+            document.body.setAttribute('data-kt-drawer', 'on');
+            document.body.setAttribute('data-kt-drawer-activitiesBenchApplication', 'on');
         }
-
-        // Recipient drawer ancestry check
-        if (rcpEl && (rcpEl.contains(e.target) || $(e.target).closest(rcpEl).length)) {
-            return;
-        }
-
-        // If node was removed/detached from DOM during click handling (e.g., tag removal, DOM re-render)
-        if (!document.body.contains(e.target) && (!path || !path.includes(document.body))) {
-            return;
-        }
-
-        // Do not close if interacting with floating dialogs, dropdowns, popups attached to body
-        if ($(e.target).closest('.swal2-container, .swal2-popup, .select2-container, .select2-dropdown, .flatpickr-calendar, .tagify__dropdown, .cke_dialog, .cke, .modal, .modal-backdrop, .tooltip, .popover, .dropdown-menu').length) {
-            return;
-        }
-
-        // Do not close if clicking any trigger button that launches the drawer
-        if ($(e.target).closest('#hdr_fwd_resume_btn, .test_fwd_resume, #kt_test_fwd_resume_drawer_toggle, #kt_test_fwd_resume_drawer_toggle_aptk, #kt_test_fwd_resume_drawer_toggle_clientapp').length) {
-            return;
-        }
-
-        // Clicked outside -> close Forward Resume drawer
-        mgr.close();
+        document.body.classList.remove('drawer-on');
     });
 
 })(window, document, jQuery);

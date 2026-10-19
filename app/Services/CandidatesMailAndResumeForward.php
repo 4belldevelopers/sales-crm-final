@@ -6,7 +6,9 @@ use App\Models\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class CandidatesMailAndResumeForward
 {
@@ -119,38 +121,78 @@ class CandidatesMailAndResumeForward
                     $msg->replyTo($fromAddress_reply, $fromName_reply);
                 }
 
-                // ✅ Attachment from Local Storage or Remote URL (Queue Safe)
-                // ✅ Dynamic Attachments
+                // ✅ Dynamic Attachments (Direct In-Memory & Cloudflare R2 Streaming - 0 Server Disk I/O)
                 if (count($attachments) > 0) {
                     foreach ($attachments as $attachment) {
-                        $path = $attachment['path'] ?? '';
+                        $filename = $attachment['filename'] ?? 'attachment.pdf';
+                        $mime = $attachment['mime'] ?? (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+
+                        // 1. Direct In-Memory raw bytes
+                        if (! empty($attachment['data']) || ! empty($attachment['bytes']) || ! empty($attachment['raw_bytes'])) {
+                            $fileBytes = $attachment['data'] ?? ($attachment['bytes'] ?? $attachment['raw_bytes']);
+                            if ($fileBytes !== false && strlen($fileBytes) > 0) {
+                                $msg->attachData($fileBytes, $filename, ['mime' => $mime]);
+                                continue;
+                            }
+                        }
+
+                        $path = $attachment['path'] ?? ($attachment['r2_key'] ?? '');
                         if (empty($path)) {
                             continue;
                         }
 
-                        $filename = $attachment['filename'] ?? basename($path);
-                        $mime = strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+                        // 2. Direct Cloudflare R2 fetch (Streamed directly into memory, 0 server disk writes)
+                        $r2Key = $attachment['r2_key'] ?? (str_starts_with($path, 'temp-forward/') || str_starts_with($path, 'user-uploads/') ? $path : null);
+                        if (! empty($r2Key)) {
+                            try {
+                                if (Storage::disk('r2')->exists($r2Key)) {
+                                    $r2Bytes = Storage::disk('r2')->get($r2Key);
+                                    if ($r2Bytes !== false && strlen($r2Bytes) > 0) {
+                                        $msg->attachData($r2Bytes, $filename, ['mime' => $mime]);
+                                        continue;
+                                    }
+                                }
+                            } catch (\Throwable $r2Ex) {
+                                Log::warning('[CandidatesMailAndResumeForward] R2 attachment stream error: '.$r2Ex->getMessage());
+                            }
+                        }
 
-                        // Check if it is a local filesystem path (e.g. generated custom PDF)
+                        // 3. Local filesystem path
                         if (! empty($attachment['is_local']) || (file_exists($path) && ! filter_var($path, FILTER_VALIDATE_URL))) {
                             if (file_exists($path)) {
                                 $fileContent = file_get_contents($path);
                                 if ($fileContent !== false && strlen($fileContent) > 0) {
                                     $msg->attachData($fileContent, $filename, ['mime' => $mime]);
+                                    continue;
                                 }
                             }
-                        } else {
-                            // Remote URL (e.g. Cloudflare R2 / S3 storage)
+                        }
+
+                        // 4. Remote HTTP URL (e.g. Cloudflare CDN / S3 presigned URL)
+                        if (filter_var($path, FILTER_VALIDATE_URL)) {
                             $attachmentData = $this->downloadAttachment($path);
                             if ($attachmentData && ! empty($attachmentData['data'])) {
                                 $finalName = $attachment['filename'] ?? $attachmentData['filename'];
                                 $msg->attachData($attachmentData['data'], $finalName, ['mime' => $mime]);
+                                continue;
                             } elseif (@file_get_contents($path)) {
                                 $fileContent = file_get_contents($path);
                                 if ($fileContent !== false && strlen($fileContent) > 0) {
                                     $msg->attachData($fileContent, $filename, ['mime' => $mime]);
+                                    continue;
                                 }
                             }
+                        }
+
+                        // 5. Fallback check for R2 key if not already caught
+                        try {
+                            if (Storage::disk('r2')->exists($path)) {
+                                $r2Bytes = Storage::disk('r2')->get($path);
+                                if ($r2Bytes !== false && strlen($r2Bytes) > 0) {
+                                    $msg->attachData($r2Bytes, $filename, ['mime' => $mime]);
+                                }
+                            }
+                        } catch (\Throwable $fallbackR2) {
                         }
                     }
                 }
