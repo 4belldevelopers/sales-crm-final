@@ -4017,6 +4017,7 @@ END:VCALENDAR";
         $interviewLink = (string) ($context['interview_link'] ?? ($context['videoUrl'] ?? ''));
         $interviewLinkUrl = (string) ($context['interview_link_url'] ?? ($context['videoUrlInter'] ?? ''));
         $interviewQuestions = (string) ($context['interview_questions'] ?? ($context['interview_ques'] ?? ''));
+        $screeningQuestions = (string) ($context['screening_questions'] ?? ($context['screening_ques'] ?? ''));
         $interviewLevel = (string) ($context['interview_level'] ?? '');
         $textSet = (string) ($context['text_set'] ?? '');
         $otherDescription = (string) ($context['other_description'] ?? ($context['otherDetails'] ?? ''));
@@ -4081,7 +4082,8 @@ END:VCALENDAR";
             'INTERVIEW_MODE' => $interviewMode,
             'INTERVIEW_LINK' => $interviewLink,
             'INTERVIEW_LINK_URL' => $interviewLinkUrl,
-            'INTERVIEW_QUESTIONS' => $interviewQuestions,
+            'INTERVIEW_QUESTIONS' => $interviewQuestions ?: $screeningQuestions,
+            'SCREENING_QUESTIONS' => $screeningQuestions ?: $interviewQuestions,
             'INTERVIEW_LEVEL' => $interviewLevel,
             'TEXT_SET' => $textSet,
             'OTHER_DESCRIPTION' => $otherDescription,
