@@ -1082,24 +1082,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   line-height: 1.4;
 }
 .fwd-tpl-item-preview-subj {
-  font-size: 11px;
-  color: #475569;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 5px;
-  padding: 3px 8px;
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  line-height: 1.3;
-}
-.fwd-tpl-subj-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
+  display: none !important;
 }
 .fwd-tpl-item-badges {
   display: flex;
@@ -1291,8 +1274,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                 <div class="fwd-tpl-trigger-title" id="testTplTriggerTitle" style="display:none;"></div>
                 <div class="fwd-tpl-trigger-meta" id="testTplTriggerMeta" style="display:none;">
                   <span id="testTplTriggerCategory" class="fwd-tpl-badge-pill"></span>
-                  <span style="color:#CBD5E1;">•</span>
-                  <span id="testTplTriggerSubjPreview" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                  <span id="testTplTriggerSubjPreview" style="display:none;"></span>
                 </div>
               </div>
             </div>
@@ -1314,7 +1296,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" class="fwd-tpl-search-input" id="testTplSearchInput" placeholder="Search templates by title, subject, or scenario..." autocomplete="off">
+                <input type="text" class="fwd-tpl-search-input" id="testTplSearchInput" placeholder="Search templates by title, category, or scenario..." autocomplete="off">
                 <span class="fwd-tpl-search-clear" id="testTplSearchClear" onclick="if(window.clearTestTemplateSearch) window.clearTestTemplateSearch();">&times;</span>
               </div>
             </div>
@@ -3177,29 +3159,8 @@ window.renderTestTemplateCards = function() {
     emptyNotice.hide();
     $('#testTplFilteredCountText').text('Showing ' + filtered.length + ' ' + (filtered.length === 1 ? 'template' : 'templates'));
 
-    var candName = @json($firstCandName ?? 'Candidate');
-    var jobTitle = @json($firstCandDesig ?? 'Specialist');
-    var compName = @json($compName ?? 'Hiring Partner');
-    var candCount = @json($candCount ?? 1);
-    var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
     filtered.forEach(function(tmpl) {
         var isSelected = String(tmpl.id) === String(selectedId);
-        var subjPreview = tmpl.subject || '';
-        if (tmpl.isDynamicMatrix) {
-            subjPreview = candCount > 1
-                ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
-                : ('Forwarded Candidate Profile: ' + candName + ' - ' + jobTitle);
-        } else {
-            subjPreview = subjPreview
-                .replace(/\[\{CURRENTDATE\}\]/gi, dateStr)
-                .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
-                .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
-                .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
-                .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
-                .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
-        }
-
         var catClass = tmpl.category || 'feedback';
         var iconHtml = window.getTestTemplateIconSvg(tmpl, 18);
 
@@ -3218,15 +3179,6 @@ window.renderTestTemplateCards = function() {
                     '</div>' +
                 '</div>' +
                 '<div class="fwd-tpl-item-desc">' + tmpl.desc + '</div>' +
-                (subjPreview ? (
-                    '<div class="fwd-tpl-item-preview-subj">' +
-                        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">' +
-                            '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>' +
-                        '</svg>' +
-                        '<span style="font-weight:600;color:#64748B;">Subject:</span>' +
-                        '<span class="fwd-tpl-subj-text">' + subjPreview + '</span>' +
-                    '</div>'
-                ) : '') +
             '</div>' +
         '</div>';
 
