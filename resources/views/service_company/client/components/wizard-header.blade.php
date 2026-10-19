@@ -1,12 +1,13 @@
 {{-- 
-  Unified Header & Compact 5-Stage Progress Stepper for Add / Edit Client Workflow
+  Unified Header & 5-Step Stepper Navigation for Add / Edit Client Workflow
+  Pixel-matched to user specification (Reference: media_1792403786709_d614e0b3.png)
   Strictly isolated to Client Wizard (Service Company & Admin)
   Optimized for 15.6" Laptops (1366x768 & 1920x1080) and Smaller Screens
 --}}
 <div class="card client-top-nav-card" id="client_top_nav_card">
   <div class="client-header-grid">
     
-    <!-- LEFT: Title Block (Clean, without separate back arrow) -->
+    <!-- LEFT: Title Block -->
     <div class="client-header-identity">
       <div class="client-header-titles">
         <h2 class="client-header-title" id="client_header_title">{{ $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client' }}</h2>
@@ -14,17 +15,22 @@
       </div>
     </div>
 
-    <!-- CENTER: Compact 5-Stage Stepper -->
+    <!-- CENTER: Stepper (1 Company → 2 Description → 3 Address → 4 Contacts → 5 Review) -->
     <div class="client-header-stepper-col">
       <div class="client-stepper-wrap" id="client_wizard_stepper" role="tablist">
         
-        <!-- Step 1: Client Info -->
-        <div class="client-step-item is-active" data-step="1" role="tab" aria-current="step" aria-label="Step 1: Client Info">
+        <!-- Step 1: Company -->
+        <div class="client-step-item is-active" data-step="1" role="tab" aria-current="step" aria-label="Step 1: Company">
           <div class="client-step-circle client-step-circle-1 is-active">1</div>
-          <span class="client-step-name">Client Info</span>
+          <span class="client-step-name">Company</span>
         </div>
 
-        <div class="client-step-line" aria-hidden="true"></div>
+        <div class="client-step-arrow" data-arrow-after="1" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
 
         <!-- Step 2: Description -->
         <div class="client-step-item" data-step="2" role="tab" aria-label="Step 2: Description">
@@ -32,7 +38,12 @@
           <span class="client-step-name">Description</span>
         </div>
 
-        <div class="client-step-line" aria-hidden="true"></div>
+        <div class="client-step-arrow" data-arrow-after="2" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
 
         <!-- Step 3: Address -->
         <div class="client-step-item" data-step="3" role="tab" aria-label="Step 3: Address">
@@ -40,7 +51,12 @@
           <span class="client-step-name">Address</span>
         </div>
 
-        <div class="client-step-line" aria-hidden="true"></div>
+        <div class="client-step-arrow" data-arrow-after="3" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
 
         <!-- Step 4: Contacts -->
         <div class="client-step-item" data-step="4" role="tab" aria-label="Step 4: Contacts">
@@ -48,12 +64,17 @@
           <span class="client-step-name">Contacts</span>
         </div>
 
-        <div class="client-step-line" aria-hidden="true"></div>
+        <div class="client-step-arrow" data-arrow-after="4" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
 
-        <!-- Step 5: Submit -->
-        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Submit">
+        <!-- Step 5: Review -->
+        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Review">
           <div class="client-step-circle client-step-circle-5 is-upcoming">5</div>
-          <span class="client-step-name">Submit</span>
+          <span class="client-step-name">Review</span>
         </div>
 
       </div>
@@ -61,9 +82,9 @@
 
     <!-- RIGHT: Unified Contextual Action Navigation Area -->
     <div class="client-header-actions" id="client_header_actions">
-      <!-- Step 1: Close (x) Button (Visible on Page 1 immediately before Next button) -->
+      <!-- Step 1: Close (✕) Button (Pixel-perfect match to screenshot) -->
       <button type="button" class="btn client-top-close-btn client-nav-close" id="client_top_close_btn" title="Close and exit">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -79,8 +100,8 @@
         <span>Back</span>
       </button>
 
-      <!-- Steps 1-4: Next Page Button -->
-      <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
+      <!-- Steps 2-4: Next Page Button (Hidden on step 1, shown on steps 2-4) -->
+      <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn" style="display:none !important;">
         <span>Next Page</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/>
