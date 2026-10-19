@@ -5884,8 +5884,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->get();
         }
 
-        // Sort naturally by template ID so templates appear in clean ascending order
+        // Sort naturally by template number [TEMPLATE-X] ascending so templates 1 to 15 appear in order
         $this->templateData = $this->templateData->sortBy(function ($item) {
+            $name = $item->display_name ?? ($item->template_name ?? '');
+            if (preg_match('/\[TEMPLATE-(\d+)\]/i', $name, $matches)) {
+                return (int) $matches[1];
+            }
+
             return (int) ($item->e_temp_id ?? ($item->id ?? 0));
         })->values();
 
