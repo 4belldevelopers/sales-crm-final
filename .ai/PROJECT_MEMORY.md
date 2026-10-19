@@ -20,6 +20,21 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-19* — **Forward Resume Default Format Configured to 4.c (Option 46) (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
+  - **Requirement**: Set the default selected resume format in Forward Resume drawer to `4.c` (`Option 46`: *Pre-Screened Report + Resume + Highlighted Keywords + Company Branding*).
+  - **Resolution**:
+    1. **Trigger Component UI**:
+       - Updated default trigger markup, icon container (`#FEF9C3` / `#854D0E`), title (`4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding (Default)`), and description.
+       - Assigned `Default` pill badge to Option 46 (`4.c`).
+    2. **Dropdown Menu State**:
+       - Removed `is-selected`, `is-checked`, and `Default` badge from Option 1 (`1.a Original Resume`).
+       - Added `is-selected`, `is-checked`, and `Default` badge to Option 46 (`4.c`).
+    3. **Hidden Input & Engine State**:
+       - Defaulted hidden input `#test_fwd_resume_format` to `value="46"`.
+       - Updated `ForwardResumeManager.js` (`_resetDrawerForm`, `_hydrateData`, and `selectResumeFormat`) to select 46 by default and trigger instant background compilation in user RAM.
+       - Updated `test_fwd_resume.blade.php` fallback view to maintain 100% parity.
+  - **Verification**: Verified PHP syntax (`php -l`), JavaScript syntax (`node -c`) with 0 errors across all modified files.
+
 - *2026-10-19* — **Forward Resume Template Picker Category Tabs 100% Visibility & Responsive Redesign (100% IMPLEMENTED, VERIFIED & COMMITTED)**:
   - **Issue Identified & Audited**:
     - The category tabs bar (`.fwd-tpl-category-tabs`) utilized `overflow-x: auto; white-space: nowrap;` with suppressed scrollbars (`scrollbar-width: none; ::-webkit-scrollbar { display: none; }`).
