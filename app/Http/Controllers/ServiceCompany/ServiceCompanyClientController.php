@@ -2568,7 +2568,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
         $companyId = (int) auth()->user()->company_id;
-        $this->industriesManifest = IndustryTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':industry_version', 1));
+        $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
         return view('service_company.client.create', $this->data);
     }
@@ -2656,8 +2656,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (! empty($request->website)) {
             $client->website = $request->website;
         }
+        $customIndustry = null;
         if (! empty($request->industry)) {
-            $client->industry = $request->industry;
+            if (is_numeric($request->industry)) {
+                $client->industry = (int) $request->industry;
+            } else {
+                $client->industry = 0;
+                $customIndustry = trim($request->industry);
+            }
+        }
+        if (! empty($request->custom_industry)) {
+            $customIndustry = trim($request->custom_industry);
+            $client->industry = 0;
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -2683,7 +2693,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->tags = $tags;
         }
 
-        $detailData = [
+        $existingDetail = [];
+        if (! empty($client->detail)) {
+            $decodedExisting = json_decode($client->detail, true);
+            if (is_array($decodedExisting)) {
+                $existingDetail = $decodedExisting;
+            }
+        }
+
+        $detailData = array_merge($existingDetail, [
+            'custom_industry' => $customIndustry ?? ($existingDetail['custom_industry'] ?? null),
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,
@@ -2693,8 +2712,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'youtube_url' => $request->youtube_url ?? null,
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
-        ];
-        $filteredDetail = array_filter($detailData);
+        ]);
+        $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
             $client->detail = json_encode($filteredDetail);
         }
@@ -3071,47 +3090,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     {
         $request = $request ?: request();
         abort_if(! auth()->check(), 401);
-        $companyId = (int) auth()->user()->company_id;
-        $version = (int) Cache::get('tenant:'.$companyId.':industry_version', 1);
-        $cacheKey = 'tenant:'.$companyId.':dataset:industries_bundle:v'.$version;
 
+        $bundle = IndustryTaxonomyService::getGlobalManifest();
+        $contentHash = $bundle['content_hash'] ?? 'default';
+        $etag = 'W/"ind_'.$contentHash.'"';
         $clientEtag = $request->header('If-None-Match');
-
-        try {
-            $bundle = Cache::get($cacheKey);
-        } catch (\Throwable $e) {
-            \Log::warning('Redis connection error in industriesBundle: '.$e->getMessage());
-            $bundle = null;
-        }
-
-        if (! $bundle) {
-            $lockKey = 'tenant:'.$companyId.':industries:refresh_lock';
-            $lock = Cache::lock($lockKey, 10);
-
-            if ($lock->get()) {
-                try {
-                    $bundle = IndustryTaxonomyService::buildTenantManifest($companyId, $version);
-                    Cache::put($cacheKey, $bundle, 86400);
-                } finally {
-                    $lock->release();
-                }
-            } else {
-                $bundle = IndustryTaxonomyService::buildTenantManifest($companyId, $version);
-            }
-        }
-
-        $manifestId = $bundle['manifest_id'] ?? ('ind-tenant-'.$companyId.'-v'.$version);
-        $etag = 'W/"tindex_'.$companyId.'_ind_'.$manifestId.'"';
 
         if ($clientEtag && trim($clientEtag) === trim($etag)) {
             return response(null, 304)
                 ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, must-revalidate');
+                ->header('Cache-Control', 'public, max-age=86400, must-revalidate');
         }
 
         return response()->json($bundle)
             ->header('ETag', $etag)
-            ->header('Cache-Control', 'private, must-revalidate');
+            ->header('Cache-Control', 'public, max-age=86400, must-revalidate');
     }
 
     public function create()
@@ -3154,7 +3147,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
         $companyId = (int) auth()->user()->company_id;
-        $this->industriesManifest = IndustryTaxonomyService::buildTenantManifest($companyId, (int) Cache::get('tenant:'.$companyId.':industry_version', 1));
+        $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
         return view('service_company.client.create', $this->data);
     }
@@ -3328,8 +3321,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (! empty($request->website)) {
             $client->website = $request->website;
         }
+        $customIndustry = null;
         if (! empty($request->industry)) {
-            $client->industry = $request->industry;
+            if (is_numeric($request->industry)) {
+                $client->industry = (int) $request->industry;
+            } else {
+                $client->industry = 0;
+                $customIndustry = trim($request->industry);
+            }
+        }
+        if (! empty($request->custom_industry)) {
+            $customIndustry = trim($request->custom_industry);
+            $client->industry = 0;
         }
         if (! empty($request->company_sizes)) {
             [$from_size, $to_size] = explode('-', $request->company_sizes);
@@ -3356,6 +3359,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $detailData = [
+            'custom_industry' => $customIndustry ?? null,
             'career_page_url' => $request->career_page_url ?? null,
             'linkedin_url' => $request->linkedin_url ?? null,
             'twitter_url' => $request->twitter_url ?? null,
@@ -3366,7 +3370,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
         ];
-        $filteredDetail = array_filter($detailData);
+        $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
             $client->detail = json_encode($filteredDetail);
         }
@@ -4206,7 +4210,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $cleanDomain = explode('/', $cleanDomain)[0];
 
         $workerUrl = config('services.company_intelligence.url', 'https://jero-company-intelligence.vibhu21m.workers.dev');
-        $targetUrl = rtrim($workerUrl, '/') . '/?domain=' . urlencode($cleanDomain);
+        $targetUrl = rtrim($workerUrl, '/').'/?domain='.urlencode($cleanDomain);
 
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(10)->get($targetUrl);
@@ -4214,18 +4218,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 return response()->json($response->json());
             }
         } catch (\Exception $e) {
-            \Log::warning('[CompanyIntelligence] Worker proxy exception: ' . $e->getMessage());
+            \Log::warning('[CompanyIntelligence] Worker proxy exception: '.$e->getMessage());
         }
 
         // Graceful Local Fallback: Basic metadata extraction with real HTML meta inspection
         $rawName = ucwords(str_replace(['-', '_'], ' ', explode('.', $cleanDomain)[0]));
-        $description = $rawName . ' is an innovative technology organization delivering premier solutions and services across global markets.';
-        $logoUrl = 'https://www.google.com/s2/favicons?domain=' . $cleanDomain . '&sz=256';
+        $description = $rawName.' is an innovative technology organization delivering premier solutions and services across global markets.';
+        $logoUrl = 'https://www.google.com/s2/favicons?domain='.$cleanDomain.'&sz=256';
 
         try {
             $siteRes = \Illuminate\Support\Facades\Http::timeout(3)->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            ])->get('https://' . $cleanDomain);
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ])->get('https://'.$cleanDomain);
             if ($siteRes->successful()) {
                 $html = $siteRes->body();
                 if (preg_match('/<meta[^>]+(?:name|property)=["\'](?:description|og:description)["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
@@ -4235,7 +4239,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $rawName = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 } elseif (preg_match('/<title[^>]*>([^<]+)<\/title>/i', $html, $m)) {
                     $tParts = preg_split('/[|\-–—:]/', $m[1]);
-                    if (!empty($tParts[0])) {
+                    if (! empty($tParts[0])) {
                         $candName = trim($tParts[0]);
                         if (strlen($candName) >= 2 && strlen($candName) <= 40) {
                             $rawName = html_entity_decode($candName, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -4243,37 +4247,39 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     }
                 }
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
-            $iconRes = \Illuminate\Support\Facades\Http::timeout(3)->get('https://www.google.com/s2/favicons?domain=' . $cleanDomain . '&sz=256');
+            $iconRes = \Illuminate\Support\Facades\Http::timeout(3)->get('https://www.google.com/s2/favicons?domain='.$cleanDomain.'&sz=256');
             if ($iconRes->successful() && strlen($iconRes->body()) > 100) {
-                $logoUrl = 'data:' . ($iconRes->header('Content-Type') ?: 'image/png') . ';base64,' . base64_encode($iconRes->body());
+                $logoUrl = 'data:'.($iconRes->header('Content-Type') ?: 'image/png').';base64,'.base64_encode($iconRes->body());
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         return response()->json([
             'domain' => $cleanDomain,
-            'website' => 'https://' . $cleanDomain,
+            'website' => 'https://'.$cleanDomain,
             'name' => $rawName,
             'logo' => $logoUrl,
             'industry' => 'Information Technology',
             'company_sizes' => '51-200',
             'company_type' => 'Corporation',
             'founded' => null,
-            'career_page_url' => 'https://' . $cleanDomain . '/careers',
+            'career_page_url' => 'https://'.$cleanDomain.'/careers',
             'description' => $description,
             'tags' => ['Technology Services', 'Software Development'],
             'city' => null,
             'address' => null,
             'cp_name' => 'Talent Acquisition Team',
-            'cp_email' => 'careers@' . $cleanDomain,
+            'cp_email' => 'careers@'.$cleanDomain,
             'calling_code' => '+91',
             'cp_number' => null,
             'cp_desigination' => 'Head of Talent Acquisition',
-            'linkedin_url' => 'https://www.linkedin.com/company/' . explode('.', $cleanDomain)[0],
-            'twitter_url' => 'https://x.com/' . explode('.', $cleanDomain)[0],
-            'github_url' => 'https://github.com/' . explode('.', $cleanDomain)[0],
+            'linkedin_url' => 'https://www.linkedin.com/company/'.explode('.', $cleanDomain)[0],
+            'twitter_url' => 'https://x.com/'.explode('.', $cleanDomain)[0],
+            'github_url' => 'https://github.com/'.explode('.', $cleanDomain)[0],
             'youtube_url' => null,
             'facebook_url' => null,
             'instagram_url' => null,

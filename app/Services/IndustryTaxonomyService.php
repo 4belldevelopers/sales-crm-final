@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * Class IndustryTaxonomyService
@@ -96,7 +95,7 @@ class IndustryTaxonomyService
     /**
      * Map each industry ID / name to its appropriate sector and search synonyms.
      */
-    protected const INDUSTRY_METADATA = [
+    public const INDUSTRY_METADATA = [
         1 => ['sector' => 2, 'keywords' => 'accounting, audit, tax, cpa, bookkeeping, financial reporting, ledger, payroll'],
         2 => ['sector' => 9, 'keywords' => 'airlines, aviation, flight, airport, aerospace, aerospace transport, commercial aviation'],
         3 => ['sector' => 5, 'keywords' => 'alternative dispute resolution, adr, arbitration, mediation, legal negotiation'],
@@ -246,97 +245,76 @@ class IndustryTaxonomyService
     ];
 
     /**
-     * Build a complete tenant manifest bundle combining standard global library and search taxonomy.
+     * Get the active global immutable taxonomy manifest.
+     * Checks Redis/Dragonfly L1 cache, then filesystem L2 cache, then compiles.
+     * Guaranteed 0% MySQL reads on standard request paths.
      */
-    public static function buildTenantManifest(int $companyId, int $version): array
+    public static function getGlobalManifest(): array
     {
-        $rows = DB::table('td_industries')
-            ->where('status', 'Y')
-            ->select('ind_id as id', 'ind_name as name')
-            ->orderBy('ind_name', 'ASC')
-            ->get();
-
-        $industries = [];
-
-        foreach ($rows as $row) {
-            $id = (int) $row->id;
-            $meta = self::INDUSTRY_METADATA[$id] ?? null;
-
-            if ($meta) {
-                $sectorId = $meta['sector'];
-                $keywords = $meta['keywords'];
-            } else {
-                $detected = self::detectSector($row->name);
-                $sectorId = $detected['id'];
-                $keywords = Str::lower($row->name);
+        // 1. Redis/Dragonfly L1 Cache
+        try {
+            $cached = Cache::get(IndustryTaxonomyCompiler::CACHE_KEY_ACTIVE);
+            if ($cached && is_array($cached) && ! empty($cached['industries'])) {
+                return $cached;
             }
-
-            $sector = self::SECTORS[$sectorId] ?? self::SECTORS[5];
-
-            $industries[] = [
-                'id' => $id,
-                'name' => $row->name,
-                'sector_id' => $sector['id'],
-                'sector_name' => $sector['name'],
-                'is_standard' => 1,
-                'keywords' => $keywords,
-            ];
+        } catch (\Throwable $e) {
+            \Log::warning('IndustryTaxonomyService: Cache read error: '.$e->getMessage());
         }
 
-        // Sort by sector first, then alphabetically by name
-        usort($industries, function ($a, $b) {
-            if ($a['sector_id'] !== $b['sector_id']) {
-                return $a['sector_id'] <=> $b['sector_id'];
+        // 2. Filesystem L2 Cache
+        try {
+            $filePath = storage_path('app/taxonomy/industry_manifest_v'.IndustryTaxonomyCompiler::SCHEMA_VERSION.'.json');
+            if (file_exists($filePath)) {
+                $raw = file_get_contents($filePath);
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && ! empty($decoded['industries'])) {
+                    // Repopulate Redis cache in background
+                    try {
+                        Cache::forever(IndustryTaxonomyCompiler::CACHE_KEY_ACTIVE, $decoded);
+                    } catch (\Throwable $err) {
+                    }
+
+                    return $decoded;
+                }
             }
+        } catch (\Throwable $e) {
+            \Log::warning('IndustryTaxonomyService: File read error: '.$e->getMessage());
+        }
 
-            return strcasecmp($a['name'], $b['name']);
-        });
-
-        return [
-            'manifest_id' => 'ind-tenant-'.$companyId.'-v'.$version,
-            'version' => $version,
-            'timestamp' => now()->timestamp,
-            'sectors' => array_values(self::SECTORS),
-            'industries' => $industries,
-            'count' => count($industries),
-        ];
+        // 3. Compile once and cache
+        return IndustryTaxonomyCompiler::compile();
     }
 
     /**
-     * Fallback detector for any new or unknown industry names.
+     * Build a complete tenant manifest bundle combining standard global library and search taxonomy.
+     * Backward-compatible signature that consumes the global compiled manifest with 0% DB reads.
+     */
+    public static function buildTenantManifest(int $companyId, int $version): array
+    {
+        $manifest = self::getGlobalManifest();
+
+        // Inject tenant-specific manifest identity while sharing the exact same compiled payload
+        $manifest['manifest_id'] = 'ind-tenant-'.$companyId.'-v'.$version.'-'.substr($manifest['content_hash'] ?? 'default', 0, 8);
+        $manifest['tenant_id'] = $companyId;
+        $manifest['version'] = $version;
+
+        return $manifest;
+    }
+
+    /**
+     * Fallback detector for any new or unknown industry names using tokenized boundaries.
      */
     public static function detectSector(string $name): array
     {
-        $nameLower = Str::lower($name);
+        $classification = IndustryTaxonomyCompiler::classify($name);
+        $sectorId = $classification['sector_id'] ?? 5; // Default to professional services if unclassified
+        $sector = self::SECTORS[$sectorId] ?? self::SECTORS[5];
 
-        if (Str::contains($nameLower, ['tech', 'software', 'computer', 'data', 'cloud', 'security', 'internet', 'telecom', 'game', 'hardware'])) {
-            return self::SECTORS[1];
-        }
-        if (Str::contains($nameLower, ['bank', 'financial', 'insurance', 'invest', 'capital', 'accounting', 'tax', 'fund'])) {
-            return self::SECTORS[2];
-        }
-        if (Str::contains($nameLower, ['health', 'hospital', 'medical', 'pharma', 'bio', 'clinic', 'wellness'])) {
-            return self::SECTORS[3];
-        }
-        if (Str::contains($nameLower, ['manufacturing', 'machinery', 'chemical', 'automotive', 'industrial', 'engineering', 'defense'])) {
-            return self::SECTORS[4];
-        }
-        if (Str::contains($nameLower, ['consult', 'legal', 'law', 'service', 'human resources', 'recruit', 'pr', 'marketing'])) {
-            return self::SECTORS[5];
-        }
-        if (Str::contains($nameLower, ['food', 'beverage', 'retail', 'consumer', 'apparel', 'fashion', 'restaurant', 'hotel'])) {
-            return self::SECTORS[6];
-        }
-        if (Str::contains($nameLower, ['energy', 'oil', 'gas', 'solar', 'renew', 'utilities', 'environment'])) {
-            return self::SECTORS[7];
-        }
-        if (Str::contains($nameLower, ['real estate', 'construction', 'property', 'building', 'facilities'])) {
-            return self::SECTORS[8];
-        }
-        if (Str::contains($nameLower, ['logistics', 'transport', 'supply', 'shipping', 'freight', 'warehouse', 'airline'])) {
-            return self::SECTORS[9];
-        }
-
-        return self::SECTORS[10];
+        return [
+            'id' => $sector['id'],
+            'name' => $sector['name'],
+            'confidence' => $classification['confidence'] ?? 0.0,
+            'matched_term' => $classification['matched_term'] ?? null,
+        ];
     }
 }

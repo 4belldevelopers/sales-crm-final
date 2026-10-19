@@ -2921,11 +2921,15 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     border-radius: 10px;
     box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
     overflow: hidden;
-    display: flex;
+    display: none;
     flex-direction: column;
     max-height: min(380px, calc(100vh - 120px));
     animation: jeroDropdownFadeIn 0.15s ease-out;
     box-sizing: border-box;
+  }
+  .jero-ind-select-wrap.is-open .jero-ind-dropdown,
+  .jero-ind-dropdown.is-open {
+    display: flex !important;
   }
   .jero-ind-dropdown.drop-up {
     top: auto;
@@ -3593,14 +3597,24 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
      // Reflect currently-added tags onto the suggested chips (e.g. on EDIT load)
      function syncSuggestedHighlight() {
+       if (!window.clientTagsTagify) return;
        var added = (window.clientTagsTagify.value || []).map(function (t) {
-         return t.value.toLowerCase();
+         return (t.value || '').toLowerCase();
        });
        $('#client_suggested_services .client-suggested-tag').each(function () {
          var v = $(this).data('value') || '';
-         $(this).toggleClass('is-added', added.indexOf(v.toLowerCase()) > -1);
+         var isAdded = added.indexOf(v.toLowerCase()) > -1;
+         $(this).toggleClass('is-added', isAdded);
+         if (isAdded) {
+           $(this).css({ 'background': '#f1f5f9', 'color': '#94a3b8', 'border-color': '#e2e8f0', 'cursor': 'default' });
+           $(this).find('i').removeClass('la-plus-circle').addClass('la-check-circle').css('color', '#10b981');
+         } else {
+           $(this).css({ 'background': '#ffffff', 'color': '#334155', 'border-color': '#cbd5e1', 'cursor': 'pointer' });
+           $(this).find('i').removeClass('la-check-circle').addClass('la-plus-circle').css('color', '#2563eb');
+         }
        });
      }
+     window.syncSuggestedHighlight = syncSuggestedHighlight;
 
      // When a tag is added or removed manually, keep chips in sync
      window.clientTagsTagify.on('add', function () {
@@ -6977,8 +6991,9 @@ $('.remove_address').click(function(){
             }
           });
           if (!optFound) {
-            $sel.append(new Option(indDispVal, indDispVal, true, true));
-            $sel.val(indDispVal);
+            $sel.append(new Option(indDispVal, 0, true, true));
+            $sel.val(0);
+            $('#custom_industry').val(indDispVal);
           }
         }
       }
@@ -7001,7 +7016,8 @@ $('.remove_address').click(function(){
       }
 
       var industryVal = ($('#industry').val() || '').trim();
-      if (!industryVal && !indDispVal) {
+      var customIndVal = ($('#custom_industry').val() || '').trim();
+      if (!industryVal && !indDispVal && !customIndVal) {
         showInlineError($('#industry_display'), 'Please select an Industry.');
         $firstInvalid = $firstInvalid || $('#industry_display');
         isValid = false;
@@ -7446,13 +7462,16 @@ $('.remove_address').click(function(){
       // Synchronize Sticky Footer Buttons
       syncWizardNavigationState(targetStep);
 
-      // On Step 2 (Client Description), ensure Quill editor is initialized & updated
+      // On Step 2 (Client Description), ensure Quill editor is initialized & updated, and service tags synced
       if (targetStep === 2) {
         if (typeof initClientDescriptionEditor === 'function') {
           initClientDescriptionEditor();
         }
         if (window.clientDescQuill) {
           try { window.clientDescQuill.update(); } catch (e) {}
+        }
+        if (typeof window.updateSuggestedServicesForIndustry === 'function') {
+          try { window.updateSuggestedServicesForIndustry(); } catch (e) {}
         }
       }
 
@@ -7507,8 +7526,9 @@ $('.remove_address').click(function(){
             }
           });
           if (!optFound) {
-            $sel.append(new Option(indDisp, indDisp, true, true));
-            $sel.val(indDisp);
+            $sel.append(new Option(indDisp, 0, true, true));
+            $sel.val(0);
+            $('#custom_industry').val(indDisp);
           }
         }
       }
@@ -7640,7 +7660,64 @@ $('.remove_address').click(function(){
     window.syncWizardNavigationState = syncWizardNavigationState;
     window.populateReviewSummaries = populateReviewSummaries;
 
+    // =========================================================================
+    // Dynamic Step 1 Industry ➔ Step 2 Service Tags Intelligence
+    // =========================================================================
+    var INDUSTRY_SECTOR_SERVICES = {
+      1: {
+        name: 'Technology & Software',
+        services: ['Custom Software Development', 'Cloud Architecture & DevOps', 'AI & Machine Learning', 'Mobile App Development', 'Cybersecurity & Compliance', 'Data Engineering & Analytics', 'UI/UX Product Design', 'SaaS Platform Engineering', 'API & Microservices', 'QA Automation']
+      },
+      2: {
+        name: 'Financial & Banking',
+        services: ['Core Banking Solutions', 'FinTech Payment Gateways', 'Risk & Fraud Analytics', 'Wealth Management Tech', 'RegTech & Compliance', 'Algorithmic Trading Tech', 'Blockchain & Smart Contracts', 'Accounting & Financial Systems', 'KYC/AML Automation', 'Financial Data Security']
+      },
+      3: {
+        name: 'Healthcare & Life Sciences',
+        services: ['Electronic Health Records (EHR)', 'Telemedicine Solutions', 'Medical Device Integration', 'Clinical Trials Tech', 'HIPAA & Health Compliance', 'Healthcare AI Diagnostics', 'Pharmacy Management Systems', 'Laboratory Information Systems', 'Health Data Analytics', 'Patient Portal Platforms']
+      },
+      4: {
+        name: 'Manufacturing & Industrial',
+        services: ['Smart Factory Automation & IoT', 'Supply Chain Optimization', 'Predictive Maintenance Systems', 'Industrial Robotics Integration', 'ERP & MRP Integration', 'Quality Assurance & ISO Tech', 'CAD/CAM Engineering', 'Lean Operations Consulting', 'Warehouse Automation', 'Inventory Telematics']
+      },
+      5: {
+        name: 'Professional & Consulting',
+        services: ['Management Consulting', 'Digital Transformation Strategy', 'Legal Ops & Compliance Tech', 'Talent Acquisition & Staffing', 'Market Intelligence & Research', 'Brand Strategy & Creative', 'Enterprise Architecture', 'Change Management', 'Corporate Training Solutions', 'HR Tech Integration']
+      },
+      6: {
+        name: 'Consumer & Retail',
+        services: ['Omnichannel E-Commerce', 'D2C Growth & Performance', 'POS & Retail Systems', 'Customer Loyalty Platforms', 'Inventory & Fulfillment Tech', 'Personalization & Recommendations', 'Marketplace Management', 'Mobile Commerce Apps', 'Product Lifecycle Management', 'Consumer Analytics']
+      },
+      7: {
+        name: 'Energy & Utilities',
+        services: ['Renewable Energy Integration', 'Smart Grid Analytics', 'ESG & Carbon Accounting', 'Energy Trading & Risk Tech', 'IoT Utility Metering', 'CleanTech Engineering', 'EV Infrastructure Solutions', 'Pipeline & Asset Monitoring', 'Energy Storage Systems', 'Environmental Compliance Tech']
+      },
+      8: {
+        name: 'Real Estate & Construction',
+        services: ['PropTech Solutions', 'Building Information Modeling (BIM)', 'Real Estate ERP & CRM', 'Construction Site Telematics', 'Facility Management Tech', 'Virtual Property Tours / 3D', 'Smart Home Integration', 'Lease Management Platforms', 'Architectural Visualization', 'Urban Planning Analytics']
+      },
+      9: {
+        name: 'Logistics, Transportation & Supply Chain',
+        services: ['Fleet Management & Telematics', 'Warehouse Management Systems (WMS)', 'Last-Mile Route Optimization', 'Freight Brokerage Tech', 'Autonomous Logistics Tech', 'Cold Chain Monitoring', 'Customs & Port Logistics', 'RFID & Asset Tracking', 'Supply Chain Visibility', 'Delivery Dispatch Systems']
+      },
+      10: {
+        name: 'Media, Education & Public Sector',
+        services: ['Learning Management Systems (LMS)', 'EdTech Interactive Platforms', 'GovTech Citizen Portals', 'Student Information Systems (SIS)', 'OTT & Video Streaming Systems', 'Digital Publishing Platforms', 'Media Asset Management (MAM)', 'Public Sector Compliance Tech', 'Online Examination Systems', 'Content Delivery Solutions']
+      }
+    };
+
+    function escapeHtmlText(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function escapeHtmlAttr(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function escapeJsString(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
     window.addSuggestedService = function(svc) {
+      if (!svc) return;
       if (window.clientTagsTagify) {
         window.clientTagsTagify.addTags([svc]);
         $('#client_tags_error').hide();
@@ -7663,6 +7740,94 @@ $('.remove_address').click(function(){
           $tags.val(JSON.stringify(list)).trigger('change');
         }
         $('#client_tags_error').hide();
+      }
+      if (typeof window.syncSuggestedHighlight === 'function') {
+        window.syncSuggestedHighlight();
+      }
+    };
+
+    window.addAllSuggestedServices = function() {
+      if (!window.clientTagsTagify) return;
+      var tagsToAdd = [];
+      var existing = (window.clientTagsTagify.value || []).map(function(t) { return (t.value || '').toLowerCase(); });
+      $('#client_suggested_services .client-suggested-tag').each(function() {
+        var val = $(this).data('value');
+        if (val && existing.indexOf(val.toLowerCase()) === -1) {
+          tagsToAdd.push(val);
+        }
+      });
+      if (tagsToAdd.length > 0) {
+        window.clientTagsTagify.addTags(tagsToAdd);
+        $('#client_tags_error').hide();
+        if (typeof window.syncSuggestedHighlight === 'function') {
+          window.syncSuggestedHighlight();
+        }
+      }
+    };
+
+    window.updateSuggestedServicesForIndustry = function(industryItem) {
+      var $container = $('#client_suggested_services');
+      var $label = $('#client_suggested_label');
+      if (!$container.length) return;
+
+      var item = industryItem || (window.JeroIndustryIntelligenceEngine ? window.JeroIndustryIntelligenceEngine.getSelected() : null);
+      var indName = item ? (item.name || '') : ($('#industry_display').val() || $('#industry option:selected').text() || '').trim();
+      if (indName === 'Select industry' || indName === '-- Select Industry --') indName = '';
+
+      var sectorId = null;
+      var sectorName = '';
+
+      if (item && item.sector_id) {
+        sectorId = parseInt(item.sector_id, 10);
+        sectorName = item.sector_name || '';
+      } else if (item && item.sector) {
+        sectorId = parseInt(item.sector, 10);
+      }
+
+      if (!sectorId && item && item.id && window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.getById === 'function') {
+        var found = window.JeroIndustryIntelligenceEngine.getById(item.id);
+        if (found && found.sector_id) {
+          sectorId = found.sector_id;
+          sectorName = found.sector_name;
+        }
+      }
+
+      var sectorConfig = INDUSTRY_SECTOR_SERVICES[sectorId] || INDUSTRY_SECTOR_SERVICES[1];
+      if (!sectorName) sectorName = sectorConfig.name;
+
+      if ($label.length) {
+        $label.text(indName ? 'Suggested Services (' + indName + ')' : 'Suggested Services (' + sectorName + ')');
+      }
+
+      var services = sectorConfig.services || [];
+      var existingTags = [];
+      if (window.clientTagsTagify && Array.isArray(window.clientTagsTagify.value)) {
+        existingTags = window.clientTagsTagify.value.map(function(t) { return (t.value || '').toLowerCase(); });
+      }
+
+      var html = '';
+      for (var i = 0; i < services.length; i++) {
+        var s = services[i];
+        var isAdded = existingTags.indexOf(s.toLowerCase()) !== -1;
+        var chipStyle = isAdded
+          ? 'background:#f1f5f9; border:1px solid #e2e8f0; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:500; color:#94a3b8; display:inline-flex; align-items:center; gap:5px; cursor:default; transition:all 0.15s ease;'
+          : 'background:#ffffff; border:1px solid #cbd5e1; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:500; color:#334155; display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all 0.15s ease;';
+        var iconCls = isAdded ? 'la la-check-circle' : 'la la-plus-circle';
+        var iconColor = isAdded ? '#10b981' : '#2563eb';
+        var addedClass = isAdded ? 'is-added' : '';
+
+        html += '<button type="button" class="btn btn-sm client-suggested-tag ' + addedClass + '" data-value="' + escapeHtmlAttr(s) + '" onclick="window.addSuggestedService ? window.addSuggestedService(\'' + escapeJsString(s) + '\') : false;" style="' + chipStyle + '">' +
+          '<i class="' + iconCls + '" style="color:' + iconColor + '; font-size:13px;"></i>' +
+          '<span>' + escapeHtmlText(s) + '</span>' +
+        '</button>';
+      }
+
+      $container.html(html);
+
+      var clientName = ($('#client_id').val() || '').trim() || 'The company';
+      var $aiDesc = $('#client_ai_suggested_desc');
+      if ($aiDesc.length && indName) {
+        $aiDesc.text(clientName + ' is an industry-leading ' + indName + ' organization providing end-to-end solutions, enterprise excellence, and specialized operations within the ' + sectorName + ' sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.');
       }
     };
 
@@ -8409,6 +8574,7 @@ $('.remove_address').click(function(){
 
         isOpen = true;
         wrap.classList.add('is-open');
+        dropdown.classList.add('is-open');
         dropdown.style.display = 'flex';
         if (input) {
             input.setAttribute('aria-expanded', 'true');
@@ -8441,6 +8607,7 @@ $('.remove_address').click(function(){
 
         isOpen = false;
         wrap.classList.remove('is-open');
+        dropdown.classList.remove('is-open');
         dropdown.style.display = 'none';
         dropdown.style.maxHeight = '';
         lastCachedMaxHeight = null;
@@ -8503,6 +8670,10 @@ $('.remove_address').click(function(){
         var clearBtn = document.getElementById('jero_ind_clear_btn');
         var kbdEl = document.getElementById('jero_ind_kbd');
         var inputBox = document.getElementById('jero_ind_input_box');
+        var customInput = document.getElementById('custom_industry');
+
+        // Reset custom industry field when selecting canonical item
+        if (customInput) customInput.value = '';
 
         // 1. Update native select (add option if not present)
         if (select) {
@@ -8543,6 +8714,11 @@ $('.remove_address').click(function(){
             window.clearFieldError($('#industry'));
         }
 
+        // Dynamic linkage to Step 2 Services
+        if (typeof window.updateSuggestedServicesForIndustry === 'function') {
+            window.updateSuggestedServicesForIndustry(item);
+        }
+
         // Recency
         saveRecentIndustry(item);
         closeDropdown();
@@ -8555,6 +8731,7 @@ $('.remove_address').click(function(){
         var clearBtn = document.getElementById('jero_ind_clear_btn');
         var kbdEl = document.getElementById('jero_ind_kbd');
         var inputBox = document.getElementById('jero_ind_input_box');
+        var customInput = document.getElementById('custom_industry');
 
         if (!clean) {
             clearSelection();
@@ -8609,51 +8786,42 @@ $('.remove_address').click(function(){
             return;
         }
 
-        // 4. Check existing native select options
-        if (select) {
-            for (var o = 0; o < select.options.length; o++) {
-                if ((select.options[o].text || '').toLowerCase() === clean.toLowerCase()) {
-                    select.selectedIndex = o;
-                    var matchedVal = select.options[o].value;
-                    $(select).val(matchedVal).trigger('change');
-                    $('.span_industry').text(select.options[o].text);
-                    $('#jero_ind_select_wrap').removeClass('has-validation-error');
-                    $('.jero-ind-input-box').removeClass('has-validation-error');
-                    if (typeof window.clearFieldError === 'function') {
-                        window.clearFieldError($('#industry'));
-                    }
-                    selectedIndustry = { id: matchedVal, name: select.options[o].text };
-                    closeDropdown();
-                    return;
-                }
-            }
+        // 4. Safe Custom Industry Handling (Database Integrity clients.industry = int(11))
+        // Set hidden input #custom_industry to clean string, set #industry to 0
+        if (customInput) customInput.value = clean;
 
-            // 5. If not matched, dynamically create option so native select has value
-            var customExists = false;
+        if (select) {
+            var customZeroExists = false;
             for (var c = 0; c < select.options.length; c++) {
-                if (select.options[c].value === clean || select.options[c].text === clean) {
+                if (select.options[c].value == 0 && select.options[c].text === clean) {
                     select.selectedIndex = c;
-                    customExists = true;
+                    customZeroExists = true;
                     break;
                 }
             }
-            if (!customExists) {
+            if (!customZeroExists) {
                 var customOpt = document.createElement('option');
-                customOpt.value = clean;
+                customOpt.value = 0;
                 customOpt.text = clean;
                 customOpt.selected = true;
                 select.appendChild(customOpt);
             }
-            $(select).val(clean).trigger('change');
+            $(select).val(0).trigger('change');
         }
 
-        selectedIndustry = { id: clean, name: clean, is_custom: true };
+        selectedIndustry = { id: 0, name: clean, is_custom: true };
         $('.span_industry').text(clean);
         $('#jero_ind_select_wrap').removeClass('has-validation-error');
         $('.jero-ind-input-box').removeClass('has-validation-error');
         if (typeof window.clearFieldError === 'function') {
             window.clearFieldError($('#industry'));
         }
+
+        // Dynamic linkage to Step 2 Services
+        if (typeof window.updateSuggestedServicesForIndustry === 'function') {
+            window.updateSuggestedServicesForIndustry(selectedIndustry);
+        }
+
         closeDropdown();
     }
 
@@ -8676,8 +8844,11 @@ $('.remove_address').click(function(){
         var clearBtn = document.getElementById('jero_ind_clear_btn');
         var kbdEl = document.getElementById('jero_ind_kbd');
         var inputBox = document.getElementById('jero_ind_input_box');
+        var customInput = document.getElementById('custom_industry');
 
         selectedIndustry = null;
+
+        if (customInput) customInput.value = '';
 
         if (select) {
             select.selectedIndex = 0;
@@ -8685,7 +8856,6 @@ $('.remove_address').click(function(){
         }
         if (displayInput) {
             displayInput.value = '';
-            displayInput.focus();
         }
         if (inputBox) {
             inputBox.classList.remove('has-value');
@@ -8700,6 +8870,12 @@ $('.remove_address').click(function(){
         $('.span_industry').text('-');
         currentSearch = '';
         renderDropdownList();
+        closeDropdown();
+
+        // Reset dynamic service tags to default
+        if (typeof window.updateSuggestedServicesForIndustry === 'function') {
+            window.updateSuggestedServicesForIndustry(null);
+        }
     }
 
     function ingestManifest(manifest) {
@@ -8727,10 +8903,13 @@ $('.remove_address').click(function(){
         var clearBtn = document.getElementById('jero_ind_clear_btn');
         var kbdEl = document.getElementById('jero_ind_kbd');
         var inputBox = document.getElementById('jero_ind_input_box');
+        var customInput = document.getElementById('custom_industry');
 
         if (!displayInput) return;
 
         var currentVal = select ? (select.value || '').trim() : '';
+        var customVal = customInput ? (customInput.value || '').trim() : '';
+
         if (currentVal && indMap.has(parseInt(currentVal, 10))) {
             var curr = indMap.get(parseInt(currentVal, 10));
             selectedIndustry = curr;
@@ -8739,8 +8918,17 @@ $('.remove_address').click(function(){
             if (clearBtn) clearBtn.style.display = 'flex';
             if (kbdEl) kbdEl.style.display = 'none';
             $('.span_industry').text(curr.name);
+        } else if (customVal || (currentVal === '0' && select && select.selectedIndex >= 0 && select.options[select.selectedIndex])) {
+            var custName = customVal || select.options[select.selectedIndex].text;
+            selectedIndustry = { id: 0, name: custName, is_custom: true };
+            displayInput.value = custName;
+            if (inputBox) inputBox.classList.add('has-value');
+            if (clearBtn) clearBtn.style.display = 'flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+            $('.span_industry').text(custName);
         } else if (currentVal && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
             var text = select.options[select.selectedIndex].text;
+            selectedIndustry = { id: currentVal, name: text };
             displayInput.value = text;
             if (inputBox) inputBox.classList.add('has-value');
             if (clearBtn) clearBtn.style.display = 'flex';
@@ -8751,6 +8939,10 @@ $('.remove_address').click(function(){
             if (inputBox) inputBox.classList.remove('has-value');
             if (clearBtn) clearBtn.style.display = 'none';
             if (kbdEl) kbdEl.style.display = '';
+        }
+
+        if (selectedIndustry && typeof window.updateSuggestedServicesForIndustry === 'function') {
+            window.updateSuggestedServicesForIndustry(selectedIndustry);
         }
     }
 
@@ -8855,8 +9047,11 @@ $('.remove_address').click(function(){
                 setTimeout(function() {
                     var activeEl = document.activeElement;
                     var wrap = document.getElementById('jero_ind_select_wrap');
-                    if (wrap && wrap.contains(activeEl)) return;
-                    commitIfCustom();
+                    if (wrap && (wrap.contains(activeEl) || wrap === activeEl)) return;
+                    if (isOpen) {
+                        commitIfCustom();
+                        closeDropdown();
+                    }
                 }, 200);
             });
 
@@ -8968,30 +9163,17 @@ $('.remove_address').click(function(){
             }
         });
 
-        // Pointer outside click handling
-        if (wrapEl) {
-            wrapEl.addEventListener('pointerdown', function() {
-                isInteractingWithDropdown = true;
-            });
-        }
-        window.addEventListener('mouseup', function() {
-            setTimeout(function() { isInteractingWithDropdown = false; }, 60);
-        });
-        window.addEventListener('pointercancel', function() {
-            isInteractingWithDropdown = false;
-        });
-
+        // Deterministic outside pointer click handling (Zero-lock composedPath state machine)
         document.addEventListener('pointerdown', function(e) {
-            if (isInteractingWithDropdown) return;
             var wrap = document.getElementById('jero_ind_select_wrap');
-            if (wrap && !wrap.contains(e.target)) {
-                if (isOpen) {
-                    var inputEl = document.getElementById('industry_display');
-                    if (inputEl && inputEl.value.trim()) {
-                        commitIfCustom();
-                    }
-                    closeDropdown();
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
+                var inputEl = document.getElementById('industry_display');
+                if (inputEl && inputEl.value.trim()) {
+                    commitIfCustom();
                 }
+                closeDropdown();
             }
         }, true);
 
@@ -9048,6 +9230,8 @@ $('.remove_address').click(function(){
         commitIfCustom: commitIfCustom,
         commitCustomIndustry: commitCustomIndustry,
         getSelected: function() { return selectedIndustry; },
+        getById: function(id) { return indMap.get(parseInt(id, 10)); },
+        getAll: function() { return indList; },
         search: function(q) {
             currentSearch = q;
             renderDropdownList();
