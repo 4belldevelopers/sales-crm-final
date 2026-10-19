@@ -79,7 +79,12 @@
           </div>
 
           <div>
-            <span class="client-suggested-label" style="font-size:11.5px; font-weight:700; color:#101A46; display:block; margin-bottom:8px;">Suggested Services</span>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="client-suggested-label" id="client_suggested_label" style="font-size:11.5px; font-weight:700; color:#101A46; display:block;">Suggested Services</span>
+              <button type="button" class="btn btn-xs p-0 text-primary font-weight-bold" id="client_add_all_suggested_btn" onclick="window.addAllSuggestedServices ? window.addAllSuggestedServices() : false;" style="font-size:11px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; cursor:pointer; background:none; border:none; color:#2563eb;">
+                <i class="la la-plus" style="font-size:12px;"></i> Add All Recommended
+              </button>
+            </div>
             <div class="client-suggested-list d-flex flex-wrap gap-2" id="client_suggested_services">
               <?php
               $suggestedServices = [
