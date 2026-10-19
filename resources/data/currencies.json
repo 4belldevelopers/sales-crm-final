@@ -1,0 +1,2939 @@
+{
+    "_meta": {
+        "generated_at": "2026-10-19T18:07:34+05:30",
+        "description": "Authoritative Enterprise Currency Dataset for JERO ATS. Serves 100% of currency queries with 0% MySQL reads.",
+        "version": "1.0",
+        "total_master_currencies": 132,
+        "total_setting_currencies": 113
+    },
+    "currencies": [
+        {
+            "id": 4,
+            "currency_name": "Rupee",
+            "currency_symbol": "₹",
+            "currency_code": "INR",
+            "usd_based_rates": "93.1600000000",
+            "inr_based_rates": "1.0000000000",
+            "getKey": 0
+        },
+        {
+            "id": 3,
+            "currency_name": "Euros",
+            "currency_symbol": "€",
+            "currency_code": "EUR",
+            "usd_based_rates": "1.1600000000",
+            "inr_based_rates": "107.4700000000",
+            "getKey": 1
+        },
+        {
+            "id": 5,
+            "currency_name": "JPY",
+            "currency_symbol": "¥",
+            "currency_code": "JPY",
+            "usd_based_rates": "0.0100000000",
+            "inr_based_rates": "0.5800000000",
+            "getKey": 2
+        },
+        {
+            "id": 2,
+            "currency_name": "Pounds",
+            "currency_symbol": "£",
+            "currency_code": "GBP",
+            "usd_based_rates": "1.3300000000",
+            "inr_based_rates": "123.1300000000",
+            "getKey": 3
+        },
+        {
+            "id": 1,
+            "currency_name": "USD",
+            "currency_symbol": "$",
+            "currency_code": "USD",
+            "usd_based_rates": "1.0000000000",
+            "inr_based_rates": "93.1600000000",
+            "getKey": 4
+        },
+        {
+            "id": 6,
+            "currency_name": "AED",
+            "currency_symbol": "د.إ",
+            "currency_code": "AED",
+            "usd_based_rates": "0.2700000000",
+            "inr_based_rates": "25.3700000000",
+            "getKey": 5
+        }
+    ],
+    "master_currencies": [
+        {
+            "id": 3,
+            "country": "Afghanistan",
+            "currency": "Afghanis",
+            "code": "AFN",
+            "symbol": "\u000b"
+        },
+        {
+            "id": 1,
+            "country": "Albania",
+            "currency": "Leke",
+            "code": "ALL",
+            "symbol": "Lek"
+        },
+        {
+            "id": 2,
+            "country": "America",
+            "currency": "Dollars",
+            "code": "USD",
+            "symbol": "$"
+        },
+        {
+            "id": 4,
+            "country": "Argentina",
+            "currency": "Pesos",
+            "code": "ARS",
+            "symbol": "$"
+        },
+        {
+            "id": 5,
+            "country": "Aruba",
+            "currency": "Guilders",
+            "code": "AWG",
+            "symbol": ""
+        },
+        {
+            "id": 6,
+            "country": "Australia",
+            "currency": "Dollars",
+            "code": "AUD",
+            "symbol": "$"
+        },
+        {
+            "id": 7,
+            "country": "Azerbaijan",
+            "currency": "New Manats",
+            "code": "AZN",
+            "symbol": "<0="
+        },
+        {
+            "id": 8,
+            "country": "Bahamas",
+            "currency": "Dollars",
+            "code": "BSD",
+            "symbol": "$"
+        },
+        {
+            "id": 9,
+            "country": "Barbados",
+            "currency": "Dollars",
+            "code": "BBD",
+            "symbol": "$"
+        },
+        {
+            "id": 10,
+            "country": "Belarus",
+            "currency": "Rubles",
+            "code": "BYR",
+            "symbol": "p."
+        },
+        {
+            "id": 11,
+            "country": "Belgium",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 12,
+            "country": "Beliz",
+            "currency": "Dollars",
+            "code": "BZD",
+            "symbol": "BZ$"
+        },
+        {
+            "id": 13,
+            "country": "Bermuda",
+            "currency": "Dollars",
+            "code": "BMD",
+            "symbol": "$"
+        },
+        {
+            "id": 14,
+            "country": "Bolivia",
+            "currency": "Bolivianos",
+            "code": "BOB",
+            "symbol": "$b"
+        },
+        {
+            "id": 15,
+            "country": "Bosnia and Herzegovina",
+            "currency": "Convertible Marka",
+            "code": "BAM",
+            "symbol": "KM"
+        },
+        {
+            "id": 16,
+            "country": "Botswana",
+            "currency": "Pula",
+            "code": "BWP",
+            "symbol": "P"
+        },
+        {
+            "id": 18,
+            "country": "Brazil",
+            "currency": "Reais",
+            "code": "BRL",
+            "symbol": "R$"
+        },
+        {
+            "id": 19,
+            "country": "Britain (United Kingdom)",
+            "currency": "Pounds",
+            "code": "GBP",
+            "symbol": ""
+        },
+        {
+            "id": 20,
+            "country": "Brunei Darussalam",
+            "currency": "Dollars",
+            "code": "BND",
+            "symbol": "$"
+        },
+        {
+            "id": 17,
+            "country": "Bulgaria",
+            "currency": "Leva",
+            "code": "BGN",
+            "symbol": ";2"
+        },
+        {
+            "id": 21,
+            "country": "Cambodia",
+            "currency": "Riels",
+            "code": "KHR",
+            "symbol": ""
+        },
+        {
+            "id": 22,
+            "country": "Canada",
+            "currency": "Dollars",
+            "code": "CAD",
+            "symbol": "$"
+        },
+        {
+            "id": 23,
+            "country": "Cayman Islands",
+            "currency": "Dollars",
+            "code": "KYD",
+            "symbol": "$"
+        },
+        {
+            "id": 24,
+            "country": "Chile",
+            "currency": "Pesos",
+            "code": "CLP",
+            "symbol": "$"
+        },
+        {
+            "id": 25,
+            "country": "China",
+            "currency": "Yuan Renminbi",
+            "code": "CNY",
+            "symbol": ""
+        },
+        {
+            "id": 26,
+            "country": "Colombia",
+            "currency": "Pesos",
+            "code": "COP",
+            "symbol": "$"
+        },
+        {
+            "id": 27,
+            "country": "Costa Rica",
+            "currency": "Coln",
+            "code": "CRC",
+            "symbol": ""
+        },
+        {
+            "id": 28,
+            "country": "Croatia",
+            "currency": "Kuna",
+            "code": "HRK",
+            "symbol": "kn"
+        },
+        {
+            "id": 29,
+            "country": "Cuba",
+            "currency": "Pesos",
+            "code": "CUP",
+            "symbol": ""
+        },
+        {
+            "id": 30,
+            "country": "Cyprus",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 31,
+            "country": "Czech Republic",
+            "currency": "Koruny",
+            "code": "CZK",
+            "symbol": "K\r\n"
+        },
+        {
+            "id": 32,
+            "country": "Denmark",
+            "currency": "Kroner",
+            "code": "DKK",
+            "symbol": "kr"
+        },
+        {
+            "id": 33,
+            "country": "Dominican Republic",
+            "currency": "Pesos",
+            "code": "DOP",
+            "symbol": "RD$"
+        },
+        {
+            "id": 34,
+            "country": "East Caribbean",
+            "currency": "Dollars",
+            "code": "XCD",
+            "symbol": "$"
+        },
+        {
+            "id": 35,
+            "country": "Egypt",
+            "currency": "Pounds",
+            "code": "EGP",
+            "symbol": ""
+        },
+        {
+            "id": 36,
+            "country": "El Salvador",
+            "currency": "Colones",
+            "code": "SVC",
+            "symbol": "$"
+        },
+        {
+            "id": 37,
+            "country": "England (United Kingdom)",
+            "currency": "Pounds",
+            "code": "GBP",
+            "symbol": ""
+        },
+        {
+            "id": 38,
+            "country": "Euro",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 39,
+            "country": "Falkland Islands",
+            "currency": "Pounds",
+            "code": "FKP",
+            "symbol": ""
+        },
+        {
+            "id": 40,
+            "country": "Fiji",
+            "currency": "Dollars",
+            "code": "FJD",
+            "symbol": "$"
+        },
+        {
+            "id": 41,
+            "country": "France",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 42,
+            "country": "Ghana",
+            "currency": "Cedis",
+            "code": "GHC",
+            "symbol": ""
+        },
+        {
+            "id": 43,
+            "country": "Gibraltar",
+            "currency": "Pounds",
+            "code": "GIP",
+            "symbol": ""
+        },
+        {
+            "id": 44,
+            "country": "Greece",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 45,
+            "country": "Guatemala",
+            "currency": "Quetzales",
+            "code": "GTQ",
+            "symbol": "Q"
+        },
+        {
+            "id": 46,
+            "country": "Guernsey",
+            "currency": "Pounds",
+            "code": "GGP",
+            "symbol": ""
+        },
+        {
+            "id": 47,
+            "country": "Guyana",
+            "currency": "Dollars",
+            "code": "GYD",
+            "symbol": "$"
+        },
+        {
+            "id": 48,
+            "country": "Holland (Netherlands)",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 49,
+            "country": "Honduras",
+            "currency": "Lempiras",
+            "code": "HNL",
+            "symbol": "L"
+        },
+        {
+            "id": 50,
+            "country": "Hong Kong",
+            "currency": "Dollars",
+            "code": "HKD",
+            "symbol": "$"
+        },
+        {
+            "id": 51,
+            "country": "Hungary",
+            "currency": "Forint",
+            "code": "HUF",
+            "symbol": "Ft"
+        },
+        {
+            "id": 52,
+            "country": "Iceland",
+            "currency": "Kronur",
+            "code": "ISK",
+            "symbol": "kr"
+        },
+        {
+            "id": 53,
+            "country": "India",
+            "currency": "Rupees",
+            "code": "INR",
+            "symbol": ""
+        },
+        {
+            "id": 132,
+            "country": "India",
+            "currency": "Rupees",
+            "code": "INR",
+            "symbol": ""
+        },
+        {
+            "id": 54,
+            "country": "Indonesia",
+            "currency": "Rupiahs",
+            "code": "IDR",
+            "symbol": "Rp"
+        },
+        {
+            "id": 55,
+            "country": "Iran",
+            "currency": "Rials",
+            "code": "IRR",
+            "symbol": ""
+        },
+        {
+            "id": 56,
+            "country": "Ireland",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 57,
+            "country": "Isle of Man",
+            "currency": "Pounds",
+            "code": "IMP",
+            "symbol": ""
+        },
+        {
+            "id": 58,
+            "country": "Israel",
+            "currency": "New Shekels",
+            "code": "ILS",
+            "symbol": ""
+        },
+        {
+            "id": 59,
+            "country": "Italy",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 60,
+            "country": "Jamaica",
+            "currency": "Dollars",
+            "code": "JMD",
+            "symbol": "J$"
+        },
+        {
+            "id": 61,
+            "country": "Japan",
+            "currency": "Yen",
+            "code": "JPY",
+            "symbol": ""
+        },
+        {
+            "id": 62,
+            "country": "Jersey",
+            "currency": "Pounds",
+            "code": "JEP",
+            "symbol": ""
+        },
+        {
+            "id": 63,
+            "country": "Kazakhstan",
+            "currency": "Tenge",
+            "code": "KZT",
+            "symbol": ";2"
+        },
+        {
+            "id": 64,
+            "country": "Korea (North)",
+            "currency": "Won",
+            "code": "KPW",
+            "symbol": ""
+        },
+        {
+            "id": 65,
+            "country": "Korea (South)",
+            "currency": "Won",
+            "code": "KRW",
+            "symbol": ""
+        },
+        {
+            "id": 66,
+            "country": "Kyrgyzstan",
+            "currency": "Soms",
+            "code": "KGS",
+            "symbol": ";2"
+        },
+        {
+            "id": 67,
+            "country": "Laos",
+            "currency": "Kips",
+            "code": "LAK",
+            "symbol": ""
+        },
+        {
+            "id": 68,
+            "country": "Latvia",
+            "currency": "Lati",
+            "code": "LVL",
+            "symbol": "Ls"
+        },
+        {
+            "id": 69,
+            "country": "Lebanon",
+            "currency": "Pounds",
+            "code": "LBP",
+            "symbol": ""
+        },
+        {
+            "id": 70,
+            "country": "Liberia",
+            "currency": "Dollars",
+            "code": "LRD",
+            "symbol": "$"
+        },
+        {
+            "id": 71,
+            "country": "Liechtenstein",
+            "currency": "Switzerland Francs",
+            "code": "CHF",
+            "symbol": "CHF"
+        },
+        {
+            "id": 72,
+            "country": "Lithuania",
+            "currency": "Litai",
+            "code": "LTL",
+            "symbol": "Lt"
+        },
+        {
+            "id": 73,
+            "country": "Luxembourg",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 74,
+            "country": "Macedonia",
+            "currency": "Denars",
+            "code": "MKD",
+            "symbol": "45="
+        },
+        {
+            "id": 75,
+            "country": "Malaysia",
+            "currency": "Ringgits",
+            "code": "MYR",
+            "symbol": "RM"
+        },
+        {
+            "id": 76,
+            "country": "Malta",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 77,
+            "country": "Mauritius",
+            "currency": "Rupees",
+            "code": "MUR",
+            "symbol": ""
+        },
+        {
+            "id": 78,
+            "country": "Mexico",
+            "currency": "Pesos",
+            "code": "MXN",
+            "symbol": "$"
+        },
+        {
+            "id": 79,
+            "country": "Mongolia",
+            "currency": "Tugriks",
+            "code": "MNT",
+            "symbol": ""
+        },
+        {
+            "id": 80,
+            "country": "Mozambique",
+            "currency": "Meticais",
+            "code": "MZN",
+            "symbol": "MT"
+        },
+        {
+            "id": 81,
+            "country": "Namibia",
+            "currency": "Dollars",
+            "code": "NAD",
+            "symbol": "$"
+        },
+        {
+            "id": 82,
+            "country": "Nepal",
+            "currency": "Rupees",
+            "code": "NPR",
+            "symbol": ""
+        },
+        {
+            "id": 84,
+            "country": "Netherlands",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 83,
+            "country": "Netherlands Antilles",
+            "currency": "Guilders",
+            "code": "ANG",
+            "symbol": ""
+        },
+        {
+            "id": 85,
+            "country": "New Zealand",
+            "currency": "Dollars",
+            "code": "NZD",
+            "symbol": "$"
+        },
+        {
+            "id": 86,
+            "country": "Nicaragua",
+            "currency": "Cordobas",
+            "code": "NIO",
+            "symbol": "C$"
+        },
+        {
+            "id": 87,
+            "country": "Nigeria",
+            "currency": "Nairas",
+            "code": "NGN",
+            "symbol": ""
+        },
+        {
+            "id": 88,
+            "country": "North Korea",
+            "currency": "Won",
+            "code": "KPW",
+            "symbol": ""
+        },
+        {
+            "id": 89,
+            "country": "Norway",
+            "currency": "Krone",
+            "code": "NOK",
+            "symbol": "kr"
+        },
+        {
+            "id": 90,
+            "country": "Oman",
+            "currency": "Rials",
+            "code": "OMR",
+            "symbol": ""
+        },
+        {
+            "id": 91,
+            "country": "Pakistan",
+            "currency": "Rupees",
+            "code": "PKR",
+            "symbol": ""
+        },
+        {
+            "id": 92,
+            "country": "Panama",
+            "currency": "Balboa",
+            "code": "PAB",
+            "symbol": "B/."
+        },
+        {
+            "id": 93,
+            "country": "Paraguay",
+            "currency": "Guarani",
+            "code": "PYG",
+            "symbol": "Gs"
+        },
+        {
+            "id": 94,
+            "country": "Peru",
+            "currency": "Nuevos Soles",
+            "code": "PEN",
+            "symbol": "S/."
+        },
+        {
+            "id": 95,
+            "country": "Philippines",
+            "currency": "Pesos",
+            "code": "PHP",
+            "symbol": "Php"
+        },
+        {
+            "id": 96,
+            "country": "Poland",
+            "currency": "Zlotych",
+            "code": "PLN",
+            "symbol": "zB"
+        },
+        {
+            "id": 97,
+            "country": "Qatar",
+            "currency": "Rials",
+            "code": "QAR",
+            "symbol": ""
+        },
+        {
+            "id": 98,
+            "country": "Romania",
+            "currency": "New Lei",
+            "code": "RON",
+            "symbol": "lei"
+        },
+        {
+            "id": 99,
+            "country": "Russia",
+            "currency": "Rubles",
+            "code": "RUB",
+            "symbol": "@C1"
+        },
+        {
+            "id": 100,
+            "country": "Saint Helena",
+            "currency": "Pounds",
+            "code": "SHP",
+            "symbol": ""
+        },
+        {
+            "id": 101,
+            "country": "Saudi Arabia",
+            "currency": "Riyals",
+            "code": "SAR",
+            "symbol": ""
+        },
+        {
+            "id": 102,
+            "country": "Serbia",
+            "currency": "Dinars",
+            "code": "RSD",
+            "symbol": "\u00148=."
+        },
+        {
+            "id": 103,
+            "country": "Seychelles",
+            "currency": "Rupees",
+            "code": "SCR",
+            "symbol": ""
+        },
+        {
+            "id": 104,
+            "country": "Singapore",
+            "currency": "Dollars",
+            "code": "SGD",
+            "symbol": "$"
+        },
+        {
+            "id": 105,
+            "country": "Slovenia",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 106,
+            "country": "Solomon Islands",
+            "currency": "Dollars",
+            "code": "SBD",
+            "symbol": "$"
+        },
+        {
+            "id": 107,
+            "country": "Somalia",
+            "currency": "Shillings",
+            "code": "SOS",
+            "symbol": "S"
+        },
+        {
+            "id": 108,
+            "country": "South Africa",
+            "currency": "Rand",
+            "code": "ZAR",
+            "symbol": "R"
+        },
+        {
+            "id": 109,
+            "country": "South Korea",
+            "currency": "Won",
+            "code": "KRW",
+            "symbol": ""
+        },
+        {
+            "id": 110,
+            "country": "Spain",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 111,
+            "country": "Sri Lanka",
+            "currency": "Rupees",
+            "code": "LKR",
+            "symbol": ""
+        },
+        {
+            "id": 114,
+            "country": "Suriname",
+            "currency": "Dollars",
+            "code": "SRD",
+            "symbol": "$"
+        },
+        {
+            "id": 112,
+            "country": "Sweden",
+            "currency": "Kronor",
+            "code": "SEK",
+            "symbol": "kr"
+        },
+        {
+            "id": 113,
+            "country": "Switzerland",
+            "currency": "Francs",
+            "code": "CHF",
+            "symbol": "CHF"
+        },
+        {
+            "id": 115,
+            "country": "Syria",
+            "currency": "Pounds",
+            "code": "SYP",
+            "symbol": ""
+        },
+        {
+            "id": 116,
+            "country": "Taiwan",
+            "currency": "New Dollars",
+            "code": "TWD",
+            "symbol": "NT$"
+        },
+        {
+            "id": 117,
+            "country": "Thailand",
+            "currency": "Baht",
+            "code": "THB",
+            "symbol": "?"
+        },
+        {
+            "id": 118,
+            "country": "Trinidad and Tobago",
+            "currency": "Dollars",
+            "code": "TTD",
+            "symbol": "TT$"
+        },
+        {
+            "id": 119,
+            "country": "Turkey",
+            "currency": "Lira",
+            "code": "TRY",
+            "symbol": "TL"
+        },
+        {
+            "id": 120,
+            "country": "Turkey",
+            "currency": "Liras",
+            "code": "TRL",
+            "symbol": ""
+        },
+        {
+            "id": 121,
+            "country": "Tuvalu",
+            "currency": "Dollars",
+            "code": "TVD",
+            "symbol": "$"
+        },
+        {
+            "id": 122,
+            "country": "Ukraine",
+            "currency": "Hryvnia",
+            "code": "UAH",
+            "symbol": ""
+        },
+        {
+            "id": 123,
+            "country": "United Kingdom",
+            "currency": "Pounds",
+            "code": "GBP",
+            "symbol": ""
+        },
+        {
+            "id": 124,
+            "country": "United States of America",
+            "currency": "Dollars",
+            "code": "USD",
+            "symbol": "$"
+        },
+        {
+            "id": 125,
+            "country": "Uruguay",
+            "currency": "Pesos",
+            "code": "UYU",
+            "symbol": "$U"
+        },
+        {
+            "id": 126,
+            "country": "Uzbekistan",
+            "currency": "Sums",
+            "code": "UZS",
+            "symbol": ";2"
+        },
+        {
+            "id": 127,
+            "country": "Vatican City",
+            "currency": "Euro",
+            "code": "EUR",
+            "symbol": ""
+        },
+        {
+            "id": 128,
+            "country": "Venezuela",
+            "currency": "Bolivares Fuertes",
+            "code": "VEF",
+            "symbol": "Bs"
+        },
+        {
+            "id": 129,
+            "country": "Vietnam",
+            "currency": "Dong",
+            "code": "VND",
+            "symbol": ""
+        },
+        {
+            "id": 130,
+            "country": "Yemen",
+            "currency": "Rials",
+            "code": "YER",
+            "symbol": ""
+        },
+        {
+            "id": 131,
+            "country": "Zimbabwe",
+            "currency": "Zimbabwe Dollars",
+            "code": "ZWD",
+            "symbol": "Z$"
+        }
+    ],
+    "setting_currencies": [
+        {
+            "key": 0,
+            "code": "INR",
+            "name": "Indian Rupee",
+            "symbol": "₹",
+            "flag": "🇮🇳",
+            "label": "INR — Indian Rupee (₹)",
+            "keywords": "inr indian rupee india rupees indian currency ₹ in india rupees  india rupees ",
+            "countries": [
+                "India",
+                "India"
+            ]
+        },
+        {
+            "key": 4,
+            "code": "USD",
+            "name": "US Dollar",
+            "symbol": "$",
+            "flag": "🇺🇸",
+            "label": "USD — US Dollar ($)",
+            "keywords": "usd us dollar america united states american usd dollars $ america dollars $ united states of america dollars $",
+            "countries": [
+                "America",
+                "United States of America"
+            ]
+        },
+        {
+            "key": 1,
+            "code": "EUR",
+            "name": "Euro",
+            "symbol": "€",
+            "flag": "🇪🇺",
+            "label": "EUR — Euro (€)",
+            "keywords": "eur euro europe european union € eu belgium euro  cyprus euro  euro euro  france euro  greece euro  holland (netherlands) euro  ireland euro  italy euro  luxembourg euro  malta euro  netherlands euro  slovenia euro  spain euro  vatican city euro ",
+            "countries": [
+                "Belgium",
+                "Cyprus",
+                "Euro",
+                "France",
+                "Greece",
+                "Holland (Netherlands)",
+                "Ireland",
+                "Italy",
+                "Luxembourg",
+                "Malta",
+                "Netherlands",
+                "Slovenia",
+                "Spain",
+                "Vatican City"
+            ]
+        },
+        {
+            "key": 3,
+            "code": "GBP",
+            "name": "British Pound",
+            "symbol": "£",
+            "flag": "🇬🇧",
+            "label": "GBP — British Pound (£)",
+            "keywords": "gbp british pound pound sterling uk united kingdom britain england £ britain (united kingdom) pounds  england (united kingdom) pounds  united kingdom pounds ",
+            "countries": [
+                "Britain (United Kingdom)",
+                "England (United Kingdom)",
+                "United Kingdom"
+            ]
+        },
+        {
+            "key": 5,
+            "code": "AED",
+            "name": "UAE Dirham",
+            "symbol": "د.إ",
+            "flag": "🇦🇪",
+            "label": "AED — UAE Dirham (د.إ)",
+            "keywords": "aed uae dirham emirates dubai abu dhabi dirhams",
+            "countries": []
+        },
+        {
+            "key": 22,
+            "code": "CAD",
+            "name": "Canadian Dollar",
+            "symbol": "C$",
+            "flag": "🇨🇦",
+            "label": "CAD — Canadian Dollar (C$)",
+            "keywords": "cad canadian dollar c$ canada cad canadian dollar canada c$",
+            "countries": [
+                "Canada"
+            ]
+        },
+        {
+            "key": 6,
+            "code": "AUD",
+            "name": "Australian Dollar",
+            "symbol": "A$",
+            "flag": "🇦🇺",
+            "label": "AUD — Australian Dollar (A$)",
+            "keywords": "aud australian dollar a$ australia aud australian dollar australia a$",
+            "countries": [
+                "Australia"
+            ]
+        },
+        {
+            "key": 104,
+            "code": "SGD",
+            "name": "Singapore Dollar",
+            "symbol": "S$",
+            "flag": "🇸🇬",
+            "label": "SGD — Singapore Dollar (S$)",
+            "keywords": "sgd singapore dollar s$ singapore sgd singapore dollar singapore s$",
+            "countries": [
+                "Singapore"
+            ]
+        },
+        {
+            "key": 2,
+            "code": "JPY",
+            "name": "Japanese Yen",
+            "symbol": "¥",
+            "flag": "🇯🇵",
+            "label": "JPY — Japanese Yen (¥)",
+            "keywords": "jpy japanese yen japan yen ¥ japan yen ",
+            "countries": [
+                "Japan"
+            ]
+        },
+        {
+            "key": 71,
+            "code": "CHF",
+            "name": "Swiss Franc",
+            "symbol": "CHF",
+            "flag": "🇨🇭",
+            "label": "CHF — Swiss Franc (CHF)",
+            "keywords": "chf swiss franc chf liechtenstein chf swiss franc switzerland francs switzerland francs chf",
+            "countries": [
+                "Liechtenstein",
+                "Switzerland"
+            ]
+        },
+        {
+            "key": 85,
+            "code": "NZD",
+            "name": "New Zealand Dollar",
+            "symbol": "NZ$",
+            "flag": "🇳🇿",
+            "label": "NZD — New Zealand Dollar (NZ$)",
+            "keywords": "nzd new zealand dollar nz$ new zealand nzd new zealand dollar kiwi nz$",
+            "countries": [
+                "New Zealand"
+            ]
+        },
+        {
+            "key": 108,
+            "code": "ZAR",
+            "name": "South African Rand",
+            "symbol": "R",
+            "flag": "🇿🇦",
+            "label": "ZAR — South African Rand (R)",
+            "keywords": "zar south african rand r south africa zar south african rand south africa rand",
+            "countries": [
+                "South Africa"
+            ]
+        },
+        {
+            "key": 50,
+            "code": "HKD",
+            "name": "Hong Kong Dollar",
+            "symbol": "HK$",
+            "flag": "🇭🇰",
+            "label": "HKD — Hong Kong Dollar (HK$)",
+            "keywords": "hkd hong kong dollar hk$ hong kong hkd hong kong dollar hk$",
+            "countries": [
+                "Hong Kong"
+            ]
+        },
+        {
+            "key": 112,
+            "code": "SEK",
+            "name": "Swedish Krona",
+            "symbol": "kr",
+            "flag": "🇸🇪",
+            "label": "SEK — Swedish Krona (kr)",
+            "keywords": "sek swedish krona kr sweden sek swedish krona sweden kronor kr",
+            "countries": [
+                "Sweden"
+            ]
+        },
+        {
+            "key": 89,
+            "code": "NOK",
+            "name": "Norwegian Krone",
+            "symbol": "kr",
+            "flag": "🇳🇴",
+            "label": "NOK — Norwegian Krone (kr)",
+            "keywords": "nok norwegian krone kr norway nok norwegian krone norway kroner kr",
+            "countries": [
+                "Norway"
+            ]
+        },
+        {
+            "key": 32,
+            "code": "DKK",
+            "name": "Danish Krone",
+            "symbol": "kr",
+            "flag": "🇩🇰",
+            "label": "DKK — Danish Krone (kr)",
+            "keywords": "dkk danish krone kr denmark dkk danish krone denmark kroner kr",
+            "countries": [
+                "Denmark"
+            ]
+        },
+        {
+            "key": 96,
+            "code": "PLN",
+            "name": "Polish Zloty",
+            "symbol": "zł",
+            "flag": "🇵🇱",
+            "label": "PLN — Polish Zloty (zł)",
+            "keywords": "pln polish zloty zł poland pln polish zloty poland zlotych zł",
+            "countries": [
+                "Poland"
+            ]
+        },
+        {
+            "key": 78,
+            "code": "MXN",
+            "name": "Mexican Peso",
+            "symbol": "Mex$",
+            "flag": "🇲🇽",
+            "label": "MXN — Mexican Peso (Mex$)",
+            "keywords": "mxn mexican peso mex$ mexico mxn mexican peso mexico pesos mex$",
+            "countries": [
+                "Mexico"
+            ]
+        },
+        {
+            "key": 18,
+            "code": "BRL",
+            "name": "Brazilian Real",
+            "symbol": "R$",
+            "flag": "🇧🇷",
+            "label": "BRL — Brazilian Real (R$)",
+            "keywords": "brl brazilian real r$ brazil brl brazilian real brazil reais",
+            "countries": [
+                "Brazil"
+            ]
+        },
+        {
+            "key": 75,
+            "code": "MYR",
+            "name": "Malaysian Ringgit",
+            "symbol": "RM",
+            "flag": "🇲🇾",
+            "label": "MYR — Malaysian Ringgit (RM)",
+            "keywords": "myr malaysian ringgit rm malaysia myr malaysian ringgit malaysia ringgits rm",
+            "countries": [
+                "Malaysia"
+            ]
+        },
+        {
+            "key": 117,
+            "code": "THB",
+            "name": "Thai Baht",
+            "symbol": "฿",
+            "flag": "🇹🇭",
+            "label": "THB — Thai Baht (฿)",
+            "keywords": "thb thai baht ฿ thailand thb thai baht thailand baht ฿",
+            "countries": [
+                "Thailand"
+            ]
+        },
+        {
+            "key": 54,
+            "code": "IDR",
+            "name": "Indonesian Rupiah",
+            "symbol": "Rp",
+            "flag": "🇮🇩",
+            "label": "IDR — Indonesian Rupiah (Rp)",
+            "keywords": "idr indonesian rupiah rp indonesia idr indonesian rupiah indonesia rp",
+            "countries": [
+                "Indonesia"
+            ]
+        },
+        {
+            "key": 95,
+            "code": "PHP",
+            "name": "Philippine Peso",
+            "symbol": "₱",
+            "flag": "🇵🇭",
+            "label": "PHP — Philippine Peso (₱)",
+            "keywords": "php philippine peso ₱ philippines php philippine peso philippines pesos ₱",
+            "countries": [
+                "Philippines"
+            ]
+        },
+        {
+            "key": 129,
+            "code": "VND",
+            "name": "Vietnamese Dong",
+            "symbol": "₫",
+            "flag": "🇻🇳",
+            "label": "VND — Vietnamese Dong (₫)",
+            "keywords": "vnd vietnamese dong ₫ vietnam vnd vietnamese dong vietnam ₫",
+            "countries": [
+                "Vietnam"
+            ]
+        },
+        {
+            "key": 101,
+            "code": "SAR",
+            "name": "Saudi Riyal",
+            "symbol": "﷼",
+            "flag": "🇸🇦",
+            "label": "SAR — Saudi Riyal (﷼)",
+            "keywords": "sar saudi riyal ﷼ saudi arabia sar saudi riyal saudi arabia riyals ﷼",
+            "countries": [
+                "Saudi Arabia"
+            ]
+        },
+        {
+            "key": 97,
+            "code": "QAR",
+            "name": "Qatari Riyal",
+            "symbol": "﷼",
+            "flag": "🇶🇦",
+            "label": "QAR — Qatari Riyal (﷼)",
+            "keywords": "qar qatari riyal ﷼ qatar qar qatari riyal qatar riyals ﷼",
+            "countries": [
+                "Qatar"
+            ]
+        },
+        {
+            "key": 90,
+            "code": "OMR",
+            "name": "Omani Rial",
+            "symbol": "RO",
+            "flag": "🇴🇲",
+            "label": "OMR — Omani Rial (RO)",
+            "keywords": "omr omani rial ro oman omr omani rial oman rials ro",
+            "countries": [
+                "Oman"
+            ]
+        },
+        {
+            "key": 58,
+            "code": "ILS",
+            "name": "Israeli Shekel",
+            "symbol": "₪",
+            "flag": "🇮🇱",
+            "label": "ILS — Israeli Shekel (₪)",
+            "keywords": "ils israeli shekel ₪ israel ils israeli shekel israel new shekel ₪",
+            "countries": [
+                "Israel"
+            ]
+        },
+        {
+            "key": 119,
+            "code": "TRY",
+            "name": "Turkish Lira",
+            "symbol": "₺",
+            "flag": "🇹🇷",
+            "label": "TRY — Turkish Lira (₺)",
+            "keywords": "try turkish lira ₺ turkey try turkish lira turkey ₺",
+            "countries": [
+                "Turkey"
+            ]
+        },
+        {
+            "key": 65,
+            "code": "KRW",
+            "name": "South Korean Won",
+            "symbol": "₩",
+            "flag": "🇰🇷",
+            "label": "KRW — South Korean Won (₩)",
+            "keywords": "krw south korean won ₩ korea (south) krw south korean won korea won ₩ south korea won ",
+            "countries": [
+                "Korea (South)",
+                "South Korea"
+            ]
+        },
+        {
+            "key": 1003,
+            "code": "AFN",
+            "name": "Afghanis",
+            "symbol": "\u000b",
+            "flag": "🌐",
+            "label": "AFN — Afghanistan (\u000b)",
+            "keywords": "afn afghanis \u000b afghanistan afn",
+            "countries": [
+                "Afghanistan"
+            ]
+        },
+        {
+            "key": 1001,
+            "code": "ALL",
+            "name": "Leke",
+            "symbol": "Lek",
+            "flag": "🌐",
+            "label": "ALL — Albania (Lek)",
+            "keywords": "all leke lek albania all",
+            "countries": [
+                "Albania"
+            ]
+        },
+        {
+            "key": 83,
+            "code": "ANG",
+            "name": "Guilders",
+            "symbol": "ANG",
+            "flag": "🌐",
+            "label": "ANG — Netherlands Antilles (ANG)",
+            "keywords": "ang guilders ang netherlands antilles ang",
+            "countries": [
+                "Netherlands Antilles"
+            ]
+        },
+        {
+            "key": 1004,
+            "code": "ARS",
+            "name": "Argentine Peso",
+            "symbol": "AR$",
+            "flag": "🇦🇷",
+            "label": "ARS — Argentine Peso (AR$)",
+            "keywords": "ars argentine peso ar$ argentina ars argentine peso argentina pesos ar$",
+            "countries": [
+                "Argentina"
+            ]
+        },
+        {
+            "key": 1005,
+            "code": "AWG",
+            "name": "Guilders",
+            "symbol": "AWG",
+            "flag": "🌐",
+            "label": "AWG — Aruba (AWG)",
+            "keywords": "awg guilders awg aruba awg",
+            "countries": [
+                "Aruba"
+            ]
+        },
+        {
+            "key": 7,
+            "code": "AZN",
+            "name": "New Manats",
+            "symbol": "<0=",
+            "flag": "🌐",
+            "label": "AZN — Azerbaijan (<0=)",
+            "keywords": "azn new manats <0= azerbaijan azn",
+            "countries": [
+                "Azerbaijan"
+            ]
+        },
+        {
+            "key": 15,
+            "code": "BAM",
+            "name": "Convertible Marka",
+            "symbol": "KM",
+            "flag": "🌐",
+            "label": "BAM — Bosnia and Herzegovina (KM)",
+            "keywords": "bam convertible marka km bosnia and herzegovina bam",
+            "countries": [
+                "Bosnia and Herzegovina"
+            ]
+        },
+        {
+            "key": 9,
+            "code": "BBD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "BBD — Barbados ($)",
+            "keywords": "bbd dollars $ barbados bbd",
+            "countries": [
+                "Barbados"
+            ]
+        },
+        {
+            "key": 17,
+            "code": "BGN",
+            "name": "Leva",
+            "symbol": ";2",
+            "flag": "🌐",
+            "label": "BGN — Bulgaria (;2)",
+            "keywords": "bgn leva ;2 bulgaria bgn",
+            "countries": [
+                "Bulgaria"
+            ]
+        },
+        {
+            "key": 13,
+            "code": "BMD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "BMD — Bermuda ($)",
+            "keywords": "bmd dollars $ bermuda bmd",
+            "countries": [
+                "Bermuda"
+            ]
+        },
+        {
+            "key": 20,
+            "code": "BND",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "BND — Brunei Darussalam ($)",
+            "keywords": "bnd dollars $ brunei darussalam bnd",
+            "countries": [
+                "Brunei Darussalam"
+            ]
+        },
+        {
+            "key": 14,
+            "code": "BOB",
+            "name": "Bolivianos",
+            "symbol": "$b",
+            "flag": "🌐",
+            "label": "BOB — Bolivia ($b)",
+            "keywords": "bob bolivianos $b bolivia bob",
+            "countries": [
+                "Bolivia"
+            ]
+        },
+        {
+            "key": 8,
+            "code": "BSD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "BSD — Bahamas ($)",
+            "keywords": "bsd dollars $ bahamas bsd",
+            "countries": [
+                "Bahamas"
+            ]
+        },
+        {
+            "key": 16,
+            "code": "BWP",
+            "name": "Pula",
+            "symbol": "P",
+            "flag": "🌐",
+            "label": "BWP — Botswana (P)",
+            "keywords": "bwp pula p botswana bwp",
+            "countries": [
+                "Botswana"
+            ]
+        },
+        {
+            "key": 10,
+            "code": "BYR",
+            "name": "Rubles",
+            "symbol": "p.",
+            "flag": "🌐",
+            "label": "BYR — Belarus (p.)",
+            "keywords": "byr rubles p. belarus byr",
+            "countries": [
+                "Belarus"
+            ]
+        },
+        {
+            "key": 12,
+            "code": "BZD",
+            "name": "Dollars",
+            "symbol": "BZ$",
+            "flag": "🌐",
+            "label": "BZD — Beliz (BZ$)",
+            "keywords": "bzd dollars bz$ beliz bzd",
+            "countries": [
+                "Beliz"
+            ]
+        },
+        {
+            "key": 24,
+            "code": "CLP",
+            "name": "Chilean Peso",
+            "symbol": "CLP$",
+            "flag": "🇨🇱",
+            "label": "CLP — Chilean Peso (CLP$)",
+            "keywords": "clp chilean peso clp$ chile clp chilean peso chile pesos clp$",
+            "countries": [
+                "Chile"
+            ]
+        },
+        {
+            "key": 25,
+            "code": "CNY",
+            "name": "Yuan Renminbi",
+            "symbol": "CNY",
+            "flag": "🇨🇳",
+            "label": "CNY — China (CNY)",
+            "keywords": "cny yuan renminbi cny china cny",
+            "countries": [
+                "China"
+            ]
+        },
+        {
+            "key": 26,
+            "code": "COP",
+            "name": "Colombian Peso",
+            "symbol": "COL$",
+            "flag": "🇨🇴",
+            "label": "COP — Colombian Peso (COL$)",
+            "keywords": "cop colombian peso col$ colombia cop colombian peso colombia pesos col$",
+            "countries": [
+                "Colombia"
+            ]
+        },
+        {
+            "key": 27,
+            "code": "CRC",
+            "name": "Coln",
+            "symbol": "CRC",
+            "flag": "🌐",
+            "label": "CRC — Costa Rica (CRC)",
+            "keywords": "crc coln crc costa rica crc",
+            "countries": [
+                "Costa Rica"
+            ]
+        },
+        {
+            "key": 29,
+            "code": "CUP",
+            "name": "Pesos",
+            "symbol": "CUP",
+            "flag": "🌐",
+            "label": "CUP — Cuba (CUP)",
+            "keywords": "cup pesos cup cuba cup",
+            "countries": [
+                "Cuba"
+            ]
+        },
+        {
+            "key": 31,
+            "code": "CZK",
+            "name": "Czech Koruna",
+            "symbol": "Kč",
+            "flag": "🇨🇿",
+            "label": "CZK — Czech Koruna (Kč)",
+            "keywords": "czk czech koruna kč czech republic czk czech koruna czech republic korunas kč",
+            "countries": [
+                "Czech Republic"
+            ]
+        },
+        {
+            "key": 33,
+            "code": "DOP",
+            "name": "Pesos",
+            "symbol": "RD$",
+            "flag": "🌐",
+            "label": "DOP — Dominican Republic (RD$)",
+            "keywords": "dop pesos rd$ dominican republic dop",
+            "countries": [
+                "Dominican Republic"
+            ]
+        },
+        {
+            "key": 35,
+            "code": "EGP",
+            "name": "Egyptian Pound",
+            "symbol": "E£",
+            "flag": "🇪🇬",
+            "label": "EGP — Egyptian Pound (E£)",
+            "keywords": "egp egyptian pound e£ egypt egp egyptian pound egypt pounds e£",
+            "countries": [
+                "Egypt"
+            ]
+        },
+        {
+            "key": 40,
+            "code": "FJD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "FJD — Fiji ($)",
+            "keywords": "fjd dollars $ fiji fjd",
+            "countries": [
+                "Fiji"
+            ]
+        },
+        {
+            "key": 39,
+            "code": "FKP",
+            "name": "Pounds",
+            "symbol": "FKP",
+            "flag": "🌐",
+            "label": "FKP — Falkland Islands (FKP)",
+            "keywords": "fkp pounds fkp falkland islands fkp",
+            "countries": [
+                "Falkland Islands"
+            ]
+        },
+        {
+            "key": 46,
+            "code": "GGP",
+            "name": "Pounds",
+            "symbol": "GGP",
+            "flag": "🌐",
+            "label": "GGP — Guernsey (GGP)",
+            "keywords": "ggp pounds ggp guernsey ggp",
+            "countries": [
+                "Guernsey"
+            ]
+        },
+        {
+            "key": 42,
+            "code": "GHC",
+            "name": "Cedis",
+            "symbol": "GHC",
+            "flag": "🌐",
+            "label": "GHC — Ghana (GHC)",
+            "keywords": "ghc cedis ghc ghana ghc",
+            "countries": [
+                "Ghana"
+            ]
+        },
+        {
+            "key": 43,
+            "code": "GIP",
+            "name": "Pounds",
+            "symbol": "GIP",
+            "flag": "🌐",
+            "label": "GIP — Gibraltar (GIP)",
+            "keywords": "gip pounds gip gibraltar gip",
+            "countries": [
+                "Gibraltar"
+            ]
+        },
+        {
+            "key": 45,
+            "code": "GTQ",
+            "name": "Quetzales",
+            "symbol": "Q",
+            "flag": "🌐",
+            "label": "GTQ — Guatemala (Q)",
+            "keywords": "gtq quetzales q guatemala gtq",
+            "countries": [
+                "Guatemala"
+            ]
+        },
+        {
+            "key": 47,
+            "code": "GYD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "GYD — Guyana ($)",
+            "keywords": "gyd dollars $ guyana gyd",
+            "countries": [
+                "Guyana"
+            ]
+        },
+        {
+            "key": 49,
+            "code": "HNL",
+            "name": "Lempiras",
+            "symbol": "L",
+            "flag": "🌐",
+            "label": "HNL — Honduras (L)",
+            "keywords": "hnl lempiras l honduras hnl",
+            "countries": [
+                "Honduras"
+            ]
+        },
+        {
+            "key": 28,
+            "code": "HRK",
+            "name": "Kuna",
+            "symbol": "kn",
+            "flag": "🌐",
+            "label": "HRK — Croatia (kn)",
+            "keywords": "hrk kuna kn croatia hrk",
+            "countries": [
+                "Croatia"
+            ]
+        },
+        {
+            "key": 51,
+            "code": "HUF",
+            "name": "Hungarian Forint",
+            "symbol": "Ft",
+            "flag": "🇭🇺",
+            "label": "HUF — Hungarian Forint (Ft)",
+            "keywords": "huf hungarian forint ft hungary huf hungarian forint hungary forints ft",
+            "countries": [
+                "Hungary"
+            ]
+        },
+        {
+            "key": 57,
+            "code": "IMP",
+            "name": "Pounds",
+            "symbol": "IMP",
+            "flag": "🌐",
+            "label": "IMP — Isle of Man (IMP)",
+            "keywords": "imp pounds imp isle of man imp",
+            "countries": [
+                "Isle of Man"
+            ]
+        },
+        {
+            "key": 55,
+            "code": "IRR",
+            "name": "Rials",
+            "symbol": "IRR",
+            "flag": "🌐",
+            "label": "IRR — Iran (IRR)",
+            "keywords": "irr rials irr iran irr",
+            "countries": [
+                "Iran"
+            ]
+        },
+        {
+            "key": 52,
+            "code": "ISK",
+            "name": "Kronur",
+            "symbol": "kr",
+            "flag": "🌐",
+            "label": "ISK — Iceland (kr)",
+            "keywords": "isk kronur kr iceland isk",
+            "countries": [
+                "Iceland"
+            ]
+        },
+        {
+            "key": 62,
+            "code": "JEP",
+            "name": "Pounds",
+            "symbol": "JEP",
+            "flag": "🌐",
+            "label": "JEP — Jersey (JEP)",
+            "keywords": "jep pounds jep jersey jep",
+            "countries": [
+                "Jersey"
+            ]
+        },
+        {
+            "key": 60,
+            "code": "JMD",
+            "name": "Dollars",
+            "symbol": "J$",
+            "flag": "🌐",
+            "label": "JMD — Jamaica (J$)",
+            "keywords": "jmd dollars j$ jamaica jmd",
+            "countries": [
+                "Jamaica"
+            ]
+        },
+        {
+            "key": 66,
+            "code": "KGS",
+            "name": "Soms",
+            "symbol": ";2",
+            "flag": "🌐",
+            "label": "KGS — Kyrgyzstan (;2)",
+            "keywords": "kgs soms ;2 kyrgyzstan kgs",
+            "countries": [
+                "Kyrgyzstan"
+            ]
+        },
+        {
+            "key": 21,
+            "code": "KHR",
+            "name": "Riels",
+            "symbol": "KHR",
+            "flag": "🌐",
+            "label": "KHR — Cambodia (KHR)",
+            "keywords": "khr riels khr cambodia khr",
+            "countries": [
+                "Cambodia"
+            ]
+        },
+        {
+            "key": 64,
+            "code": "KPW",
+            "name": "Won",
+            "symbol": "KPW",
+            "flag": "🌐",
+            "label": "KPW — Korea (North) (KPW)",
+            "keywords": "kpw won kpw korea (north) kpw north korea won ",
+            "countries": [
+                "Korea (North)",
+                "North Korea"
+            ]
+        },
+        {
+            "key": 23,
+            "code": "KYD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "KYD — Cayman Islands ($)",
+            "keywords": "kyd dollars $ cayman islands kyd",
+            "countries": [
+                "Cayman Islands"
+            ]
+        },
+        {
+            "key": 63,
+            "code": "KZT",
+            "name": "Tenge",
+            "symbol": ";2",
+            "flag": "🌐",
+            "label": "KZT — Kazakhstan (;2)",
+            "keywords": "kzt tenge ;2 kazakhstan kzt",
+            "countries": [
+                "Kazakhstan"
+            ]
+        },
+        {
+            "key": 67,
+            "code": "LAK",
+            "name": "Kips",
+            "symbol": "LAK",
+            "flag": "🌐",
+            "label": "LAK — Laos (LAK)",
+            "keywords": "lak kips lak laos lak",
+            "countries": [
+                "Laos"
+            ]
+        },
+        {
+            "key": 69,
+            "code": "LBP",
+            "name": "Pounds",
+            "symbol": "LBP",
+            "flag": "🌐",
+            "label": "LBP — Lebanon (LBP)",
+            "keywords": "lbp pounds lbp lebanon lbp",
+            "countries": [
+                "Lebanon"
+            ]
+        },
+        {
+            "key": 111,
+            "code": "LKR",
+            "name": "Sri Lankan Rupee",
+            "symbol": "Rs",
+            "flag": "🇱🇰",
+            "label": "LKR — Sri Lankan Rupee (Rs)",
+            "keywords": "lkr sri lankan rupee rs sri lanka lkr sri lankan rupee sri lanka rupees rs",
+            "countries": [
+                "Sri Lanka"
+            ]
+        },
+        {
+            "key": 70,
+            "code": "LRD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "LRD — Liberia ($)",
+            "keywords": "lrd dollars $ liberia lrd",
+            "countries": [
+                "Liberia"
+            ]
+        },
+        {
+            "key": 72,
+            "code": "LTL",
+            "name": "Litai",
+            "symbol": "Lt",
+            "flag": "🌐",
+            "label": "LTL — Lithuania (Lt)",
+            "keywords": "ltl litai lt lithuania ltl",
+            "countries": [
+                "Lithuania"
+            ]
+        },
+        {
+            "key": 68,
+            "code": "LVL",
+            "name": "Lati",
+            "symbol": "Ls",
+            "flag": "🌐",
+            "label": "LVL — Latvia (Ls)",
+            "keywords": "lvl lati ls latvia lvl",
+            "countries": [
+                "Latvia"
+            ]
+        },
+        {
+            "key": 74,
+            "code": "MKD",
+            "name": "Denars",
+            "symbol": "45=",
+            "flag": "🌐",
+            "label": "MKD — Macedonia (45=)",
+            "keywords": "mkd denars 45= macedonia mkd",
+            "countries": [
+                "Macedonia"
+            ]
+        },
+        {
+            "key": 79,
+            "code": "MNT",
+            "name": "Tugriks",
+            "symbol": "MNT",
+            "flag": "🌐",
+            "label": "MNT — Mongolia (MNT)",
+            "keywords": "mnt tugriks mnt mongolia mnt",
+            "countries": [
+                "Mongolia"
+            ]
+        },
+        {
+            "key": 77,
+            "code": "MUR",
+            "name": "Rupees",
+            "symbol": "MUR",
+            "flag": "🌐",
+            "label": "MUR — Mauritius (MUR)",
+            "keywords": "mur rupees mur mauritius mur",
+            "countries": [
+                "Mauritius"
+            ]
+        },
+        {
+            "key": 80,
+            "code": "MZN",
+            "name": "Meticais",
+            "symbol": "MT",
+            "flag": "🌐",
+            "label": "MZN — Mozambique (MT)",
+            "keywords": "mzn meticais mt mozambique mzn",
+            "countries": [
+                "Mozambique"
+            ]
+        },
+        {
+            "key": 81,
+            "code": "NAD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "NAD — Namibia ($)",
+            "keywords": "nad dollars $ namibia nad",
+            "countries": [
+                "Namibia"
+            ]
+        },
+        {
+            "key": 87,
+            "code": "NGN",
+            "name": "Nigerian Naira",
+            "symbol": "₦",
+            "flag": "🇳🇬",
+            "label": "NGN — Nigerian Naira (₦)",
+            "keywords": "ngn nigerian naira ₦ nigeria ngn nigerian naira nigeria naira ₦",
+            "countries": [
+                "Nigeria"
+            ]
+        },
+        {
+            "key": 86,
+            "code": "NIO",
+            "name": "Cordobas",
+            "symbol": "C$",
+            "flag": "🌐",
+            "label": "NIO — Nicaragua (C$)",
+            "keywords": "nio cordobas c$ nicaragua nio",
+            "countries": [
+                "Nicaragua"
+            ]
+        },
+        {
+            "key": 82,
+            "code": "NPR",
+            "name": "Nepalese Rupee",
+            "symbol": "रू",
+            "flag": "🇳🇵",
+            "label": "NPR — Nepalese Rupee (रू)",
+            "keywords": "npr nepalese rupee रू nepal npr nepalese rupee nepal rupees रू",
+            "countries": [
+                "Nepal"
+            ]
+        },
+        {
+            "key": 92,
+            "code": "PAB",
+            "name": "Balboa",
+            "symbol": "B/.",
+            "flag": "🌐",
+            "label": "PAB — Panama (B/.)",
+            "keywords": "pab balboa b/. panama pab",
+            "countries": [
+                "Panama"
+            ]
+        },
+        {
+            "key": 94,
+            "code": "PEN",
+            "name": "Nuevos Soles",
+            "symbol": "S/.",
+            "flag": "🌐",
+            "label": "PEN — Peru (S/.)",
+            "keywords": "pen nuevos soles s/. peru pen",
+            "countries": [
+                "Peru"
+            ]
+        },
+        {
+            "key": 91,
+            "code": "PKR",
+            "name": "Pakistani Rupee",
+            "symbol": "₨",
+            "flag": "🇵🇰",
+            "label": "PKR — Pakistani Rupee (₨)",
+            "keywords": "pkr pakistani rupee ₨ pakistan pkr pakistani rupee pakistan rupees ₨",
+            "countries": [
+                "Pakistan"
+            ]
+        },
+        {
+            "key": 93,
+            "code": "PYG",
+            "name": "Guarani",
+            "symbol": "Gs",
+            "flag": "🌐",
+            "label": "PYG — Paraguay (Gs)",
+            "keywords": "pyg guarani gs paraguay pyg",
+            "countries": [
+                "Paraguay"
+            ]
+        },
+        {
+            "key": 98,
+            "code": "RON",
+            "name": "Romanian Leu",
+            "symbol": "lei",
+            "flag": "🇷🇴",
+            "label": "RON — Romanian Leu (lei)",
+            "keywords": "ron romanian leu lei romania ron romanian leu romania lei",
+            "countries": [
+                "Romania"
+            ]
+        },
+        {
+            "key": 102,
+            "code": "RSD",
+            "name": "Dinars",
+            "symbol": "\u00148=.",
+            "flag": "🌐",
+            "label": "RSD — Serbia (\u00148=.)",
+            "keywords": "rsd dinars \u00148=. serbia rsd",
+            "countries": [
+                "Serbia"
+            ]
+        },
+        {
+            "key": 99,
+            "code": "RUB",
+            "name": "Rubles",
+            "symbol": "@C1",
+            "flag": "🌐",
+            "label": "RUB — Russia (@C1)",
+            "keywords": "rub rubles @c1 russia rub",
+            "countries": [
+                "Russia"
+            ]
+        },
+        {
+            "key": 106,
+            "code": "SBD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "SBD — Solomon Islands ($)",
+            "keywords": "sbd dollars $ solomon islands sbd",
+            "countries": [
+                "Solomon Islands"
+            ]
+        },
+        {
+            "key": 103,
+            "code": "SCR",
+            "name": "Rupees",
+            "symbol": "SCR",
+            "flag": "🌐",
+            "label": "SCR — Seychelles (SCR)",
+            "keywords": "scr rupees scr seychelles scr",
+            "countries": [
+                "Seychelles"
+            ]
+        },
+        {
+            "key": 100,
+            "code": "SHP",
+            "name": "Pounds",
+            "symbol": "SHP",
+            "flag": "🌐",
+            "label": "SHP — Saint Helena (SHP)",
+            "keywords": "shp pounds shp saint helena shp",
+            "countries": [
+                "Saint Helena"
+            ]
+        },
+        {
+            "key": 107,
+            "code": "SOS",
+            "name": "Shillings",
+            "symbol": "S",
+            "flag": "🌐",
+            "label": "SOS — Somalia (S)",
+            "keywords": "sos shillings s somalia sos",
+            "countries": [
+                "Somalia"
+            ]
+        },
+        {
+            "key": 114,
+            "code": "SRD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "SRD — Suriname ($)",
+            "keywords": "srd dollars $ suriname srd",
+            "countries": [
+                "Suriname"
+            ]
+        },
+        {
+            "key": 36,
+            "code": "SVC",
+            "name": "Colones",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "SVC — El Salvador ($)",
+            "keywords": "svc colones $ el salvador svc",
+            "countries": [
+                "El Salvador"
+            ]
+        },
+        {
+            "key": 115,
+            "code": "SYP",
+            "name": "Pounds",
+            "symbol": "SYP",
+            "flag": "🌐",
+            "label": "SYP — Syria (SYP)",
+            "keywords": "syp pounds syp syria syp",
+            "countries": [
+                "Syria"
+            ]
+        },
+        {
+            "key": 120,
+            "code": "TRL",
+            "name": "Liras",
+            "symbol": "TRL",
+            "flag": "🌐",
+            "label": "TRL — Turkey (TRL)",
+            "keywords": "trl liras trl turkey trl",
+            "countries": [
+                "Turkey"
+            ]
+        },
+        {
+            "key": 118,
+            "code": "TTD",
+            "name": "Dollars",
+            "symbol": "TT$",
+            "flag": "🌐",
+            "label": "TTD — Trinidad and Tobago (TT$)",
+            "keywords": "ttd dollars tt$ trinidad and tobago ttd",
+            "countries": [
+                "Trinidad and Tobago"
+            ]
+        },
+        {
+            "key": 121,
+            "code": "TVD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "TVD — Tuvalu ($)",
+            "keywords": "tvd dollars $ tuvalu tvd",
+            "countries": [
+                "Tuvalu"
+            ]
+        },
+        {
+            "key": 116,
+            "code": "TWD",
+            "name": "Taiwan New Dollar",
+            "symbol": "NT$",
+            "flag": "🇹🇼",
+            "label": "TWD — Taiwan New Dollar (NT$)",
+            "keywords": "twd taiwan new dollar nt$ taiwan twd taiwan new dollar taiwan nt$",
+            "countries": [
+                "Taiwan"
+            ]
+        },
+        {
+            "key": 122,
+            "code": "UAH",
+            "name": "Hryvnia",
+            "symbol": "UAH",
+            "flag": "🌐",
+            "label": "UAH — Ukraine (UAH)",
+            "keywords": "uah hryvnia uah ukraine uah",
+            "countries": [
+                "Ukraine"
+            ]
+        },
+        {
+            "key": 125,
+            "code": "UYU",
+            "name": "Pesos",
+            "symbol": "$U",
+            "flag": "🌐",
+            "label": "UYU — Uruguay ($U)",
+            "keywords": "uyu pesos $u uruguay uyu",
+            "countries": [
+                "Uruguay"
+            ]
+        },
+        {
+            "key": 126,
+            "code": "UZS",
+            "name": "Sums",
+            "symbol": ";2",
+            "flag": "🌐",
+            "label": "UZS — Uzbekistan (;2)",
+            "keywords": "uzs sums ;2 uzbekistan uzs",
+            "countries": [
+                "Uzbekistan"
+            ]
+        },
+        {
+            "key": 128,
+            "code": "VEF",
+            "name": "Bolivares Fuertes",
+            "symbol": "Bs",
+            "flag": "🌐",
+            "label": "VEF — Venezuela (Bs)",
+            "keywords": "vef bolivares fuertes bs venezuela vef",
+            "countries": [
+                "Venezuela"
+            ]
+        },
+        {
+            "key": 34,
+            "code": "XCD",
+            "name": "Dollars",
+            "symbol": "$",
+            "flag": "🌐",
+            "label": "XCD — East Caribbean ($)",
+            "keywords": "xcd dollars $ east caribbean xcd",
+            "countries": [
+                "East Caribbean"
+            ]
+        },
+        {
+            "key": 130,
+            "code": "YER",
+            "name": "Rials",
+            "symbol": "YER",
+            "flag": "🌐",
+            "label": "YER — Yemen (YER)",
+            "keywords": "yer rials yer yemen yer",
+            "countries": [
+                "Yemen"
+            ]
+        },
+        {
+            "key": 131,
+            "code": "ZWD",
+            "name": "Zimbabwe Dollars",
+            "symbol": "Z$",
+            "flag": "🌐",
+            "label": "ZWD — Zimbabwe (Z$)",
+            "keywords": "zwd zimbabwe dollars z$ zimbabwe zwd",
+            "countries": [
+                "Zimbabwe"
+            ]
+        }
+    ],
+    "key_to_code": {
+        "0": "INR",
+        "1": "EUR",
+        "2": "JPY",
+        "3": "GBP",
+        "4": "USD",
+        "5": "AED",
+        "22": "CAD",
+        "6": "AUD",
+        "104": "SGD",
+        "71": "CHF",
+        "85": "NZD",
+        "108": "ZAR",
+        "50": "HKD",
+        "112": "SEK",
+        "89": "NOK",
+        "32": "DKK",
+        "96": "PLN",
+        "78": "MXN",
+        "18": "BRL",
+        "75": "MYR",
+        "117": "THB",
+        "54": "IDR",
+        "95": "PHP",
+        "129": "VND",
+        "101": "SAR",
+        "97": "QAR",
+        "90": "OMR",
+        "58": "ILS",
+        "119": "TRY",
+        "65": "KRW",
+        "1003": "AFN",
+        "1001": "ALL",
+        "83": "ANG",
+        "1004": "ARS",
+        "1005": "AWG",
+        "7": "AZN",
+        "15": "BAM",
+        "9": "BBD",
+        "17": "BGN",
+        "13": "BMD",
+        "20": "BND",
+        "14": "BOB",
+        "8": "BSD",
+        "16": "BWP",
+        "10": "BYR",
+        "12": "BZD",
+        "24": "CLP",
+        "25": "CNY",
+        "26": "COP",
+        "27": "CRC",
+        "29": "CUP",
+        "31": "CZK",
+        "33": "DOP",
+        "35": "EGP",
+        "40": "FJD",
+        "39": "FKP",
+        "46": "GGP",
+        "42": "GHC",
+        "43": "GIP",
+        "45": "GTQ",
+        "47": "GYD",
+        "49": "HNL",
+        "28": "HRK",
+        "51": "HUF",
+        "57": "IMP",
+        "55": "IRR",
+        "52": "ISK",
+        "62": "JEP",
+        "60": "JMD",
+        "66": "KGS",
+        "21": "KHR",
+        "64": "KPW",
+        "23": "KYD",
+        "63": "KZT",
+        "67": "LAK",
+        "69": "LBP",
+        "111": "LKR",
+        "70": "LRD",
+        "72": "LTL",
+        "68": "LVL",
+        "74": "MKD",
+        "79": "MNT",
+        "77": "MUR",
+        "80": "MZN",
+        "81": "NAD",
+        "87": "NGN",
+        "86": "NIO",
+        "82": "NPR",
+        "92": "PAB",
+        "94": "PEN",
+        "91": "PKR",
+        "93": "PYG",
+        "98": "RON",
+        "102": "RSD",
+        "99": "RUB",
+        "106": "SBD",
+        "103": "SCR",
+        "100": "SHP",
+        "107": "SOS",
+        "114": "SRD",
+        "36": "SVC",
+        "115": "SYP",
+        "120": "TRL",
+        "118": "TTD",
+        "121": "TVD",
+        "116": "TWD",
+        "122": "UAH",
+        "125": "UYU",
+        "126": "UZS",
+        "128": "VEF",
+        "34": "XCD",
+        "130": "YER",
+        "131": "ZWD",
+        "1002": "USD",
+        "11": "EUR",
+        "19": "GBP",
+        "30": "EUR",
+        "37": "GBP",
+        "38": "EUR",
+        "41": "EUR",
+        "44": "EUR",
+        "48": "EUR",
+        "53": "INR",
+        "132": "INR",
+        "56": "EUR",
+        "59": "EUR",
+        "61": "JPY",
+        "73": "EUR",
+        "76": "EUR",
+        "84": "EUR",
+        "88": "KPW",
+        "105": "EUR",
+        "109": "KRW",
+        "110": "EUR",
+        "113": "CHF",
+        "123": "GBP",
+        "124": "USD",
+        "127": "EUR"
+    },
+    "code_to_key": {
+        "INR": 0,
+        "EUR": 1,
+        "JPY": 2,
+        "GBP": 3,
+        "USD": 4,
+        "AED": 5,
+        "CAD": 22,
+        "AUD": 6,
+        "SGD": 104,
+        "CHF": 71,
+        "NZD": 85,
+        "ZAR": 108,
+        "HKD": 50,
+        "SEK": 112,
+        "NOK": 89,
+        "DKK": 32,
+        "PLN": 96,
+        "MXN": 78,
+        "BRL": 18,
+        "MYR": 75,
+        "THB": 117,
+        "IDR": 54,
+        "PHP": 95,
+        "VND": 129,
+        "SAR": 101,
+        "QAR": 97,
+        "OMR": 90,
+        "ILS": 58,
+        "TRY": 119,
+        "KRW": 65,
+        "AFN": 1003,
+        "ALL": 1001,
+        "ANG": 83,
+        "ARS": 1004,
+        "AWG": 1005,
+        "AZN": 7,
+        "BAM": 15,
+        "BBD": 9,
+        "BGN": 17,
+        "BMD": 13,
+        "BND": 20,
+        "BOB": 14,
+        "BSD": 8,
+        "BWP": 16,
+        "BYR": 10,
+        "BZD": 12,
+        "CLP": 24,
+        "CNY": 25,
+        "COP": 26,
+        "CRC": 27,
+        "CUP": 29,
+        "CZK": 31,
+        "DOP": 33,
+        "EGP": 35,
+        "FJD": 40,
+        "FKP": 39,
+        "GGP": 46,
+        "GHC": 42,
+        "GIP": 43,
+        "GTQ": 45,
+        "GYD": 47,
+        "HNL": 49,
+        "HRK": 28,
+        "HUF": 51,
+        "IMP": 57,
+        "IRR": 55,
+        "ISK": 52,
+        "JEP": 62,
+        "JMD": 60,
+        "KGS": 66,
+        "KHR": 21,
+        "KPW": 64,
+        "KYD": 23,
+        "KZT": 63,
+        "LAK": 67,
+        "LBP": 69,
+        "LKR": 111,
+        "LRD": 70,
+        "LTL": 72,
+        "LVL": 68,
+        "MKD": 74,
+        "MNT": 79,
+        "MUR": 77,
+        "MZN": 80,
+        "NAD": 81,
+        "NGN": 87,
+        "NIO": 86,
+        "NPR": 82,
+        "PAB": 92,
+        "PEN": 94,
+        "PKR": 91,
+        "PYG": 93,
+        "RON": 98,
+        "RSD": 102,
+        "RUB": 99,
+        "SBD": 106,
+        "SCR": 103,
+        "SHP": 100,
+        "SOS": 107,
+        "SRD": 114,
+        "SVC": 36,
+        "SYP": 115,
+        "TRL": 120,
+        "TTD": 118,
+        "TVD": 121,
+        "TWD": 116,
+        "UAH": 122,
+        "UYU": 125,
+        "UZS": 126,
+        "VEF": 128,
+        "XCD": 34,
+        "YER": 130,
+        "ZWD": 131
+    },
+    "master_id_to_code": {
+        "3": "AFN",
+        "1": "ALL",
+        "2": "USD",
+        "4": "ARS",
+        "5": "AWG",
+        "6": "AUD",
+        "7": "AZN",
+        "8": "BSD",
+        "9": "BBD",
+        "10": "BYR",
+        "11": "EUR",
+        "12": "BZD",
+        "13": "BMD",
+        "14": "BOB",
+        "15": "BAM",
+        "16": "BWP",
+        "18": "BRL",
+        "19": "GBP",
+        "20": "BND",
+        "17": "BGN",
+        "21": "KHR",
+        "22": "CAD",
+        "23": "KYD",
+        "24": "CLP",
+        "25": "CNY",
+        "26": "COP",
+        "27": "CRC",
+        "28": "HRK",
+        "29": "CUP",
+        "30": "EUR",
+        "31": "CZK",
+        "32": "DKK",
+        "33": "DOP",
+        "34": "XCD",
+        "35": "EGP",
+        "36": "SVC",
+        "37": "GBP",
+        "38": "EUR",
+        "39": "FKP",
+        "40": "FJD",
+        "41": "EUR",
+        "42": "GHC",
+        "43": "GIP",
+        "44": "EUR",
+        "45": "GTQ",
+        "46": "GGP",
+        "47": "GYD",
+        "48": "EUR",
+        "49": "HNL",
+        "50": "HKD",
+        "51": "HUF",
+        "52": "ISK",
+        "53": "INR",
+        "132": "INR",
+        "54": "IDR",
+        "55": "IRR",
+        "56": "EUR",
+        "57": "IMP",
+        "58": "ILS",
+        "59": "EUR",
+        "60": "JMD",
+        "61": "JPY",
+        "62": "JEP",
+        "63": "KZT",
+        "64": "KPW",
+        "65": "KRW",
+        "66": "KGS",
+        "67": "LAK",
+        "68": "LVL",
+        "69": "LBP",
+        "70": "LRD",
+        "71": "CHF",
+        "72": "LTL",
+        "73": "EUR",
+        "74": "MKD",
+        "75": "MYR",
+        "76": "EUR",
+        "77": "MUR",
+        "78": "MXN",
+        "79": "MNT",
+        "80": "MZN",
+        "81": "NAD",
+        "82": "NPR",
+        "84": "EUR",
+        "83": "ANG",
+        "85": "NZD",
+        "86": "NIO",
+        "87": "NGN",
+        "88": "KPW",
+        "89": "NOK",
+        "90": "OMR",
+        "91": "PKR",
+        "92": "PAB",
+        "93": "PYG",
+        "94": "PEN",
+        "95": "PHP",
+        "96": "PLN",
+        "97": "QAR",
+        "98": "RON",
+        "99": "RUB",
+        "100": "SHP",
+        "101": "SAR",
+        "102": "RSD",
+        "103": "SCR",
+        "104": "SGD",
+        "105": "EUR",
+        "106": "SBD",
+        "107": "SOS",
+        "108": "ZAR",
+        "109": "KRW",
+        "110": "EUR",
+        "111": "LKR",
+        "114": "SRD",
+        "112": "SEK",
+        "113": "CHF",
+        "115": "SYP",
+        "116": "TWD",
+        "117": "THB",
+        "118": "TTD",
+        "119": "TRY",
+        "120": "TRL",
+        "121": "TVD",
+        "122": "UAH",
+        "123": "GBP",
+        "124": "USD",
+        "125": "UYU",
+        "126": "UZS",
+        "127": "EUR",
+        "128": "VEF",
+        "129": "VND",
+        "130": "YER",
+        "131": "ZWD"
+    },
+    "symbols": {
+        "INR": "₹",
+        "EUR": "€",
+        "JPY": "¥",
+        "GBP": "£",
+        "USD": "$",
+        "AED": "د.إ",
+        "CAD": "C$",
+        "AUD": "A$",
+        "SGD": "S$",
+        "CHF": "CHF",
+        "NZD": "NZ$",
+        "ZAR": "R",
+        "HKD": "HK$",
+        "SEK": "kr",
+        "NOK": "kr",
+        "DKK": "kr",
+        "PLN": "zł",
+        "MXN": "Mex$",
+        "BRL": "R$",
+        "MYR": "RM",
+        "THB": "฿",
+        "IDR": "Rp",
+        "PHP": "₱",
+        "VND": "₫",
+        "SAR": "﷼",
+        "QAR": "﷼",
+        "OMR": "RO",
+        "ILS": "₪",
+        "TRY": "₺",
+        "KRW": "₩",
+        "AFN": "\u000b",
+        "ALL": "Lek",
+        "ANG": "ANG",
+        "ARS": "AR$",
+        "AWG": "AWG",
+        "AZN": "<0=",
+        "BAM": "KM",
+        "BBD": "$",
+        "BGN": ";2",
+        "BMD": "$",
+        "BND": "$",
+        "BOB": "$b",
+        "BSD": "$",
+        "BWP": "P",
+        "BYR": "p.",
+        "BZD": "BZ$",
+        "CLP": "CLP$",
+        "CNY": "CNY",
+        "COP": "COL$",
+        "CRC": "CRC",
+        "CUP": "CUP",
+        "CZK": "Kč",
+        "DOP": "RD$",
+        "EGP": "E£",
+        "FJD": "$",
+        "FKP": "FKP",
+        "GGP": "GGP",
+        "GHC": "GHC",
+        "GIP": "GIP",
+        "GTQ": "Q",
+        "GYD": "$",
+        "HNL": "L",
+        "HRK": "kn",
+        "HUF": "Ft",
+        "IMP": "IMP",
+        "IRR": "IRR",
+        "ISK": "kr",
+        "JEP": "JEP",
+        "JMD": "J$",
+        "KGS": ";2",
+        "KHR": "KHR",
+        "KPW": "KPW",
+        "KYD": "$",
+        "KZT": ";2",
+        "LAK": "LAK",
+        "LBP": "LBP",
+        "LKR": "Rs",
+        "LRD": "$",
+        "LTL": "Lt",
+        "LVL": "Ls",
+        "MKD": "45=",
+        "MNT": "MNT",
+        "MUR": "MUR",
+        "MZN": "MT",
+        "NAD": "$",
+        "NGN": "₦",
+        "NIO": "C$",
+        "NPR": "रू",
+        "PAB": "B/.",
+        "PEN": "S/.",
+        "PKR": "₨",
+        "PYG": "Gs",
+        "RON": "lei",
+        "RSD": "\u00148=.",
+        "RUB": "@C1",
+        "SBD": "$",
+        "SCR": "SCR",
+        "SHP": "SHP",
+        "SOS": "S",
+        "SRD": "$",
+        "SVC": "$",
+        "SYP": "SYP",
+        "TRL": "TRL",
+        "TTD": "TT$",
+        "TVD": "$",
+        "TWD": "NT$",
+        "UAH": "UAH",
+        "UYU": "$U",
+        "UZS": ";2",
+        "VEF": "Bs",
+        "XCD": "$",
+        "YER": "YER",
+        "ZWD": "Z$"
+    },
+    "rates_to_inr": {
+        "INR": 1,
+        "EUR": 107.47,
+        "JPY": 0.58,
+        "GBP": 123.13,
+        "USD": 93.16,
+        "AED": 25.37,
+        "CAD": 67.5,
+        "AUD": 60.5,
+        "SGD": 69.5,
+        "CHF": 105,
+        "NZD": 56,
+        "ZAR": 5.1,
+        "HKD": 11.9,
+        "SEK": 8.8,
+        "NOK": 8.6,
+        "DKK": 14.4,
+        "PLN": 23.5,
+        "MXN": 5.1,
+        "BRL": 17.5,
+        "MYR": 20.8,
+        "THB": 2.65,
+        "IDR": 0.0058,
+        "PHP": 1.62,
+        "VND": 0.0037,
+        "SAR": 24.84,
+        "QAR": 25.59,
+        "KWD": 303,
+        "BHD": 247.1,
+        "OMR": 241.9,
+        "ILS": 25.2,
+        "TRY": 2.7,
+        "KRW": 0.068
+    },
+    "rates_to_usd": {
+        "INR": 93.16,
+        "EUR": 1.16,
+        "JPY": 0.01,
+        "GBP": 1.33,
+        "USD": 1,
+        "AED": 0.27,
+        "CAD": 0.72456,
+        "AUD": 0.64942,
+        "SGD": 0.746028,
+        "CHF": 1.127093,
+        "NZD": 0.601116,
+        "ZAR": 0.054745,
+        "HKD": 0.127737,
+        "SEK": 0.094461,
+        "NOK": 0.092314,
+        "DKK": 0.154573,
+        "PLN": 0.252254,
+        "MXN": 0.054745,
+        "BRL": 0.187849,
+        "MYR": 0.223272,
+        "THB": 0.028446,
+        "IDR": 6.2e-5,
+        "PHP": 0.017389,
+        "VND": 4.0e-5,
+        "SAR": 0.266638,
+        "QAR": 0.274689,
+        "KWD": 3.252469,
+        "BHD": 2.652426,
+        "OMR": 2.596608,
+        "ILS": 0.270502,
+        "TRY": 0.028982,
+        "KRW": 0.00073
+    }
+}

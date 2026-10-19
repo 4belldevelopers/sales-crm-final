@@ -116,11 +116,18 @@ class ReferenceDataCache
     }
 
     /**
-     * Master currencies, cached 24 h.
+     * Master currencies, served directly from static currencies.json (0% SQL queries) with 24 h cache.
      */
     public static function masterCurrencies(): \Illuminate\Support\Collection
     {
         return Cache::remember('global_master_currencies', self::TTL_24H, function () {
+            $jsonData = CurrencyService::loadCurrencyJson();
+            if (! empty($jsonData['master_currencies'])) {
+                return collect($jsonData['master_currencies'])->map(function ($item) {
+                    return (object) $item;
+                });
+            }
+
             return DB::table('master_currency')->select('*')->orderBy('country', 'ASC')->get();
         });
     }

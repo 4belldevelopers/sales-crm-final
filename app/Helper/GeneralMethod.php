@@ -2922,20 +2922,13 @@ END:VCALENDAR";
 
     public static function openDefaultCurrency($company_id)
     {
-        /* Intent: 24h Redis cache for tenant default currency code */
+        /* Intent: 24h Redis cache for tenant default currency code without joining master_currency table */
         return Cache::remember("tenant_currency_code:{$company_id}", 86400, function () use ($company_id) {
-            $defaultCurrency = DB::table('companies')
-                ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-                ->select('master_currency.code')
+            $currencyId = DB::table('companies')
                 ->where('companies.id', $company_id)
-                ->first();
+                ->value('currency');
 
-            $currency_code = 'INR';
-            if ($defaultCurrency) {
-                $currency_code = ($defaultCurrency->code);
-            }
-
-            return $currency_code;
+            return \App\Services\CurrencyService::resolveCurrencyCode($currencyId ?? 'INR');
         });
     }
 
@@ -4498,30 +4491,13 @@ END:VCALENDAR";
 
     public static function currency()
     {
-        $currencies = Cache::remember('currency_codesww', 86400, function () {
-            return DB::table('currencies')
-                ->orderBy('getKey', 'ASC')
-                ->pluck('currency_code', 'getKey')
-                ->toArray();
-        });
-        if ($currencies) {
-            return $currencies;
-        }
-
-        return [
-            0 => 'INR',
-            1 => 'EUR',
-            2 => 'JPY',
-            3 => 'GBP',
-            4 => 'USD',
-            5 => 'AED',
-        ];
+        return \App\Services\CurrencyService::getCurrencies();
     }
 
     public static function currencySymbole()
     {
         return Cache::remember('currency_symbols_all', 86400, function () {
-            $currencies = DB::table('currencies')->get();
+            $data = \App\Services\CurrencyService::loadCurrencyJson();
             $iconMap = [
                 'INR' => '<i class="fa fa-inr" aria-hidden="true"></i>',
                 'EUR' => '<i class="fa fa-eur" aria-hidden="true"></i>',
@@ -4535,10 +4511,12 @@ END:VCALENDAR";
             ];
 
             $array = [];
+            $currencies = ! empty($data['currencies']) ? $data['currencies'] : [];
             foreach ($currencies as $curr) {
-                $code = strtoupper(trim($curr->currency_code));
-                $html = $iconMap[$code] ?? ('<span class="fw-bold">'.e($curr->currency_symbol ?: $code).' </span>');
-                $array[$curr->getKey] = $html;
+                $code = strtoupper(trim($curr['currency_code']));
+                $sym = $curr['currency_symbol'] ?? '';
+                $html = $iconMap[$code] ?? ('<span class="fw-bold">'.e($sym ?: $code).' </span>');
+                $array[$curr['getKey']] = $html;
                 $array[$code] = $html;
             }
 
@@ -4548,27 +4526,7 @@ END:VCALENDAR";
 
     public static function currencySymboleforexcell()
     {
-
-        $currencies = Cache::remember('currency_codesww', 86400, function () {
-            return DB::table('currencies')
-                ->orderBy('getKey', 'ASC')
-                ->pluck('currency_code')
-                ->toArray();
-        });
-        if ($currencies) {
-            return $currencies;
-        }
-
-        $array = [
-            0 => 'INR',
-            1 => 'EUR',
-            2 => 'JPY',
-            3 => 'GBP',
-            4 => 'USD',
-            5 => 'AED',
-        ];
-
-        return $array;
+        return array_values(\App\Services\CurrencyService::getCurrencies());
     }
 
     /**
@@ -5212,7 +5170,8 @@ END:VCALENDAR";
     {
         return cache()->remember('ref:currencies:all', 86400, function () {
             try {
-                $currencies = DB::table('currencies')->get();
+                $data = \App\Services\CurrencyService::loadCurrencyJson();
+                $currencies = ! empty($data['currencies']) ? $data['currencies'] : [];
 
                 $exchangeRates = [];
                 $rates = [];
@@ -5221,14 +5180,12 @@ END:VCALENDAR";
                 $getKey = [];
 
                 foreach ($currencies as $row) {
-                    // INR based (your first array)
-                    $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
-
-                    // Second rates (example: you can use another column or same)
-                    $rates[$row->currency_code] = (float) $row->usd_based_rates;
-                    $symbolsValue[$row->currency_code] = $row->getKey;
-                    $symbols[$row->currency_code] = $row->currency_symbol;
-                    $getKey[$row->getKey] = $row->currency_code;
+                    $code = $row['currency_code'];
+                    $exchangeRates[$code] = (float) $row['inr_based_rates'];
+                    $rates[$code] = (float) $row['usd_based_rates'];
+                    $symbolsValue[$code] = $row['getKey'];
+                    $symbols[$code] = $row['currency_symbol'];
+                    $getKey[$row['getKey']] = $code;
                 }
 
                 return [
@@ -14435,15 +14392,14 @@ END:VCALENDAR";
         }
 
         $data = Cache::remember("tenant:{$companyId}:currency_bench_show_mode", 300, static function () use ($companyId) {
-            $defaultCurrency = DB::table('companies')
-                ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-                ->select('master_currency.code', 'companies.bench_show_mode')
-                ->where('companies.id', $companyId)
+            $company = DB::table('companies')
+                ->select('currency', 'bench_show_mode')
+                ->where('id', $companyId)
                 ->first();
 
             return [
-                'currency_code' => ($defaultCurrency && ! empty($defaultCurrency->code)) ? $defaultCurrency->code : 'INR',
-                'show_mode' => (int) ($defaultCurrency->bench_show_mode ?? 0),
+                'currency_code' => $company ? \App\Services\CurrencyService::resolveCurrencyCode($company->currency) : 'INR',
+                'show_mode' => (int) ($company->bench_show_mode ?? 0),
             ];
         });
 

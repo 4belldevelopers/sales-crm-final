@@ -201,7 +201,7 @@ class AdminAccountSettingsController extends AdminBaseController
 			
 			$this->languagesArr 				=	DB::table('master_languages')->select('*')->orderBy('master_languages.name', 'ASC')->get();
 			$this->timezone 					=	DB::table('master_timezone')->select('*')->orderBy('master_timezone.country_name', 'ASC')->get();
-			$this->currencyArr 					=	DB::table('master_currency')->select('*')->orderBy('master_currency.country', 'ASC')->get();
+			$this->currencyArr 					=	\App\Services\ReferenceDataCache::masterCurrencies();
 			$this->time_formatArr 				=	DB::table('master_time_format')->select('*')->orderBy('master_time_format.priority', 'ASC')->get();
 			$this->date_formatArr 				=	DB::table('master_date_format')->select('*')->orderBy('master_date_format.priority', 'ASC')->get();
 			$this->email_preferencesArr 		=	DB::table('master_email_preferences')->select('*')->orderBy('master_email_preferences.priority', 'ASC')->get();
