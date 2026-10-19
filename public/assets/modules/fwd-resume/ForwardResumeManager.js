@@ -29,8 +29,102 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    var emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
     var MAX_TOTAL_RECIPIENTS = 5;
+
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 100% CLIENT-FIRST GOD-LEVEL EMAIL VALIDATION & TYPO ENGINE (ZERO SERVER STRAIN)
+    // ══════════════════════════════════════════════════════════════════════════════
+    window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || {
+        domainTypos: {
+            'gamil.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmai.com': 'gmail.com',
+            'gmial.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gamil.co': 'gmail.com', 'gmail.con': 'gmail.com',
+            'gmail.co': 'gmail.com', 'gmaill.co': 'gmail.com', 'gmaill.con': 'gmail.com', 'gmail.cpm': 'gmail.com',
+            'gmail.cm': 'gmail.com', 'gmail.om': 'gmail.com', 'g.mail.com': 'gmail.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+            'hotmial.co': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmsil.com': 'hotmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+            'yaho.in': 'yahoo.in', 'yahooo.in': 'yahoo.in', 'yaho.co.in': 'yahoo.co.in',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com',
+            'outlok.co': 'outlook.com', 'outlock.com': 'outlook.com',
+            'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com'
+        },
+        cleanDeterministic: function (val) {
+            if (!val || typeof val !== 'string') return '';
+            var cleaned = val.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                             .trim()
+                             .replace(/^mailto:\s*/i, '')
+                             .replace(/^<+|>+$/g, '')
+                             .replace(/^"+|"+$/g, '')
+                             .replace(/^'+|'+$/g, '')
+                             .replace(/[.,;:]+$/, '')
+                             .trim();
+            return cleaned;
+        },
+        validateSyntax: function (email) {
+            if (!email || typeof email !== 'string') return false;
+            var trimmed = email.trim();
+            if (trimmed.length === 0 || trimmed.length > 254) return false;
+            if ((trimmed.match(/@/g) || []).length !== 1) return false;
+            var parts = trimmed.split('@');
+            var local = parts[0];
+            var domain = parts[1];
+            if (!local || !domain) return false;
+            if (local.length > 64) return false;
+            if (local.startsWith('.') || local.endsWith('.') || local.indexOf('..') !== -1) return false;
+            if (domain.startsWith('.') || domain.endsWith('.') || domain.startsWith('-') || domain.endsWith('-')) return false;
+            if (domain.indexOf('..') !== -1) return false;
+            var rfcPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+            return rfcPattern.test(trimmed);
+        },
+        suggestCorrection: function (email) {
+            if (!email || typeof email !== 'string') return null;
+            var raw = email.trim();
+            if (raw.indexOf(',') !== -1) {
+                raw = raw.replace(/,/g, '.');
+            }
+            var atMatches = raw.match(/@/g) || [];
+            if (atMatches.length !== 1) return null;
+            var parts = raw.split('@');
+            var local = parts[0].trim();
+            var domain = (parts[1] || '').trim().toLowerCase();
+            if (!local || !domain) return null;
+            if (this.domainTypos[domain]) {
+                return local + '@' + this.domainTypos[domain];
+            }
+            var tldFixes = {
+                'con': 'com', 'cpm': 'com', 'comm': 'com', 'cmo': 'com', 'ocm': 'com',
+                'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+            };
+            var dParts = domain.split('.');
+            if (dParts.length >= 2) {
+                var last = dParts[dParts.length - 1];
+                if (tldFixes[last]) {
+                    dParts[dParts.length - 1] = tldFixes[last];
+                    var suggestedDomain = dParts.join('.');
+                    if (suggestedDomain !== domain) {
+                        return local + '@' + suggestedDomain;
+                    }
+                }
+            }
+            return null;
+        },
+        renderTypoPill: function (containerSelector, suggestedEmail, targetInputSelector) {
+            var $hint = $(containerSelector);
+            if (!$hint.length) return;
+            if (suggestedEmail) {
+                $hint.html(
+                    '<div class="d-inline-flex align-items-center bg-light-primary text-primary px-2 py-1 rounded fs-8 fw-semibold mt-1" style="background:#EFF6FF;color:#2563EB;padding:4px 8px;border-radius:6px;font-size:11.5px;font-family:\'Poppins\',sans-serif;display:inline-flex;align-items:center;">' +
+                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' +
+                        '<span>Did you mean <strong>' + $('<div>').text(suggestedEmail).html() + '</strong>?</span>' +
+                        '<button type="button" class="apply-email-fix" data-target="' + targetInputSelector + '" data-suggestion="' + $('<div>').text(suggestedEmail).html() + '" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;margin-left:8px;text-decoration:underline;padding:0;font-size:11.5px;font-family:\'Poppins\',sans-serif;">Apply</button>' +
+                    '</div>'
+                ).slideDown(150);
+            } else {
+                $hint.slideUp(100, function () { $(this).empty(); });
+            }
+        }
+    };
 
     function generateUuidV4() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -285,8 +379,7 @@
         _routes: {
             shell: '/assets/modules/fwd-resume/shell.v4.html',
             engine: '/assets/modules/fwd-resume/engine.v4.js',
-            quillJs: '/assets/modules/fwd-resume/quill/quill.min.js',
-            quillCss: '/assets/modules/fwd-resume/quill/quill.snow.css',
+            ckeditorJs: '/demo/ckeditor/ckeditor.js',
             data: '/service_company/cvtracker/test_fwd_resume_data',
             recipients: '/service_company/cvtracker/fwd_recipients',
             intent: '/service_company/cvtracker/test_fwd_resume_intent',
@@ -300,8 +393,7 @@
         _shellHtml: '',
         _engineLoading: false,
         _engineLoaded: false,
-        _quill: null,
-        _quillLoading: false,
+        _ckeditorLoading: false,
         _recipientsCache: null,
         _recipientsCacheKey: null,
         _recipientsCacheTime: 0,
@@ -368,7 +460,7 @@
                         .catch(function (e) { console.warn('Prewarm shell error:', e); });
                 }
                 self._loadEngineScript();
-                self._loadQuill();
+                self._loadCkEditor();
             });
         },
 
@@ -405,43 +497,36 @@
             document.head.appendChild(script);
         },
 
-        _loadQuill: function (callback) {
+        _loadCkEditor: function (callback) {
             var self = this;
-            if (window.Quill) {
+            if (typeof CKEDITOR !== 'undefined') {
                 if (callback) callback();
                 return;
             }
-            if (self._quillLoading) {
+            if (self._ckeditorLoading) {
                 var checkInterval = setInterval(function () {
-                    if (window.Quill) {
+                    if (typeof CKEDITOR !== 'undefined') {
                         clearInterval(checkInterval);
                         if (callback) callback();
                     }
                 }, 30);
                 return;
             }
-            self._quillLoading = true;
+            self._ckeditorLoading = true;
 
-            // 1. Inject Quill CSS if not present
-            if (!document.getElementById('jero_quill_css')) {
-                var link = document.createElement('link');
-                link.id = 'jero_quill_css';
-                link.rel = 'stylesheet';
-                link.href = self._routes.quillCss || '/assets/modules/fwd-resume/quill/quill.snow.css';
-                document.head.appendChild(link);
-            }
-
-            // 2. Inject Quill JS
             var script = document.createElement('script');
-            script.src = self._routes.quillJs || '/assets/modules/fwd-resume/quill/quill.min.js';
+            script.src = self._routes.ckeditorJs || '/demo/ckeditor/ckeditor.js';
             script.async = true;
             script.onload = function () {
-                self._quillLoading = false;
+                self._ckeditorLoading = false;
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
+                    CKEDITOR.tools.enableHtml5Elements(document);
+                }
                 if (callback) callback();
             };
             script.onerror = function (e) {
-                self._quillLoading = false;
-                console.error('Failed to load Quill editor script:', e);
+                self._ckeditorLoading = false;
+                console.error('Failed to load CKEditor script:', e);
             };
             document.head.appendChild(script);
         },
@@ -502,7 +587,9 @@
 
             // 2. Client Shell Injection (< 5ms)
             if (!container.find('#test_form1').length) {
-                self._quill = null;
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                    try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
+                }
                 self._editorInitialized = false;
                 if (self._shellHtml) {
                     container.html(self._shellHtml);
@@ -515,8 +602,10 @@
                     fetch(self._routes.shell)
                         .then(function (res) { return res.text(); })
                         .then(function (html) {
+                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
+                            }
                             self._shellHtml = html;
-                            self._quill = null;
                             self._editorInitialized = false;
                             container.html(html);
                             self._afterShellInjected();
@@ -601,6 +690,33 @@
             self._setupTagInput('to');
             self._setupTagInput('cc');
             self._initRecipientDrawerEvents();
+
+            // Prevent unintended form submission on Enter
+            $('#test_form1').off('submit.preventSubmit').on('submit.preventSubmit', function (e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Delegate typo suggestion pill clicks
+            $(document).off('click', '#test_to_email_typo_hint .apply-email-fix').on('click', '#test_to_email_typo_hint .apply-email-fix', function (e) {
+                e.preventDefault();
+                var suggestion = $(this).attr('data-suggestion');
+                if (suggestion) {
+                    self.addEmailTag('to', suggestion);
+                    $('#test_to_email_input').val('');
+                    $('#test_to_email_typo_hint').slideUp(100, function () { $(this).empty(); });
+                }
+            });
+
+            $(document).off('click', '#test_cc_email_typo_hint .apply-email-fix').on('click', '#test_cc_email_typo_hint .apply-email-fix', function (e) {
+                e.preventDefault();
+                var suggestion = $(this).attr('data-suggestion');
+                if (suggestion) {
+                    self.addEmailTag('cc', suggestion);
+                    $('#test_cc_email_input').val('');
+                    $('#test_cc_email_typo_hint').slideUp(100, function () { $(this).empty(); });
+                }
+            });
         },
 
         _resetDrawerForm: function () {
@@ -635,64 +751,55 @@
 
         _initEditor: function () {
             var self = this;
-            self._loadQuill(function () {
-                self._initQuillEditor();
+            self._loadCkEditor(function () {
+                self._initCkEditor();
             });
         },
 
-        _initQuillEditor: function () {
+        _initCkEditor: function () {
             var self = this;
-            var quillContainer = document.getElementById('test_editor_quill');
-            if (!quillContainer) {
-                self._initCkEditor();
+            if (typeof CKEDITOR === 'undefined') {
+                setTimeout(function () { self._initCkEditor(); }, 60);
+                return;
+            }
+            var el = document.getElementById('test_editor1');
+            if (!el) {
+                setTimeout(function () { self._initCkEditor(); }, 60);
                 return;
             }
 
-            if (self._quill && self._quill.root && quillContainer.contains(self._quill.root)) {
-                self._editorInitialized = true;
-                return;
+            if (CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try {
+                    CKEDITOR.instances['test_editor1'].destroy(true);
+                } catch (destroyErr) {}
             }
-
-            self._quill = null;
-            self._editorInitialized = false;
 
             try {
-                quillContainer.innerHTML = '';
-                self._quill = new Quill('#test_editor_quill', {
-                    theme: 'snow',
-                    placeholder: 'Compose executive email presentation...',
-                    modules: {
-                        toolbar: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                            [{ 'align': [] }],
-                            ['link', 'clean']
-                        ]
-                    }
+                var editorInstance = CKEDITOR.replace('test_editor1', {
+                    height: 260,
+                    width: '100%',
+                    allowedContent: true,
+                    removePlugins: 'elementspath',
+                    resize_enabled: false
                 });
 
-                self._quill.on('text-change', function () {
-                    var html = self.getEditorHtml();
-                    $('#test_editor1').val(html);
+                editorInstance.on('instanceReady', function () {
+                    self._editorInitialized = true;
+                    self.syncFirstRecipientSalutation();
                 });
 
-                self._editorInitialized = true;
-                self.syncFirstRecipientSalutation();
+                editorInstance.on('change', function () {
+                    try {
+                        $('#test_editor1').val(editorInstance.getData());
+                    } catch (e) {}
+                });
             } catch (err) {
-                console.warn('[ForwardResume] Quill initialization warning:', err);
-                self._initCkEditor();
+                console.warn('[ForwardResume] CKEditor initialization error:', err);
             }
         },
 
         getEditorHtml: function () {
             var self = this;
-            if (self._quill && self._quill.root) {
-                var html = self._quill.root.innerHTML || '';
-                if (html === '<p><br></p>') return '';
-                return html;
-            }
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                 try { return CKEDITOR.instances['test_editor1'].getData() || ''; } catch (e) {}
             }
@@ -704,17 +811,27 @@
             var cleanHtml = (html === null || html === undefined) ? '' : String(html);
             $('#test_editor1').val(cleanHtml);
 
-            if (self._quill && self._quill.root) {
-                self._quill.root.innerHTML = cleanHtml;
-                if (callback) callback();
-                return;
-            }
-
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try {
-                    CKEDITOR.instances['test_editor1'].setData(cleanHtml, callback);
+                var inst = CKEDITOR.instances['test_editor1'];
+                if (inst.status === 'ready' || inst.instanceReady) {
+                    try {
+                        inst.setData(cleanHtml, function () {
+                            if (callback) callback();
+                        });
+                        return;
+                    } catch (e) {
+                        console.warn('[ForwardResume] CKEditor setData error:', e);
+                    }
+                } else {
+                    inst.on('instanceReady', function () {
+                        try {
+                            inst.setData(cleanHtml, function () {
+                                if (callback) callback();
+                            });
+                        } catch (e) {}
+                    });
                     return;
-                } catch (e) {}
+                }
             }
 
             if (callback) callback();
@@ -724,14 +841,6 @@
             var self = this;
             if (!html) return;
 
-            if (self._quill && self._quill.root) {
-                var range = self._quill.getSelection(true);
-                var index = range ? range.index : self._quill.getLength();
-                self._quill.clipboard.dangerouslyPasteHTML(index, html);
-                $('#test_editor1').val(self.getEditorHtml());
-                return;
-            }
-
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                 var inst = CKEDITOR.instances['test_editor1'];
                 try {
@@ -739,46 +848,13 @@
                     $('#test_editor1').val(inst.getData());
                     return;
                 } catch (e) {
-                    console.warn('CKEditor insertHtml notice:', e);
+                    console.warn('[ForwardResume] CKEditor insertHtml notice:', e);
                 }
             }
 
             var currentVal = $('#test_editor1').val() || '';
             var updatedVal = currentVal ? (currentVal + '<br>' + html) : html;
             $('#test_editor1').val(updatedVal);
-        },
-
-        _initCkEditor: function () {
-            var self = this;
-            if (typeof CKEDITOR === 'undefined') {
-                setTimeout(function () { self._initCkEditor(); }, 100);
-                return;
-            }
-            var el = document.getElementById('test_editor1');
-            if (!el) return;
-
-            if (CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try {
-                    CKEDITOR.instances['test_editor1'].setData('');
-                    self._editorInitialized = true;
-                    return;
-                } catch (e) {}
-            }
-
-            try {
-                CKEDITOR.replace('test_editor1', {
-                    height: 280,
-                    width: '100%',
-                    on: {
-                        instanceReady: function () {
-                            self._editorInitialized = true;
-                            self.syncFirstRecipientSalutation();
-                        }
-                    }
-                });
-            } catch (err) {
-                console.warn('CKEditor replacement error:', err);
-            }
         },
 
         _hydrateData: function (data) {
@@ -1736,6 +1812,7 @@
                             self.syncFirstRecipientSalutation();
                         });
                         setTimeout(function () { self.syncFirstRecipientSalutation(); }, 100);
+                    }
                 },
                 error: function (xhr) {
                     console.error('Failed to load email template:', xhr);
@@ -1753,7 +1830,7 @@
 
             container.empty();
             list.forEach(function (email, idx) {
-                var isValid = emailRegex.test(email);
+                var isValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(email) : emailRegex.test(email);
                 var tagHtml =
                     '<span class="mm-email-tag' + (isValid ? '' : ' is-invalid') + '" title="' + escapeHtml(email) + '">' +
                       '<span class="mm-email-tag-text">' + escapeHtml(email) + '</span>' +
@@ -1763,7 +1840,7 @@
             });
 
             hidden.val(list.join(', ')).trigger('input');
-            input.attr('placeholder', list.length > 0 ? 'Add another email...' : 'Type email and press Enter...');
+            input.attr('placeholder', list.length > 0 ? 'Add another email...' : (target === 'to' ? 'Type recipient email and press Enter...' : 'Type CC email and press Enter...'));
 
             // Deliverability Quota Gauge: Enforce and display 5 Total Recipients limit (To + CC combined)
             var toCount = (self._emailTags.to || []).length;
@@ -1789,8 +1866,14 @@
 
         addEmailTag: function (target, email) {
             if (!email) return false;
-            email = String(email).trim();
+            email = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(email) : String(email).trim();
             if (!email) return false;
+
+            var suggestion = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(email) : null;
+            if (suggestion && suggestion.toLowerCase() !== email.toLowerCase()) {
+                var hintSelector = (target === 'to') ? '#test_to_email_typo_hint' : '#test_cc_email_typo_hint';
+                window.JeroEmailBoxEngine.renderTypoPill(hintSelector, suggestion, (target === 'to') ? '#test_to_email_input' : '#test_cc_email_input');
+            }
 
             if (!this._emailTags[target]) this._emailTags[target] = [];
             var lower = email.toLowerCase();
@@ -1836,12 +1919,24 @@
             var self = this;
             var box = (target === 'to') ? $('#test_to_email_tag_box') : $('#test_cc_email_tag_box');
             var input = (target === 'to') ? $('#test_to_email_input') : $('#test_cc_email_input');
+            var hintSelector = (target === 'to') ? '#test_to_email_typo_hint' : '#test_cc_email_typo_hint';
+
+            input.off('input').on('input', function () {
+                var raw = $(this).val();
+                var cleaned = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+                var suggestion = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(cleaned) : null;
+                if (suggestion && suggestion.toLowerCase() !== cleaned.toLowerCase()) {
+                    window.JeroEmailBoxEngine.renderTypoPill(hintSelector, suggestion, (target === 'to') ? '#test_to_email_input' : '#test_cc_email_input');
+                } else {
+                    $(hintSelector).slideUp(100, function () { $(this).empty(); });
+                }
+            });
 
             input.off('focus blur keydown paste').on('focus', function () {
                 box.addClass('is-focused');
             }).on('blur', function () {
                 box.removeClass('is-focused');
-                var val = $(this).val().trim();
+                var val = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($(this).val()) : $(this).val().trim();
                 if (val) {
                     self._processTagInputText(target, val);
                     $(this).val('');
@@ -1853,6 +1948,7 @@
                         e.preventDefault();
                         self._processTagInputText(target, val);
                         $(this).val('');
+                        $(hintSelector).slideUp(100, function () { $(this).empty(); });
                     }
                 } else if ((e.key === 'Backspace' || e.keyCode === 8) && !val) {
                     if (self._emailTags[target].length > 0) {
@@ -1865,6 +1961,7 @@
                     e.preventDefault();
                     self._processTagInputText(target, pasted);
                     $(this).val('');
+                    $(hintSelector).slideUp(100, function () { $(this).empty(); });
                 }
             });
 
@@ -1879,7 +1976,9 @@
         _processTagInputText: function (target, text) {
             var self = this;
             if (!text) return;
-            var items = String(text).split(/[\s,;]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+            var items = String(text).split(/[\s,;]+/).map(function (s) { 
+                return window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(s) : s.trim(); 
+            }).filter(Boolean);
             var droppedCount = 0;
             items.forEach(function (item) {
                 var currentTotal = (self._emailTags.to ? self._emailTags.to.length : 0) + (self._emailTags.cc ? self._emailTags.cc.length : 0);
@@ -2240,6 +2339,8 @@
             if (e && e.preventDefault) e.preventDefault();
             var self = this;
 
+            if (self._isSubmitting) return;
+
             var rawOpt = $('#test_fwd_resume_format').val();
             var optId = rawOpt ? parseInt(rawOpt, 10) : 0;
 
@@ -2256,40 +2357,29 @@
             $('#test_fwd_resume_format').css('border-color', '#E5E7EB');
 
             // Commit pending tag text
-            var pendingTo = ($('#test_to_email_input').val() || '').trim();
+            var pendingTo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($('#test_to_email_input').val()) : ($('#test_to_email_input').val() || '').trim();
             if (pendingTo) {
                 self._processTagInputText('to', pendingTo);
                 $('#test_to_email_input').val('');
+                $('#test_to_email_typo_hint').slideUp(100, function () { $(this).empty(); });
             }
-            var pendingCc = ($('#test_cc_email_input').val() || '').trim();
+            var pendingCc = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($('#test_cc_email_input').val()) : ($('#test_cc_email_input').val() || '').trim();
             if (pendingCc) {
                 self._processTagInputText('cc', pendingCc);
                 $('#test_cc_email_input').val('');
+                $('#test_cc_email_typo_hint').slideUp(100, function () { $(this).empty(); });
             }
 
             var toList = self._emailTags.to || [];
             var ccList = self._emailTags.cc || [];
-            var totalRecipients = toList.length + ccList.length;
 
-            if (totalRecipients > MAX_TOTAL_RECIPIENTS) {
-                Swal.fire({
-                    title: 'Recipient Limit Exceeded',
-                    text: 'Maximum ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed for deliverability. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TOTAL_RECIPIENTS) + ' recipient(s).',
-                    icon: 'warning',
-                    confirmButtonColor: '#0D9488'
-                });
-                return;
-            }
-            var toEmail = toList.join(', ');
-            var ccEmail = ccList.join(', ');
-            var subject = ($('#test_subject').val() || '').trim();
-
+            // 1. Validate Candidate/Client Recipient Email (To)
             if (toList.length === 0) {
                 $('#test_to_email_tag_box').css('border-color', '#EF4444');
                 $('#test_to_email_input').focus();
                 Swal.fire({
                     title: 'Recipient Email Required',
-                    text: 'Please enter at least one valid recipient email address in the "To" field.',
+                    text: 'Please enter at least one valid recipient email address in the "To" field before sending.',
                     icon: 'warning',
                     confirmButtonColor: '#0D9488'
                 });
@@ -2297,11 +2387,15 @@
             }
 
             for (var ti = 0; ti < toList.length; ti++) {
-                if (!emailRegex.test(toList[ti])) {
+                var isSyntaxValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(toList[ti]) : emailRegex.test(toList[ti]);
+                if (!isSyntaxValid) {
                     $('#test_to_email_tag_box').css('border-color', '#EF4444');
+                    $('#test_to_email_input').focus();
+                    var typo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(toList[ti]) : null;
+                    var typoMsg = typo ? ('<br><br>Did you mean <strong>' + escapeHtml(typo) + '</strong>?') : '';
                     Swal.fire({
-                        title: 'Invalid Email Address',
-                        html: 'The recipient email address <code>' + escapeHtml(toList[ti]) + '</code> is invalid.',
+                        title: 'Invalid Recipient Email',
+                        html: 'The recipient email address <code>' + escapeHtml(toList[ti]) + '</code> is invalid.' + typoMsg,
                         icon: 'warning',
                         confirmButtonColor: '#0D9488'
                     });
@@ -2310,11 +2404,47 @@
             }
             $('#test_to_email_tag_box').css('border-color', '#E5E7EB');
 
+            // 2. Validate CC Email Addresses
+            for (var ci = 0; ci < ccList.length; ci++) {
+                var isCcValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(ccList[ci]) : emailRegex.test(ccList[ci]);
+                if (!isCcValid) {
+                    $('#test_cc_email_tag_box').css('border-color', '#EF4444');
+                    $('#test_cc_email_input').focus();
+                    var ccTypo = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(ccList[ci]) : null;
+                    var ccTypoMsg = ccTypo ? ('<br><br>Did you mean <strong>' + escapeHtml(ccTypo) + '</strong>?') : '';
+                    Swal.fire({
+                        title: 'Invalid CC Email Address',
+                        html: 'The CC email address <code>' + escapeHtml(ccList[ci]) + '</code> is invalid.' + ccTypoMsg,
+                        icon: 'warning',
+                        confirmButtonColor: '#0D9488'
+                    });
+                    return;
+                }
+            }
+            $('#test_cc_email_tag_box').css('border-color', '#E5E7EB');
+
+            // 3. Validate Deliverability Cap
+            var totalRecipients = toList.length + ccList.length;
+            if (totalRecipients > MAX_TOTAL_RECIPIENTS) {
+                Swal.fire({
+                    title: 'Recipient Limit Exceeded',
+                    text: 'To protect email deliverability and avoid spam flags, a maximum of ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) is permitted. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TOTAL_RECIPIENTS) + ' recipient(s).',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
+
+            var toEmail = toList.join(', ');
+            var ccEmail = ccList.join(', ');
+
+            // 4. Validate Subject Line
+            var subject = ($('#test_subject').val() || '').trim();
             if (!subject) {
                 $('#test_subject').css('border-color', '#EF4444').focus();
                 Swal.fire({
-                    title: 'Subject Required',
-                    text: 'Please enter an email subject before forwarding resumes.',
+                    title: 'Subject Line Required',
+                    text: 'Please enter an email subject line before forwarding resumes.',
                     icon: 'warning',
                     confirmButtonColor: '#0D9488'
                 });
@@ -2322,13 +2452,19 @@
             }
             $('#test_subject').css('border-color', '#E5E7EB');
 
-            // Validate Body
+            // 5. Validate Email Body
             var editorData = self.getEditorHtml();
-            var textOnly = $('<div>').html(editorData).text().trim().replace(/[\s\u00A0]+/g, '');
-            if (!textOnly && editorData.indexOf('<img') === -1) {
+            var plainBodyText = (editorData || '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (!plainBodyText && editorData.indexOf('<img') === -1) {
                 Swal.fire({
-                    title: 'Email Message Required',
-                    text: 'Email message body cannot be blank. Please enter a message before sending.',
+                    title: 'Email Body Empty',
+                    text: 'Your email has no content. Please choose an email template or compose your message in the editor before sending.',
                     icon: 'warning',
                     confirmButtonColor: '#0D9488'
                 });
@@ -2382,20 +2518,26 @@
                 return;
             }
 
+            self._isSubmitting = true;
             var btn = document.getElementById('btnTestSubmit');
-            btn.disabled = true;
-            btn.style.cursor = 'not-allowed';
-            btn.style.opacity = '0.85';
-            $(btn).find('.indicator-label').hide();
-            $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
+            if (btn) {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+                btn.style.opacity = '0.85';
+                $(btn).find('.indicator-label').hide();
+                $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
+            }
             $('#test_fwd_btn_progress_text').text('Dispatching...');
 
             function restoreBtn() {
-                $(btn).find('.indicator-progress').hide();
-                $(btn).find('.indicator-label').css('display', 'inline-flex').show();
-                btn.disabled = false;
-                btn.style.cursor = 'pointer';
-                btn.style.opacity = '1';
+                self._isSubmitting = false;
+                if (btn) {
+                    $(btn).find('.indicator-progress').hide();
+                    $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+                    btn.disabled = false;
+                    btn.style.cursor = 'pointer';
+                    btn.style.opacity = '1';
+                }
             }
 
             var token = self._csrfToken || $('input[name="_token"]').val();
@@ -2651,6 +2793,11 @@
 
             // Cleanly remove dedicated Forward Resume overlay — leaves Candidate Drawer overlay 100% intact
             $('.fwd-resume-overlay').remove();
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
+            }
+            self._editorInitialized = false;
 
             if (typeof self.closeFormatDropdown === 'function') {
                 self.closeFormatDropdown();

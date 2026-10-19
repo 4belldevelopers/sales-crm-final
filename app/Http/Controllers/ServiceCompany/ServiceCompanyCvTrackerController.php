@@ -4953,18 +4953,45 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'error', 'message' => 'Recipient email (To) is required.']);
         }
 
-        $to = array_values(array_filter(array_map('trim', explode(',', $toRaw))));
-        foreach ($to as $email) {
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid recipient email format: {$email}"]);
+        $cleanEmailDeterministic = function ($val) {
+            $cleaned = preg_replace('/[\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200B}\x{202F}\x{205F}\x{3000}\x{FEFF}]/u', ' ', (string) $val);
+            $cleaned = trim($cleaned);
+            $cleaned = preg_replace('/^mailto:\s*/i', '', $cleaned);
+            $cleaned = preg_replace('/^[<"\']+|[>"\']+$/', '', $cleaned);
+            $cleaned = rtrim($cleaned, '.,;:');
+            return trim($cleaned);
+        };
+
+        $rawToParts = explode(',', (string) $toRaw);
+        $to = [];
+        foreach ($rawToParts as $part) {
+            $cleaned = $cleanEmailDeterministic($part);
+            if (! empty($cleaned)) {
+                if (! filter_var($cleaned, FILTER_VALIDATE_EMAIL)) {
+                    return Reply::dataOnly(['status' => 'error', 'message' => "Invalid recipient email format: {$cleaned}"]);
+                }
+                $to[] = strtolower($cleaned);
             }
         }
+        $to = array_values(array_unique($to));
 
-        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
-        foreach ($cc as $email) {
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid CC email format: {$email}"]);
+        if (empty($to)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Recipient email (To) is required.']);
+        }
+
+        $cc = [];
+        if (! empty($request->cc_email)) {
+            $rawCcParts = explode(',', (string) $request->cc_email);
+            foreach ($rawCcParts as $part) {
+                $cleaned = $cleanEmailDeterministic($part);
+                if (! empty($cleaned)) {
+                    if (! filter_var($cleaned, FILTER_VALIDATE_EMAIL)) {
+                        return Reply::dataOnly(['status' => 'error', 'message' => "Invalid CC email format: {$cleaned}"]);
+                    }
+                    $cc[] = strtolower($cleaned);
+                }
             }
+            $cc = array_values(array_unique($cc));
         }
 
         // Strict deliverability cap: Maximum 5 total recipients (To + CC combined)
@@ -4976,8 +5003,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ]);
         }
 
-        if (empty($subject)) {
-            return Reply::dataOnly(['status' => 'error', 'message' => 'Subject is required.']);
+        $trimmedSubject = trim(strip_tags((string) $subject));
+        if (empty($trimmedSubject)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Email subject cannot be empty. Please enter an email subject line before sending.']);
         }
 
         if ($formatId <= 0) {
@@ -4985,8 +5013,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $cleanMsg = trim(strip_tags(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $cleanMsg = str_replace(["\xc2\xa0", "\u{00a0}"], '', $cleanMsg);
         $cleanMsg = preg_replace('/\s+/', '', $cleanMsg);
-        if ($cleanMsg === '' && stripos($message, '<img') === false) {
+        if ($cleanMsg === '' && stripos($message, '<img') === false && stripos($message, '<table') === false) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Email message body cannot be blank.']);
         }
 
@@ -5092,7 +5121,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
         $replyToEmail = ! empty($request->reply_to_email) ? trim($request->reply_to_email) : $fromAddress;
         $senderName = auth()->user()->name ?? 'Recruitment Team';
-        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
 
         $companyRow = DB::table('companies')->select('company_name')->where('id', $companyId)->first();
         $companyName = $companyRow ? $companyRow->company_name : 'Hiring Partner';
