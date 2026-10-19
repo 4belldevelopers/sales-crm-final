@@ -303,7 +303,8 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
           <div class="col-lg-10 col-xl-10" style="position: relative;">
             <input type="hidden" id="mtypeId" name="mtype" value="{{ $mtype }}">
             <input type="hidden" id="offerId" name="offerId" value="{{ $offerId }}">
-            <input class="form-control form-control-solid" name="to_email" id="to_email"  value="{{ (@$mtype==1) ? @$toEmailId : '' }}" >
+            <input type="email" class="form-control form-control-solid" name="to_email" id="to_email"  value="{{ (@$mtype==1) ? @$toEmailId : '' }}" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+            <div id="to_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
             <span class="form-text text-muted">Please enter email</span> 
             @if(@$mtype==2)
              <div class="" style="position: absolute; right: 13px; top: 4px;">
@@ -330,7 +331,8 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
 					<!--</optgroup>-->
 			  <!--</select>-->
 
-            <input class="form-control form-control-solid" name="cc_email_panel" id="cc_email_panel"  value="">
+            <input type="text" class="form-control form-control-solid" name="cc_email_panel" id="cc_email_panel"  value="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+            <div id="cc_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
             <span class="form-text text-muted">Please enter email</span>
             
             <div class="" style="position: absolute; right: 13px; top: 4px;">
@@ -631,17 +633,179 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
 
 <script>
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 100% CLIENT-FIRST GOD-LEVEL EMAIL VALIDATION ENGINE (ZERO SERVER STRAIN)
+// ══════════════════════════════════════════════════════════════════════════════
+window.JeroEmailBoxEngine = {
+    domainTypos: {
+        'gamil.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmai.com': 'gmail.com',
+        'gmial.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gamil.co': 'gmail.com', 'gmail.con': 'gmail.com',
+        'gmail.co': 'gmail.com', 'gmaill.co': 'gmail.com', 'gmaill.con': 'gmail.com', 'gmail.cpm': 'gmail.com',
+        'gmail.cm': 'gmail.com', 'gmail.om': 'gmail.com', 'g.mail.com': 'gmail.com',
+        'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+        'hotmial.co': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmsil.com': 'hotmail.com',
+        'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+        'yaho.in': 'yahoo.in', 'yahooo.in': 'yahoo.in', 'yaho.co.in': 'yahoo.co.in',
+        'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com',
+        'outlok.co': 'outlook.com', 'outlock.com': 'outlook.com',
+        'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com'
+    },
+    cleanDeterministic: function(val) {
+        if (!val || typeof val !== 'string') return '';
+        var cleaned = val.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                         .trim()
+                         .replace(/^mailto:\s*/i, '')
+                         .replace(/^<+|>+$/g, '')
+                         .replace(/^"+|"+$/g, '')
+                         .replace(/^'+|'+$/g, '')
+                         .replace(/[.,;:]+$/, '')
+                         .trim();
+        return cleaned;
+    },
+    validateSyntax: function(email) {
+        if (!email || typeof email !== 'string') return false;
+        var trimmed = email.trim();
+        if (trimmed.length === 0 || trimmed.length > 254) return false;
+        if ((trimmed.match(/@/g) || []).length !== 1) return false;
+        var parts = trimmed.split('@');
+        var local = parts[0];
+        var domain = parts[1];
+        if (!local || !domain) return false;
+        if (local.length > 64) return false;
+        if (local.startsWith('.') || local.endsWith('.') || local.indexOf('..') !== -1) return false;
+        if (domain.startsWith('.') || domain.endsWith('.') || domain.startsWith('-') || domain.endsWith('-')) return false;
+        if (domain.indexOf('..') !== -1) return false;
+        var rfcPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+        return rfcPattern.test(trimmed);
+    },
+    suggestCorrection: function(email) {
+        if (!email || typeof email !== 'string') return null;
+        var raw = email.trim();
+        if (raw.indexOf(',') !== -1) {
+            raw = raw.replace(/,/g, '.');
+        }
+        var atMatches = raw.match(/@/g) || [];
+        if (atMatches.length !== 1) return null;
+        var parts = raw.split('@');
+        var local = parts[0].trim();
+        var domain = (parts[1] || '').trim().toLowerCase();
+        if (!local || !domain) return null;
+        if (this.domainTypos[domain]) {
+            return local + '@' + this.domainTypos[domain];
+        }
+        var tldFixes = {
+            'con': 'com', 'cpm': 'com', 'comm': 'com', 'cmo': 'com', 'ocm': 'com',
+            'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+        };
+        var dParts = domain.split('.');
+        if (dParts.length >= 2) {
+            var last = dParts[dParts.length - 1];
+            if (tldFixes[last]) {
+                dParts[dParts.length - 1] = tldFixes[last];
+                var suggestedDomain = dParts.join('.');
+                if (suggestedDomain !== domain) {
+                    return local + '@' + suggestedDomain;
+                }
+            }
+        }
+        return null;
+    },
+    renderTypoPill: function(containerSelector, suggestedEmail, targetInputSelector) {
+        var $hint = $(containerSelector);
+        if (!$hint.length) return;
+        if (suggestedEmail) {
+            $hint.html(
+                '<div class="d-inline-flex align-items-center bg-light-primary text-primary px-2 py-1 rounded fs-8 fw-semibold mt-1">' +
+                    '<i class="ki-outline ki-information-2 fs-7 me-1"></i>' +
+                    '<span>Did you mean <strong>' + $('<div>').text(suggestedEmail).html() + '</strong>?</span>' +
+                    '<button type="button" class="btn btn-xs btn-link text-primary fw-bold p-0 ms-2 text-decoration-underline apply-email-fix" data-target="' + targetInputSelector + '" data-suggestion="' + $('<div>').text(suggestedEmail).html() + '">Apply</button>' +
+                '</div>'
+            ).slideDown(150);
+        } else {
+            $hint.slideUp(100, function() { $(this).empty(); });
+        }
+    },
+    setupEmailBox: function(inputSelector, hintSelector) {
+        var self = this;
+        var $input = $(inputSelector);
+        if (!$input.length) return;
+
+        $input.on('paste', function(e) {
+            var pasted = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+            if (pasted) {
+                e.preventDefault();
+                var cleaned = self.cleanDeterministic(pasted);
+                var current = $input.val();
+                if ($input.is('#cc_email_panel') && current) {
+                    $input.val(current + ', ' + cleaned);
+                } else {
+                    $input.val(cleaned);
+                }
+                $input.trigger('input').trigger('change');
+            }
+        });
+
+        $input.on('input', function() {
+            var val = $(this).val();
+            var parts = val.split(/[,;]/);
+            var lastPart = parts[parts.length - 1].trim();
+            var suggestion = self.suggestCorrection(lastPart);
+            if (suggestion && suggestion.toLowerCase() !== lastPart.toLowerCase()) {
+                self.renderTypoPill(hintSelector, suggestion, inputSelector);
+            } else {
+                $(hintSelector).slideUp(100, function() { $(this).empty(); });
+            }
+        });
+
+        $input.on('blur', function() {
+            var val = $(this).val();
+            if (val) {
+                var parts = val.split(/[,;]/).map(function(p) { return self.cleanDeterministic(p); }).filter(Boolean);
+                $(this).val(parts.join(', '));
+            }
+        });
+    }
+};
+
+$(document).ready(function() {
+    window.JeroEmailBoxEngine.setupEmailBox('#to_email', '#to_email_typo_hint');
+    window.JeroEmailBoxEngine.setupEmailBox('#cc_email_panel', '#cc_email_typo_hint');
+
+    $(document).on('click', '.apply-email-fix', function(e) {
+        e.preventDefault();
+        var targetSel = $(this).attr('data-target');
+        var suggestion = $(this).attr('data-suggestion');
+        if (targetSel && suggestion) {
+            var $tgt = $(targetSel);
+            var val = $tgt.val();
+            var parts = val.split(/[,;]/);
+            if (parts.length > 1) {
+                parts[parts.length - 1] = ' ' + suggestion;
+                $tgt.val(parts.join(','));
+            } else {
+                $tgt.val(suggestion);
+            }
+            $(this).closest('.email-typo-hint-container').slideUp(100, function() { $(this).empty(); });
+            $tgt.trigger('input').trigger('change');
+        }
+    });
+});
+
 $('#ck-editor__editable_inline').html("testing");
 
-
-
 function validateEmailInput() {
-    let emailInput = this.value.trim();
-    
-    // Check if there's more than one email
-    if (emailInput.split(',').length > 1 || emailInput.split(';').length > 1) {
+    var raw = this.value;
+    var cleaned = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+    if (cleaned.split(',').length > 1 || cleaned.split(';').length > 1) {
         alert('Please enter only one email address.');
-        this.value = ''; // Clear the input
+        this.value = '';
+        return;
+    }
+    if (cleaned && window.JeroEmailBoxEngine && !window.JeroEmailBoxEngine.validateSyntax(cleaned)) {
+        var suggestion = window.JeroEmailBoxEngine.suggestCorrection(cleaned);
+        if (suggestion) {
+            window.JeroEmailBoxEngine.renderTypoPill('#to_email_typo_hint', suggestion, '#to_email');
+        }
     }
 }
 
@@ -873,8 +1037,48 @@ if (_btnSubmitEl) _btnSubmitEl.addEventListener("click", ()=>{
 									
 									var template	=	$('#template').val();
 									var from_email	=	$('#from_email').val();
-									var to_email	=	$('#to_email').val();
-									var cc_email	=	$('#cc_email_panel').val();
+									var to_email	=	($('#to_email').val() || '').trim();
+									var cc_email	=	($('#cc_email_panel').val() || '').trim();
+
+									if (window.JeroEmailBoxEngine) {
+										if (!to_email) {
+											Swal.fire("Warning", "Please enter a valid recipient email address.", "warning");
+											$('#to_email').focus();
+											$('.indicator-progress').hide();
+											$('.indicator-label').show();
+											return false;
+										}
+										var toParts = to_email.split(/[,;]/).map(function(s) { return window.JeroEmailBoxEngine.cleanDeterministic(s); }).filter(Boolean);
+										for (var ti = 0; ti < toParts.length; ti++) {
+											if (!window.JeroEmailBoxEngine.validateSyntax(toParts[ti])) {
+												var sugg = window.JeroEmailBoxEngine.suggestCorrection(toParts[ti]);
+												if (sugg) {
+													window.JeroEmailBoxEngine.renderTypoPill('#to_email_typo_hint', sugg, '#to_email');
+												}
+												Swal.fire("Invalid Email", "The recipient email address " + toParts[ti] + " is invalid.", "warning");
+												$('#to_email').focus();
+												$('.indicator-progress').hide();
+												$('.indicator-label').show();
+												return false;
+											}
+										}
+										if (cc_email) {
+											var ccParts = cc_email.split(/[,;]/).map(function(s) { return window.JeroEmailBoxEngine.cleanDeterministic(s); }).filter(Boolean);
+											for (var ci = 0; ci < ccParts.length; ci++) {
+												if (!window.JeroEmailBoxEngine.validateSyntax(ccParts[ci])) {
+													var csugg = window.JeroEmailBoxEngine.suggestCorrection(ccParts[ci]);
+													if (csugg) {
+														window.JeroEmailBoxEngine.renderTypoPill('#cc_email_typo_hint', csugg, '#cc_email_panel');
+													}
+													Swal.fire("Invalid CC Email", "The CC email address " + ccParts[ci] + " is invalid.", "warning");
+													$('#cc_email_panel').focus();
+													$('.indicator-progress').hide();
+													$('.indicator-label').show();
+													return false;
+												}
+											}
+										}
+									}
 									var subject		=	$('#subject').val();
                                     var mtypeId		=	$('#mtypeId').val();
                                     var offerId		=	$('#offerId').val();

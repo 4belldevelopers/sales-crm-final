@@ -1316,8 +1316,9 @@ body, html {
             <span class="v2-il">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            <input type="email" class="v2-inp" name="email" placeholder="Enter your official work email address" autocomplete="off" />
+            <input type="email" class="v2-inp" name="email" id="register_email" placeholder="Enter your official work email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
           </div>
+          <div id="register_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
           <div class="v2-hint">We'll use this email for all communications</div>
         </div>
 
@@ -1861,6 +1862,150 @@ body, html {
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
 
 <script>
+// =========================================================================
+// JeroEmailBoxEngine: 100% Client-First (Zero Server Strain) Email Engine
+// RFC 5321 (254 char), Deterministic Sanitizer, 3-State Typo Detection
+// =========================================================================
+window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || (function () {
+    var CONSUMER_DOMAIN_TYPOS = {
+        'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmial.com': 'gmail.com',
+        'gmaill.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gmeil.com': 'gmail.com',
+        'gmaul.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaili.com': 'gmail.com',
+        'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'ymail.com': 'yahoo.com',
+        'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+        'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+        'iclou.com': 'icloud.com', 'iclod.com': 'icloud.com',
+        'redifmail.com': 'rediffmail.com', 'rediffmial.com': 'rediffmail.com'
+    };
+
+    var CONSUMER_TLD_TYPOS = {
+        'con': 'com', 'cmo': 'com', 'ocm': 'com', 'cpm': 'com',
+        'comm': 'com', 'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+    };
+
+    return {
+        cleanDeterministic: function (raw) {
+            if (!raw) return '';
+            var str = String(raw).trim();
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, '');
+            str = str.replace(/^['"`<]+|['"`>]+$/g, '');
+            str = str.replace(/^mailto:\s*/i, '');
+            var match = str.match(/<([^>]+)>/);
+            if (match && match[1]) {
+                str = match[1];
+            }
+            str = str.replace(/[.,;:]+$/, '');
+            return str.toLowerCase().replace(/\s+/g, '');
+        },
+
+        getSuggestion: function (email) {
+            if (!email || email.indexOf('@') === -1) return null;
+            var parts = email.split('@');
+            if (parts.length !== 2) return null;
+
+            var local = parts[0];
+            var domain = parts[1];
+
+            if (domain.indexOf(',') !== -1) {
+                var commaFixed = domain.replace(/,([a-zA-Z]{2,})$/, '.$1');
+                return {
+                    suggested: local + '@' + commaFixed,
+                    message: 'Did you mean <strong>' + local + '@' + commaFixed + '</strong>?'
+                };
+            }
+
+            if (CONSUMER_DOMAIN_TYPOS[domain]) {
+                var fixedEmail = local + '@' + CONSUMER_DOMAIN_TYPOS[domain];
+                return {
+                    suggested: fixedEmail,
+                    message: 'Did you mean <strong>' + fixedEmail + '</strong>?'
+                };
+            }
+
+            var dParts = domain.split('.');
+            if (dParts.length >= 2) {
+                var root = dParts[0];
+                var tld = dParts[dParts.length - 1];
+                if (CONSUMER_TLD_TYPOS[tld] && (root === 'gmail' || root === 'yahoo' || root === 'outlook' || root === 'hotmail')) {
+                    dParts[dParts.length - 1] = CONSUMER_TLD_TYPOS[tld];
+                    var fixed = local + '@' + dParts.join('.');
+                    return {
+                        suggested: fixed,
+                        message: 'Did you mean <strong>' + fixed + '</strong>?'
+                    };
+                }
+            }
+
+            return null;
+        },
+
+        validateSyntax: function (email) {
+            if (!email || email.trim() === '') {
+                return { isValid: false, error: 'Email address is required.' };
+            }
+
+            if (email.length > 254) {
+                return { isValid: false, error: 'Email exceeds maximum allowed length of 254 characters.' };
+            }
+
+            if (/\s/.test(email)) {
+                return { isValid: false, error: 'Email address cannot contain spaces.' };
+            }
+
+            if (email.indexOf(',') !== -1) {
+                if (email.indexOf('@') !== -1 && email.split('@')[1].indexOf(',') !== -1) {
+                    return { isValid: false, error: 'Domain name contains a comma instead of a period (e.g. gmail,com).' };
+                }
+                return { isValid: false, error: 'Email address cannot contain commas.' };
+            }
+
+            var parts = email.split('@');
+            if (parts.length < 2) {
+                return { isValid: false, error: 'Email is missing the "@" symbol.' };
+            }
+            if (parts.length > 2) {
+                return { isValid: false, error: 'Email contains more than one "@" symbol.' };
+            }
+
+            var local = parts[0];
+            var domain = parts[1];
+
+            if (local.length === 0) {
+                return { isValid: false, error: 'Email username cannot be empty.' };
+            }
+            if (local.length > 64) {
+                return { isValid: false, error: 'Email username cannot exceed 64 characters.' };
+            }
+
+            if (local.indexOf('..') !== -1 || domain.indexOf('..') !== -1) {
+                return { isValid: false, error: 'Email cannot contain consecutive dots ("..").' };
+            }
+
+            if (local.startsWith('.') || local.endsWith('.')) {
+                return { isValid: false, error: 'Email username cannot start or end with a dot.' };
+            }
+            if (domain.startsWith('.') || domain.endsWith('.')) {
+                return { isValid: false, error: 'Domain name cannot start or end with a dot.' };
+            }
+
+            if (domain.indexOf('_') !== -1) {
+                return { isValid: false, error: 'Domain name cannot contain underscores (use hyphens instead).' };
+            }
+
+            if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+                return { isValid: false, error: 'Domain name format is invalid (letters, numbers, and hyphens only).' };
+            }
+
+            var tld = domain.split('.').pop();
+            if (!tld || tld.length < 2 || /^\d+$/.test(tld)) {
+                return { isValid: false, error: 'Domain must end with a valid extension (e.g. .com, .org).' };
+            }
+
+            return { isValid: true, error: null };
+        }
+    };
+})();
+
 function selectCompanyType(val, elem) {
   $('.v2-comp-card').removeClass('selected');
   $(elem).addClass('selected');
@@ -2330,7 +2475,20 @@ $(document).ready(function() {
               fields: {
                 company_name: { validators: { notEmpty: { message: "Company name is required" } } },
                 name: { validators: { notEmpty: { message: "Name is required" } } },
-                email: { validators: { notEmpty: { message: "Email is required" }, emailAddress: { message: "The value is not a valid email address" } } },
+                email: {
+                  validators: {
+                    notEmpty: { message: "Email is required" },
+                    callback: {
+                      message: "The value is not a valid email address",
+                      callback: function(input) {
+                        var val = input.value ? input.value.trim() : '';
+                        if (!val) return { valid: false, message: "Email is required" };
+                        var res = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(val) : { isValid: true };
+                        return { valid: res.isValid, message: res.error || "The value is not a valid email address" };
+                      }
+                    }
+                  }
+                },
                 password: { validators: { notEmpty: { message: "Please enter password" } } },
                 password_confirmation: {
                   validators: {
@@ -2436,10 +2594,71 @@ $(document).ready(function() {
             });
           }),
 
-          // Email check handler
+          // Email paste cleaner
+          $(o.querySelector('[name="email"]')).on("paste", function () {
+            var self = this;
+            setTimeout(function () {
+              var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($(self).val()) : $(self).val().trim();
+              if (clean !== $(self).val()) {
+                $(self).val(clean).trigger('input');
+              }
+            }, 10);
+          });
+
+          // Email blur handler (syntax + typo check)
+          $(o.querySelector('[name="email"]')).on("blur", function () {
+            var raw = $(this).val();
+            var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+            if (clean !== raw) {
+              $(this).val(clean);
+            }
+            var $hint = $('#register_email_typo_hint');
+            if (!clean) {
+              $hint.hide().empty();
+              return;
+            }
+            if (window.JeroEmailBoxEngine) {
+              var syntax = window.JeroEmailBoxEngine.validateSyntax(clean);
+              if (!syntax.isValid) {
+                $hint.html('<i class="fa-solid fa-circle-exclamation text-danger"></i> ' + syntax.error).show();
+                return;
+              }
+              var suggestion = window.JeroEmailBoxEngine.getSuggestion(clean);
+              if (suggestion) {
+                $hint.html('<i class="fa-solid fa-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="[name=\'email\']" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+              } else {
+                $hint.hide().empty();
+              }
+            }
+          });
+
+          // Delegated click handler to apply typo fix
+          $(document).on('click', '.apply-email-fix', function(e) {
+            e.preventDefault();
+            var target = $(this).data('target');
+            var fixed = $(this).data('fixed');
+            if (target && fixed) {
+              $(target).val(fixed).trigger('input').trigger('change');
+              $('#register_email_typo_hint').hide().empty();
+            }
+          });
+
+          // Email check handler (uniqueness verification only for syntactically valid emails)
           $(o.querySelector('[name="email"]')).on("change", function () {            
-            var email = $("input[name=email]").val();
+            var raw = $("input[name=email]").val();
+            var email = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+            if (email !== raw) {
+              $("input[name=email]").val(email);
+            }
+            var $hint = $('#register_email_typo_hint');
             if(email != '') {
+              if (window.JeroEmailBoxEngine) {
+                var syntax = window.JeroEmailBoxEngine.validateSyntax(email);
+                if (!syntax.isValid) {
+                  $hint.html('<i class="fa-solid fa-circle-exclamation text-danger"></i> ' + syntax.error).show();
+                  return; // Zero server load when email is invalid
+                }
+              }
               $('.page-loader').css('display', 'flex');
               $.ajax({
                 url: "{{route('company-register-chk')}}",
@@ -2483,6 +2702,8 @@ $(document).ready(function() {
                   }
                 }
               });
+            } else {
+              $hint.hide().empty();
             }  	
           }),
 

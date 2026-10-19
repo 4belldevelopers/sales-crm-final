@@ -20,7 +20,8 @@
   </div>
   <div class="fv-row mb-7">
     <label class="required fw-bold fs-6 mb-2">Email</label>
-    <input type="email" name="invitation_email" id="invitation_email" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="example@domain.com" value="" />
+    <input type="email" name="invitation_email" id="invitation_email" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="example@domain.com" value="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+    <div id="invitation_email_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
   </div>
   <div class="mb-7">
     <label class="required fw-bold fs-6 mb-5">Role</label>

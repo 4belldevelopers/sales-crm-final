@@ -373,13 +373,20 @@ body
                         <div class="form-group row fv-row mb-10">
                            <div class="col-lg-4">
                               <label class="form-label required">Primary Email:</label>
-                              <input type="email" class="form-control form-control-solid" name="email" id="email" placeholder="Enter primary number" value="<?php echo @$application->email; ?>">
+                              <div class="candidate-field-control candidate-field-control--interactive position-relative">
+                                 <input type="email" class="form-control form-control-solid" name="email" id="email" placeholder="Enter primary email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" value="<?php echo @$application->email; ?>">
+                                 <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
+                              </div>
+                              <div id="email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
                               <span class="form-text text-muted">Please enter primary email</span>							  
                            </div>
                            <div class="col-lg-4">
                               <label class="form-label">Secondary Email:</label>
-                                 <input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email" placeholder="Enter secondary number" value="<?php echo @$application->secondrary_email; ?>">
-                                 <span class="form-text text-muted">Please enter secondary number</span>
+                              <div class="candidate-field-control candidate-field-control--interactive position-relative">
+                                 <input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email" placeholder="Enter secondary email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" value="<?php echo @$application->secondrary_email; ?>">
+                                 <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
+                              </div>
+                              <span class="form-text text-muted">Please enter secondary email</span>
                            </div>
                            <div class="col-lg-4">
                               <label class="form-label required">Qualification:</label>
@@ -834,6 +841,309 @@ new Tagify(input2);
 <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}"></script>
 <script src="{{ asset('front/assets/js/location.js') }}"></script>
 <!-- <script src="{{ asset('js/jquery.validate.js') }}"></script> -->
+
+<style>
+.candidate-field-control--interactive {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.candidate-field-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #e4e6ef;
+    color: #7e8299;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+.candidate-field-clear:hover {
+    background: #f1416c;
+    color: #ffffff;
+}
+.candidate-email-typo-hint {
+    margin-top: 5px;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 6px 12px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+.candidate-email-typo-hint a {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+</style>
+
+<script>
+// ============================================================================
+// JERO ATS - CLIENT-FIRST EMAIL BOX ENGINE (0% SERVER LOAD)
+// Pure Browser RAM Execution • Zero Silent Data Mutation • 3-State Model
+// ============================================================================
+var JeroEmailBoxEngine = (function () {
+    'use strict';
+
+    var CONSUMER_DOMAIN_TYPOS = {
+        'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+        'gmaill.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmeil.com': 'gmail.com',
+        'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'ymail.com': 'yahoo.com',
+        'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+        'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+        'iclou.com': 'icloud.com', 'iclod.com': 'icloud.com',
+        'redifmail.com': 'rediffmail.com', 'rediffmial.com': 'rediffmail.com'
+    };
+
+    var CONSUMER_TLD_TYPOS = {
+        'con': 'com', 'cmo': 'com', 'ocm': 'com', 'cpm': 'com',
+        'comm': 'com', 'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+    };
+
+    return {
+        cleanDeterministic: function (raw) {
+            if (!raw) return '';
+            var str = String(raw).trim();
+            // Strip Unicode non-breaking spaces & zero-width artifacts
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, '');
+            // Strip surrounding quotes or angle brackets
+            str = str.replace(/^['"`<]+|['"`>]+$/g, '');
+            // Strip 'mailto:' prefix
+            str = str.replace(/^mailto:\s*/i, '');
+            // Extract from "Name <email@domain.com>" format
+            var match = str.match(/<([^>]+)>/);
+            if (match && match[1]) {
+                str = match[1];
+            }
+            // Strip trailing punctuation (dots, semicolons, colons, commas)
+            str = str.replace(/[.,;:]+$/, '');
+            // Lowercase and remove internal spaces
+            return str.toLowerCase().replace(/\s+/g, '');
+        },
+
+        getSuggestion: function (email) {
+            if (!email || email.indexOf('@') === -1) return null;
+            var parts = email.split('@');
+            if (parts.length !== 2) return null;
+
+            var local = parts[0];
+            var domain = parts[1];
+
+            // Comma typo in domain: user@gmail,com
+            if (domain.indexOf(',') !== -1) {
+                var commaFixed = domain.replace(/,([a-zA-Z]{2,})$/, '.$1');
+                return {
+                    suggested: local + '@' + commaFixed,
+                    message: 'Did you mean <strong>' + local + '@' + commaFixed + '</strong>?'
+                };
+            }
+
+            // Direct consumer domain dictionary match
+            if (CONSUMER_DOMAIN_TYPOS[domain]) {
+                var fixedEmail = local + '@' + CONSUMER_DOMAIN_TYPOS[domain];
+                return {
+                    suggested: fixedEmail,
+                    message: 'Did you mean <strong>' + fixedEmail + '</strong>?'
+                };
+            }
+
+            // High-confidence TLD typo on major consumer domains (e.g. gmail.con -> gmail.com)
+            var dParts = domain.split('.');
+            if (dParts.length >= 2) {
+                var root = dParts[0];
+                var tld = dParts[dParts.length - 1];
+                if (CONSUMER_TLD_TYPOS[tld] && (root === 'gmail' || root === 'yahoo' || root === 'outlook' || root === 'hotmail')) {
+                    dParts[dParts.length - 1] = CONSUMER_TLD_TYPOS[tld];
+                    var fixed = local + '@' + dParts.join('.');
+                    return {
+                        suggested: fixed,
+                        message: 'Did you mean <strong>' + fixed + '</strong>?'
+                    };
+                }
+            }
+
+            return null;
+        },
+
+        validateSyntax: function (email) {
+            if (!email || email.trim() === '') {
+                return { isValid: false, error: 'Email address is required.' };
+            }
+
+            // Length check (RFC 254 Maximum Standard)
+            if (email.length > 254) {
+                return { isValid: false, error: 'Email exceeds maximum allowed length of 254 characters.' };
+            }
+
+            // Spaces check
+            if (/\s/.test(email)) {
+                return { isValid: false, error: 'Email address cannot contain spaces.' };
+            }
+
+            // Check comma in email
+            if (email.indexOf(',') !== -1) {
+                if (email.indexOf('@') !== -1 && email.split('@')[1].indexOf(',') !== -1) {
+                    return { isValid: false, error: 'Domain name contains a comma instead of a period (e.g. gmail,com).' };
+                }
+                return { isValid: false, error: 'Email address cannot contain commas.' };
+            }
+
+            // Exactly one @ symbol
+            var parts = email.split('@');
+            if (parts.length < 2) {
+                return { isValid: false, error: 'Email is missing the "@" symbol.' };
+            }
+            if (parts.length > 2) {
+                return { isValid: false, error: 'Email contains more than one "@" symbol.' };
+            }
+
+            var local = parts[0];
+            var domain = parts[1];
+
+            // Local-part length (1 to 64 octets per RFC 5321)
+            if (local.length === 0) {
+                return { isValid: false, error: 'Email username cannot be empty.' };
+            }
+            if (local.length > 64) {
+                return { isValid: false, error: 'Email username cannot exceed 64 characters.' };
+            }
+
+            // Consecutive dots check
+            if (local.indexOf('..') !== -1 || domain.indexOf('..') !== -1) {
+                return { isValid: false, error: 'Email cannot contain consecutive dots ("..").' };
+            }
+
+            // Leading or trailing dots
+            if (local.startsWith('.') || local.endsWith('.')) {
+                return { isValid: false, error: 'Email username cannot start or end with a dot.' };
+            }
+            if (domain.startsWith('.') || domain.endsWith('.')) {
+                return { isValid: false, error: 'Domain name cannot start or end with a dot.' };
+            }
+
+            // Domain syntax: alphanumeric and hyphens only (RFC 1035 / RFC 1123)
+            if (domain.indexOf('_') !== -1) {
+                return { isValid: false, error: 'Domain name cannot contain underscores (use hyphens instead).' };
+            }
+
+            if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+                return { isValid: false, error: 'Domain name format is invalid (letters, numbers, and hyphens only).' };
+            }
+
+            // Top-level domain check (at least 2 letters, not purely numeric)
+            var tld = domain.split('.').pop();
+            if (!tld || tld.length < 2 || /^\d+$/.test(tld)) {
+                return { isValid: false, error: 'Domain must end with a valid extension (e.g. .com, .org).' };
+            }
+
+            return { isValid: true, error: null };
+        }
+    };
+})();
+window.JeroEmailBoxEngine = JeroEmailBoxEngine;
+
+// Clear Button Synchronization for Email
+function syncAdminClearButton($input) {
+    var $clearBtn = $input.siblings('.candidate-field-clear');
+    if (($input.val() || '').trim().length > 0) {
+        $clearBtn.show();
+    } else {
+        $clearBtn.hide();
+    }
+}
+
+$(document).on('input paste keyup change', '#email, #secondrary_email', function () {
+    syncAdminClearButton($(this));
+});
+
+$(document).on('click', '.candidate-field-clear', function (e) {
+    e.preventDefault();
+    var $input = $(this).siblings('input');
+    $input.val('').trigger('input').trigger('change').focus();
+    $(this).hide();
+    if ($input.attr('id') === 'email') {
+        $('#email-typo-hint').hide().empty();
+    }
+});
+
+// Deterministic Paste Cleaning
+$(document).on('paste', '#email, #secondrary_email', function () {
+    var self = this;
+    setTimeout(function () {
+        var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
+        if (clean !== $(self).val()) {
+            $(self).val(clean).trigger('change');
+        }
+    }, 10);
+});
+
+// 3-State Evaluation on Blur / Change for Primary Email (Zero Silent Mutation)
+$(document).on('blur change', '#email', function () {
+    var raw = $(this).val();
+    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    if (clean !== raw) {
+        $(this).val(clean);
+    }
+
+    var $hint = $('#email-typo-hint');
+    if (!clean) {
+        $hint.hide().empty();
+        return;
+    }
+
+    // Structural Syntax Check (State 1 vs State 3)
+    var syntax = JeroEmailBoxEngine.validateSyntax(clean);
+    if (!syntax.isValid) {
+        $hint.html('<i class="fa-solid fa-circle-exclamation text-danger" aria-hidden="true"></i> ' + syntax.error).show();
+        return;
+    }
+
+    // High-Confidence Typo Suggestion (State 2)
+    var suggestion = JeroEmailBoxEngine.getSuggestion(clean);
+    if (suggestion) {
+        $hint.html('<i class="fa-solid fa-lightbulb text-warning" aria-hidden="true"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+    } else {
+        $hint.hide().empty();
+    }
+});
+
+$(document).on('click', '.apply-email-fix', function (e) {
+    e.preventDefault();
+    var fixed = $(this).data('fixed') || $(this).text();
+    $('#email').val(fixed).trigger('change');
+    $('#email-typo-hint').hide().empty();
+});
+
+$(document).on('blur change', '#secondrary_email', function () {
+    var raw = $(this).val();
+    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    if (clean !== raw) {
+        $(this).val(clean);
+    }
+});
+
+$(document).ready(function () {
+    $('#email, #secondrary_email').each(function () {
+        syncAdminClearButton($(this));
+    });
+});
+</script>
 
 <!--begin::Validation-->
 

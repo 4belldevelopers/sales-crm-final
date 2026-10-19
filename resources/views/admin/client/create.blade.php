@@ -680,7 +680,7 @@ body
 
                                              <div class="col-xl-3">
                                                 <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                                                   <input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded me-5" value="'.$ccArr->contact_person_email.'" placeholder="Enter email">
+                                                   <input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded me-5" value="'.$ccArr->contact_person_email.'" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
                                                    <span class="form-text text-muted">Please enter contact email</span>
                                                 </div>
                                              </div> 
@@ -716,7 +716,7 @@ body
 
                                        <div class="col-xl-3">                              
                                           <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                                             <input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter email">
+                                             <input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
                                              <span class="form-text text-muted">Please enter contact email</span>
                                           </div>
                                        </div>
@@ -1068,7 +1068,7 @@ body
    			
    			$('#contactPersonId').val(contactPersonId);  			
    			
-   			$('.client-cperson-container').last().append('<div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div></div></div></div>');});
+    			$('.client-cperson-container').last().append('<div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div></div></div></div>');});
    	
    	$('.remove_cperson').click(function(){
    			$('.client-cperson-container').children().last().remove();
@@ -1361,6 +1361,171 @@ if(cp_name != 'undefined')
 <!-- <script src="{{ asset('demo/v7/js/prismjs.bundle.js') }}<?php echo TM_VERSION; ?>"></script> -->
 <script src="{{ asset('demo/v7/js/plugins.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
 <script src="{{ asset('demo/v7/js/scripts.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
+<script>
+    // =========================================================================
+    // JeroEmailBoxEngine: 100% Client-First (Zero Server Strain) Email Engine
+    // RFC 5321 (254 char), Deterministic Sanitizer, 3-State Typo Detection
+    // =========================================================================
+    window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || (function () {
+        var CONSUMER_DOMAIN_TYPOS = {
+            'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmial.com': 'gmail.com',
+            'gmaill.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gmeil.com': 'gmail.com',
+            'gmaul.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaili.com': 'gmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'ymail.com': 'yahoo.com',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+            'iclou.com': 'icloud.com', 'iclod.com': 'icloud.com',
+            'redifmail.com': 'rediffmail.com', 'rediffmial.com': 'rediffmail.com'
+        };
+
+        var CONSUMER_TLD_TYPOS = {
+            'con': 'com', 'cmo': 'com', 'ocm': 'com', 'cpm': 'com',
+            'comm': 'com', 'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+        };
+
+        return {
+            cleanDeterministic: function (raw) {
+                if (!raw) return '';
+                var str = String(raw).trim();
+                str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, '');
+                str = str.replace(/^['"`<]+|['"`>]+$/g, '');
+                str = str.replace(/^mailto:\s*/i, '');
+                var match = str.match(/<([^>]+)>/);
+                if (match && match[1]) {
+                    str = match[1];
+                }
+                str = str.replace(/[.,;:]+$/, '');
+                return str.toLowerCase().replace(/\s+/g, '');
+            },
+
+            getSuggestion: function (email) {
+                if (!email || email.indexOf('@') === -1) return null;
+                var parts = email.split('@');
+                if (parts.length !== 2) return null;
+
+                var local = parts[0];
+                var domain = parts[1];
+
+                if (domain.indexOf(',') !== -1) {
+                    var commaFixed = domain.replace(/,([a-zA-Z]{2,})$/, '.$1');
+                    return {
+                        suggested: local + '@' + commaFixed,
+                        message: 'Did you mean <strong>' + local + '@' + commaFixed + '</strong>?'
+                    };
+                }
+
+                if (CONSUMER_DOMAIN_TYPOS[domain]) {
+                    var fixedEmail = local + '@' + CONSUMER_DOMAIN_TYPOS[domain];
+                    return {
+                        suggested: fixedEmail,
+                        message: 'Did you mean <strong>' + fixedEmail + '</strong>?'
+                    };
+                }
+
+                var dParts = domain.split('.');
+                if (dParts.length >= 2) {
+                    var root = dParts[0];
+                    var tld = dParts[dParts.length - 1];
+                    if (CONSUMER_TLD_TYPOS[tld] && (root === 'gmail' || root === 'yahoo' || root === 'outlook' || root === 'hotmail')) {
+                        dParts[dParts.length - 1] = CONSUMER_TLD_TYPOS[tld];
+                        var fixed = local + '@' + dParts.join('.');
+                        return {
+                            suggested: fixed,
+                            message: 'Did you mean <strong>' + fixed + '</strong>?'
+                        };
+                    }
+                }
+
+                return null;
+            },
+
+            validateSyntax: function (email) {
+                if (!email || email.trim() === '') {
+                    return { isValid: false, error: 'Email address is required.' };
+                }
+
+                if (email.length > 254) {
+                    return { isValid: false, error: 'Email exceeds maximum allowed length of 254 characters.' };
+                }
+
+                if (/\s/.test(email)) {
+                    return { isValid: false, error: 'Email address cannot contain spaces.' };
+                }
+
+                if (email.indexOf(',') !== -1) {
+                    if (email.indexOf('@') !== -1 && email.split('@')[1].indexOf(',') !== -1) {
+                        return { isValid: false, error: 'Domain name contains a comma instead of a period (e.g. gmail,com).' };
+                    }
+                    return { isValid: false, error: 'Email address cannot contain commas.' };
+                }
+
+                var parts = email.split('@');
+                if (parts.length < 2) {
+                    return { isValid: false, error: 'Email is missing the "@" symbol.' };
+                }
+                if (parts.length > 2) {
+                    return { isValid: false, error: 'Email contains more than one "@" symbol.' };
+                }
+
+                var local = parts[0];
+                var domain = parts[1];
+
+                if (local.length === 0) {
+                    return { isValid: false, error: 'Email username cannot be empty.' };
+                }
+                if (local.length > 64) {
+                    return { isValid: false, error: 'Email username cannot exceed 64 characters.' };
+                }
+
+                if (local.indexOf('..') !== -1 || domain.indexOf('..') !== -1) {
+                    return { isValid: false, error: 'Email cannot contain consecutive dots ("..").' };
+                }
+
+                if (local.startsWith('.') || local.endsWith('.')) {
+                    return { isValid: false, error: 'Email username cannot start or end with a dot.' };
+                }
+                if (domain.startsWith('.') || domain.endsWith('.')) {
+                    return { isValid: false, error: 'Domain name cannot start or end with a dot.' };
+                }
+
+                if (domain.indexOf('_') !== -1) {
+                    return { isValid: false, error: 'Domain name cannot contain underscores (use hyphens instead).' };
+                }
+
+                if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+                    return { isValid: false, error: 'Domain name format is invalid (letters, numbers, and hyphens only).' };
+                }
+
+                var tld = domain.split('.').pop();
+                if (!tld || tld.length < 2 || /^\d+$/.test(tld)) {
+                    return { isValid: false, error: 'Domain must end with a valid extension (e.g. .com, .org).' };
+                }
+
+                return { isValid: true, error: null };
+            }
+        };
+    })();
+
+    // 100% Client-First (Zero Server Strain) contact email handling
+    $(document).on("paste", 'input[name="cp_email[]"]', function () {
+        var self = this;
+        setTimeout(function () {
+            var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
+            if (clean !== $(self).val()) {
+                $(self).val(clean).trigger('change');
+            }
+        }, 10);
+    });
+
+    $(document).on("blur change", 'input[name="cp_email[]"]', function () {
+        var raw = $(this).val();
+        var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+        if (clean !== raw) {
+            $(this).val(clean);
+        }
+    });
+</script>
+
 <!--begin::Validation-->
 <script src="{{ asset('demo/v7/js/add-clients.js') }}<?php echo TM_VERSION; ?>"></script>
 <!--end::Validation-->
