@@ -5809,12 +5809,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     {
 
         // echo $request->id; exit;
-        $arr = '';
-        // 		dd($request->jobIdArr[0]);
-        $this->arr = $request->arr;
-        $this->jobIdArr = $request->jobIdArr;
-        $this->applicationDataCount = DB::table('job_applications')->select('*')->whereIn('id', $this->arr)->count();
-        // $this->applicationData			=	DB::table('job_applications')->select('job_applications.id')->whereIn('id', $arr)->get();
+        $rawArr = is_array($request->arr) ? $request->arr : explode(',', (string) $request->arr);
+        $cleanArr = array_values(array_filter(array_map('intval', $rawArr)));
+        $this->arr = $cleanArr;
+        $this->jobIdArr = is_array($request->jobIdArr) ? $request->jobIdArr : (! empty($request->jobIdArr) ? [(int) $request->jobIdArr] : []);
 
         $this->applicationData = DB::table('job_applications')
             ->select(
@@ -5824,6 +5822,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.current_designation',
                 'job_applications.phone',
                 'job_applications.email',
+                'job_applications.secondrary_email',
                 'job_applications.total_exp',
                 'job_applications.rel_exp',
                 'job_applications.ctc',
@@ -5841,7 +5840,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'jobs.id as jobID',
                 'clients.name as client_name'
             )
-            // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
             ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
             ->leftJoin('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
@@ -5849,6 +5847,66 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->whereIn('job_applications.id', $this->arr)->groupBy('job_applications.id')->get();
+
+        // Fallback 1: If $this->arr matched add_job_wise_condidates.id instead of job_applications.id
+        if ($this->applicationData->isEmpty() && ! empty($this->arr)) {
+            $this->applicationData = DB::table('job_applications')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.condidate_type',
+                    'job_applications.current_designation',
+                    'job_applications.phone',
+                    'job_applications.email',
+                    'job_applications.secondrary_email',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.current_ctc_cur',
+                    'job_applications.current_ectc_cur',
+                    'job_applications.current_ctc_mode',
+                    'job_applications.current_ectc_cur',
+                    'job_applications.np_id',
+                    'job_applications.serving_notice_period_mode',
+                    'job_applications.current_company',
+                    'job_applications.skills',
+                    'qualification_master.name as qualification_name',
+                    'jobs.title as job_title',
+                    'jobs.id as jobID',
+                    'clients.name as client_name'
+                )
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                ->leftJoin('jobs', function ($join) {
+                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+                })
+                ->leftjoin('clients', 'clients.id', 'jobs.client_id')
+                ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+                ->whereIn('add_job_wise_condidates.id', $this->arr)->groupBy('job_applications.id')->get();
+        }
+
+        // Fallback 2: Direct lookup without joins to guarantee candidate email availability
+        if ($this->applicationData->isEmpty() && ! empty($this->arr)) {
+            $this->applicationData = DB::table('job_applications')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.condidate_type',
+                    'job_applications.current_designation',
+                    'job_applications.phone',
+                    'job_applications.email',
+                    'job_applications.secondrary_email',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.skills'
+                )
+                ->whereIn('job_applications.id', $this->arr)
+                ->get();
+        }
+
+        $this->applicationDataCount = $this->applicationData->count();
 
         // $this->templateData = DB::table('th_email_template')->select('*')->where('th_email_template.status', 1)->where('th_email_template.temptype', 4)->get();
 
@@ -5902,7 +5960,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        $i = 0;
         foreach ($this->applicationData as $aval) {
             if ($aval->condidate_type == 'bench_condidate') {
                 $bench_assign = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
@@ -5910,14 +5967,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ->where('bench_assign.bench_applications_id', $aval->id)
                     ->get()->toArray();
                 foreach ($bench_assign as $assign) {
-                    $commonCcArr[$i] = $assign->email;
-                    $i++;
+                    $bMail = trim($assign->email ?? '');
+                    if (! empty($bMail)) {
+                        $commonCcArr[] = $bMail;
+                    }
                 }
             } else {
-                $commonCcArr[$i] = $aval->email;
-                $i++;
+                $cMail = trim((string) ($aval->email ?: ($aval->secondrary_email ?? '')));
+                if (! empty($cMail)) {
+                    $commonCcArr[] = $cMail;
+                }
             }
         }
+        $commonCcArr = array_values(array_unique($commonCcArr));
         $this->cc_email_count = count($commonCcArr);
         $this->cc_email_data = $commonCcArr;
 
@@ -7932,6 +7994,29 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
         $mailto = array_values(array_unique($mailto));
+
+        if (empty($mailto)) {
+            // Resilient Server Fallback: If recipient email was not passed in form payload, recover directly from database
+            $candRec = null;
+            if (! empty($applicationDataId) && (int) $applicationDataId > 0) {
+                $candRec = JobApplication::find((int) $applicationDataId);
+            }
+            if (! $candRec && ! empty($arr) && is_array($arr) && (int) $arr[0] > 0) {
+                $candRec = JobApplication::find((int) $arr[0]);
+                if (! $candRec) {
+                    $wiseRec = DB::table('add_job_wise_condidates')->where('id', (int) $arr[0])->first();
+                    if ($wiseRec && ! empty($wiseRec->job_application_id)) {
+                        $candRec = JobApplication::find((int) $wiseRec->job_application_id);
+                    }
+                }
+            }
+            if ($candRec) {
+                $candDbEmail = trim(strtolower((string) ($candRec->email ?: ($candRec->secondrary_email ?? ''))));
+                if (! empty($candDbEmail) && filter_var($candDbEmail, FILTER_VALIDATE_EMAIL)) {
+                    $mailto[] = $candDbEmail;
+                }
+            }
+        }
 
         if (empty($mailto)) {
             return Reply::dataOnly([
