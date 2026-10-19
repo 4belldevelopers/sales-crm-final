@@ -818,18 +818,21 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   color: #2563EB;
 }
 
-/* Floating Popover Dropdown */
+/* Floating Popover Dropdown — Strictest Vertical Stacking Guarantee */
 .fwd-tpl-popover-dropdown {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
+  width: 100% !important;
+  box-sizing: border-box !important;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #CBD5E1;
   border-radius: 12px;
-  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.14), 0 6px 12px -2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.18), 0 8px 18px -4px rgba(15, 23, 42, 0.08);
   z-index: 1050;
   display: none;
+  flex-direction: column !important;
   overflow: hidden;
   animation: fwdTplFadeIn 0.16s ease-out;
 }
@@ -840,87 +843,105 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
 /* Popover Search Bar */
 .fwd-tpl-search-box {
-  padding: 10px 12px 8px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 14px 8px;
   border-bottom: 1px solid #F1F5F9;
   background: #FAFAFA;
-  position: relative;
+  flex-shrink: 0;
 }
 .fwd-tpl-search-input-wrap {
   position: relative;
+  width: 100% !important;
+  box-sizing: border-box !important;
   display: flex;
   align-items: center;
 }
 .fwd-tpl-search-icon {
   position: absolute;
-  left: 10px;
-  width: 14px;
-  height: 14px;
+  left: 11px;
+  width: 15px;
+  height: 15px;
   color: #94A3B8;
   pointer-events: none;
 }
 .fwd-tpl-search-input {
-  width: 100%;
+  width: 100% !important;
+  box-sizing: border-box !important;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1.5px solid #E2E8F0;
   border-radius: 7px;
-  padding: 7px 30px 7px 32px;
-  font-size: 12px;
+  padding: 8px 30px 8px 34px !important;
+  font-size: 12.5px;
   font-family: 'Poppins', sans-serif;
   color: #1E293B;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
 }
 .fwd-tpl-search-input:focus {
   border-color: #2563EB;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .fwd-tpl-search-clear {
   position: absolute;
-  right: 8px;
-  width: 16px;
-  height: 16px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #E2E8F0;
   color: #64748B;
   display: none;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
+  transition: all 0.12s;
+}
+.fwd-tpl-search-clear:hover {
+  background: #CBD5E1;
+  color: #1E293B;
 }
 
 /* Category Filter Tabs / Pills */
 .fwd-tpl-category-tabs {
+  width: 100% !important;
+  box-sizing: border-box !important;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px 8px;
+  gap: 6px;
+  padding: 8px 12px;
   overflow-x: auto;
   white-space: nowrap;
   border-bottom: 1px solid #F1F5F9;
   background: #FFFFFF;
   scrollbar-width: none;
+  flex-shrink: 0;
 }
 .fwd-tpl-category-tabs::-webkit-scrollbar { display: none; }
 .fwd-tpl-cat-btn {
-  background: #F1F5F9;
+  background: #F8FAFC;
   border: 1px solid #E2E8F0;
   color: #475569;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
-  padding: 3px 9px;
-  border-radius: 14px;
+  padding: 4px 11px;
+  border-radius: 16px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  transition: all 0.12s ease;
+  gap: 6px;
+  transition: all 0.15s ease;
   user-select: none;
   font-family: 'Poppins', sans-serif;
+  flex-shrink: 0;
+}
+.fwd-tpl-cat-btn svg {
+  flex-shrink: 0;
+  color: inherit;
 }
 .fwd-tpl-cat-btn:hover {
-  background: #E2E8F0;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
   color: #1E293B;
 }
 .fwd-tpl-cat-btn.is-active {
@@ -933,47 +954,79 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
 /* Templates List Container */
 .fwd-tpl-items-list {
-  max-height: 250px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 290px;
   overflow-y: auto;
-  padding: 6px;
+  padding: 8px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F8FAFC;
 }
-.fwd-tpl-items-list::-webkit-scrollbar { width: 5px; }
-.fwd-tpl-items-list::-webkit-scrollbar-track { background: #F8FAFC; }
+.fwd-tpl-items-list::-webkit-scrollbar { width: 6px; }
+.fwd-tpl-items-list::-webkit-scrollbar-track { background: #F8FAFC; border-radius: 4px; }
 .fwd-tpl-items-list::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+.fwd-tpl-items-list::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
 /* Template Card Item */
 .fwd-tpl-item-card {
-  padding: 9px 12px;
-  border-radius: 8px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 12px;
+  border-radius: 9px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
-  transition: all 0.12s ease;
-  border: 1px solid transparent;
-  margin-bottom: 4px;
+  transition: all 0.15s ease;
+  border: 1px solid #F1F5F9;
+  background: #FFFFFF;
+  margin-bottom: 6px;
   user-select: none;
 }
 .fwd-tpl-item-card:hover {
   background: #F8FAFC;
-  border-color: #E2E8F0;
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 .fwd-tpl-item-card.is-selected {
-  background: #EFF6FF;
-  border-color: #BFDBFE;
+  background: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
 }
-.fwd-tpl-num-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background: #EFF6FF;
-  color: #1D4ED8;
-  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-  letter-spacing: -0.3px;
+
+/* Dedicated Enterprise Icon Avatar for Template Cards */
+.fwd-tpl-card-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
+  transition: all 0.15s ease;
 }
+.fwd-tpl-card-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.fwd-tpl-icon-matrix    { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.fwd-tpl-icon-fresh     { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.fwd-tpl-icon-screening { background: #F5F3FF; color: #7C3AED; border: 1px solid #DDD6FE; }
+.fwd-tpl-icon-urgency   { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.fwd-tpl-icon-bench     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
+.fwd-tpl-icon-executive { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+.fwd-tpl-icon-feedback  { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+
+.fwd-tpl-item-card:hover .fwd-tpl-card-icon {
+  transform: scale(1.05);
+}
+
 .fwd-tpl-item-main {
   flex: 1;
   min-width: 0;
@@ -985,7 +1038,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   gap: 8px;
 }
 .fwd-tpl-item-name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #1E293B;
   white-space: nowrap;
@@ -997,45 +1050,56 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   color: #1D4ED8;
 }
 .fwd-tpl-item-desc {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #64748B;
-  margin-top: 2px;
-  line-height: 1.35;
+  margin-top: 3px;
+  line-height: 1.4;
 }
 .fwd-tpl-item-preview-subj {
   font-size: 11px;
-  color: #94A3B8;
-  margin-top: 3px;
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 5px;
+  padding: 3px 8px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.3;
+}
+.fwd-tpl-subj-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
 }
 .fwd-tpl-item-badges {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 .fwd-tpl-badge-pill {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
   white-space: nowrap;
 }
-.fwd-badge-matrix { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
-.fwd-badge-fresh { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
-.fwd-badge-urgency { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
-.fwd-badge-bench { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.fwd-badge-matrix    { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.fwd-badge-fresh     { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.fwd-badge-urgency   { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.fwd-badge-bench     { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
 .fwd-badge-executive { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
-.fwd-badge-dossier { background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; }
+.fwd-badge-dossier   { background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; }
 .fwd-badge-screening { background: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
-.fwd-badge-feedback { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+.fwd-badge-feedback  { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
 
 .fwd-tpl-item-check {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #2563EB;
   color: #FFFFFF;
@@ -1044,20 +1108,26 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
-  margin-left: 4px;
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 .fwd-tpl-item-card.is-selected .fwd-tpl-item-check {
   display: inline-flex;
 }
+
+/* Popover Footer */
 .fwd-tpl-popover-footer {
+  width: 100% !important;
+  box-sizing: border-box !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 9px 14px;
   background: #F8FAFC;
-  border-top: 1px solid #F1F5F9;
-  font-size: 11px;
+  border-top: 1px solid #E2E8F0;
+  font-size: 11.5px;
   color: #64748B;
+  flex-shrink: 0;
 }
 </style>
 
@@ -1225,14 +1295,38 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
             <!-- Category Filter Tabs / Pills -->
             <div class="fwd-tpl-category-tabs" id="testTplCategoryTabs">
-              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all">All <span id="testTplCatCount_all">(10)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix">📊 Matrix <span id="testTplCatCount_matrix">(1)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh">🚀 Fresh Shortlist <span id="testTplCatCount_fresh">(2)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="screening">📝 Screening &amp; Q&amp;A <span id="testTplCatCount_screening">(2)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency">⚡ High Urgency <span id="testTplCatCount_urgency">(1)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="bench">💼 Bench &amp; C2C <span id="testTplCatCount_bench">(1)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="executive">⭐ Executive <span id="testTplCatCount_executive">(1)</span></button>
-              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback">🕒 Follow-up <span id="testTplCatCount_feedback">(2)</span></button>
+              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                All <span id="testTplCatCount_all">(10)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                Matrix <span id="testTplCatCount_matrix">(1)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                Fresh Shortlist <span id="testTplCatCount_fresh">(2)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="screening">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                Screening &amp; Q&amp;A <span id="testTplCatCount_screening">(2)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                High Urgency <span id="testTplCatCount_urgency">(1)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="bench">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Bench &amp; C2C <span id="testTplCatCount_bench">(1)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="executive">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Executive <span id="testTplCatCount_executive">(1)</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Follow-up <span id="testTplCatCount_feedback">(2)</span>
+              </button>
             </div>
 
             <!-- Template Items List -->
@@ -1248,8 +1342,13 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
             <!-- Popover Footer -->
             <div class="fwd-tpl-popover-footer">
-              <span id="testTplFilteredCountText">Showing 8 templates</span>
-              <span style="font-size:10.5px;color:#94A3B8;">Click any card to apply</span>
+              <span id="testTplFilteredCountText" style="font-weight:600;color:#334155;">Showing 10 templates</span>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#94A3B8;">
+                <span style="display:inline-flex;align-items:center;padding:1px 5px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:3px;font-size:10px;font-family:monospace;color:#475569;">↑↓</span>
+                <span>Navigate</span>
+                <span style="display:inline-flex;align-items:center;padding:1px 5px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:3px;font-size:10px;font-family:monospace;color:#475569;">Enter</span>
+                <span>Apply</span>
+              </div>
             </div>
           </div>
 
@@ -2912,6 +3011,38 @@ window.initTestTemplatePicker = function() {
         window.renderTestTemplateCards();
     });
 
+    // Keyboard navigation inside search input
+    $('#testTplSearchInput').off('keydown').on('keydown', function(e) {
+        var cards = $('#testTplItemsList .fwd-tpl-item-card:visible');
+        if (!cards.length) return;
+        var currentFocused = cards.filter('.is-focused');
+        var curIdx = currentFocused.length ? cards.index(currentFocused) : -1;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            var nextIdx = (curIdx + 1) >= cards.length ? 0 : (curIdx + 1);
+            cards.removeClass('is-focused');
+            var target = cards.eq(nextIdx).addClass('is-focused');
+            target[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            var prevIdx = (curIdx - 1) < 0 ? (cards.length - 1) : (curIdx - 1);
+            cards.removeClass('is-focused');
+            var target = cards.eq(prevIdx).addClass('is-focused');
+            target[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocused.length) {
+                currentFocused.trigger('click');
+            } else if (cards.length > 0) {
+                cards.first().trigger('click');
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            window.closeTestTemplatePicker();
+        }
+    });
+
     $(document).off('click.testTplPicker').on('click.testTplPicker', function(e) {
         if (!$(e.target).closest('#testTplPickerWrapper').length) {
             window.closeTestTemplatePicker();
@@ -2936,6 +3067,41 @@ window.initTestTemplatePicker = function() {
     $('#testTplAvailableCountBadge').text(allList.length + ' Available');
 
     window.renderTestTemplateCards();
+};
+
+window.getTestTemplateIconSvg = function(tmpl, size) {
+    size = size || 18;
+    var cat = (tmpl && tmpl.category) ? tmpl.category : 'feedback';
+    var id = String((tmpl && tmpl.id) || '');
+
+    if (cat === 'matrix' || (tmpl && tmpl.isDynamicMatrix)) {
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>';
+    }
+    if (cat === 'fresh') {
+        if (id === '60') {
+            return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>';
+        }
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>';
+    }
+    if (cat === 'screening') {
+        if (id === '77') {
+            return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+        }
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>';
+    }
+    if (cat === 'urgency') {
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+    }
+    if (cat === 'bench') {
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+    }
+    if (cat === 'executive') {
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    }
+    if (id === '75') {
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+    }
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 };
 
 window.renderTestTemplateCards = function() {
@@ -2996,8 +3162,11 @@ window.renderTestTemplateCards = function() {
                 .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
         }
 
+        var catClass = tmpl.category || 'feedback';
+        var iconHtml = window.getTestTemplateIconSvg(tmpl, 18);
+
         var cardHtml = '<div class="fwd-tpl-item-card' + (isSelected ? ' is-selected' : '') + '" data-template-id="' + tmpl.id + '" role="option" aria-selected="' + isSelected + '">' +
-            '<div class="fwd-tpl-num-badge">' + (tmpl.icon || '📄') + '</div>' +
+            '<div class="fwd-tpl-card-icon fwd-tpl-icon-' + catClass + '">' + iconHtml + '</div>' +
             '<div class="fwd-tpl-item-main">' +
                 '<div class="fwd-tpl-item-header">' +
                     '<div class="fwd-tpl-item-name">' + tmpl.name + '</div>' +
@@ -3011,7 +3180,15 @@ window.renderTestTemplateCards = function() {
                     '</div>' +
                 '</div>' +
                 '<div class="fwd-tpl-item-desc">' + tmpl.desc + '</div>' +
-                (subjPreview ? ('<div class="fwd-tpl-item-preview-subj"><strong>Subject:</strong> ' + subjPreview + '</div>') : '') +
+                (subjPreview ? (
+                    '<div class="fwd-tpl-item-preview-subj">' +
+                        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">' +
+                            '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>' +
+                        '</svg>' +
+                        '<span style="font-weight:600;color:#64748B;">Subject:</span>' +
+                        '<span class="fwd-tpl-subj-text">' + subjPreview + '</span>' +
+                    '</div>'
+                ) : '') +
             '</div>' +
         '</div>';
 
@@ -3096,15 +3273,14 @@ window.selectTestTemplate = function(templateId, skipChange) {
         metaEl.show();
         clearBtn.css('display', 'flex');
 
-        if (match.icon) {
-            iconEl.html('<span style="font-size:16px;">' + match.icon + '</span>');
-        }
+        var catClass = match.category || 'feedback';
+        iconEl.attr('class', 'fwd-tpl-trigger-icon fwd-tpl-icon-' + catClass).html(window.getTestTemplateIconSvg(match, 18));
     } else {
         placeholder.show();
         titleEl.hide();
         metaEl.hide();
         clearBtn.hide();
-        iconEl.html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+        iconEl.attr('class', 'fwd-tpl-trigger-icon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
     }
 
     $('#testTplItemsList .fwd-tpl-item-card').each(function() {
@@ -3131,7 +3307,7 @@ window.clearTestTemplate = function(event) {
     $('#testTplTriggerTitle').hide();
     $('#testTplTriggerMeta').hide();
     $('#testTplTriggerClear').hide();
-    $('#testTplTriggerIcon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+    $('#testTplTriggerIcon').attr('class', 'fwd-tpl-trigger-icon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
     $('#testTplItemsList .fwd-tpl-item-card').removeClass('is-selected').attr('aria-selected', 'false');
     window.closeTestTemplatePicker();
     window.onTestTemplateChange('');

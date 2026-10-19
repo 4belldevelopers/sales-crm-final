@@ -2119,6 +2119,38 @@
                 self.renderTemplateCards();
             });
 
+            // Keyboard navigation inside search input
+            $('#fwdTplSearchInput').off('keydown').on('keydown', function (e) {
+                var cards = $('#fwdTplItemsList .fwd-tpl-item-card:visible');
+                if (!cards.length) return;
+                var currentFocused = cards.filter('.is-focused');
+                var curIdx = currentFocused.length ? cards.index(currentFocused) : -1;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    var nextIdx = (curIdx + 1) >= cards.length ? 0 : (curIdx + 1);
+                    cards.removeClass('is-focused');
+                    var target = cards.eq(nextIdx).addClass('is-focused');
+                    target[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    var prevIdx = (curIdx - 1) < 0 ? (cards.length - 1) : (curIdx - 1);
+                    cards.removeClass('is-focused');
+                    var target = cards.eq(prevIdx).addClass('is-focused');
+                    target[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentFocused.length) {
+                        currentFocused.trigger('click');
+                    } else if (cards.length > 0) {
+                        cards.first().trigger('click');
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    self.closeTemplatePicker();
+                }
+            });
+
             $(document).off('click.fwdTplPicker').on('click.fwdTplPicker', function (e) {
                 if (!$(e.target).closest('#fwdTplPickerWrapper').length) {
                     self.closeTemplatePicker();
@@ -2143,6 +2175,41 @@
 
             $('#fwdTplAvailableCountBadge').text(allList.length + ' Available');
             self.renderTemplateCards();
+        },
+
+        getTemplateIconSvg: function (tmpl, size) {
+            size = size || 18;
+            var cat = (tmpl && tmpl.category) ? tmpl.category : 'feedback';
+            var id = String((tmpl && tmpl.id) || '');
+
+            if (cat === 'matrix' || (tmpl && tmpl.isDynamicMatrix)) {
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>';
+            }
+            if (cat === 'fresh') {
+                if (id === '60') {
+                    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>';
+                }
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>';
+            }
+            if (cat === 'screening') {
+                if (id === '77') {
+                    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+                }
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>';
+            }
+            if (cat === 'urgency') {
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+            }
+            if (cat === 'bench') {
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+            }
+            if (cat === 'executive') {
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+            }
+            if (id === '75') {
+                return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+            }
+            return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
         },
 
         renderTemplateCards: function () {
@@ -2207,8 +2274,11 @@
                         .replace(/\[\{CANDIDATE_COUNT\}\]/gi, candCount);
                 }
 
+                var catClass = tmpl.category || 'feedback';
+                var iconHtml = self.getTemplateIconSvg(tmpl, 18);
+
                 var cardHtml = '<div class="fwd-tpl-item-card' + (isSelected ? ' is-selected' : '') + '" data-template-id="' + escapeHtml(tmpl.id) + '" role="option" aria-selected="' + isSelected + '">' +
-                    '<div class="fwd-tpl-num-badge">' + escapeHtml(tmpl.icon || '📄') + '</div>' +
+                    '<div class="fwd-tpl-card-icon fwd-tpl-icon-' + escapeHtml(catClass) + '">' + iconHtml + '</div>' +
                     '<div class="fwd-tpl-item-main">' +
                         '<div class="fwd-tpl-item-header">' +
                             '<div class="fwd-tpl-item-name">' + escapeHtml(tmpl.name) + '</div>' +
@@ -2222,7 +2292,15 @@
                             '</div>' +
                         '</div>' +
                         '<div class="fwd-tpl-item-desc">' + escapeHtml(tmpl.desc) + '</div>' +
-                        (subjPreview ? ('<div class="fwd-tpl-item-preview-subj"><strong>Subject:</strong> ' + escapeHtml(subjPreview) + '</div>') : '') +
+                        (subjPreview ? (
+                            '<div class="fwd-tpl-item-preview-subj">' +
+                                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">' +
+                                    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>' +
+                                '</svg>' +
+                                '<span style="font-weight:600;color:#64748B;">Subject:</span>' +
+                                '<span class="fwd-tpl-subj-text">' + escapeHtml(subjPreview) + '</span>' +
+                            '</div>'
+                        ) : '') +
                     '</div>' +
                 '</div>';
 
@@ -2310,15 +2388,14 @@
                 metaEl.show();
                 clearBtn.css('display', 'flex');
 
-                if (match.icon) {
-                    iconEl.html('<span style="font-size:16px;">' + match.icon + '</span>');
-                }
+                var catClass = match.category || 'feedback';
+                iconEl.attr('class', 'fwd-tpl-trigger-icon fwd-tpl-icon-' + catClass).html(self.getTemplateIconSvg(match, 18));
             } else {
                 placeholder.show();
                 titleEl.hide();
                 metaEl.hide();
                 clearBtn.hide();
-                iconEl.html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+                iconEl.attr('class', 'fwd-tpl-trigger-icon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
             }
 
             $('#fwdTplItemsList .fwd-tpl-item-card').each(function () {
@@ -2346,7 +2423,7 @@
             $('#fwdTplTriggerTitle').hide();
             $('#fwdTplTriggerMeta').hide();
             $('#fwdTplTriggerClear').hide();
-            $('#fwdTplTriggerIcon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
+            $('#fwdTplTriggerIcon').attr('class', 'fwd-tpl-trigger-icon').html('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>');
             $('#fwdTplItemsList .fwd-tpl-item-card').removeClass('is-selected').attr('aria-selected', 'false');
             self.closeTemplatePicker();
             self.onTemplateChange('');
