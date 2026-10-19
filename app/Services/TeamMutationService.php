@@ -86,6 +86,15 @@ class TeamMutationService
 
                     return is_array($cachedBody) ? $cachedBody : ['status' => 'error'];
                 }
+
+                // If FAILED_RETRYABLE, claim it again for retry
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $tenantId)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'PROCESSING',
+                        'updated_at' => now(),
+                    ]);
             }
         }
 
@@ -97,39 +106,46 @@ class TeamMutationService
                 $responseData = ['status' => 'success'];
             }
 
+            $isSuccessfulMutation = ($responseData['status'] ?? '') === 'success' && ($responseData['msgType'] ?? 'success') === 'success';
+
             // Current tenant team version
             $versionKey = 'ats:teamversion:company_'.$tenantId;
             $currentVersion = (int) Cache::get($versionKey, 1);
             $newVersion = $currentVersion + 1;
 
-            // 3. Atomically write to sys_outbox_events
-            $outboxId = DB::table('sys_outbox_events')->insertGetId([
-                'tenant_id' => $tenantId,
-                'idempotency_key' => $idempotencyKey,
-                'aggregate_type' => 'TeamMember',
-                'aggregate_id' => (int) ($targetUserId ?? 0),
-                'aggregate_version' => $newVersion,
-                'event_type' => $eventType,
-                'payload' => json_encode(array_merge($requestPayload, [
-                    'tenant_id' => $tenantId,
-                    'aggregate_id' => $targetUserId,
-                    'aggregate_version' => $newVersion,
-                    'action' => $eventType,
-                    'response_data' => $responseData,
-                    'timestamp' => now()->toIso8601String(),
-                ])),
-                'status' => 'PENDING',
-                'attempts' => 0,
-                'available_at' => now(),
-                'created_at' => now(),
-            ]);
+            $resolvedUserId = (int) ($targetUserId ?: ($responseData['user_id'] ?? $responseData['aggregate_id'] ?? 0));
 
-            // 4. Update idempotency status to COMPLETED
+            $outboxId = null;
+            if ($isSuccessfulMutation) {
+                // 3. Atomically write to sys_outbox_events
+                $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                    'tenant_id' => $tenantId,
+                    'idempotency_key' => $idempotencyKey,
+                    'aggregate_type' => 'TeamMember',
+                    'aggregate_id' => $resolvedUserId,
+                    'aggregate_version' => $newVersion,
+                    'event_type' => $eventType,
+                    'payload' => json_encode(array_merge($requestPayload, [
+                        'tenant_id' => $tenantId,
+                        'aggregate_id' => $resolvedUserId,
+                        'aggregate_version' => $newVersion,
+                        'action' => $eventType,
+                        'response_data' => $responseData,
+                        'timestamp' => now()->toIso8601String(),
+                    ])),
+                    'status' => 'PENDING',
+                    'attempts' => 0,
+                    'available_at' => now(),
+                    'created_at' => now(),
+                ]);
+            }
+
+            // 4. Update idempotency status
             DB::table('sys_idempotency_keys')
                 ->where('tenant_id', $tenantId)
                 ->where('idempotency_key', $idempotencyKey)
                 ->update([
-                    'status' => 'COMPLETED',
+                    'status' => $isSuccessfulMutation ? 'COMPLETED' : 'FAILED_RETRYABLE',
                     'response_status' => 200,
                     'response_body' => json_encode($responseData),
                     'completed_at' => now(),
@@ -138,32 +154,47 @@ class TeamMutationService
 
             DB::commit();
 
-            // 5. Invalidate tenant cache
-            $this->clearTeamCache($tenantId);
+            // 5. Invalidate tenant cache if mutated
+            if ($isSuccessfulMutation) {
+                $this->clearTeamCache($tenantId);
+            }
 
-            // 6. Asynchronous Outbox Worker dispatch post-commit
-            try {
-                ProcessTeamOutboxEventJob::dispatch($outboxId)->afterCommit();
-            } catch (\Throwable $e) {
-                Log::warning('ProcessTeamOutboxEventJob dispatch warning: '.$e->getMessage());
+            // 6. Immediate Elasticsearch document sync post-commit (zero stale data in ATS)
+            if ($isSuccessfulMutation && $resolvedUserId > 0) {
+                try {
+                    GeneralMethod::userIndexingupload($resolvedUserId);
+                } catch (\Throwable $e) {
+                    Log::warning("TeamMutationService: synchronous ES sync warning for user {$resolvedUserId}: ".$e->getMessage());
+                }
+            }
+
+            // 7. Asynchronous Outbox Worker dispatch post-commit (delivers email without blocking HTTP response)
+            if ($outboxId !== null) {
+                try {
+                    ProcessTeamOutboxEventJob::dispatch($outboxId)->afterCommit();
+                } catch (\Throwable $e) {
+                    Log::warning('ProcessTeamOutboxEventJob dispatch warning: '.$e->getMessage());
+                }
             }
 
             // 7. Real-time broadcast signal to other users in tenant
-            try {
-                broadcast(new TeamMemberUpdated(
-                    companyId: $tenantId,
-                    userId: (int) ($targetUserId ?? 0),
-                    action: $eventType,
-                    senderId: (int) (auth()->id() ?? 0),
-                    status: $requestPayload['status'] ?? null,
-                    roleId: isset($requestPayload['role_id']) ? (int) $requestPayload['role_id'] : null,
-                    roleName: $requestPayload['role_name'] ?? null,
-                    workingStatus: isset($requestPayload['working_status']) ? (int) $requestPayload['working_status'] : null,
-                    version: $newVersion
-                ))->toOthers();
-            } catch (\Throwable $e) {
-                // If broadcasting driver encounters an issue, gracefully log without failing the user mutation
-                Log::warning('TeamMemberUpdated broadcast warning: '.$e->getMessage());
+            if ($isSuccessfulMutation) {
+                try {
+                    broadcast(new TeamMemberUpdated(
+                        companyId: $tenantId,
+                        userId: $resolvedUserId,
+                        action: $eventType,
+                        senderId: (int) (auth()->id() ?? 0),
+                        status: $requestPayload['status'] ?? null,
+                        roleId: isset($requestPayload['role_id']) ? (int) $requestPayload['role_id'] : null,
+                        roleName: $requestPayload['role_name'] ?? null,
+                        workingStatus: isset($requestPayload['working_status']) ? (int) $requestPayload['working_status'] : null,
+                        version: $newVersion
+                    ))->toOthers();
+                } catch (\Throwable $e) {
+                    // If broadcasting driver encounters an issue, gracefully log without failing the user mutation
+                    Log::warning('TeamMemberUpdated broadcast warning: '.$e->getMessage());
+                }
             }
 
             return $responseData;

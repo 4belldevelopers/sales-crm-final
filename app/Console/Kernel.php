@@ -110,6 +110,12 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(2)
             ->runInBackground();
 
+        // Team Member Transactional Outbox Dispatcher
+        $schedule->command('team:process-outbox --limit=25')
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->runInBackground();
+
         $schedule->command('apptracker:prune-outbox --days=7')
             ->dailyAt('03:30')
             ->withoutOverlapping(10)

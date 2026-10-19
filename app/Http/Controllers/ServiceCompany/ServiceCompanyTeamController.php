@@ -14,7 +14,6 @@ use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Http\Requests\StoreTeam;
 use App\Http\Requests\UpdateTeam;
-use App\Jobs\QueueMailService;
 use App\Jobs\SyncUserToElasticJob;
 use App\Models\Company;
 use App\Models\Job;
@@ -24,6 +23,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\ElasticService;
 use App\Services\MailService;
+use App\Services\TeamMutationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,20 +50,13 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $this->elasticService = $elasticService;
     }
 
-    public function index()
+    public function getTeamCounts(int $companyId): array
     {
-        // Why: the redesigned team list shows summary stat cards (Total / Active /
-        // Inactive / Captain·TRM) and status tabs. These aggregate counts are cached
-        // briefly so the landing load stays cheap — the row data itself is fetched and
-        // cached separately via data_ajax(). Tenancy: User::company() is company-scoped;
-        // the raw DB::table() counts are filtered by company_id explicitly.
-        $companyId = $this->user->company_id;
-
-        $this->teamCounts = cache()->remember(
+        return cache()->remember(
             'ats:teamcounts:'.$companyId,
             now()->addMinutes(ALL_TEAM_TIME),
             function () use ($companyId) {
-                $status = User::query()->company()
+                $status = User::query()->where('company_id', $companyId)
                     ->selectRaw('COUNT(*) as total')
                     ->selectRaw("SUM(status = 'active' AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
                     ->selectRaw("SUM(status = 'inactive' AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
@@ -95,7 +88,17 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 ];
             }
         );
+    }
 
+    public function index()
+    {
+        // Why: the redesigned team list shows summary stat cards (Total / Active /
+        // Inactive / Captain·TRM) and status tabs. These aggregate counts are cached
+        // briefly so the landing load stays cheap — the row data itself is fetched and
+        // cached separately via data_ajax(). Tenancy: User::company() is company-scoped;
+        // the raw DB::table() counts are filtered by company_id explicitly.
+        $companyId = (int) $this->user->company_id;
+        $this->teamCounts = $this->getTeamCounts($companyId);
         $this->usersCount = $this->teamCounts['total'];
 
         //  GeneralMethod::userIndexingupload((int) 6);
@@ -563,6 +566,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.team-pagination', compact('pagination'))->render(),
             'raw_data' => $data,
             'version' => $version,
+            'counts' => $this->getTeamCounts((int) $company_id),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_TEAM_TIME));
@@ -1331,68 +1335,94 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function reSendmail(Request $request)
     {
+        $company_id = (int) auth()->user()->company_id;
+        $userId = (int) $request->userId;
 
-        $user = User::withoutGlobalScopes()->find($request->userId);
-        $Companies = Company::withoutGlobalScopes()->find($user->company_id);
-        $company_id = $user->company_id;
+        // Strict tenant scoping and validation
+        $user = DB::table('users')
+            ->where('id', $userId)
+            ->where('company_id', $company_id)
+            ->where('status', 'inactive')
+            ->first();
 
-        $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
-        $to = $user->email;
+        if (! $user) {
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Team member not found or unauthorized.']);
+        }
 
-        $data = [
-            'to' => $user->email,
-            'name' => $user->name,
-            'url' => $Url,
-            'company_name' => $Companies->company_name,
-        ];
-        // dd($data);
-        $basecompany = GeneralMethod::baseCompany();
-        $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-        $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-        $attachments = [];
-        $subject = 'Account Credential';
-        $cc = [];
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key') ?? ('resend_'.$company_id.'_'.$userId.'_'.date('YmdH'));
+        $mutationService = app(TeamMutationService::class);
 
-        // QueueMailService::dispatch(
-        //     $user->email,
-        //     $subject,
-        //     'email.team.create-account',
-        //     (object) $data,
-        //     $attachments,
-        //     $fromAddress,
-        //     $senderName,
-        //     $cc,
-        //     $company_id
-        // )->onConnection('emails');
-        QueueMailService::dispatch(
-            $user->email,
-            $subject,
-            'email.team.create-account',
-            (object) $data,
-            $attachments,
-            $fromAddress,
-            $senderName,
-            $cc,
-            $company_id
-        )
-            ->onConnection('emails');
+        $result = $mutationService->executeIdempotentMutation(
+            tenantId: $company_id,
+            targetUserId: $userId,
+            idempotencyKey: $idempotencyKey,
+            eventType: 'team_member.resend_invitation',
+            requestPayload: [
+                'userId' => $userId,
+                'email' => $user->email,
+            ],
+            mutationCallback: function () use ($user, $company_id, $userId) {
+                $Companies = Company::withoutGlobalScopes()->find($company_id);
+                $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($userId));
+                $basecompany = GeneralMethod::baseCompany();
 
-        // $result = $this->mailService->sendEmail($user->email, $subject,'email.team.create-account', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-        $message = 'Team member created successfully. set password link has been sent to team member email';
-        $type = 'success';
+                $emailData = [
+                    'to' => $user->email,
+                    'name' => $user->name,
+                    'url' => $Url,
+                    'company_name' => $Companies->company_name ?? '',
+                ];
 
-        return Reply::dataOnly(['status' => 'success', 'msgType' => $type, 'message' => $message]);
+                return [
+                    'status' => 'success',
+                    'msgType' => 'success',
+                    'message' => 'Team member created successfully. set password link has been sent to team member email',
+                    'user_id' => $userId,
+                    'email' => $user->email,
+                    'company_id' => $company_id,
+                    'invitation_url' => $Url,
+                    'email_data' => $emailData,
+                    'email_subject' => 'Account Credential',
+                    'email_template' => 'email.team.create-account',
+                    'sender_name' => ($basecompany->companyName) ? $basecompany->companyName : '',
+                    'from_address' => ($basecompany->companyEmail) ? $basecompany->companyEmail : '',
+                ];
+            }
+        );
 
-        //
-
+        return Reply::dataOnly($result);
     }
 
     public function store(StoreTeam $request)
     {
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
+        $email = strtolower(trim((string) $request->email));
 
-        // Phase 9 Optimization: Redis Atomic Lock against rapid duplicate invitation submissions
-        $lockKey = 'ats:team:invite:'.md5(strtolower((string) $request->email));
+        // Strict Tenant Scoping: Verify role exists and belongs to this company or system
+        $role_row = DB::table('roles')
+            ->where('id', $request->role_id)
+            ->where(function ($q) use ($company_id) {
+                $q->where('company_id', $company_id)->orWhereNull('company_id');
+            })
+            ->first();
+
+        if (! $role_row) {
+            return Reply::dataOnly([
+                'status' => 'success',
+                'msgType' => 'warning',
+                'message' => 'Selected role is invalid or unauthorized.',
+            ]);
+        }
+
+        // Coin validation check
+        $eventId = 1;
+        $coinsDeductions = GeneralMethod::coinsValidations((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
+        if ($coinsDeductions->status) {
+            return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+        }
+
+        // Phase 9 Optimization: Redis Atomic Lock against concurrent requests with different idempotency keys
+        $lockKey = 'ats:team:invite:'.md5($email);
         $lock = Cache::lock($lockKey, 10);
         if (! $lock->get()) {
             return Reply::dataOnly([
@@ -1403,173 +1433,116 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         }
 
         try {
-            $count = DB::table('users')->select('users.id')->where('email', '=', $request->email)->count();
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $mutationService = app(TeamMutationService::class);
 
-            $eventId = 1;
-            $coinsDeductions = GeneralMethod::coinsValidations((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
-            if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-            }
-
-            if ($count == 0) {
-                if (! empty($request->name)) {
-                    DB::beginTransaction();
-                    try {
-                        $user = new User;
-                        $user->name = $request->name;
-                        $user->email = $request->email;
-                        $user->company_id = $company_id;
-                        $user->email_verification_code = str_random(40);
-
-                        $user->status = 'inactive';
-                        $user->working_status = 0;
-
-                        if ($request->hasFile('logo')) {
-                            $file = $request->file('logo');
-                            $filename = time().'.'.$file->getClientOriginalExtension();
-                            $filePath = 'Images/'.$filename;
-
-                            Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                            $fileUrl = Storage::disk('s3')->url($filePath);
-                            $user->image = $fileUrl;
-                        }
-
-                        $user->save();
-
-                        // Phase 3 Optimization: Deduplicate role attachment (single Spatie assignRole + pivot sync)
-                        if ($request->role_id > 0) {
-                            $role_row = DB::table('roles')->select('roles.name')->where('roles.id', $request->role_id)->first();
-                            if ($role_row) {
-                                $user->assignRole($role_row->name);
-                            }
-                            DB::table('role_user')->updateOrInsert([
-                                'user_id' => $user->id,
-                                'role_id' => $request->role_id,
-                            ]);
-                        }
-
-                        $users_profile = ['company_id' => $company_id, 'user_id' => $user->id, 'country' => 101, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')];
-                        DB::table('users_profile')->insert($users_profile);
-
-                        DB::commit();
-
-                        $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
-                        $to = $request->email;
-                        $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
-                        $data = [
-                            'to' => $request->email,
-                            'name' => $request->name,
-                            'url' => $Url,
-                            'company_name' => $Companies->company_name ?? '',
+            $result = $mutationService->executeIdempotentMutation(
+                tenantId: $company_id,
+                targetUserId: null,
+                idempotencyKey: $idempotencyKey,
+                eventType: 'team_member.invited',
+                requestPayload: [
+                    'name' => $request->name,
+                    'email' => $email,
+                    'role_id' => (int) $request->role_id,
+                    'role_name' => $role_row->display_name ?? $role_row->name,
+                ],
+                mutationCallback: function () use ($request, $company_id, $email, $role_row) {
+                    // Double-check inside transaction (concurrency race check)
+                    $raceUser = DB::table('users')->where('email', $email)->first();
+                    if ($raceUser) {
+                        return [
+                            'status' => 'success',
+                            'msgType' => 'warning',
+                            'message' => ($raceUser->status === 'inactive')
+                                ? 'Already user register & account not activated'
+                                : 'Already user register',
                         ];
-
-                        $basecompany = GeneralMethod::baseCompany();
-                        $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                        $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                        $attachments = [];
-                        $cc = [];
-                        $subject = 'Account Credential';
-
-                        QueueMailService::dispatch(
-                            $request->email,
-                            $subject,
-                            'email.team.create-account',
-                            (object) $data,
-                            $attachments,
-                            $fromAddress,
-                            $senderName,
-                            $cc,
-                            auth()->user()->company_id
-                        )->onConnection('emails');
-
-                        $message = 'Team member created successfully. set password link has been sent to team member email';
-                        $type = 'success';
-
-                        // Update Elasticsearch document synchronously post-commit and dispatch queue job as fallback
-                        GeneralMethod::userIndexingupload((int) $user->id);
-                        SyncUserToElasticJob::dispatch((int) $user->id)->afterCommit();
-                        $this->clearTeamCache($company_id);
-
-                        $inviteIdempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key') ?? ('invite_'.$company_id.'_'.md5(strtolower((string) $request->email)));
-                        $versionKey = 'ats:teamversion:company_'.$company_id;
-                        $newVersion = (int) (Cache::get($versionKey, 1));
-
-                        try {
-                            DB::table('sys_outbox_events')->insert([
-                                'tenant_id' => $company_id,
-                                'idempotency_key' => $inviteIdempotencyKey,
-                                'aggregate_type' => 'TeamMember',
-                                'aggregate_id' => (int) $user->id,
-                                'aggregate_version' => $newVersion,
-                                'event_type' => 'team_member.created',
-                                'payload' => json_encode([
-                                    'user_id' => $user->id,
-                                    'name' => $user->name,
-                                    'email' => $user->email,
-                                    'role_id' => $request->role_id,
-                                    'action' => 'team_member.created',
-                                    'timestamp' => now()->toIso8601String(),
-                                ]),
-                                'status' => 'COMPLETED',
-                                'attempts' => 1,
-                                'available_at' => now(),
-                                'processed_at' => now(),
-                                'created_at' => now(),
-                            ]);
-
-                            DB::table('sys_idempotency_keys')->updateOrInsert(
-                                ['tenant_id' => $company_id, 'idempotency_key' => $inviteIdempotencyKey],
-                                [
-                                    'request_hash' => sha1(strtolower((string) $request->email)),
-                                    'status' => 'COMPLETED',
-                                    'response_status' => 200,
-                                    'response_body' => json_encode(['status' => 'success', 'msgType' => 'success', 'message' => $message]),
-                                    'expires_at' => now()->addHours(24),
-                                    'completed_at' => now(),
-                                    'updated_at' => now(),
-                                ]
-                            );
-
-                            broadcast(new \App\Events\TeamMemberUpdated(
-                                companyId: (int) $company_id,
-                                userId: (int) $user->id,
-                                action: 'team_member.created',
-                                senderId: (int) (auth()->id() ?? 0),
-                                status: 'inactive',
-                                roleId: (int) $request->role_id,
-                                version: $newVersion
-                            ))->toOthers();
-                        } catch (\Throwable $evtEx) {
-                            \Log::warning('TeamMemberCreated outbox/broadcast warning: '.$evtEx->getMessage());
-                        }
-                    } catch (\Throwable $e) {
-                        DB::rollBack();
-
-                        return Reply::dataOnly(['status' => 'success', 'msgType' => 'warning', 'message' => 'Failed to create team member: '.$e->getMessage()]);
                     }
-                } else {
-                    $message = 'User detail can not be null !';
-                    $type = 'warning';
-                }
 
-            } else {
-                $count = 0;
-                $count = DB::table('users')->select('users.id')->where('email', '=', $request->email)->where('status', '=', 'inactive')->count();
-                if ($count == 1) {
-                    $message = 'Already user register & account not activated';
-                    $type = 'warning';
-                } else {
-                    $message = 'Already user register';
-                    $type = 'warning';
-                }
-            }
+                    if (empty($request->name)) {
+                        return [
+                            'status' => 'success',
+                            'msgType' => 'warning',
+                            'message' => 'User detail can not be null !',
+                        ];
+                    }
 
-            return Reply::dataOnly(['status' => 'success', 'msgType' => $type, 'message' => $message]);
+                    $user = new User;
+                    $user->name = $request->name;
+                    $user->email = $email;
+                    $user->company_id = $company_id;
+                    $user->email_verification_code = str_random(40);
+                    $user->status = 'inactive';
+                    $user->working_status = 0;
+
+                    if ($request->hasFile('logo')) {
+                        $file = $request->file('logo');
+                        $filename = time().'.'.$file->getClientOriginalExtension();
+                        $filePath = 'Images/'.$filename;
+
+                        Storage::disk('s3')->put($filePath, file_get_contents($file));
+
+                        $fileUrl = Storage::disk('s3')->url($filePath);
+                        $user->image = $fileUrl;
+                    }
+
+                    $user->save();
+
+                    // Deduplicate role attachment
+                    if ($request->role_id > 0) {
+                        $user->assignRole($role_row->name);
+                        DB::table('role_user')->updateOrInsert([
+                            'user_id' => $user->id,
+                            'role_id' => $request->role_id,
+                        ]);
+                    }
+
+                    $users_profile = [
+                        'company_id' => $company_id,
+                        'user_id' => $user->id,
+                        'country' => 101,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                    DB::table('users_profile')->insert($users_profile);
+
+                    $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
+                    $Companies = Company::withoutGlobalScopes()->find($company_id);
+                    $basecompany = GeneralMethod::baseCompany();
+                    $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                    $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+
+                    $emailData = [
+                        'to' => $email,
+                        'name' => $user->name,
+                        'url' => $Url,
+                        'company_name' => $Companies->company_name ?? '',
+                    ];
+
+                    $message = 'Team member created successfully. set password link has been sent to team member email';
+
+                    return [
+                        'status' => 'success',
+                        'msgType' => 'success',
+                        'message' => $message,
+                        'user_id' => $user->id,
+                        'email' => $email,
+                        'company_id' => $company_id,
+                        'invitation_url' => $Url,
+                        'email_data' => $emailData,
+                        'email_subject' => 'Account Credential',
+                        'email_template' => 'email.team.create-account',
+                        'sender_name' => $senderName,
+                        'from_address' => $fromAddress,
+                    ];
+                }
+            );
+
+            return Reply::dataOnly($result);
         } finally {
             optional($lock)->release();
         }
-
     }
 
     public function update(UpdateTeam $request, $id)
