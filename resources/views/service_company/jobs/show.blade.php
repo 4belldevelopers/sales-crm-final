@@ -3021,7 +3021,8 @@ $end_date   =	date('d-M-Y', $date);
                     <input type="text" class="popup-input" placeholder="First Name">
                     <input type="text" class="popup-input" placeholder="Last Name">
                 </div>
-                <input type="email" class="popup-input" placeholder="Email Address" style="margin-bottom:12px;">
+                <input type="email" id="popup_candidate_email" class="popup-input" placeholder="Email Address" style="margin-bottom:12px;" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+                <div id="popup_candidate_email_typo_hint" class="email-typo-hint-container mb-2" style="display: none; font-size: 11px;"></div>
                 <div class="phone-input-wrapper" style="margin-bottom:12px;">
                     <select class="country-select">
                         <option value="+91">🇮🇳 +91</option>

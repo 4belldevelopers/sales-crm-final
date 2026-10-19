@@ -216,7 +216,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
         $cDesig = is_object($ccArr) ? ($ccArr->contact_person_designation ?? '') : ($ccArr['contact_person_designation'] ?? '');
         echo '<div class="row client-cperson-container" data-contact-index="'.$contactPersonId.'">
           <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_'.$contactPersonId.'" class="form-control form-control-solid" value="'.htmlspecialchars($cName, ENT_QUOTES).'" placeholder="Enter person name"></div></div>
-          <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-solid" value="'.htmlspecialchars($cEmail, ENT_QUOTES).'" placeholder="Enter email"></div></div>
+          <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-solid" value="'.htmlspecialchars($cEmail, ENT_QUOTES).'" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>
           <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_'.$contactPersonId.'" class="form-control form-control-solid" value="'.htmlspecialchars($cNumber, ENT_QUOTES).'" placeholder="Enter contact number"><input type="hidden" value="'.htmlspecialchars($cCalling, ENT_QUOTES).'" class="calling_code" name="calling_code[]" id="calling_code_'.$contactPersonId.'"></div></div>
           <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_'.$contactPersonId.'" class="form-control form-control-solid cp_desigination" value="'.htmlspecialchars($cDesig, ENT_QUOTES).'" placeholder="Enter desigination"></div></div>
         </div>';
@@ -228,7 +228,7 @@ if ($page_event == 'EDIT' && $hasContacts) {
 ?>
           <div class="row client-cperson-container" data-contact-index="0">
             <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_0" class="form-control form-control-solid" placeholder="Enter person name"></div></div>
-            <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_0" class="form-control form-control-solid" placeholder="Enter email"></div></div>
+            <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_0" class="form-control form-control-solid" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>
             <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_0" class="form-control form-control-solid" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code ?? '+91' }}" class="calling_code" name="calling_code[]" id="calling_code_0"></div></div>
             <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_0" class="form-control form-control-solid cp_desigination" placeholder="Enter desigination"></div></div>
           </div>
@@ -287,8 +287,9 @@ if ($page_event == 'EDIT' && $hasContacts) {
             <label class="form-label" for="ap_email" style="font-size:12.5px; font-weight:600; color:#0f172a; margin-bottom:5px;">Accounts Payable (Billing) Email</label>
             <div class="input-group input-group-solid" style="border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:42px;">
               <span class="input-group-text" style="background:#fff; border:none; color:#059669; padding-left:12px; padding-right:8px;"><i class="la la-envelope" style="font-size:16px;"></i></span>
-              <input type="email" class="form-control form-control-solid" name="ap_email" id="ap_email" value="<?php echo @$ap_email ?? ''; ?>" placeholder="billing@example.com" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
+              <input type="email" class="form-control form-control-solid" name="ap_email" id="ap_email" value="<?php echo @$ap_email ?? ''; ?>" placeholder="billing@example.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" style="border:none; height:100%; font-size:13px; color:#1e293b; background-color:#ffffff;">
             </div>
+            <div id="ap_email_typo_hint" class="client-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
           </div>
         </div>
 
@@ -502,8 +503,9 @@ if ($page_event == 'EDIT' && $hasContacts) {
       <label class="cdf-label" for="client_drawer_email">Email Address<span class="cdf-required">*</span></label>
       <div class="cdf-input-wrap">
         <i class="la la-envelope cdf-input-icon" aria-hidden="true"></i>
-        <input type="email" id="client_drawer_email" placeholder="name@company.com" autocomplete="off">
+        <input type="email" id="client_drawer_email" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
       </div>
+      <div id="client_drawer_email_typo_hint" class="client-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
       <div class="cdf-error" id="cdf_err_email">Please enter a valid email address.</div>
     </div>
 

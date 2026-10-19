@@ -137,7 +137,16 @@ var KTWizard1 = function() {
                     'cp_email[]': {
                         validators: {
                             notEmpty:     { message: 'Email is required' },
-                            emailAddress: { message: 'Please enter a valid email address' }
+                            callback: {
+                                callback: function(input) {
+                                    if (!input.value) return true;
+                                    if (window.JeroEmailBoxEngine) {
+                                        var res = window.JeroEmailBoxEngine.validateSyntax(input.value);
+                                        return { valid: res.isValid, message: res.error || 'Please enter a valid email address' };
+                                    }
+                                    return true;
+                                }
+                            }
                         }
                     },
                     'cp_number[]': {

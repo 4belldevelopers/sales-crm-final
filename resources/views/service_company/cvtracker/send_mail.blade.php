@@ -954,7 +954,7 @@
           <div class="mm-field-col">
             <div class="mm-tag-box" id="sendmail_cc_email_box" onclick="$('#sendmail_cc_email_input').focus()">
               <div class="mm-tag-list" id="sendmail_cc_email_tags"></div>
-              <input type="text" class="mm-tag-input" id="sendmail_cc_email_input" placeholder="Type CC email and press Enter...">
+              <input type="text" class="mm-tag-input" id="sendmail_cc_email_input" placeholder="Type CC email and press Enter..." maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
               <a href="javascript:;" class="mm-add-recipient-btn" onclick="openSendMailRecipientDrawer(); return false;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -965,6 +965,7 @@
                 + Add Recipient
               </a>
             </div>
+            <div id="sendmail_cc_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
             <input type="hidden" name="sendmail_panel" id="sendmail_panel" value="">
             <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
               <span>Type CC address and press Enter or comma, or click "+ Add Recipient"</span>
@@ -2038,11 +2039,106 @@
         syncSendMailRecipientDrawerState();
     });
 
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 100% CLIENT-FIRST GOD-LEVEL EMAIL VALIDATION ENGINE (ZERO SERVER STRAIN)
+    // ══════════════════════════════════════════════════════════════════════════════
+    window.JeroEmailBoxEngine = {
+        domainTypos: {
+            'gamil.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmai.com': 'gmail.com',
+            'gmial.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gamil.co': 'gmail.com', 'gmail.con': 'gmail.com',
+            'gmail.co': 'gmail.com', 'gmaill.co': 'gmail.com', 'gmaill.con': 'gmail.com', 'gmail.cpm': 'gmail.com',
+            'gmail.cm': 'gmail.com', 'gmail.om': 'gmail.com', 'g.mail.com': 'gmail.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+            'hotmial.co': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmsil.com': 'hotmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+            'yaho.in': 'yahoo.in', 'yahooo.in': 'yahoo.in', 'yaho.co.in': 'yahoo.co.in',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com',
+            'outlok.co': 'outlook.com', 'outlock.com': 'outlook.com',
+            'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com'
+        },
+        cleanDeterministic: function(val) {
+            if (!val || typeof val !== 'string') return '';
+            var cleaned = val.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                             .trim()
+                             .replace(/^mailto:\s*/i, '')
+                             .replace(/^<+|>+$/g, '')
+                             .replace(/^"+|"+$/g, '')
+                             .replace(/^'+|'+$/g, '')
+                             .replace(/[.,;:]+$/, '')
+                             .trim();
+            return cleaned;
+        },
+        validateSyntax: function(email) {
+            if (!email || typeof email !== 'string') return false;
+            var trimmed = email.trim();
+            if (trimmed.length === 0 || trimmed.length > 254) return false;
+            if ((trimmed.match(/@/g) || []).length !== 1) return false;
+            var parts = trimmed.split('@');
+            var local = parts[0];
+            var domain = parts[1];
+            if (!local || !domain) return false;
+            if (local.length > 64) return false;
+            if (local.startsWith('.') || local.endsWith('.') || local.indexOf('..') !== -1) return false;
+            if (domain.startsWith('.') || domain.endsWith('.') || domain.startsWith('-') || domain.endsWith('-')) return false;
+            if (domain.indexOf('..') !== -1) return false;
+            var rfcPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+            return rfcPattern.test(trimmed);
+        },
+        suggestCorrection: function(email) {
+            if (!email || typeof email !== 'string') return null;
+            var raw = email.trim();
+            if (raw.indexOf(',') !== -1) {
+                raw = raw.replace(/,/g, '.');
+            }
+            var atMatches = raw.match(/@/g) || [];
+            if (atMatches.length !== 1) return null;
+            var parts = raw.split('@');
+            var local = parts[0].trim();
+            var domain = (parts[1] || '').trim().toLowerCase();
+            if (!local || !domain) return null;
+            if (this.domainTypos[domain]) {
+                return local + '@' + this.domainTypos[domain];
+            }
+            var tldFixes = {
+                'con': 'com', 'cpm': 'com', 'comm': 'com', 'cmo': 'com', 'ocm': 'com',
+                'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+            };
+            var dParts = domain.split('.');
+            if (dParts.length >= 2) {
+                var last = dParts[dParts.length - 1];
+                if (tldFixes[last]) {
+                    dParts[dParts.length - 1] = tldFixes[last];
+                    var suggestedDomain = dParts.join('.');
+                    if (suggestedDomain !== domain) {
+                        return local + '@' + suggestedDomain;
+                    }
+                }
+            }
+            return null;
+        },
+        renderTypoPill: function(containerSelector, suggestedEmail, targetInputSelector) {
+            var $hint = $(containerSelector);
+            if (!$hint.length) return;
+            if (suggestedEmail) {
+                $hint.html(
+                    '<div class="d-inline-flex align-items-center bg-light-primary text-primary px-2 py-1 rounded fs-8 fw-semibold mt-1">' +
+                        '<i class="ki-outline ki-information-2 fs-7 me-1"></i>' +
+                        '<span>Did you mean <strong>' + $('<div>').text(suggestedEmail).html() + '</strong>?</span>' +
+                        '<button type="button" class="btn btn-xs btn-link text-primary fw-bold p-0 ms-2 text-decoration-underline apply-email-fix" data-target="' + targetInputSelector + '" data-suggestion="' + $('<div>').text(suggestedEmail).html() + '">Apply</button>' +
+                    '</div>'
+                ).slideDown(150);
+            } else {
+                $hint.slideUp(100, function() { $(this).empty(); });
+            }
+        }
+    };
+
     function renderSendMailCcTags() {
         var html = '';
         window._sendMailCcTags.forEach(function(email) {
-            html += '<span class="mm-email-tag">' +
-                '<span class="mm-email-tag-text">' + email + '</span>' +
+            var isValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(email) : true;
+            html += '<span class="mm-email-tag' + (isValid ? '' : ' is-invalid') + '" title="' + $('<div>').text(email).html() + '">' +
+                '<span class="mm-email-tag-text">' + $('<div>').text(email).html() + '</span>' +
                 '<span class="mm-email-tag-remove" onclick="removeSendMailCcTag(\'' + email + '\')">&times;</span>' +
                 '</span>';
         });
@@ -2050,6 +2146,46 @@
         $('#sendmail_panel').val(window._sendMailCcTags.join(','));
         $('#sendmail_rcp_footer_count_text').text(window._sendMailCcTags.length + ' CC recipient(s) selected');
     }
+
+    window.addSendMailCcEmail = function(rawEmail) {
+        if (!rawEmail) return false;
+        var email = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(rawEmail).toLowerCase() : String(rawEmail).trim().toLowerCase();
+        if (!email) return false;
+
+        var isValid = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.validateSyntax(email) : /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+        if (!isValid) {
+            var sugg = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(email) : null;
+            if (sugg) {
+                window.JeroEmailBoxEngine.renderTypoPill('#sendmail_cc_email_typo_hint', sugg, '#sendmail_cc_email_input');
+            }
+            Swal.fire({
+                title: 'Invalid Email Address',
+                text: 'The email address "' + email + '" is not valid. Please enter a valid email address.',
+                icon: 'warning',
+                confirmButtonColor: '#2563EB'
+            });
+            return false;
+        }
+
+        if (getSendMailTotalRecipientsCount() >= MAX_SENDMAIL_TOTAL_RECIPIENTS) {
+            Swal.fire({
+                title: 'Recipient Limit Reached',
+                text: 'Maximum ' + MAX_SENDMAIL_TOTAL_RECIPIENTS + ' total recipients allowed.',
+                icon: 'warning',
+                confirmButtonColor: '#2563EB'
+            });
+            return false;
+        }
+
+        if (window._sendMailCcTags.indexOf(email) === -1) {
+            window._sendMailCcTags.push(email);
+            renderSendMailCcTags();
+            syncSendMailRecipientDrawerState();
+            $('#sendmail_cc_email_typo_hint').slideUp(100, function() { $(this).empty(); });
+            return true;
+        }
+        return false;
+    };
 
     window.removeSendMailCcTag = function(email) {
         var idx = window._sendMailCcTags.indexOf(email.toLowerCase());
@@ -2070,32 +2206,56 @@
         });
     }
 
+    // Input typo detection in real-time
+    $(document).off('input', '#sendmail_cc_email_input').on('input', '#sendmail_cc_email_input', function() {
+        var raw = $(this).val();
+        var cleaned = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+        var sugg = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.suggestCorrection(cleaned) : null;
+        if (sugg && sugg.toLowerCase() !== cleaned.toLowerCase()) {
+            window.JeroEmailBoxEngine.renderTypoPill('#sendmail_cc_email_typo_hint', sugg, '#sendmail_cc_email_input');
+        } else {
+            $('#sendmail_cc_email_typo_hint').slideUp(100, function() { $(this).empty(); });
+        }
+    });
+
     // Tag input key handling (Enter, comma, Backspace)
     $(document).off('keydown', '#sendmail_cc_email_input').on('keydown', '#sendmail_cc_email_input', function(e) {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
-            var val = $(this).val().replace(/,/g, '').trim().toLowerCase();
-            if (val) {
-                if (getSendMailTotalRecipientsCount() >= MAX_SENDMAIL_TOTAL_RECIPIENTS) {
-                    Swal.fire({
-                        title: 'Recipient Limit Reached',
-                        text: 'Maximum ' + MAX_SENDMAIL_TOTAL_RECIPIENTS + ' total recipients allowed.',
-                        icon: 'warning',
-                        confirmButtonColor: '#2563EB'
-                    });
-                    return;
+            var val = $(this).val();
+            if (val.trim()) {
+                if (addSendMailCcEmail(val)) {
+                    $(this).val('');
                 }
-                if (window._sendMailCcTags.indexOf(val) === -1) {
-                    window._sendMailCcTags.push(val);
-                    renderSendMailCcTags();
-                    syncSendMailRecipientDrawerState();
-                }
-                $(this).val('');
             }
-        } else if (e.key === 'Backspace' && !$(this).val() && window._sendMailCcTags.length > 0) {
+        } else if ((e.key === 'Backspace' || e.keyCode === 8) && !$(this).val() && window._sendMailCcTags.length > 0) {
             window._sendMailCcTags.pop();
             renderSendMailCcTags();
             syncSendMailRecipientDrawerState();
+        }
+    });
+
+    // Tag input paste handling
+    $(document).off('paste', '#sendmail_cc_email_input').on('paste', '#sendmail_cc_email_input', function(e) {
+        var pasted = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+        if (pasted && (pasted.indexOf(',') !== -1 || pasted.indexOf(';') !== -1 || pasted.indexOf('\n') !== -1 || pasted.indexOf(' ') !== -1)) {
+            e.preventDefault();
+            var parts = pasted.split(/[\s,;]+/).filter(Boolean);
+            parts.forEach(function(p) {
+                addSendMailCcEmail(p);
+            });
+            $(this).val('');
+        }
+    });
+
+    // Typo suggestion pill apply click
+    $(document).off('click', '#sendmail_cc_email_typo_hint .apply-email-fix').on('click', '#sendmail_cc_email_typo_hint .apply-email-fix', function(e) {
+        e.preventDefault();
+        var suggestion = $(this).attr('data-suggestion');
+        if (suggestion) {
+            addSendMailCcEmail(suggestion);
+            $('#sendmail_cc_email_input').val('');
+            $('#sendmail_cc_email_typo_hint').slideUp(100, function() { $(this).empty(); });
         }
     });
 
@@ -2103,7 +2263,9 @@
     (function initSendMailCcTags() {
         var initCc = ($('#sendmail_panel').val() || '').trim();
         if (initCc) {
-            var arr = initCc.split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+            var arr = initCc.split(',').map(function(s) { 
+                return window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(s).toLowerCase() : s.trim().toLowerCase(); 
+            }).filter(Boolean);
             window._sendMailCcTags = arr.slice(0, 4); // max 4 CC
             renderSendMailCcTags();
         }

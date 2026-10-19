@@ -205,7 +205,8 @@ body {overflow-x:hidden;}
           <div class="d-flex flex-column scroll-y me-n7 pe-7" id="add_staffing_partners_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#add_staffing_partners_header" data-kt-scroll-wrappers="#add_staffing_partners_scroll" data-kt-scroll-offset="300px" style="max-height: 10px;">
             <div class="fv-row mb-7 fv-plugins-icon-container">
               <label class="fw-bold fs-6 mb-2" >Invite with email</label>
-              <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="Enter one or more email addresses" value="">
+              <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="Enter email address" value="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+              <div id="staffing_partners_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
               <div class="fv-plugins-message-container invalid-feedback" for="staffing_partners_email"></div>
             </div>
           </div>
@@ -263,24 +264,225 @@ body {overflow-x:hidden;}
    										});
     new $.fn.dataTable.FixedHeader( table );	
 		
+	// =========================================================================
+	// JeroEmailBoxEngine: 100% Client-First (Zero Server Strain) Email Engine
+	// RFC 5321 (254 char), Deterministic Sanitizer, 3-State Typo Detection
+	// =========================================================================
+	window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || (function () {
+		var CONSUMER_DOMAIN_TYPOS = {
+			'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmial.com': 'gmail.com',
+			'gmaill.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gmeil.com': 'gmail.com',
+			'gmaul.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaili.com': 'gmail.com',
+			'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'ymail.com': 'yahoo.com',
+			'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+			'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+			'iclou.com': 'icloud.com', 'iclod.com': 'icloud.com',
+			'redifmail.com': 'rediffmail.com', 'rediffmial.com': 'rediffmail.com'
+		};
+
+		var CONSUMER_TLD_TYPOS = {
+			'con': 'com', 'cmo': 'com', 'ocm': 'com', 'cpm': 'com',
+			'comm': 'com', 'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+		};
+
+		return {
+			cleanDeterministic: function (raw) {
+				if (!raw) return '';
+				var str = String(raw).trim();
+				str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, '');
+				str = str.replace(/^['"`<]+|['"`>]+$/g, '');
+				str = str.replace(/^mailto:\s*/i, '');
+				var match = str.match(/<([^>]+)>/);
+				if (match && match[1]) {
+					str = match[1];
+				}
+				str = str.replace(/[.,;:]+$/, '');
+				return str.toLowerCase().replace(/\s+/g, '');
+			},
+
+			getSuggestion: function (email) {
+				if (!email || email.indexOf('@') === -1) return null;
+				var parts = email.split('@');
+				if (parts.length !== 2) return null;
+
+				var local = parts[0];
+				var domain = parts[1];
+
+				if (domain.indexOf(',') !== -1) {
+					var commaFixed = domain.replace(/,([a-zA-Z]{2,})$/, '.$1');
+					return {
+						suggested: local + '@' + commaFixed,
+						message: 'Did you mean <strong>' + local + '@' + commaFixed + '</strong>?'
+					};
+				}
+
+				if (CONSUMER_DOMAIN_TYPOS[domain]) {
+					var fixedEmail = local + '@' + CONSUMER_DOMAIN_TYPOS[domain];
+					return {
+						suggested: fixedEmail,
+						message: 'Did you mean <strong>' + fixedEmail + '</strong>?'
+					};
+				}
+
+				var dParts = domain.split('.');
+				if (dParts.length >= 2) {
+					var root = dParts[0];
+					var tld = dParts[dParts.length - 1];
+					if (CONSUMER_TLD_TYPOS[tld] && (root === 'gmail' || root === 'yahoo' || root === 'outlook' || root === 'hotmail')) {
+						dParts[dParts.length - 1] = CONSUMER_TLD_TYPOS[tld];
+						var fixed = local + '@' + dParts.join('.');
+						return {
+							suggested: fixed,
+							message: 'Did you mean <strong>' + fixed + '</strong>?'
+						};
+					}
+				}
+
+				return null;
+			},
+
+			validateSyntax: function (email) {
+				if (!email || email.trim() === '') {
+					return { isValid: false, error: 'Email address is required.' };
+				}
+
+				if (email.length > 254) {
+					return { isValid: false, error: 'Email exceeds maximum allowed length of 254 characters.' };
+				}
+
+				if (/\s/.test(email)) {
+					return { isValid: false, error: 'Email address cannot contain spaces.' };
+				}
+
+				if (email.indexOf(',') !== -1) {
+					if (email.indexOf('@') !== -1 && email.split('@')[1].indexOf(',') !== -1) {
+						return { isValid: false, error: 'Domain name contains a comma instead of a period (e.g. gmail,com).' };
+					}
+					return { isValid: false, error: 'Email address cannot contain commas.' };
+				}
+
+				var parts = email.split('@');
+				if (parts.length < 2) {
+					return { isValid: false, error: 'Email is missing the "@" symbol.' };
+				}
+				if (parts.length > 2) {
+					return { isValid: false, error: 'Email contains more than one "@" symbol.' };
+				}
+
+				var local = parts[0];
+				var domain = parts[1];
+
+				if (local.length === 0) {
+					return { isValid: false, error: 'Email username cannot be empty.' };
+				}
+				if (local.length > 64) {
+					return { isValid: false, error: 'Email username cannot exceed 64 characters.' };
+				}
+
+				if (local.indexOf('..') !== -1 || domain.indexOf('..') !== -1) {
+					return { isValid: false, error: 'Email cannot contain consecutive dots ("..").' };
+				}
+
+				if (local.startsWith('.') || local.endsWith('.')) {
+					return { isValid: false, error: 'Email username cannot start or end with a dot.' };
+				}
+				if (domain.startsWith('.') || domain.endsWith('.')) {
+					return { isValid: false, error: 'Domain name cannot start or end with a dot.' };
+				}
+
+				if (domain.indexOf('_') !== -1) {
+					return { isValid: false, error: 'Domain name cannot contain underscores (use hyphens instead).' };
+				}
+
+				if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+					return { isValid: false, error: 'Domain name format is invalid (letters, numbers, and hyphens only).' };
+				}
+
+				var tld = domain.split('.').pop();
+				if (!tld || tld.length < 2 || /^\d+$/.test(tld)) {
+					return { isValid: false, error: 'Domain must end with a valid extension (e.g. .com, .org).' };
+				}
+
+				return { isValid: true, error: null };
+			}
+		};
+	})();
+
 	$().ready(function() { 
-		$("#add_staffing_partners_form").validate({
-				rules: {
-								email: { required: true, email: true }
-						},
-				messages: {
-					
-							email: "Please enter a valid email address"
-						 }
+		// Email paste cleaner
+		$('#staffing_partners_email').on('paste', function () {
+			var self = this;
+			setTimeout(function () {
+				var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic($(self).val()) : $(self).val().trim();
+				if (clean !== $(self).val()) {
+					$(self).val(clean).trigger('input');
+				}
+			}, 10);
+		});
+
+		// Email blur handler (syntax + typo check)
+		$('#staffing_partners_email').on('blur', function () {
+			var raw = $(this).val();
+			var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+			if (clean !== raw) {
+				$(this).val(clean);
+			}
+			var $hint = $('#staffing_partners_email_typo_hint');
+			if (!clean) {
+				$hint.hide().empty();
+				return;
+			}
+			if (window.JeroEmailBoxEngine) {
+				var syntax = window.JeroEmailBoxEngine.validateSyntax(clean);
+				if (!syntax.isValid) {
+					$hint.html('<i class="fa fa-exclamation-circle text-danger"></i> ' + syntax.error).show();
+					return;
+				}
+				var suggestion = window.JeroEmailBoxEngine.getSuggestion(clean);
+				if (suggestion) {
+					$hint.html('<i class="fa fa-lightbulb-o text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix font-weight-bold text-primary ml-1" data-target="#staffing_partners_email" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+				} else {
+					$hint.hide().empty();
+				}
+			}
+		});
+
+		// Delegated click handler to apply typo fix
+		$(document).on('click', '.apply-email-fix', function (e) {
+			e.preventDefault();
+			var target = $(this).data('target');
+			var fixed = $(this).data('fixed');
+			if (target && fixed) {
+				$(target).val(fixed).trigger('input').trigger('change');
+				$('#staffing_partners_email_typo_hint').hide().empty();
+			}
 		});
 	 });
 
-$('body').on('click', '.add_staffing_partners_frm', function(){ $('#staffing_partners_email').val('');	 });
+$('body').on('click', '.add_staffing_partners_frm', function(){ 
+	$('#staffing_partners_email').val('');
+	$('#staffing_partners_email_typo_hint').hide().empty();
+});
 $('body').on('click', '#submit_staffing_partners', function(){
-	
-			$("#add_staffing_partners_form").valid();
+			var raw = $('#staffing_partners_email').val();
+			var staffing_partners_email = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+			$('#staffing_partners_email').val(staffing_partners_email);
 			
-			var staffing_partners_email		=	$('#staffing_partners_email').val();
+			if (window.JeroEmailBoxEngine) {
+				var syntax = window.JeroEmailBoxEngine.validateSyntax(staffing_partners_email);
+				if (!syntax.isValid) {
+					$('#staffing_partners_email_typo_hint').html('<i class="fa fa-exclamation-circle text-danger"></i> ' + syntax.error).show();
+					swal({
+						title: "Invalid Email",
+						text: syntax.error,
+						type: "warning",
+						timer: 2000,
+						showConfirmButton: true
+					});
+					return false;
+				}
+			}
+			
 			var id							=	0; 
             var url 						=	"{{ route('service_company.consultancy.staffing_invitation', 'id') }}";
 			url 							=	url.replace(':id', id);

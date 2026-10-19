@@ -3312,6 +3312,149 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 <link href="https://unpkg.com/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 
 <script>
+  // =========================================================================
+  // JeroEmailBoxEngine: 100% Client-First (Zero Server Strain) Email Engine
+  // RFC 5321 (254 char), Deterministic Sanitizer, 3-State Typo Detection
+  // =========================================================================
+  window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || (function () {
+    var CONSUMER_DOMAIN_TYPOS = {
+      'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmial.com': 'gmail.com',
+      'gmaill.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gmeil.com': 'gmail.com',
+      'gmaul.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaili.com': 'gmail.com',
+      'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'ymail.com': 'yahoo.com',
+      'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+      'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+      'iclou.com': 'icloud.com', 'iclod.com': 'icloud.com',
+      'redifmail.com': 'rediffmail.com', 'rediffmial.com': 'rediffmail.com'
+    };
+
+    var CONSUMER_TLD_TYPOS = {
+      'con': 'com', 'cmo': 'com', 'ocm': 'com', 'cpm': 'com',
+      'comm': 'com', 'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+    };
+
+    return {
+      cleanDeterministic: function (raw) {
+        if (!raw) return '';
+        var str = String(raw).trim();
+        str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, '');
+        str = str.replace(/^['"`<]+|['"`>]+$/g, '');
+        str = str.replace(/^mailto:\s*/i, '');
+        var match = str.match(/<([^>]+)>/);
+        if (match && match[1]) {
+          str = match[1];
+        }
+        str = str.replace(/[.,;:]+$/, '');
+        return str.toLowerCase().replace(/\s+/g, '');
+      },
+
+      getSuggestion: function (email) {
+        if (!email || email.indexOf('@') === -1) return null;
+        var parts = email.split('@');
+        if (parts.length !== 2) return null;
+
+        var local = parts[0];
+        var domain = parts[1];
+
+        if (domain.indexOf(',') !== -1) {
+          var commaFixed = domain.replace(/,([a-zA-Z]{2,})$/, '.$1');
+          return {
+            suggested: local + '@' + commaFixed,
+            message: 'Did you mean <strong>' + local + '@' + commaFixed + '</strong>?'
+          };
+        }
+
+        if (CONSUMER_DOMAIN_TYPOS[domain]) {
+          var fixedEmail = local + '@' + CONSUMER_DOMAIN_TYPOS[domain];
+          return {
+            suggested: fixedEmail,
+            message: 'Did you mean <strong>' + fixedEmail + '</strong>?'
+          };
+        }
+
+        var dParts = domain.split('.');
+        if (dParts.length >= 2) {
+          var root = dParts[0];
+          var tld = dParts[dParts.length - 1];
+          if (CONSUMER_TLD_TYPOS[tld] && (root === 'gmail' || root === 'yahoo' || root === 'outlook' || root === 'hotmail')) {
+            dParts[dParts.length - 1] = CONSUMER_TLD_TYPOS[tld];
+            var fixed = local + '@' + dParts.join('.');
+            return {
+              suggested: fixed,
+              message: 'Did you mean <strong>' + fixed + '</strong>?'
+            };
+          }
+        }
+
+        return null;
+      },
+
+      validateSyntax: function (email) {
+        if (!email || email.trim() === '') {
+          return { isValid: false, error: 'Email address is required.' };
+        }
+
+        if (email.length > 254) {
+          return { isValid: false, error: 'Email exceeds maximum allowed length of 254 characters.' };
+        }
+
+        if (/\s/.test(email)) {
+          return { isValid: false, error: 'Email address cannot contain spaces.' };
+        }
+
+        if (email.indexOf(',') !== -1) {
+          if (email.indexOf('@') !== -1 && email.split('@')[1].indexOf(',') !== -1) {
+            return { isValid: false, error: 'Domain name contains a comma instead of a period (e.g. gmail,com).' };
+          }
+          return { isValid: false, error: 'Email address cannot contain commas.' };
+        }
+
+        var parts = email.split('@');
+        if (parts.length < 2) {
+          return { isValid: false, error: 'Email is missing the "@" symbol.' };
+        }
+        if (parts.length > 2) {
+          return { isValid: false, error: 'Email contains more than one "@" symbol.' };
+        }
+
+        var local = parts[0];
+        var domain = parts[1];
+
+        if (local.length === 0) {
+          return { isValid: false, error: 'Email username cannot be empty.' };
+        }
+        if (local.length > 64) {
+          return { isValid: false, error: 'Email username cannot exceed 64 characters.' };
+        }
+
+        if (local.indexOf('..') !== -1 || domain.indexOf('..') !== -1) {
+          return { isValid: false, error: 'Email cannot contain consecutive dots ("..").' };
+        }
+
+        if (local.startsWith('.') || local.endsWith('.')) {
+          return { isValid: false, error: 'Email username cannot start or end with a dot.' };
+        }
+        if (domain.startsWith('.') || domain.endsWith('.')) {
+          return { isValid: false, error: 'Domain name cannot start or end with a dot.' };
+        }
+
+        if (domain.indexOf('_') !== -1) {
+          return { isValid: false, error: 'Domain name cannot contain underscores (use hyphens instead).' };
+        }
+
+        if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+          return { isValid: false, error: 'Domain name format is invalid (letters, numbers, and hyphens only).' };
+        }
+
+        var tld = domain.split('.').pop();
+        if (!tld || tld.length < 2 || /^\d+$/.test(tld)) {
+          return { isValid: false, error: 'Domain must end with a valid extension (e.g. .com, .org).' };
+        }
+
+        return { isValid: true, error: null };
+      }
+    };
+  })();
 
   $(document).on('input', 'input[name="cp_number[]"]', function () {
 
@@ -3325,66 +3468,25 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
 
   });
 
-  $(document).on("change", 'input[name="cp_email[]"]', function () {
+  // 100% Client-First (Zero Server Strain) contact email handling
+  $(document).on("paste", 'input[name="cp_email[]"]', function () {
+      var self = this;
+      setTimeout(function () {
+          var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
+          if (clean !== $(self).val()) {
+              $(self).val(clean).trigger('change');
+          }
+      }, 10);
+  });
 
-      let input  = $(this);                 // current input
-      let email  = input.val();
-
-      if (email !== '') {
-
-          $('.page-loader').css('display', 'flex');
-
-          $.ajax({
-              url: "{{ route('valid-email-chk') }}",
-              type: "POST",
-              data: {
-                  _token: "{{ csrf_token() }}",
-                  email: email
-              },
-
-              success: function (response) {
-
-                  $('.page-loader').hide();
-
-                  if (response.status === 'fail') {
-
-                      input.val('');
-
-                      Swal.fire({
-                          text: "Sorry, Email [" + email + "] is already registered, Please use another email.",
-                          icon: "error",
-                          confirmButtonText: "Ok, got it!",
-                          customClass: { confirmButton: "btn btn-light" }
-                      });
-
-                  } else if (response.status === 'emailchecker') {
-
-                      input.val('');
-
-                      Swal.fire({
-                          text: response.message,
-                          icon: "error",
-                          confirmButtonText: "Ok, got it!",
-                          customClass: { confirmButton: "btn btn-light" }
-                      });
-
-                  } else {
-
-                      // ✅ valid email
-                      $('.verification_email').val(email);
-                  }
-              },
-
-              error: function (xhr) {
-                  $('.page-loader').hide();
-
-                  if (xhr.status === 0 || !navigator.onLine) {
-                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                  } else {
-                      Swal.fire({ text: "Server error, please try again", icon: "error" });
-                  }
-              }
-          });
+  $(document).on("blur change", 'input[name="cp_email[]"]', function () {
+      var raw = $(this).val();
+      var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+      if (clean !== raw) {
+          $(this).val(clean);
+      }
+      if (clean) {
+          $('.verification_email').val(clean);
       }
   });
 
@@ -3437,7 +3539,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
    			
    			$('#contactPersonId').val(contactPersonId);  			
    			
-   			$('.client-cperson-row').last().append('<div class="row client-cperson-container" data-contact-index="'+contactPersonId+'"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
+    			$('.client-cperson-row').last().append('<div class="row client-cperson-container" data-contact-index="'+contactPersonId+'"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
           if (window.clientWizardUi) window.clientWizardUi.renderContactTable();
           // Reinitialize intl-tel-input for the newly added cp_number[] field
          var newContactNumberField = $(`input[name='cp_number[]']`).last()[0];
@@ -5999,6 +6101,7 @@ $('.remove_address').click(function(){
   function _cdfClearErrors() {
     $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').removeClass('is-invalid');
     $('.cdf-error').removeClass('visible');
+    $('#client_drawer_email_typo_hint').hide().empty();
   }
 
   function openContactDrawer(index) {
@@ -6068,6 +6171,7 @@ $('.remove_address').click(function(){
     $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
     _cdfClearErrors();
     $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('').removeClass('is-invalid');
+    $('#client_drawer_email_typo_hint').hide().empty();
     $('#client_drawer_edit_index').val('');
     if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
       window.JeroPhoneBox.setPhone('client_drawer_phone', '');
@@ -6100,12 +6204,12 @@ $('.remove_address').click(function(){
     _cdfClearErrors();
     var name        = $('#client_drawer_name').val().trim();
     var designation = $('#client_drawer_designation').val().trim();
-    var email       = $('#client_drawer_email').val().trim();
+    var email       = JeroEmailBoxEngine.cleanDeterministic($('#client_drawer_email').val());
+    $('#client_drawer_email').val(email);
     var phone       = window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function'
       ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone')
       : ($('#client_drawer_phone').val() || '').replace(/[^\d]/g, '');
     var callingCode = ($('#client_drawer_calling_code').val() || '+91').trim();
-    var emailRe     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     var valid       = true;
     var $firstBad   = null;
 
@@ -6121,9 +6225,10 @@ $('.remove_address').click(function(){
       $firstBad = $firstBad || $('#client_drawer_designation');
       valid = false;
     }
-    if (!email || !emailRe.test(email)) {
+    var emailSyntax = JeroEmailBoxEngine.validateSyntax(email);
+    if (!emailSyntax.isValid) {
       $('#client_drawer_email').addClass('is-invalid');
-      $('#cdf_err_email').text(!email ? 'Email address is required.' : 'Please enter a valid email address.').addClass('visible');
+      $('#cdf_err_email').text(emailSyntax.error).addClass('visible');
       $firstBad = $firstBad || $('#client_drawer_email');
       valid = false;
     }
@@ -6202,7 +6307,7 @@ $('.remove_address').click(function(){
         var newIdx = $('.client-cperson-container').length;
         var newHtml = '<div class="row client-cperson-container" data-contact-index="' + newIdx + '">' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(name) + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(email) + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(email) + '" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(phone) + '"><input type="hidden" value="' + escapeHtml(callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
           '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + newIdx + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(designation) + '"></div></div>' +
           '</div>';
@@ -6268,7 +6373,7 @@ $('.remove_address').click(function(){
       var newIdx = $('.client-cperson-container').length;
       var newHtml = '<div class="row client-cperson-container" data-contact-index="' + newIdx + '">' +
         '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.name) + '"></div></div>' +
-        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '"></div></div>' +
+        '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>' +
         '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + newIdx + '" class="form-control form-control-solid" value="' + escapeHtml(c.phone) + '"><input type="hidden" value="' + escapeHtml(c.callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + newIdx + '"></div></div>' +
         '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + newIdx + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(c.designation) + '"></div></div>' +
         '</div>';
@@ -6308,6 +6413,87 @@ $('.remove_address').click(function(){
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
   $(document).on('input', '#client_drawer_email', function () { $(this).removeClass('is-invalid'); $('#cdf_err_email').removeClass('visible'); });
   $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
+
+  // Paste & Blur deterministic cleanup and typo suggestions for Contact Person Drawer Email
+  $(document).on('paste', '#client_drawer_email', function () {
+    var self = this;
+    setTimeout(function () {
+      var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
+      if (clean !== $(self).val()) {
+        $(self).val(clean).trigger('input');
+      }
+    }, 10);
+  });
+
+  $(document).on('blur change', '#client_drawer_email', function () {
+    var raw = $(this).val();
+    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    if (clean !== raw) {
+      $(this).val(clean);
+    }
+    var $hint = $('#client_drawer_email_typo_hint');
+    if (!clean) {
+      $hint.hide().empty();
+      return;
+    }
+    var syntax = JeroEmailBoxEngine.validateSyntax(clean);
+    if (!syntax.isValid) {
+      $hint.html('<i class="la la-exclamation-circle text-danger"></i> ' + syntax.error).show();
+      return;
+    }
+    var suggestion = JeroEmailBoxEngine.getSuggestion(clean);
+    if (suggestion) {
+      $hint.html('<i class="la la-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="#client_drawer_email" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+    } else {
+      $hint.hide().empty();
+    }
+  });
+
+  // Paste & Blur deterministic cleanup and typo suggestions for Accounts Payable Email
+  $(document).on('paste', '#ap_email', function () {
+    var self = this;
+    setTimeout(function () {
+      var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
+      if (clean !== $(self).val()) {
+        $(self).val(clean).trigger('input');
+      }
+    }, 10);
+  });
+
+  $(document).on('blur change', '#ap_email', function () {
+    var raw = $(this).val();
+    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    if (clean !== raw) {
+      $(this).val(clean);
+    }
+    var $hint = $('#ap_email_typo_hint');
+    if (!clean) {
+      $hint.hide().empty();
+      return;
+    }
+    var syntax = JeroEmailBoxEngine.validateSyntax(clean);
+    if (!syntax.isValid) {
+      $hint.html('<i class="la la-exclamation-circle text-danger"></i> ' + syntax.error).show();
+      return;
+    }
+    var suggestion = JeroEmailBoxEngine.getSuggestion(clean);
+    if (suggestion) {
+      $hint.html('<i class="la la-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="#ap_email" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+    } else {
+      $hint.hide().empty();
+    }
+  });
+
+  // Explicit User Action to Apply High-Confidence Fix (Zero Silent Mutation)
+  $(document).on('click', '.apply-email-fix', function (e) {
+    e.preventDefault();
+    var targetSelector = $(this).data('target');
+    var fixed = $(this).data('fixed');
+    if (targetSelector && fixed) {
+      $(targetSelector).val(fixed).trigger('input').trigger('change');
+      $(this).closest('.client-email-typo-hint').hide().empty();
+    }
+  });
 
   function populateReviewSummaries() {
     var clientName = ($('#client_id').val() || '').trim();
@@ -6636,8 +6822,20 @@ $('.remove_address').click(function(){
         case 'cp_email':
           if (!value) {
             result = { valid: false, message: 'Email address is required.' };
-          } else if (!patterns.email.test(value)) {
-            result = { valid: false, message: 'Please enter a valid email address (e.g. contact@example.com).' };
+          } else {
+            var syntax = JeroEmailBoxEngine.validateSyntax(value);
+            if (!syntax.isValid) {
+              result = { valid: false, message: syntax.error };
+            }
+          }
+          break;
+
+        case 'ap_email':
+          if (value) {
+            var syntax = JeroEmailBoxEngine.validateSyntax(value);
+            if (!syntax.isValid) {
+              result = { valid: false, message: syntax.error };
+            }
           }
           break;
 
@@ -6913,6 +7111,18 @@ $('.remove_address').click(function(){
             $firstInvalid = $firstInvalid || $contactRow;
             isValid = false;
             break;
+          }
+        }
+      }
+
+      if (isValid) {
+        var apEmailVal = ($('#ap_email').val() || '').trim();
+        if (apEmailVal) {
+          var apRes = ClientValidationEngine.validateField('ap_email', apEmailVal);
+          if (!apRes.valid) {
+            showInlineError($('#ap_email'), apRes.message);
+            $firstInvalid = $firstInvalid || $('#ap_email');
+            isValid = false;
           }
         }
       }

@@ -103,7 +103,8 @@ $gender = [
                         <h5>
                            <label for="email">Primary Email Address</label>
                         </h5>
-                        <input class="form-control" type="text" value="{{ $application->email }}" name="email" id="email" placeholder="@lang('app.email')">
+                        <input class="form-control" type="email" value="{{ $application->email }}" name="email" id="email" placeholder="@lang('app.email')" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+                        <div id="email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
                      </div>
                   </div>
                   <div class="col-md-6">
@@ -131,7 +132,8 @@ $gender = [
                         <h5>
                            <label for="secondrary_email">Secondary Email Address</label>
                         </h5>
-                        <input class="form-control" type="email" name="secondrary_email" id="secondrary_email" value="{{ $application->secondrary_email }}" placeholder="@lang('app.email')">
+                        <input class="form-control" type="email" name="secondrary_email" id="secondrary_email" value="{{ $application->secondrary_email }}" placeholder="@lang('app.email')" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+                        <div id="secondrary_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
                      </div>
                   </div>
                   <div class="col-md-6">
@@ -658,8 +660,170 @@ $gender = [
        width: '100%'
    });
    
+   // JeroEmailBoxEngine - 100% Client-Side RFC 5321 Validation & Typo Detection
+   window.JeroEmailBoxEngine = window.JeroEmailBoxEngine || {
+       domainTypos: {
+           'gamil.com': 'gmail.com', 'gmial.com': 'gmail.com', 'gmaill.com': 'gmail.com',
+           'gmai.com': 'gmail.com', 'gmaii.com': 'gmail.com', 'gemail.com': 'gmail.com',
+           'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmil.com': 'hotmail.com',
+           'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yhaoo.com': 'yahoo.com',
+           'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+           'iclou.com': 'icloud.com', 'icoud.com': 'icloud.com'
+       },
+       tldTypos: {
+           'con': 'com', 'cmo': 'com', 'ocm': 'com', 'comm': 'com', 'coom': 'com',
+           'ney': 'net', 'nte': 'net', 'nett': 'net',
+           'og': 'org', 'orgg': 'org', 'ogr': 'org',
+           'in': 'in', 'inn': 'in', 'iin': 'in',
+           'co': 'co', 'cc': 'cc'
+       },
+       cleanDeterministic: function(val) {
+           if (!val) return '';
+           var s = String(val).replace(/[\u200B-\u200D\uFEFF\u00A0\u1680\u180E\u2000-\u200A\u202F\u205F\u3000]/g, ' ').trim();
+           s = s.replace(/^mailto:\s*/i, '');
+           s = s.replace(/^["'<(\[]+|[>"')\]]+$/g, '');
+           s = s.replace(/[,;]+$/, '');
+           return s.trim();
+       },
+       validateSyntax: function(email) {
+           if (!email) return false;
+           var cleaned = this.cleanDeterministic(email);
+           if (cleaned.length < 5 || cleaned.length > 254) return false;
+           var atIdx = cleaned.indexOf('@');
+           if (atIdx <= 0 || atIdx !== cleaned.lastIndexOf('@')) return false;
+           var local = cleaned.slice(0, atIdx);
+           var domain = cleaned.slice(atIdx + 1);
+           if (local.length > 64 || domain.length > 253) return false;
+           var localRegex = /^[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+(?:\.[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)*$/;
+           if (!localRegex.test(local)) return false;
+           if (domain.indexOf('.') === -1) return false;
+           var parts = domain.split('.');
+           if (parts.length < 2) return false;
+           var domainPartRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+           for (var i = 0; i < parts.length; i++) {
+               if (!parts[i] || !domainPartRegex.test(parts[i])) return false;
+           }
+           var tld = parts[parts.length - 1];
+           return tld.length >= 2 && !/^\d+$/.test(tld);
+       },
+       suggestCorrection: function(email) {
+           if (!email) return null;
+           var cleaned = this.cleanDeterministic(email);
+           var atIdx = cleaned.indexOf('@');
+           if (atIdx <= 0 || atIdx !== cleaned.lastIndexOf('@')) return null;
+           var local = cleaned.slice(0, atIdx);
+           var domain = cleaned.slice(atIdx + 1).toLowerCase();
+           if (!domain) return null;
+           if (this.domainTypos[domain]) {
+               return local + '@' + this.domainTypos[domain];
+           }
+           var lastDot = domain.lastIndexOf('.');
+           if (lastDot > 0) {
+               var mainDomain = domain.slice(0, lastDot);
+               var ext = domain.slice(lastDot + 1);
+               if (this.tldTypos[ext]) {
+                   return local + '@' + mainDomain + '.' + this.tldTypos[ext];
+               }
+           }
+           return null;
+       },
+       renderTypoPill: function(containerSelector, suggestion, inputSelector) {
+           var $container = $(containerSelector);
+           if (!$container.length) return;
+           $container.html(
+               '<div class="d-inline-flex align-items-center py-1 px-2 rounded bg-light-warning text-warning fs-8 border border-warning border-dashed">' +
+                   '<i class="fa fa-info-circle text-warning mr-1 fs-8"></i>' +
+                   '<span>Did you mean <strong>' + $('<div>').text(suggestion).html() + '</strong>?</span>' +
+                   '<a href="javascript:void(0);" class="btn btn-xs btn-primary ml-2 px-2 py-0 apply-email-fix" data-suggestion="' + $('<div>').text(suggestion).html() + '" data-target="' + inputSelector + '">Apply</a>' +
+               '</div>'
+           ).slideDown(150);
+       },
+       setupEmailBox: function(inputSelector, hintSelector) {
+           var self = this;
+           var $input = $(inputSelector);
+           if (!$input.length) return;
+
+           $input.on('paste', function(e) {
+               var pasted = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : null;
+               if (pasted) {
+                   e.preventDefault();
+                   var cleaned = self.cleanDeterministic(pasted);
+                   $input.val(cleaned).trigger('input').trigger('change');
+               }
+           });
+
+           $input.on('input', function() {
+               var val = $(this).val();
+               var cleaned = self.cleanDeterministic(val);
+               var suggestion = self.suggestCorrection(cleaned);
+               if (suggestion && suggestion.toLowerCase() !== cleaned.toLowerCase()) {
+                   self.renderTypoPill(hintSelector, suggestion, inputSelector);
+               } else {
+                   $(hintSelector).slideUp(100, function() { $(this).empty(); });
+               }
+           });
+
+           $input.on('blur', function() {
+               var val = $(this).val();
+               if (val) {
+                   $(this).val(self.cleanDeterministic(val));
+               }
+           });
+       }
+   };
+
+   window.JeroEmailBoxEngine.setupEmailBox('#email', '#email_typo_hint');
+   window.JeroEmailBoxEngine.setupEmailBox('#secondrary_email', '#secondrary_email_typo_hint');
+
+   $(document).off('click', '.apply-email-fix').on('click', '.apply-email-fix', function(e) {
+       e.preventDefault();
+       var suggestion = $(this).attr('data-suggestion');
+       var target = $(this).attr('data-target');
+       if (suggestion && target) {
+           $(target).val(suggestion).trigger('input').trigger('change');
+           $(this).closest('.email-typo-hint-container').slideUp(100, function() { $(this).empty(); });
+       }
+   });
+
    $('#save-form').click(function () {
-   
+       var primaryEmail = $('#email').val();
+       if (window.JeroEmailBoxEngine) {
+           var cleanedPrimary = window.JeroEmailBoxEngine.cleanDeterministic(primaryEmail);
+           $('#email').val(cleanedPrimary);
+           if (!cleanedPrimary) {
+               if (typeof toastr !== 'undefined') {
+                   toastr.error('Please enter primary email address');
+               } else {
+                   alert('Please enter primary email address');
+               }
+               $('#email').focus();
+               return false;
+           }
+           if (!window.JeroEmailBoxEngine.validateSyntax(cleanedPrimary)) {
+               if (typeof toastr !== 'undefined') {
+                   toastr.error('Please enter a valid primary email address');
+               } else {
+                   alert('Please enter a valid primary email address');
+               }
+               $('#email').focus();
+               return false;
+           }
+           var secondaryEmail = $('#secondrary_email').val();
+           if (secondaryEmail) {
+               var cleanedSecondary = window.JeroEmailBoxEngine.cleanDeterministic(secondaryEmail);
+               $('#secondrary_email').val(cleanedSecondary);
+               if (!window.JeroEmailBoxEngine.validateSyntax(cleanedSecondary)) {
+                   if (typeof toastr !== 'undefined') {
+                       toastr.error('Please enter a valid secondary email address');
+                   } else {
+                       alert('Please enter a valid secondary email address');
+                   }
+                   $('#secondrary_email').focus();
+                   return false;
+               }
+           }
+       }
+
        $.easyAjax({
            url: '{{route('admin.job-applications.update', $application->id)}}',
            container: '#editForm',

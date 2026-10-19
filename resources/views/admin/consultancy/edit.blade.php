@@ -69,7 +69,7 @@
     			     <div class="col-md-6">
                   <div class="form-group">
                     <label for="email">Email </label>
-                    <input type="text" class="form-control" name="email" id="email" placeholder="email" value="{{ @$user->email }}" readonly="" style="background-color:#f2faff">
+                    <input type="email" class="form-control" name="email" id="email" placeholder="email" value="{{ @$user->email }}" readonly="" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" style="background-color:#f2faff">
                   </div>
                 </div>
 

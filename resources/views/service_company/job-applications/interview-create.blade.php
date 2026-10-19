@@ -1052,9 +1052,10 @@ if (empty($isdCompanyAddress)) {
                     </div>
                     <div class="mm-field-col">
                         <div style="position:relative;">
-                            <input class="mm-input mm-input-with-btn" name="cc_email" id="cc_email" value="" placeholder="Type an email...">
+                            <input class="mm-input mm-input-with-btn" name="cc_email" id="cc_email" value="" placeholder="Type an email..." maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
                             <a href="javascript:;" class="mm-add-email-btn in_tr_email_panel" data-panel="0">+ Add Email</a>
                         </div>
+                        <div id="cc_email_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
                         <div class="mm-hint">Add email addresses separated by commas</div>
                     </div>
                 </div>
@@ -1170,7 +1171,8 @@ if (empty($isdCompanyAddress)) {
                             </div>
                             <div class="col-xl-12">
                                 <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container" id="remove">
-                                    <input type="email" name="cp_email" id="cp_email_0" class="form-control form-control-lg form-control-solid rounded me-5" value="" placeholder="Enter email">
+                                    <input type="email" name="cp_email" id="cp_email_0" class="form-control form-control-lg form-control-solid rounded me-5" value="" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+                                    <div id="cp_email_0_typo_hint" class="email-typo-hint-container mt-1" style="display: none; font-size: 11px;"></div>
                                     <span class="form-text text-muted">Please enter contact email</span>
                                     <div class="fv-plugins-message-container"></div>
                                 </div>
@@ -1212,7 +1214,163 @@ if (empty($isdCompanyAddress)) {
 <!--end::Add  Contact Person popup-->
 
 <script>
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 100% CLIENT-FIRST GOD-LEVEL EMAIL VALIDATION ENGINE (ZERO SERVER STRAIN)
+    // ══════════════════════════════════════════════════════════════════════════════
+    window.JeroEmailBoxEngine = {
+        domainTypos: {
+            'gamil.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmai.com': 'gmail.com',
+            'gmial.com': 'gmail.com', 'gmaik.com': 'gmail.com', 'gamil.co': 'gmail.com', 'gmail.con': 'gmail.com',
+            'gmail.co': 'gmail.com', 'gmaill.co': 'gmail.com', 'gmaill.con': 'gmail.com', 'gmail.cpm': 'gmail.com',
+            'gmail.cm': 'gmail.com', 'gmail.om': 'gmail.com', 'g.mail.com': 'gmail.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+            'hotmial.co': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmsil.com': 'hotmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yaho.co': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+            'yaho.in': 'yahoo.in', 'yahooo.in': 'yahoo.in', 'yaho.co.in': 'yahoo.co.in',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com', 'outlook.con': 'outlook.com',
+            'outlok.co': 'outlook.com', 'outlock.com': 'outlook.com',
+            'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.con': 'icloud.com'
+        },
+        cleanDeterministic: function(val) {
+            if (!val || typeof val !== 'string') return '';
+            var cleaned = val.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                             .trim()
+                             .replace(/^mailto:\s*/i, '')
+                             .replace(/^<+|>+$/g, '')
+                             .replace(/^"+|"+$/g, '')
+                             .replace(/^'+|'+$/g, '')
+                             .replace(/[.,;:]+$/, '')
+                             .trim();
+            return cleaned;
+        },
+        validateSyntax: function(email) {
+            if (!email || typeof email !== 'string') return false;
+            var trimmed = email.trim();
+            if (trimmed.length === 0 || trimmed.length > 254) return false;
+            if ((trimmed.match(/@/g) || []).length !== 1) return false;
+            var parts = trimmed.split('@');
+            var local = parts[0];
+            var domain = parts[1];
+            if (!local || !domain) return false;
+            if (local.length > 64) return false;
+            if (local.startsWith('.') || local.endsWith('.') || local.indexOf('..') !== -1) return false;
+            if (domain.startsWith('.') || domain.endsWith('.') || domain.startsWith('-') || domain.endsWith('-')) return false;
+            if (domain.indexOf('..') !== -1) return false;
+            var rfcPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+            return rfcPattern.test(trimmed);
+        },
+        suggestCorrection: function(email) {
+            if (!email || typeof email !== 'string') return null;
+            var raw = email.trim();
+            if (raw.indexOf(',') !== -1) {
+                raw = raw.replace(/,/g, '.');
+            }
+            var atMatches = raw.match(/@/g) || [];
+            if (atMatches.length !== 1) return null;
+            var parts = raw.split('@');
+            var local = parts[0].trim();
+            var domain = (parts[1] || '').trim().toLowerCase();
+            if (!local || !domain) return null;
+            if (this.domainTypos[domain]) {
+                return local + '@' + this.domainTypos[domain];
+            }
+            var tldFixes = {
+                'con': 'com', 'cpm': 'com', 'comm': 'com', 'cmo': 'com', 'ocm': 'com',
+                'coom': 'com', 'ent': 'net', 'og': 'org', 'ogr': 'org'
+            };
+            var dParts = domain.split('.');
+            if (dParts.length >= 2) {
+                var last = dParts[dParts.length - 1];
+                if (tldFixes[last]) {
+                    dParts[dParts.length - 1] = tldFixes[last];
+                    var suggestedDomain = dParts.join('.');
+                    if (suggestedDomain !== domain) {
+                        return local + '@' + suggestedDomain;
+                    }
+                }
+            }
+            return null;
+        },
+        renderTypoPill: function(containerSelector, suggestedEmail, targetInputSelector) {
+            var $hint = $(containerSelector);
+            if (!$hint.length) return;
+            if (suggestedEmail) {
+                $hint.html(
+                    '<div class="d-inline-flex align-items-center bg-light-primary text-primary px-2 py-1 rounded fs-8 fw-semibold mt-1">' +
+                        '<i class="ki-outline ki-information-2 fs-7 me-1"></i>' +
+                        '<span>Did you mean <strong>' + $('<div>').text(suggestedEmail).html() + '</strong>?</span>' +
+                        '<button type="button" class="btn btn-xs btn-link text-primary fw-bold p-0 ms-2 text-decoration-underline apply-email-fix" data-target="' + targetInputSelector + '" data-suggestion="' + $('<div>').text(suggestedEmail).html() + '">Apply</button>' +
+                    '</div>'
+                ).slideDown(150);
+            } else {
+                $hint.slideUp(100, function() { $(this).empty(); });
+            }
+        },
+        setupEmailBox: function(inputSelector, hintSelector) {
+            var self = this;
+            var $input = $(inputSelector);
+            if (!$input.length) return;
+
+            $input.on('paste', function(e) {
+                var pasted = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+                if (pasted) {
+                    e.preventDefault();
+                    var cleaned = self.cleanDeterministic(pasted);
+                    var current = $input.val();
+                    if ($input.is('#cc_email') && current) {
+                        $input.val(current + ', ' + cleaned);
+                    } else {
+                        $input.val(cleaned);
+                    }
+                    $input.trigger('input').trigger('change');
+                }
+            });
+
+            $input.on('input', function() {
+                var val = $(this).val();
+                var parts = val.split(/[,;]/);
+                var lastPart = parts[parts.length - 1].trim();
+                var suggestion = self.suggestCorrection(lastPart);
+                if (suggestion && suggestion.toLowerCase() !== lastPart.toLowerCase()) {
+                    self.renderTypoPill(hintSelector, suggestion, inputSelector);
+                } else {
+                    $(hintSelector).slideUp(100, function() { $(this).empty(); });
+                }
+            });
+
+            $input.on('blur', function() {
+                var val = $(this).val();
+                if (val) {
+                    var parts = val.split(/[,;]/).map(function(p) { return self.cleanDeterministic(p); }).filter(Boolean);
+                    $(this).val(parts.join(', '));
+                }
+            });
+        }
+    };
+
     $(document).ready(function() {
+        window.JeroEmailBoxEngine.setupEmailBox('#cc_email', '#cc_email_typo_hint');
+        window.JeroEmailBoxEngine.setupEmailBox('#cp_email_0', '#cp_email_0_typo_hint');
+
+        $(document).on('click', '.apply-email-fix', function(e) {
+            e.preventDefault();
+            var targetSel = $(this).attr('data-target');
+            var suggestion = $(this).attr('data-suggestion');
+            if (targetSel && suggestion) {
+                var $tgt = $(targetSel);
+                var val = $tgt.val();
+                var parts = val.split(/[,;]/);
+                if (parts.length > 1) {
+                    parts[parts.length - 1] = ' ' + suggestion;
+                    $tgt.val(parts.join(','));
+                } else {
+                    $tgt.val(suggestion);
+                }
+                $(this).closest('.email-typo-hint-container').slideUp(100, function() { $(this).empty(); });
+                $tgt.trigger('input').trigger('change');
+            }
+        });
+
         if ($('#add_team_member').length && $('#add_team_member').parent().is('#app_interview_schedule_content, form, .isd-wrap')) {
             $('body > #add_team_member').remove();
             $('#add_team_member').appendTo('body');
@@ -1260,6 +1418,21 @@ if (empty($isdCompanyAddress)) {
             var phone_country_code = $('#phone_country_code').val();
 
             if (client_id > 0 && cp_name_0 !='' && cp_email_0 !='' && cp_desigination_0 !='') {
+                var cleanedCpEmail = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(cp_email_0) : cp_email_0.trim();
+                if (window.JeroEmailBoxEngine && !window.JeroEmailBoxEngine.validateSyntax(cleanedCpEmail)) {
+                    var sugg = window.JeroEmailBoxEngine.suggestCorrection(cleanedCpEmail);
+                    if (sugg) {
+                        window.JeroEmailBoxEngine.renderTypoPill('#cp_email_0_typo_hint', sugg, '#cp_email_0');
+                    }
+                    Swal.fire({
+                        title: 'Invalid Email Address',
+                        text: 'Please enter a valid email address for the contact person.',
+                        icon: 'warning'
+                    });
+                    $('#cp_email_0').focus();
+                    return false;
+                }
+                cp_email_0 = cleanedCpEmail;
 
                 $('.indicator-label').hide();
                 $('#hiring_contact_person_add').attr('disabled',true);
@@ -1458,6 +1631,25 @@ if (empty($isdCompanyAddress)) {
     $(document).ready(function() {
         $(document).on('click', '#sendEmailBtn', function(e) {
             e.preventDefault();
+            var ccEmailVal = ($('#cc_email').val() || '').trim();
+            if (ccEmailVal && window.JeroEmailBoxEngine) {
+                var ccParts = ccEmailVal.split(/[,;]/).map(function(s) { return window.JeroEmailBoxEngine.cleanDeterministic(s); }).filter(Boolean);
+                for (var ci = 0; ci < ccParts.length; ci++) {
+                    if (!window.JeroEmailBoxEngine.validateSyntax(ccParts[ci])) {
+                        var sugg = window.JeroEmailBoxEngine.suggestCorrection(ccParts[ci]);
+                        if (sugg) {
+                            window.JeroEmailBoxEngine.renderTypoPill('#cc_email_typo_hint', sugg, '#cc_email');
+                        }
+                        Swal.fire({
+                            title: 'Invalid CC Email',
+                            text: 'The CC email address "' + ccParts[ci] + '" is invalid. Please enter a valid email address.',
+                            icon: 'warning'
+                        });
+                        $('#cc_email').focus();
+                        return false;
+                    }
+                }
+            }
             $(this).prop('disabled', true);
             var formData = new FormData($('#app_interview_create_frm')[0]);
             $('.indicator-label').hide();

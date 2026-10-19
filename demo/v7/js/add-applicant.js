@@ -99,9 +99,27 @@ var KTAddCandidate = function () {
                             {
                                 message: 'Primary email is required'
                             },
-                            emailAddress:
-                            {
-                                message: 'The value is not a valid email address'
+                            callback: {
+                                message: 'The value is not a valid email address',
+                                callback: function(input) {
+                                    var val = (input.value || '').trim();
+                                    if (!val) return false;
+                                    if (window.JeroEmailBoxEngine) {
+                                        var check = window.JeroEmailBoxEngine.validateSyntax(val);
+                                        if (!check.isValid) {
+                                            return {
+                                                valid: false,
+                                                message: check.error || 'The value is not a valid email address'
+                                            };
+                                        }
+                                        return true;
+                                    }
+                                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                                }
+                            },
+                            stringLength: {
+                                max: 254,
+                                message: 'Email must not exceed 254 characters'
                             }
                         }
                     },
