@@ -201,17 +201,20 @@
                 </div>
 
                 <div class="jero-ind-tabs-wrap">
-                  <button type="button" class="jero-ind-tab-nav jero-ind-tab-prev" id="jero_ind_tab_prev" aria-label="Scroll left" tabindex="-1">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                  </button>
                   <div class="jero-ind-tabs" id="jero_ind_tabs">
                     <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
                   </div>
-                  <button type="button" class="jero-ind-tab-nav jero-ind-tab-next" id="jero_ind_tab_next" aria-label="Scroll right" tabindex="-1">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </button>
                 </div>
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
+
+                <!-- Enterprise Status & Keyboard Hint Footer -->
+                <div class="jero-ind-footer" id="jero_ind_footer">
+                  <div class="jero-ind-sync-status" id="jero_ind_sync_status">
+                    <span class="jero-ind-sync-dot"></span>
+                    <span id="jero_ind_status_text">160+ Master Industries</span>
+                  </div>
+                  <span class="jero-ind-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
+                </div>
               </div>
             </div>
           </div>

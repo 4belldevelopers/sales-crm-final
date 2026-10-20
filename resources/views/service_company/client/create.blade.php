@@ -3012,15 +3012,15 @@ html, body {
     color: #2563eb;
   }
 
-  /* Elevated Modern Dropdown Container */
+  /* Elevated Modern Dropdown Container — Enterprise Downward Anchored (Never pop-up offscreen) */
   .jero-ind-dropdown {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 5px);
     left: 0;
     min-width: 100%;
     width: max(100%, 540px);
     max-width: min(620px, calc(100vw - 32px));
-    z-index: 1060;
+    z-index: 1080;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -3028,7 +3028,7 @@ html, body {
     overflow: hidden;
     display: none;
     flex-direction: column;
-    max-height: min(420px, calc(100vh - 140px));
+    max-height: min(440px, calc(100vh - 120px));
     animation: jeroDropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
   }
@@ -3036,10 +3036,9 @@ html, body {
   .jero-ind-dropdown.is-open {
     display: flex !important;
   }
-  .jero-ind-dropdown.drop-up {
-    top: auto;
-    bottom: calc(100% + 6px);
-    box-shadow: 0 -20px 48px -8px rgba(15, 23, 42, 0.16), 0 -8px 20px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  .jero-ind-select-wrap.is-open {
+    z-index: 1050 !important;
+    position: relative !important;
   }
   @keyframes jeroDropdownFadeIn {
     from { opacity: 0; transform: translateY(-4px); }
@@ -3080,9 +3079,9 @@ html, body {
     box-sizing: border-box;
   }
   .jero-ind-search-input:focus {
-    border-color: #ffd428;
+    border-color: #2563eb;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
   }
   .jero-ind-search-clear {
     display: none;
@@ -3103,69 +3102,54 @@ html, body {
     background: #fee2e2;
   }
 
-  /* God-Level Enterprise Industry Tabs Bar with Smooth Overflow Scroll & Controls */
+  /* God-Level Enterprise Industry Tabs Bar: Multi-Pill Wrap (All 10 Sectors 100% Visible & Accessible) */
   .jero-ind-tabs-wrap {
     position: relative;
     background: #f8fafc;
     border-bottom: 1px solid #eef2f6;
     display: flex;
-    align-items: center;
-    padding: 4px 6px;
-    gap: 4px;
+    flex-direction: column;
+    padding: 7px 10px;
+    gap: 5px;
     user-select: none;
     flex-shrink: 0;
     z-index: 6;
+    box-sizing: border-box;
   }
   .jero-ind-tabs {
     display: flex;
-    flex: 1 1 auto;
-    gap: 6px;
-    padding: 8px 4px;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .jero-ind-tabs::-webkit-scrollbar { display: none; }
-  .jero-ind-tab-nav {
-    display: none;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    cursor: pointer;
-    flex-shrink: 0;
-    z-index: 2;
-    transition: all 0.15s ease;
-    padding: 0;
+    gap: 5px;
+    padding: 1px 0;
+    max-height: 84px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
   }
-  .jero-ind-tab-nav:hover {
-    background: #f1f5f9;
-    color: #1e293b;
-    border-color: #94a3b8;
+  .jero-ind-tabs::-webkit-scrollbar { width: 4px; }
+  .jero-ind-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  .jero-ind-tab-nav {
+    display: none !important;
   }
   .jero-ind-tab-btn {
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 500;
     color: #475569;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    padding: 4px 11px;
-    border-radius: 20px;
+    padding: 3px 9px;
+    border-radius: 14px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    transition: all 0.15s ease;
+    gap: 4.5px;
+    transition: all 0.12s ease;
     font-family: inherit;
     white-space: nowrap;
     flex-shrink: 0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    line-height: 1.35;
   }
   .jero-ind-tab-btn:hover {
     color: #1e293b;
@@ -3180,24 +3164,66 @@ html, body {
     box-shadow: 0 2px 6px rgba(16, 26, 70, 0.18);
   }
   .jero-ind-tab-btn .tab-count {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 600;
-    padding: 1px 5px;
-    border-radius: 10px;
+    padding: 0 4.5px;
+    border-radius: 8px;
     background: #f1f5f9;
     color: #64748b;
   }
   .jero-ind-tab-btn.active .tab-count {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.24);
     color: #ffffff;
   }
 
   /* List Container */
   .jero-ind-list-container {
     flex: 1 1 auto;
-    min-height: 80px;
+    min-height: 90px;
     max-height: 290px;
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    position: relative;
+    padding: 4px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    box-sizing: border-box;
+  }
+  .jero-ind-list-container::-webkit-scrollbar { width: 5px; }
+  .jero-ind-list-container::-webkit-scrollbar-track { background: #f8fafc; }
+  .jero-ind-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .jero-ind-list-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* Enterprise Status & Keyboard Hint Footer */
+  .jero-ind-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    font-size: 10.5px;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jero-ind-sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .jero-ind-sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+  .jero-ind-footer-hint {
+    color: #94a3b8;
+    font-size: 10px;
+  }
     overflow-x: hidden;
     overscroll-behavior: contain;
     position: relative;
@@ -9420,9 +9446,7 @@ $('.remove_address').click(function(){
         }
 
         tabsWrap.innerHTML = allHtml;
-        if (typeof updateTabNavVisibility === 'function') {
-            setTimeout(updateTabNavVisibility, 30);
-        }
+        adjustDropdownPosition();
     }
 
     function renderDropdownList() {
@@ -9526,23 +9550,47 @@ $('.remove_address').click(function(){
     function adjustDropdownPosition() {
         var wrap = document.getElementById('jero_ind_select_wrap');
         var dropdown = document.getElementById('jero_ind_dropdown');
+        var listContainer = document.getElementById('jero_ind_list_container');
         if (!wrap || !dropdown || !isOpen) return;
 
         var rect = wrap.getBoundingClientRect();
         var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
-        var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
-        var spaceAbove = Math.max(0, rect.top - 12);
 
-        var dropUp = (spaceBelow < 260 && spaceAbove > spaceBelow && spaceAbove > 180);
+        // Enterprise UX: Strictly open downwards under the input box (never pop-up offscreen or hide headers/tabs)
+        dropdown.classList.remove('drop-up');
+        dropdown.style.bottom = 'auto';
+        dropdown.style.top = 'calc(100% + 5px)';
 
-        if (dropUp) {
-            dropdown.classList.add('drop-up');
-            dropdown.style.top = 'auto';
-            dropdown.style.bottom = 'calc(100% + 5px)';
+        // Ensure parent wrap has high z-index and relative position
+        wrap.style.zIndex = '1050';
+        wrap.style.position = 'relative';
+
+        // Calculate available vertical space below input box to bottom of viewport
+        var spaceBelow = Math.max(180, viewportH - rect.bottom - 16);
+
+        // Intelligently fit inside available viewport space (min 260px, max 440px)
+        var idealDropdownHeight = Math.min(440, Math.max(260, spaceBelow));
+        dropdown.style.maxHeight = idealDropdownHeight + 'px';
+
+        // Subtract search box, wrapped tabs bar, and footer to give list container its exact fit
+        var searchWrap = document.getElementById('jero_ind_search_wrap');
+        var tabsWrap = document.querySelector('.jero-ind-tabs-wrap');
+        var footerWrap = document.getElementById('jero_ind_footer');
+        var nonListHeight = (searchWrap ? searchWrap.offsetHeight : 44) + 
+                            (tabsWrap ? tabsWrap.offsetHeight : 64) + 
+                            (footerWrap ? footerWrap.offsetHeight : 32);
+        var listMaxH = Math.max(110, idealDropdownHeight - nonListHeight);
+        if (listContainer) {
+            listContainer.style.maxHeight = listMaxH + 'px';
+        }
+
+        // Horizontal boundary protection (prevent overflow off right edge of screen)
+        var dropdownRect = dropdown.getBoundingClientRect();
+        if (dropdownRect.right > (window.innerWidth - 16)) {
+            var overflowX = dropdownRect.right - (window.innerWidth - 16);
+            dropdown.style.left = (-overflowX) + 'px';
         } else {
-            dropdown.classList.remove('drop-up');
-            dropdown.style.bottom = 'auto';
-            dropdown.style.top = 'calc(100% + 5px)';
+            dropdown.style.left = '0px';
         }
     }
 
@@ -9571,6 +9619,8 @@ $('.remove_address').click(function(){
 
         isOpen = true;
         wrap.classList.add('is-open');
+        wrap.style.zIndex = '1050';
+        wrap.style.position = 'relative';
         dropdown.classList.add('is-open');
         dropdown.style.display = 'flex';
         if (input) {
@@ -9592,8 +9642,14 @@ $('.remove_address').click(function(){
         renderDropdownList();
         adjustDropdownPosition();
 
-        if (typeof window.jeroUpdateIndTabNavVisibility === 'function') {
-            setTimeout(window.jeroUpdateIndTabNavVisibility, 30);
+        // If viewport space below input is tight (< 340px), gently scroll input into comfortable view
+        var rect = wrap.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight || 768;
+        if ((vh - rect.bottom) < 340) {
+            try {
+                wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setTimeout(adjustDropdownPosition, 180);
+            } catch(e){}
         }
 
         if (container) {
@@ -9616,6 +9672,7 @@ $('.remove_address').click(function(){
 
         isOpen = false;
         wrap.classList.remove('is-open');
+        wrap.style.zIndex = '';
         dropdown.classList.remove('is-open');
         dropdown.style.display = 'none';
         if (input) input.setAttribute('aria-expanded', 'false');
@@ -10218,12 +10275,10 @@ $('.remove_address').click(function(){
                 }
                 btn.classList.add('active');
 
-                // Smooth scroll active tab into view
-                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                setTimeout(updateTabNavVisibility, 220);
-
                 renderDropdownList();
-                if (input) input.focus();
+                adjustDropdownPosition();
+                var sInput = document.getElementById('jero_ind_search_input');
+                if (sInput) sInput.focus();
             });
         }
 
@@ -11314,17 +11369,17 @@ $('.remove_address').click(function(){
             return;
         }
 
-        var spaceBelow = Math.max(0, vh - rect.bottom - 12);
-        var spaceAbove = Math.max(0, rect.top - 12);
+        dropdown.classList.remove('drop-up');
+        dropdown.style.bottom = 'auto';
+        dropdown.style.top = 'calc(100% + 5px)';
+        wrap.style.zIndex = '1040';
+        wrap.style.position = 'relative';
 
-        if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
-            dropdown.classList.add('drop-up');
-            dropdown.style.top = 'auto';
-            dropdown.style.bottom = 'calc(100% + 5px)';
-        } else {
-            dropdown.classList.remove('drop-up');
-            dropdown.style.bottom = 'auto';
-            dropdown.style.top = 'calc(100% + 5px)';
+        var spaceBelow = Math.max(160, vh - rect.bottom - 16);
+        var idealHeight = Math.min(320, Math.max(180, spaceBelow));
+        dropdown.style.maxHeight = idealHeight + 'px';
+        if (listContainer) {
+            listContainer.style.maxHeight = (idealHeight - 12) + 'px';
         }
     }
 
@@ -11332,6 +11387,8 @@ $('.remove_address').click(function(){
         if (isOpen || !wrap || !dropdown) return;
         isOpen = true;
         wrap.classList.add('is-open');
+        wrap.style.zIndex = '1040';
+        wrap.style.position = 'relative';
         dropdown.style.display = 'flex';
         if (inputBox) inputBox.setAttribute('aria-expanded', 'true');
         adjustPosition();
@@ -11347,6 +11404,7 @@ $('.remove_address').click(function(){
         if (!isOpen || !wrap || !dropdown) return;
         isOpen = false;
         wrap.classList.remove('is-open');
+        wrap.style.zIndex = '';
         dropdown.style.display = 'none';
         if (inputBox) inputBox.setAttribute('aria-expanded', 'false');
         focusedIndex = -1;
