@@ -3351,7 +3351,9 @@ html, body {
     align-items: center;
     justify-content: center;
     color: #64748b;
-    pointer-events: none;
+    pointer-events: auto !important;
+    cursor: pointer;
+    z-index: 2;
     transition: transform 0.2s ease, color 0.2s ease;
   }
   .jero-ctype-select-wrap.is-open .jero-ctype-chevron {
@@ -3491,34 +3493,6 @@ html, body {
     text-align: center;
     font-size: 12.5px;
     color: #64748b;
-  }
-  .jero-ctype-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 12px;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    font-size: 11px;
-    flex-shrink: 0;
-    font-family: 'Poppins', sans-serif;
-  }
-  .jero-ctype-sync-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #059669;
-    font-weight: 500;
-  }
-  .jero-ctype-sync-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  }
-  .jero-ctype-footer-hint {
-    color: #94a3b8;
   }
   .jero-ctype-input-box.has-validation-error,
   .jero-ctype-select-wrap.has-validation-error .jero-ctype-input-box {
@@ -3848,7 +3822,9 @@ html, body {
     align-items: center;
     justify-content: center;
     color: #64748b;
-    pointer-events: none;
+    pointer-events: auto !important;
+    cursor: pointer;
+    z-index: 2;
     transition: transform 0.2s ease, color 0.2s ease;
   }
   .jero-founded-select-wrap.is-open .jero-founded-chevron {
@@ -10188,6 +10164,7 @@ $('.remove_address').click(function(){
     var filteredList = [];
     var focusedIndex = -1;
     var isOpen = false;
+    var suppressOpenOnFocus = false;
 
     // DOM References
     var wrap = null;
@@ -10477,13 +10454,36 @@ $('.remove_address').click(function(){
             });
         }
 
+        // Toggle on input box click
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_ctype_clear_btn')) return;
+                if (e.target.closest('#jero_ctype_chevron')) return;
+                if (!isOpen) {
+                    input.focus();
+                    openDropdown();
+                }
+            });
+        }
+
         // Focus & Click on input
         input.addEventListener('focus', function() {
             openDropdown();
         });
-        input.addEventListener('click', function() {
+        input.addEventListener('click', function(e) {
+            e.stopPropagation();
             openDropdown();
         });
+
+        // Dropdown internal clicks should never bubble out to close
+        if (dropdown) {
+            dropdown.addEventListener('pointerdown', function(e) {
+                e.stopPropagation();
+            });
+            dropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
 
         // Typing in input
         input.addEventListener('input', function() {
@@ -10576,12 +10576,14 @@ $('.remove_address').click(function(){
             }
         });
 
-        // Outside click
-        document.addEventListener('click', function(e) {
-            if (isOpen && wrap && !wrap.contains(e.target)) {
+        // Deterministic outside pointer click handling (Zero-lock composedPath state machine)
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
                 closeDropdown(true);
             }
-        });
+        }, true);
 
         // Window resize / scroll
         window.addEventListener('resize', function() {
@@ -10658,6 +10660,7 @@ $('.remove_address').click(function(){
     var filteredList = [];
     var focusedIndex = -1;
     var isOpen = false;
+    var suppressOpenOnFocus = false;
 
     // DOM Elements
     var wrap = null;
@@ -10811,7 +10814,14 @@ $('.remove_address').click(function(){
         if (input) input.setAttribute('aria-expanded', 'false');
         focusedIndex = -1;
         if (restoreFocus && input) {
-            input.focus();
+            suppressOpenOnFocus = true;
+            try {
+                input.focus();
+            } finally {
+                setTimeout(function() {
+                    suppressOpenOnFocus = false;
+                }, 100);
+            }
         }
     }
 
@@ -10847,7 +10857,7 @@ $('.remove_address').click(function(){
         if (typeof window.clearFieldError === 'function' && hiddenInput) {
             window.clearFieldError($(hiddenInput));
         }
-        closeDropdown(true);
+        closeDropdown(false);
     }
 
     function clearYear() {
@@ -10863,7 +10873,6 @@ $('.remove_address').click(function(){
         filterYears('');
         renderList('');
         closeDropdown(false);
-        if (input) input.focus();
     }
 
     function initEventListeners() {
@@ -10883,27 +10892,52 @@ $('.remove_address').click(function(){
         // Toggle on chevron click
         if (chevron) {
             chevron.addEventListener('click', function(e) {
+                e.preventDefault();
                 e.stopPropagation();
                 if (isOpen) {
-                    closeDropdown(true);
+                    closeDropdown(false);
                 } else {
                     openDropdown();
                 }
             });
         }
 
-        // Click / Focus on display input
+        // Toggle on input box click
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_founded_clear_btn')) return;
+                if (e.target.closest('#jero_founded_chevron')) return;
+                if (!isOpen) {
+                    openDropdown();
+                } else if (searchInput) {
+                    searchInput.focus();
+                }
+            });
+        }
+
+        // Click / Focus on display input (guaranteed zero premature auto-close)
         input.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (isOpen) {
-                closeDropdown(false);
-            } else {
+            if (!isOpen) {
                 openDropdown();
+            } else if (searchInput) {
+                searchInput.focus();
             }
         });
         input.addEventListener('focus', function() {
+            if (suppressOpenOnFocus) return;
             if (!isOpen) openDropdown();
         });
+
+        // Dropdown internal clicks should never bubble out to close
+        if (dropdown) {
+            dropdown.addEventListener('pointerdown', function(e) {
+                e.stopPropagation();
+            });
+            dropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
 
         // Typing in search input
         if (searchInput) {
@@ -10924,6 +10958,18 @@ $('.remove_address').click(function(){
                     e.preventDefault();
                     if (filteredList.length > 0) {
                         focusedIndex = (focusedIndex - 1 + filteredList.length) % filteredList.length;
+                        renderList(searchInput.value);
+                    }
+                } else if (e.key === 'Home') {
+                    if (filteredList.length > 0) {
+                        e.preventDefault();
+                        focusedIndex = 0;
+                        renderList(searchInput.value);
+                    }
+                } else if (e.key === 'End') {
+                    if (filteredList.length > 0) {
+                        e.preventDefault();
+                        focusedIndex = filteredList.length - 1;
                         renderList(searchInput.value);
                     }
                 } else if (e.key === 'Enter') {
@@ -10954,6 +11000,7 @@ $('.remove_address').click(function(){
         // Clear button
         if (clearBtn) {
             clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
                 e.stopPropagation();
                 clearYear();
             });
@@ -10971,12 +11018,14 @@ $('.remove_address').click(function(){
             });
         }
 
-        // Outside click
-        document.addEventListener('click', function(e) {
-            if (isOpen && wrap && !wrap.contains(e.target)) {
+        // Deterministic outside pointer click handling (Zero-lock composedPath state machine)
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
                 closeDropdown(false);
             }
-        });
+        }, true);
 
         // Window resize / scroll reposition
         window.addEventListener('resize', function() {
