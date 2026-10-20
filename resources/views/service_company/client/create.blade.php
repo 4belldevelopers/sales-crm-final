@@ -9002,8 +9002,13 @@ $('.remove_address').click(function(){
 <!-- =========================================================================
      Client Industry Intelligence Engine (Client-First Execution / 10K Concurrency)
      ========================================================================= -->
+@php
+    $indManifestData = (!empty($industriesManifest) && !empty($industriesManifest['industries']))
+        ? $industriesManifest
+        : \App\Services\IndustryTaxonomyService::getGlobalManifest();
+@endphp
 <script id="jero_industry_seed_data" type="application/json">
-    {!! json_encode(@$industriesManifest ?? ['manifest_id'=>'ind-empty','version'=>1,'sectors'=>[],'industries'=>[]]) !!}
+    {!! json_encode($indManifestData) !!}
 </script>
 
 <script>
@@ -9359,70 +9364,53 @@ $('.remove_address').click(function(){
         }
     }
 
+    function fallbackFromNativeSelect() {
+        if (indList && indList.length > 0) return;
+        var nativeSelect = document.getElementById('industry');
+        if (!nativeSelect || !nativeSelect.options || nativeSelect.options.length <= 1) return;
+
+        var extracted = [];
+        for (var o = 0; o < nativeSelect.options.length; o++) {
+            var opt = nativeSelect.options[o];
+            var valId = parseInt(opt.value, 10);
+            if (valId > 0 && opt.text && opt.text.toLowerCase() !== 'select industry') {
+                extracted.push({
+                    id: valId,
+                    name: opt.text.trim(),
+                    sector_id: 1,
+                    sector_name: 'General'
+                });
+            }
+        }
+        if (extracted.length > 0) {
+            ingestManifest({
+                version: 1,
+                sectors: [{ id: 1, name: 'All Industries' }],
+                industries: extracted
+            });
+        }
+    }
+
     function adjustDropdownPosition() {
         var wrap = document.getElementById('jero_ind_select_wrap');
         var dropdown = document.getElementById('jero_ind_dropdown');
-        var container = document.getElementById('jero_ind_list_container');
         if (!wrap || !dropdown || !isOpen) return;
 
         var rect = wrap.getBoundingClientRect();
         var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
-
-        if (rect.bottom < 0 || rect.top > viewportH) {
-            closeDropdown();
-            return;
-        }
-
         var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
         var spaceAbove = Math.max(0, rect.top - 12);
 
-        var tabsEl = dropdown.querySelector('.jero-ind-tabs-wrap') || dropdown.querySelector('.jero-ind-tabs');
-        var fixedH = (tabsEl ? tabsEl.offsetHeight : 42) + 8;
-
-        var dropUp = false;
-        if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
-            dropUp = true;
-        }
+        var dropUp = (spaceBelow < 260 && spaceAbove > spaceBelow && spaceAbove > 180);
 
         if (dropUp) {
             dropdown.classList.add('drop-up');
             dropdown.style.top = 'auto';
             dropdown.style.bottom = 'calc(100% + 5px)';
-
-            var maxAvailable = Math.max(180, Math.min(380, spaceAbove));
-            if (lastCachedMaxHeight !== maxAvailable) {
-                dropdown.style.maxHeight = maxAvailable + 'px';
-                lastCachedMaxHeight = maxAvailable;
-            }
-            if (container) {
-                var listH = Math.max(80, maxAvailable - fixedH);
-                if (lastCachedListHeight !== listH) {
-                    container.style.maxHeight = listH + 'px';
-                    lastCachedListHeight = listH;
-                }
-            }
         } else {
             dropdown.classList.remove('drop-up');
             dropdown.style.bottom = 'auto';
             dropdown.style.top = 'calc(100% + 5px)';
-
-            var maxAvailable = Math.max(180, Math.min(380, spaceBelow));
-            if (lastCachedMaxHeight !== maxAvailable) {
-                dropdown.style.maxHeight = maxAvailable + 'px';
-                lastCachedMaxHeight = maxAvailable;
-            }
-            if (container) {
-                var listH = Math.max(80, maxAvailable - fixedH);
-                if (lastCachedListHeight !== listH) {
-                    container.style.maxHeight = listH + 'px';
-                    lastCachedListHeight = listH;
-                }
-            }
-        }
-                    container.style.maxHeight = listH + 'px';
-                    lastCachedListHeight = listH;
-                }
-            }
         }
     }
 
@@ -9433,6 +9421,22 @@ $('.remove_address').click(function(){
         var container = document.getElementById('jero_ind_list_container');
         if (!dropdown || !wrap) return;
 
+        // Ensure indList is ready before rendering
+        if (!indList || indList.length === 0) {
+            var seedEl = document.getElementById('jero_industry_seed_data');
+            if (seedEl && seedEl.textContent.trim()) {
+                try {
+                    var seedManifest = JSON.parse(seedEl.textContent);
+                    if (seedManifest && Array.isArray(seedManifest.industries) && seedManifest.industries.length > 0) {
+                        ingestManifest(seedManifest);
+                    }
+                } catch (e) {}
+            }
+            if (!indList || indList.length === 0) {
+                fallbackFromNativeSelect();
+            }
+        }
+
         isOpen = true;
         wrap.classList.add('is-open');
         dropdown.classList.add('is-open');
@@ -9441,9 +9445,6 @@ $('.remove_address').click(function(){
             input.setAttribute('aria-expanded', 'true');
             input.classList.remove('is-invalid');
             currentSearch = '';
-            try {
-                input.select();
-            } catch (e) {}
         }
 
         renderDropdownList();
@@ -9463,10 +9464,9 @@ $('.remove_address').click(function(){
         }
     }
 
-    function closeDropdown() {
+    function closeDropdown(restoreText) {
         var dropdown = document.getElementById('jero_ind_dropdown');
         var wrap = document.getElementById('jero_ind_select_wrap');
-        var container = document.getElementById('jero_ind_list_container');
         var input = document.getElementById('industry_display');
         if (!dropdown || !wrap) return;
 
@@ -9474,12 +9474,14 @@ $('.remove_address').click(function(){
         wrap.classList.remove('is-open');
         dropdown.classList.remove('is-open');
         dropdown.style.display = 'none';
-        dropdown.style.maxHeight = '';
-        lastCachedMaxHeight = null;
-        lastCachedListHeight = null;
-        if (container) container.style.maxHeight = '';
         if (input) input.setAttribute('aria-expanded', 'false');
         focusedIndex = -1;
+
+        if (restoreText && input) {
+            if (selectedIndustry && selectedIndustry.name) {
+                input.value = selectedIndustry.name;
+            }
+        }
     }
 
     function moveFocus(delta) {
@@ -9831,14 +9833,17 @@ $('.remove_address').click(function(){
         // 2. Check IndexedDB L1 Persistent Store (< 5ms)
         try {
             var cached = await idbGet(cacheKey);
-            if (cached && cached.manifest && Array.isArray(cached.manifest.industries)) {
+            if (cached && cached.manifest && Array.isArray(cached.manifest.industries) && cached.manifest.industries.length > 0) {
                 ingestManifest(cached.manifest);
                 checkServerVersion(cached.manifest.version);
                 return;
             }
         } catch (err) {}
 
-        // 3. Fallback: Fetch bundle from server
+        // 3. Fallback to native select options in DOM immediately
+        fallbackFromNativeSelect();
+
+        // 4. Fallback: Fetch bundle from server
         fetchBundleFromServer(1);
     }
 
@@ -9853,7 +9858,7 @@ $('.remove_address').click(function(){
             if (res.ok) return res.json();
             return null;
         }).then(function(newManifest) {
-            if (newManifest && Array.isArray(newManifest.industries)) {
+            if (newManifest && Array.isArray(newManifest.industries) && newManifest.industries.length > 0) {
                 ingestManifest(newManifest);
                 idbSet('ind_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
                 if (indBroadcast) {
@@ -9872,7 +9877,7 @@ $('.remove_address').click(function(){
         fetch(BUNDLE_URL)
             .then(function(res) { return res.json(); })
             .then(function(manifest) {
-                if (manifest && Array.isArray(manifest.industries)) {
+                if (manifest && Array.isArray(manifest.industries) && manifest.industries.length > 0) {
                     ingestManifest(manifest);
                     idbSet('ind_tenant_' + CURRENT_TENANT_ID, { manifest: manifest, timestamp: Date.now() });
                 }
@@ -9883,6 +9888,8 @@ $('.remove_address').click(function(){
                 if (statusEl) {
                     statusEl.innerHTML = '<span class="jero-ind-sync-dot" style="background:#e11d48;"></span><span>Offline Cache</span>';
                 }
+                // If fetch fails, ensure DOM fallback is ingested
+                fallbackFromNativeSelect();
             });
     }
 
@@ -9892,35 +9899,48 @@ $('.remove_address').click(function(){
         var chevron = document.getElementById('jero_ind_chevron');
         var tabsContainer = document.getElementById('jero_ind_tabs');
         var container = document.getElementById('jero_ind_list_container');
-        var recentBar = document.getElementById('jero_ind_recent_bar');
         var wrapEl = document.getElementById('jero_ind_select_wrap');
+        var inputBox = document.getElementById('jero_ind_input_box');
 
-        if (input) {
-            input.addEventListener('focus', function() {
+        // Toggle on Input Box click
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_ind_clear_btn')) return;
+                if (e.target.closest('#jero_ind_chevron')) return; // handled by chevron
                 if (!isOpen) {
                     openDropdown();
+                    if (input) input.focus();
                 }
+            });
+        }
+
+        // Toggle on Chevron click
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) {
+                    closeDropdown(true);
+                } else {
+                    openDropdown();
+                    if (input) input.focus();
+                }
+            });
+        }
+
+        // Focus & Click on input
+        if (input) {
+            input.addEventListener('focus', function() {
+                if (!isOpen) openDropdown();
             });
 
             input.addEventListener('click', function(e) {
-                if (!isOpen) {
-                    openDropdown();
-                }
-            });
-
-            input.addEventListener('blur', function() {
-                setTimeout(function() {
-                    var activeEl = document.activeElement;
-                    var wrap = document.getElementById('jero_ind_select_wrap');
-                    if (wrap && (wrap.contains(activeEl) || wrap === activeEl)) return;
-                    if (isOpen) {
-                        commitIfCustom();
-                        closeDropdown();
-                    }
-                }, 200);
+                e.stopPropagation();
+                if (!isOpen) openDropdown();
             });
 
             input.addEventListener('input', function() {
+                if (!isOpen) openDropdown();
                 currentSearch = this.value;
                 renderDropdownList();
             });
@@ -9941,20 +9961,7 @@ $('.remove_address').click(function(){
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
-                    closeDropdown();
-                }
-            });
-        }
-
-        if (chevron) {
-            chevron.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isOpen) {
-                    closeDropdown();
-                } else {
-                    openDropdown();
-                    if (input) input.focus();
+                    closeDropdown(true);
                 }
             });
         }
@@ -10070,7 +10077,7 @@ $('.remove_address').click(function(){
                 if (inputEl && inputEl.value.trim()) {
                     commitIfCustom();
                 }
-                closeDropdown();
+                closeDropdown(true);
             }
         }, true);
 
