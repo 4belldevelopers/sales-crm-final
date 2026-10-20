@@ -1007,7 +1007,6 @@ select.jw-inp option {
                     <div class="jw-metric" style="--metric-color:#ff6b1a;--metric-bg:#fff0e7;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16M17 9h1a2 2 0 0 1 2 2v10M3 21h18M8 8h2M12 8h2M8 12h2M12 12h2M8 16h2M12 16h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><div><strong>20K+</strong><span>Agencies</span></div></div>
                     <div class="jw-metric" style="--metric-color:#2563eb;--metric-bg:#e8f0ff;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>15K+</strong><span>Companies</span></div></div>
                 </div>
-                <div class="jw-privacy-note"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Built with privacy by design and enterprise-grade security.</span></div>
             </section>
 
             <!-- RIGHT SIDE: Dual-State Authentication Shell -->
