@@ -183,54 +183,115 @@
               <!-- Hierarchical Dropdown Menu Container -->
               <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Client Industries">
                 <div class="jero-ind-tabs-wrap">
+                  <button type="button" class="jero-ind-tab-nav jero-ind-tab-prev" id="jero_ind_tab_prev" aria-label="Scroll left" tabindex="-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
                   <div class="jero-ind-tabs" id="jero_ind_tabs">
                     <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
                   </div>
+                  <button type="button" class="jero-ind-tab-nav jero-ind-tab-next" id="jero_ind_tab_next" aria-label="Scroll right" tabindex="-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
                 </div>
-                <div class="jero-ind-recent-bar" id="jero_ind_recent_bar" style="display:none;"></div>
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
-                <div class="jero-ind-footer">
-                  <div class="jero-ind-sync-status" id="jero_ind_sync_status">
-                    <span class="jero-ind-sync-dot"></span>
-                    <span>Live Synced</span>
-                  </div>
-                  <span class="jero-ind-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
-                </div>
               </div>
             </div>
           </div>
 
-          <!-- ROW 3, COL 2: Company Size -->
+          <!-- ROW 3, COL 2: Company Size (Enterprise Custom Dropdown) -->
+          @php
+            $companySizeTiers = [
+              '1-1'         => ['label' => 'Solo (1 employee)',        'badge' => '1',           'desc' => 'Individual practitioner / Freelancer'],
+              '2-10'        => ['label' => '2 – 10 employees',          'badge' => '2 – 10',      'desc' => 'Seed / Startup stage team'],
+              '11-50'       => ['label' => '11 – 50 employees',         'badge' => '11 – 50',     'desc' => 'Early growth stage business'],
+              '51-200'      => ['label' => '51 – 200 employees',        'badge' => '51 – 200',    'desc' => 'Mid-sized established business'],
+              '201-500'     => ['label' => '201 – 500 employees',       'badge' => '201 – 500',   'desc' => 'Upper mid-market company'],
+              '501-1000'    => ['label' => '501 – 1,000 employees',     'badge' => '501 – 1K',    'desc' => 'Commercial scale organization'],
+              '1001-5000'   => ['label' => '1,001 – 5,000 employees',   'badge' => '1K – 5K',     'desc' => 'Enterprise tier organization'],
+              '5001-10000'  => ['label' => '5,001 – 10,000 employees',  'badge' => '5K – 10K',    'desc' => 'Large enterprise corporation'],
+              '10001-50000' => ['label' => '10,001 – 50,000 employees', 'badge' => '10K – 50K',   'desc' => 'Global enterprise scale'],
+              '50001-0'     => ['label' => '50,000+ employees',        'badge' => '50,000+',     'desc' => 'Multinational conglomerate']
+            ];
+
+            // Normalize any legacy 1-10 to 2-10 or match selected
+            $currSizeKey = @$company_sizes;
+            if ($currSizeKey === '1-10') {
+              $currSizeKey = '2-10';
+            } elseif (in_array($currSizeKey, ['50001-', '10000-999999'])) {
+              $currSizeKey = '50001-0';
+            }
+
+            $selectedSizeLabel = isset($companySizeTiers[$currSizeKey]) ? $companySizeTiers[$currSizeKey]['label'] : '';
+          @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_sizes">Company Size</label>
+              <label class="god-field-label" for="company_sizes_display">Company Size</label>
             </div>
-            <div class="god-input-box god-select-box">
-              <span class="god-input-left-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </span>
-              <select name="company_sizes" class="god-native-select" id="company_sizes">
-                <option value="">Select company size</option>
-                <option value="1-1"          {{ @$company_sizes == '1-1'          ? 'selected' : '' }}>Solo / 1 employee</option>
-                <option value="2-10"         {{ @$company_sizes == '2-10'         ? 'selected' : '' }}>2 – 10 employees</option>
-                <option value="1-10"         {{ @$company_sizes == '1-10'         ? 'selected' : '' }}>1 – 10 employees</option>
-                <option value="11-50"        {{ @$company_sizes == '11-50'        ? 'selected' : '' }}>11 – 50 employees</option>
-                <option value="51-200"       {{ @$company_sizes == '51-200'       ? 'selected' : '' }}>51 – 200 employees</option>
-                <option value="201-500"      {{ @$company_sizes == '201-500'      ? 'selected' : '' }}>201 – 500 employees</option>
-                <option value="501-1000"     {{ @$company_sizes == '501-1000'     ? 'selected' : '' }}>501 – 1,000 employees</option>
-                <option value="1001-5000"    {{ @$company_sizes == '1001-5000'    ? 'selected' : '' }}>1,001 – 5,000 employees</option>
-                <option value="5001-10000"   {{ @$company_sizes == '5001-10000'   ? 'selected' : '' }}>5,001 – 10,000 employees</option>
-                <option value="10001-50000"  {{ @$company_sizes == '10001-50000'  ? 'selected' : '' }}>10,001 – 50,000 employees</option>
-                <option value="50001-0"      {{ in_array(@$company_sizes, ['50001-0', '50001-', '10000-999999']) ? 'selected' : '' }}>50,001+ employees</option>
-              </select>
-              <span class="god-input-right-chevron">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-              </span>
+
+            <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
+            <select name="company_sizes" id="company_sizes" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" tabindex="-1" aria-hidden="true">
+              <option value="">Select company size</option>
+              @foreach($companySizeTiers as $cVal => $cData)
+                <option value="{{ $cVal }}" {{ (string)$currSizeKey === (string)$cVal ? 'selected="selected"' : '' }}>{{ $cData['label'] }}</option>
+              @endforeach
+            </select>
+
+            <!-- God-Level Enterprise Company Size Combobox -->
+            <div class="jero-csize-select-wrap god-csize-wrap" id="jero_csize_select_wrap">
+              <div class="god-input-box jero-csize-input-box {{ $selectedSizeLabel ? 'has-value' : '' }}" id="jero_csize_input_box" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
+                <span class="god-input-left-icon jero-csize-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </span>
+                <input type="text"
+                       class="god-native-input jero-csize-input"
+                       id="company_sizes_display"
+                       placeholder="Select company size"
+                       readonly
+                       autocomplete="off"
+                       spellcheck="false"
+                       value="{{ htmlspecialchars($selectedSizeLabel) }}"
+                       style="cursor:pointer; user-select:none;">
+                <button type="button" class="god-input-clear-btn jero-csize-clear-btn" id="jero_csize_clear_btn" aria-label="Clear company size" title="Clear selection" style="{{ $selectedSizeLabel ? 'display:flex;' : 'display:none;' }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="god-input-right-chevron jero-csize-chevron" id="jero_csize_chevron" title="Toggle company size list" role="button" aria-label="Toggle company size list" tabindex="-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
+
+              <!-- Enterprise Custom Dropdown List -->
+              <div class="jero-csize-dropdown" id="jero_csize_dropdown" style="display:none;" role="listbox" aria-label="Company Sizes">
+                <div class="jero-csize-list-container" id="jero_csize_list_container">
+                  @foreach($companySizeTiers as $cVal => $cData)
+                    <div class="jero-csize-item {{ (string)$currSizeKey === (string)$cVal ? 'selected' : '' }}"
+                         data-val="{{ $cVal }}"
+                         data-label="{{ $cData['label'] }}"
+                         role="option"
+                         aria-selected="{{ (string)$currSizeKey === (string)$cVal ? 'true' : 'false' }}">
+                      <div class="jero-csize-item-main">
+                        <span class="jero-csize-item-icon">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+                        </span>
+                        <div class="jero-csize-item-info">
+                          <div class="jero-csize-item-label">{{ $cData['label'] }}</div>
+                          <div class="jero-csize-item-desc">{{ $cData['desc'] }}</div>
+                        </div>
+                      </div>
+                      <div class="jero-csize-item-side">
+                        <span class="jero-csize-item-badge">{{ $cData['badge'] }}</span>
+                        <span class="jero-csize-item-check">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
             </div>
           </div>
 
