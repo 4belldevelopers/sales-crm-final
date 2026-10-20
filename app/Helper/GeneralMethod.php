@@ -7444,6 +7444,9 @@ END:VCALENDAR";
             $company = DB::table('companies')->select('calling_code')->where('id', $company_id)->first();
             if ($company && ! empty($company->calling_code)) {
                 $rawCode = ltrim(trim((string) $company->calling_code), '+');
+                if ($rawCode === '1') {
+                    return 'us';
+                }
                 $matchedCountry = DB::table('countries')->where('phonecode', $rawCode)->value('country_code');
                 if ($matchedCountry) {
                     return strtolower(trim($matchedCountry));
@@ -7487,6 +7490,9 @@ END:VCALENDAR";
             $company = DB::table('companies')->select('calling_code')->where('id', $company_id)->first();
             if ($company && ! empty($company->calling_code)) {
                 $rawCode = ltrim(trim((string) $company->calling_code), '+');
+                if ($rawCode === '1') {
+                    return 233; // America (USA)
+                }
                 $matchedId = DB::table('countries')->where('phonecode', $rawCode)->value('id');
                 if ($matchedId) {
                     return (int) $matchedId;

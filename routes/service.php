@@ -611,7 +611,10 @@ Route::group(['middleware' => 'auth'], function () {
                     Route::post('delete-account-store', [CompanySettingsController::class, 'deleteAccountStore'])->name('settings.delete-account-store');
 
                     // Company settings
-                    Route::resource('/', CompanySettingsController::class)->only(['edit', 'update', 'index']);
+                    Route::get('/', [CompanySettingsController::class, 'index'])->name('settings.index');
+                    Route::get('{id}/edit', [CompanySettingsController::class, 'edit'])->name('settings.edit');
+                    Route::put('{id}', [CompanySettingsController::class, 'update'])->name('settings.update');
+                    Route::post('{id}', [CompanySettingsController::class, 'update'])->name('settings.update.post');
                     Route::resource('application-setting', ApplicationSettingsController::class);
 
                     // Role permission routes
