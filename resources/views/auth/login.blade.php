@@ -512,6 +512,25 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-inp:focus { border-color: var(--jw-blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, .11); }
 .jw-inp.is-ok { border-color: var(--jw-green); }
 .jw-inp.is-invalid { border-color: var(--jw-danger); }
+select.jw-inp,
+.jw-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-color: #fff;
+    padding-right: 44px;
+}
+select.jw-inp:invalid,
+select.jw-inp option[value=""] {
+    color: #8993ad;
+}
+select.jw-inp option {
+    color: var(--jw-navy);
+    font-size: 13.5px;
+    padding: 10px 12px;
+    background: #fff;
+}
 .jw-err {
     display: block;
     margin-top: 7px;
@@ -1055,11 +1074,9 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
                     <div class="jw-card-trust"><div class="jw-trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Your security comes first</strong><span>Your credentials are encrypted and<br>never shared with employers or agencies.</span></div></div>
                 </form>
 
-                <!-- STATE 2: SIGNUP (Lightweight 4-Field Account Creation) -->
+                <!-- STATE 2: SIGNUP (Account Creation) -->
                 <form class="jw-card-form jw-fade-enter" novalidate id="kt_sign_up_form" action="{{ route('company-register') }}" method="post" style="{{ $signupStyle }}">
                     @csrf
-                    <!-- Structural organization default: Service Company (Type 2). Tenancy is configured post-verification inside app. -->
-                    <input type="hidden" name="company_type" value="2">
                     <!-- Honeypot anti-bot security: humans never touch hidden fields -->
                     <input type="text" name="website_url" style="display:none;" tabindex="-1" autocomplete="off">
 
@@ -1142,7 +1159,33 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
                         <span class="jw-err" id="jw-signup-phone-err" style="display:none;"></span>
                     </div>
 
-                    <!-- Field 4: Password with ZXCVBN Strength Meter -->
+                    <!-- Field 4: Company Type -->
+                    <div class="jw-field">
+                        <label for="jw-signup-company-type">Company Type</label>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <select class="jw-inp jw-select" name="company_type" id="jw-signup-company-type" required>
+                                <option value="" disabled selected>Select company business model...</option>
+                                <option value="2">Consulting or Services Company</option>
+                                <option value="1">Recruitment or Staffing Agency</option>
+                                <option value="3">Product or Manufacturing Company (Direct Employer)</option>
+                                <option value="4">Freelancer / Individual Recruiter</option>
+                            </select>
+                            <span class="ir" style="pointer-events:none;" aria-hidden="true">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 9l6 6 6-6" stroke="#8b95af" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <span class="jw-err" id="jw-signup-company-type-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Field 5: Password with ZXCVBN Strength Meter -->
                     <div class="jw-field">
                         <label for="jw-signup-pwd">Password</label>
                         <div class="jw-iw">
@@ -1560,6 +1603,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (signupPwd) signupPwd.addEventListener('input', evalPasswordStrength);
 
+    var typeSelect = document.getElementById('jw-signup-company-type');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', function() {
+            typeSelect.classList.remove('is-invalid');
+            var alertEl = document.getElementById('jw_signup_alert');
+            if (alertEl) alertEl.style.display = 'none';
+        });
+    }
+
     // Signup form AJAX submit (2-Step Flow: Step 1 Account Creation)
     var signupForm = document.getElementById('kt_sign_up_form');
     var signupBtn  = document.getElementById('kt_sign_up_submit');
@@ -1583,6 +1635,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var nameInput  = document.getElementById('jw-signup-name');
             var emailInput = document.getElementById('jw-signup-email');
+            var typeInput  = document.getElementById('jw-signup-company-type');
             var pwdInput   = document.getElementById('jw-signup-pwd');
 
             if (!nameInput || !nameInput.value.trim()) {
@@ -1593,6 +1646,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!emailInput || !emailRe.test(emailInput.value.trim())) {
                 if (signupAlert) { signupAlert.textContent = 'Please enter a valid work email address.'; signupAlert.style.display = 'block'; }
                 if (emailInput) emailInput.focus();
+                return;
+            }
+            if (!typeInput || !typeInput.value) {
+                if (signupAlert) { signupAlert.textContent = 'Please select your company type.'; signupAlert.style.display = 'block'; }
+                if (typeInput) { typeInput.focus(); typeInput.classList.add('is-invalid'); }
                 return;
             }
             if (!pwdInput || pwdInput.value.length < 8) {

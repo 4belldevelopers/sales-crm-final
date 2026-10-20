@@ -43,9 +43,9 @@ class CompanySignupRequest extends FormRequest
             'contact_number' => ['required', 'string', 'min:6', 'max:20'],
             'contact_code' => ['required', 'string', 'max:10'],
 
-            // 4. Company Type (structural organization model, defaults to 2: Service Company)
+            // 4. Company Type (structural organization model)
             // 1: Staffing Agency, 2: Service Company, 3: Product Company, 4: Freelancer
-            'company_type' => ['nullable', 'in:1,2,3,4'],
+            'company_type' => ['required', 'in:1,2,3,4'],
 
             // 5. Password (Argon2id / bcrypt standard; min 8, max 128)
             'password' => ['required', 'string', 'min:8', 'max:128'],
