@@ -186,21 +186,22 @@ body, html {
   border-color: var(--j-success);
 }
 
-.jero-phone-wrap {
-  display: flex;
-  gap: 8px;
+.jero-field .jero-phone-box-wrapper .jero-phone-input-group {
+  border-color: var(--j-border) !important;
+  border-radius: 7px !important;
+  height: 38px !important;
+  background-color: #fff !important;
+  transition: all 0.15s ease !important;
 }
 
-.jero-phone-code {
-  width: 110px;
-  flex-shrink: 0;
-  height: 38px;
-  border: 1px solid var(--j-border);
-  border-radius: 7px;
-  padding: 0 6px;
-  font-size: 12px;
-  background: #fff;
-  font-family: inherit;
+.jero-field .jero-phone-box-wrapper .jero-phone-input-group:focus-within {
+  border-color: var(--j-primary) !important;
+  box-shadow: 0 0 0 3px rgba(29,97,242,0.12) !important;
+}
+
+.jero-field .jero-phone-box-wrapper .jero-phone-input-group.is-invalid {
+  border-color: var(--j-danger) !important;
+  background-color: #fef2f2 !important;
 }
 
 .jero-btn-submit {
@@ -416,24 +417,20 @@ body, html {
           <div class="jero-field-error" id="err_email"></div>
         </div>
 
-        <!-- 3. Phone Number with Country Dial Code -->
+        <!-- 3. Phone Number with Global Mobile Number Architecture (V7.0) -->
         <div class="jero-field">
           <label class="jero-label">Phone Number <span style="color:var(--j-danger);">*</span></label>
-          <div class="jero-phone-wrap">
-            <select name="contact_code" id="contact_code" class="jero-phone-code" required autocomplete="tel-country-code">
-              <option value="+1" selected>🇺🇸 +1</option>
-              <option value="+91">🇮🇳 +91</option>
-              <option value="+44">🇬🇧 +44</option>
-              <option value="+65">🇸🇬 +65</option>
-              <option value="+61">🇦🇺 +61</option>
-              <option value="+49">🇩🇪 +49</option>
-              <option value="+971">🇦🇪 +971</option>
-              <option value="+33">🇫🇷 +33</option>
-              <option value="+81">🇯🇵 +81</option>
-              <option value="+1242">🇧🇸 +1242</option>
-            </select>
-            <input type="tel" name="contact_number" id="contact_number" class="jero-input" placeholder="(415) 555-2671" required autocomplete="tel-national">
-          </div>
+          <x-jero-phone-input
+            id="contact_number"
+            name="contact_number"
+            countryCodeName="contact_code"
+            countryCodeId="contact_code"
+            label=""
+            :required="true"
+            placeholder="Enter phone number"
+            countryCode="+1"
+            defaultIso="US"
+          />
           <div class="jero-field-error" id="err_contact_number"></div>
         </div>
 
@@ -593,6 +590,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (el) {
       el.addEventListener('input', () => {
         el.classList.remove('is-invalid');
+        const group = el.closest('.jero-phone-input-group');
+        if (group) group.classList.remove('is-invalid');
         const errEl = document.getElementById(`err_${f}`);
         if (errEl) errEl.style.display = 'none';
       });
@@ -626,8 +625,12 @@ document.addEventListener('DOMContentLoaded', function () {
     requiredFields.forEach(item => {
       const el = document.querySelector(`[name="${item.name}"]`);
       const errEl = document.getElementById(`err_${item.name}`);
-      if (!el.value || !el.value.trim()) {
-        el.classList.add('is-invalid');
+      if (!el || !el.value || !el.value.trim()) {
+        if (el) {
+          el.classList.add('is-invalid');
+          const group = el.closest('.jero-phone-input-group');
+          if (group) group.classList.add('is-invalid');
+        }
         if (errEl) {
           errEl.textContent = item.label;
           errEl.style.display = 'block';

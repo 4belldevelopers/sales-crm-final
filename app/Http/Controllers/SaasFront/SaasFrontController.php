@@ -391,7 +391,7 @@ class SaasFrontController extends SaasFrontBaseController
         $freeWebmails = [
             'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
             'aol.com', 'zoho.com', 'mail.com', 'yandex.com', 'protonmail.com',
-            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com'
+            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com',
         ];
         $isFreeWebmail = in_array($rawDomain, $freeWebmails, true);
         $domainKey = $isFreeWebmail ? null : $rawDomain;
@@ -404,7 +404,7 @@ class SaasFrontController extends SaasFrontBaseController
                     'title' => 'This company domain is already registered on Jero.',
                     'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
                     'login_url' => route('login'),
-                    'support_email' => 'support@jeroworks.com'
+                    'support_email' => 'support@jeroworks.com',
                 ], 422);
             }
         }
@@ -412,15 +412,19 @@ class SaasFrontController extends SaasFrontBaseController
         // Passive In-Memory Suspicious Tenant Risk Assessment (0 DB reads)
         $riskAssessment = app(\App\Services\TenantRiskAssessmentService::class)->evaluate($request->all(), $request->ip());
 
+        $rawContactCode = trim((string) $request->input('contact_code', '+1'));
+        $formattedCallingCode = str_starts_with($rawContactCode, '+') ? $rawContactCode : ('+'.$rawContactCode);
+        $cleanPhone = preg_replace('/[^\d]/', '', (string) $request->input('contact_number', ''));
+
         $company = new Company;
         DB::beginTransaction();
         try {
-            $company->company_name = !empty($request->company_name) ? trim($request->company_name) : 'Pending Onboarding';
+            $company->company_name = ! empty($request->company_name) ? trim($request->company_name) : 'Pending Onboarding';
             $company->company_email = $request->email;
             $company->website = $request->website;
             $company->domain_key = $domainKey;
-            $company->company_phone = $request->contact_number;
-            $company->calling_code = @$request->contact_code;
+            $company->company_phone = $cleanPhone;
+            $company->calling_code = $formattedCallingCode;
             $company->company_type = $request->company_type;
             $company->accountVerify = $riskAssessment['is_suspicious'] ? 0 : 1;
             $company->app_duplicate = 2;
@@ -430,7 +434,21 @@ class SaasFrontController extends SaasFrontBaseController
             // $company->career_page_link 	= str_slug($request->career_page_link, '-');
             $company->job_opening_text = 'Welcome!';
             $company->job_opening_title = 'We want people to thrive. We believe you do your best work when you feel your best.';
-            $company->timezone = 'Asia/Kolkata';
+
+            $tzMap = [
+                '+1' => 'America/New_York',
+                '+44' => 'Europe/London',
+                '+971' => 'Asia/Dubai',
+                '+65' => 'Asia/Singapore',
+                '+61' => 'Australia/Sydney',
+                '+49' => 'Europe/Berlin',
+                '+33' => 'Europe/Paris',
+                '+81' => 'Asia/Tokyo',
+                '+966' => 'Asia/Riyadh',
+                '+974' => 'Asia/Qatar',
+                '+91' => 'Asia/Kolkata',
+            ];
+            $company->timezone = $tzMap[$formattedCallingCode] ?? 'Asia/Kolkata';
             if ($request->company_type == 1) {
                 $company->industries = 131;
             }
@@ -1103,8 +1121,8 @@ class SaasFrontController extends SaasFrontBaseController
             $user = new User;
             $user->company_id = $company->id;
             $user->name = $request->name;
-            $user->mobile = $request->contact_number;
-            $user->calling_code = @$request->contact_code;
+            $user->mobile = $cleanPhone;
+            $user->calling_code = $formattedCallingCode;
             $user->email = $request->email;
             $user->password = bcrypt($request->password);
             // SEC-DEBT REMEDIATED: Plaintext password storage eradicated per God-Level Security Audit (P0).
@@ -1151,10 +1169,18 @@ class SaasFrontController extends SaasFrontBaseController
                 $user->roles()->syncWithoutDetaching([$role->id]);
             }
 
+            $rawDial = ltrim(trim($formattedCallingCode), '+');
+            if ($rawDial === '1') {
+                $countryId = 233; // America (USA)
+            } else {
+                $matchedCountryId = DB::table('countries')->where('phonecode', $rawDial)->value('id');
+                $countryId = $matchedCountryId ? (int) $matchedCountryId : 101;
+            }
+
             $users_profile = [
                 'company_id' => $company->id,
                 'user_id' => $user->id,
-                'country' => 101,
+                'country' => $countryId,
                 'created_at' => date('Y-m-d'),
                 'updated_at' => date('Y-m-d'),
             ];
@@ -1570,8 +1596,12 @@ class SaasFrontController extends SaasFrontBaseController
                     ['company_id' => $company->id],
                     ['currency' => $company->currency, 'updated_at' => now()]
                 );
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
             \App\Services\CurrencyService::invalidateTenantCache($company->id);
+            Cache::forget("tenant_country_code:{$company->id}");
+            Cache::forget("tenant_default_country_id:{$company->id}");
+            Cache::forget("tenant_default_calling_code:{$company->id}");
 
             DB::commit();
 
@@ -1579,14 +1609,14 @@ class SaasFrontController extends SaasFrontBaseController
             try {
                 app(\App\Services\TenantRiskAssessmentService::class)->handlePostRegistration($company, $user, $riskAssessment);
             } catch (\Throwable $riskEx) {
-                \Log::warning('Async tenant risk assessment notification deferred: ' . $riskEx->getMessage());
+                \Log::warning('Async tenant risk assessment notification deferred: '.$riskEx->getMessage());
             }
 
             // Project new company into Elasticsearch so it immediately reflects on SuperAdmin Companies tab
             try {
                 app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
             } catch (\Throwable $esEx) {
-                \Log::warning('Async ES company index on registration deferred: ' . $esEx->getMessage());
+                \Log::warning('Async ES company index on registration deferred: '.$esEx->getMessage());
             }
 
             return response()->json([
@@ -1608,10 +1638,11 @@ class SaasFrontController extends SaasFrontBaseController
                     'title' => 'This company domain is already registered on Jero.',
                     'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
                     'login_url' => route('login'),
-                    'support_email' => 'support@jeroworks.com'
+                    'support_email' => 'support@jeroworks.com',
                 ], 422);
             }
-            \Log::error('companyRegister query error: ' . $e->getMessage(), ['exception' => $e]);
+            \Log::error('companyRegister query error: '.$e->getMessage(), ['exception' => $e]);
+
             return response()->json(['status' => 'error', 'message' => 'Registration failed due to a database conflict. Please try again.'], 500);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -1735,15 +1766,14 @@ class SaasFrontController extends SaasFrontBaseController
         $freeWebmails = [
             'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
             'aol.com', 'zoho.com', 'mail.com', 'yandex.com', 'protonmail.com',
-            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com'
+            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com',
         ];
 
         if (in_array($domainKey, $freeWebmails, true)) {
             return Reply::dataOnly(['status' => 'success', 'is_free_webmail' => true, 'allowed' => true]);
         }
 
-        $exists = Cache::remember('register:domain:' . md5($domainKey), 60, fn () => 
-            DB::table('companies')->where('domain_key', $domainKey)->exists()
+        $exists = Cache::remember('register:domain:'.md5($domainKey), 60, fn () => DB::table('companies')->where('domain_key', $domainKey)->exists()
         );
 
         if ($exists) {
@@ -1753,7 +1783,7 @@ class SaasFrontController extends SaasFrontBaseController
                 'title' => 'This company domain is already registered on Jero.',
                 'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
                 'login_url' => route('login'),
-                'support_email' => 'support@jeroworks.com'
+                'support_email' => 'support@jeroworks.com',
             ]);
         }
 
@@ -3463,8 +3493,12 @@ class SaasFrontController extends SaasFrontBaseController
                     ['company_id' => $company->id],
                     ['currency' => $company->currency, 'updated_at' => now()]
                 );
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
             \App\Services\CurrencyService::invalidateTenantCache($company->id);
+            Cache::forget("tenant_country_code:{$company->id}");
+            Cache::forget("tenant_default_country_id:{$company->id}");
+            Cache::forget("tenant_default_calling_code:{$company->id}");
 
             return Reply::dataOnly(['status' => 'success', 'view' => $view, 'emailenabled' => $emailenabled]);
 

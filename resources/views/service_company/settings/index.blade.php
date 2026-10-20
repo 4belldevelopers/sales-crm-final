@@ -58,7 +58,17 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="company_phone">@lang('modules.accountSettings.companyPhone')</label>
-                <input type="number" class="form-control" id="company_phone" name="company_phone" value="{{ $global->company_phone }}" placeholder="Enter Company Phone">
+                <x-jero-phone-input
+                  id="company_phone"
+                  name="company_phone"
+                  countryCodeName="company_phone_code"
+                  countryCodeId="company_phone_code"
+                  label=""
+                  :required="false"
+                  :value="$global->company_phone"
+                  :countryCode="$global->calling_code ?: '+91'"
+                  placeholder="Enter Company Phone"
+                />
               </div>
             </div>
             <div class="col-md-4">
