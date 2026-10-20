@@ -206,15 +206,6 @@
                   </div>
                 </div>
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
-
-                <!-- Enterprise Status & Keyboard Hint Footer -->
-                <div class="jero-ind-footer" id="jero_ind_footer">
-                  <div class="jero-ind-sync-status" id="jero_ind_sync_status">
-                    <span class="jero-ind-sync-dot"></span>
-                    <span id="jero_ind_status_text">160+ Master Industries</span>
-                  </div>
-                  <span class="jero-ind-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
-                </div>
               </div>
             </div>
           </div>

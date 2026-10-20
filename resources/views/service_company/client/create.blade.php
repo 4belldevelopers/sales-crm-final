@@ -3195,48 +3195,6 @@ html, body {
   .jero-ind-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   .jero-ind-list-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-  /* Enterprise Status & Keyboard Hint Footer */
-  .jero-ind-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 12px;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    font-size: 10.5px;
-    flex-shrink: 0;
-    font-family: 'Poppins', sans-serif;
-  }
-  .jero-ind-sync-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #64748b;
-    font-weight: 500;
-  }
-  .jero-ind-sync-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-  }
-  .jero-ind-footer-hint {
-    color: #94a3b8;
-    font-size: 10px;
-  }
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    position: relative;
-    padding: 4px 0;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f8fafc;
-    box-sizing: border-box;
-  }
-  .jero-ind-list-container::-webkit-scrollbar { width: 5px; }
-  .jero-ind-list-container::-webkit-scrollbar-track { background: #f8fafc; }
-  .jero-ind-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-  .jero-ind-list-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
   /* Section Header: Prominent, sticky, NEVER hidden under tabs */
   .jero-ind-section-header {
     display: flex !important;
@@ -9572,14 +9530,12 @@ $('.remove_address').click(function(){
         var idealDropdownHeight = Math.min(440, Math.max(260, spaceBelow));
         dropdown.style.maxHeight = idealDropdownHeight + 'px';
 
-        // Subtract search box, wrapped tabs bar, and footer to give list container its exact fit
+        // Subtract search box and wrapped tabs bar to give list container its exact fit
         var searchWrap = document.getElementById('jero_ind_search_wrap');
         var tabsWrap = document.querySelector('.jero-ind-tabs-wrap');
-        var footerWrap = document.getElementById('jero_ind_footer');
         var nonListHeight = (searchWrap ? searchWrap.offsetHeight : 44) + 
-                            (tabsWrap ? tabsWrap.offsetHeight : 64) + 
-                            (footerWrap ? footerWrap.offsetHeight : 32);
-        var listMaxH = Math.max(110, idealDropdownHeight - nonListHeight);
+                            (tabsWrap ? tabsWrap.offsetHeight : 64);
+        var listMaxH = Math.max(120, idealDropdownHeight - nonListHeight);
         if (listContainer) {
             listContainer.style.maxHeight = listMaxH + 'px';
         }
