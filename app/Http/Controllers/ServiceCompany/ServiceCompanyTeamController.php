@@ -3549,8 +3549,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             ]);
         }
 
-        // Update the password
-        $user->super_password = $request->mteamcpassword;
+        // Update the password (SEC-DEBT REMEDIATED: No plaintext super_password storage)
         $user->password = bcrypt($request->mteamcpassword);
         $user->save();
         GeneralMethod::userIndexingupload($user->id);

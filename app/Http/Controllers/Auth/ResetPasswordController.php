@@ -161,7 +161,7 @@ class ResetPasswordController extends Controller
 				//return back()->withInput()->with('errors', 'Invalid token!');
 			}
 	
-			$user 	= User::where('email', $encEmail)->update(['password' => Hash::make($request->password),'super_password'=>$request->password]);
+			$user 	= User::where('email', $encEmail)->update(['password' => Hash::make($request->password)]);
 	
 			// Delete password_resets record
 			DB::table('password_resets')->where(['email'=> $encEmail])->delete();

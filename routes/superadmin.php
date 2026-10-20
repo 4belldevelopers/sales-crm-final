@@ -105,6 +105,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('company/edit/{id?}', [SuperAdminCompanyController::class,'edit_company'])->name('company.edit_company');
     Route::post('company/update/{id?}', [SuperAdminCompanyController::class,'update_company'])->name('company.update_company');
+    Route::post('company/{id}/toggle-verify', [SuperAdminCompanyController::class,'toggleAccountVerify'])->name('company.toggleAccountVerify');
 
 
     Route::get('addresslist/{cid?}', [SuperAdminCompanyController::class,'addresslist'])->name('company.addresslist');

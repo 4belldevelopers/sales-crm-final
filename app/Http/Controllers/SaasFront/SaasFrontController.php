@@ -362,37 +362,67 @@ class SaasFrontController extends SaasFrontBaseController
         // }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password_confirmation' => 'required|same:password',
-            'password' => 'required|confirmed',
-            'toc' => 'required',
-            'company_name' => 'required',
-            'company_type' => 'required',
-            'contact_number' => 'required',
-            'contact_code' => 'required',
+            'name' => 'required|string|min:2|max:100',
+            'email' => 'required|string|email:rfc|max:191|unique:users,email',
+            'company_type' => 'required|in:1,2,3,4',
+            'contact_number' => 'required|string|min:6|max:20',
+            'contact_code' => 'required|string|max:10',
+            'password' => 'required|string|min:8|max:128',
+        ], [
+            'name.required' => 'Please enter your full name.',
+            'email.required' => 'Please enter your work email address.',
+            'email.email' => 'Please enter a valid work email address.',
+            'email.unique' => 'This email is already registered on Jero. Please sign in instead.',
+            'company_type.required' => 'Please select your company type.',
+            'company_type.in' => 'Please select a valid company type.',
+            'contact_number.required' => 'Please enter your phone number.',
+            'contact_code.required' => 'Please select your country calling code.',
+            'password.required' => 'Please enter a password (minimum 8 characters).',
+            'password.min' => 'Password must be at least 8 characters long.',
         ]);
-        // dd($validator->errors());
 
         if ($validator->fails()) {
-
-            return Reply::dataOnly(['status' => 'error', 'validation' => $validator->errors()]);
-
+            return response()->json(['status' => 'error', 'validation' => $validator->errors()], 422);
         }
+
+        // Corporate Domain Governance (One Administrator Per Custom Corporate Domain)
+        $emailParts = explode('@', strtolower(trim($request->email)));
+        $rawDomain = $emailParts[1] ?? '';
+        $freeWebmails = [
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
+            'aol.com', 'zoho.com', 'mail.com', 'yandex.com', 'protonmail.com',
+            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com'
+        ];
+        $isFreeWebmail = in_array($rawDomain, $freeWebmails, true);
+        $domainKey = $isFreeWebmail ? null : $rawDomain;
+
+        if ($domainKey !== null) {
+            $existingCompany = DB::table('companies')->where('domain_key', $domainKey)->first();
+            if ($existingCompany) {
+                return response()->json([
+                    'status' => 'domain_collision',
+                    'title' => 'This company domain is already registered on Jero.',
+                    'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
+                    'login_url' => route('login'),
+                    'support_email' => 'support@jeroworks.com'
+                ], 422);
+            }
+        }
+
+        // Passive In-Memory Suspicious Tenant Risk Assessment (0 DB reads)
+        $riskAssessment = app(\App\Services\TenantRiskAssessmentService::class)->evaluate($request->all(), $request->ip());
 
         $company = new Company;
         DB::beginTransaction();
         try {
-            $company->company_name = $request->company_name;
+            $company->company_name = !empty($request->company_name) ? trim($request->company_name) : 'Pending Onboarding';
             $company->company_email = $request->email;
             $company->website = $request->website;
-            // Normalized domain key for fast uniqueness probe — replaces LIKE '%domain%' scan. (Sprint 3 task 3.2/3.3)
-            $_parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
-            $company->domain_key = preg_replace('/^www\./i', '', strtolower(trim($_parsedHost)));
-            // $company->company_size = $request->company_size;
+            $company->domain_key = $domainKey;
             $company->company_phone = $request->contact_number;
             $company->calling_code = @$request->contact_code;
             $company->company_type = $request->company_type;
+            $company->accountVerify = $riskAssessment['is_suspicious'] ? 0 : 1;
             $company->app_duplicate = 2;
             $company->app_duplicate_days = 60;
             $company->bench_show_mode = 2;
@@ -1077,8 +1107,7 @@ class SaasFrontController extends SaasFrontBaseController
             $user->calling_code = @$request->contact_code;
             $user->email = $request->email;
             $user->password = bcrypt($request->password);
-            // SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
-            $user->super_password = $request->password;
+            // SEC-DEBT REMEDIATED: Plaintext password storage eradicated per God-Level Security Audit (P0).
             $user->super_admin_login_code = $company->id.rand(1111, 9999);
             $user->email_verification_code = str_random(40);
             $user->status = 'inactive';
@@ -1546,18 +1575,49 @@ class SaasFrontController extends SaasFrontBaseController
 
             DB::commit();
 
-            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+            // Passive SuperAdmin Alarm / Notification for Suspicious Registrations (without restricting tenant)
+            try {
+                app(\App\Services\TenantRiskAssessmentService::class)->handlePostRegistration($company, $user, $riskAssessment);
+            } catch (\Throwable $riskEx) {
+                \Log::warning('Async tenant risk assessment notification deferred: ' . $riskEx->getMessage());
+            }
+
+            // Project new company into Elasticsearch so it immediately reflects on SuperAdmin Companies tab
+            try {
+                app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
+            } catch (\Throwable $esEx) {
+                \Log::warning('Async ES company index on registration deferred: ' . $esEx->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Registration successful! Please check your email to verify your workspace.',
+                'email' => $user->email,
+                'verification_pending' => true,
+            ]);
 
         } catch (\Swift_TransportException $e) {
             DB::rollBack();
 
             return Reply::error('Please contact administrator to set SMTP details to add company', 'smtp_error');
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062 && str_contains($e->getMessage(), 'domain_key')) {
+                return response()->json([
+                    'status' => 'domain_collision',
+                    'title' => 'This company domain is already registered on Jero.',
+                    'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
+                    'login_url' => route('login'),
+                    'support_email' => 'support@jeroworks.com'
+                ], 422);
+            }
+            \Log::error('companyRegister query error: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['status' => 'error', 'message' => 'Registration failed due to a database conflict. Please try again.'], 500);
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error('companyRegister failed: '.$e->getMessage(), ['exception' => $e]);
 
-            // dd($e->getMessage(),$e);
-            return Reply::dataOnly(['status' => 'error', 'message' => 'Registration failed. Please try again.']);
+            return response()->json(['status' => 'error', 'message' => 'Registration failed. Please try again.'], 500);
         }
 
         return Reply::dataOnly(['status' => 'fail']);
@@ -1662,61 +1722,42 @@ class SaasFrontController extends SaasFrontBaseController
 
     public function domainCompanyRegisterChk(Request $request)
     {
-
-        $status = 'fail';
-        $company_domain = '';
-        $company_email = '';
-        $company_name = '';
-        if ($request->website != '') {
-
-            $client_id = $request->check_client_id;
-            $parsedUrl = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
-
-            // Remove 'www.'
-            $parsedUrl = preg_replace('/^www\./', '', $parsedUrl);
-
-            // Remove TLD (.com, .org, etc.)
-            $domainParts = explode('.', $parsedUrl);
-            $mainDomain = $parsedUrl; // $domainParts[0] ?? '';
-
-            $website = $request->website;
-            // Exact domain_key lookup — replaces LIKE '%domain%' full-table scan. (Sprint 3 task 3.3)
-            $userCount = Cache::remember('register:domain:'.md5($mainDomain), 60, fn () => DB::table('companies')->where('domain_key', $mainDomain)->count()
-            );
-            if ($userCount == 0) {
-                $status = 'success';
-            } else {
-                $companies = DB::table('companies')
-                    ->select('companies.*')
-                    ->where('domain_key', $mainDomain)
-                    ->first();
-
-                $visibleLength = 10;
-                $maskChar = 'X';
-                $email = $companies->company_email;
-                [$username, $domain] = explode('@', $email);
-                $length = strlen($username);
-                if ($length <= 2) {
-                    $maskedUsername = $username;
-                } elseif ($length <= 6) {
-                    // Show first 2, mask the rest
-                    $maskedUsername = substr($username, 0, 2).str_repeat('X', $length - 2);
-                } elseif ($length <= 10) {
-                    // Show first 3, mask the rest
-                    $maskedUsername = substr($username, 0, 3).str_repeat('X', $length - 3);
-                } else {
-                    // Show first 10, mask the rest
-                    $maskedUsername = substr($username, 0, 10).str_repeat('X', $length - 10);
-                }
-
-                $company_email = $email; // $maskedUsername . '@' . $domain;
-                $company_domain = $companies->website;
-                $company_name = $companies->company_name;
-            }
-
+        $input = $request->email ?: $request->website;
+        if (empty($input)) {
+            return Reply::dataOnly(['status' => 'success', 'allowed' => true]);
         }
 
-        return Reply::dataOnly(['status' => $status, 'company_domain' => $company_domain, 'company_email' => $company_email, 'company_name' => $company_name]);
+        $emailParts = explode('@', strtolower(trim($input)));
+        $rawDomain = count($emailParts) > 1 ? $emailParts[1] : (parse_url($input, PHP_URL_HOST) ?? $input);
+        $domainKey = preg_replace('/^www\./i', '', strtolower(trim($rawDomain)));
+
+        // Free webmails are 100% permitted
+        $freeWebmails = [
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
+            'aol.com', 'zoho.com', 'mail.com', 'yandex.com', 'protonmail.com',
+            'gmx.com', 'live.com', 'msn.com', 'rediffmail.com'
+        ];
+
+        if (in_array($domainKey, $freeWebmails, true)) {
+            return Reply::dataOnly(['status' => 'success', 'is_free_webmail' => true, 'allowed' => true]);
+        }
+
+        $exists = Cache::remember('register:domain:' . md5($domainKey), 60, fn () => 
+            DB::table('companies')->where('domain_key', $domainKey)->exists()
+        );
+
+        if ($exists) {
+            return Reply::dataOnly([
+                'status' => 'domain_collision',
+                'allowed' => false,
+                'title' => 'This company domain is already registered on Jero.',
+                'message' => 'An administrator or team member from this domain is already registered. If you want to join the same company, please ask your company administrator to invite you to Jero.',
+                'login_url' => route('login'),
+                'support_email' => 'support@jeroworks.com'
+            ]);
+        }
+
+        return Reply::dataOnly(['status' => 'success', 'allowed' => true]);
     }
 
     public function domainClientRegisterChk(Request $request)
@@ -1925,8 +1966,7 @@ class SaasFrontController extends SaasFrontBaseController
 
             $user->email = $request->email;
             $user->password = bcrypt($request->password);
-            // SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
-            $user->super_password = $request->password;
+            // SEC-DEBT REMEDIATED: Plaintext password storage eradicated per God-Level Security Audit (P0).
             $user->super_admin_login_code = $company->id.rand(1111, 9999);
 
             // $user->email_verification_code 	=	str_random(40);
@@ -2995,8 +3035,7 @@ class SaasFrontController extends SaasFrontBaseController
             $user->root_user = 1;
             $user->email = $request->email;
             $user->password = bcrypt($request->password);
-            // SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
-            $user->super_password = $request->password;
+            // SEC-DEBT REMEDIATED: Plaintext password storage eradicated per God-Level Security Audit (P0).
             $user->super_admin_login_code = $company->id.rand(1111, 9999);
 
             if (! empty($request->direct_user)) {
@@ -3475,13 +3514,13 @@ class SaasFrontController extends SaasFrontBaseController
         });
 
         if ($user) {
-            // Sprint 5 task 5.14 — mail + ES run in queue (audit H4). HTTP returns in <50ms.
+            // Mail + ES run in background queue. HTTP returns immediately.
             \App\Jobs\MarkUserVerifiedJob::dispatch($user->id)->onConnection('emails');
 
-            $this->messsage = __('messages.emailVerifySuccess');
-            $this->class = 'success';
+            // Authenticate verified user directly and drop them into the in-app Onboarding Hub
+            \Illuminate\Support\Facades\Auth::loginUsingId($user->id);
 
-            return view('auth.login', $this->data);
+            return redirect(route('service_company.account.onboarding'));
         }
 
         // Invalid, missing, or expired token — redirect to login page with error flash message.
@@ -3538,8 +3577,7 @@ class SaasFrontController extends SaasFrontBaseController
                         'status' => 'active',
                         'password' => bcrypt($password),
                         'super_admin_login_code' => @$companyid.rand(1111, 9999),
-                        // SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
-                        'super_password' => $password,
+                        // SEC-DEBT REMEDIATED: Plaintext password storage eradicated per God-Level Security Audit (P0).
                     ]
                 );
         }

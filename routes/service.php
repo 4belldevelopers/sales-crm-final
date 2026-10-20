@@ -522,6 +522,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('career-page/settings', [ServiceCompanyAccountSettingsController::class, 'careerPageSettings'])->name('career.page.settings');
                 Route::post('career-page/settings/save', [ServiceCompanyAccountSettingsController::class, 'careerPageSettingsSave'])->name('career.page.settings.save');
 
+                Route::get('account/onboarding', [ServiceCompanyAccountSettingsController::class, 'onboarding'])->name('account.onboarding');
+                Route::post('account/onboarding/save', [ServiceCompanyAccountSettingsController::class, 'onboardingSave'])->name('account.onboarding.save');
                 Route::get('account/google/{id?}', [ServiceCompanyAccountSettingsController::class, 'google'])->name('account.google');
                 Route::resource('account', ServiceCompanyAccountSettingsController::class);
                 Route::get('account/tab/{tabName}', [ServiceCompanyAccountSettingsController::class, 'getTabContent'])->name('account.tab');

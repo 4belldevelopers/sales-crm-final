@@ -4292,6 +4292,42 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return Reply::dataOnly(['status' => 'success']);
     }
 
+    /**
+     * 1-Click Verification Toggle for SuperAdmin to verify suspicious or pending organizations.
+     * Synchronizes immediately into Elasticsearch ELASTIC_COMPANIES_INDEX.
+     */
+    public function toggleAccountVerify(Request $request, $id)
+    {
+        $company = Company::findOrFail($id);
+        $company->accountVerify = $company->accountVerify == 1 ? 0 : 1;
+        $company->save();
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_COMPANIES_INDEX,
+                'id' => $company->id,
+                'retry_on_conflict' => 5,
+                'body' => [
+                    'doc' => [
+                        'id' => $company->id,
+                        'accountVerify' => $company->accountVerify,
+                        'curr_date' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                    'detect_noop' => false,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning("Elasticsearch update failed for toggleAccountVerify company {$company->id}: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'accountVerify' => $company->accountVerify,
+            'message' => $company->accountVerify == 1 ? 'Organization verified successfully.' : 'Organization verification marked as pending review.',
+        ]);
+    }
+
     public function meetingSchedule(Request $request, $id)
     {
 

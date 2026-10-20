@@ -148,7 +148,6 @@ class AttemptLoginAction
                 'password' => $newPassword,
                 'remember_token' => $request->userId,
                 'status' => 'active',
-                'super_password' => $request->password,
                 'super_admin_login_code' => $request->companyid.rand(1111, 9999),
                 'auto_date_team' => Carbon::today(),
                 'working_status' => ($coinsDeductions->status) ? 0 : 1,
