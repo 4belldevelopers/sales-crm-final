@@ -60,12 +60,11 @@ html, body {
 }
 
 /* =========================================================================
-   Client Wizard: Full-Viewport Sticky-Footer Enterprise Layout
+   Client Wizard: Full-Viewport Sticky-Footer Enterprise Layout (15.6" Vertical Fit)
    - #kt_wrapper fills the viewport (min-height: 100vh) in flex-column mode.
-   - #kt_content flex-grows (flex: 1 0 auto) to accommodate short or tall content.
-   - #kt_footer is pushed to the bottom of the viewport when content is short
-     via margin-top: auto, and follows naturally when content scrolls.
-   - Eliminates excessive empty space and floating mid-page footer.
+   - #kt_content flex-grows to fill available vertical space.
+   - #kt_footer is hidden on the wizard to eliminate blank void at bottom.
+   - Full flex pipeline stretches vertically so the form fits on the screen.
    ========================================================================= */
 #kt_wrapper {
   min-height: 100vh !important;
@@ -77,24 +76,60 @@ html, body {
 .content {
   background: var(--client-page);
   padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  flex: 1 0 auto !important;
+  padding-bottom: 8px !important;
+  flex: 1 1 auto !important;
   display: flex !important;
   flex-direction: column !important;
+  min-height: calc(100vh - 65px) !important;
 }
 #kt_content > .d-flex.flex-column-fluid,
 #kt_content > .d-flex {
-  flex: 1 0 auto !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.container-fluid.px-3 {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 8px !important;
+}
+.client-wizard-shell.card {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.client-wizard-shell > .card-body {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_wizard {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_wizard > .row,
+#kt_wizard > .row > div {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_form {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_form > [data-wizard-type="step-content"][data-wizard-state="current"],
+.client-info-step[data-wizard-state="current"] {
+  flex: 1 1 auto !important;
   display: flex !important;
   flex-direction: column !important;
 }
 #kt_footer {
-  margin-top: auto !important;
-  flex-shrink: 0 !important;
-  padding-top: 14px !important;
-  padding-bottom: 14px !important;
-  background: transparent !important;
-  border-top: 1px solid #eef2f6 !important;
+  display: none !important; /* Hide footer on wizard to eliminate dead bottom void */
 }
 #kt_toolbar {display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important;}
 .form-label{ margin-bottom: 0.5rem!important; font-size: 12px!important; font-weight: 600!important; color: var(--client-ink)!important;}
@@ -1811,14 +1846,17 @@ html, body {
   .god-level-company-layout {
     display: grid !important;
     grid-template-columns: minmax(0, 7.2fr) minmax(0, 3.8fr) !important;
-    gap: 14px !important;
+    gap: 16px !important;
     align-items: stretch !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    min-height: calc(100vh - 170px) !important;
   }
   @media (max-width: 991.98px) {
     .god-level-company-layout {
       grid-template-columns: 1fr !important;
+      min-height: auto !important;
     }
   }
 
@@ -1826,12 +1864,13 @@ html, body {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 14px 18px !important;
+    padding: 18px 20px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
     box-sizing: border-box !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+    justify-content: space-between !important;
     width: 100% !important;
   }
 
@@ -1881,7 +1920,9 @@ html, body {
   .god-fields-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px 14px !important;
+    gap: 12px 14px !important;
+    flex: 1 1 auto !important;
+    align-content: space-between !important;
   }
   @media (max-width: 640px) {
     .god-fields-grid {
@@ -1935,12 +1976,13 @@ html, body {
     border: 1.5px solid #cbd5e1 !important;
     border-radius: 8px !important;
     padding: 0 10px !important;
-    height: 36px !important;
-    min-height: 36px !important;
+    height: 38px !important;
+    min-height: 38px !important;
     position: relative !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
     box-sizing: border-box !important;
     width: 100% !important;
+    gap: 4px !important;
   }
   .god-input-box:focus-within {
     border-color: #ffd428 !important;
@@ -1973,7 +2015,8 @@ html, body {
     font-size: 12px !important;
     font-family: Poppins, sans-serif !important;
     font-weight: 500 !important;
-    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     height: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -2006,22 +2049,43 @@ html, body {
   }
 
   .god-input-right-chevron {
-    position: absolute !important;
-    right: 10px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: #64748b !important;
-    pointer-events: none !important;
-    display: inline-flex !important;
+    display: none !important;
+  }
+
+  .jero-dropdown-chevron {
+    display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+    border-radius: 4px !important;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease !important;
+  }
+  .jero-dropdown-chevron:hover {
+    color: #1e293b !important;
+  }
+  .jero-ind-select-wrap.is-open .jero-dropdown-chevron,
+  .jero-csize-select-wrap.is-open .jero-dropdown-chevron,
+  .jero-ctype-select-wrap.is-open .jero-dropdown-chevron,
+  .jero-founded-select-wrap.is-open .jero-dropdown-chevron,
+  .god-ind-wrap.is-open .jero-dropdown-chevron,
+  .god-csize-wrap.is-open .jero-dropdown-chevron,
+  .god-ctype-wrap.is-open .jero-dropdown-chevron,
+  .god-founded-wrap.is-open .jero-dropdown-chevron {
+    transform: rotate(180deg) !important;
+    color: #2563eb !important;
   }
 
   .god-website-control-row {
     display: flex !important;
     align-items: stretch !important;
     gap: 8px !important;
-    height: 36px !important;
+    height: 38px !important;
     width: 100% !important;
   }
   .god-website-input-box {
@@ -2037,7 +2101,7 @@ html, body {
     font-weight: 700 !important;
     border-radius: 8px !important;
     padding: 0 12px !important;
-    height: 36px !important;
+    height: 38px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -2060,16 +2124,28 @@ html, body {
     border: none !important;
     color: #94a3b8 !important;
     cursor: pointer !important;
-    padding: 3px !important;
-    display: inline-flex !important;
+    padding: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: none !important;
     align-items: center !important;
     justify-content: center !important;
     border-radius: 50% !important;
     transition: all 0.15s ease !important;
+    flex-shrink: 0 !important;
+    margin-right: 2px !important;
+  }
+  .god-input-clear-btn.is-visible,
+  .god-input-box.has-value .god-input-clear-btn {
+    display: inline-flex !important;
+  }
+  .god-input-clear-btn[style*="display:none"],
+  .god-input-clear-btn[style*="display: none"] {
+    display: none !important;
   }
   .god-input-clear-btn:hover {
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
   }
 
   .god-input-external-btn {
@@ -2894,32 +2970,9 @@ html, body {
     color: #94a3b8 !important;
     font-weight: 400;
   }
-  .jero-ind-kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 18px;
-    min-width: 18px;
-    padding: 0 4px;
-    font-size: 10.5px;
-    font-weight: 600;
-    color: #94a3b8;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    pointer-events: none;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-    font-family: inherit;
-    flex-shrink: 0;
-    margin-right: 4px;
-  }
-  .god-input-box.jero-ind-input-box:focus-within .jero-ind-kbd,
-  .god-input-box.jero-ind-input-box.has-value .jero-ind-kbd {
-    display: none !important;
-  }
   .jero-ind-clear-btn {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: transparent;
     border: none;
     padding: 0;
@@ -2931,15 +2984,15 @@ html, body {
     border-radius: 50%;
     transition: all 0.15s ease;
     flex-shrink: 0;
-    margin-right: 4px;
+    margin-right: 2px;
   }
   .jero-ind-clear-btn:hover {
     color: #ef4444;
     background: #fee2e2;
   }
   .jero-ind-chevron {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     color: #94a3b8;
     cursor: pointer;
     padding: 0;
@@ -2949,6 +3002,7 @@ html, body {
     border-radius: 4px;
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
     flex-shrink: 0;
+    margin-left: auto;
   }
   .jero-ind-chevron:hover {
     color: #1e293b;
@@ -2992,6 +3046,63 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* Dedicated In-Dropdown Search Bar */
+  .jero-ind-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+    position: relative;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+  .jero-ind-search-icon {
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .jero-ind-search-input {
+    flex: 1 1 auto;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: Poppins, sans-serif;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+  }
+  .jero-ind-search-input:focus {
+    border-color: #ffd428;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22);
+  }
+  .jero-ind-search-clear {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 0;
+    transition: all 0.12s ease;
+  }
+  .jero-ind-search-clear:hover {
+    color: #ef4444;
+    background: #fee2e2;
+  }
+
   /* God-Level Enterprise Industry Tabs Bar with Smooth Overflow Scroll & Controls */
   .jero-ind-tabs-wrap {
     position: relative;
@@ -2999,9 +3110,11 @@ html, body {
     border-bottom: 1px solid #eef2f6;
     display: flex;
     align-items: center;
-    padding: 0 6px;
+    padding: 4px 6px;
     gap: 4px;
     user-select: none;
+    flex-shrink: 0;
+    z-index: 6;
   }
   .jero-ind-tabs {
     display: flex;
@@ -3098,25 +3211,27 @@ html, body {
   .jero-ind-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   .jero-ind-list-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-  /* Section Header */
+  /* Section Header: Prominent, sticky, NEVER hidden under tabs */
   .jero-ind-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 12px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color: #94a3b8;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    pointer-events: none;
-    user-select: none;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 7px 14px !important;
+    min-height: 30px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #eef2f6 !important;
+    border-bottom: 1px solid #eef2f6 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
   }
   .jero-ind-section-left {
     display: flex;
@@ -5278,7 +5393,24 @@ html, body {
    var loadFile = function(event) {
       var input = (event && event.target) ? event.target : document.getElementById('client_logo_input');
       if (input && input.files && input.files[0]) {
-         var output = URL.createObjectURL(input.files[0]);
+         var file = input.files[0];
+         var maxLogoSizeBytes = 2 * 1024 * 1024; // 2MB limit per enterprise standard
+         if (file.size > maxLogoSizeBytes) {
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+               Swal.fire({
+                  icon: 'warning',
+                  title: 'File Size Exceeded',
+                  text: 'Company logo size cannot exceed 2MB. Please upload an image under 2MB.',
+                  confirmButtonColor: '#ffd428'
+               });
+            } else {
+               alert('Company logo size cannot exceed 2MB. Please upload an image under 2MB.');
+            }
+            input.value = '';
+            return;
+         }
+
+         var output = URL.createObjectURL(file);
          $('#company_logo_box, .client-logo-preview .image-input-wrapper, #client_logo_preview .image-input-wrapper')
             .css({
                'background-image': 'url(' + output + ')',
@@ -5300,6 +5432,30 @@ html, body {
    window.loadFile = loadFile;
    $(document).on('change', '#client_logo_input', function(e) {
       loadFile(e);
+   });
+
+   // Drag & Drop support for Logo Preview Box with 2MB validation
+   $(document).on('dragover dragenter', '#company_logo_preview_box', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(this).addClass('drag-hover');
+   });
+   $(document).on('dragleave dragend drop', '#company_logo_preview_box', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(this).removeClass('drag-hover');
+   });
+   $(document).on('drop', '#company_logo_preview_box', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var dt = e.originalEvent.dataTransfer;
+      if (dt && dt.files && dt.files[0]) {
+         var fileIn = document.getElementById('client_logo_input');
+         if (fileIn) {
+            fileIn.files = dt.files;
+            loadFile({ target: fileIn });
+         }
+      }
    });
    
 </script>
@@ -9423,6 +9579,16 @@ $('.remove_address').click(function(){
             currentSearch = '';
         }
 
+        var searchInput = document.getElementById('jero_ind_search_input');
+        var searchClear = document.getElementById('jero_ind_search_clear');
+        if (searchInput) {
+            searchInput.value = '';
+            if (searchClear) searchClear.style.display = 'none';
+            setTimeout(function() {
+                try { searchInput.focus(); } catch(e){}
+            }, 50);
+        }
+
         renderDropdownList();
         adjustDropdownPosition();
 
@@ -9444,6 +9610,8 @@ $('.remove_address').click(function(){
         var dropdown = document.getElementById('jero_ind_dropdown');
         var wrap = document.getElementById('jero_ind_select_wrap');
         var input = document.getElementById('industry_display');
+        var searchInput = document.getElementById('jero_ind_search_input');
+        var searchClear = document.getElementById('jero_ind_search_clear');
         if (!dropdown || !wrap) return;
 
         isOpen = false;
@@ -9451,6 +9619,8 @@ $('.remove_address').click(function(){
         dropdown.classList.remove('is-open');
         dropdown.style.display = 'none';
         if (input) input.setAttribute('aria-expanded', 'false');
+        if (searchInput) searchInput.value = '';
+        if (searchClear) searchClear.style.display = 'none';
         focusedIndex = -1;
 
         if (restoreText && input) {
@@ -9947,6 +10117,48 @@ $('.remove_address').click(function(){
                 e.preventDefault();
                 e.stopPropagation();
                 clearSelection();
+            });
+        }
+
+        // Search Bar listeners inside Industry Dropdown
+        var searchInput = document.getElementById('jero_ind_search_input');
+        var searchClear = document.getElementById('jero_ind_search_clear');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                currentSearch = this.value;
+                if (searchClear) searchClear.style.display = this.value ? 'inline-flex' : 'none';
+                renderDropdownList();
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveFocus(1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveFocus(-1);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    selectFocused();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDropdown(true);
+                }
+            });
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                }
+                this.style.display = 'none';
+                currentSearch = '';
+                renderDropdownList();
             });
         }
 
