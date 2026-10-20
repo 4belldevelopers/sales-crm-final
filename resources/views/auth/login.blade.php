@@ -1,12 +1,32 @@
 @extends('layouts.metronic_front_app')
-<title>Sign In - jero.works</title>
+
+<?php
+$isSignup = (isset($initialMode) && $initialMode === 'signup') 
+    || request()->routeIs('register') 
+    || request('mode') === 'signup' 
+    || session('signup_mode');
+
+if (session('status')) {
+    $activeState = 'recover';
+} elseif ($isSignup) {
+    $activeState = 'signup';
+} else {
+    $activeState = 'login';
+}
+
+$loginStyle   = ($activeState === 'login') ? '' : 'display:none;';
+$signupStyle  = ($activeState === 'signup') ? '' : 'display:none;';
+$recoverStyle = ($activeState === 'recover') ? '' : 'display:none;';
+?>
+
+<title id="jw-page-title">{{ $activeState === 'signup' ? 'Create your Jero.works account 🚀' : 'Sign In - jero.works' }}</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-/* Presentation-only login redesign: server routes, input names, captcha endpoint, and submit handlers stay intact. */
+/* Presentation-only login & signup unified shell: master layout, visual language, and responsiveness strictly preserved. */
 :root {
     --jw-navy: #0b1f44;
     --jw-blue: #2563eb;
@@ -90,6 +110,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
+    cursor: pointer;
     transition: background .18s ease, border-color .18s ease, transform .18s ease;
 }
 .jw-create-btn:hover,
@@ -312,6 +333,13 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     border-radius: 24px;
     box-shadow: 0 25px 60px rgba(23, 40, 84, .10), 0 2px 6px rgba(23, 40, 84, .04);
 }
+.jw-fade-enter {
+    animation: jwCardFade .2s ease-out;
+}
+@keyframes jwCardFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 .jw-card-form h2 {
     margin: 0;
     color: var(--jw-navy);
@@ -321,7 +349,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     text-align: center;
 }
 .jw-card-form .sub {
-    margin: 8px 0 28px;
+    margin: 8px 0 26px;
     color: #66708e;
     font-size: 14px;
     line-height: 1.5;
@@ -343,6 +371,95 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-alert-err,
 .jw-alert-error,
 .jw-alert-danger { color: #991b1b; background: #fef2f2; border-color: #fee2e2; }
+
+/* Corporate Domain Collision Banner */
+.jw-collision-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    background: #fff7ed;
+    border: 1.5px solid #fed7aa;
+    border-radius: 12px;
+    animation: jwCardFade .2s ease-out;
+}
+.jw-collision-icon {
+    flex: 0 0 24px;
+    margin-top: 2px;
+}
+.jw-collision-content {
+    flex: 1;
+    min-width: 0;
+}
+.jw-collision-content strong {
+    display: block;
+    color: #9a3412;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.jw-collision-content p {
+    margin: 4px 0 10px;
+    color: #7c2d12;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.jw-collision-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.jw-btn-mini-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: #ea580c;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.jw-btn-mini-primary:hover { background: #c2410c; }
+.jw-btn-mini-link {
+    font-size: 12px;
+    color: #9a3412;
+    text-decoration: underline;
+    font-weight: 600;
+}
+.jw-btn-mini-link:hover { color: #7c2d12; }
+
+/* Domain badge next to field label */
+.jw-domain-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+}
+.jw-domain-tag.corporate {
+    color: #15803d;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+}
+.jw-domain-tag.webmail {
+    color: #475467;
+    background: #f2f4f7;
+    border: 1px solid #eaecf0;
+}
+.jw-domain-tag.exists {
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
 .jw-field { margin-bottom: 18px; }
 .jw-field-row {
     display: flex;
@@ -394,6 +511,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-inp:hover { border-color: #c7cfdf; }
 .jw-inp:focus { border-color: var(--jw-blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, .11); }
 .jw-inp.is-ok { border-color: var(--jw-green); }
+.jw-inp.is-invalid { border-color: var(--jw-danger); }
 .jw-err {
     display: block;
     margin-top: 7px;
@@ -402,6 +520,61 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     font-weight: 500;
     line-height: 1.45;
 }
+
+/* Scoped styling to ensure x-jero-phone-input harmonizes with master shell */
+.jw-card-form .jero-phone-field-group {
+    margin-bottom: 0 !important;
+}
+.jw-card-form .jero-phone-label {
+    display: block !important;
+    margin: 0 0 10px !important;
+    color: var(--jw-navy) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+.jw-card-form .jero-phone-input-wrap {
+    height: 54px !important;
+    min-height: 54px !important;
+    max-height: 54px !important;
+    border: 1.5px solid #d7ddea !important;
+    border-radius: 10px !important;
+    transition: border-color .16s ease, box-shadow .16s ease !important;
+}
+.jw-card-form .jero-phone-input-wrap:focus-within {
+    border-color: var(--jw-blue) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .11) !important;
+}
+.jw-card-form .jero-phone-native-input {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--jw-navy) !important;
+}
+
+/* Password strength bar */
+.jw-pwd-strength-bar {
+    display: flex;
+    gap: 5px;
+    height: 4px;
+    margin-top: 8px;
+}
+.jw-pwd-seg {
+    flex: 1;
+    height: 100%;
+    background: #e2e8f0;
+    border-radius: 2px;
+    transition: background .2s ease;
+}
+.jw-pwd-seg.weak { background: #ef4444; }
+.jw-pwd-seg.fair { background: #f59e0b; }
+.jw-pwd-seg.good { background: #3b82f6; }
+.jw-pwd-seg.strong { background: #10b981; }
+.jw-pwd-hint {
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+
 .jw-sec {
     margin: 0 0 20px;
     padding: 13px;
@@ -506,6 +679,31 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-btn[disabled] { opacity: .74; cursor: not-allowed; transform: none; }
 .jw-btn .arrow { display: inline-flex; align-items: center; transition: transform .16s ease; }
 .jw-btn:hover .arrow { transform: translateX(3px); }
+
+/* Switch link beneath forms */
+.jw-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: #4b5563;
+    font-weight: 500;
+}
+.jw-link-switch {
+    color: var(--jw-violet);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .15s ease;
+}
+.jw-link-switch:hover,
+.jw-link-switch:focus-visible {
+    color: var(--jw-blue);
+    text-decoration: underline;
+}
+
 .jw-card-divider {
     position: relative;
     display: flex;
@@ -561,7 +759,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     text-decoration: none;
 }
 .jw-fgt-sub { flex: 1; color: #fff; background: linear-gradient(90deg, var(--jw-blue) 0%, var(--jw-violet) 100%); border: 0; cursor: pointer; }
-.jw-fgt-cancel { padding: 0 20px; color: #334155; background: #f4f6fb; border: 1px solid #e2e8f0; }
+.jw-fgt-cancel { padding: 0 20px; color: #334155; background: #f4f6fb; border: 1px solid #e2e8f0; cursor: pointer; }
 .jw-footer {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -611,6 +809,8 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     font-weight: 500;
     cursor: pointer;
 }
+
+/* Metronic 15.6" Screen Adaptations (1366x768 & 1920x1080) */
 @media (max-width: 1366px) {
     .jw-auth-inner { width: min(1234px, calc(100% - 42px)); gap: 8px; }
     .jw-auth-top { padding-top: 18px; }
@@ -642,6 +842,8 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     .jw-card-form .sub { margin-bottom: 18px; font-size: 12.5px; }
     .jw-field { margin-bottom: 12px; }
     .jw-inp { height: 46px; font-size: 13px; }
+    .jw-card-form .jero-phone-input-wrap { height: 46px !important; min-height: 46px !important; max-height: 46px !important; }
+    .jw-card-form .jero-phone-native-input { font-size: 13px !important; }
     .jw-cap-row { grid-template-columns: minmax(136px, 36%) 40px minmax(0, 1fr); }
     .jw-sec { margin-bottom: 14px; padding: 12px; }
     .jw-cap-box,
@@ -687,6 +889,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     .jw-card-form h2 { font-size: 23px !important; }
     .jw-card-form .sub { margin-bottom: 22px; font-size: 12px; }
     .jw-inp { height: 48px; font-size: 12.5px; }
+    .jw-card-form .jero-phone-input-wrap { height: 48px !important; min-height: 48px !important; max-height: 48px !important; }
     .jw-cap-row { grid-template-columns: 1fr 42px; }
     .jw-cap-field { grid-column: 1 / -1; }
     .jw-btn { height: 50px; font-size: 16px; }
@@ -721,33 +924,27 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 </style>
 
 @section('content')
-<?php
-if (session('status')) {
-    $resetForm = '';
-    $loginForm = 'display:none';
-} else {
-    $resetForm = 'display:none';
-    $loginForm = '';
-}
-?>
-
 <div class="jw-auth-shell">
     <div class="jw-auth-inner">
+        <!-- Master Shell Top Header with Dynamic In-Place Switcher -->
         <header class="jw-auth-top">
             <a href="https://jero.works/" class="jw-logo" aria-label="Jero.works">
                 <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" alt="Jero.works">
                 <span>AI Recruitment Platform</span>
             </a>
             <div class="jw-account-cta">
-                <span>New to Jero.works?</span>
-                <a href="{{ route('register') }}" class="jw-create-btn">
-                    Create Free Account
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
+                <span id="jw-top-cta-text">{{ $activeState === 'signup' ? 'Already have an account?' : 'New to Jero.works?' }}</span>
+                <button type="button" class="jw-create-btn" id="jw-top-switch-btn" onclick="jwSwitchAuth('{{ $activeState === 'signup' ? 'login' : 'signup' }}')">
+                    <span id="jw-top-btn-label">{{ $activeState === 'signup' ? 'Sign In' : 'Create Free Account' }}</span>
+                    <svg id="jw-top-btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
             </div>
         </header>
 
         <main class="jw-auth-main">
+            <!-- LEFT SIDE: Immutable Master Ecosystem Design -->
             <section class="jw-hero" aria-label="Jero.works hiring ecosystem">
                 <div class="jw-hero-copy">
                     <h1>One Platform.<br>One Ecosystem.<br><span class="jw-gradient-text">Limitless Opportunities.</span></h1>
@@ -794,11 +991,15 @@ if (session('status')) {
                 <div class="jw-privacy-note"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Built with privacy by design and enterprise-grade security.</span></div>
             </section>
 
-            <section class="jw-login-zone" aria-label="Sign in">
-                <form class="jw-card-form" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="<?php echo $loginForm; ?>">
+            <!-- RIGHT SIDE: Dual-State Authentication Shell -->
+            <section class="jw-login-zone" aria-label="Authentication Card">
+                
+                <!-- STATE 1: LOGIN -->
+                <form class="jw-card-form jw-fade-enter" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="{{ $loginStyle }}">
                     @csrf
                     <h2>Welcome Back! 👋</h2>
                     <p class="sub">Sign in to continue to your Jero.works account</p>
+                    
                     @if(@$class && @$messsage)<div class="jw-alert {{ in_array(strtolower(trim(@$class)), ['success', 'ok']) ? 'jw-alert-ok jw-alert-success' : '' }}"><strong>{{ rtrim(ucfirst(@$class), '!') }}!</strong> {!! @$messsage !!}</div>@endif
                     @if(session('success'))<div class="jw-alert jw-alert-ok jw-alert-success"><strong>Success!</strong> {{ session('success') }}</div>@endif
                     @if(session('error'))<div class="jw-alert"><strong>Error!</strong> {{ session('error') }}</div>@endif
@@ -844,29 +1045,196 @@ if (session('status')) {
                         <span class="arrow" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                         <span class="indicator-progress" style="display:none" aria-live="polite">Signing in...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
                     </button>
+
+                    <div class="jw-switch-row">
+                        <span>Don't have an account?</span>
+                        <a href="javascript:void(0);" onclick="jwSwitchAuth('signup')" class="jw-link-switch">Create Free Account →</a>
+                    </div>
+
                     <div class="jw-card-divider" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
                     <div class="jw-card-trust"><div class="jw-trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Your security comes first</strong><span>Your credentials are encrypted and<br>never shared with employers or agencies.</span></div></div>
                 </form>
 
-                <form class="jw-card-form" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="<?php echo $resetForm; ?>">
+                <!-- STATE 2: SIGNUP (Lightweight 4-Field Account Creation) -->
+                <form class="jw-card-form jw-fade-enter" novalidate id="kt_sign_up_form" action="{{ route('company-register') }}" method="post" style="{{ $signupStyle }}">
+                    @csrf
+                    <!-- Structural organization default: Service Company (Type 2). Tenancy is configured post-verification inside app. -->
+                    <input type="hidden" name="company_type" value="2">
+                    <!-- Honeypot anti-bot security: humans never touch hidden fields -->
+                    <input type="text" name="website_url" style="display:none;" tabindex="-1" autocomplete="off">
+
+                    <h2>Create your Jero.works account 🚀</h2>
+                    <p class="sub">Get started in 30 seconds. No credit card required.</p>
+
+                    <!-- Dynamic Error Alert Box -->
+                    <div class="jw-alert jw-alert-danger" id="jw_signup_alert" style="display:none;" role="alert"></div>
+
+                    <!-- Corporate Domain Collision Card -->
+                    <div id="jw_domain_collision_card" class="jw-collision-box" style="display:none;" role="alert">
+                        <div class="jw-collision-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                                <path d="M12 9v4M12 17h.01M5.07 19h13.86a2 2 0 0 0 1.74-2.98L13.74 4.5a2 2 0 0 0-3.48 0L3.33 16.02A2 2 0 0 0 5.07 19Z" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="jw-collision-content">
+                            <strong id="jw_collision_title">This company already has a Jero.works workspace</strong>
+                            <p id="jw_collision_msg">An administrator or team member from your company domain is already registered. If you want to join this workspace, please ask your company administrator to invite you.</p>
+                            <div class="jw-collision-actions">
+                                <button type="button" class="jw-btn-mini-primary" onclick="jwSwitchToLoginWithEmail()">Sign In Instead →</button>
+                                <a href="mailto:support@jeroworks.com?subject=Request%20Access%20to%20Company%20Workspace" class="jw-btn-mini-link" id="jw_collision_request_btn">Request Access</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Field 1: Full Name -->
+                    <div class="jw-field">
+                        <label for="jw-signup-name">Full Name</label>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="text" name="name" id="jw-signup-name" placeholder="e.g. Sarah Jenkins" autocomplete="name" required/>
+                        </div>
+                        <span class="jw-err" id="jw-signup-name-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Field 2: Work Email with Live Corporate Domain Validation -->
+                    <div class="jw-field">
+                        <div class="jw-field-row">
+                            <label for="jw-signup-email">Work Email</label>
+                            <span class="jw-domain-tag" id="jw-domain-badge" style="display:none;"></span>
+                        </div>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                    <rect x="2.2" y="4.5" width="15.6" height="11" rx="2.2" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M3 7.2l7 5 7-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="email" name="email" id="jw-signup-email" placeholder="name@company.com" autocomplete="email" required/>
+                            <span class="ok-mark" id="jw-signup-email-ok" style="display:none;" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <circle cx="9" cy="9" r="8.4" fill="#16B364"/>
+                                    <path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="ir" id="jw-signup-email-spinner" style="display:none;" aria-hidden="true">
+                                <span class="spinner-border spinner-border-sm text-primary"></span>
+                            </span>
+                        </div>
+                        <span class="jw-err" id="jw-signup-email-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Field 3: Global Phone Number with Dynamic Calling Code Selector -->
+                    <div class="jw-field">
+                        <x-jero-phone-input
+                            id="signup_phone"
+                            name="contact_number"
+                            countryCodeName="contact_code"
+                            countryCodeId="signup_contact_code"
+                            label="Phone Number"
+                            placeholder="Enter phone number"
+                            :required="true"
+                        />
+                        <span class="jw-err" id="jw-signup-phone-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Field 4: Password with ZXCVBN Strength Meter -->
+                    <div class="jw-field">
+                        <label for="jw-signup-pwd">Password</label>
+                        <div class="jw-iw">
+                            <span class="il" aria-hidden="true">
+                                <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                    <rect x="3.3" y="8.7" width="13.4" height="8.2" rx="2.1" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M6.6 8.7V6.4a3.4 3.4 0 0 1 6.8 0v2.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                    <circle cx="10" cy="12.9" r="1.25" fill="currentColor"/>
+                                </svg>
+                            </span>
+                            <input class="jw-inp" type="password" name="password" id="jw-signup-pwd" placeholder="At least 8 characters" autocomplete="new-password" required/>
+                            <span class="ir" onclick="jwEyeSignup()" role="button" tabindex="0" aria-label="Toggle password visibility">
+                                <svg id="jw-signup-eye" width="19" height="19" viewBox="0 0 20 20" fill="none">
+                                    <path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/>
+                                    <circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="jw-pwd-strength-bar" id="jw_pwd_strength_bar">
+                            <div class="jw-pwd-seg" id="jw_seg_1"></div>
+                            <div class="jw-pwd-seg" id="jw_seg_2"></div>
+                            <div class="jw-pwd-seg" id="jw_seg_3"></div>
+                            <div class="jw-pwd-seg" id="jw_seg_4"></div>
+                        </div>
+                        <div class="jw-pwd-hint" id="jw_pwd_hint">Use 8 or more characters with letters & numbers</div>
+                        <span class="jw-err" id="jw-signup-pwd-err" style="display:none;"></span>
+                    </div>
+
+                    <!-- Continue Action Button -->
+                    <button type="submit" id="kt_sign_up_submit" class="jw-btn">
+                        <span class="indicator-label">Continue</span>
+                        <span class="arrow" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span class="indicator-progress" style="display:none" aria-live="polite">
+                            Creating Account...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span>
+                        </span>
+                    </button>
+
+                    <!-- In-Place Switch to Login -->
+                    <div class="jw-switch-row">
+                        <span>Already have an account?</span>
+                        <a href="javascript:void(0);" onclick="jwSwitchAuth('login')" class="jw-link-switch">Sign In →</a>
+                    </div>
+
+                    <div class="jw-card-divider" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+                    <div class="jw-card-trust"><div class="jw-trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Enterprise Grade Architecture</strong><span>One administrator per custom company domain.<br>100% data isolation & SOC2 compliant.</span></div></div>
+                </form>
+
+                <!-- STATE 3: POST-SIGNUP VERIFICATION CONFIRMATION -->
+                <div class="jw-card-form jw-fade-enter" id="jw_signup_success_card" style="display:none;">
+                    <div style="text-align:center; padding: 12px 0 16px;">
+                        <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: #e8f8f0; display: flex; align-items: center; justify-content: center; color: #16b364;">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <h2 style="font-size: 26px; font-weight: 800; color: #0b1f44; margin-bottom: 8px;">Check your inbox! ✉️</h2>
+                        <p class="sub" style="margin-bottom: 24px; color: #475467;">We sent a verification link to <strong id="jw_success_email" style="color:#0b1f44;"></strong>. Click the link in your email to verify your address and launch your workspace.</p>
+                        
+                        <button type="button" onclick="jwSwitchAuth('login')" class="jw-btn" style="text-decoration:none;">
+                            <span>Sign In to Your Account</span>
+                            <span class="arrow"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        </button>
+                        
+                        <div style="margin-top: 18px; font-size: 12px; color: #64748b;">
+                            Didn't receive the email? Check your spam folder or contact support.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATE 4: FORGOT PASSWORD -->
+                <form class="jw-card-form jw-fade-enter" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="{{ $recoverStyle }}">
                     {{ csrf_field() }}
                     <h2>Forgot Password?</h2>
                     <p class="sub">Enter your email to reset your password.</p>
                     @if(session('status'))<div class="jw-alert jw-alert-ok">{{ session('status') }}</div>@endif
                     @if(session('accountnotverify'))<div class="jw-alert">{{ session('accountnotverify') }}</div>@endif
                     <div class="jw-field {{ $errors->has('email') ? 'has-error' : '' }}">
-                        <label for="email">Email Address</label>
+                        <label for="recover-email">Email Address</label>
                         <div class="jw-iw">
                             <span class="il" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 20 20" fill="none"><rect x="2.2" y="4.5" width="15.6" height="11" rx="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 7.2l7 5 7-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                            <input type="email" name="email" id="email" class="jw-inp {{ $errors->has('email') ? 'is-invalid' : '' }}" placeholder="Enter your email" value="{{ old('email') }}" required autocomplete="email">
+                            <input type="email" name="email" id="recover-email" class="jw-inp {{ $errors->has('email') ? 'is-invalid' : '' }}" placeholder="Enter your email" value="{{ old('email') }}" required autocomplete="email">
                         </div>
                         @if($errors->has('email'))<span class="jw-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
                     </div>
                     <div class="jw-fgt-acts">
                         <button type="submit" id="reset_password" class="jw-fgt-sub"><span class="indicator-label">Reset Password</span><span class="indicator-progress" style="display:none">Please wait...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span></button>
-                        <a href="{{ route('login') }}" class="jw-fgt-cancel">Cancel</a>
+                        <button type="button" onclick="jwSwitchAuth('login')" class="jw-fgt-cancel">Cancel</button>
                     </div>
                 </form>
+
             </section>
         </main>
 
@@ -886,15 +1254,113 @@ if (session('status')) {
 
 @push('scripts')
 <script>
+// State management & In-Place switching between Login, Signup, Recover
+function jwSwitchAuth(mode) {
+    var loginForm   = document.getElementById('kt_sign_in_form1');
+    var signupForm  = document.getElementById('kt_sign_up_form');
+    var recoverForm = document.getElementById('recoverform');
+    var successCard = document.getElementById('jw_signup_success_card');
+
+    var topCtaText  = document.getElementById('jw-top-cta-text');
+    var topBtnLabel = document.getElementById('jw-top-btn-label');
+    var topSwitchBtn= document.getElementById('jw-top-switch-btn');
+    var pageTitle   = document.getElementById('jw-page-title');
+
+    // Hide all
+    if (loginForm)   loginForm.style.display = 'none';
+    if (signupForm)  signupForm.style.display = 'none';
+    if (recoverForm) recoverForm.style.display = 'none';
+    if (successCard) successCard.style.display = 'none';
+
+    if (mode === 'signup') {
+        if (signupForm) {
+            signupForm.style.display = 'block';
+            signupForm.classList.remove('jw-fade-enter');
+            void signupForm.offsetWidth; // trigger reflow
+            signupForm.classList.add('jw-fade-enter');
+        }
+        if (topCtaText)  topCtaText.textContent = 'Already have an account?';
+        if (topBtnLabel) topBtnLabel.textContent = 'Sign In';
+        if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
+        if (pageTitle)   pageTitle.textContent = 'Create your Jero.works account 🚀';
+        try { history.pushState({ authMode: 'signup' }, '', '{{ route("register") }}'); } catch(e) {}
+    } else if (mode === 'recover') {
+        if (recoverForm) {
+            recoverForm.style.display = 'block';
+            recoverForm.classList.remove('jw-fade-enter');
+            void recoverForm.offsetWidth;
+            recoverForm.classList.add('jw-fade-enter');
+        }
+        if (topCtaText)  topCtaText.textContent = 'Remember password?';
+        if (topBtnLabel) topBtnLabel.textContent = 'Sign In';
+        if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
+        if (pageTitle)   pageTitle.textContent = 'Forgot Password - jero.works';
+    } else {
+        // default: login
+        if (loginForm) {
+            loginForm.style.display = 'block';
+            loginForm.classList.remove('jw-fade-enter');
+            void loginForm.offsetWidth;
+            loginForm.classList.add('jw-fade-enter');
+        }
+        if (topCtaText)  topCtaText.textContent = 'New to Jero.works?';
+        if (topBtnLabel) topBtnLabel.textContent = 'Create Free Account';
+        if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('signup')");
+        if (pageTitle)   pageTitle.textContent = 'Sign In - jero.works';
+        try { history.pushState({ authMode: 'login' }, '', '{{ route("login") }}'); } catch(e) {}
+    }
+}
+
+// Browser navigation sync
+window.addEventListener('popstate', function (e) {
+    if (e.state && e.state.authMode) {
+        jwSwitchAuth(e.state.authMode);
+    } else if (window.location.pathname.indexOf('register') !== -1) {
+        jwSwitchAuth('signup');
+    } else {
+        jwSwitchAuth('login');
+    }
+});
+
+// Switch from domain collision card to login with prefilled email
+function jwSwitchToLoginWithEmail() {
+    var signupEmail = document.getElementById('jw-signup-email');
+    var loginEmail  = document.getElementById('jw-email');
+    if (signupEmail && loginEmail && signupEmail.value) {
+        loginEmail.value = signupEmail.value.trim();
+        var emailOk = document.getElementById('jw-email-ok');
+        if (emailOk) emailOk.style.display = 'flex';
+        loginEmail.classList.add('is-ok');
+    }
+    jwSwitchAuth('login');
+    var pwd = document.getElementById('jw-pwd');
+    if (pwd) pwd.focus();
+}
+
 function refreshCaptcha() {
     var img = document.getElementById('captchaImg');
-    img.src = "{{ route('captcha.generate') }}?t=" + Date.now();
+    if (img) img.src = "{{ route('captcha.generate') }}?t=" + Date.now();
     var c = document.getElementById('jw-cap');
     if (c) { c.value = ''; c.classList.remove('is-ok'); c.focus(); }
 }
 
 function jwEye() {
     var i = document.getElementById('jw-pwd'), e = document.getElementById('jw-eye');
+    if (!i || !e) return;
+    if (i.type === 'password') {
+        i.type = 'text';
+        e.innerHTML = '<path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/><line x1="2.5" y1="2.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
+        e.setAttribute('aria-label', 'Hide password');
+    } else {
+        i.type = 'password';
+        e.innerHTML = '<path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/>';
+        e.setAttribute('aria-label', 'Show password');
+    }
+}
+
+function jwEyeSignup() {
+    var i = document.getElementById('jw-signup-pwd'), e = document.getElementById('jw-signup-eye');
+    if (!i || !e) return;
     if (i.type === 'password') {
         i.type = 'text';
         e.innerHTML = '<path d="M2 10s3-5.6 8-5.6S18 10 18 10s-3 5.6-8 5.6S2 10 2 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.7"/><line x1="2.5" y1="2.5" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
@@ -907,17 +1373,28 @@ function jwEye() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    var email = document.getElementById('jw-email');
-    var emailOk = document.getElementById('jw-email-ok');
-    var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    function checkEmail() {
-        if (!email || !emailOk) return;
-        var ok = emailRe.test(email.value.trim());
-        emailOk.style.display = ok ? 'flex' : 'none';
-        email.classList.toggle('is-ok', ok);
+    // Forgot password toggle on login
+    var toRecover = document.getElementById('to-recover');
+    if (toRecover) {
+        toRecover.addEventListener('click', function(e) {
+            e.preventDefault();
+            jwSwitchAuth('recover');
+        });
     }
-    if (email) { checkEmail(); email.addEventListener('input', checkEmail); }
 
+    // Login email format check
+    var loginEmail = document.getElementById('jw-email');
+    var loginEmailOk = document.getElementById('jw-email-ok');
+    var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    function checkLoginEmail() {
+        if (!loginEmail || !loginEmailOk) return;
+        var ok = emailRe.test(loginEmail.value.trim());
+        loginEmailOk.style.display = ok ? 'flex' : 'none';
+        loginEmail.classList.toggle('is-ok', ok);
+    }
+    if (loginEmail) { checkLoginEmail(); loginEmail.addEventListener('input', checkLoginEmail); }
+
+    // Captcha validation check
     var cap = document.getElementById('jw-cap');
     function checkCap() {
         if (!cap) return;
@@ -926,17 +1403,273 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (cap) { checkCap(); cap.addEventListener('input', checkCap); }
 
-    var btn = document.getElementById('kt_sign_in_submit');
-    var form = document.getElementById('kt_sign_in_form1');
-    if (form && btn) {
-        form.addEventListener('submit', function () {
-            var label = btn.querySelector('.indicator-label');
-            var prog = btn.querySelector('.indicator-progress');
-            var arrow = btn.querySelector('.arrow');
+    // Login form submission handler
+    var loginBtn = document.getElementById('kt_sign_in_submit');
+    var loginForm = document.getElementById('kt_sign_in_form1');
+    if (loginForm && loginBtn) {
+        loginForm.addEventListener('submit', function () {
+            var label = loginBtn.querySelector('.indicator-label');
+            var prog  = loginBtn.querySelector('.indicator-progress');
+            var arrow = loginBtn.querySelector('.arrow');
             if (label) label.style.display = 'none';
             if (arrow) arrow.style.display = 'none';
-            if (prog) prog.style.display = 'inline-flex';
-            btn.setAttribute('disabled', 'disabled');
+            if (prog)  prog.style.display = 'inline-flex';
+            loginBtn.setAttribute('disabled', 'disabled');
+        });
+    }
+
+    // -------------------------------------------------------------
+    // SIGNUP WORKFLOW: Corporate Domain Check, Password Meter, Submission
+    // -------------------------------------------------------------
+    var signupEmail   = document.getElementById('jw-signup-email');
+    var signupEmailOk = document.getElementById('jw-signup-email-ok');
+    var signupSpinner = document.getElementById('jw-signup-email-spinner');
+    var domainBadge   = document.getElementById('jw-domain-badge');
+    var collisionCard = document.getElementById('jw-domain-collision_card');
+    var collisionTitle= document.getElementById('jw_collision_title');
+    var collisionMsg  = document.getElementById('jw_collision_msg');
+    var collisionReq  = document.getElementById('jw_collision_request_btn');
+
+    var domainCheckTimer = null;
+    var lastCheckedDomain = '';
+
+    function probeCorporateDomain() {
+        if (!signupEmail) return;
+        var val = signupEmail.value.trim().toLowerCase();
+        if (!emailRe.test(val)) {
+            if (domainBadge) domainBadge.style.display = 'none';
+            if (signupEmailOk) signupEmailOk.style.display = 'none';
+            if (collisionCard) collisionCard.style.display = 'none';
+            signupEmail.classList.remove('is-ok', 'is-invalid');
+            return;
+        }
+
+        var domainPart = val.split('@')[1] || '';
+        if (domainPart === lastCheckedDomain) return;
+
+        if (signupSpinner) signupSpinner.style.display = 'flex';
+        if (signupEmailOk) signupEmailOk.style.display = 'none';
+
+        var formData = new FormData();
+        formData.append('email', val);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        fetch("{{ route('domain-company-register-chk') }}", {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (signupSpinner) signupSpinner.style.display = 'none';
+            lastCheckedDomain = domainPart;
+
+            if (data.status === 'domain_collision' || data.allowed === false) {
+                // Collision detected: corporate domain already taken
+                if (collisionCard) collisionCard.style.display = 'flex';
+                if (collisionTitle && data.title) collisionTitle.textContent = data.title;
+                if (collisionMsg && data.message) collisionMsg.textContent = data.message;
+                if (collisionReq) {
+                    collisionReq.href = "mailto:" + (data.support_email || 'support@jeroworks.com') + "?subject=Request%20Access%20to%20" + encodeURIComponent(domainPart) + "%20Workspace";
+                }
+                if (domainBadge) {
+                    domainBadge.textContent = 'Workspace Exists';
+                    domainBadge.className = 'jw-domain-tag exists';
+                    domainBadge.style.display = 'inline-flex';
+                }
+                signupEmail.classList.remove('is-ok');
+                signupEmail.classList.add('is-invalid');
+            } else {
+                // Domain available or free webmail
+                if (collisionCard) collisionCard.style.display = 'none';
+                if (signupEmailOk) signupEmailOk.style.display = 'flex';
+                signupEmail.classList.remove('is-invalid');
+                signupEmail.classList.add('is-ok');
+
+                if (domainBadge) {
+                    if (data.is_free_webmail) {
+                        domainBadge.textContent = 'Personal Webmail';
+                        domainBadge.className = 'jw-domain-tag webmail';
+                    } else {
+                        domainBadge.textContent = 'Available Workspace ✓';
+                        domainBadge.className = 'jw-domain-tag corporate';
+                    }
+                    domainBadge.style.display = 'inline-flex';
+                }
+            }
+        })
+        .catch(function() {
+            if (signupSpinner) signupSpinner.style.display = 'none';
+        });
+    }
+
+    if (signupEmail) {
+        signupEmail.addEventListener('input', function() {
+            clearTimeout(domainCheckTimer);
+            domainCheckTimer = setTimeout(probeCorporateDomain, 450);
+        });
+        signupEmail.addEventListener('blur', probeCorporateDomain);
+    }
+
+    // Password strength evaluator (User RAM execution)
+    var signupPwd = document.getElementById('jw-signup-pwd');
+    var seg1 = document.getElementById('jw_seg_1');
+    var seg2 = document.getElementById('jw_seg_2');
+    var seg3 = document.getElementById('jw_seg_3');
+    var seg4 = document.getElementById('jw_seg_4');
+    var pwdHint = document.getElementById('jw_pwd_hint');
+
+    function evalPasswordStrength() {
+        if (!signupPwd) return;
+        var p = signupPwd.value;
+        var score = 0;
+        if (p.length >= 8) score++;
+        if (p.length >= 12) score++;
+        if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
+        if (/[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p)) score++;
+
+        [seg1, seg2, seg3, seg4].forEach(function(s) { if (s) s.className = 'jw-pwd-seg'; });
+
+        if (p.length === 0) {
+            if (pwdHint) pwdHint.textContent = 'Use 8 or more characters with letters & numbers';
+            return;
+        }
+
+        if (score === 1) {
+            if (seg1) seg1.classList.add('weak');
+            if (pwdHint) pwdHint.textContent = 'Too weak (minimum 8 characters)';
+        } else if (score === 2) {
+            if (seg1) seg1.classList.add('fair');
+            if (seg2) seg2.classList.add('fair');
+            if (pwdHint) pwdHint.textContent = 'Fair password — add uppercase or numbers';
+        } else if (score === 3) {
+            if (seg1) seg1.classList.add('good');
+            if (seg2) seg2.classList.add('good');
+            if (seg3) seg3.classList.add('good');
+            if (pwdHint) pwdHint.textContent = 'Good password';
+        } else if (score >= 4) {
+            if (seg1) seg1.classList.add('strong');
+            if (seg2) seg2.classList.add('strong');
+            if (seg3) seg3.classList.add('strong');
+            if (seg4) seg4.classList.add('strong');
+            if (pwdHint) pwdHint.textContent = 'Strong enterprise-grade password';
+        }
+    }
+    if (signupPwd) signupPwd.addEventListener('input', evalPasswordStrength);
+
+    // Signup form AJAX submit (2-Step Flow: Step 1 Account Creation)
+    var signupForm = document.getElementById('kt_sign_up_form');
+    var signupBtn  = document.getElementById('kt_sign_up_submit');
+    var signupAlert= document.getElementById('jw_signup_alert');
+
+    function resetSignupBtn() {
+        if (!signupBtn) return;
+        signupBtn.removeAttribute('disabled');
+        var label = signupBtn.querySelector('.indicator-label');
+        var prog  = signupBtn.querySelector('.indicator-progress');
+        var arrow = signupBtn.querySelector('.arrow');
+        if (label) label.style.display = 'inline';
+        if (arrow) arrow.style.display = 'inline-flex';
+        if (prog)  prog.style.display = 'none';
+    }
+
+    if (signupForm && signupBtn) {
+        signupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (signupAlert) { signupAlert.style.display = 'none'; signupAlert.textContent = ''; }
+
+            var nameInput  = document.getElementById('jw-signup-name');
+            var emailInput = document.getElementById('jw-signup-email');
+            var pwdInput   = document.getElementById('jw-signup-pwd');
+
+            if (!nameInput || !nameInput.value.trim()) {
+                if (signupAlert) { signupAlert.textContent = 'Please enter your full name.'; signupAlert.style.display = 'block'; }
+                if (nameInput) nameInput.focus();
+                return;
+            }
+            if (!emailInput || !emailRe.test(emailInput.value.trim())) {
+                if (signupAlert) { signupAlert.textContent = 'Please enter a valid work email address.'; signupAlert.style.display = 'block'; }
+                if (emailInput) emailInput.focus();
+                return;
+            }
+            if (!pwdInput || pwdInput.value.length < 8) {
+                if (signupAlert) { signupAlert.textContent = 'Password must be at least 8 characters long.'; signupAlert.style.display = 'block'; }
+                if (pwdInput) pwdInput.focus();
+                return;
+            }
+
+            // Spinner state
+            var label = signupBtn.querySelector('.indicator-label');
+            var prog  = signupBtn.querySelector('.indicator-progress');
+            var arrow = signupBtn.querySelector('.arrow');
+            if (label) label.style.display = 'none';
+            if (arrow) arrow.style.display = 'none';
+            if (prog)  prog.style.display = 'inline-flex';
+            signupBtn.setAttribute('disabled', 'disabled');
+
+            var formData = new FormData(signupForm);
+
+            fetch("{{ route('company-register') }}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(async function(res) {
+                var data = await res.json().catch(function() { return {}; });
+                if (res.ok && data.status === 'success') {
+                    // Account creation success! Show verification confirmation
+                    signupForm.style.display = 'none';
+                    var successCard  = document.getElementById('jw_signup_success_card');
+                    var successEmail = document.getElementById('jw_success_email');
+                    if (successEmail) successEmail.textContent = data.email || emailInput.value.trim();
+                    if (successCard) {
+                        successCard.style.display = 'block';
+                        successCard.classList.remove('jw-fade-enter');
+                        void successCard.offsetWidth;
+                        successCard.classList.add('jw-fade-enter');
+                    }
+                    var topCtaText  = document.getElementById('jw-top-cta-text');
+                    var topBtnLabel = document.getElementById('jw-top-btn-label');
+                    var topSwitchBtn= document.getElementById('jw-top-switch-btn');
+                    if (topCtaText)   topCtaText.textContent = 'Already verified?';
+                    if (topBtnLabel)  topBtnLabel.textContent = 'Sign In';
+                    if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
+                } else if (res.status === 422 && data.status === 'domain_collision') {
+                    if (collisionCard) {
+                        collisionCard.style.display = 'flex';
+                        if (collisionTitle && data.title) collisionTitle.textContent = data.title;
+                        if (collisionMsg && data.message) collisionMsg.textContent = data.message;
+                    }
+                    resetSignupBtn();
+                } else if (res.status === 422 && data.validation) {
+                    var keys = Object.keys(data.validation);
+                    var firstMsg = data.validation[keys[0]][0];
+                    if (signupAlert) {
+                        signupAlert.textContent = firstMsg;
+                        signupAlert.style.display = 'block';
+                    }
+                    resetSignupBtn();
+                } else {
+                    if (signupAlert) {
+                        signupAlert.textContent = data.message || 'Unable to complete registration. Please try again.';
+                        signupAlert.style.display = 'block';
+                    }
+                    resetSignupBtn();
+                }
+            })
+            .catch(function() {
+                if (signupAlert) {
+                    signupAlert.textContent = 'A network error occurred. Please check your connection and retry.';
+                    signupAlert.style.display = 'block';
+                }
+                resetSignupBtn();
+            });
         });
     }
 });

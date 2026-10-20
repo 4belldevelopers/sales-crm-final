@@ -15,8 +15,19 @@ class CompanySignupRequest extends FormRequest
     }
 
     /**
+     * Prepare inputs before validation: default company_type to 2 (Service Company)
+     * for frictionless lightweight signup.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('company_type') || empty($this->company_type)) {
+            $this->merge(['company_type' => 2]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
-     * The 5 Essential Inputs: Name, Email, Phone, Company Type, Password.
+     * The 4 Essential Inputs: Name, Email, Phone (with Code), Password.
      * Zero-DNS real-time validation: syntax checked via RFC 5321 in User RAM and server.
      */
     public function rules(): array
@@ -32,9 +43,9 @@ class CompanySignupRequest extends FormRequest
             'contact_number' => ['required', 'string', 'min:6', 'max:20'],
             'contact_code' => ['required', 'string', 'max:10'],
 
-            // 4. Company Type (structural organization model)
+            // 4. Company Type (structural organization model, defaults to 2: Service Company)
             // 1: Staffing Agency, 2: Service Company, 3: Product Company, 4: Freelancer
-            'company_type' => ['required', 'in:1,2,3,4'],
+            'company_type' => ['nullable', 'in:1,2,3,4'],
 
             // 5. Password (Argon2id / bcrypt standard; min 8, max 128)
             'password' => ['required', 'string', 'min:8', 'max:128'],
