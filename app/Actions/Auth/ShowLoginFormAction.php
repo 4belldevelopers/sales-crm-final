@@ -32,9 +32,10 @@ class ShowLoginFormAction
             return redirect(TenantRouter::profileEditUrl($userId));
         }
 
-        // Incomplete company profile → account-edit before dashboard.
-        if (TenantRouter::profileCompletionRow($user->company_id) === null) {
-            return redirect(TenantRouter::accountEditUrl($userId));
+        // Post-verification onboarding: if company has not yet set their organization name, route to clean Onboarding Hub
+        $company = DB::table('companies')->where('id', $user->company_id)->select('company_name')->first();
+        if ($company && (empty($company->company_name) || $company->company_name === 'Pending Onboarding')) {
+            return redirect(url('/service_company/account/onboarding'));
         }
 
         return redirect(TenantRouter::dashboardUrl($user));

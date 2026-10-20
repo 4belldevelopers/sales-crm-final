@@ -1880,4 +1880,78 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         return Reply::dataOnly(['status' => 'success', 'status_text' => $status_text]);
     }
+
+    /**
+     * Post-Verification In-App Onboarding Hub
+     * Allows newly verified tenants to establish organization name and upload their company logo (<= 2MB).
+     */
+    public function onboarding()
+    {
+        $this->pageTitle = 'Setup Your Workspace';
+        $company_id = auth()->user()->company_id;
+        $this->company = DB::table('companies')->where('id', $company_id)->first();
+
+        return view('service_company.account.onboarding', $this->data);
+    }
+
+    /**
+     * Save Onboarding Setup & Transition to ATS Dashboard
+     * Enforces strict <= 2MB logo limit.
+     */
+    public function onboardingSave(Request $request)
+    {
+        $request->validate([
+            'company_name' => 'required|string|min:2|max:191',
+            'website' => 'nullable|url|max:191',
+            'logo' => 'nullable|file|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ], [
+            'company_name.required' => 'Please enter your organization name.',
+            'logo.max' => 'Company logo must not exceed 2MB in file size.',
+            'logo.image' => 'Uploaded logo must be a valid image file (PNG, JPG, SVG, WebP).',
+        ]);
+
+        $company_id = auth()->user()->company_id;
+        $company = Company::withoutGlobalScopes()->findOrFail($company_id);
+
+        $company->company_name = trim($request->company_name);
+        if ($request->filled('website')) {
+            $company->website = trim($request->website);
+            if (empty($company->domain_key)) {
+                $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
+                $cleanDomain = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+                $existing = DB::table('companies')->where('domain_key', $cleanDomain)->where('id', '!=', $company_id)->exists();
+                if (!$existing) {
+                    $company->domain_key = $cleanDomain;
+                }
+            }
+        }
+
+        if ($request->hasFile('logo')) {
+            try {
+                $file = $request->file('logo');
+                $filename = uniqid('JERO_logo_') . '.' . $file->getClientOriginalExtension();
+                $fileUrl = $file->storeAs('Companies/' . $company_id . '/Images', $filename, 'r2');
+                $company->logo = $fileUrl;
+            } catch (\Throwable $r2Ex) {
+                $company->logo = \App\Helper\Files::upload($request->logo, 'company-logo');
+            }
+        }
+
+        $company->save();
+
+        // Synchronize with Elasticsearch so SuperAdmin immediately sees updated company profile
+        try {
+            app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company_id);
+        } catch (\Throwable $esEx) {
+            \Log::warning('ES sync in onboardingSave deferred: ' . $esEx->getMessage());
+        }
+
+        \App\Services\CurrencyService::invalidateTenantCache($company_id);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Workspace profile completed successfully!',
+            'redirect_url' => url('service_company/dashboard')
+        ]);
+    }
 }
