@@ -3204,6 +3204,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return Reply::error('Founded Year is required.');
         }
 
+        // Logo size and extension check (max 2MB per enterprise specification)
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                return Reply::error('Company logo size cannot exceed 2MB.');
+            }
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (! in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'svg'])) {
+                return Reply::error('Logo must be a valid image file (PNG, JPG, WEBP, SVG).');
+            }
+        }
+
         // 2. Client Description & Service Offerings
         if (empty(trim(strip_tags($request->description ?? '')))) {
             return Reply::error('Company Description is required.');

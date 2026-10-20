@@ -171,17 +171,35 @@
                        aria-haspopup="listbox"
                        aria-autocomplete="list"
                        value="{{ htmlspecialchars($selectedIndName) }}">
-                <kbd class="jero-ind-kbd" id="jero_ind_kbd" title="Press / to search" style="{{ $selectedIndName ? 'display:none;' : '' }}">/</kbd>
-                <button type="button" class="god-input-clear-btn jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="{{ $selectedIndName ? 'display:flex;' : 'display:none;' }}">
+                <button type="button" class="god-input-clear-btn jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="{{ $selectedIndName ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-                <div class="god-input-right-chevron jero-ind-chevron" id="jero_ind_chevron" title="Toggle industry list" role="button" aria-label="Toggle industry list" tabindex="-1">
+                <div class="jero-dropdown-chevron jero-ind-chevron" id="jero_ind_chevron" title="Toggle industry list" role="button" aria-label="Toggle industry list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
               </div>
 
               <!-- Hierarchical Dropdown Menu Container -->
               <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Client Industries">
+                <!-- Dropdown Header: Dedicated Search Bar -->
+                <div class="jero-ind-search-wrap" id="jero_ind_search_wrap">
+                  <span class="jero-ind-search-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </span>
+                  <input type="text"
+                         class="jero-ind-search-input"
+                         id="jero_ind_search_input"
+                         placeholder="Search 160+ industries (e.g. Software, Healthcare, Fintech)..."
+                         autocomplete="off"
+                         spellcheck="false">
+                  <button type="button" class="jero-ind-search-clear" id="jero_ind_search_clear" aria-label="Clear search" style="display:none;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+
                 <div class="jero-ind-tabs-wrap">
                   <button type="button" class="jero-ind-tab-nav jero-ind-tab-prev" id="jero_ind_tab_prev" aria-label="Scroll left" tabindex="-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -256,10 +274,10 @@
                        spellcheck="false"
                        value="{{ htmlspecialchars($selectedSizeLabel) }}"
                        style="cursor:pointer; user-select:none;">
-                <button type="button" class="god-input-clear-btn jero-csize-clear-btn" id="jero_csize_clear_btn" aria-label="Clear company size" title="Clear selection" style="{{ $selectedSizeLabel ? 'display:flex;' : 'display:none;' }}">
+                <button type="button" class="god-input-clear-btn jero-csize-clear-btn" id="jero_csize_clear_btn" aria-label="Clear company size" title="Clear selection" style="{{ $selectedSizeLabel ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-                <div class="god-input-right-chevron jero-csize-chevron" id="jero_csize_chevron" title="Toggle company size list" role="button" aria-label="Toggle company size list" tabindex="-1">
+                <div class="jero-dropdown-chevron jero-csize-chevron" id="jero_csize_chevron" title="Toggle company size list" role="button" aria-label="Toggle company size list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
               </div>
@@ -352,11 +370,10 @@
                        aria-autocomplete="list"
                        aria-controls="jero_ctype_dropdown"
                        value="{{ htmlspecialchars($selectedCompTypeName) }}">
-                <kbd class="jero-ctype-kbd" id="jero_ctype_kbd" title="Press / to search" style="{{ $selectedCompTypeName ? 'display:none;' : '' }}">/</kbd>
-                <button type="button" class="god-input-clear-btn jero-ctype-clear-btn" id="jero_ctype_clear_btn" aria-label="Clear company type" title="Clear selection" style="{{ $selectedCompTypeName ? 'display:flex;' : 'display:none;' }}">
+                <button type="button" class="god-input-clear-btn jero-ctype-clear-btn" id="jero_ctype_clear_btn" aria-label="Clear company type" title="Clear selection" style="{{ $selectedCompTypeName ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-                <div class="god-input-right-chevron jero-ctype-chevron" id="jero_ctype_chevron" title="Toggle company type list" role="button" aria-label="Toggle company type list" tabindex="-1">
+                <div class="jero-dropdown-chevron jero-ctype-chevron" id="jero_ctype_chevron" title="Toggle company type list" role="button" aria-label="Toggle company type list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
               </div>
@@ -400,11 +417,10 @@
                        aria-controls="jero_founded_dropdown"
                        readonly
                        value="{{ $founded ?? '' }}">
-                <kbd class="jero-founded-kbd" id="jero_founded_kbd" title="Press / to search" style="{{ !empty($founded) ? 'display:none;' : '' }}">/</kbd>
-                <button type="button" class="god-input-clear-btn jero-founded-clear-btn" id="jero_founded_clear_btn" aria-label="Clear founded year" title="Clear selection" style="{{ !empty($founded) ? 'display:flex;' : 'display:none;' }}">
+                <button type="button" class="god-input-clear-btn jero-founded-clear-btn" id="jero_founded_clear_btn" aria-label="Clear founded year" title="Clear selection" style="{{ !empty($founded) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-                <div class="god-input-right-chevron jero-founded-chevron" id="jero_founded_chevron" title="Toggle founded year list" role="button" aria-label="Toggle founded year list" tabindex="-1">
+                <div class="jero-dropdown-chevron jero-founded-chevron" id="jero_founded_chevron" title="Toggle founded year list" role="button" aria-label="Toggle founded year list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
               </div>
@@ -522,7 +538,7 @@
         <input type="file"
                name="logo"
                id="client_logo_input"
-               accept=".png, .jpg, .jpeg, .webp"
+               accept=".png, .jpg, .jpeg, .webp, .svg"
                onchange="loadFile(event)"
                style="display:none;" />
         <input type="hidden" name="avatar_remove" id="client_avatar_remove" value="0" />
@@ -583,7 +599,7 @@
             <line x1="12" y1="16" x2="12" y2="12"/>
             <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
-          <span>Supported formats: PNG, JPG, WEBP (Max 2MB).<br>Used in job postings, candidate submissions, and client portals.</span>
+          <span>Supported formats: PNG, JPG, WEBP, SVG (Max 2MB).<br>Recommended: 400×400px. Used in job postings & client portals.</span>
         </div>
 
       </section>
