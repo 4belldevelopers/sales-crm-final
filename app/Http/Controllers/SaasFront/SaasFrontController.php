@@ -361,10 +361,15 @@ class SaasFrontController extends SaasFrontBaseController
         //     return Reply::dataOnly(['status' => 'error', 'message' => 'CAPTCHA verification failed. Please try again.']);
         // }
 
+        // Default to Service Company (Type 2) if omitted in lightweight 4-field signup
+        if (! $request->has('company_type') || empty($request->company_type)) {
+            $request->merge(['company_type' => 2]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:2|max:100',
             'email' => 'required|string|email:rfc|max:191|unique:users,email',
-            'company_type' => 'required|in:1,2,3,4',
+            'company_type' => 'nullable|in:1,2,3,4',
             'contact_number' => 'required|string|min:6|max:20',
             'contact_code' => 'required|string|max:10',
             'password' => 'required|string|min:8|max:128',
@@ -373,8 +378,6 @@ class SaasFrontController extends SaasFrontBaseController
             'email.required' => 'Please enter your work email address.',
             'email.email' => 'Please enter a valid work email address.',
             'email.unique' => 'This email is already registered on Jero. Please sign in instead.',
-            'company_type.required' => 'Please select your company type.',
-            'company_type.in' => 'Please select a valid company type.',
             'contact_number.required' => 'Please enter your phone number.',
             'contact_code.required' => 'Please select your country calling code.',
             'password.required' => 'Please enter a password (minimum 8 characters).',

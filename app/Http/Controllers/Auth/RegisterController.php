@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\SaasFront\SaasFrontBaseController;
+use App\Models\FrontCmsHeader;
+use App\Models\ThemeSetting;
+// use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-// use Illuminate\Foundation\Auth\RegistersUsers;
-use App\Models\GlobalSetting;
-use App\Models\ThemeSetting;
-use App\Models\FrontCmsHeader;
-use App\Http\Controllers\SaasFront\SaasFrontBaseController;
 
 class RegisterController extends SaasFrontBaseController
 {
@@ -42,28 +41,36 @@ class RegisterController extends SaasFrontBaseController
     public function __construct()
     {
         parent::__construct();
-		
-		$this->pageTitle 	=	'Meecruit | Register';
-        $this->pageIcon 	=	'icon-grid';
-		
-		
+
+        $this->pageTitle = 'Meecruit | Register';
+        $this->pageIcon = 'icon-grid';
+
         $this->middleware('guest')->except('logout');
     }
 
     public function showRegistrationForm()
     {
-        $this->setting 			= $this->global;
-        $this->headerData 		= FrontCmsHeader::first();
-        $this->frontTheme 		= $this->adminTheme;
-		
-		
-        return view('saas-front.register', $this->data);
+        if (auth()->check()) {
+            return app(\App\Actions\Auth\ShowLoginFormAction::class)->redirectIfAuthenticated() ?? redirect('/service_company/dashboard');
+        }
+
+        $this->setting = $this->global;
+        $this->headerData = FrontCmsHeader::first();
+        $this->frontTheme = $this->adminTheme;
+
+        return view('auth.login', array_merge($this->data, [
+            'initialMode' => 'signup',
+            'setting' => $this->global,
+            'global' => $this->global,
+            'frontTheme' => ThemeSetting::whereNull('company_id')->first(),
+            'headerData' => FrontCmsHeader::first(),
+            'adminTheme' => $this->adminTheme,
+        ]));
     }
 
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -78,7 +85,6 @@ class RegisterController extends SaasFrontBaseController
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
      * @return \App\User
      */
     protected function create(array $data)
