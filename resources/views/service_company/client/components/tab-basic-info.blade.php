@@ -364,13 +364,6 @@
               <!-- Dropdown Menu Container (Search-First) -->
               <div class="jero-ctype-dropdown" id="jero_ctype_dropdown" style="display:none;" role="listbox" aria-label="Company Types">
                 <div class="jero-ctype-list-container" id="jero_ctype_list_container"></div>
-                <div class="jero-ctype-footer">
-                  <div class="jero-ctype-sync-status">
-                    <span class="jero-ctype-sync-dot"></span>
-                    <span>Global Business Classification</span>
-                  </div>
-                  <span class="jero-ctype-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
-                </div>
               </div>
             </div>
           </div>
