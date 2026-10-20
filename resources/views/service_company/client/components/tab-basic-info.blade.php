@@ -179,32 +179,8 @@
                 </div>
               </div>
 
-              <!-- Hierarchical Dropdown Menu Container -->
+              <!-- God-Level Enterprise Industry Dropdown Menu -->
               <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Client Industries">
-                <!-- Dropdown Header: Dedicated Search Bar -->
-                <div class="jero-ind-search-wrap" id="jero_ind_search_wrap">
-                  <span class="jero-ind-search-icon">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"/>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                  </span>
-                  <input type="text"
-                         class="jero-ind-search-input"
-                         id="jero_ind_search_input"
-                         placeholder="Search 160+ industries (e.g. Software, Healthcare, Fintech)..."
-                         autocomplete="off"
-                         spellcheck="false">
-                  <button type="button" class="jero-ind-search-clear" id="jero_ind_search_clear" aria-label="Clear search" style="display:none;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                  </button>
-                </div>
-
-                <div class="jero-ind-tabs-wrap">
-                  <div class="jero-ind-tabs" id="jero_ind_tabs">
-                    <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
-                  </div>
-                </div>
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
               </div>
             </div>

@@ -3012,24 +3012,25 @@ html, body {
     color: #2563eb;
   }
 
-  /* Elevated Modern Dropdown Container — Enterprise Downward Anchored (Never pop-up offscreen) */
+  /* Elevated Modern Dropdown Container — God-Level Pure List Architecture */
   .jero-ind-dropdown {
     position: absolute;
-    top: calc(100% + 5px);
+    top: calc(100% + 4px);
     left: 0;
+    right: 0;
+    width: 100%;
     min-width: 100%;
-    width: max(100%, 540px);
-    max-width: min(620px, calc(100vw - 32px));
+    max-width: 100%;
     z-index: 1080;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.16), 0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
     overflow: hidden;
     display: none;
     flex-direction: column;
-    max-height: min(440px, calc(100vh - 120px));
-    animation: jeroDropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 300px;
+    animation: jeroDropdownFadeIn 0.14s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
   }
   .jero-ind-select-wrap.is-open .jero-ind-dropdown,
@@ -3045,147 +3046,15 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Dedicated In-Dropdown Search Bar */
-  .jero-ind-search-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
-    flex-shrink: 0;
-    position: relative;
-    box-sizing: border-box;
-    z-index: 10;
-  }
-  .jero-ind-search-icon {
-    color: #94a3b8;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .jero-ind-search-input {
-    flex: 1 1 auto;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 7px;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-family: Poppins, sans-serif;
-    color: #0f172a;
-    background: #f8fafc;
-    outline: none;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-  }
-  .jero-ind-search-input:focus {
-    border-color: #2563eb;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
-  }
-  .jero-ind-search-clear {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: none;
-    background: transparent;
-    color: #94a3b8;
-    cursor: pointer;
-    border-radius: 50%;
-    padding: 0;
-    transition: all 0.12s ease;
-  }
-  .jero-ind-search-clear:hover {
-    color: #ef4444;
-    background: #fee2e2;
-  }
-
-  /* God-Level Enterprise Industry Tabs Bar: Multi-Pill Wrap (All 10 Sectors 100% Visible & Accessible) */
-  .jero-ind-tabs-wrap {
-    position: relative;
-    background: #f8fafc;
-    border-bottom: 1px solid #eef2f6;
-    display: flex;
-    flex-direction: column;
-    padding: 7px 10px;
-    gap: 5px;
-    user-select: none;
-    flex-shrink: 0;
-    z-index: 6;
-    box-sizing: border-box;
-  }
-  .jero-ind-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 5px;
-    padding: 1px 0;
-    max-height: 84px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-  }
-  .jero-ind-tabs::-webkit-scrollbar { width: 4px; }
-  .jero-ind-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-  .jero-ind-tab-nav {
-    display: none !important;
-  }
-  .jero-ind-tab-btn {
-    font-size: 11px;
-    font-weight: 500;
-    color: #475569;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    padding: 3px 9px;
-    border-radius: 14px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4.5px;
-    transition: all 0.12s ease;
-    font-family: inherit;
-    white-space: nowrap;
-    flex-shrink: 0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    line-height: 1.35;
-  }
-  .jero-ind-tab-btn:hover {
-    color: #1e293b;
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-  }
-  .jero-ind-tab-btn.active {
-    background: #101A46;
-    color: #ffffff;
-    border-color: #101A46;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(16, 26, 70, 0.18);
-  }
-  .jero-ind-tab-btn .tab-count {
-    font-size: 9.5px;
-    font-weight: 600;
-    padding: 0 4.5px;
-    border-radius: 8px;
-    background: #f1f5f9;
-    color: #64748b;
-  }
-  .jero-ind-tab-btn.active .tab-count {
-    background: rgba(255, 255, 255, 0.24);
-    color: #ffffff;
-  }
-
-  /* List Container */
+  /* List Container: Silky Smooth Pure List */
   .jero-ind-list-container {
     flex: 1 1 auto;
-    min-height: 90px;
     max-height: 290px;
+    min-height: 100px;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    position: relative;
-    padding: 4px 0;
+    padding: 6px 0;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
     box-sizing: border-box;
@@ -9381,30 +9250,7 @@ $('.remove_address').click(function(){
     // Render & Dropdown UI Engine
     // =========================================================================
     function updateSectorTabs() {
-        var tabsWrap = document.getElementById('jero_ind_tabs');
-        if (!tabsWrap) return;
-
-        // Count per sector
-        var counts = {};
-        for (var i = 0; i < indList.length; i++) {
-            var s = indList[i].sector_id;
-            counts[s] = (counts[s] || 0) + 1;
-        }
-
-        var allHtml = '<button type="button" class="jero-ind-tab-btn ' + (currentSector === 'all' ? 'active' : '') + '" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">' + indList.length + '</span></button>';
-
-        for (var sIdx = 0; sIdx < sectorsList.length; sIdx++) {
-            var sec = sectorsList[sIdx];
-            var count = counts[sec.id] || 0;
-            var shortName = sec.name.split(',')[0].split('&')[0].trim();
-            var isActive = (String(currentSector) === String(sec.id)) ? 'active' : '';
-            allHtml += '<button type="button" class="jero-ind-tab-btn ' + isActive + '" data-sector="' + sec.id + '" title="' + escapeHtml(sec.name) + '">' +
-                escapeHtml(shortName) + ' <span class="tab-count">' + count + '</span>' +
-            '</button>';
-        }
-
-        tabsWrap.innerHTML = allHtml;
-        adjustDropdownPosition();
+        // Pure God-Level combobox list architecture — in-dropdown tabs removed per UI/UX specification
     }
 
     function renderDropdownList() {
@@ -9419,7 +9265,12 @@ $('.remove_address').click(function(){
 
         if (currentMatches.length === 0) {
             container.innerHTML = '<div class="jero-ind-empty-state">' +
-                (q ? 'No industries match "' + escapeHtml(q) + '".' : 'No industries available in this sector.') +
+                '<div class="jero-ind-empty-icon">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
+                '</div>' +
+                '<div class="jero-ind-empty-title">' + (q ? 'No industry matches "' + escapeHtml(q) + '"' : 'No industries available') + '</div>' +
+                (q ? '<div class="jero-ind-empty-sub">Add this as a custom industry:</div>' +
+                     '<button type="button" class="jero-ind-add-custom-btn" onclick="if(window.JeroIndustryIntelligenceEngine) window.JeroIndustryIntelligenceEngine.commitCustomIndustry(\'' + escapeHtml(q).replace(/'/g, "\\'") + '\');">+ Use "' + escapeHtml(q) + '"</button>' : '') +
             '</div>';
             adjustDropdownPosition();
             return;
@@ -9514,39 +9365,21 @@ $('.remove_address').click(function(){
         var rect = wrap.getBoundingClientRect();
         var viewportH = window.innerHeight || document.documentElement.clientHeight || 768;
 
-        // Enterprise UX: Strictly open downwards under the input box (never pop-up offscreen or hide headers/tabs)
+        // Enterprise UX: Strictly open downwards under the input box
         dropdown.classList.remove('drop-up');
         dropdown.style.bottom = 'auto';
-        dropdown.style.top = 'calc(100% + 5px)';
+        dropdown.style.top = 'calc(100% + 4px)';
 
         // Ensure parent wrap has high z-index and relative position
         wrap.style.zIndex = '1050';
         wrap.style.position = 'relative';
 
         // Calculate available vertical space below input box to bottom of viewport
-        var spaceBelow = Math.max(180, viewportH - rect.bottom - 16);
-
-        // Intelligently fit inside available viewport space (min 260px, max 440px)
-        var idealDropdownHeight = Math.min(440, Math.max(260, spaceBelow));
+        var spaceBelow = Math.max(160, viewportH - rect.bottom - 16);
+        var idealDropdownHeight = Math.min(290, spaceBelow);
         dropdown.style.maxHeight = idealDropdownHeight + 'px';
-
-        // Subtract search box and wrapped tabs bar to give list container its exact fit
-        var searchWrap = document.getElementById('jero_ind_search_wrap');
-        var tabsWrap = document.querySelector('.jero-ind-tabs-wrap');
-        var nonListHeight = (searchWrap ? searchWrap.offsetHeight : 44) + 
-                            (tabsWrap ? tabsWrap.offsetHeight : 64);
-        var listMaxH = Math.max(120, idealDropdownHeight - nonListHeight);
         if (listContainer) {
-            listContainer.style.maxHeight = listMaxH + 'px';
-        }
-
-        // Horizontal boundary protection (prevent overflow off right edge of screen)
-        var dropdownRect = dropdown.getBoundingClientRect();
-        if (dropdownRect.right > (window.innerWidth - 16)) {
-            var overflowX = dropdownRect.right - (window.innerWidth - 16);
-            dropdown.style.left = (-overflowX) + 'px';
-        } else {
-            dropdown.style.left = '0px';
+            listContainer.style.maxHeight = idealDropdownHeight + 'px';
         }
     }
 
@@ -9585,25 +9418,15 @@ $('.remove_address').click(function(){
             currentSearch = '';
         }
 
-        var searchInput = document.getElementById('jero_ind_search_input');
-        var searchClear = document.getElementById('jero_ind_search_clear');
-        if (searchInput) {
-            searchInput.value = '';
-            if (searchClear) searchClear.style.display = 'none';
-            setTimeout(function() {
-                try { searchInput.focus(); } catch(e){}
-            }, 50);
-        }
-
         renderDropdownList();
         adjustDropdownPosition();
 
-        // If viewport space below input is tight (< 340px), gently scroll input into comfortable view
+        // If viewport space below input is tight (< 300px), gently center the input in viewport
         var rect = wrap.getBoundingClientRect();
         var vh = window.innerHeight || document.documentElement.clientHeight || 768;
-        if ((vh - rect.bottom) < 340) {
+        if ((vh - rect.bottom) < 300) {
             try {
-                wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTimeout(adjustDropdownPosition, 180);
             } catch(e){}
         }
@@ -9622,8 +9445,6 @@ $('.remove_address').click(function(){
         var dropdown = document.getElementById('jero_ind_dropdown');
         var wrap = document.getElementById('jero_ind_select_wrap');
         var input = document.getElementById('industry_display');
-        var searchInput = document.getElementById('jero_ind_search_input');
-        var searchClear = document.getElementById('jero_ind_search_clear');
         if (!dropdown || !wrap) return;
 
         isOpen = false;
@@ -9632,8 +9453,6 @@ $('.remove_address').click(function(){
         dropdown.classList.remove('is-open');
         dropdown.style.display = 'none';
         if (input) input.setAttribute('aria-expanded', 'false');
-        if (searchInput) searchInput.value = '';
-        if (searchClear) searchClear.style.display = 'none';
         focusedIndex = -1;
 
         if (restoreText && input) {
@@ -10130,111 +9949,6 @@ $('.remove_address').click(function(){
                 e.preventDefault();
                 e.stopPropagation();
                 clearSelection();
-            });
-        }
-
-        // Search Bar listeners inside Industry Dropdown
-        var searchInput = document.getElementById('jero_ind_search_input');
-        var searchClear = document.getElementById('jero_ind_search_clear');
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                currentSearch = this.value;
-                if (searchClear) searchClear.style.display = this.value ? 'inline-flex' : 'none';
-                renderDropdownList();
-            });
-
-            searchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    moveFocus(1);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    moveFocus(-1);
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    selectFocused();
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    closeDropdown(true);
-                }
-            });
-        }
-
-        if (searchClear) {
-            searchClear.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (searchInput) {
-                    searchInput.value = '';
-                    searchInput.focus();
-                }
-                this.style.display = 'none';
-                currentSearch = '';
-                renderDropdownList();
-            });
-        }
-
-        var tabPrevBtn = document.getElementById('jero_ind_tab_prev');
-        var tabNextBtn = document.getElementById('jero_ind_tab_next');
-
-        function updateTabNavVisibility() {
-            if (!tabsContainer) return;
-            var hasOverflow = tabsContainer.scrollWidth > tabsContainer.clientWidth + 2;
-            if (tabPrevBtn) tabPrevBtn.style.display = (hasOverflow && tabsContainer.scrollLeft > 6) ? 'inline-flex' : 'none';
-            if (tabNextBtn) tabNextBtn.style.display = (hasOverflow && (tabsContainer.scrollLeft + tabsContainer.clientWidth < tabsContainer.scrollWidth - 6)) ? 'inline-flex' : 'none';
-        }
-        window.jeroUpdateIndTabNavVisibility = updateTabNavVisibility;
-
-        if (tabPrevBtn) {
-            tabPrevBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (tabsContainer) {
-                    tabsContainer.scrollBy({ left: -160, behavior: 'smooth' });
-                    setTimeout(updateTabNavVisibility, 220);
-                }
-            });
-        }
-
-        if (tabNextBtn) {
-            tabNextBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (tabsContainer) {
-                    tabsContainer.scrollBy({ left: 160, behavior: 'smooth' });
-                    setTimeout(updateTabNavVisibility, 220);
-                }
-            });
-        }
-
-        if (tabsContainer) {
-            tabsContainer.addEventListener('scroll', updateTabNavVisibility, { passive: true });
-            tabsContainer.addEventListener('wheel', function(e) {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    tabsContainer.scrollLeft += e.deltaY;
-                    updateTabNavVisibility();
-                }
-            }, { passive: false });
-
-            tabsContainer.addEventListener('click', function(e) {
-                var btn = e.target.closest('.jero-ind-tab-btn');
-                if (!btn) return;
-                var sector = btn.getAttribute('data-sector');
-                if (!sector) return;
-
-                currentSector = sector;
-                var allTabs = tabsContainer.querySelectorAll('.jero-ind-tab-btn');
-                for (var t = 0; t < allTabs.length; t++) {
-                    allTabs[t].classList.remove('active');
-                }
-                btn.classList.add('active');
-
-                renderDropdownList();
-                adjustDropdownPosition();
-                var sInput = document.getElementById('jero_ind_search_input');
-                if (sInput) sInput.focus();
             });
         }
 
