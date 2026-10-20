@@ -1246,15 +1246,20 @@ class SaasFrontController extends SaasFrontBaseController
                 }
 
                 // Working with Client
+                $clientCompanyName = ! empty($request->company_name)
+                    ? trim($request->company_name)
+                    : (! empty($company->company_name) ? $company->company_name : 'Pending Onboarding');
+                $clientContactPerson = ! empty($request->name) ? trim($request->name) : $clientCompanyName;
+
                 $values = [
                     'company_id' => $company->id,
-                    'name' => $request->company_name,
+                    'name' => $clientCompanyName,
                     'website' => $request->website,
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
                     'email' => $request->email,
-                    'contact_person_name' => $request->company_name,
+                    'contact_person_name' => $clientContactPerson,
                 ];
                 DB::table('clients')->insert($values);
                 $client_id = DB::getPdo()->lastInsertId();
@@ -1444,7 +1449,7 @@ class SaasFrontController extends SaasFrontBaseController
             $countryID = '';
             $city = '';
             $default_rates = DB::table('default_rates')->first();
-            if (count($work_city_all) > 0) {
+            if (! empty($work_city_all) && is_array($work_city_all) && count($work_city_all) > 0) {
                 // Single batched city lookup — replaces N×3 per-city queries with 1 whereIn. (Sprint 3 task 3.4)
                 $_batchCityNames = array_unique(array_map(
                     fn ($v) => trim(explode('|', $v['value'])[0]),
@@ -2051,15 +2056,20 @@ class SaasFrontController extends SaasFrontBaseController
                 }
 
                 // Working with Client
+                $clientCompanyName = ! empty($request->company_name)
+                    ? trim($request->company_name)
+                    : (! empty($company->company_name) ? $company->company_name : 'Pending Onboarding');
+                $clientContactPerson = ! empty($request->name) ? trim($request->name) : $clientCompanyName;
+
                 $values = [
                     'company_id' => $company->id,
-                    'name' => $request->company_name,
+                    'name' => $clientCompanyName,
                     'website' => $request->website,
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
                     'email' => $request->email,
-                    'contact_person_name' => $request->company_name,
+                    'contact_person_name' => $clientContactPerson,
                 ];
                 DB::table('clients')->insert($values);
                 $client_id = DB::getPdo()->lastInsertId();
@@ -2067,7 +2077,7 @@ class SaasFrontController extends SaasFrontBaseController
                 // Working with Client Contact Info
                 $values = [
                     'client_id' => $client_id,
-                    'contact_person_name' => $request->company_name,
+                    'contact_person_name' => ! empty($request->name) ? trim($request->name) : $clientCompanyName,
                     'contact_person_email' => $request->email,
                     // 'contact_person_number' 	=> $number,
                     'contact_person_designation' => 'Account Owner',
@@ -3159,15 +3169,20 @@ class SaasFrontController extends SaasFrontBaseController
                 }
 
                 // Working with Client
+                $clientCompanyName = ! empty($request->company_name)
+                    ? trim($request->company_name)
+                    : (! empty($company->company_name) ? $company->company_name : 'Pending Onboarding');
+                $clientContactPerson = ! empty($request->name) ? trim($request->name) : $clientCompanyName;
+
                 $values = [
                     'company_id' => $company->id,
-                    'name' => $request->company_name,
+                    'name' => $clientCompanyName,
                     'website' => $request->website,
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
                     'email' => $request->email,
-                    'contact_person_name' => $request->company_name,
+                    'contact_person_name' => $clientContactPerson,
                 ];
                 DB::table('clients')->insert($values);
                 $client_id = DB::getPdo()->lastInsertId();
@@ -3175,7 +3190,7 @@ class SaasFrontController extends SaasFrontBaseController
                 // Working with Client Contact Info
                 $values = [
                     'client_id' => $client_id,
-                    'contact_person_name' => $request->company_name,
+                    'contact_person_name' => ! empty($request->name) ? trim($request->name) : $clientCompanyName,
                     'contact_person_email' => $request->email,
                     // 'contact_person_number' 	=> $number,
                     'contact_person_designation' => 'Account Owner',
@@ -3361,7 +3376,7 @@ class SaasFrontController extends SaasFrontBaseController
                 GeneralMethod::userIndexingupload($user->id);
             }
             $default_rates = DB::table('default_rates')->first();
-            if (count($work_city_all) > 0) {
+            if (! empty($work_city_all) && is_array($work_city_all) && count($work_city_all) > 0) {
                 if (! DB::table('commericials')->where('rateType', 1)->where('company_id', $company_id)->exists()) {
 
                     $status = 0;
