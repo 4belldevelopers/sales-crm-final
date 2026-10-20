@@ -2964,8 +2964,8 @@ html, body {
     top: calc(100% + 6px);
     left: 0;
     min-width: 100%;
-    width: max(100%, 460px);
-    max-width: calc(100vw - 32px);
+    width: max(100%, 540px);
+    max-width: min(620px, calc(100vw - 32px));
     z-index: 1060;
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -2992,29 +2992,57 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Tabs Bar */
+  /* God-Level Enterprise Industry Tabs Bar with Smooth Overflow Scroll & Controls */
   .jero-ind-tabs-wrap {
     position: relative;
     background: #f8fafc;
     border-bottom: 1px solid #eef2f6;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    gap: 4px;
+    user-select: none;
   }
   .jero-ind-tabs {
     display: flex;
-    flex-shrink: 0;
+    flex: 1 1 auto;
     gap: 6px;
-    padding: 8px 12px;
+    padding: 8px 4px;
     overflow-x: auto;
+    scroll-behavior: smooth;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
   .jero-ind-tabs::-webkit-scrollbar { display: none; }
+  .jero-ind-tab-nav {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    flex-shrink: 0;
+    z-index: 2;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .jero-ind-tab-nav:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #94a3b8;
+  }
   .jero-ind-tab-btn {
     font-size: 11.5px;
     font-weight: 500;
     color: #475569;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    padding: 3px 10px;
+    padding: 4px 11px;
     border-radius: 20px;
     cursor: pointer;
     display: inline-flex;
@@ -3049,51 +3077,6 @@ html, body {
   .jero-ind-tab-btn.active .tab-count {
     background: rgba(255, 255, 255, 0.22);
     color: #ffffff;
-  }
-
-  /* Recent Bar */
-  .jero-ind-recent-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex-shrink: 0;
-  }
-  .jero-ind-recent-bar::-webkit-scrollbar { display: none; }
-  .jero-ind-recent-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #94a3b8;
-    flex-shrink: 0;
-  }
-  .jero-ind-recent-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #334155;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 2px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.12s ease;
-  }
-  .jero-ind-recent-chip:hover {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
   }
 
   /* List Container */
@@ -3290,55 +3273,6 @@ html, body {
   }
   .jero-ind-add-custom-btn:hover {
     background: #1d4ed8 !important;
-  }
-
-  /* Footer */
-  .jero-ind-footer {
-    display: flex;
-    flex-shrink: 0;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 12px;
-    background: #f8fafc;
-    border-top: 1px solid #eef2f6;
-    font-size: 10.5px;
-    color: #64748b;
-  }
-  .jero-ind-sync-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #059669;
-    font-weight: 600;
-    font-size: 11px;
-  }
-  .jero-ind-sync-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    animation: jeroPulseDot 2s infinite;
-  }
-  .jero-ind-footer-hints {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #94a3b8;
-  }
-  .jero-ind-hint-key {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-  }
-  .jero-ind-hint-key kbd {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 3px;
-    padding: 1px 4px;
-    font-size: 9.5px;
-    color: #475569;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
   }
 
   /* =========================================================================
@@ -3593,48 +3527,249 @@ html, body {
   }
 
   /* =========================================================================
-     Company Size Native Select — Enterprise-Grade Clean Styling
+     Enterprise Company Size Combobox Module (Rule 17 Isolated)
      ========================================================================= */
-  #company_sizes.god-native-select {
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    font-size: 12.5px !important;
-    font-weight: 500 !important;
-    color: #1e293b !important;
-    font-family: 'Poppins', sans-serif !important;
-    cursor: pointer !important;
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    line-height: 1.4 !important;
-    width: 100% !important;
-    flex: 1 1 auto !important;
+  .jero-csize-select-wrap {
+    position: relative;
+    width: 100%;
   }
-  #company_sizes.god-native-select option {
-    font-size: 13px;
-    font-weight: 500;
-    color: #1e293b;
-    padding: 8px 12px;
+  .god-input-box.jero-csize-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    height: 42px;
+    padding: 0 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+  }
+  .god-input-box.jero-csize-input-box:hover {
+    border-color: #94a3b8;
+  }
+  .god-input-box.jero-csize-input-box:focus-within,
+  .god-input-box.jero-csize-input-box.is-focused,
+  .jero-csize-select-wrap.is-open .god-input-box.jero-csize-input-box {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     background: #ffffff;
   }
-  #company_sizes.god-native-select option:checked,
-  #company_sizes.god-native-select option:hover {
-    background: #eff6ff;
-    color: #1d4ed8;
+  .god-input-box.jero-csize-input-box.is-invalid,
+  .god-input-box.jero-csize-input-box.has-validation-error,
+  .jero-csize-select-wrap.has-validation-error .god-input-box.jero-csize-input-box {
+    border-color: #f1416c !important;
+    background-color: #fff8f8 !important;
   }
-  .god-input-box.god-select-box {
+  .jero-csize-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+  }
+  .god-input-box.jero-csize-input-box:focus-within .jero-csize-icon,
+  .jero-csize-select-wrap.is-open .jero-csize-icon {
+    color: #2563eb;
+  }
+  .jero-csize-input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #1e293b;
+    font-family: inherit;
+    background: transparent;
+    padding: 0;
+    min-width: 0;
+    line-height: 1.4;
     cursor: pointer;
   }
-  .god-input-box.god-select-box:hover {
-    border-color: #94a3b8 !important;
+  .jero-csize-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
   }
-  .god-input-box.god-select-box:focus-within {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+  .jero-csize-clear-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: #94a3b8;
+    background: #f1f5f9;
+    border: none;
+    cursor: pointer;
+    margin-right: 6px;
+    padding: 0;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .jero-csize-clear-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+  .jero-csize-chevron {
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+    flex-shrink: 0;
+  }
+  .jero-csize-chevron:hover {
+    color: #1e293b;
+  }
+  .jero-csize-select-wrap.is-open .jero-csize-chevron {
+    transform: rotate(180deg);
+    color: #2563eb;
+  }
+  .jero-csize-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    min-width: 100%;
+    z-index: 1060;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.16), 0 8px 20px -4px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    animation: jeroDropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+  }
+  .jero-csize-select-wrap.is-open .jero-csize-dropdown {
+    display: flex !important;
+  }
+  .jero-csize-dropdown.drop-up {
+    top: auto;
+    bottom: calc(100% + 6px);
+    box-shadow: 0 -20px 48px -8px rgba(15, 23, 42, 0.16), 0 -8px 20px -4px rgba(15, 23, 42, 0.08);
+  }
+  .jero-csize-list-container {
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 6px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+  }
+  .jero-csize-list-container::-webkit-scrollbar { width: 5px; }
+  .jero-csize-list-container::-webkit-scrollbar-track { background: #f8fafc; }
+  .jero-csize-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .jero-csize-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+    border-bottom: 1px solid #f8fafc;
+    box-sizing: border-box;
+    min-height: 42px;
+  }
+  .jero-csize-item:last-child {
+    border-bottom: none;
+  }
+  .jero-csize-item:hover,
+  .jero-csize-item.focused {
+    background: #f8fafc;
+  }
+  .jero-csize-item.selected {
+    background: #eff6ff;
+  }
+  .jero-csize-item-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .jero-csize-item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .jero-csize-item:hover .jero-csize-item-icon,
+  .jero-csize-item.selected .jero-csize-item-icon {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .jero-csize-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .jero-csize-item-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .jero-csize-item.selected .jero-csize-item-label {
+    color: #1d4ed8;
+  }
+  .jero-csize-item-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .jero-csize-item-side {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  .jero-csize-item-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+  .jero-csize-item.selected .jero-csize-item-badge {
+    background: #bfdbfe;
+    color: #1e40af;
+    border-color: #93c5fd;
+  }
+  .jero-csize-item-check {
+    display: none;
+    color: #2563eb;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .jero-csize-item.selected .jero-csize-item-check {
+    display: inline-flex;
   }
 
   /* =========================================================================
@@ -7647,6 +7782,7 @@ $('.remove_address').click(function(){
     $('.is-invalid').removeClass('is-invalid');
     $('.client-inline-error').remove();
     $('#jero_ind_select_wrap, #jero_ind_input_box').removeClass('has-validation-error');
+    $('#jero_csize_select_wrap, #jero_csize_input_box').removeClass('has-validation-error');
     $('#jero_ctype_select_wrap, #jero_ctype_input_box').removeClass('has-validation-error');
     $('#jero_founded_select_wrap, #jero_founded_input_box').removeClass('has-validation-error');
   }
@@ -7658,6 +7794,11 @@ $('.remove_address').click(function(){
       $('#industry_display').removeClass('is-invalid');
       $('#jero_ind_input_box').removeClass('has-validation-error');
       $('#jero_ind_select_wrap').removeClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'company_sizes' || $field.attr('id') === 'company_sizes_display') {
+      $('#company_sizes_display').removeClass('is-invalid');
+      $('#jero_csize_input_box').removeClass('has-validation-error');
+      $('#jero_csize_select_wrap').removeClass('has-validation-error');
     }
     if ($field.attr('id') === 'company_type' || $field.attr('id') === 'company_type_display') {
       $('#company_type_display').removeClass('is-invalid');
@@ -7688,6 +7829,11 @@ $('.remove_address').click(function(){
       $('#industry_display').addClass('is-invalid');
       $('#jero_ind_input_box').addClass('has-validation-error');
       $('#jero_ind_select_wrap').addClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'company_sizes' || $field.attr('id') === 'company_sizes_display') {
+      $('#company_sizes_display').addClass('is-invalid');
+      $('#jero_csize_input_box').addClass('has-validation-error');
+      $('#jero_csize_select_wrap').addClass('has-validation-error');
     }
     if ($field.attr('id') === 'company_type' || $field.attr('id') === 'company_type_display') {
       $('#company_type_display').addClass('is-invalid');
@@ -9137,44 +9283,15 @@ $('.remove_address').click(function(){
         }
 
         tabsWrap.innerHTML = allHtml;
-    }
-
-    function updateRecentBar() {
-        var bar = document.getElementById('jero_ind_recent_bar');
-        if (!bar) return;
-
-        var q = currentSearch.trim();
-        if (q || currentSector !== 'all') {
-            bar.style.display = 'none';
-            return;
+        if (typeof updateTabNavVisibility === 'function') {
+            setTimeout(updateTabNavVisibility, 30);
         }
-
-        var recentItems = getRecentIndustries();
-        if (!recentItems || recentItems.length === 0) {
-            bar.style.display = 'none';
-            return;
-        }
-
-        var html = '<span class="jero-ind-recent-label">Recent:</span>';
-        var count = Math.min(recentItems.length, 3);
-        for (var r = 0; r < count; r++) {
-            var item = recentItems[r];
-            var iconData = SECTOR_ICONS[item.sector_id] || DEFAULT_SECTOR_ICON;
-            html += '<span class="jero-ind-recent-chip" data-id="' + item.id + '" title="' + escapeHtml(item.sector_name || '') + '">' +
-                '<span style="display:inline-flex;width:12px;height:12px;color:' + iconData.color + ';">' + iconData.icon + '</span> ' +
-                escapeHtml(item.name) +
-            '</span>';
-        }
-
-        bar.innerHTML = html;
-        bar.style.display = 'flex';
     }
 
     function renderDropdownList() {
         var container = document.getElementById('jero_ind_list_container');
         if (!container) return;
 
-        updateRecentBar();
         currentMatches = searchIndustries(currentSearch, currentSector);
         focusedIndex = -1;
 
@@ -9259,13 +9376,8 @@ $('.remove_address').click(function(){
         var spaceBelow = Math.max(0, viewportH - rect.bottom - 12);
         var spaceAbove = Math.max(0, rect.top - 12);
 
-        var tabsEl = dropdown.querySelector('.jero-ind-tabs');
-        var recentEl = document.getElementById('jero_ind_recent_bar');
-        var footerEl = dropdown.querySelector('.jero-ind-footer');
-
-        var fixedH = (tabsEl ? tabsEl.offsetHeight : 38) +
-                     ((recentEl && recentEl.style.display !== 'none') ? recentEl.offsetHeight : 0) +
-                     (footerEl ? footerEl.offsetHeight : 34) + 16;
+        var tabsEl = dropdown.querySelector('.jero-ind-tabs-wrap') || dropdown.querySelector('.jero-ind-tabs');
+        var fixedH = (tabsEl ? tabsEl.offsetHeight : 42) + 8;
 
         var dropUp = false;
         if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
@@ -9307,6 +9419,11 @@ $('.remove_address').click(function(){
                 }
             }
         }
+                    container.style.maxHeight = listH + 'px';
+                    lastCachedListHeight = listH;
+                }
+            }
+        }
     }
 
     function openDropdown() {
@@ -9331,6 +9448,10 @@ $('.remove_address').click(function(){
 
         renderDropdownList();
         adjustDropdownPosition();
+
+        if (typeof window.jeroUpdateIndTabNavVisibility === 'function') {
+            setTimeout(window.jeroUpdateIndTabNavVisibility, 30);
+        }
 
         if (container) {
             var selectedEl = container.querySelector('.jero-ind-item.selected');
@@ -9846,7 +9967,49 @@ $('.remove_address').click(function(){
             });
         }
 
+        var tabPrevBtn = document.getElementById('jero_ind_tab_prev');
+        var tabNextBtn = document.getElementById('jero_ind_tab_next');
+
+        function updateTabNavVisibility() {
+            if (!tabsContainer) return;
+            var hasOverflow = tabsContainer.scrollWidth > tabsContainer.clientWidth + 2;
+            if (tabPrevBtn) tabPrevBtn.style.display = (hasOverflow && tabsContainer.scrollLeft > 6) ? 'inline-flex' : 'none';
+            if (tabNextBtn) tabNextBtn.style.display = (hasOverflow && (tabsContainer.scrollLeft + tabsContainer.clientWidth < tabsContainer.scrollWidth - 6)) ? 'inline-flex' : 'none';
+        }
+        window.jeroUpdateIndTabNavVisibility = updateTabNavVisibility;
+
+        if (tabPrevBtn) {
+            tabPrevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (tabsContainer) {
+                    tabsContainer.scrollBy({ left: -160, behavior: 'smooth' });
+                    setTimeout(updateTabNavVisibility, 220);
+                }
+            });
+        }
+
+        if (tabNextBtn) {
+            tabNextBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (tabsContainer) {
+                    tabsContainer.scrollBy({ left: 160, behavior: 'smooth' });
+                    setTimeout(updateTabNavVisibility, 220);
+                }
+            });
+        }
+
         if (tabsContainer) {
+            tabsContainer.addEventListener('scroll', updateTabNavVisibility, { passive: true });
+            tabsContainer.addEventListener('wheel', function(e) {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    tabsContainer.scrollLeft += e.deltaY;
+                    updateTabNavVisibility();
+                }
+            }, { passive: false });
+
             tabsContainer.addEventListener('click', function(e) {
                 var btn = e.target.closest('.jero-ind-tab-btn');
                 if (!btn) return;
@@ -9860,6 +10023,10 @@ $('.remove_address').click(function(){
                 }
                 btn.classList.add('active');
 
+                // Smooth scroll active tab into view
+                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                setTimeout(updateTabNavVisibility, 220);
+
                 renderDropdownList();
                 if (input) input.focus();
             });
@@ -9870,20 +10037,6 @@ $('.remove_address').click(function(){
                 var itemEl = e.target.closest('.jero-ind-item');
                 if (!itemEl) return;
                 var id = itemEl.getAttribute('data-id');
-                if (id) {
-                    var item = indMap.get(parseInt(id, 10));
-                    if (item) {
-                        selectItem(item);
-                    }
-                }
-            });
-        }
-
-        if (recentBar) {
-            recentBar.addEventListener('click', function(e) {
-                var chip = e.target.closest('.jero-ind-recent-chip');
-                if (!chip) return;
-                var id = chip.getAttribute('data-id');
                 if (id) {
                     var item = indMap.get(parseInt(id, 10));
                     if (item) {
@@ -10849,6 +11002,321 @@ $('.remove_address').click(function(){
         open: openDropdown,
         close: closeDropdown,
         getYears: function() { return yearsList; }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
+        initEventListeners();
+    }
+})();
+
+/**
+ * =========================================================================
+ * JERO ENTERPRISE COMPANY SIZE ENGINE (RULE 17 ISOLATED)
+ * Modern custom combobox component replacing browser-native select menu.
+ * Full 2-way sync with hidden <select name="company_sizes" id="company_sizes">
+ * =========================================================================
+ */
+(function() {
+    'use strict';
+
+    var wrap = null;
+    var inputBox = null;
+    var displayInput = null;
+    var hiddenSelect = null;
+    var clearBtn = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+    var isOpen = false;
+    var focusedIndex = -1;
+
+    function getItems() {
+        return listContainer ? listContainer.querySelectorAll('.jero-csize-item') : [];
+    }
+
+    function adjustPosition() {
+        if (!wrap || !dropdown || !isOpen) return;
+        var rect = wrap.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight || 768;
+
+        if (rect.bottom < 0 || rect.top > vh) {
+            closeDropdown();
+            return;
+        }
+
+        var spaceBelow = Math.max(0, vh - rect.bottom - 12);
+        var spaceAbove = Math.max(0, rect.top - 12);
+
+        if (spaceBelow < 220 && spaceAbove > spaceBelow && spaceAbove > 180) {
+            dropdown.classList.add('drop-up');
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = 'calc(100% + 5px)';
+        } else {
+            dropdown.classList.remove('drop-up');
+            dropdown.style.bottom = 'auto';
+            dropdown.style.top = 'calc(100% + 5px)';
+        }
+    }
+
+    function openDropdown() {
+        if (isOpen || !wrap || !dropdown) return;
+        isOpen = true;
+        wrap.classList.add('is-open');
+        dropdown.style.display = 'flex';
+        if (inputBox) inputBox.setAttribute('aria-expanded', 'true');
+        adjustPosition();
+
+        var selected = listContainer ? listContainer.querySelector('.jero-csize-item.selected') : null;
+        if (selected && listContainer) {
+            var sTop = selected.offsetTop - listContainer.offsetTop;
+            listContainer.scrollTop = Math.max(0, sTop - 40);
+        }
+    }
+
+    function closeDropdown(restoreFocus) {
+        if (!isOpen || !wrap || !dropdown) return;
+        isOpen = false;
+        wrap.classList.remove('is-open');
+        dropdown.style.display = 'none';
+        if (inputBox) inputBox.setAttribute('aria-expanded', 'false');
+        focusedIndex = -1;
+        var items = getItems();
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.remove('focused');
+        }
+        if (restoreFocus && inputBox) {
+            inputBox.focus();
+        }
+    }
+
+    function updateVisualState() {
+        var val = hiddenSelect ? (hiddenSelect.value || '').trim() : '';
+        var hasVal = val.length > 0;
+        if (inputBox) {
+            if (hasVal) {
+                inputBox.classList.add('has-value');
+            } else {
+                inputBox.classList.remove('has-value');
+            }
+        }
+        if (clearBtn) clearBtn.style.display = hasVal ? 'flex' : 'none';
+
+        var items = getItems();
+        for (var i = 0; i < items.length; i++) {
+            var itemVal = items[i].getAttribute('data-val');
+            var isSel = (itemVal === val) || (val === '1-10' && itemVal === '2-10') || (itemVal === '50001-0' && (val === '50001-' || val === '10000-999999'));
+            if (isSel) {
+                items[i].classList.add('selected');
+                items[i].setAttribute('aria-selected', 'true');
+            } else {
+                items[i].classList.remove('selected');
+                items[i].setAttribute('aria-selected', 'false');
+            }
+        }
+    }
+
+    function selectOption(val, label) {
+        if (!hiddenSelect) return;
+        hiddenSelect.value = val;
+        $(hiddenSelect).trigger('change');
+
+        if (displayInput) {
+            displayInput.value = label || (hiddenSelect.options[hiddenSelect.selectedIndex] ? hiddenSelect.options[hiddenSelect.selectedIndex].text : '');
+        }
+
+        updateVisualState();
+
+        if (typeof window.clearFieldError === 'function') {
+            window.clearFieldError($(hiddenSelect));
+        }
+        $('#jero_csize_input_box, #jero_csize_select_wrap').removeClass('has-validation-error');
+
+        // Review summary text sync
+        var txt = displayInput ? displayInput.value : '';
+        $('.span_company_sizes').text(txt && txt !== 'Select company size' ? txt : '—');
+
+        closeDropdown(true);
+    }
+
+    function clearOption() {
+        if (!hiddenSelect) return;
+        hiddenSelect.value = '';
+        $(hiddenSelect).trigger('change');
+
+        if (displayInput) {
+            displayInput.value = '';
+        }
+
+        updateVisualState();
+        $('.span_company_sizes').text('—');
+        closeDropdown(false);
+        if (inputBox) inputBox.focus();
+    }
+
+    function moveFocus(delta) {
+        var items = getItems();
+        if (items.length === 0) return;
+
+        if (focusedIndex >= 0 && focusedIndex < items.length) {
+            items[focusedIndex].classList.remove('focused');
+        }
+
+        focusedIndex += delta;
+        if (focusedIndex < 0) focusedIndex = items.length - 1;
+        if (focusedIndex >= items.length) focusedIndex = 0;
+
+        var target = items[focusedIndex];
+        target.classList.add('focused');
+
+        if (listContainer) {
+            var cTop = listContainer.scrollTop;
+            var cH = listContainer.clientHeight;
+            var tTop = target.offsetTop;
+            var tH = target.offsetHeight;
+
+            if (tTop < cTop) {
+                listContainer.scrollTop = tTop - 6;
+            } else if (tTop + tH > cTop + cH) {
+                listContainer.scrollTop = (tTop + tH) - cH + 6;
+            }
+        }
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_csize_select_wrap');
+        inputBox = document.getElementById('jero_csize_input_box');
+        displayInput = document.getElementById('company_sizes_display');
+        hiddenSelect = document.getElementById('company_sizes');
+        clearBtn = document.getElementById('jero_csize_clear_btn');
+        chevron = document.getElementById('jero_csize_chevron');
+        dropdown = document.getElementById('jero_csize_dropdown');
+        listContainer = document.getElementById('jero_csize_list_container');
+
+        if (!wrap || !hiddenSelect) return;
+
+        if (inputBox) {
+            inputBox.addEventListener('click', function(e) {
+                if (e.target.closest('#jero_csize_clear_btn')) return;
+                if (isOpen) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
+                }
+            });
+
+            inputBox.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!isOpen) openDropdown();
+                    else moveFocus(1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!isOpen) openDropdown();
+                    else moveFocus(-1);
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                        openDropdown();
+                    } else if (focusedIndex >= 0) {
+                        var items = getItems();
+                        if (items[focusedIndex]) {
+                            var val = items[focusedIndex].getAttribute('data-val');
+                            var lbl = items[focusedIndex].getAttribute('data-label');
+                            selectOption(val, lbl);
+                        }
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDropdown();
+                }
+            });
+        }
+
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isOpen) closeDropdown();
+                else openDropdown();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearOption();
+            });
+        }
+
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-csize-item');
+                if (!itemEl) return;
+                var val = itemEl.getAttribute('data-val');
+                var lbl = itemEl.getAttribute('data-label');
+                selectOption(val, lbl);
+            });
+        }
+
+        // Deterministic outside pointer click handling
+        document.addEventListener('pointerdown', function(e) {
+            var path = (typeof e.composedPath === 'function') ? e.composedPath() : [];
+            var isInside = wrap && (wrap.contains(e.target) || path.indexOf(wrap) !== -1);
+            if (!isInside && isOpen) {
+                closeDropdown();
+            }
+        }, true);
+
+        // Reposition on scroll/resize
+        window.addEventListener('resize', function() {
+            if (isOpen) adjustPosition();
+        }, { passive: true });
+        window.addEventListener('scroll', function() {
+            if (isOpen) adjustPosition();
+        }, { passive: true });
+
+        // Synchronize if native select is changed programmatically (e.g., website auto-fetch)
+        $(hiddenSelect).on('change', function() {
+            var v = (this.value || '').trim();
+            if (v === '1-10') v = '2-10';
+            else if (v === '50001-' || v === '10000-999999') v = '50001-0';
+
+            var optText = '';
+            var items = getItems();
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].getAttribute('data-val') === v) {
+                    optText = items[i].getAttribute('data-label');
+                    break;
+                }
+            }
+            if (!optText && hiddenSelect.selectedIndex >= 0 && hiddenSelect.options[hiddenSelect.selectedIndex]) {
+                optText = hiddenSelect.options[hiddenSelect.selectedIndex].text;
+            }
+
+            if (displayInput) {
+                displayInput.value = (optText && optText !== 'Select company size') ? optText : '';
+            }
+            updateVisualState();
+        });
+
+        // Initial state sync
+        var initVal = (hiddenSelect.value || '').trim();
+        if (initVal) {
+            $(hiddenSelect).trigger('change');
+        } else {
+            updateVisualState();
+        }
+    }
+
+    // Public API
+    window.JeroCompanySizeEngine = {
+        select: selectOption,
+        clear: clearOption,
+        open: openDropdown,
+        close: closeDropdown
     };
 
     if (document.readyState === 'loading') {
