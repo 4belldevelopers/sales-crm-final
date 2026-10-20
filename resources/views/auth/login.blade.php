@@ -19,7 +19,7 @@ $signupStyle  = ($activeState === 'signup') ? '' : 'display:none;';
 $recoverStyle = ($activeState === 'recover') ? '' : 'display:none;';
 ?>
 
-<title id="jw-page-title">{{ $activeState === 'signup' ? 'Create your Jero.works account 🚀' : 'Sign In - jero.works' }}</title>
+<title id="jw-page-title">{{ $activeState === 'signup' ? 'Create your Jero.works account' : 'Sign In - jero.works' }}</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1080,7 +1080,7 @@ select.jw-inp option {
                     <!-- Honeypot anti-bot security: humans never touch hidden fields -->
                     <input type="text" name="website_url" style="display:none;" tabindex="-1" autocomplete="off">
 
-                    <h2>Create your Jero.works account 🚀</h2>
+                    <h2>Create your Jero.works account</h2>
                     <p class="sub">Get started in 30 seconds. No credit card required.</p>
 
                     <!-- Dynamic Error Alert Box -->
@@ -1232,9 +1232,6 @@ select.jw-inp option {
                         <span>Already have an account?</span>
                         <a href="javascript:void(0);" onclick="jwSwitchAuth('login')" class="jw-link-switch">Sign In →</a>
                     </div>
-
-                    <div class="jw-card-divider" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-                    <div class="jw-card-trust"><div class="jw-trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Enterprise Grade Architecture</strong><span>One administrator per custom company domain.<br>100% data isolation & SOC2 compliant.</span></div></div>
                 </form>
 
                 <!-- STATE 3: POST-SIGNUP VERIFICATION CONFIRMATION -->
@@ -1325,7 +1322,7 @@ function jwSwitchAuth(mode) {
         if (topCtaText)  topCtaText.textContent = 'Already have an account?';
         if (topBtnLabel) topBtnLabel.textContent = 'Sign In';
         if (topSwitchBtn) topSwitchBtn.setAttribute('onclick', "jwSwitchAuth('login')");
-        if (pageTitle)   pageTitle.textContent = 'Create your Jero.works account 🚀';
+        if (pageTitle)   pageTitle.textContent = 'Create your Jero.works account';
         try { history.pushState({ authMode: 'signup' }, '', '{{ route("register") }}'); } catch(e) {}
     } else if (mode === 'recover') {
         if (recoverForm) {
