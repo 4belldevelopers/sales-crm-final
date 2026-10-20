@@ -11,7 +11,7 @@
     <div class="client-header-identity">
       <div class="client-header-titles">
         <h2 class="client-header-title" id="client_header_title">{{ $page_event === 'EDIT' ? 'Edit Client' : 'Add Internal Client' }}</h2>
-        <p class="client-header-subtitle" id="client_header_subtitle" title="Create and configure a client profile for jobs, contacts and recruitment operations.">Create and configure a client profile for jobs, contacts and recruitment operations.</p>
+        <p class="client-header-subtitle" id="client_header_subtitle" title="Create a client profile for recruitment operations">Create a client profile for recruitment operations</p>
       </div>
     </div>
 

@@ -48,8 +48,54 @@
   --client-page: #f8fafc;
 }
 
-body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
-#kt_content {background: var(--client-page); padding-top: 0 !important;}
+html, body {
+  height: 100% !important;
+  overflow-x: hidden;
+  width: 100%;
+  font-family: Poppins, sans-serif;
+}
+.flex-root,
+.page {
+  min-height: 100vh !important;
+}
+
+/* =========================================================================
+   Client Wizard: Full-Viewport Sticky-Footer Enterprise Layout
+   - #kt_wrapper fills the viewport (min-height: 100vh) in flex-column mode.
+   - #kt_content flex-grows (flex: 1 0 auto) to accommodate short or tall content.
+   - #kt_footer is pushed to the bottom of the viewport when content is short
+     via margin-top: auto, and follows naturally when content scrolls.
+   - Eliminates excessive empty space and floating mid-page footer.
+   ========================================================================= */
+#kt_wrapper {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+#kt_content,
+.content {
+  background: var(--client-page);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  flex: 1 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_content > .d-flex.flex-column-fluid,
+#kt_content > .d-flex {
+  flex: 1 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#kt_footer {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  background: transparent !important;
+  border-top: 1px solid #eef2f6 !important;
+}
 #kt_toolbar {display: none !important; height: 0 !important; padding: 0 !important; margin: 0 !important;}
 .form-label{ margin-bottom: 0.5rem!important; font-size: 12px!important; font-weight: 600!important; color: var(--client-ink)!important;}
 .last-input-border-radius{border-radius	: 5px 0px 0px 5px!important;}
@@ -1293,23 +1339,21 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     margin-top: 0 !important;
   }
 
-  /* Remove excessive blank space above footer & fit cleanly on 15.6" screens */
-  #kt_wrapper {
-    min-height: auto !important;
+  /* Wizard container stretches cleanly in full-height flex column */
+  #kt_content .container-fluid {
+    flex: 1 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
-  #kt_content,
-  .content.flex-column-fluid,
-  #kt_content > .d-flex.flex-column-fluid {
-    flex: none !important;
-    padding-bottom: 0 !important;
-    margin-bottom: 0 !important;
+  .client-wizard-shell {
+    flex: 1 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
-  #kt_footer {
-    margin-top: 14px !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    background: transparent !important;
-    border-top: none !important;
+  #kt_wizard {
+    flex: 1 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Wizard Header Card: Sticky directly below top navbar (#kt_header), exactly 5px upper gap & 5px lower gap */
@@ -3076,12 +3120,12 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 14px;
-    font-size: 10.5px;
+    padding: 5px 12px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #64748b;
+    letter-spacing: 0.7px;
+    color: #94a3b8;
     background: #f8fafc;
     border-top: 1px solid #f1f5f9;
     border-bottom: 1px solid #f1f5f9;
@@ -3139,6 +3183,7 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     gap: 8px;
     min-width: 0;
     flex: 1 1 auto;
+    overflow: hidden;
   }
   .jero-ind-item-dot {
     width: 6px;
@@ -3161,6 +3206,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.4;
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .jero-ind-item.selected .jero-ind-item-name {
     font-weight: 600;
@@ -3426,11 +3473,12 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 9px 14px;
+    padding: 8px 14px;
     cursor: pointer;
     transition: background 0.12s ease;
     border-bottom: 1px solid #f8fafc;
     box-sizing: border-box;
+    min-height: 38px;
   }
   .jero-ctype-item:last-child {
     border-bottom: none;
@@ -3444,7 +3492,8 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   }
   .jero-ctype-item-main {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: 2px;
     flex: 1;
     min-width: 0;
@@ -3540,6 +3589,298 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .jero-ctype-input-box.has-validation-error,
   .jero-ctype-select-wrap.has-validation-error .jero-ctype-input-box {
     border-color: #f1416c !important;
+    background-color: #fff8f8 !important;
+  }
+
+  /* =========================================================================
+     Company Size Native Select — Enterprise-Grade Clean Styling
+     ========================================================================= */
+  #company_sizes.god-native-select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    font-family: 'Poppins', sans-serif !important;
+    cursor: pointer !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+  #company_sizes.god-native-select option {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    padding: 8px 12px;
+    background: #ffffff;
+  }
+  #company_sizes.god-native-select option:checked,
+  #company_sizes.god-native-select option:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+  .god-input-box.god-select-box {
+    cursor: pointer;
+  }
+  .god-input-box.god-select-box:hover {
+    border-color: #94a3b8 !important;
+  }
+  .god-input-box.god-select-box:focus-within {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+  }
+
+  /* =========================================================================
+     Search-First Founded Year Intelligence Combobox (Rule 17 Isolated)
+     ========================================================================= */
+  .jero-founded-select-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .jero-founded-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .jero-founded-input {
+    cursor: pointer;
+    padding-right: 64px !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #101a46;
+  }
+  .jero-founded-input:focus {
+    cursor: text;
+  }
+  .jero-founded-kbd {
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #94a3b8;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .jero-founded-clear-btn {
+    position: absolute;
+    right: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    border: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+  }
+  .jero-founded-clear-btn:hover {
+    background: #cbd5e1;
+    color: #0f172a;
+  }
+  .jero-founded-chevron {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .jero-founded-select-wrap.is-open .jero-founded-chevron {
+    transform: translateY(-50%) rotate(180deg);
+    color: #2563eb;
+  }
+  .jero-founded-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    max-height: min(320px, calc(100vh - 120px));
+    animation: jeroDropdownFadeIn 0.15s ease-out;
+    box-sizing: border-box;
+  }
+  .jero-founded-select-wrap.is-open .jero-founded-dropdown,
+  .jero-founded-dropdown.is-open {
+    display: flex !important;
+  }
+  .jero-founded-dropdown.drop-up {
+    top: auto;
+    bottom: calc(100% + 5px);
+    box-shadow: 0 -12px 32px -4px rgba(15, 23, 42, 0.12), 0 -4px 12px -2px rgba(15, 23, 42, 0.08);
+  }
+  .jero-founded-search-wrap {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef2f6;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+  .jero-founded-search-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  .jero-founded-search-input {
+    width: 100%;
+    height: 30px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .jero-founded-search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  }
+  .jero-founded-list-container {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+  }
+  .jero-founded-list-container::-webkit-scrollbar {
+    width: 5px;
+  }
+  .jero-founded-list-container::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+  .jero-founded-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  .jero-founded-list-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .jero-founded-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+    border-bottom: 1px solid #f8fafc;
+    box-sizing: border-box;
+    min-height: 34px;
+  }
+  .jero-founded-item:last-child {
+    border-bottom: none;
+  }
+  .jero-founded-item:hover,
+  .jero-founded-item.focused {
+    background: #f1f5f9;
+  }
+  .jero-founded-item.selected {
+    background: #eff6ff;
+  }
+  .jero-founded-item-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jero-founded-item.selected .jero-founded-item-name {
+    font-weight: 600;
+    color: #2563eb;
+  }
+  .jero-founded-mark {
+    background: #fef08a;
+    color: #854d0e;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 700;
+  }
+  .jero-founded-item-check {
+    display: flex;
+    align-items: center;
+    color: #2563eb;
+  }
+  .jero-founded-empty-state {
+    padding: 20px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .jero-founded-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    font-size: 10.5px;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jero-founded-sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .jero-founded-calendar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3b82f6;
+  }
+  .jero-founded-footer-hint {
+    color: #94a3b8;
+  }
+  .jero-founded-input-box.has-validation-error,
+  .jero-founded-select-wrap.has-validation-error .jero-founded-input-box {
+    border-color: #ef4444 !important;
     background-color: #fff8f8 !important;
   }
 </style>
@@ -4014,6 +4355,16 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
        $('#jero_ind_input_box').removeClass('has-validation-error');
        $('#jero_ind_select_wrap').removeClass('has-validation-error');
      }
+     if ($f.attr('id') === 'company_type' || $f.attr('id') === 'company_type_display') {
+       $('#company_type_display').removeClass('is-invalid');
+       $('#jero_ctype_input_box').removeClass('has-validation-error');
+       $('#jero_ctype_select_wrap').removeClass('has-validation-error');
+     }
+     if ($f.attr('id') === 'founded' || $f.attr('id') === 'founded_display') {
+       $('#founded_display').removeClass('is-invalid');
+       $('#jero_founded_input_box').removeClass('has-validation-error');
+       $('#jero_founded_select_wrap').removeClass('has-validation-error');
+     }
      var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
      if ($container.length) {
        $container.find('.client-inline-error').remove();
@@ -4034,6 +4385,16 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
        $('#industry_display').addClass('is-invalid');
        $('#jero_ind_input_box').addClass('has-validation-error');
        $('#jero_ind_select_wrap').addClass('has-validation-error');
+     }
+     if ($f.attr('id') === 'company_type' || $f.attr('id') === 'company_type_display') {
+       $('#company_type_display').addClass('is-invalid');
+       $('#jero_ctype_input_box').addClass('has-validation-error');
+       $('#jero_ctype_select_wrap').addClass('has-validation-error');
+     }
+     if ($f.attr('id') === 'founded' || $f.attr('id') === 'founded_display') {
+       $('#founded_display').addClass('is-invalid');
+       $('#jero_founded_input_box').addClass('has-validation-error');
+       $('#jero_founded_select_wrap').addClass('has-validation-error');
      }
      var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
      if ($container.length) {
@@ -5770,6 +6131,13 @@ $('.remove_address').click(function(){
     // 6. Founded Year
     if (data.founded) {
       $('#founded').val(data.founded).trigger('input').trigger('change');
+      if (window.JeroFoundedYearEngine && typeof window.JeroFoundedYearEngine.selectYear === 'function') {
+        window.JeroFoundedYearEngine.selectYear(data.founded);
+      }
+    } else {
+      if (window.JeroFoundedYearEngine && typeof window.JeroFoundedYearEngine.clearYear === 'function') {
+        window.JeroFoundedYearEngine.clearYear();
+      }
     }
 
     // 7. Career Page URL
@@ -7280,6 +7648,7 @@ $('.remove_address').click(function(){
     $('.client-inline-error').remove();
     $('#jero_ind_select_wrap, #jero_ind_input_box').removeClass('has-validation-error');
     $('#jero_ctype_select_wrap, #jero_ctype_input_box').removeClass('has-validation-error');
+    $('#jero_founded_select_wrap, #jero_founded_input_box').removeClass('has-validation-error');
   }
 
   function clearFieldError($field) {
@@ -7294,6 +7663,11 @@ $('.remove_address').click(function(){
       $('#company_type_display').removeClass('is-invalid');
       $('#jero_ctype_input_box').removeClass('has-validation-error');
       $('#jero_ctype_select_wrap').removeClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'founded' || $field.attr('id') === 'founded_display') {
+      $('#founded_display').removeClass('is-invalid');
+      $('#jero_founded_input_box').removeClass('has-validation-error');
+      $('#jero_founded_select_wrap').removeClass('has-validation-error');
     }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
@@ -7319,6 +7693,11 @@ $('.remove_address').click(function(){
       $('#company_type_display').addClass('is-invalid');
       $('#jero_ctype_input_box').addClass('has-validation-error');
       $('#jero_ctype_select_wrap').addClass('has-validation-error');
+    }
+    if ($field.attr('id') === 'founded' || $field.attr('id') === 'founded_display') {
+      $('#founded_display').addClass('is-invalid');
+      $('#jero_founded_input_box').addClass('has-validation-error');
+      $('#jero_founded_select_wrap').addClass('has-validation-error');
     }
     var $container = $field.closest('.client-field, .fv-plugins-icon-container');
     if ($container.length) {
@@ -7601,7 +7980,7 @@ $('.remove_address').click(function(){
 
     // Dynamic Top Header Subtitles matching workflow steps
     var subtitles = {
-      1: 'Create and configure a client profile for jobs, contacts and recruitment operations.',
+      1: 'Create a client profile for recruitment operations',
       2: 'Provide client description and service offerings.',
       3: 'Enter the city and full address of this client.',
       4: 'Add key contacts for this client organization.',
@@ -8841,10 +9220,11 @@ $('.remove_address').click(function(){
 
         return '<div class="jero-ind-item ' + (isSelected ? 'selected' : '') + '" data-idx="' + index + '" data-id="' + item.id + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
             '<div class="jero-ind-item-main">' +
+                '<span class="jero-ind-item-dot"></span>' +
                 '<div class="jero-ind-item-name">' + highlightMatch(item.name, query) + '</div>' +
-                '<div class="jero-ind-item-sub">' + escapeHtml(item.sector_name || '') + '</div>' +
             '</div>' +
             '<div class="jero-ind-item-side">' +
+                (query ? '<span class="jero-ind-search-sector-badge">' + escapeHtml((item.sector_name || '').split(',')[0].split('&')[0].trim()) + '</span>' : '') +
                 checkHtml +
             '</div>' +
         '</div>';
@@ -9774,11 +10154,8 @@ $('.remove_address').click(function(){
                 'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
                 '<div class="jero-ctype-item-main">' +
                 '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
-                '<div class="jero-ctype-item-desc">' + highlightMatch(item.desc || '', query) + '</div>' +
-                aliasesPreview +
                 '</div>' +
                 '<div class="jero-ctype-item-side">' +
-                badgeHtml +
                 checkIcon +
                 '</div>' +
                 '</div>';
@@ -10098,6 +10475,385 @@ $('.remove_address').click(function(){
         });
     } else {
         initData();
+        initEventListeners();
+    }
+})();
+</script>
+
+<!-- =========================================================================
+     Search-First Founded Year Intelligence Engine (Client-First / 10K Concurrency)
+     Strictly isolated to Client Wizard (Rule 17)
+     ========================================================================= -->
+<script>
+(function() {
+    'use strict';
+
+    var currentYear = (new Date()).getFullYear();
+    var minYear = 1800;
+    var yearsList = [];
+    for (var y = currentYear; y >= minYear; y--) {
+        yearsList.push(y);
+    }
+
+    var filteredList = [];
+    var focusedIndex = -1;
+    var isOpen = false;
+
+    // DOM Elements
+    var wrap = null;
+    var input = null;
+    var searchInput = null;
+    var hiddenInput = null;
+    var inputBox = null;
+    var clearBtn = null;
+    var kbd = null;
+    var chevron = null;
+    var dropdown = null;
+    var listContainer = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function highlightMatch(text, query) {
+        var safeText = escapeHtml(String(text || ''));
+        if (!query) return safeText;
+        var cleanQ = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!cleanQ) return safeText;
+        var regex = new RegExp('(' + cleanQ + ')', 'gi');
+        return safeText.replace(regex, '<mark class="jero-founded-mark">$1</mark>');
+    }
+
+    function getSelectedYear() {
+        if (!hiddenInput) return null;
+        var val = (hiddenInput.value || '').trim();
+        return val ? parseInt(val, 10) : null;
+    }
+
+    function filterYears(query) {
+        var clean = (query || '').trim();
+        if (!clean) {
+            filteredList = yearsList.slice();
+            return;
+        }
+        filteredList = yearsList.filter(function(yr) {
+            return String(yr).indexOf(clean) !== -1;
+        });
+    }
+
+    function renderList(query) {
+        if (!listContainer) return;
+        if (!filteredList.length) {
+            listContainer.innerHTML = '<div class="jero-founded-empty-state">' +
+                '<div style="font-weight:600; margin-bottom:4px; color:#1e293b;">No years found</div>' +
+                '<div style="font-size:11.5px; color:#64748b;">No results matching "' + escapeHtml(query) + '".</div>' +
+                '</div>';
+            return;
+        }
+
+        var selected = getSelectedYear();
+        var html = '';
+        for (var i = 0; i < filteredList.length; i++) {
+            var yr = filteredList[i];
+            var isSelected = (selected !== null && selected === yr);
+            var isFocused = (i === focusedIndex);
+            var checkIcon = isSelected ? '<span class="jero-founded-item-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : '';
+
+            html += '<div class="jero-founded-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
+                'data-idx="' + i + '" data-year="' + yr + '" role="option" id="jero_founded_opt_' + yr + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
+                '<div class="jero-founded-item-name">' + highlightMatch(yr, query) + '</div>' +
+                checkIcon +
+                '</div>';
+        }
+
+        listContainer.innerHTML = html;
+        scrollFocusedIntoView();
+    }
+
+    function scrollFocusedIntoView() {
+        if (!listContainer || focusedIndex < 0) return;
+        var items = listContainer.querySelectorAll('.jero-founded-item');
+        if (items[focusedIndex]) {
+            var item = items[focusedIndex];
+            var itemTop = item.offsetTop;
+            var itemBottom = itemTop + item.offsetHeight;
+            var containerTop = listContainer.scrollTop;
+            var containerBottom = containerTop + listContainer.offsetHeight;
+
+            if (itemTop < containerTop) {
+                listContainer.scrollTop = itemTop;
+            } else if (itemBottom > containerBottom) {
+                listContainer.scrollTop = itemBottom - listContainer.offsetHeight;
+            }
+        }
+    }
+
+    function updateDropdownPosition() {
+        if (!wrap || !dropdown) return;
+        var rect = wrap.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var dropdownHeight = 280;
+        if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+            dropdown.classList.add('drop-up');
+        } else {
+            dropdown.classList.remove('drop-up');
+        }
+    }
+
+    function openDropdown() {
+        if (isOpen) return;
+        isOpen = true;
+        updateDropdownPosition();
+        if (wrap) wrap.classList.add('is-open');
+        if (dropdown) dropdown.style.display = 'flex';
+        if (input) input.setAttribute('aria-expanded', 'true');
+
+        if (searchInput) {
+            searchInput.value = '';
+            setTimeout(function() { searchInput.focus(); }, 60);
+        }
+
+        filterYears('');
+        var selected = getSelectedYear();
+        focusedIndex = -1;
+        if (selected !== null) {
+            for (var i = 0; i < filteredList.length; i++) {
+                if (filteredList[i] === selected) {
+                    focusedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (focusedIndex === -1 && filteredList.length > 0) {
+            focusedIndex = 0;
+        }
+        renderList('');
+
+        if (selected !== null && listContainer) {
+            var selEl = listContainer.querySelector('.jero-founded-item.selected');
+            if (selEl) {
+                listContainer.scrollTop = Math.max(0, selEl.offsetTop - 60);
+            }
+        }
+    }
+
+    function closeDropdown(restoreFocus) {
+        if (!isOpen) return;
+        isOpen = false;
+        if (wrap) wrap.classList.remove('is-open');
+        if (dropdown) dropdown.style.display = 'none';
+        if (input) input.setAttribute('aria-expanded', 'false');
+        focusedIndex = -1;
+        if (restoreFocus && input) {
+            input.focus();
+        }
+    }
+
+    function updateInputVisualState() {
+        var hasVal = hiddenInput && (hiddenInput.value || '').trim().length > 0;
+        if (inputBox) {
+            if (hasVal) {
+                inputBox.classList.add('has-value');
+            } else {
+                inputBox.classList.remove('has-value');
+            }
+        }
+        if (clearBtn) clearBtn.style.display = hasVal ? 'flex' : 'none';
+        if (kbd) kbd.style.display = hasVal ? 'none' : 'inline-flex';
+    }
+
+    function selectYear(yr) {
+        if (!yr) return;
+        var cleanYr = parseInt(yr, 10);
+        if (isNaN(cleanYr)) return;
+        if (hiddenInput) {
+            hiddenInput.value = cleanYr;
+            $(hiddenInput).trigger('input').trigger('change');
+        }
+        if (input) {
+            input.value = cleanYr;
+        }
+        updateInputVisualState();
+        $('.span_founded').text(cleanYr);
+
+        $('#jero_founded_input_box').removeClass('has-validation-error');
+        $('#jero_founded_select_wrap').removeClass('has-validation-error');
+        if (typeof window.clearFieldError === 'function' && hiddenInput) {
+            window.clearFieldError($(hiddenInput));
+        }
+        closeDropdown(true);
+    }
+
+    function clearYear() {
+        if (hiddenInput) {
+            hiddenInput.value = '';
+            $(hiddenInput).trigger('input').trigger('change');
+        }
+        if (input) {
+            input.value = '';
+        }
+        updateInputVisualState();
+        $('.span_founded').text('-');
+        filterYears('');
+        renderList('');
+        closeDropdown(false);
+        if (input) input.focus();
+    }
+
+    function initEventListeners() {
+        wrap = document.getElementById('jero_founded_select_wrap');
+        input = document.getElementById('founded_display');
+        searchInput = document.getElementById('founded_search_input');
+        hiddenInput = document.getElementById('founded');
+        inputBox = document.getElementById('jero_founded_input_box');
+        clearBtn = document.getElementById('jero_founded_clear_btn');
+        kbd = document.getElementById('jero_founded_kbd');
+        chevron = document.getElementById('jero_founded_chevron');
+        dropdown = document.getElementById('jero_founded_dropdown');
+        listContainer = document.getElementById('jero_founded_list_container');
+
+        if (!wrap || !input || !hiddenInput) return;
+
+        // Toggle on chevron click
+        if (chevron) {
+            chevron.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (isOpen) {
+                    closeDropdown(true);
+                } else {
+                    openDropdown();
+                }
+            });
+        }
+
+        // Click / Focus on display input
+        input.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (isOpen) {
+                closeDropdown(false);
+            } else {
+                openDropdown();
+            }
+        });
+        input.addEventListener('focus', function() {
+            if (!isOpen) openDropdown();
+        });
+
+        // Typing in search input
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                focusedIndex = 0;
+                filterYears(this.value);
+                renderList(this.value);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (filteredList.length > 0) {
+                        focusedIndex = (focusedIndex + 1) % filteredList.length;
+                        renderList(searchInput.value);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (filteredList.length > 0) {
+                        focusedIndex = (focusedIndex - 1 + filteredList.length) % filteredList.length;
+                        renderList(searchInput.value);
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (focusedIndex >= 0 && focusedIndex < filteredList.length) {
+                        selectYear(filteredList[focusedIndex]);
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeDropdown(true);
+                } else if (e.key === 'Tab') {
+                    closeDropdown(false);
+                }
+            });
+        }
+
+        // Display input keyboard navigation
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (!isOpen) openDropdown();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDropdown(false);
+            }
+        });
+
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                clearYear();
+            });
+        }
+
+        // Item selection via click
+        if (listContainer) {
+            listContainer.addEventListener('click', function(e) {
+                var itemEl = e.target.closest('.jero-founded-item');
+                if (!itemEl) return;
+                var yr = itemEl.getAttribute('data-year');
+                if (yr) {
+                    selectYear(yr);
+                }
+            });
+        }
+
+        // Outside click
+        document.addEventListener('click', function(e) {
+            if (isOpen && wrap && !wrap.contains(e.target)) {
+                closeDropdown(false);
+            }
+        });
+
+        // Window resize / scroll reposition
+        window.addEventListener('resize', function() {
+            if (isOpen) updateDropdownPosition();
+        });
+        window.addEventListener('scroll', function() {
+            if (isOpen) updateDropdownPosition();
+        });
+
+        // External change listener on native hidden input (e.g. from autofill)
+        $(hiddenInput).on('change input', function() {
+            var val = (this.value || '').trim();
+            if (input) input.value = val;
+            updateInputVisualState();
+            $('.span_founded').text(val || '-');
+        });
+
+        // Initial visual sync
+        var initVal = (hiddenInput.value || '').trim();
+        if (initVal && input) {
+            input.value = initVal;
+        }
+        updateInputVisualState();
+    }
+
+    // Public API
+    window.JeroFoundedYearEngine = {
+        selectYear: selectYear,
+        clearYear: clearYear,
+        open: openDropdown,
+        close: closeDropdown,
+        getYears: function() { return yearsList; }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
         initEventListeners();
     }
 })();

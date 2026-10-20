@@ -182,8 +182,10 @@
 
               <!-- Hierarchical Dropdown Menu Container -->
               <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Client Industries">
-                <div class="jero-ind-tabs" id="jero_ind_tabs">
-                  <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
+                <div class="jero-ind-tabs-wrap">
+                  <div class="jero-ind-tabs" id="jero_ind_tabs">
+                    <button type="button" class="jero-ind-tab-btn active" data-sector="all">All <span class="tab-count" id="jero_ind_count_all">0</span></button>
+                  </div>
                 </div>
                 <div class="jero-ind-recent-bar" id="jero_ind_recent_bar" style="display:none;"></div>
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
@@ -214,17 +216,17 @@
               </span>
               <select name="company_sizes" class="god-native-select" id="company_sizes">
                 <option value="">Select company size</option>
-                <option value="1-1"          {{ @$company_sizes == '1-1'          ? 'selected' : '' }}>1 employee (Solo / Self-employed)</option>
-                <option value="2-10"         {{ @$company_sizes == '2-10'         ? 'selected' : '' }}>2–10 employees</option>
-                <option value="1-10"         {{ @$company_sizes == '1-10'         ? 'selected' : '' }}>1–10 employees</option>
-                <option value="11-50"        {{ @$company_sizes == '11-50'        ? 'selected' : '' }}>11–50 employees</option>
-                <option value="51-200"       {{ @$company_sizes == '51-200'       ? 'selected' : '' }}>51–200 employees</option>
-                <option value="201-500"      {{ @$company_sizes == '201-500'      ? 'selected' : '' }}>201–500 employees</option>
-                <option value="501-1000"     {{ @$company_sizes == '501-1000'     ? 'selected' : '' }}>501–1,000 employees</option>
-                <option value="1001-5000"    {{ @$company_sizes == '1001-5000'    ? 'selected' : '' }}>1,001–5,000 employees</option>
-                <option value="5001-10000"   {{ @$company_sizes == '5001-10000'   ? 'selected' : '' }}>5,001–10,000 employees</option>
-                <option value="10001-50000"  {{ @$company_sizes == '10001-50000'  ? 'selected' : '' }}>10,001–50,000 employees</option>
-                <option value="50001-0"      {{ in_array(@$company_sizes, ['50001-0', '50001-', '10000-999999']) ? 'selected' : '' }}>50,000+ employees</option>
+                <option value="1-1"          {{ @$company_sizes == '1-1'          ? 'selected' : '' }}>Solo / 1 employee</option>
+                <option value="2-10"         {{ @$company_sizes == '2-10'         ? 'selected' : '' }}>2 – 10 employees</option>
+                <option value="1-10"         {{ @$company_sizes == '1-10'         ? 'selected' : '' }}>1 – 10 employees</option>
+                <option value="11-50"        {{ @$company_sizes == '11-50'        ? 'selected' : '' }}>11 – 50 employees</option>
+                <option value="51-200"       {{ @$company_sizes == '51-200'       ? 'selected' : '' }}>51 – 200 employees</option>
+                <option value="201-500"      {{ @$company_sizes == '201-500'      ? 'selected' : '' }}>201 – 500 employees</option>
+                <option value="501-1000"     {{ @$company_sizes == '501-1000'     ? 'selected' : '' }}>501 – 1,000 employees</option>
+                <option value="1001-5000"    {{ @$company_sizes == '1001-5000'    ? 'selected' : '' }}>1,001 – 5,000 employees</option>
+                <option value="5001-10000"   {{ @$company_sizes == '5001-10000'   ? 'selected' : '' }}>5,001 – 10,000 employees</option>
+                <option value="10001-50000"  {{ @$company_sizes == '10001-50000'  ? 'selected' : '' }}>10,001 – 50,000 employees</option>
+                <option value="50001-0"      {{ in_array(@$company_sizes, ['50001-0', '50001-', '10000-999999']) ? 'selected' : '' }}>50,001+ employees</option>
               </select>
               <span class="god-input-right-chevron">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -312,28 +314,72 @@
             </div>
           </div>
 
-          <!-- ROW 4, COL 2: Founded Year -->
+          <!-- ROW 4, COL 2: Founded Year (Enterprise Searchable Dropdown) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="founded">Founded Year</label>
+              <label class="god-field-label" for="founded_display">Founded Year</label>
             </div>
-            <div class="god-input-box">
-              <span class="god-input-left-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-              </span>
-              <input type="number"
-                     class="god-native-input"
-                     name="founded"
-                     id="founded"
-                     value="{{ $founded ?? '' }}"
-                     placeholder="2010"
-                     min="1800"
-                     max="2099">
+
+            <!-- Native hidden input kept synchronized for 100% Form POST, validation, and API compatibility -->
+            <input type="hidden" name="founded" id="founded" value="{{ $founded ?? '' }}">
+
+            <!-- God-Level Enterprise Founded Year Combobox -->
+            <div class="jero-founded-select-wrap god-founded-wrap" id="jero_founded_select_wrap">
+              <div class="god-input-box jero-founded-input-box {{ !empty($founded) ? 'has-value' : '' }}" id="jero_founded_input_box">
+                <span class="god-input-left-icon jero-founded-calendar-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </span>
+                <input type="text"
+                       class="god-native-input jero-founded-input"
+                       id="founded_display"
+                       placeholder="Select founded year"
+                       autocomplete="off"
+                       spellcheck="false"
+                       role="combobox"
+                       aria-expanded="false"
+                       aria-haspopup="listbox"
+                       aria-controls="jero_founded_dropdown"
+                       readonly
+                       value="{{ $founded ?? '' }}">
+                <kbd class="jero-founded-kbd" id="jero_founded_kbd" title="Press / to search" style="{{ !empty($founded) ? 'display:none;' : '' }}">/</kbd>
+                <button type="button" class="god-input-clear-btn jero-founded-clear-btn" id="jero_founded_clear_btn" aria-label="Clear founded year" title="Clear selection" style="{{ !empty($founded) ? 'display:flex;' : 'display:none;' }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <div class="god-input-right-chevron jero-founded-chevron" id="jero_founded_chevron" title="Toggle founded year list" role="button" aria-label="Toggle founded year list" tabindex="-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
+
+              <!-- Dropdown Menu Container (Search-First) -->
+              <div class="jero-founded-dropdown" id="jero_founded_dropdown" style="display:none;" role="listbox" aria-label="Founded Years">
+                <div class="jero-founded-search-wrap">
+                  <span class="jero-founded-search-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </span>
+                  <input type="text"
+                         class="jero-founded-search-input"
+                         id="founded_search_input"
+                         placeholder="Search year..."
+                         autocomplete="off"
+                         spellcheck="false">
+                </div>
+                <div class="jero-founded-list-container" id="jero_founded_list_container"></div>
+                <div class="jero-founded-footer">
+                  <div class="jero-founded-sync-status">
+                    <span class="jero-founded-calendar-dot"></span>
+                    <span>Historical Registry (1800 – {{ date('Y') }})</span>
+                  </div>
+                  <span class="jero-founded-footer-hint">↑↓ Navigate • Enter Select • Esc Close</span>
+                </div>
+              </div>
             </div>
           </div>
 
