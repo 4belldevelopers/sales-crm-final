@@ -20,6 +20,20 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Clients Listing: Restore "Connected On" on Date Column (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Restore the "Connected on" text on the date column.
+  - **Architectural Enhancements**:
+    - In `resources/views/service_company/client/index.blade.php`:
+      - Updated `#clientTableHead` static sub-card and dynamic JS `setClientTab` to label the column header as **"Connected On"** (`title="Sort by Connected On"`).
+    - In `custom_client.blade.php` & `direct_client.blade.php`:
+      - Synced column header sub-card label to **"Connected On"**.
+    - In `demo/css/clientList.css`:
+      - Set grid column sizing for Connected On to `minmax(120px, 0.9fr)` to ensure zero text wrapping on 15.6" screens.
+    - In `all-client-ajax.blade.php`, `custom-client-ajax.blade.php`, & `direct-client-ajax.blade.php`:
+      - Restored `<div class="cl-conn-caption">Connected on</div>` between the date and client type badge, ensuring clean 3-line vertical row balance (~48px) matching the Company Name and Jobs columns.
+  - **Verification**: `php -l` passed with 0 errors across all modified blades and scripts.
+
 - *2026-10-21* — **Service Company Clients Listing: Column Reordering & Jobs Header Cleanup (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Remove the text "Hiring, Hold, Closed" completely from the table header only (retaining the full status lines and counts inside the row listings/cards).
