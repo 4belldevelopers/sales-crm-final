@@ -67,14 +67,15 @@ class ReconcileClientProjectionCommand extends Command
                     'body' => [
                         'size' => min(count($mysqlIds), 10000),
                         'query' => [
-                            'terms' => ['id' => $mysqlIds],
+                            'ids' => ['values' => array_map('strval', $mysqlIds)],
                         ],
                         '_source' => ['id', 'company_id', 'name', 'updated_at'],
                     ],
                 ]);
 
                 foreach ($esResponse['hits']['hits'] as $hit) {
-                    $esHits[(int) $hit['_id']] = $hit['_source'];
+                    $docId = (int) ($hit['_source']['id'] ?? $hit['_id']);
+                    $esHits[$docId] = $hit['_source'];
                 }
             } else {
                 $this->error("Elasticsearch index '{$esIndex}' does not exist!");
