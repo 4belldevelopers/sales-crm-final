@@ -409,7 +409,7 @@
                     <span style="position: absolute; right: -22px; font-size: 17px;">Cart</span>
                     <span
                         style="text-align: center; position: absolute; top: 0px; right: 16px; background: #f9bd13; height: 22px; width: 22px; color: white; font-weight: 700; border-radius: 100%;">
-                        {{ $carts_count }} <span>
+                        {{ $carts_count }} </span>
                 </a>
             </div>
         </div>
@@ -593,6 +593,8 @@
                                         @php
                                             $opIcons = ['fa-star text-warning', 'fa-crown text-primary', 'fa-gem text-info'];
                                             $activeOpPackageId = !empty($current_coins_operational) ? ($current_coins_operational[0]['coin_package_id'] ?? null) : null;
+                                            $customOpPkg = collect($operational_package)->firstWhere('custome_pck', 2) ?? (!empty($operational_package) ? reset($operational_package) : null);
+                                            $customOpPkgId = $customOpPkg ? encrypt($customOpPkg['id']) : encrypt(5);
                                         @endphp
                                         @foreach ($operational_package as $i => $opr_preview)
                                             @php $isCurrentOp = ($activeOpPackageId && $opr_preview['id'] == $activeOpPackageId); @endphp
@@ -624,7 +626,7 @@
                                                         @endforeach
                                                     </ul>
                                                     @if($opr_preview['custome_pck'] == 2)
-                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success btn-contact-sales customsubscription" data-id="{{ encrypt($opr_preview['id']) }}" data-type="operational">Contact Sales</a>
                                                     @elseif($isCurrentOp)
                                                         <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-current-plan mb-2">
                                                             <i class="fa fa-check-circle me-1"></i>Current Plan
@@ -673,7 +675,7 @@
                                                 <li><i class="fa fa-check"></i> Volume Discounts</li>
                                                 <li><i class="fa fa-check"></i> Dedicated Support</li>
                                             </ul>
-                                            <a href="javascript:;" class="btn btn-primary btn-sm" onclick="switchWalletCenterTab('packages');return false;">Contact Sales Team</a>
+                                            <a href="javascript:;" class="btn btn-primary btn-sm btn-contact-sales customsubscription" data-id="{{ $customOpPkgId }}" data-type="operational">Contact Sales Team</a>
                                         </div>
                                     </div>
                                 </div>
@@ -724,6 +726,8 @@
                                         @php
                                             $salIcons = ['fa-star text-warning', 'fa-crown text-success', 'fa-gem text-info'];
                                             $activeSlPackageId = !empty($current_coins_sales) ? ($current_coins_sales[0]['coin_package_id'] ?? null) : null;
+                                            $customSalPkg = collect($sales_package)->firstWhere('custome_pck', 2) ?? (!empty($sales_package) ? reset($sales_package) : null);
+                                            $customSalPkgId = $customSalPkg ? encrypt($customSalPkg['id']) : encrypt(10);
                                         @endphp
                                         @foreach ($sales_package as $i => $sales_preview)
                                             @php $isCurrentSal = ($activeSlPackageId && $sales_preview['id'] == $activeSlPackageId); @endphp
@@ -755,7 +759,7 @@
                                                         @endforeach
                                                     </ul>
                                                     @if($sales_preview['custome_pck'] == 2)
-                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success btn-contact-sales customsubscription_sal" data-id="{{ encrypt($sales_preview['id']) }}" data-type="sales">Contact Sales</a>
                                                     @elseif($isCurrentSal)
                                                         <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-current-plan wallet-pkg-btn-current-plan-sal mb-2">
                                                             <i class="fa fa-check-circle me-1"></i>Current Plan
@@ -806,7 +810,7 @@
                                                 <li><i class="fa fa-check"></i> Volume Discounts</li>
                                                 <li><i class="fa fa-check"></i> Dedicated Support</li>
                                             </ul>
-                                            <a href="javascript:;" class="btn btn-success btn-sm" onclick="switchWalletCenterTab('packages');return false;">Contact Sales Team</a>
+                                            <a href="javascript:;" class="btn btn-success btn-sm btn-contact-sales customsubscription_sal" data-id="{{ $customSalPkgId }}" data-type="sales">Contact Sales Team</a>
                                         </div>
                                     </div>
                                 </div>
@@ -892,7 +896,7 @@
                                                         @if($isOpCurrent)
                                                             <a href="javascript:;" class="pkg-btn pkg-btn-current"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
                                                         @else
-                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact">Contact Sales</a>
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact btn-contact-sales customsubscription" data-id="{{ encrypt($opr_val['id']) }}" data-type="operational">Contact Sales</a>
                                                         @endif
                                                     @else
                                                         @if($isOpCurrent)
@@ -995,7 +999,7 @@
                                                         @if($isSalCurrent)
                                                             <a href="javascript:;" class="pkg-btn pkg-btn-current pkg-btn-current-sal"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
                                                         @else
-                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact-sal">Contact Sales</a>
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact-sal btn-contact-sales customsubscription_sal" data-id="{{ encrypt($sales_val['id']) }}" data-type="sales">Contact Sales</a>
                                                         @endif
                                                     @else
                                                         @if($isSalCurrent)
@@ -1467,40 +1471,48 @@
             $(window).on('hashchange', function() { applyHashTab(true); });
 
 
-            $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {
+            // Contact Sales Team / Custom subscription inquiry workflow.
+            // Preserves page layout, keeps the overview section intact, prevents blank space,
+            // and submits inquiry via customCheckoutSubscribe with debouncing & error handling.
+            $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal,.btn-contact-sales', function(e) {
                 e.preventDefault();
-                // $('.app_int_amount_op').click(function(){
-                var suscriptId, url;
-
-
-                if ($(this).is('.customsubscription')) {
-                    suscriptId = $('input[name="opr_plan"]:checked').val();
-                } else if ($(this).is('.customsubscription_sal')) {
-                    suscriptId = $('input[name="sales_plan"]:checked').val();
-                } else if ($(this).hasClass('topupcustom')) {
-                    suscriptId = $(this).val();
+                var $btn = $(this);
+                if ($btn.hasClass('is-busy') || $btn.prop('disabled')) {
+                    return false;
                 }
 
+                var isTopup = $btn.hasClass('topupcustom');
+                var suscriptId = $btn.data('id') || $btn.attr('data-id') || ($btn.is('input') ? $btn.val() : null);
+                var walletType = $btn.data('type') || ($btn.is('.customsubscription_sal') ? 'sales' : 'operational');
 
-                url = "{{ route('service_company.subscribe.customCheckoutSubscribe') }}";
-                if ($(this).hasClass('topupcustom')) {
+                var defaultOpId = "{{ $customOpPkgId ?? '' }}";
+                var defaultSalId = "{{ $customSalPkgId ?? '' }}";
+
+                if (!suscriptId && !isTopup) {
+                    suscriptId = (walletType === 'sales') ? defaultSalId : defaultOpId;
+                }
+
+                var url = "{{ route('service_company.subscribe.customCheckoutSubscribe') }}";
+                if (isTopup) {
                     url += '?topup=true';
                 }
 
-
                 Swal.fire({
-                    title: "Are you sure?",
-                    text: "Would you like our sales team to give you a call and discuss the details of the custom subscription package",
-                    icon: "warning",
+                    title: "Contact Sales Team",
+                    text: "Would you like our sales team to give you a call and discuss the details of the custom subscription package?",
+                    icon: "question",
                     showCancelButton: true,
                     confirmButtonColor: "#3085d6",
                     cancelButtonColor: "#d33",
                     cancelButtonText: "No",
-                    confirmButtonText: "Yes"
+                    confirmButtonText: "Yes, Contact Me"
                 }).then((result) => {
                     if (result.isConfirmed) {
-
-                        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+                        $btn.addClass('is-busy').prop('disabled', true);
+                        var originalHtml = $btn.html();
+                        if (!$btn.is('input')) {
+                            $btn.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Sending...');
+                        }
 
                         var token = "{{ csrf_token() }}";
 
@@ -1509,24 +1521,39 @@
                             url: url,
                             data: {
                                 '_token': token,
-                                '_method': 'POST',
-                                'id': suscriptId
-                            },
-                            beforeSend: function() {
-                                $('#approve').html('<img src="' + baseurl +
-                                    '" height="35px" width="100%">');
+                                'id': suscriptId,
+                                'type': walletType
                             },
                             success: function(response) {
+                                $btn.removeClass('is-busy').prop('disabled', false);
+                                if (!$btn.is('input')) {
+                                    $btn.html(originalHtml);
+                                }
+                                var successText = (response && response.reference)
+                                    ? "Your request (" + response.reference + ") has been sent successfully. Our sales team will get in touch with you shortly."
+                                    : (response && response.message ? response.message : "Your request has been sent successfully. Our sales team will get in touch with you shortly.");
                                 Swal.fire({
-                                    title: "Request Sent",
-                                    text: "Your rwquest send successfully.",
+                                    title: "Request Sent!",
+                                    text: successText,
                                     icon: "success"
                                 });
-                                $('.closemodal').click();
+                            },
+                            error: function(xhr) {
+                                $btn.removeClass('is-busy').prop('disabled', false);
+                                if (!$btn.is('input')) {
+                                    $btn.html(originalHtml);
+                                }
+                                var errorMsg = "Could not send your request at this time. Please try again later.";
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMsg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    title: "Submission Failed",
+                                    text: errorMsg,
+                                    icon: "error"
+                                });
                             }
                         });
-
-
                     }
                 });
             });
