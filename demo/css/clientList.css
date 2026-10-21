@@ -5,6 +5,9 @@
    ========================================================================== */
 
 /* ── Activities Drawers Width ── */
+@media only screen and (max-width: 1023px) {
+  #kt_activitiesClient, #kt_activitiesDirectClient { width: min(95vw, 680px) !important; }
+}
 @media only screen and (min-width: 1024px) and (max-width: 1440px) {
   #kt_activitiesClient, #kt_activitiesDirectClient { width: 1025px !important; }
 }
@@ -404,19 +407,33 @@
 
 /* ── Table Grid (Header & Rows) ── */
 /* 7 columns: Checkbox, Client, Location, Jobs, Hiring Pipeline, Type & Connected On, Last Activity */
+/* Tuned for 15.6-inch displays (1366x768 & 1920x1080) with 0 horizontal scroll */
 .tbl-h, .tbl-r {
   display: grid;
-  grid-template-columns: 38px minmax(190px, 1.4fr) minmax(140px, 1fr) minmax(95px, 0.75fr) minmax(280px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr);
-  min-width: 1045px;
+  grid-template-columns: 32px minmax(175px, 1.35fr) minmax(105px, 0.85fr) minmax(80px, 0.65fr) minmax(175px, 1.35fr) minmax(115px, 0.85fr) minmax(105px, 0.8fr);
   align-items: center;
-  column-gap: 12px;
-  padding: 14px 20px;
+  column-gap: 10px;
+  padding: 12px 16px;
+  min-width: 880px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1200px) {
+  .tbl-h, .tbl-r {
+    min-width: 100%;
+  }
 }
 
 /* Requests 5-column variant: Checkbox, Client, Location, Request Date, Action */
 .tbl-req .tbl-h, .tbl-req .tbl-r {
-  grid-template-columns: 38px minmax(240px, 2fr) minmax(180px, 1.3fr) minmax(160px, 1fr) minmax(180px, 1.2fr);
-  min-width: 800px;
+  grid-template-columns: 32px minmax(200px, 1.8fr) minmax(130px, 1.2fr) minmax(120px, 1fr) minmax(150px, 1.2fr);
+  min-width: 680px;
+  box-sizing: border-box;
+}
+@media (min-width: 1200px) {
+  .tbl-req .tbl-h, .tbl-req .tbl-r {
+    min-width: 100%;
+  }
 }
 
 .tbl-h {
@@ -462,11 +479,61 @@
   border-radius: 4px;
 }
 
-/* ── Client Column (NO ICON) ── */
+/* ── Client Column with Company Logo / Initials Avatar ── */
 .tbl-cell-client {
   min-width: 0;
   overflow: hidden;
   cursor: pointer;
+}
+.cl-company-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.cl-logo-box {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tbl-cell-client:hover .cl-logo-box,
+.cl-logo-box:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.cl-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+  display: block;
+}
+.cl-initials-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 7px;
+  text-transform: uppercase;
+  user-select: none;
+}
+.cl-details-box {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .cl-name {
   font-size: 13.5px;
@@ -479,6 +546,7 @@
   cursor: pointer;
   transition: color 0.15s ease;
 }
+.tbl-cell-client:hover .cl-name,
 .cl-name:hover {
   color: #2563eb;
   text-decoration: underline;
@@ -574,25 +642,28 @@
   color: #2563eb;
 }
 
-/* ── Hiring Pipeline Funnel ── */
+/* ── Hiring Pipeline Funnel (No arrows, perfectly balanced) ── */
 .tbl-cell-pipeline {
   min-width: 0;
 }
 .cl-pipeline-flow {
   display: flex;
-  align-items: flex-start;
-  gap: 3px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
 }
 .cl-pipe-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 44px;
+  flex: 1;
+  min-width: 0;
 }
 .cl-pipe-pill {
-  min-width: 26px;
+  min-width: 24px;
   height: 20px;
-  padding: 0 7px;
+  padding: 0 5px;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
@@ -608,20 +679,26 @@
 .pill-joined     { background: #fef2f2; color: #dc2626; }
 
 .cl-pipe-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 20px;
-  color: #94a3b8;
-  margin: 0 1px;
+  display: none !important;
 }
 .cl-pipe-label {
   font-size: 10px;
   font-weight: 500;
   color: #64748b;
-  margin-top: 4px;
+  margin-top: 3px;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
+
+/* ── Metronic Initials Avatar Color Fallbacks ── */
+.bg-light-primary { background-color: #eff6ff !important; color: #2563eb !important; }
+.bg-light-success { background-color: #ecfdf5 !important; color: #059669 !important; }
+.bg-light-danger  { background-color: #fef2f2 !important; color: #dc2626 !important; }
+.bg-light-warning { background-color: #fffbeb !important; color: #d97706 !important; }
+.bg-light-info    { background-color: #f0fdf4 !important; color: #0284c7 !important; }
 
 /* ── Type & Connected On ── */
 .tbl-cell-type {

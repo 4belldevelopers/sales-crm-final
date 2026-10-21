@@ -114,6 +114,62 @@
         } elseif ($stateName) {
             $locMain = ucwords($stateName);
         }
+
+        /* ── logo / avatar calculation ── */
+        $background_image = '';
+        if ($company_id != $row->company_id) {
+            if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                $background_image = @$row->logo;
+            } elseif (!empty(@$row->website)) {
+                $domainGet = GeneralMethod::getDomain($row->website);
+                if ($domainGet) {
+                    $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                }
+            }
+        } else {
+            if (!empty(@$row->logo_logical_path) && strlen(@$row->logo_logical_path) > 10) {
+                $background_image = @$row->logo_logical_path;
+            } elseif (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                $background_image = @$row->logo;
+            } elseif (!empty(@$row->website)) {
+                $domainGet = GeneralMethod::getDomain($row->website);
+                if ($domainGet) {
+                    $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                }
+            }
+        }
+
+        if (!empty($background_image) && !str_starts_with($background_image, 'http') && !str_starts_with($background_image, '//')) {
+            $background_image = asset($background_image);
+        }
+
+        // initials & background color
+        $cleanName = trim(@$client_Or_CompanyName ?: 'Client');
+        $strVal = strtolower($cleanName[0] ?? 'c');
+        $ascii = ord($strVal);
+        if ($ascii >= 97 && $ascii <= 101) {
+            $bgTextDecore = 'bg-light-danger text-danger';
+        } elseif ($ascii >= 102 && $ascii <= 106) {
+            $bgTextDecore = 'bg-light-warning text-warning';
+        } elseif ($ascii >= 107 && $ascii <= 111) {
+            $bgTextDecore = 'bg-light-primary text-primary';
+        } elseif ($ascii >= 112 && $ascii <= 116) {
+            $bgTextDecore = 'bg-light-success text-success';
+        } elseif ($ascii >= 117 && $ascii <= 121) {
+            $bgTextDecore = 'bg-light-info text-info';
+        } else {
+            $bgTextDecore = 'bg-light-primary text-primary';
+        }
+
+        $nameParts = array_values(array_filter(explode(' ', $cleanName)));
+        $initials = '';
+        if (count($nameParts) >= 2) {
+            $initials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[1], 0, 1));
+        } elseif (count($nameParts) === 1) {
+            $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+        } else {
+            $initials = 'CL';
+        }
     @endphp
 
     <div class="tbl-r">
@@ -122,17 +178,29 @@
             <input type="checkbox" class="tbl-cb" value="{{ $rowTargetId }}" onclick="event.stopPropagation()">
         </div>
 
-        {{-- Client (NO ICON as requested) --}}
+        {{-- Client (with Company Logo / Initials Avatar) --}}
         <div class="tbl-cell-client {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" title="{{ ucwords(@$client_Or_CompanyName) }}">
-            <div class="cl-name {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
-                {{ ucwords(@$client_Or_CompanyName) }}
+            <div class="cl-company-wrapper">
+                <div class="cl-logo-box">
+                    @if (!empty($background_image) && strlen($background_image) > 10)
+                        <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                        <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
+                    @else
+                        <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
+                    @endif
+                </div>
+                <div class="cl-details-box">
+                    <div class="cl-name">
+                        {{ ucwords(@$client_Or_CompanyName) }}
+                    </div>
+                    @if(!empty($departmentArr))
+                        <div class="cl-ind" title="{{ @$departmentArr }}">{{ @$departmentArr }}</div>
+                    @endif
+                    @if(!empty($companySizeText))
+                        <div class="cl-size">{{ $companySizeText }}</div>
+                    @endif
+                </div>
             </div>
-            @if(!empty($departmentArr))
-                <div class="cl-ind">{{ @$departmentArr }}</div>
-            @endif
-            @if(!empty($companySizeText))
-                <div class="cl-size">{{ $companySizeText }}</div>
-            @endif
         </div>
 
         {{-- Location (NO ICON as requested) --}}
@@ -167,36 +235,24 @@
             </div>
         </div>
 
-        {{-- Hiring Pipeline Funnel --}}
+        {{-- Hiring Pipeline Funnel (No arrows) --}}
         <div class="tbl-cell-pipeline">
             <div class="cl-pipeline-flow">
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-sourced">{{ $sourced }}</span>
                     <span class="cl-pipe-label">Sourced</span>
                 </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-evaluated">{{ $evaluated }}</span>
                     <span class="cl-pipe-label">Evaluated</span>
-                </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-interviews">{{ $interviews }}</span>
                     <span class="cl-pipe-label">Interviews</span>
                 </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-offers">{{ $offers }}</span>
                     <span class="cl-pipe-label">Offers</span>
-                </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>

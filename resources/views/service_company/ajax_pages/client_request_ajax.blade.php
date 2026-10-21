@@ -16,6 +16,47 @@
         $created_at = !empty($row->from_created_at) ? $row->from_created_at : ($row->created_at ?? '');
         $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
         $daysAgo = !empty($created_at) ? GeneralMethod::timeAgo($created_at) : '';
+
+        /* ── logo / avatar calculation ── */
+        $background_image = '';
+        if (!empty($row->logo) && strlen($row->logo) > 10) {
+            $background_image = $row->logo;
+        } elseif (!empty($row->website)) {
+            $domainGet = GeneralMethod::getDomain($row->website);
+            if ($domainGet) {
+                $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+            }
+        }
+        if (!empty($background_image) && !str_starts_with($background_image, 'http') && !str_starts_with($background_image, '//')) {
+            $background_image = asset($background_image);
+        }
+
+        $cleanName = trim($company_name ?: 'Client');
+        $strVal = strtolower($cleanName[0] ?? 'c');
+        $ascii = ord($strVal);
+        if ($ascii >= 97 && $ascii <= 101) {
+            $bgTextDecore = 'bg-light-danger text-danger';
+        } elseif ($ascii >= 102 && $ascii <= 106) {
+            $bgTextDecore = 'bg-light-warning text-warning';
+        } elseif ($ascii >= 107 && $ascii <= 111) {
+            $bgTextDecore = 'bg-light-primary text-primary';
+        } elseif ($ascii >= 112 && $ascii <= 116) {
+            $bgTextDecore = 'bg-light-success text-success';
+        } elseif ($ascii >= 117 && $ascii <= 121) {
+            $bgTextDecore = 'bg-light-info text-info';
+        } else {
+            $bgTextDecore = 'bg-light-primary text-primary';
+        }
+
+        $nameParts = array_values(array_filter(explode(' ', $cleanName)));
+        $initials = '';
+        if (count($nameParts) >= 2) {
+            $initials = strtoupper(mb_substr($nameParts[0], 0, 1) . mb_substr($nameParts[1], 0, 1));
+        } elseif (count($nameParts) === 1) {
+            $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+        } else {
+            $initials = 'CL';
+        }
     @endphp
 
         <div class="tbl-r">
@@ -24,12 +65,26 @@
                 <input type="checkbox" class="tbl-cb" value="{{ $client_id }}" onclick="event.stopPropagation()">
             </div>
 
-            {{-- Client Name (NO ICON as requested) --}}
+            {{-- Client Name (with Company Logo / Initials Avatar) --}}
             <div class="tbl-cell-client show-detail-direct" data-row-id="{{ $client_id }}" title="{{ $company_name }}">
-                <div class="cl-name show-detail-direct" data-row-id="{{ $client_id }}">{{ $company_name }}</div>
-                @if(!empty($ind_name))
-                    <div class="cl-ind">{{ $ind_name }}</div>
-                @endif
+                <div class="cl-company-wrapper">
+                    <div class="cl-logo-box">
+                        @if (!empty($background_image) && strlen($background_image) > 10)
+                            <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                            <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
+                        @else
+                            <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
+                        @endif
+                    </div>
+                    <div class="cl-details-box">
+                        <div class="cl-name">
+                            {{ $company_name }}
+                        </div>
+                        @if(!empty($ind_name))
+                            <div class="cl-ind" title="{{ $ind_name }}">{{ $ind_name }}</div>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             {{-- Location (NO ICON as requested) --}}
