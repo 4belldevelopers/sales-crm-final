@@ -48,6 +48,33 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
       - Updated `removeAddressCard` and `createBranchWithData` to maintain real-time location count badge synchronization.
   - **Verification**: `php -l` passed with 0 errors across all modified blades and scripts.
 
+- *2026-10-21* — **Service Company Clients Platform Architecture v5.0 & Zero-Downtime Rebuild Engine (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Review rigorous enterprise critiques across 9 core architectural vectors: I6 Dual-Level Monotonic Versioning, G2 cache physical lifecycle (TTL + Dragonfly native memory eviction vs. wildcard DEL), Single-flight lock failure semantics & timeout fallback, Race-proof dual-tier idempotency with `request_hash` conflict rejection, Projection watermark observability (`projection_lag`), `min_version` bounded wait contract (`max_consistency_wait_ms`), Pure ETag derivation without ES queries, Lean DLQ schema, and I16 Projection Rebuildability CLI + index versioning/alias swap.
+    - Elevate `CLIENT_PAGE_CONSOLIDATION_PLAN.md` to v5.0 and implement the approved invariants.
+  - **Architectural Implementation**:
+    1. **Dual-Level Monotonic Versioning (I6)**:
+       - Tenant sequence (`tenant_{company_id}_client_version`) handles cache invalidation, Read-Your-Write consistency, and cross-tab synchronization.
+       - Aggregate sequence (`client.aggregate_version`) calculated monotonically on client mutations and indexed into Elasticsearch using `version_type=external_gte` to prevent out-of-order document regression.
+    2. **Pure ETag Derivation & Zero-Read HTTP 304 (G5)**:
+       - ETag derived strictly from `sha256(company_id + ":" + tenant_version + ":" + hash + ":" + schema_version)` BEFORE hitting Elasticsearch.
+       - HTTP 304 Not Modified returned instantly with 0 Elasticsearch queries, 0 database reads, and 0 bytes payload.
+    3. **Deterministic Single-Flight Lock & Fallback (G3)**:
+       - If `lock->block(2)` times out, unacquired locks are nullified so unheld locks are never released.
+       - Checks cache once more before graceful query fallback; on ES cluster partition, returns HTTP 200 with `projection_status: "syncing"` and `retry_after_ms: 250`.
+    4. **Watermark Observability Telemetry & Bounded `min_version` Polling (G6)**:
+       - API returns `authoritative_version`, `projection_version`, `projection_lag = max(0, authoritative - projection)`, and `retry_after_ms`.
+       - If `min_version > projection_version`, server executes micro-poll (up to 300ms in 100ms intervals) to satisfy Read-Your-Write on roundtrip 1.
+    5. **Dual-Tier Idempotency with RFC Conflict Rejection (G4)**:
+       - In `store` and `update`, if an idempotency key exists but `request_hash !== $canonicalHash`, immediately returns HTTP 409 Conflict with `error_code: IDEMPOTENCY_KEY_REUSED`.
+       - If status is `COMPLETED`, returns cached response body.
+    6. **Lean Dead-Letter Queue (DLQ) Schema (G7)**:
+       - In `ProcessClientOutboxEventJob`, if `attempts >= $this->tries` (3), event transitions to `status = 'DEAD_LETTER'` with lean error metadata (`error_code`, `error_message` truncated to 500 chars). Detailed stack traces routed to application logs.
+    7. **Projection Rebuild CLI & Zero-Downtime Aliasing (I16)**:
+       - Implemented `php artisan clients:projection:rebuild {--alias=clients_read} {--dry-run}` (`RebuildClientElasticsearchCommand`).
+       - Protocol: captures snapshot outbox watermark ID, streams client records into versioned backing index `clients_v{timestamp}`, replays post-watermark outbox events, and executes atomic zero-downtime alias swap.
+  - **Verification**: `php -l` (0 errors), `vendor\bin\pint.bat` (PASS across all files), and `php artisan clients:projection:rebuild --dry-run` (100% successful simulation).
+
 - *2026-10-21* — **Service Company Clients Listing Redesign & Canonical SPA Architecture v4.0 (Phases 1–6 100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Completely redesign `/service_company/clients` matching the attached visual design specification (`media_1792581837462_ba2ed325.png`).

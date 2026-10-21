@@ -111,14 +111,23 @@ class ProcessClientOutboxEventJob implements ShouldQueue
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error("ProcessClientOutboxEventJob failed for event {$eventId}: ".$e->getMessage());
+            Log::error("ProcessClientOutboxEventJob failed for event {$eventId}: ".$e->getMessage(), [
+                'event_id' => $eventId,
+                'aggregate_id' => $event->aggregate_id ?? null,
+                'attempts' => $event->attempts ?? 1,
+                'exception' => $e,
+            ]);
+
+            $attempts = (int) ($event->attempts ?? 1);
+            $isDeadLetter = ($attempts >= $this->tries);
 
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
-                    'status' => 'FAILED',
-                    'last_error' => substr($e->getMessage(), 0, 1000),
-                    'available_at' => now()->addSeconds(30),
+                    'status' => $isDeadLetter ? 'DEAD_LETTER' : 'PENDING',
+                    'last_error' => substr($e->getMessage(), 0, 500),
+                    'available_at' => $isDeadLetter ? now()->addHours(24) : now()->addSeconds(30 * $attempts),
+                    'updated_at' => now(),
                 ]);
         }
     }
