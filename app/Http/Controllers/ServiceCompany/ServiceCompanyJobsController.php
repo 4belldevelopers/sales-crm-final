@@ -2610,15 +2610,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $companyVersionKey = 'alljobslist_version_company_'.$company_id;
         $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
         $cacheKeySet = 'ats:alljobslist:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        if ($requisition_type === 'job_request' || $requisition_type === 'request') {
+            return $this->recommandedrequest_ajax($request);
+        }
+
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
-        }
-
-        if ($requisition_type === 'job_request' || $requisition_type === 'request') {
-            return $this->recommandedrequest_ajax($request);
         }
 
         // INTENT: Fetch & cache recommendation job IDs for company once to eliminate duplicate size:10000 ES queries. Tenancy: scoped to to_company_id.
@@ -5435,12 +5435,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $searchQuery = $request->input('q');
+        $searchQuery = trim((string) $request->input('custom_search', $request->input('search', $request->input('q', ''))));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10); // Default 10 results per page
         $from = ($page - 1) * $size;
-        $valCheck = $request->input('sortingfilter');
+        $valCheck = $request->input('sortingfilter', $request->input('custom_hiringtype', 1));
         $mstatus_id = $request->input('mstatus_id');
+        $custom_status = $request->input('custom_status', 'all');
+        $employment_type = $request->input('employment_type', 'all');
+        $experience_filter = $request->input('experience_filter', 'all');
         $sort = [];
         $country = '';
         $filters = [];
@@ -5454,6 +5457,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'mstatus_id' => $mstatus_id,
+            'custom_status' => $custom_status,
+            'employment_type' => $employment_type,
+            'experience_filter' => $experience_filter,
+            'requisition_type' => 'job_request',
         ];
 
         $versionKey = 'alljobrequest_version_user_'.$this->user->id;
@@ -5468,6 +5475,39 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // Apply fallback sort by ID descending
         $sort[] = ['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']];
+        if ($valCheck == 2) {
+            $sort[] = ['id' => ['order' => 'asc']];
+        } else {
+            $sort[] = ['id' => ['order' => 'desc']];
+        }
+
+        if ($searchQuery !== '') {
+            $filters[] = [
+                'multi_match' => [
+                    'query' => $searchQuery,
+                    'fields' => ['title^3', 'company_name^2', 'clients_name^2', 'city_name', 'skillArr'],
+                    'type' => 'phrase_prefix',
+                ],
+            ];
+        }
+
+        if (! empty($experience_filter) && $experience_filter !== 'all') {
+            if ($experience_filter === '0-1') {
+                $filters[] = ['range' => ['min_exp' => ['lte' => 1]]];
+            } elseif ($experience_filter === '1-3') {
+                $filters[] = ['range' => ['min_exp' => ['lte' => 3]]];
+                $filters[] = ['range' => ['max_exp' => ['gte' => 1]]];
+            } elseif ($experience_filter === '3-5') {
+                $filters[] = ['range' => ['min_exp' => ['lte' => 5]]];
+                $filters[] = ['range' => ['max_exp' => ['gte' => 3]]];
+            } elseif ($experience_filter === '5+') {
+                $filters[] = ['range' => ['max_exp' => ['gte' => 5]]];
+            }
+        }
+
+        if ($employment_type !== '' && $employment_type !== 'all') {
+            $filters[] = ['term' => ['employment_type' => (int) $employment_type]];
+        }
 
         $boolQuery = [
             'bool' => [
