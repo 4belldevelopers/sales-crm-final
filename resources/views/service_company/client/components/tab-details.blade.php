@@ -1,12 +1,10 @@
 <!--begin::Client Description (God-Level Design Aligned with Reference Design System)-->
 @php
-    $defaultSampleDesc = '4Bell Technology is an innovative and professional company that has provided Achievement Technologies with valuable software development services.';
-    $initialDesc = !empty($description) ? $description : ((isset($page_event) && $page_event === 'ADD') ? $defaultSampleDesc : '');
+    $initialDesc = (($page_event ?? '') === 'ADD') ? '' : (!empty($description) ? $description : '');
     $initialDescCount = mb_strlen(strip_tags($initialDesc));
 
-    $defaultSampleTags = ['Software Development', 'Technology Services', 'Enterprise Platform'];
     $parsedTags = [];
-    if (!empty($tags)) {
+    if (($page_event ?? '') !== 'ADD' && !empty($tags)) {
         $decoded = json_decode($tags, true);
         if (is_array($decoded)) {
             foreach ($decoded as $item) {
@@ -15,8 +13,6 @@
         } else {
             $parsedTags = array_map('trim', explode(',', $tags));
         }
-    } elseif (isset($page_event) && $page_event === 'ADD') {
-        $parsedTags = $defaultSampleTags;
     }
     $parsedTags = array_values(array_filter($parsedTags));
     $encodedTags = !empty($parsedTags) ? json_encode(array_map(fn($t) => ['value' => $t], $parsedTags)) : '';
@@ -59,8 +55,8 @@
               </svg>
             </div>
             <div style="text-align:left !important;">
-              <h3 class="client-section-heading" style="font-size:15px; font-weight:700; color:#101828; margin:0 0 2px 0; text-align:left !important;">About the Company</h3>
-              <p class="client-section-copy" style="font-size:11.5px; color:#64748b; margin:0; text-align:left !important;">Give recruiters a clear understanding of what this company does.</p>
+              <h3 class="client-section-heading" style="font-size:14px; font-weight:700; color:#101828; margin:0 0 2px 0; text-align:left !important;">About the Company</h3>
+              <p class="client-section-copy" style="font-size:11px; color:#64748b; margin:0; text-align:left !important;">Give recruiters a clear understanding of what this company does.</p>
             </div>
           </div>
         </div>
@@ -68,7 +64,7 @@
         <div class="card-body" style="padding:14px 18px !important;">
           <div class="client-editor-wrap">
             <div class="d-flex align-items-center justify-content-between mb-1 client-desc-label-row">
-              <label class="form-label mb-0" style="font-size:12.5px; font-weight:700; color:#0f172a;">Company Description <span class="text-danger">*</span></label>
+              <label class="form-label mb-0" style="font-size:12px; font-weight:700; color:#0f172a;">Company Description <span class="text-danger">*</span></label>
             </div>
             <p style="font-size:11.5px; color:#64748b; margin:0 0 8px 0;">Briefly describe the company's business, products/services, industry and key strengths.</p>
 

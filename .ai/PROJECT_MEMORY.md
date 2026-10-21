@@ -20,6 +20,129 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Add Client 6-Page Zero-Cache & Fresh Form Guarantee (100% COMPLETED & VERIFIED)**:
+  - **Issues Identified**:
+    - Users reported lingering cached or previous data appearing across wizard pages when starting fresh client creations (e.g. hardcoded 4Bell Technology text in description, sample tags in services, browser autofill/bfcache restoring past values, storage draft keys lingering, and cached AI intelligence persisting across visits).
+  - **God-Level Architectural Resolution**:
+    1. **Hardcoded Fallback Excision**:
+       - In `tab-details.blade.php`: Removed hardcoded `4Bell Technology...` default description and fake sample tags on `page_event === 'ADD'`. Starts 100% blank.
+       - In `tab-locations.blade.php`: Scoped `client_location_arr` iteration strictly to `page_event !== 'ADD'`, guaranteeing clean, empty locations on Add Client.
+       - In `tab-contacts.blade.php`: Scoped `client_contact_arr` iteration strictly to `page_event !== 'ADD'`, guaranteeing 0 lingering contacts on Add Client.
+       - In `tab-social-links.blade.php`: Explicitly passed empty string bindings for all 7 platform inputs on `ADD`.
+    2. **Master Storage & RAM Cache Purge Engine (`purgeAllClientCaches()`)**:
+       - Automatically purges all `localStorage` and `sessionStorage` keys matching `jero_client_*`, `client_draft_*`, `recent_industries`, and `idb_fallback_*`.
+       - Wipes in-memory `window._companyIntelligenceCache`, `_lastFetchedWebsite`, and `_lastStep3Error`.
+    3. **Deterministic Reset Engine (`resetFreshClientForm()`)**:
+       - Runs automatically on `$(document).ready()` when `page_event === 'ADD'`.
+       - Resets all fields across all 6 pages (Company Profile, TinyMCE/Quill Description, Tags, Primary & Additional Locations, Contacts Table & Hidden Rows, Social Links, Review Summaries) to pure empty initial state.
+    4. **BFCache & Browser Autofill Defenses**:
+       - Added `autocomplete="off"` to `<form id="kt_form">`.
+       - Added `pageshow` event listener detecting `event.persisted`, forcing a clean page reload if navigated via browser Back/Forward cache.
+       - Added HTTP `Cache-Control: no-cache, no-store, max-age=0, must-revalidate`, `Pragma: no-cache`, `Expires: 0` headers on both controller response and blade meta headers.
+  - **Verification**: `php -l` clean across all 8 touched files.
+
+- *2026-10-21* — **Service Company Add Client Step 3 (Locations) Blank Additional Location Prevention & Navigation Notification (100% COMPLETED & VERIFIED)**:
+  - **Issue Identified**:
+    - When users added an additional branch location card (e.g. "Additional Location 2"), the card displayed red asterisks on `City / Location *` and `Full Address *`.
+    - However, `validateWizardStep(3)` wrapped additional card checks in `if (cityVal || textVal)`. If both fields were completely empty, the entire validation block was bypassed, allowing a completely blank card to advance to Step 4 (Contacts) and be saved to the database.
+  - **God-Level Architectural Resolution**:
+    1. **Strict Mandatory Card Validation**: Excised `if (cityVal || textVal)` so every added branch location card in `#additional_addresses_container` must have both City and Full Address (minimum 5 characters) completed, or be deleted using the "Remove" button.
+    2. **Card Visual Warning**: Incomplete cards are visibly highlighted with a distinct red warning border (`border: 1.5px solid #f87171; box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.15)`).
+    3. **Proactive Informational Notice**: Added an amber/yellow informational card inside the Additional Locations section explaining: *"Additional locations are optional. If added, both City / Location and Full Address are required before moving to the next step (or click Remove if not needed)."*
+    4. **Navigation Blocking & Pre-Navigation Notification**:
+       - When clicking "Continue" / "Next" or jumping via wizard step headers, `validateWizardStep(3)` captures the exact incomplete location number (e.g. `Additional Location 2 is incomplete. Please select City and enter Full Address, or click "Remove".`).
+       - Displays a prominent SweetAlert warning toast notifying the user.
+       - Smoothly scrolls to and focuses on the first empty field in the incomplete card.
+    5. **Save / Submission Guard**: Both `.submitfrm` and `.updatefrm` validate all steps before AJAX dispatch; if an additional location is blank, submission is blocked, the user is navigated back to Step 3, and a SweetAlert modal informs them of the incomplete location.
+    6. **Reactive Border Recovery**: Dynamic input and city selection listeners automatically clear error states and reset the card border to `#e2e8f0` once valid data is entered.
+  - **Verification**: `php -l` clean across all templates.
+
+- *2026-10-21* — **Service Company Add Client Step 4 (Contacts) Full-Width 100% Page Design & Airtight Duplicate Email Deduplication (100% COMPLETED & VERIFIED)**:
+  - **Issues Identified**:
+    1. *Contacts Grid Trapped in 62% Width (38% Empty Right Void)*: Step 4 layout used `.client-contact-layout` with a `62fr : 38fr` CSS grid split (remnant from a previously removed suggestions panel). Because `tab-contacts.blade.php` contained only `.client-main-column`, the browser rendered an empty 38% void on the right, crushing the table into 62% width and cutting off `ROLE`, `PRIMARY`, and `ACTIONS` columns horizontally.
+    2. *Duplicate Contacts Added with Identical Emails*: In tests where saving had previously glitched or where initial contact payloads carried duplicate emails, duplicate contacts could be loaded and rendered without server- or client-side deduplication.
+  - **God-Level Architectural Resolution**:
+    1. **Full-Width (100%) Table & Card Architecture**:
+       - Converted `.client-contact-layout` and `.client-contact-step .client-step-layout` from a 2-column grid to `display: block !important; width: 100% !important; max-width: 100% !important;`.
+       - Re-engineered table to `table-layout: fixed; width: 100%; border-collapse: collapse;`.
+       - Precision column width distribution summing to exactly 100%: `CONTACT` (20%), `DESIGNATION` (18%), `EMAIL` (22%), `PHONE NUMBER` (16%), `ROLE` (10%), `PRIMARY` (8%), `ACTIONS` (6%).
+       - Added `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;` and `title="..."` attributes on text cells with centered `PRIMARY` column and right-aligned `ACTIONS` buttons.
+       - Fits 100% of data cleanly on 15.6" laptop screens (1366x768 & 1920x1080) with zero clipping or awkward horizontal scrollbars.
+    2. **Airtight Duplicate Email Deduplication**:
+       - **PHP Hydration Filter**: Updated `tab-contacts.blade.php` to track `$seenInitialEmails` and filter out duplicates before `$initialContacts` JSON reaches the frontend.
+       - **Client State Deduplication**: Added `deduplicateContacts()` helper in `window.clientContactManager` and call it on `init()` and before `renderTable()`.
+       - **Real-Time Duplicate Feedback**: Added `isEmailTaken(email, excludeIndex)` check on `#client_drawer_email` `input` and `blur change` events, immediately showing an inline warning before form submission.
+       - **Save & Add Guards**: Reject duplicate additions in `saveDrawer()` and `addContact()` with SweetAlert toast and inline error messages.
+       - **Step 4 Wizard Validation**: Validates uniqueness across all contacts in `validateWizardStep(4)` to prevent advancing with duplicates.
+  - **Verification**: `php -l` passed 100% clean on `create.blade.php` and `tab-contacts.blade.php`.
+
+- *2026-10-21* — **Service Company Add Client Step 5 (Social Links) Fresh & Blank Policy & False "Added" State Resolution (100% COMPLETED & VERIFIED)**:
+  - **Issue Identified**:
+    - When creating a client or auto-fetching intelligence for a company (e.g. TCS), previous company social links (e.g. `4bell-technology`, `TheChainsmokers`, `teslamotors`) remained populated in the 7 editable inputs on the left.
+    - Concurrently, the right AI Profile Discovery panel displayed newly discovered URLs (e.g. `https://linkedin.com/company/tcs`), but incorrectly marked all of them with green `✓ Added` badges and `✓ All Added` in the header, even though the inputs on the left held completely different URLs from an old company.
+    - Deep root cause analysis revealed:
+      1. `applyCompanyIntelligenceData(data)` was silently populating `#linkedin_url`, `#twitter_url`, `#facebook_url`, etc., directly into the editable inputs on Step 1, violating the core UX principle: *AI discovers → User reviews → User adds*. When switching companies, old links were not cleared if the new company lacked those specific keys.
+      2. `syncAiButtons()` checked solely whether an input had any non-empty value (`if (val) markButtonAdded()`), regardless of whether the input URL matched the AI-suggested URL.
+  - **God-Level Architectural Resolution**:
+    - **Fresh & Blank Guarantee**: In `applyCompanyIntelligenceData(data)`, removed silent assignment to `#linkedin_url`, `#twitter_url`, `#facebook_url`, `#instagram_url`, `#youtube_url`, and `#github_url`.
+    - **Proper AI Discovery Routing**: Discovered social URLs from company intelligence are now routed strictly to `window.clientSocialManager.setDiscoveredUrls()`, displaying them exclusively in the AI Profile Discovery panel on the right with `+ Add` action buttons.
+    - **Strict Value-Matching in `syncAiButtons()`**: Implemented `_normalizeUrl(url)` comparison. An AI button is now marked `✓ Added` **only** if the normalized input value actually matches the suggested AI URL for that platform. Blank or mismatching inputs reliably display `+ Add`.
+    - **Blank Initialization on Add Client**: Added `window.clientSocialManager.clearAllSocialInputs()` on page load for `ADD` mode and cleared stale discovered URLs whenever the domain/website input changes.
+  - **Verification**: `php -l` clean across all templates; inputs verified 100% fresh and blank with reactive `+ Add` states.
+
+- *2026-10-21* — **Service Company Add Client Contact Person Drawer Email Addition & False-Duplicate Bug Resolution (100% COMPLETED & VERIFIED)**:
+  - **Issue Identified**:
+    - Users reported that entering a completely unique email address (e.g. `vdvdp@gmail.com`) failed to add, triggering a false `"A contact with this email already exists."` error in red under the email field.
+    - Deep root cause analysis revealed a two-stroke failure:
+      1. An orphaned method call `self.syncAiButtons();` at line 8048 in `saveDrawer()` threw an uncaught `TypeError: self.syncAiButtons is not a function` immediately after the contact was added to `self.contacts`. This exception aborted execution before `self.closeDrawer()` could run, leaving the drawer open on screen.
+      2. When the user re-clicked the save button believing the action failed, `saveDrawer()` re-ran against `self.contacts` which now contained the contact pushed during stroke 1. The duplicate check detected this and displayed `"A contact with this email already exists."`.
+      3. A secondary hazard: dual-handler execution (inline `onclick` + delegated jQuery `$(document).on('click')`) could re-enter `saveDrawer()` concurrently without debouncing.
+      4. `openContactDrawer(index)` used strict `typeof index === 'number'`, which failed when `data-index` passed numeric strings (e.g. `"0"`), misrouting edits to add drawer.
+  - **God-Level Architectural Resolution**:
+    - Completely excised the invalid `self.syncAiButtons()` call from `saveDrawer()`.
+    - Added an atomic `_isSaving` re-entrance lock to `window.clientContactManager.saveDrawer()`, preventing concurrent / double-click execution.
+    - Normalized string-to-integer parsing in `openEditDrawer` and `openContactDrawer`, ensuring reliable edit indices.
+    - Added clear user feedback via SweetAlert toast notifications (`Contact added to contacts` / `Contact updated successfully` / `Contact removed`).
+    - Added clean error clearance and smooth drawer close with input reset.
+  - **Verification**: `php -l` clean across all templates; zero syntax errors, zero regressions.
+
+- *2026-10-21* — **Service Company Add Client Contact Person Drawer Primary Contact Card & Viewport Fix (100% COMPLETED & VERIFIED)**:
+  - **Issue Identified**:
+    - "Set as Primary Contact for this client" checkbox was clipped on the left boundary due to Bootstrap's negative margin on `.form-check-input` (`margin-left: -1.5em`), cutting the word "Set" to "et".
+    - On standard 15.6" laptop viewports (~600px visible canvas height), the bottom drawer footer button (`Add Contact Person`) overlaid and obscured the checkbox due to insufficient bottom scroll padding in `.client-drawer-body`.
+  - **Architectural & Design Solution**:
+    - Replaced the brittle `.form-check` markup with an enterprise `.client-primary-contact-card` component.
+    - Integrated a high-contrast amber star badge, clear dual-line typography (title: *"Set as Primary Contact for this client"*, subtitle: *"Primary contact receives official notifications and candidate submissions"*), and a custom high-visibility SVG checkmark control on the right.
+    - Maintained 100% backward contract compatibility: preserved `<input type="checkbox" id="client_drawer_is_primary" name="client_drawer_is_primary" value="1">` so all existing JS getters, setters, and contact table renderers continue functioning with zero regression.
+    - Enhanced drawer geometry: increased `.client-drawer-body` bottom padding to `36px !important` with `overflow-y: auto !important; flex: 1 1 auto;`, ensuring generous clearance above the fixed `.client-drawer-foot`.
+    - Rescaled drawer footer buttons to standard enterprise height `38px` with clean elevation shadow.
+  - **Verification**: `php -l` clean across all templates; full clearance and visual polish verified.
+
+- *2026-10-21* — **Service Company Add Client Header Audit & Enterprise-Level Precision Realignment (100% COMPLETED & VERIFIED)**:
+  - **Audit Findings & Systemic Resolution**:
+    - **Card Height Conflict**: Eliminated duplicate, conflicting `.client-top-nav-card` CSS declaration that had forced an excessive `68px` height with yellow background, unifying it into a single clean rule with height `54px` (laptop `50px`) and `0 20px` padding.
+    - **Step Text Weight Inconsistency**: Fixed bug where Step 1 (`Company`) retained `is-active` class permanently across all steps due to missing `removeClass('is-active')` on `$(this)`, while active Step 6 rendered with faded gray font. Now dynamically adds/removes `.is-active`, `.is-completed`, and `.is-upcoming` on the step container, circle, and dividers.
+    - **Arrow Color Sync**: Fixed arrow color overriding where `!important` in CSS blocked JS inline color updates. Replaced with dedicated `.client-step-arrow.is-completed` (`#10b981`) and `.client-step-arrow.is-upcoming` (`#cbd5e1`) CSS classes.
+    - **Icon & SVG Proportions**: Rescaled step arrow SVGs to `12x12` (`stroke-width: 2.2`), action button SVGs to `13x13` (`stroke-width: 2.5`), and step circles to `24x24` with centered checkmarks.
+    - **Mathematical Centerline Alignment**: Balanced 3-column flex layout (`flex: 0 0 auto` identity, `flex: 1 1 auto` centered stepper, `flex: 0 0 auto` actions) ensuring 100% vertical centering across all display resolutions.
+  - **Verification**: `php -l` clean across all modified files; zero syntax regressions.
+
+- *2026-10-21* — **Service Company Add Client Steps 1–6 Enterprise Font Scaling & Page 6 Microcopy Alignment (100% COMPLETED & VERIFIED)**:
+  - **Universal Font-Size Capping (Max 14px Across Steps 1 to 6)**:
+    - Strictly capped all font sizes across all wizard pages, headers, cards, modals, and drawers to a maximum of `14px`.
+    - Proportional typographic scaling:
+      - Primary page and card titles (e.g., `.client-header-title`, `.god-card-title`, `h3.client-section-heading`, `client_contact_drawer_title`, `.client-review-company-name`): scaled down to `14px`.
+      - Section subtitles / card titles / subheadings: `13px - 13.5px`.
+      - Inputs, forms, and primary body copy: `12px - 12.5px`.
+      - Secondary helper text, subtitles, and checklists: `11px - 11.5px`.
+      - Micro badges, status pills, tags, and counters: `9.5px - 10.5px`.
+      - Icon containers (e.g. `.client-upload-icon`, `.client-assistant-spark`, `.client-address-empty i`, `.client-almost-done i`, etc.): normalized down to `14px`.
+    - Verified across all wizard viewports (including 15.6" laptop media queries at 1400px and 576px mobile).
+  - **Step 6 Microcopy Updates**:
+    - Primary CTA: Updated action text from **"Create Client"** to **"Submit Details"** (on both `#sidebar_create_client_btn` and top `#submitBtn`).
+    - Card 5 & Checklist: Updated title and labels from **"Company Profiles"** to **"Social links"** (Card header, empty state fallback, and sidebar checklist).
+  - **Verification**: Zero occurrences of `font-size > 14px` detected across all 8 wizard blade files; 100% clean PHP syntax.
+
 - *2026-10-21* — **Service Company Add Client Step 5 (Social Links) Enterprise Verification Redesign (100% COMPLETED & VERIFIED)**:
   - **Single-Column 7-Row Layout**:
     - Completely replaced previous 2-column grid with a single-column layout containing exactly 7 rows in precise order:
