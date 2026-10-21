@@ -20,6 +20,23 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Clients Listing: Column Reordering & Jobs Header Cleanup (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Remove the text "Hiring, Hold, Closed" completely from the table header only (retaining the full status lines and counts inside the row listings/cards).
+    - Reorder table columns to: **1. Checkbox $\to$ 2. Company Name $\to$ 3. Location $\to$ 4. Date $\to$ 5. Last Activity $\to$ 6. Jobs $\to$ 7. Hiring Pipeline**.
+  - **Architectural Enhancements**:
+    - In `demo/css/clientList.css`:
+      - Updated `.tbl-h, .tbl-r` CSS grid template columns to match the new sequence: `32px minmax(175px, 1.4fr) minmax(115px, 0.9fr) minmax(115px, 0.85fr) minmax(110px, 0.85fr) minmax(85px, 0.65fr) minmax(185px, 1.35fr)`.
+      - Maintains horizontal fit for 15.6-inch displays (1366×768 & 1920×1080) with 0 horizontal scrolling.
+    - In `resources/views/service_company/client/index.blade.php`:
+      - Updated `#clientTableHead` in static HTML and dynamic JS (`setClientTab`) to match the new column order.
+      - Simplified Jobs sub-card header to a clean `.tbl-th-subcard` with briefcase SVG, "Jobs" label, and sort chevron (completely removing the "Hiring, Hold, Closed" chip text from the header).
+    - In `resources/views/service_company/client/custom_client.blade.php` & `direct_client.blade.php`:
+      - Synced identical header sub-card order and cleaned Jobs header.
+    - In `resources/views/service_company/ajax_pages/all-client-ajax.blade.php`, `custom-client-ajax.blade.php`, & `direct-client-ajax.blade.php`:
+      - Reordered row cells to: `tbl-cell-check`, `tbl-cell-client`, `tbl-cell-loc`, `tbl-cell-type` (Date), `tbl-cell-activity` (Last Activity), `tbl-cell-jobs` (Jobs with Hiring/Hold/Closed lines and conditional status colors), `tbl-cell-pipeline` (Hiring Pipeline).
+  - **Verification**: `php -l` passed with 0 errors across all 6 blade files.
+
 - *2026-10-21* — **Service Company Add Client Step 3: Additional Locations Section Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Redesign the Additional Locations section of the Add Internal Client wizard (Step 3: Full Address) to match the approved visual reference specification (`media_1792592823243_6f4e2bbd.png`) at a God-Level enterprise SaaS standard.
