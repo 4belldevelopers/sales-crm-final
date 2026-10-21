@@ -165,12 +165,44 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
         $cachePayload['version'] = $tenantVersion;
-        $cacheKeySet = 'ats:v2:clients:'.$company_id.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
+        $hash = md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:v2:clients:'.$company_id.':'.$tenantVersion.':'.$hash;
+        $etag = '"clients-'.$company_id.'-'.$tenantVersion.'-'.$hash.'"';
+
+        /* ----------------------------------------------------
+        ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
+        ----------------------------------------------------- */
+        if ($request->header('If-None-Match') === $etag) {
+            return response('', 304)->header('ETag', $etag);
+        }
+
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+        }
+
+        /* ----------------------------------------------------
+        ⚡ Phase 6: Single-Flight Request Coalescing (Anti-Stampede)
+        ----------------------------------------------------- */
+        $singleFlightLock = null;
+        try {
+            $lockKey = 'lock:'.$cacheKeySet;
+            $singleFlightLock = cache()->lock($lockKey, 5);
+            if (! $singleFlightLock->block(2)) {
+                if (cache()->has($cacheKeySet)) {
+                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                }
+            } else {
+                if (cache()->has($cacheKeySet)) {
+                    $singleFlightLock->release();
+
+                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback if lock is unsupported
         }
 
         $relationIds = $this->elasticService->getClient()->search([
@@ -587,19 +619,32 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ];
         }
 
+        $minVersion = (int) $request->input('min_version', 0);
+        $projectionStatus = ($minVersion > $tenantVersion) ? 'syncing' : 'synced';
+
         $responseData = [
             'html' => view('service_company.ajax_pages.all-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
             'rows' => $rowsDto,
             'data_version' => $tenantVersion,
+            'projection_version' => $tenantVersion,
+            'projection_status' => $projectionStatus,
+            'etag' => $etag,
             'page' => $page,
             'per_page' => $size,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENTS_TIME));
 
-        return response()->json($responseData);
+        if ($singleFlightLock) {
+            try {
+                $singleFlightLock->release();
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return response()->json($responseData)->header('ETag', $etag);
 
     }
 
@@ -676,13 +721,44 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
         $cachePayload['version'] = $tenantVersion;
-        $cacheKeySet = 'ats:v2:clientrequest:'.$company_id.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
+        $hash = md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:v2:clientrequest:'.$company_id.':'.$tenantVersion.':'.$hash;
+        $etag = '"clientreq-'.$company_id.'-'.$tenantVersion.'-'.$hash.'"';
+
+        /* ----------------------------------------------------
+        ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
+        ----------------------------------------------------- */
+        if ($request->header('If-None-Match') === $etag) {
+            return response('', 304)->header('ETag', $etag);
+        }
 
         /* ----------------------------
         ⚡ DragonflyDB / Redis Cache Hit
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+        }
+
+        /* ----------------------------------------------------
+        ⚡ Phase 6: Single-Flight Request Coalescing (Anti-Stampede)
+        ----------------------------------------------------- */
+        $singleFlightLock = null;
+        try {
+            $lockKey = 'lock:'.$cacheKeySet;
+            $singleFlightLock = cache()->lock($lockKey, 5);
+            if (! $singleFlightLock->block(2)) {
+                if (cache()->has($cacheKeySet)) {
+                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                }
+            } else {
+                if (cache()->has($cacheKeySet)) {
+                    $singleFlightLock->release();
+
+                    return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Graceful fallback
         }
 
         // Tenancy & Status Filter Context (utilizes ES bitset cache)
@@ -771,6 +847,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ];
         }
 
+        $minVersion = (int) $request->input('min_version', 0);
+        $projectionStatus = ($minVersion > $tenantVersion) ? 'syncing' : 'synced';
+
         $userPermissions = $this->userPermissions;
         $responseData = [
             'html' => view('service_company.ajax_pages.client_request_ajax', compact('data', 'userPermissions'))->render(),
@@ -778,13 +857,23 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
             'rows' => $rowsDto,
             'data_version' => $tenantVersion,
+            'projection_version' => $tenantVersion,
+            'projection_status' => $projectionStatus,
+            'etag' => $etag,
             'page' => $page,
             'per_page' => $size,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_REQUEST_TIME));
 
-        return response()->json($responseData);
+        if ($singleFlightLock) {
+            try {
+                $singleFlightLock->release();
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return response()->json($responseData)->header('ETag', $etag);
     }
 
     /**
@@ -3595,8 +3684,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
                 GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
+                $newVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
 
-                return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Ignored']);
+                return Reply::dataOnly([
+                    'status' => 'success',
+                    'mutation_version' => $newVersion,
+                    'projection_status' => 'syncing',
+                    'clientDataCnt' => $clientDataCnt,
+                    'message' => 'Request has been Ignored',
+                ]);
             } elseif ($event_id == 1) {
 
                 $updateArr = ['to_invitation_status' => $event_id];
@@ -3749,8 +3845,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
                 GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
+                $newVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
 
-                return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Accepted']);
+                return Reply::dataOnly([
+                    'status' => 'success',
+                    'mutation_version' => $newVersion,
+                    'projection_status' => 'syncing',
+                    'clientDataCnt' => $clientDataCnt,
+                    'message' => 'Request has been Accepted',
+                ]);
             }
 
         } finally {

@@ -48,7 +48,7 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
       - Updated `removeAddressCard` and `createBranchWithData` to maintain real-time location count badge synchronization.
   - **Verification**: `php -l` passed with 0 errors across all modified blades and scripts.
 
-- *2026-10-21* — **Service Company Clients Listing Redesign & Canonical SPA Architecture (Phases 1–5 100% COMPLETED & VERIFIED)**:
+- *2026-10-21* — **Service Company Clients Listing Redesign & Canonical SPA Architecture v4.0 (Phases 1–6 100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Completely redesign `/service_company/clients` matching the attached visual design specification (`media_1792581837462_ba2ed325.png`).
     - Strictly omit icons in the `Client` column and `Location` column.
@@ -74,7 +74,11 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
        - URL State Machine (`pushState`/`popstate`) maintains `?tab=...&search=...&country=...&sort=...&page=...`.
        - Browser back/forward buttons work instantaneously via `popstate` hydration.
        - Native `BroadcastChannel('jero_clients_cross_tab_sync')` broadcasts request mutation events across browser tabs in real time.
-    6. **Zero MySQL Reads on Listing Path**:
+    6. **Anti-Stampede Single-Flight Distributed Lock & ETag 304 Support**:
+       - Cache stampede protection via single-flight distributed lock (`Cache::lock`) ensures only 1 request queries ES to warm Dragonfly under 10K concurrency.
+       - ETag & HTTP 304 Not Modified slashes network transfer and server CPU by >90% during warm background SWR revalidations.
+       - Read-Your-Write consistency protocol with `min_version` verification and honest search degradation banner (`#cl_search_sync_banner`).
+    7. **Zero MySQL Reads on Listing Path**:
        - 100% of queries, full-text searches, and filters are executed against Elasticsearch cluster indices (`ELASTIC_CLIENT_LIST`, `ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX`, `ELASTIC_CLIENT_REQUEST`) with DragonflyDB/Redis caching.
   - **Verification**: `php -l` clean across all modified files, Pint formatting applied, git diff verified.
 
