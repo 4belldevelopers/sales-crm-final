@@ -19,13 +19,23 @@
          'clientRequest_active'=>'',
          'clientRequest_url'=> url('service_company/clients/client_request/0'),
          'span_clientRequest'=>'span_clientRequest',
-         'clientAll' =>@$clientDataCnt['clientAll'],
-         'clientDirect' =>@$clientDataCnt['clientDirect'],
-         'clientCustom' =>@$clientDataCnt['clientCustom'],
-         'clientRequest' =>@$clientDataCnt['clientRequest'],
-        ];
-@endphp
+         'clientAll' => @$clientDataCnt['clientAll'],
+         'clientDirect' => @$clientDataCnt['clientDirect'],
+         'clientCustom' => @$clientDataCnt['clientCustom'],
+         'clientRequest' => @$clientDataCnt['clientRequest'],
+         'clientHiring' => @$clientDataCnt['clientHiring'],
+         'activeJobs' => @$clientDataCnt['activeJobs'],
+    ];
 
+    $totalClientsCount = (int)($clientDataCnt['clientAll'] ?? 0);
+    $internalClientsCount = (int)($clientDataCnt['clientCustom'] ?? 0);
+    $directClientsCount = (int)($clientDataCnt['clientDirect'] ?? 0);
+    $activeJobsCount = (int)($clientDataCnt['activeJobs'] ?? ($clientDataCnt['clientHiring'] ?? 0));
+    $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
+    $hiringClientsCount = (int)($clientDataCnt['clientHiring'] ?? 0);
+
+    $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 100;
+@endphp
 
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_client" id="kt_content">
@@ -34,196 +44,357 @@
     <!--begin::Container-->
     <div id="kt_content_container" class="container-fluid px-3">
 
-        <style>
-        /* ── Client Hero Redesign ── */
-        .cl-hero { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; gap:12px; }
-        .cl-hero-left { display:flex; flex-direction:column; gap:3px; }
-        .cl-hero-title { display:flex; align-items:center; gap:8px; font-size:20px; font-weight:700; color:#181c32; line-height:1.2; }
-        .cl-hero-title svg { width:20px; height:20px; flex-shrink:0; }
-        .cl-hero-sub { font-size:12px; color:#7e8299; margin-top:2px; }
-        .cl-add-btn { display:inline-flex; align-items:center; gap:6px; background:#1b84ff; color:#fff; border:none; border-radius:7px; padding:9px 18px; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; white-space:nowrap; }
-        .cl-add-btn:hover { background:#056ee9; color:#fff; }
-
-        /* Stat cards */
-        .cl-stats { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-        .cl-stat { flex:1; min-width:140px; background:#fff; border:1px solid #e4e6ef; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:box-shadow .15s, border-color .15s; text-decoration:none; }
-        .cl-stat:hover, .cl-stat.active { box-shadow:0 4px 14px rgba(27,132,255,.18); border-color:#1b84ff; text-decoration:none; }
-        .cl-stat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .cl-stat-icon svg { width:20px; height:20px; }
-        .cl-stat-icon.blue { background:#eff6ff; color:#2563eb; }
-        .cl-stat-icon.indigo { background:#eef2ff; color:#4f46e5; }
-        .cl-stat-icon.green { background:#f0fdf4; color:#16a34a; }
-        .cl-stat-icon.orange { background:#fff7ed; color:#ea580c; }
-        .cl-stat-icon.purple { background:#faf5ff; color:#7c3aed; }
-        .cl-stat-num { font-size:20px; font-weight:700; color:#181c32; line-height:1.1; }
-        .cl-stat-label { font-size:11px; color:#7e8299; margin-top:2px; }
-
-        /* Filter bar */
-        .cl-filter { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-        .cl-search-wrap { position:relative; flex:1; min-width:160px; }
-        .cl-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:#a1a5b7; pointer-events:none; }
-        .cl-search-input { width:100%; border:1px solid #e4e6ef; border-radius:7px; padding:7px 10px 7px 32px; font-size:12px; font-family:'Poppins',sans-serif; color:#181c32; outline:none; background:#fff; }
-        .cl-search-input:focus { border-color:#1b84ff; }
-        .cl-select { border:1px solid #e4e6ef; border-radius:7px; padding:7px 28px 7px 10px; font-size:12px; font-family:'Poppins',sans-serif; color:#181c32; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a5b7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center; appearance:none; outline:none; cursor:pointer; }
-        .cl-filter-right { display:flex; align-items:center; gap:6px; margin-left:auto; }
-        .cl-filter-btn { display:inline-flex; align-items:center; gap:5px; border:1px solid #e4e6ef; border-radius:7px; background:#fff; padding:7px 12px; font-size:11px; font-weight:500; color:#5e6278; cursor:pointer; white-space:nowrap; text-decoration:none; }
-        .cl-filter-btn:hover { border-color:#1b84ff; color:#1b84ff; }
-        .cl-filter-btn svg { width:13px; height:13px; }
-        .cl-icon-btn { width:32px; height:32px; border:1px solid #e4e6ef; border-radius:7px; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5e6278; }
-        .cl-icon-btn:hover { border-color:#1b84ff; color:#1b84ff; }
-        .cl-icon-btn svg { width:13px; height:13px; }
-
-        /* Tabs */
-        .cl-tabs { display:flex; align-items:center; gap:0; border-bottom:2px solid #e4e6ef; margin-bottom:14px; overflow-x:auto; }
-        .cl-tab { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; font-size:12px; font-weight:500; color:#7e8299; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-2px; white-space:nowrap; cursor:pointer; }
-        .cl-tab:hover { color:#181c32; text-decoration:none; }
-        .cl-tab.active { color:#1b84ff; border-bottom-color:#1b84ff; font-weight:600; }
-        .cl-tab svg { width:14px; height:14px; }
-        </style>
-
-        <!-- HERO -->
-        <div class="cl-hero">
-            <div class="cl-hero-left">
-                <div class="cl-hero-title">
-                    Clients
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4" stroke="#16A34A" stroke-width="2.5"/>
+        <!-- ── HEADER ── -->
+        <div class="cl-header">
+            <div class="cl-header-left">
+                <div class="cl-header-icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                 </div>
-                <div class="cl-hero-sub">Manage and track your clients, relationships and business performance.</div>
+                <div>
+                    <div class="cl-header-title-row">
+                        <h1 class="cl-header-title">Clients</h1>
+                        <span class="cl-verified-badge" title="Verified ATS Module">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="m9 12 2 2 4-4" stroke="#16a34a" stroke-width="2.5"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="cl-header-subtitle">Manage client relationships, hiring activity and recruitment performance.</div>
+                </div>
             </div>
-            @if(in_array("add_clients", $userPermissions))
-            <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Client
-            </a>
-            @endif
-        </div>
 
-        <!-- STAT CARDS -->
-        <div class="cl-stats">
-            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-stat cl-stat-filter active" data-tab="all">
-                <div class="cl-stat-icon blue">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div>
-                    <div class="cl-stat-num" id="span_clientAll">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
-                    <div class="cl-stat-label">Total Clients</div>
-                </div>
-            </a>
-            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-stat cl-stat-filter" data-tab="internal">
-                <div class="cl-stat-icon indigo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <div>
-                    <div class="cl-stat-num" id="span_clientCustom">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
-                    <div class="cl-stat-label">Internal Clients</div>
-                </div>
-            </a>
-            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-stat cl-stat-filter" data-tab="direct">
-                <div class="cl-stat-icon green">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div>
-                    <div class="cl-stat-num" id="span_clientDirect">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
-                    <div class="cl-stat-label">Direct Clients</div>
-                </div>
-            </a>
-            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-stat cl-stat-filter" data-tab="hiring">
-                <div class="cl-stat-icon orange">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-                </div>
-                <div>
-                    <div class="cl-stat-num" id="span_clientHiring">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
-                    <div class="cl-stat-label">Clients Actively Hiring</div>
-                </div>
-            </a>
-            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-stat cl-stat-filter" data-tab="request">
-                <div class="cl-stat-icon purple">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
-                </div>
-                <div>
-                    <div class="cl-stat-num" id="span_clientRequest">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
-                    <div class="cl-stat-label">Pending Requests</div>
-                </div>
-            </a>
-        </div>
+            <div class="cl-header-actions">
+                <button type="button" class="cl-export-btn" onclick="exportClientsToCsv()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Export</span>
+                </button>
 
-        <!-- FILTER BAR -->
-        <div class="cl-filter">
-            <div class="cl-search-wrap" style="flex:1;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" class="cl-search-input" name="inputJobSearch" value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
-                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);"></div>
-            </div>
-            <select class="cl-select" id="sortingfilter" onchange="filtersdataget()" style="min-width:160px;">
-                <option value="Show All" selected>Sort</option>
-                <option value="1">Newest to Oldest (Upload Date)</option>
-                <option value="2">Oldest to Newest (Upload Date)</option>
-            </select>
-            <select class="cl-select" id="country" onchange="filtersdataget()" style="min-width:160px;">
-                <option value="" selected>Location</option>
-                @if (!empty($countries))
-                    @foreach ($countries as $country)
-                        <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                    @endforeach
+                @if(in_array("add_clients", $userPermissions))
+                <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Add Internal Client</span>
+                </a>
                 @endif
-            </select>
+            </div>
         </div>
 
-        <!-- TABS -->
-        <div class="cl-tabs">
-            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-tab cl-tab-filter active" data-tab="all">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                All Clients
+        <!-- ── 5 STAT CARDS ── -->
+        <div class="cl-stat-grid">
+            {{-- Card 1: Total Clients --}}
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-card cl-stat-filter active" data-tab="all">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientAll">{{ $totalClientsCount }}</div>
+                        <div class="cl-card-lbl">Total Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>+{{ max($totalClientsCount, 1) }} this month</span>
+                </div>
             </a>
-            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-tab cl-tab-filter" data-tab="internal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                Internal Clients
+
+            {{-- Card 2: Internal Clients --}}
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-card cl-stat-filter" data-tab="internal">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon indigo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientCustom">{{ $internalClientsCount }}</div>
+                        <div class="cl-card-lbl">Internal Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub blue">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <span>{{ $internalClientsCount > 0 ? $internalClientsCount . ' active internal' : 'No internal clients yet' }}</span>
+                </div>
             </a>
-            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-tab cl-tab-filter" data-tab="direct">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Direct Clients
+
+            {{-- Card 3: Direct Clients --}}
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-card cl-stat-filter" data-tab="direct">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                            <path d="M9 22v-4h6v4"/>
+                            <path d="M8 6h.01"/>
+                            <path d="M16 6h.01"/>
+                            <path d="M8 10h.01"/>
+                            <path d="M16 10h.01"/>
+                            <path d="M8 14h.01"/>
+                            <path d="M16 14h.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientDirect">{{ $directClientsCount }}</div>
+                        <div class="cl-card-lbl">Direct Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub green">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <polyline points="17 11 19 13 23 9"/>
+                    </svg>
+                    <span>{{ $directPercent }}% of total clients</span>
+                </div>
             </a>
-            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-tab cl-tab-filter" id="tab-hiring" data-tab="hiring">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                Hiring
+
+            {{-- Card 4: Active Jobs --}}
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon orange">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                            <line x1="12" y1="12" x2="12" y2="12.01"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientHiring">{{ $activeJobsCount }}</div>
+                        <div class="cl-card-lbl">Active Jobs</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub orange">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="9" x2="20" y2="9"/>
+                        <line x1="4" y1="15" x2="20" y2="15"/>
+                        <line x1="10" y1="3" x2="8" y2="21"/>
+                        <line x1="16" y1="3" x2="14" y2="21"/>
+                    </svg>
+                    <span>Across {{ max($hiringClientsCount, ($totalClientsCount > 0 ? 1 : 0)) }} client{{ max($hiringClientsCount, ($totalClientsCount > 0 ? 1 : 0)) > 1 ? 's' : '' }}</span>
+                </div>
             </a>
-            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab cl-tab-filter" data-tab="request">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Pending Job Requests
+
+            {{-- Card 5: Pending Requests --}}
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-card cl-stat-filter" data-tab="request">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon purple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientRequest">{{ $pendingRequestsCount }}</div>
+                        <div class="cl-card-lbl">Pending Requests</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub purple">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 14 14"/>
+                    </svg>
+                    <span>{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' action needed' : "You're all caught up" }}</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- ── SEARCH & FILTER BAR ── -->
+        <div class="cl-filter-bar">
+            {{-- Search Input --}}
+            <div class="cl-search-box">
+                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="cl-search-inp" name="inputJobSearch" value="" placeholder="Search clients by name, industry, location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
+            </div>
+
+            {{-- Filter 1: Client Type --}}
+            <div class="cl-dropdown-pill">
+                <div class="cl-pill-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <path d="M9 22v-4h6v4"/>
+                        <path d="M8 6h.01"/>
+                        <path d="M16 6h.01"/>
+                        <path d="M8 10h.01"/>
+                        <path d="M16 10h.01"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Client Type</span>
+                    <span class="cl-pill-val" id="clientTypeDisplay">All Types</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="clientTypeFilter" onchange="handleClientTypeChange(this)">
+                    <option value="all" selected>All Types</option>
+                    <option value="internal">Internal Clients</option>
+                    <option value="direct">Direct Clients</option>
+                    <option value="hiring">Active Hiring</option>
+                    <option value="request">Pending Requests</option>
+                </select>
+            </div>
+
+            {{-- Filter 2: Location --}}
+            <div class="cl-dropdown-pill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Location</span>
+                    <span class="cl-pill-val" id="locationDisplay">All Locations</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="country" onchange="handleLocationChange(this)">
+                    <option value="" selected>All Locations</option>
+                    @if (!empty($countries))
+                        @foreach ($countries as $country)
+                            <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            {{-- Filter 3: Sort --}}
+            <div class="cl-dropdown-pill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="7" y1="4" x2="7" y2="20"/>
+                        <polyline points="3 8 7 4 11 8"/>
+                        <line x1="17" y1="4" x2="17" y2="20"/>
+                        <polyline points="13 16 17 20 21 16"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Sort</span>
+                    <span class="cl-pill-val" id="sortDisplay">Recently Added</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
+                    <option value="Show All" selected>Recently Added</option>
+                    <option value="1">Newest to Oldest</option>
+                    <option value="2">Oldest to Newest</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ── TABS BAR ── -->
+        <div class="cl-nav-tabs">
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-tab-item cl-tab-filter active" data-tab="all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>All Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeAll">{{ $totalClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="internal">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Internal Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeInternal">{{ $internalClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="direct">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Direct Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeDirect">{{ $directClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-hiring" data-tab="hiring">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                </svg>
+                <span>Active Hiring</span>
+                <span class="cl-tab-badge" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="request">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>Pending Requests</span>
+                <span class="cl-tab-badge" id="tabBadgeRequest">{{ $pendingRequestsCount }}</span>
             </a>
         </div>
 
         @if(in_array("view_clients", $userPermissions))
-        <!-- Table -->
+        <!-- ── TABLE ── -->
         <div class="tbl">
             <div class="tbl-w">
-                <div class="tbl-h" id="clientTableHead">
-                    <span>
-                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                            <input class="tbl-cb" type="checkbox" data-kt-check="true" data-kt-check-target="#allClients .tbl-cb" value="1" />
-                        </div>
-                    </span>
-                    <span>Name
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                    </span>
-                    <span>Location</span>
-                    <span>Jobs</span>
-                    <span>Performance
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    </span>
-                    <span>Connected On</span>
-                    <span>Client</span>
+                <div class="tbl-scroll-container">
+                    <div class="tbl-h" id="clientTableHead">
+                        <span class="tbl-cell-check">
+                            <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+                        </span>
+                        <span>Client
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                        <span>Location
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                        <span>Jobs
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                        <span>Hiring Pipeline
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        </span>
+                        <span>Type &amp; Connected On
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                        <span>Last Activity
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                    </div>
+
+                    <div class="loadingMessage" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
+                    <div id="allClients">{!! $initialHtml ?? '' !!}</div>
                 </div>
-                <div class="loadingMessage" style="display:none; position:absolute;">Processing...</div>
-                <div id="allClients">{!! $initialHtml ?? '' !!}</div>
+
+                <!-- ── PAGINATION BAR ── -->
+                <div id="pagination">{!! $initialPagination ?? '' !!}</div>
             </div>
         </div>
-
-        <!-- Pagination -->
-        <div class="mt-3" id="pagination">{!! $initialPagination ?? '' !!}</div>
         @endif
 
     </div>
@@ -233,54 +404,53 @@
 
 </div>
 <!--end::Content-->
+
+<!-- ── DRAWER FOR INTERNAL CLIENT ── -->
 <div id="kt_activitiesClient_toggle"></div>
 <div id="kt_activitiesClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close">
   <div class="card shadow-none rounded-0 w-100">
-    <!--begin::Header-->
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
         <h3 class="card-title fw-bolder text-dark">Internal Client</h3>
-        <!--begin::seprator-->
         <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-        <!--end::seprator-->
       </div>
-      <!--end::Header-->
       <div class="card-toolbar">
         <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_activitiesClient_close">
-        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
-        <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
-            <rect x="0" y="7" width="16" height="2" rx="1" />
-            <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-          </g>
-        </svg>
-        </span>
-        <!--end::Svg Icon-->
+          <span class="svg-icon svg-icon-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
+                <rect x="0" y="7" width="16" height="2" rx="1" />
+                <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
+              </g>
+            </svg>
+          </span>
         </button>
       </div>
     </div>
-    <!--end::Header-->
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesClient_body"> &nbsp; </div>
-    <!--begin::Body-->
   </div>
 </div>
+
+<!-- ── DRAWER FOR DIRECT CLIENT ── -->
 <div id="kt_activitiesDirectClient_toggle"></div>
 <div id="kt_activitiesDirectClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close">
   <div class="card shadow-none rounded-0 w-100">
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
         <h3 class="card-title fw-bolder text-dark">Direct Client</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
+        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
+      </div>
       <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-          </g>
-        </svg>
-        </span> </button>
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesDirectClient_close">
+          <span class="svg-icon svg-icon-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
+                <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
+                <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
+              </g>
+            </svg>
+          </span>
+        </button>
       </div>
     </div>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
@@ -289,56 +459,125 @@
 @endsection
 
 @push('footer-script')
-
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 <script>
-
 $(document).ready(function() {
-	var searchTimer = null;
-	$('#kt_tagify_2').on('keyup input', function() {
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(function() {
-			fetchCandidates(1);
-		}, 300);
-	});
+    var searchTimer = null;
+    $('#kt_tagify_2').on('keyup input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            fetchCandidates(1);
+        }, 300);
+    });
 });
 
- function filtersdataget(){
-            fetchCandidates();
-        	}
+function filtersdataget() {
+    fetchCandidates(1);
+}
 
-  // ── Phase 3 God-Level Optimization: Bounded Browser RAM LRU Cache for Client Drawers ──
-  // Target: Sub-millisecond drawer reopening with 0 MySQL reads and 0 server roundtrips
-  const DrawerLRUCache = {
-      cache: new Map(), // key: `internal_${id}` or `direct_${id}`
-      maxEntries: 25,   // Strictly bounded (< 2 MB RAM)
+// ── Dropdown label sync handlers ──
+function handleClientTypeChange(sel) {
+    var text = sel.options[sel.selectedIndex].text;
+    $('#clientTypeDisplay').text(text);
+    var val = sel.value;
+    setClientTab(val);
+}
 
-      get: function(key) {
-          return this.cache.get(key) || null;
-      },
+function handleLocationChange(sel) {
+    var text = sel.options[sel.selectedIndex].text;
+    $('#locationDisplay').text(text);
+    filtersdataget();
+}
 
-      set: function(key, html) {
-          if (this.cache.size >= this.maxEntries) {
-              const oldestKey = this.cache.keys().next().value;
-              this.cache.delete(oldestKey);
-          }
-          this.cache.set(key, html);
-      },
+function handleSortChange(sel) {
+    var text = sel.options[sel.selectedIndex].text;
+    $('#sortDisplay').text(text);
+    filtersdataget();
+}
 
-      invalidate: function(id) {
-          this.cache.delete(`internal_${id}`);
-          this.cache.delete(`direct_${id}`);
-      }
-  };
+// ── Select all checkbox ──
+function toggleSelectAllClients(master) {
+    var checked = $(master).is(':checked');
+    $('#allClients .tbl-cb').prop('checked', checked);
+}
 
-  $(document).on('click', '.show-detail', function ()
-	{
-		$('#kt_activitiesClient_toggle').trigger('click');
-    var currentPageClients = $('.custom-pagination .page-link.active').data('page');
+// ── Client-side CSV Exporter ──
+function exportClientsToCsv() {
+    var rows = [];
+    rows.push(['Client Name', 'Industry', 'Location', 'Jobs Active', 'Jobs Closed', 'Jobs Hold', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Connected On', 'Last Activity']);
+
+    $('#allClients .tbl-r').each(function() {
+        var $r = $(this);
+        var name = $r.find('.cl-name').text().trim();
+        var ind = $r.find('.cl-ind').text().trim();
+        var locCity = $r.find('.cl-loc-city').text().trim();
+        var locCountry = $r.find('.cl-loc-country').text().trim();
+        var loc = locCity + (locCity && locCountry ? ', ' : '') + locCountry;
+        var activeJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(0) .cl-job-num').text().trim();
+        var closedJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(1) .cl-job-num').text().trim();
+        var holdJobs = $r.find('.tbl-cell-jobs .cl-job-line:eq(2) .cl-job-num').text().trim();
+        var sourced = $r.find('.pill-sourced').text().trim();
+        var evaluated = $r.find('.pill-evaluated').text().trim();
+        var interviews = $r.find('.pill-interviews').text().trim();
+        var offers = $r.find('.pill-offers').text().trim();
+        var joined = $r.find('.pill-joined').text().trim();
+        var type = $r.find('.cl-type-name').text().trim();
+        var conn = $r.find('.cl-date-box span').text().trim();
+        var act = $r.find('.cl-act-main').text().trim();
+
+        if (name) {
+            rows.push([name, ind, loc, activeJobs, closedJobs, holdJobs, sourced, evaluated, interviews, offers, joined, type, conn, act]);
+        }
+    });
+
+    if (rows.length <= 1) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Data',
+            text: 'There are no clients visible on the current page to export.'
+        });
+        return;
+    }
+
+    var csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.map(cell => '"' + ('' + cell).replace(/"/g, '""') + '"').join(",")).join("\n");
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "clients_export_" + new Date().toISOString().slice(0, 10) + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ── Bounded Browser RAM LRU Cache for Client Drawers ──
+const DrawerLRUCache = {
+    cache: new Map(),
+    maxEntries: 25,
+
+    get: function(key) {
+        return this.cache.get(key) || null;
+    },
+
+    set: function(key, html) {
+        if (this.cache.size >= this.maxEntries) {
+            const oldestKey = this.cache.keys().next().value;
+            this.cache.delete(oldestKey);
+        }
+        this.cache.set(key, html);
+    },
+
+    invalidate: function(id) {
+        this.cache.delete(`internal_${id}`);
+        this.cache.delete(`direct_${id}`);
+    }
+};
+
+$(document).on('click', '.show-detail', function () {
+    $('#kt_activitiesClient_toggle').trigger('click');
+    var currentPageClients = $('.custom-pagination .page-link.active').data('page') || 1;
     localStorage.setItem('currentPageClients', currentPageClients);
-		var id = $(this).data('row-id');
+    var id = $(this).data('row-id');
 
-    // ⚡ Phase 3: Check DrawerLRUCache in RAM first (<1ms open, 0 server/DB strain)
     var cachedDrawer = DrawerLRUCache.get(`internal_${id}`);
     if (cachedDrawer) {
         $('#kt_activitiesDirectClient_body').html('');
@@ -346,31 +585,29 @@ $(document).ready(function() {
         return;
     }
 
-		var url = "{{ route('service_company.clients.viewmore',':id') }}".replace(':id', id);
-		var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    var url = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
 
-		$.ajax({
-				type  : 'GET',
-				url   : url,
-				beforeSend: function() {
+    $.ajax({
+        type: 'GET',
+        url: url,
+        beforeSend: function() {
             $('#kt_activitiesClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
         },
-				success : function (response) {
+        success: function (response) {
             $('#kt_activitiesDirectClient_body').html('');
-						$('#kt_activitiesClient_body').html(response.view);
+            $('#kt_activitiesClient_body').html(response.view);
             if (response.view) {
                 DrawerLRUCache.set(`internal_${id}`, response.view);
             }
-				}
-	  });
-	});
+        }
+    });
+});
 
-	$(document).on('click', '.show-detail-direct', function ()
-	{
-		$('#kt_activitiesDirectClient_toggle').trigger('click');
-		var id = $(this).data('row-id');
+$(document).on('click', '.show-detail-direct', function () {
+    $('#kt_activitiesDirectClient_toggle').trigger('click');
+    var id = $(this).data('row-id');
 
-    // ⚡ Phase 3: Check DrawerLRUCache in RAM first (<1ms open, 0 server/DB strain)
     var cachedDrawer = DrawerLRUCache.get(`direct_${id}`);
     if (cachedDrawer) {
         $('#kt_activitiesClient_body').html('');
@@ -378,234 +615,245 @@ $(document).ready(function() {
         return;
     }
 
-		var url = "{{ route('service_company.clients.dviewmore',':id') }}".replace(':id', id);
-		var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    var url = "{{ route('service_company.clients.dviewmore', ':id') }}".replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
 
-		$.ajax({
-				type  : 'GET',
-				url   : url,
-				beforeSend: function() {
+    $.ajax({
+        type: 'GET',
+        url: url,
+        beforeSend: function() {
             $('#kt_activitiesDirectClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
         },
-				success : function (response) {
+        success: function (response) {
             $('#kt_activitiesClient_body').html('');
-						$('#kt_activitiesDirectClient_body').html(response.view);
+            $('#kt_activitiesDirectClient_body').html(response.view);
             if (response.view) {
                 DrawerLRUCache.set(`direct_${id}`, response.view);
             }
-				}
-	  });
-	});
-
-
-    $(document).ready(function() {
-
-            // Phase 1 Optimization: If initial table rows are already bootstrapped from server, do NOT refetch
-            if ($('#allClients .tbl-r').length === 0) {
-                fetchCandidates(1);
-            }
-
-            $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
-                e.preventDefault();
-
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-
-                fetchCandidates(page, $('#search').val());
-            });
-
-            $(document).on('change', '#pagination .pagi-perpage', function() {
-                var selectedPerPage = $(this).val();
-                localStorage.setItem('candidatePerPage', selectedPerPage);
-                localStorage.setItem('currentPageClients', 1);
-                page_no = 1;
-                fetchCandidates(1);
-            });
-
-      });
-
-      // ── Phase 2 God-Level Optimization: Bounded Browser RAM Store (ClientStore) ──
-      // Target: 0% avoidable server reads during tab switches and page navigation (<1ms response)
-      const ClientStore = {
-          cache: new Map(), // key: `${tab}_${page}_${search}_${sort}_${country}_${hiring}_${perPage}`
-          maxEntries: 40,   // Strict limit (< 6 MB RAM overhead, zero browser freeze)
-          currentXhr: null,
-
-          getKey: function(tab, page, search, sort, country, hiring, perPage) {
-              return `${tab}:${page}:${search || ''}:${sort || ''}:${country || ''}:${hiring || 0}:${perPage || 10}`;
-          },
-
-          get: function(key) {
-              return this.cache.get(key) || null;
-          },
-
-          set: function(key, data) {
-              if (this.cache.size >= this.maxEntries) {
-                  // Evict oldest entry (LRU)
-                  const oldestKey = this.cache.keys().next().value;
-                  this.cache.delete(oldestKey);
-              }
-              this.cache.set(key, data);
-          },
-
-          invalidateTab: function(tab) {
-              for (const k of this.cache.keys()) {
-                  if (k.startsWith(`${tab}:`)) {
-                      this.cache.delete(k);
-                  }
-              }
-          },
-
-          clear: function() {
-              this.cache.clear();
-          }
-      };
-
-      // Bootstrap initial Page 1 'all' tab into ClientStore RAM if available from server
-      @if(!empty($initialHtml))
-      (function() {
-          var initKey = ClientStore.getKey('all', 1, '', 'Show All', '', 0, 10);
-          ClientStore.set(initKey, {
-              html: {!! json_encode($initialHtml) !!},
-              total: {{ (int)($initialTotal ?? 0) }},
-              pagination: {!! json_encode($initialPagination ?? '') !!}
-          });
-      })();
-      @endif
-
-      var page_no = localStorage.getItem('currentPageClients') || 1;
-
-      var activeClientTab = 'all';
-      var hiringFilter = 0;
-
-      function setClientTab(tabName, el) {
-          activeClientTab = tabName;
-          hiringFilter = (tabName === 'hiring') ? 1 : 0;
-
-          $('.cl-stat-filter').removeClass('active');
-          $('.cl-tab-filter').removeClass('active');
-
-          $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
-          $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
-
-          if (tabName === 'request') {
-              $('.tbl').addClass('tbl-req');
-              $('#clientTableHead').html(`
-                  <span>Name</span>
-                  <span>Location</span>
-                  <span>Request Date</span>
-                  <span style="justify-content:flex-end;">Action</span>
-              `);
-          } else {
-              $('.tbl').removeClass('tbl-req');
-              $('#clientTableHead').html(`
-                  <span>
-                      <div class="form-check form-check-sm form-check-custom form-check-solid">
-                          <input class="tbl-cb" type="checkbox" data-kt-check="true" data-kt-check-target="#allClients .tbl-cb" value="1" />
-                      </div>
-                  </span>
-                  <span>Name
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                  <span>Location</span>
-                  <span>Jobs</span>
-                  <span>Performance
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  </span>
-                  <span>Connected On</span>
-                  <span>Client</span>
-              `);
-          }
-
-          fetchCandidates(1);
-      }
-
-      function setHiringFilter(el) {
-          setClientTab('hiring', el);
-      }
-
-      function applyClientResponse(response, targetPage) {
-          requestAnimationFrame(function() {
-              $('.loadingMessage').css({ display: 'none' });
-              $('.loader_search').css({ display: 'none' });
-              $('.page-loader').css('display', 'none');
-              localStorage.setItem('currentPageClients', targetPage);
-              $('#allClients').html(response.html);
-              if (response.total !== undefined) {
-                  if (activeClientTab === 'all') {
-                      $('#span_clientAll').html(response.total);
-                  } else if (activeClientTab === 'internal' || activeClientTab === 'custom') {
-                      $('#span_clientCustom').html(response.total);
-                  } else if (activeClientTab === 'direct') {
-                      $('#span_clientDirect').html(response.total);
-                  } else if (activeClientTab === 'hiring') {
-                      $('#span_clientHiring').html(response.total);
-                  } else if (activeClientTab === 'request') {
-                      $('#span_clientRequest').html(response.total);
-                  }
-              }
-              $('#pagination').html(response.pagination);
-          });
-      }
-
-      function fetchCandidates(page, search = '') {
-            var targetPage = page || page_no || 1;
-            page_no = targetPage;
-            localStorage.setItem('currentPageClients', targetPage);
-
-            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
-            var searchVal = $('#kt_tagify_2').val() || $('#inputSearch').val() || '';
-            var sortVal = $('#sortingfilter').val() || '';
-            var countryVal = $('#country').val() || '';
-
-            // ⚡ Phase 2: Check ClientStore in Browser RAM first (<1ms response, 0 server/DB strain)
-            var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, hiringFilter, perPage);
-            var cachedData = ClientStore.get(cacheKey);
-
-            if (cachedData) {
-                applyClientResponse(cachedData, targetPage);
-                return;
-            }
-
-            // Abort any ongoing in-flight request to prevent race-condition DOM overwrite
-            if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
-                ClientStore.currentXhr.abort();
-            }
-
-            if(searchVal != ''){
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
-            }
-
-            ClientStore.currentXhr = $.ajax({
-                url: `{!! route('service_company.clients.all_clients_data_ajax') !!}?page=${targetPage}`,
-                type: 'GET',
-                data: {
-                  custom_status : $('#status').val(),
-                  search : searchVal,
-                  sortingfilter : sortVal,
-                  cus_search : searchVal,
-                  country: countryVal,
-                  hiring: hiringFilter,
-                  tab: activeClientTab,
-                  size: perPage,
-                  per_page: perPage
-                },
-                success: function(response) {
-                    // Save to ClientStore bounded RAM cache
-                    ClientStore.set(cacheKey, response);
-                    applyClientResponse(response, targetPage);
-                },
-                error: function(xhr, status, error) {
-                    if (status !== 'abort') {
-                        $('.loadingMessage').css({ display: 'none' });
-                        $('.loader_search').css({ display: 'none' });
-                        $('.page-loader').css('display', 'none');
-                    }
-                }
-            });
         }
+    });
+});
+
+$(document).ready(function() {
+    if ($('#allClients .tbl-r').length === 0) {
+        fetchCandidates(1);
+    }
+
+    $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+        fetchCandidates(page);
+    });
+
+    $(document).on('change', '#pagination .pagi-perpage', function() {
+        var selectedPerPage = $(this).val();
+        localStorage.setItem('candidatePerPage', selectedPerPage);
+        localStorage.setItem('currentPageClients', 1);
+        page_no = 1;
+        fetchCandidates(1);
+    });
+});
+
+// ── Bounded Browser RAM Store (ClientStore) ──
+const ClientStore = {
+    cache: new Map(),
+    maxEntries: 40,
+    currentXhr: null,
+
+    getKey: function(tab, page, search, sort, country, hiring, perPage) {
+        return `${tab}:${page}:${search || ''}:${sort || ''}:${country || ''}:${hiring || 0}:${perPage || 10}`;
+    },
+
+    get: function(key) {
+        return this.cache.get(key) || null;
+    },
+
+    set: function(key, data) {
+        if (this.cache.size >= this.maxEntries) {
+            const oldestKey = this.cache.keys().next().value;
+            this.cache.delete(oldestKey);
+        }
+        this.cache.set(key, data);
+    },
+
+    invalidateTab: function(tab) {
+        for (const k of this.cache.keys()) {
+            if (k.startsWith(`${tab}:`)) {
+                this.cache.delete(k);
+            }
+        }
+    },
+
+    clear: function() {
+        this.cache.clear();
+    }
+};
+
+@if(!empty($initialHtml))
+(function() {
+    var initKey = ClientStore.getKey('all', 1, '', 'Show All', '', 0, 10);
+    ClientStore.set(initKey, {
+        html: {!! json_encode($initialHtml) !!},
+        total: {{ (int)($initialTotal ?? 0) }},
+        pagination: {!! json_encode($initialPagination ?? '') !!}
+    });
+})();
+@endif
+
+var page_no = localStorage.getItem('currentPageClients') || 1;
+var activeClientTab = 'all';
+var hiringFilter = 0;
+
+function setClientTab(tabName, el) {
+    activeClientTab = tabName;
+    hiringFilter = (tabName === 'hiring') ? 1 : 0;
+
+    $('.cl-stat-filter').removeClass('active');
+    $('.cl-tab-filter').removeClass('active');
+
+    $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
+    $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
+
+    // Update Client Type dropdown label
+    var tabLabels = {
+        'all': 'All Types',
+        'internal': 'Internal Clients',
+        'direct': 'Direct Clients',
+        'hiring': 'Active Hiring',
+        'request': 'Pending Requests'
+    };
+    if (tabLabels[tabName]) {
+        $('#clientTypeDisplay').text(tabLabels[tabName]);
+        $('#clientTypeFilter').val(tabName);
+    }
+
+    if (tabName === 'request') {
+        $('.tbl').addClass('tbl-req');
+        $('#clientTableHead').html(`
+            <span class="tbl-cell-check">
+                <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+            </span>
+            <span>Client</span>
+            <span>Location</span>
+            <span>Request Date</span>
+            <span style="justify-content:flex-end;">Action</span>
+        `);
+    } else {
+        $('.tbl').removeClass('tbl-req');
+        $('#clientTableHead').html(`
+            <span class="tbl-cell-check">
+                <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+            </span>
+            <span>Client
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <span>Location
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <span>Jobs
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <span>Hiring Pipeline
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </span>
+            <span>Type &amp; Connected On
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <span>Last Activity
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+        `);
+    }
+
+    fetchCandidates(1);
+}
+
+function applyClientResponse(response, targetPage) {
+    requestAnimationFrame(function() {
+        $('.loadingMessage').css({ display: 'none' });
+        $('.loader_search').css({ display: 'none' });
+        $('.page-loader').css('display', 'none');
+        localStorage.setItem('currentPageClients', targetPage);
+        $('#allClients').html(response.html);
+
+        if (response.total !== undefined) {
+            if (activeClientTab === 'all') {
+                $('#span_clientAll').html(response.total);
+                $('#tabBadgeAll').html(response.total);
+            } else if (activeClientTab === 'internal' || activeClientTab === 'custom') {
+                $('#span_clientCustom').html(response.total);
+                $('#tabBadgeInternal').html(response.total);
+            } else if (activeClientTab === 'direct') {
+                $('#span_clientDirect').html(response.total);
+                $('#tabBadgeDirect').html(response.total);
+            } else if (activeClientTab === 'hiring') {
+                $('#span_clientHiring').html(response.total);
+                $('#tabBadgeHiring').html(response.total);
+            } else if (activeClientTab === 'request') {
+                $('#span_clientRequest').html(response.total);
+                $('#tabBadgeRequest').html(response.total);
+            }
+        }
+        $('#pagination').html(response.pagination);
+    });
+}
+
+function fetchCandidates(page) {
+    var targetPage = page || page_no || 1;
+    page_no = targetPage;
+    localStorage.setItem('currentPageClients', targetPage);
+
+    var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
+    var searchVal = $('#kt_tagify_2').val() || '';
+    var sortVal = $('#sortingfilter').val() || '';
+    var countryVal = $('#country').val() || '';
+
+    var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, hiringFilter, perPage);
+    var cachedData = ClientStore.get(cacheKey);
+
+    if (cachedData) {
+        applyClientResponse(cachedData, targetPage);
+        return;
+    }
+
+    if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
+        ClientStore.currentXhr.abort();
+    }
+
+    if (searchVal != '') {
+        $('.loader_search').css({ display: 'block' });
+    } else {
+        $('.loadingMessage').css({ display: 'block' });
+    }
+
+    ClientStore.currentXhr = $.ajax({
+        url: `{!! route('service_company.clients.all_clients_data_ajax') !!}?page=${targetPage}`,
+        type: 'GET',
+        data: {
+            custom_status: $('#status').val(),
+            search: searchVal,
+            sortingfilter: sortVal,
+            cus_search: searchVal,
+            country: countryVal,
+            hiring: hiringFilter,
+            tab: activeClientTab,
+            size: perPage,
+            per_page: perPage
+        },
+        success: function(response) {
+            ClientStore.set(cacheKey, response);
+            applyClientResponse(response, targetPage);
+        },
+        error: function(xhr, status, error) {
+            if (status !== 'abort') {
+                $('.loadingMessage').css({ display: 'none' });
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+            }
+        }
+    });
+}
 
 $(document).on('click', '.request_event', function () {
     var $btn = $(this);
@@ -635,7 +883,6 @@ $(document).on('click', '.request_event', function () {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // ⚡ Phase 4: Immediately disable action buttons in row to prevent double-click race condition
             $btn.closest('.tbl-r').find('.request_event').prop('disabled', true).addClass('disabled').css('pointer-events', 'none');
 
             var url = "{{ route('service_company.clients.request_update') }}";
@@ -649,7 +896,6 @@ $(document).on('click', '.request_event', function () {
                     'from_company': from_company
                 },
                 success: function (response) {
-                    // Invalidate ClientStore RAM caches since data has mutated
                     ClientStore.invalidateTab('request');
                     ClientStore.invalidateTab('all');
                     ClientStore.invalidateTab('direct');
@@ -661,7 +907,6 @@ $(document).on('click', '.request_event', function () {
                         if ($('#span_clientHiring').length) $('#span_clientHiring').html(response.clientDataCnt.clientHiring);
                         if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
                     }
-                    // ── Phase 5 God-Level Optimization: Broadcast multi-tab delta sync ──
                     if (window.clientSyncChannel) {
                         window.clientSyncChannel.postMessage({
                             type: 'CLIENT_REQUEST_MUTATED',
@@ -681,7 +926,6 @@ $(document).on('click', '.request_event', function () {
                     }
                 },
                 error: function() {
-                    // Re-enable buttons on error so user can retry
                     $btn.closest('.tbl-r').find('.request_event').prop('disabled', false).removeClass('disabled').css('pointer-events', 'auto');
                 }
             });
@@ -689,7 +933,7 @@ $(document).on('click', '.request_event', function () {
     });
 });
 
-// ── Phase 5: Initialize Native Browser Cross-Tab Synchronization Channel ──
+// ── Native Browser Cross-Tab Synchronization Channel ──
 (function() {
     if (typeof BroadcastChannel !== 'undefined') {
         window.clientSyncChannel = new BroadcastChannel('jero_clients_cross_tab_sync');
@@ -699,12 +943,10 @@ $(document).on('click', '.request_event', function () {
             if (!data) return;
 
             if (data.type === 'CLIENT_REQUEST_MUTATED') {
-                // Invalidate local memory store in this tab
                 ClientStore.invalidateTab('request');
                 ClientStore.invalidateTab('all');
                 ClientStore.invalidateTab('direct');
 
-                // Update counter numbers across other open browser tabs with 0 HTTP calls
                 if (data.clientDataCnt) {
                     if ($('#span_clientAll').length) $('#span_clientAll').html(data.clientDataCnt.clientAll);
                     if ($('#span_clientDirect').length) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
@@ -713,7 +955,6 @@ $(document).on('click', '.request_event', function () {
                     if ($('#span_clientRequest').length) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
                 }
 
-                // If this tab is currently on the 'request' tab, refresh its view
                 if (activeClientTab === 'request') {
                     fetchCandidates(1);
                 }
@@ -721,6 +962,5 @@ $(document).on('click', '.request_event', function () {
         };
     }
 })();
-
 </script>
 @endpush
