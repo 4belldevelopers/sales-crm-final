@@ -900,6 +900,7 @@ function setClientTab(tabName, el, updateUrl = true) {
 }
 
 function applyClientResponse(response, targetPage) {
+    if (!response || typeof response !== 'object') return;
     requestAnimationFrame(function() {
         $('.loadingMessage').css({ display: 'none' });
         $('.loader_search').css({ display: 'none' });
@@ -1012,8 +1013,9 @@ function fetchCandidates(page, updateUrl = true) {
             }
         },
         success: function(response) {
-            // Discard stale out-of-order response
+            // Discard stale out-of-order response or empty 304 response bodies
             if (requestId !== ClientStore.latestRequestId) return;
+            if (!response || typeof response !== 'object') return;
 
             ClientStore.set(cacheKey, response);
             applyClientResponse(response, targetPage);
