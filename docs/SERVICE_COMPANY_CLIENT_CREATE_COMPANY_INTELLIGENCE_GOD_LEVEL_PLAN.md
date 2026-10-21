@@ -336,3 +336,18 @@ npx wrangler deploy
 ```
 *   Configured Custom Route: `https://company-intel.jero.works/enrich`
 *   Wizard Integration: A single CORS `fetch('https://company-intel.jero.works/enrich?domain=' + domain)` in `tab-basic-info.blade.php`.
+
+---
+
+## 13. Elimination of Tier 2 Server Fallback (100% Pure Client-First Architecture)
+
+To enforce strict adherence to **JERO Non-Negotiable Rule 3 (Client-First Execution)** and **Rule 4 (10K Concurrency / 0% Server Strain)**:
+
+1. **Complete Removal of Server Proxy Fallback**:
+   - The server-side proxy route `clients.companyIntelligence` (`/service_company/clients/company-intelligence`) and its backend implementation `ServiceCompanyClientController@companyIntelligence` have been **permanently eliminated**.
+   - Zero outbound HTTP cURL requests or web scraping are executed by JERO's Laravel / FrankenPHP application servers.
+
+2. **100% Pure Client-Side Execution**:
+   - The user browser executes direct CORS queries to the Cloudflare Edge Worker (`https://jero-company-intelligence.vibhu21m.workers.dev/?domain=...`).
+   - If the edge network fails or the user is offline, the client browser handles degradation **100% in user RAM** by dynamically synthesizing the company identity from the domain slug and local sector taxonomies.
+   - **Server Impact**: Exactly **0 bytes of server RAM** and **0 server CPU cycles** are consumed for external company extraction.
