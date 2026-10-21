@@ -4318,7 +4318,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ],
             ]);
         } catch (\Throwable $e) {
-            \Log::warning("Elasticsearch update failed for toggleAccountVerify company {$company->id}: " . $e->getMessage());
+            \Log::warning("Elasticsearch update failed for toggleAccountVerify company {$company->id}: ".$e->getMessage());
         }
 
         return response()->json([
@@ -5314,12 +5314,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'mailType' => $request->mailType_is,
                 'from_email_id' => $request->from_email_id,
             ];
-            // Intent: avoid SQL errors on live databases that have not yet received newer default-term columns.
+            // Intent: avoid SQL errors on live databases that have not yet received newer notification columns.
             foreach (array_keys($values) as $settingsColumn) {
-                if (! Schema::hasColumn('global_settings', $settingsColumn)) {
+                if (! Schema::hasColumn('email_notifications', $settingsColumn)) {
                     return Reply::dataOnly([
                         'status' => 'warning',
-                        'message' => 'This default term cannot be saved until the database column is added.',
+                        'message' => 'This notification setting cannot be saved until the database column is added.',
                     ]);
                 }
             }
@@ -5382,6 +5382,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 }
             }
         }
+
+        Cache::forget('email_notification_cpr_admin');
+        Cache::forget('email_notification_cpr_customer');
 
         return Reply::dataOnly(['status' => 'success']);
 

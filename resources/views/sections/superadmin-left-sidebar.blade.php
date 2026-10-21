@@ -92,7 +92,32 @@
                         <span class="menu-title">Subscription</span>
                     </a>
                 </div>
-                <!--end::Dashboard-->
+                <!--end::Subscription-->
+
+                <!--begin::Custom Plan Requests-->
+                <div class="menu-item">
+                    <a href="{{ route('superadmin.custom-plan-requests.index') }}"
+                        class="menu-link {{ request()->is('super-admin/custom-plan-requests*') ? 'active' : '' }}">
+                        <span class="menu-icon">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px"
+                                    viewBox="0 0 24 24" version="1.1">
+                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                        <rect x="0" y="0" width="24" height="24" />
+                                        <path
+                                            d="M8,3 L8,3.5 C8,4.32842712 8.67157288,5 9.5,5 L14.5,5 C15.3284271,5 16,4.32842712 16,3.5 L16,3 L18,3 C19.1045695,3 20,3.8954305 20,5 L20,21 C20,22.1045695 19.1045695,23 18,23 L6,23 C4.8954305,23 4,22.1045695 4,21 L4,5 C4,3.8954305 4.8954305,3 6,3 L8,3 Z"
+                                            fill="#000000" opacity="0.3" />
+                                        <path
+                                            d="M10.8,11.2 C10.4,10.8 9.8,10.8 9.4,11.2 C9,11.6 9,12.2 9.4,12.6 L11.4,14.6 C11.8,15 12.4,15 12.8,14.6 L16.8,10.6 C17.2,10.2 17.2,9.6 16.8,9.2 C16.4,8.8 15.8,8.8 15.4,9.2 L12.1,12.5 L10.8,11.2 Z"
+                                            fill="#000000" />
+                                    </g>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="menu-title">Custom Plan Requests</span>
+                    </a>
+                </div>
+                <!--end::Custom Plan Requests-->
                 
                 <?php
                 

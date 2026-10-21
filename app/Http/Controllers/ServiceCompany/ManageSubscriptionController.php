@@ -17,6 +17,8 @@ use App\Jobs\QueueNotificationMailService;
 use App\Jobs\SyncPendingRazorpayPaymentsJob;
 use App\Models\Company;
 use App\Models\CompanyPackage;
+use App\Models\CustomPlanRequest;
+use App\Models\CustomPlanRequestLog;
 use App\Models\GlobalSetting;
 use App\Models\PaymentSetting;
 use App\Models\RazorpayInvoice;
@@ -31,6 +33,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use PayPal\Api\Agreement;
 use PayPal\Api\AgreementStateDescriptor;
@@ -1924,36 +1927,64 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Submit an enquiry/request for a custom subscription package or top-up package.
+     * Persists request in custom_plan_requests & custom_plan_request_logs,
+     * enforces double-click idempotency, and dispatches:
+     * - Email 1: New Custom Plan Enquiry Notification to Sales Team & Super Admin (CC)
+     * - Email 2: Customer Enquiry Confirmation to Customer and a copy to Super Admin (separate dispatch)
+     *
+     * @return array
+     */
     public function customCheckoutSubscribe(Request $request)
     {
-        decrypt($request->id);
-        $id = decrypt($request->id);
+        $id = null;
+        if (! empty($request->id)) {
+            try {
+                $id = decrypt($request->id);
+            } catch (\Throwable $e) {
+                $id = is_numeric($request->id) ? (int) $request->id : null;
+            }
+        }
 
-        //   dd( $id,   $request->topup);
         $currency = GeneralMethod::convertINRToUSD();
-        $top_up_coins_cart = '';
-        $company_coins_cart = '';
+        $top_up_coins_cart = null;
+        $company_coins_cart = null;
         $subject = '';
         $type = '';
 
         if ($request->topup) {
-            $top_up_coins_cart = DB::table('top_up_coin_packages')
-                ->where('top_up_coin_packages.id', $id)
-                ->select('top_up_coin_packages.*')
-                ->first();
+            if ($id) {
+                $top_up_coins_cart = DB::table('top_up_coin_packages')
+                    ->where('top_up_coin_packages.id', $id)
+                    ->select('top_up_coin_packages.*')
+                    ->first();
+            }
             $subject = 'Custom Top-Up package';
-            $type = @$top_up_coins_cart->event_type;
+            $type = $top_up_coins_cart->event_type ?? $request->get('type', 'operational');
         } else {
-            $company_coins_cart = DB::table('coin_packages')
-                ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-                ->where('coin_packages.id', $id)
-                ->select('coin_packages.*', 'coin_package_types.title')
-                ->first();
-            $subject = 'Custom subscription package';
-            $type = @$company_coins_cart->event_type;
-        }
+            if ($id) {
+                $company_coins_cart = DB::table('coin_packages')
+                    ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                    ->where('coin_packages.id', $id)
+                    ->select('coin_packages.*', 'coin_package_types.title')
+                    ->first();
+            }
 
-        $id = decrypt($request->id);
+            if (! $company_coins_cart) {
+                $eventType = $request->get('type', 'operational');
+                $company_coins_cart = DB::table('coin_packages')
+                    ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                    ->where('coin_packages.event_type', $eventType)
+                    ->whereIn('coin_packages.custome_pck', [1, 2])
+                    ->select('coin_packages.*', 'coin_package_types.title')
+                    ->orderBy('coin_packages.custome_pck', 'asc')
+                    ->first();
+            }
+
+            $subject = 'Custom subscription package';
+            $type = $company_coins_cart->event_type ?? $request->get('type', 'operational');
+        }
 
         $company_id = auth()->user()->company_id;
         $clients = DB::table('clients')
@@ -1964,54 +1995,327 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             ->where('clients.self_company', '=', 1)
             ->first();
 
-        $locInfo = DB::table('client_location')
-            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select(
-                'client_location.id',
-                'client_location.city',
-                'client_location.address',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name',
-                'state_list.state as state_name',
-                'countries.country_name'
-            )
-            ->where('client_id', $clients->id)
-            ->first();
-        $company_name = @$clients->company_name;
-        $company_id = @$clients->ComID;
-        $user_name = @$clients->name;
-        $user_email = @$clients->email;
-        $mobile = @$clients->mobile;
+        $locInfo = null;
+        if ($clients && $clients->id) {
+            $locInfo = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.postcode',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_id', $clients->id)
+                ->first();
+        }
+
+        $company_name = @$clients->company_name ?? auth()->user()->company->company_name ?? '';
+        $company_id = @$clients->ComID ?? auth()->user()->company_id;
+        $user_name = @$clients->name ?? auth()->user()->name ?? '';
+        $user_email = @$clients->email ?? auth()->user()->email ?? '';
+        $mobile = @$clients->mobile ?? auth()->user()->mobile ?? '';
         $locArrLocation = '';
         if ($locInfo) {
             $city_name = @$locInfo->city;
             $locArrLocation = ucwords(@$locInfo->address).' '.ucwords($city_name).' , '.ucwords(@$locInfo->state_name).' , '.ucwords(@$locInfo->country_name);
         }
 
-        $message = "<p><strong>Name:</strong> {$user_name}</p>
-                        <p><strong>Company Name:</strong> {$company_name} </p>
-                        <p><strong>Location:</strong> {$locArrLocation}</p>
-                        <p><strong>ID:</strong> {$company_id}</p>
-                        <p><strong>Number:</strong> {$mobile}</p>
-                        <p><strong>Email Address:</strong> {$user_email}</p>
-                        <p><strong>Package Type:</strong> {$type} </p>
-                        <p><strong>Issue:</strong> {$subject}</p>";
-        $datamail = ['message' => $message];
+        // Durable Idempotency Protection: Check sys_idempotency_keys if client header provided
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $cprRequestPayload = [
+            'company_id' => (int) $company_id,
+            'user_id' => (int) auth()->id(),
+            'package_type' => (string) $type,
+            'id' => $id,
+        ];
+        $cprRequestHash = hash('sha256', json_encode($cprRequestPayload));
+
+        if ($idempotencyKey) {
+            $existingIdempotency = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existingIdempotency) {
+                if ($existingIdempotency->request_hash !== $cprRequestHash) {
+                    return response()->json([
+                        'status' => 'fail',
+                        'message' => 'Idempotency key reuse with modified payload detected.',
+                        'error_code' => 'IDEMPOTENCY_KEY_REUSE',
+                    ], 409);
+                }
+
+                if ($existingIdempotency->status === 'COMPLETED' && $existingIdempotency->response_body) {
+                    return response()->json(json_decode($existingIdempotency->response_body, true), 200)
+                        ->header('X-Cache-Lookup', 'HIT-IDEMPOTENT')
+                        ->header('X-Idempotency-Key', $idempotencyKey);
+                }
+            }
+        }
+
+        // Secondary Guard: Prevent duplicate enquiries within a 120-second window (Rule 6 & Rule 7)
+        $recentEnquiry = CustomPlanRequest::where('company_id', $company_id)
+            ->where('user_id', auth()->id())
+            ->where('package_type', $type)
+            ->where('created_at', '>=', now()->subSeconds(120))
+            ->latest('id')
+            ->first();
+
+        if ($recentEnquiry) {
+            Log::info('[CONTACT_SALES] Duplicate submission intercepted by idempotency guard.', [
+                'reference' => $recentEnquiry->request_reference,
+                'company_id' => $company_id,
+                'user_id' => auth()->id(),
+            ]);
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'reference' => $recentEnquiry->request_reference,
+                'message' => 'Your request is already received and is being processed.',
+            ]);
+        }
+
+        if ($request->topup) {
+            $rawTopUpTitle = $top_up_coins_cart->title ?? null;
+            $packageTitle = (! empty($rawTopUpTitle) && strcasecmp(trim($rawTopUpTitle), 'free') !== 0)
+                ? $rawTopUpTitle
+                : 'Custom Top-Up Package';
+            $requestType = 'Custom Top-Up Package';
+        } else {
+            $rawTitle = $company_coins_cart->title ?? null;
+            if (empty($rawTitle) || strcasecmp(trim($rawTitle), 'free') === 0 || strcasecmp(trim($rawTitle), 'custom package') === 0) {
+                $packageTitle = ucfirst($type).' Custom Package';
+            } else {
+                $packageTitle = $rawTitle;
+            }
+            $requestType = 'Custom Subscription Plan';
+        }
+
+        // Persist Custom Plan Request, audit log, and transactional outbox event
+        $cprOutboxId = null;
+        $customPlanRequest = DB::transaction(function () use (
+            $company_id,
+            $user_name,
+            $user_email,
+            $mobile,
+            $company_name,
+            $locArrLocation,
+            $requestType,
+            $type,
+            $id,
+            $packageTitle,
+            $subject,
+            $idempotencyKey,
+            $cprRequestHash,
+            &$cprOutboxId
+        ) {
+            if ($idempotencyKey) {
+                DB::table('sys_idempotency_keys')->insertOrIgnore([
+                    'tenant_id' => $company_id,
+                    'idempotency_key' => $idempotencyKey,
+                    'request_hash' => $cprRequestHash,
+                    'status' => 'PROCESSING',
+                    'expires_at' => now()->addMinutes(30),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $reference = CustomPlanRequest::generateReference();
+
+            $cpr = CustomPlanRequest::create([
+                'request_reference' => $reference,
+                'company_id' => $company_id,
+                'user_id' => auth()->id(),
+                'customer_name' => $user_name,
+                'customer_email' => $user_email,
+                'customer_mobile' => $mobile,
+                'company_name' => $company_name,
+                'location' => $locArrLocation,
+                'request_type' => $requestType,
+                'package_type' => $type,
+                'package_id' => $id,
+                'package_title' => $packageTitle,
+                'status' => CustomPlanRequest::STATUS_NEW,
+                'aggregate_version' => 1,
+                'message' => $subject,
+                'admin_notes' => null,
+                'assigned_to' => null,
+                'updated_by' => auth()->id(),
+                'last_status_updated_at' => now(),
+            ]);
+
+            CustomPlanRequestLog::create([
+                'custom_plan_request_id' => $cpr->id,
+                'previous_status' => null,
+                'new_status' => CustomPlanRequest::STATUS_NEW,
+                'notes' => 'Initial custom plan enquiry submitted via Contact Sales Team.',
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Atomic Transactional Outbox write
+            $outboxPayload = [
+                'id' => (int) $cpr->id,
+                'reference' => $cpr->request_reference,
+                'previous_status' => null,
+                'new_status' => CustomPlanRequest::STATUS_NEW,
+                'entity_version' => 1,
+                'status_badge' => '<span class="badge badge-light-info fw-bolder fs-8 px-3 py-2">New</span>',
+                'last_updated' => now()->format('d M Y, h:i A'),
+                'customer_name' => $user_name,
+                'company_name' => $company_name,
+                'company_id' => $company_id,
+            ];
+
+            $cprOutboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $company_id ?? 0,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'CustomPlanRequest',
+                'aggregate_id' => $cpr->id,
+                'aggregate_version' => 1,
+                'event_type' => 'CustomPlanRequestCreated',
+                'payload' => json_encode($outboxPayload),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
+
+            Cache::forget('custom_plan_requests_counts');
+
+            if ($idempotencyKey) {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode([
+                            'status' => 'success',
+                            'reference' => $reference,
+                            'message' => 'Your custom plan enquiry has been submitted successfully.',
+                        ]),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            return $cpr;
+        });
+
+        if ($cprOutboxId) {
+            try {
+                \App\Jobs\ProcessCustomPlanRequestOutboxEventJob::dispatch((int) $cprOutboxId)->afterCommit();
+            } catch (\Throwable $ex) {}
+        }
+
         $basecompany = GeneralMethod::baseCompany();
-        $senderName = $basecompany->companyName ?? '';
-        $fromAddress = $basecompany->companyEmail ?? '';
-        $cc = [];
-        $mailService = new MailService;
+        $senderName = $basecompany->companyName ?? 'JERO Platform';
+        $fromAddress = $basecompany->companyEmail ?? config('mail.from.address', 'support@jero.works');
         $to_Mail_Id = 'jeroinf@yopmail.com';
+
+        $superAdminEmails = $this->resolveSuperAdminEmails();
+
+        // Resolve Custom Subscription Plan Email Notification Templates from email_notifications (MySQL/Redis)
+        $adminTmpl = Cache::remember('email_notification_cpr_admin', 300, function () {
+            return DB::table('email_notifications')
+                ->where('purpose', 'Custom Subscription Plan Enquiry (Admin Notification)')
+                ->where('status', 1)
+                ->first();
+        });
+
+        $customerTmpl = Cache::remember('email_notification_cpr_customer', 300, function () {
+            return DB::table('email_notifications')
+                ->where('purpose', 'Custom Subscription Plan Confirmation (Customer)')
+                ->where('status', 1)
+                ->first();
+        });
+
+        $submittedAt = now()->format('d M Y, h:i A');
+        $placeholders = [
+            '{{customer_name}}' => $user_name,
+            '[{customer_name}]' => $user_name,
+            '[CUSTOMER_NAME]' => $user_name,
+            '{{customer_email}}' => $user_email,
+            '[{customer_email}]' => $user_email,
+            '[CUSTOMER_EMAIL]' => $user_email,
+            '{{company_name}}' => $company_name,
+            '[{company_name}]' => $company_name,
+            '[COMPANY_NAME]' => $company_name,
+            '{{submitted_at}}' => $submittedAt,
+            '[{submitted_at}]' => $submittedAt,
+            '[SUBMITTED_AT]' => $submittedAt,
+            '{{reference}}' => $customPlanRequest->request_reference,
+            '{{request_reference}}' => $customPlanRequest->request_reference,
+        ];
+
+        $adminEmailSubject = ($adminTmpl && ! empty($adminTmpl->subject))
+            ? str_replace(array_keys($placeholders), array_values($placeholders), $adminTmpl->subject)
+            : 'New Custom Subscription Plan Enquiry – JERO.works';
+
+        $customerEmailSubject = ($customerTmpl && ! empty($customerTmpl->subject))
+            ? str_replace(array_keys($placeholders), array_values($placeholders), $customerTmpl->subject)
+            : "We've Received Your Custom Plan Enquiry | JERO.works";
+
+        $adminRendered = ($adminTmpl && ! empty($adminTmpl->body_description))
+            ? str_replace(array_keys($placeholders), array_values($placeholders), $adminTmpl->body_description)
+            : null;
+
+        $customerRendered = ($customerTmpl && ! empty($customerTmpl->body_description))
+            ? str_replace(array_keys($placeholders), array_values($placeholders), $customerTmpl->body_description)
+            : null;
+
+        $emailData = (object) [
+            'reference' => $customPlanRequest->request_reference,
+            'customer_name' => $user_name,
+            'customer_email' => $user_email,
+            'customer_mobile' => $mobile,
+            'company_name' => $company_name,
+            'company_id' => $company_id,
+            'location' => $locArrLocation,
+            'request_type' => $requestType,
+            'package_type' => $type,
+            'package_title' => $packageTitle,
+            'submitted_at' => $submittedAt,
+            'admin_url' => url('/super-admin/custom-plan-requests'),
+            'rendered_message' => $adminRendered,
+            'subject' => $adminEmailSubject,
+        ];
+
+        $customerEmailData = clone $emailData;
+        $customerEmailData->rendered_message = $customerRendered;
+        $customerEmailData->subject = $customerEmailSubject;
+
+        // --------------------------------------------------------------------------------------------------
+        // Requirement A: Email 1 — New Custom Plan Enquiry Notification
+        // Sent to primary sales enquiry mailbox with configured Super Admin in CC (or To if Sales absent).
+        // --------------------------------------------------------------------------------------------------
+        $cc = [];
+        if (empty($superAdminEmails)) {
+            Log::warning('[CONTACT_SALES] Super Admin email configuration is missing or invalid. Sales enquiry email dispatched to primary recipient only.', [
+                'to' => $to_Mail_Id,
+                'company_id' => $company_id,
+                'reference' => $customPlanRequest->request_reference,
+            ]);
+        } else {
+            foreach ($superAdminEmails as $adminEmail) {
+                if (! $this->recipientExists(array_merge([$to_Mail_Id], $cc), $adminEmail)) {
+                    $cc[] = $adminEmail;
+                }
+            }
+        }
 
         QueueNotificationMailService::dispatch(
             $to_Mail_Id,
-            $subject,
-            'email.common.index',
-            (object) $datamail,
+            $adminEmailSubject,
+            'email.custom_plan.admin_notification',
+            $emailData,
             [],
             $fromAddress,
             $senderName,
@@ -2019,12 +2323,140 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             $company_id
         )->onConnection('emails');
 
-        // $result =   $mailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $datamail, [], $fromAddress, $senderName, $cc);
+        // --------------------------------------------------------------------------------------------------
+        // Requirement A: Email 2 — Customer Enquiry Confirmation
+        // Sent to customer; ALSO sent as a separate dispatch to Super Admin (so customer never sees admin email)
+        // --------------------------------------------------------------------------------------------------
+        if (! empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL)) {
+            QueueNotificationMailService::dispatch(
+                $user_email,
+                $customerEmailSubject,
+                'email.custom_plan.customer_confirmation',
+                $customerEmailData,
+                [],
+                $fromAddress,
+                $senderName,
+                [], // Empty CC to strictly comply with Rule 5 (never expose Super Admin to customer)
+                $company_id
+            )->onConnection('emails');
+        }
 
-        $company_id = auth()->user()->company_id;
+        // Additional recipient requirement: Super Admin receives Email 2 separately
+        if (! empty($superAdminEmails)) {
+            foreach ($superAdminEmails as $adminEmail) {
+                if (strtolower(trim($adminEmail)) !== strtolower(trim($user_email))) {
+                    QueueNotificationMailService::dispatch(
+                        $adminEmail,
+                        $customerEmailSubject,
+                        'email.custom_plan.customer_confirmation',
+                        $customerEmailData,
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $company_id
+                    )->onConnection('emails');
+                }
+            }
+        }
 
-        return Reply::dataOnly(['status' => 'success']);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'reference' => $customPlanRequest->request_reference,
+            'message' => 'Your custom plan enquiry has been submitted successfully.',
+        ]);
+    }
 
-        // return view('service_company.subscription.checkout-subscribe', $this->data);
+    /**
+     * Resolve the authoritative Super Admin email address(es) from the system.
+     * Follows tenant/organization rules by querying active users with is_superadmin = 1.
+     * Caches resolution in Redis/memory to avoid unnecessary database queries (Rule 4 & Rule 8).
+     *
+     * @return array<string>
+     */
+    public function resolveSuperAdminEmails(): array
+    {
+        try {
+            return Cache::remember('jero_super_admin_emails', 300, function () {
+                $emails = [];
+
+                // 1. Configured super admin email in config (if available)
+                $configEmail = config('mail.superadmin_email');
+                if (! empty($configEmail) && filter_var($configEmail, FILTER_VALIDATE_EMAIL)) {
+                    $emails[] = strtolower(trim((string) $configEmail));
+                }
+
+                // 2. Primary source: active users with is_superadmin = 1
+                $dbEmails = DB::table('users')
+                    ->where('is_superadmin', 1)
+                    ->where('status', 'active')
+                    ->whereNotNull('email')
+                    ->where('email', '!=', '')
+                    ->pluck('email')
+                    ->toArray();
+
+                foreach ($dbEmails as $dbEmail) {
+                    $clean = strtolower(trim((string) $dbEmail));
+                    if (filter_var($clean, FILTER_VALIDATE_EMAIL) && ! in_array($clean, $emails, true)) {
+                        $emails[] = $clean;
+                    }
+                }
+
+                // 3. Fallback: User ID 1 if not already matched
+                if (empty($emails)) {
+                    $rootUser = DB::table('users')
+                        ->where('id', 1)
+                        ->where('status', 'active')
+                        ->whereNotNull('email')
+                        ->first();
+
+                    if ($rootUser && ! empty($rootUser->email)) {
+                        $clean = strtolower(trim((string) $rootUser->email));
+                        if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                            $emails[] = $clean;
+                        }
+                    }
+                }
+
+                return array_values(array_unique($emails));
+            });
+        } catch (\Throwable $e) {
+            Log::error('[CONTACT_SALES] Failed to resolve Super Admin email: '.$e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Resolve the primary Super Admin email address.
+     */
+    public function resolveSuperAdminEmail(): ?string
+    {
+        $emails = $this->resolveSuperAdminEmails();
+
+        return ! empty($emails) ? $emails[0] : null;
+    }
+
+    /**
+     * Check if a recipient email already exists in a given recipient collection/address.
+     * Performs a case-insensitive and trimmed comparison.
+     *
+     * @param  array<string>|string  $recipients
+     */
+    public function recipientExists($recipients, string $email): bool
+    {
+        $target = strtolower(trim($email));
+        if ($target === '') {
+            return false;
+        }
+
+        $list = is_array($recipients) ? $recipients : [$recipients];
+        foreach ($list as $recipient) {
+            if (is_string($recipient) && strtolower(trim($recipient)) === $target) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

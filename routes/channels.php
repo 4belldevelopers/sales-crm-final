@@ -27,3 +27,8 @@ Broadcast::channel('company.{companyId}', function ($user, int $companyId) {
     return (int) $user->company_id === (int) $companyId;
 });
 
+// Super Admin private channel for Custom Plan Requests real-time synchronization
+Broadcast::channel('superadmin.custom-plans', function ($user) {
+    return (bool) ($user && ! empty($user->is_superadmin));
+});
+
