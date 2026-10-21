@@ -6428,8 +6428,55 @@ if ($page_event == 'ADD') {
         }
     });
 
+    window.checkCompanyNameDuplicate = function(name, isSync, callback) {
+        name = (typeof name === 'string' ? name : ($('#client_id').val() || '')).trim();
+        if (!name || name.length < 2) {
+            window._dupCompanyNameError = null;
+            $('#company_duplicate_error').hide();
+            $('#client_id').removeClass('is-invalid');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        var isDuplicate = false;
+        var dupMessage = null;
+
+        $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: isSync ? false : true,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: {
+                field: 'name',
+                name: name,
+                value: name,
+                client_id: {{ $client->id ?? 'null' }}
+            },
+            success: function(res) {
+                if (res && res.duplicate) {
+                    isDuplicate = true;
+                    dupMessage = res.message || 'This client is already registered internally. A client with this company name already exists in the Internal Client list.';
+                    window._dupCompanyNameError = dupMessage;
+                    $('#company_duplicate_error').show();
+                    $('#company_duplicate_error_text').text(dupMessage);
+                    $('#client_id').addClass('is-invalid');
+                } else {
+                    window._dupCompanyNameError = null;
+                    $('#company_duplicate_error').hide();
+                    $('#client_id').removeClass('is-invalid');
+                }
+                if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+            },
+            error: function() {
+                if (typeof callback === 'function') callback(true, null);
+            }
+        });
+
+        return !isDuplicate;
+    };
+
     var _clientIdDupTimer = null;
-    $(document).on('input blur', '#client_id', function() {
+    $(document).on('input', '#client_id', function() {
         var name = $(this).val().trim();
         $('#ai_suggested_company_name').text(name || 'Jeroworks');
 
@@ -6437,70 +6484,105 @@ if ($page_event == 'ADD') {
         if (!name || name.length < 2) {
             window._dupCompanyNameError = null;
             $('#company_duplicate_error').hide();
+            $('#client_id').removeClass('is-invalid');
             return;
         }
 
         _clientIdDupTimer = setTimeout(function() {
-            $.ajax({
-                url: "{{ route('service_company.clients.validateInternalField') }}",
-                type: 'POST',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: {
-                    field: 'name',
-                    value: name,
-                    client_id: {{ $client->id ?? 'null' }}
-                },
-                success: function(res) {
-                    if (res && res.duplicate) {
-                        window._dupCompanyNameError = res.message;
-                        $('#company_duplicate_error').show();
-                        $('#company_duplicate_error_text').text(res.message);
-                        $('#client_id').addClass('is-invalid');
-                    } else {
-                        window._dupCompanyNameError = null;
-                        $('#company_duplicate_error').hide();
-                        $('#client_id').removeClass('is-invalid');
-                    }
-                }
-            });
-        }, 350);
+            window.checkCompanyNameDuplicate(name, false);
+        }, 280);
     });
 
+    $(document).on('blur change', '#client_id', function() {
+        var name = $(this).val().trim();
+        clearTimeout(_clientIdDupTimer);
+        if (name && name.length >= 2) {
+            window.checkCompanyNameDuplicate(name, false);
+        }
+    });
+
+    window.checkWebsiteDuplicate = function(web, isSync, callback) {
+        web = (typeof web === 'string' ? web : ($('#website').val() || '')).trim();
+        if (!web) {
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        var isDuplicate = false;
+        var dupMessage = null;
+        if (!isSync) {
+            $('#website_checking_indicator').show();
+        }
+
+        $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: isSync ? false : true,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: {
+                field: 'website',
+                website: web,
+                value: web,
+                client_id: {{ $client->id ?? 'null' }}
+            },
+            success: function(res) {
+                $('#website_checking_indicator').hide();
+                if (res && res.duplicate) {
+                    isDuplicate = true;
+                    dupMessage = res.message || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.';
+                    window._dupWebsiteError = dupMessage;
+                    $('#website_duplicate_error').show();
+                    $('#website_duplicate_error_text').text(dupMessage);
+                    $('#website').addClass('is-invalid');
+                    $('.god-website-input-box').addClass('has-validation-error');
+                } else {
+                    window._dupWebsiteError = null;
+                    $('#website_duplicate_error').hide();
+                    $('#website').removeClass('is-invalid');
+                    $('.god-website-input-box').removeClass('has-validation-error');
+                }
+                if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+            },
+            error: function() {
+                $('#website_checking_indicator').hide();
+                if (typeof callback === 'function') callback(true, null);
+            }
+        });
+
+        return !isDuplicate;
+    };
+
     var _websiteDupTimer = null;
-    $(document).on('input blur', '#website', function() {
+    $(document).on('input', '#website', function() {
         var web = $(this).val().trim();
 
         clearTimeout(_websiteDupTimer);
         if (!web) {
             window._dupWebsiteError = null;
             $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
             return;
         }
 
+        $('#website_checking_indicator').show();
         _websiteDupTimer = setTimeout(function() {
-            $.ajax({
-                url: "{{ route('service_company.clients.validateInternalField') }}",
-                type: 'POST',
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: {
-                    field: 'website',
-                    value: web,
-                    client_id: {{ $client->id ?? 'null' }}
-                },
-                success: function(res) {
-                    if (res && res.duplicate) {
-                        window._dupWebsiteError = res.message;
-                        $('#website_duplicate_error').show();
-                        $('#website_duplicate_error_text').text(res.message);
-                        $('#website').addClass('is-invalid');
-                    } else {
-                        window._dupWebsiteError = null;
-                        $('#website_duplicate_error').hide();
-                        $('#website').removeClass('is-invalid');
-                    }
-                }
-            });
-        }, 350);
+            window.checkWebsiteDuplicate(web, false);
+        }, 280);
+    });
+
+    $(document).on('blur change', '#website', function() {
+        var web = $(this).val().trim();
+        clearTimeout(_websiteDupTimer);
+        if (web) {
+            window.checkWebsiteDuplicate(web, false);
+        }
     });
 $('.remove_address').click(function(){
           let container = $('.client-address-container');
@@ -8484,53 +8566,22 @@ $('.remove_address').click(function(){
       var isEdit = (editIndexStr !== '' && !isNaN(parseInt(editIndexStr, 10)));
       var editIdx = isEdit ? parseInt(editIndexStr, 10) : null;
 
-      // Duplicate check (case-insensitive & trimmed)
-      if (self.isEmailTaken(email, editIdx)) {
+      // Immediate duplicate check (Scenario B & Scenario C verification before adding contact)
+      var isAvail = window.checkDrawerEmailDuplicate ? window.checkDrawerEmailDuplicate(email, true) : true;
+      if (!isAvail || window._drawerContactEmailDupError) {
         self._isSaving = false;
         $('#client_drawer_email').addClass('is-invalid');
-        $('#cdf_err_email').text('This contact is already registered with the current company.').addClass('visible');
+        $('#cdf_err_email').text(window._drawerContactEmailDupError || 'This contact email is already registered.').addClass('visible');
         $('#client_drawer_email').focus();
         if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
-          Toast.fire({ icon: 'warning', title: 'This contact is already registered with the current company.' });
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          Toast.fire({ icon: 'warning', title: window._drawerContactEmailDupError || 'This contact email is already registered.' });
         }
         return false;
       }
 
       var roleInfo = self.mapDesignationToRole(designation);
-
-      $('#client_save_contact_drawer').prop('disabled', true);
-      $.ajax({
-        url: "{{ route('service_company.clients.validateInternalField') }}",
-        type: 'POST',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: {
-          field: 'contact',
-          email: email,
-          phone: phone,
-          client_id: {{ $client->id ?? 'null' }}
-        },
-        success: function(resp) {
-          $('#client_save_contact_drawer').prop('disabled', false);
-          if (resp && resp.duplicate) {
-            self._isSaving = false;
-            $('#client_drawer_email').addClass('is-invalid');
-            $('#cdf_err_email').text(resp.message).addClass('visible');
-            $('#client_drawer_email').focus();
-            if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-              var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-              Toast.fire({ icon: 'warning', title: resp.message });
-            }
-            return;
-          }
-          self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
-        },
-        error: function() {
-          $('#client_save_contact_drawer').prop('disabled', false);
-          self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
-        }
-      });
-
+      self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
       return false;
     },
 
@@ -8679,59 +8730,164 @@ $('.remove_address').click(function(){
     /* Clear individual field error on input */
   $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
+  window.checkDrawerEmailDuplicate = function(clean, isSync, callback) {
+    clean = (typeof clean === 'string' ? clean : ($('#client_drawer_email').val() || '')).trim().toLowerCase();
+    if (!clean) {
+      window._drawerContactEmailDupError = null;
+      $('#client_drawer_email_checking').hide();
+      $('#client_drawer_email').removeClass('is-invalid');
+      $('#cdf_err_email').removeClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', false);
+      if (typeof callback === 'function') callback(true, null);
+      return true;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+
+    // 1. Scenario B check: Intra-draft duplicate
+    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      var scBMsg = 'This contact is already registered with the current company.';
+      window._drawerContactEmailDupError = scBMsg;
+      $('#client_drawer_email_checking').hide();
+      $('#client_drawer_email').addClass('is-invalid');
+      $('#cdf_err_email').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      if (typeof callback === 'function') callback(false, scBMsg);
+      return false;
+    }
+
+    // Syntax check
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
+    if (!syntax.isValid) {
+      $('#client_drawer_email_checking').hide();
+      if (typeof callback === 'function') callback(true, null);
+      return true;
+    }
+
+    // 2. Scenario C check: Remote check against existing Internal Clients
+    var isDuplicate = false;
+    var dupMessage = null;
+    if (!isSync) {
+      $('#client_drawer_email_checking').show();
+    }
+
+    $.ajax({
+      url: "{{ route('service_company.clients.validateInternalField') }}",
+      type: 'POST',
+      async: isSync ? false : true,
+      headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+      data: {
+        field: 'contact',
+        email: clean,
+        value: clean,
+        client_id: {{ $client->id ?? 'null' }}
+      },
+      success: function(resp) {
+        $('#client_drawer_email_checking').hide();
+        if (resp && resp.duplicate) {
+          isDuplicate = true;
+          dupMessage = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
+          window._drawerContactEmailDupError = dupMessage;
+          $('#client_drawer_email').addClass('is-invalid');
+          $('#cdf_err_email').text(dupMessage).addClass('visible');
+          $('#client_save_contact_drawer').prop('disabled', true);
+        } else {
+          window._drawerContactEmailDupError = null;
+          $('#client_drawer_email').removeClass('is-invalid');
+          $('#cdf_err_email').removeClass('visible');
+          $('#client_save_contact_drawer').prop('disabled', false);
+        }
+        if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+      },
+      error: function() {
+        $('#client_drawer_email_checking').hide();
+        $('#client_save_contact_drawer').prop('disabled', false);
+        if (typeof callback === 'function') callback(true, null);
+      }
+    });
+
+    return !isDuplicate;
+  };
+
+  var _drawerEmailDupTimer = null;
   $(document).on('input', '#client_drawer_email', function () {
     $(this).removeClass('is-invalid');
     $('#cdf_err_email').removeClass('visible');
     var raw = $(this).val();
     var clean = (raw || '').trim().toLowerCase();
-    var editIdx = $('#client_drawer_edit_index').val();
-    if (clean && window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
-      $(this).addClass('is-invalid');
-      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
-    }
-  });
-  $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
+    clearTimeout(_drawerEmailDupTimer);
 
-  // Paste & Blur deterministic cleanup and typo suggestions for Contact Person Drawer Email
-  $(document).on('paste', '#client_drawer_email', function () {
-    var self = this;
-    setTimeout(function () {
-      var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
-      if (clean !== $(self).val()) {
-        $(self).val(clean).trigger('input');
-      }
-    }, 10);
+    if (!clean) {
+      window._drawerContactEmailDupError = null;
+      $('#client_drawer_email_checking').hide();
+      $('#client_save_contact_drawer').prop('disabled', false);
+      return;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      var scBMsg = 'This contact is already registered with the current company.';
+      window._drawerContactEmailDupError = scBMsg;
+      $(this).addClass('is-invalid');
+      $('#cdf_err_email').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      return;
+    }
+
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
+    if (!syntax.isValid) {
+      $('#client_drawer_email_checking').hide();
+      return;
+    }
+
+    $('#client_drawer_email_checking').show();
+    _drawerEmailDupTimer = setTimeout(function () {
+      window.checkDrawerEmailDuplicate(clean, false);
+    }, 280);
   });
 
   $(document).on('blur change', '#client_drawer_email', function () {
     var raw = $(this).val();
-    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    var clean = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.cleanDeterministic === 'function')
+      ? window.JeroEmailBoxEngine.cleanDeterministic(raw)
+      : (raw || '').trim().toLowerCase();
+
     if (clean !== raw) {
       $(this).val(clean);
     }
+    clearTimeout(_drawerEmailDupTimer);
+
     var $hint = $('#client_drawer_email_typo_hint');
     if (!clean) {
       $hint.hide().empty();
       return;
     }
-    var editIdx = $('#client_drawer_edit_index').val();
-    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
-      $('#client_drawer_email').addClass('is-invalid');
-      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
-      $hint.hide().empty();
-      return;
-    }
-    var syntax = JeroEmailBoxEngine.validateSyntax(clean);
+
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
     if (!syntax.isValid) {
       $hint.html('<i class="la la-exclamation-circle text-danger"></i> ' + syntax.error).show();
       return;
     }
-    var suggestion = JeroEmailBoxEngine.getSuggestion(clean);
+
+    var suggestion = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.getSuggestion === 'function')
+      ? window.JeroEmailBoxEngine.getSuggestion(clean)
+      : null;
     if (suggestion) {
       $hint.html('<i class="la la-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="#client_drawer_email" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
     } else {
       $hint.hide().empty();
     }
+
+    window.checkDrawerEmailDuplicate(clean, false);
   });
 
   // Paste & Blur deterministic cleanup and typo suggestions for Accounts Payable Email
@@ -9636,12 +9792,16 @@ $('.remove_address').click(function(){
         showInlineError($('#client_id'), clientNameRes.message);
         $firstInvalid = $firstInvalid || $('#client_id');
         isValid = false;
-      } else if (window._dupCompanyNameError) {
-        $('#company_duplicate_error').show();
-        $('#company_duplicate_error_text').text(window._dupCompanyNameError);
-        $('#client_id').addClass('is-invalid');
-        $firstInvalid = $firstInvalid || $('#client_id');
-        isValid = false;
+      } else {
+        // Enforce immediate synchronous company duplicate check before leaving Step 1
+        var isNameAvail = window.checkCompanyNameDuplicate ? window.checkCompanyNameDuplicate($('#client_id').val(), true) : true;
+        if (!isNameAvail || window._dupCompanyNameError) {
+          $('#company_duplicate_error').show();
+          $('#company_duplicate_error_text').text(window._dupCompanyNameError || 'This client is already registered internally.');
+          $('#client_id').addClass('is-invalid');
+          $firstInvalid = $firstInvalid || $('#client_id');
+          isValid = false;
+        }
       }
 
       var webVal = ($('#website').val() || '').trim();
@@ -9651,12 +9811,17 @@ $('.remove_address').click(function(){
           showInlineError($('#website'), websiteRes.message);
           $firstInvalid = $firstInvalid || $('#website');
           isValid = false;
-        } else if (window._dupWebsiteError) {
-          $('#website_duplicate_error').show();
-          $('#website_duplicate_error_text').text(window._dupWebsiteError);
-          $('#website').addClass('is-invalid');
-          $firstInvalid = $firstInvalid || $('#website');
-          isValid = false;
+        } else {
+          // Enforce immediate synchronous website duplicate check before leaving Step 1
+          var isWebAvail = window.checkWebsiteDuplicate ? window.checkWebsiteDuplicate(webVal, true) : true;
+          if (!isWebAvail || window._dupWebsiteError) {
+            $('#website_duplicate_error').show();
+            $('#website_duplicate_error_text').text(window._dupWebsiteError || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.');
+            $('#website').addClass('is-invalid');
+            $('.god-website-input-box').addClass('has-validation-error');
+            $firstInvalid = $firstInvalid || $('#website');
+            isValid = false;
+          }
         }
       }
 

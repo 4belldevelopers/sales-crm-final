@@ -73,6 +73,14 @@
           </button>
         </div>
 
+        <!-- Dedicated Contact Page Duplicate Alert -->
+        <div id="client_contacts_duplicate_alert" style="display:none; margin:12px 20px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#dc2626; font-size:12px; font-weight:600;">
+          <div class="d-flex align-items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="client_contacts_duplicate_alert_text">One or more contacts are already registered with another internal company.</span>
+          </div>
+        </div>
+
         <!-- Contacts Table -->
         <div class="card-body p-0">
           <div class="table-responsive client-contact-table-wrap" style="width:100%; overflow-x:auto;">
@@ -183,6 +191,10 @@
       <div class="cdf-input-wrap">
         <i class="la la-envelope cdf-input-icon" aria-hidden="true"></i>
         <input type="email" id="client_drawer_email" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+      </div>
+      <div id="client_drawer_email_checking" style="display: none; margin-top: 5px; font-size: 11.5px; color: #2563eb; font-weight: 500;">
+        <span class="spinner-border spinner-border-sm me-1" style="width: 12px; height: 12px; border-width: 1.5px;" role="status"></span>
+        <span>Checking contact email availability...</span>
       </div>
       <div id="client_drawer_email_typo_hint" class="client-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
       <div class="cdf-error" id="cdf_err_email">Please enter a valid email address.</div>
