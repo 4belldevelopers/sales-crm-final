@@ -2571,7 +2571,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $companyId = (int) auth()->user()->company_id;
         $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
-        return view('service_company.client.create', $this->data);
+        return response()
+            ->view('service_company.client.create', $this->data)
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function update(Request $request, $id)
@@ -3167,7 +3171,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $companyId = (int) auth()->user()->company_id;
         $this->industriesManifest = IndustryTaxonomyService::getGlobalManifest();
 
-        return view('service_company.client.create', $this->data);
+        return response()
+            ->view('service_company.client.create', $this->data)
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
     }
 
     public function citylist($state_id)

@@ -162,7 +162,7 @@
       </div>
 
       <!-- ==========================================
-           CARD 5: Company Profiles
+           CARD 5: Social links
            ========================================== -->
       <div class="card client-review-section-card">
         <div class="card-header border-0 py-3 px-5 d-flex align-items-center justify-content-between">
@@ -174,7 +174,7 @@
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
             </div>
-            <h4 class="client-review-card-title">Company Profiles</h4>
+            <h4 class="client-review-card-title">Social links</h4>
           </div>
           <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(5) : false;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -186,7 +186,7 @@
             <!-- Dynamically populated profile items -->
           </div>
           <div id="client_review_social_empty" class="text-muted py-2" style="display:none; font-size:12px;">
-            No official company profiles added.
+            No social links added.
           </div>
         </div>
       </div>
@@ -247,7 +247,7 @@
           </div>
           <div class="checklist-item">
             <span class="checklist-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
-            <span class="checklist-text">Company profiles</span>
+            <span class="checklist-text">Social links</span>
             <span class="checklist-status">Completed</span>
           </div>
         </div>
@@ -320,7 +320,7 @@
           </button>
         @else
           <button type="button" class="btn client-sidebar-primary-btn submitfrm" id="sidebar_create_client_btn">
-            <span>Create Client</span>
+            <span>Submit Details</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
         @endif
@@ -337,7 +337,7 @@
 
 <style>
   /* --------------------------------------------------------------------------
-     Step 6: Review & Create Client (Matches Reference media_1792566743106_f52e3a53.png)
+     Step 6: Review & Submit Details (Matches Reference media_1792566743106_f52e3a53.png)
      -------------------------------------------------------------------------- */
   .client-review-layout {
     display: grid !important;
@@ -375,7 +375,7 @@
     background: #ede9fe !important;
     color: #7c3aed !important;
     font-weight: 700 !important;
-    font-size: 19px !important;
+    font-size: 14px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -386,7 +386,7 @@
   }
 
   .client-review-company-name {
-    font-size: 17px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
@@ -449,14 +449,14 @@
   }
 
   .client-review-card-title {
-    font-size: 14.5px !important;
+    font-size: 13.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
   }
 
   .client-review-description-text {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     line-height: 1.55 !important;
     color: #334155 !important;
   }
@@ -496,7 +496,7 @@
   }
 
   .hq-city-title {
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
   }
@@ -594,7 +594,7 @@
   }
 
   .contact-mini-name {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
   }
@@ -627,7 +627,7 @@
     flex-shrink: 0 !important;
   }
 
-  /* Company Profiles flex */
+  /* Social links flex */
   .client-review-profiles-wrap {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -672,7 +672,7 @@
   }
 
   .client-ready-title {
-    font-size: 14.5px !important;
+    font-size: 13.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 0 2px 0 !important;
@@ -776,7 +776,7 @@
   }
 
   .before-create-title {
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: #854d0e !important;
     margin: 0 !important;
@@ -830,7 +830,7 @@
   }
 
   .next-steps-title {
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: #1e293b !important;
     margin: 0 !important;
@@ -871,7 +871,7 @@
     background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
     border: none !important;
     color: #10143b !important;
-    font-size: 13.5px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     height: 44px !important;
     border-radius: 8px !important;
@@ -896,7 +896,7 @@
     background: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     color: #334155 !important;
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     height: 40px !important;
     border-radius: 8px !important;
@@ -940,16 +940,16 @@
     }
     .client-sidebar-primary-btn {
       height: 38px !important;
-      font-size: 12.5px !important;
+      font-size: 12px !important;
     }
     .client-sidebar-back-btn {
       height: 34px !important;
-      font-size: 12px !important;
+      font-size: 11.5px !important;
     }
     .client-review-avatar-box {
       width: 46px !important;
       height: 46px !important;
-      font-size: 16px !important;
+      font-size: 13px !important;
     }
     .client-review-contacts-grid {
       gap: 8px !important;
