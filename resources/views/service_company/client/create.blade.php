@@ -1,5 +1,8 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <!--Add New Css of Metronic-7-->
 <link href="{{ asset('demo/v7/css/wizard-1.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/v7/css/plugins.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
@@ -799,37 +802,23 @@ html, body {
     box-sizing: border-box !important;
   }
 
-  /* Step 4 (Contact Person): 62:38 two-column layout matching reference media_1792566135420_6aa92088.png */
+  /* Step 4 (Contact Person): Full-Width Enterprise Architecture */
   .client-contact-layout,
   .client-contact-step .client-step-layout {
-    display: grid !important;
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    grid-template-columns: minmax(0, 62fr) minmax(0, 38fr) !important;
-    gap: 20px !important;
-    align-items: start !important;
     box-sizing: border-box !important;
   }
   .client-contact-layout > *,
-  .client-contact-step .client-step-layout > * {
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
+  .client-contact-step .client-step-layout > *,
   .client-contact-layout > .client-main-column,
-  .client-contact-layout > .client-side-column,
-  .client-contact-step .client-main-column,
-  .client-contact-step .client-side-column {
+  .client-contact-step .client-main-column {
     min-width: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-  }
-  .client-contact-step .client-side-column .btn {
-    white-space: normal !important;
-    word-break: break-word !important;
   }
 
   .client-main-column {
@@ -861,7 +850,7 @@ html, body {
   .client-branding-grid {display: grid; width: 100%; min-width: 0; grid-template-columns: 190px 130px minmax(0, 1fr); gap: 16px; align-items: stretch;}
   .client-logo-upload {border: 1px dashed #ffd428; border-radius: 8px; background: #fffdf5; min-height: 152px; padding: 14px; display: flex; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: border-color .2s ease, background .2s ease;}
   .client-logo-upload:hover {border-color: #d4a017; background: #fffbeb;}
-  .client-upload-icon {display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 6px; border-radius: 50%; background: #fff8d6; color: #d4a017; font-size: 23px;}
+  .client-upload-icon {display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 6px; border-radius: 50%; background: #fff8d6; color: #d4a017; font-size: 14px;}
   .client-logo-upload .client-upload-title {font-size: 11.5px; color: #b45309; font-weight: 600;}
   .client-logo-upload .client-upload-copy {font-size: 10px; color: #7b8497; margin-top: 3px;}
   .client-logo-preview {border: 1px solid var(--client-border); border-radius: 8px; overflow: hidden; min-height: 152px; display: flex; flex-direction: column; background: #fff;}
@@ -1006,7 +995,7 @@ html, body {
   .client-assistant-title {font-size: 13px; font-weight: 600; color: #4c38ed; margin: 0;}
   .client-beta {padding: 3px 8px; border-radius: 12px; background: #e9e4ff; color: #6a47f5; font-size: 9.5px; font-weight: 600;}
   .client-assistant-copy {font-size: 10.5px; line-height: 1.5; color: #53607e; margin: 5px 0 0;}
-  .client-assistant-spark {display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 10px; background: #fff; color: #6246ea; font-size: 23px; box-shadow: 0 8px 18px rgba(78, 56, 237, 0.12);}
+  .client-assistant-spark {display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 10px; background: #fff; color: #6246ea; font-size: 14px; box-shadow: 0 8px 18px rgba(78, 56, 237, 0.12);}
   .client-suggestions {border: 1px solid #e1e6ef; border-radius: 8px; background: #fff; overflow: hidden;}
   .client-suggestions-title {padding: 12px 13px 10px; border-bottom: 1px solid #edf0f5; font-size: 11px; color: var(--client-ink); font-weight: 600;}
   .client-suggestion-row {display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) 16px; align-items: center; gap: 6px; min-height: 38px; padding: 7px 13px; border-bottom: 1px solid #edf0f5; font-size: 10px;}
@@ -1127,8 +1116,8 @@ html, body {
     }
     .client-contact-layout,
     .client-contact-step .client-step-layout {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 3fr) !important;
-      gap: 16px !important;
+      display: block !important;
+      width: 100% !important;
     }
     .client-branding-grid {grid-template-columns: 160px 120px minmax(0, 1fr) !important; gap: 12px !important;}
   }
@@ -1370,13 +1359,13 @@ html, body {
   .client-preview-tags {display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;}
   .client-preview-tag {padding: 4px 10px; border-radius: 14px; background: #edf4ff; color: #315efb; font-size: 9.5px; font-weight: 600;}
   .client-info-banner {display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; background: var(--client-primary-soft); color: #405174; font-size: 10.5px; margin-bottom: 14px;}
-  .client-info-banner i {color: var(--client-primary); font-size: 15px; margin-top: 1px;}
+  .client-info-banner i {color: var(--client-primary); font-size: 14px; margin-top: 1px;}
   .client-address-card {border: 1px solid var(--client-border); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: #fff;}
   .client-address-card.is-additional {background: #fafbfd;}
   .client-address-card-head {display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;}
   .client-address-card-head h4 {font-size: 12px; font-weight: 600; margin: 0; color: var(--client-ink);}
   .client-address-empty {text-align: center; padding: 28px 16px; color: #7b8497;}
-  .client-address-empty i {font-size: 36px; color: #c5cfe0; display: block; margin-bottom: 8px;}
+  .client-address-empty i {font-size: 14px; color: #c5cfe0; display: block; margin-bottom: 8px;}
   .client-address-empty p {font-size: 10.5px; margin: 0;}
   .client-add-address-btn {min-height: 34px; padding: 6px 14px; border-radius: 7px; border: 0; background: var(--client-primary); color: #fff; font-size: 10.5px; font-weight: 600;}
   .client-remove-address-btn {min-height: 30px; padding: 4px 10px; border-radius: 6px; border: 1px solid #f5c2cb; background: #fff5f6; color: #e5484d; font-size: 10px;}
@@ -1418,25 +1407,29 @@ html, body {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0;
   }
   .client-drawer-head-info {flex: 1; min-width: 0;}
-  .client-drawer-head h4 {margin: 0 0 3px; font-size: 17px; font-weight: 700; color: #0f1940; line-height: 1.3;}
-  .client-drawer-head-subtitle {margin: 0; font-size: 12px; color: #7889a8; line-height: 1.5;}
+  .client-drawer-head h4 {margin: 0 0 3px; font-size: 14px; font-weight: 700; color: #0f1940; line-height: 1.3;}
+  .client-drawer-head-subtitle {margin: 0; font-size: 11.5px; color: #7889a8; line-height: 1.5;}
   .client-drawer-close-btn {
     flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px;
     border: 1px solid #e2e8f4; background: #f5f7fb;
     display: inline-flex; align-items: center; justify-content: center;
-    cursor: pointer; color: #64748b; font-size: 15px; padding: 0;
+    cursor: pointer; color: #64748b; font-size: 14px; padding: 0;
     transition: background .15s, border-color .15s, color .15s; margin-top: 1px;
   }
   .client-drawer-close-btn:hover {background: #fff0f2; border-color: #fca5a5; color: #dc2626;}
 
   /* Body */
-  .client-drawer-body {padding: 24px; overflow-y: auto; flex: 1;}
+  .client-drawer-body {
+    padding: 20px 24px 36px 24px !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+  }
 
   /* Fields */
-  .client-drawer-field {margin-bottom: 18px;}
+  .client-drawer-field {margin-bottom: 16px;}
   .client-drawer-field .cdf-label {
-    display: block; margin-bottom: 7px;
-    font-size: 13px; font-weight: 600; color: #0f1940; line-height: 1;
+    display: block; margin-bottom: 6px;
+    font-size: 12px; font-weight: 600; color: #0f1940; line-height: 1;
   }
   .client-drawer-field .cdf-label .cdf-required {color: #e5484d; margin-left: 2px;}
 
@@ -1444,48 +1437,198 @@ html, body {
   .cdf-input-wrap {position: relative; display: flex; align-items: center;}
   .cdf-input-icon {
     position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-    font-size: 16px; color: #94a3b8; pointer-events: none; line-height: 1; z-index: 2;
+    font-size: 14px; color: #94a3b8; pointer-events: none; line-height: 1; z-index: 2;
   }
   .cdf-input-wrap input {
-    width: 100%; height: 44px;
-    padding: 0 14px 0 40px;
+    width: 100%; height: 42px;
+    padding: 0 14px 0 38px;
     border: 1px solid #d8e2f0; border-radius: 8px;
     background: #fff; color: #1e2d4f;
-    font-size: 13px; font-family: inherit;
+    font-size: 12.5px; font-family: inherit;
     outline: none; transition: border-color .15s, box-shadow .15s;
     -webkit-appearance: none;
   }
-  .cdf-input-wrap input::placeholder {color: #94a3b8; font-size: 12.5px;}
+  .cdf-input-wrap input::placeholder {color: #94a3b8; font-size: 12px;}
   .cdf-input-wrap input:focus {
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37,99,235,.10);
   }
   .cdf-input-wrap input.is-invalid {border-color: #ef4444;}
   .cdf-input-wrap input.is-invalid:focus {border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.10);}
-  .cdf-error {display: none; margin-top: 5px; font-size: 11.5px; color: #dc2626; line-height: 1.4;}
+  .cdf-error {display: none; margin-top: 5px; font-size: 11px; color: #dc2626; line-height: 1.4;}
   .cdf-error.visible {display: block;}
+
+  /* Primary Contact Enterprise Toggle Card in Drawer */
+  .client-primary-contact-card {
+    background: #fffdf5 !important;
+    border: 1.5px solid #fde68a !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    margin-top: 6px !important;
+    margin-bottom: 24px !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  .client-primary-contact-card:hover {
+    background: #fefce8 !important;
+    border-color: #f59e0b !important;
+  }
+  .client-primary-contact-card.is-active,
+  .client-primary-contact-card:has(.client-primary-native-checkbox:checked) {
+    background: #fefce8 !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15) !important;
+  }
+
+  .client-primary-card-label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+  }
+
+  .client-primary-card-left {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .client-primary-star-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 6px !important;
+    background: #fef3c7 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #d97706 !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+  }
+
+  .client-primary-card-texts {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    gap: 2px !important;
+  }
+
+  .client-primary-card-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    line-height: 1.3 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  .client-primary-card-subtitle {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    line-height: 1.35 !important;
+    font-weight: 400 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+
+  .client-primary-checkbox-wrapper {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .client-primary-native-checkbox {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    z-index: 2 !important;
+  }
+
+  .client-primary-custom-box {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important;
+  }
+
+  .client-primary-check-icon {
+    opacity: 0 !important;
+    transition: opacity 0.15s ease !important;
+    display: block !important;
+  }
+
+  .client-primary-native-checkbox:checked + .client-primary-custom-box {
+    background: #f59e0b !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3) !important;
+  }
+
+  .client-primary-native-checkbox:checked + .client-primary-custom-box .client-primary-check-icon {
+    opacity: 1 !important;
+  }
 
   /* Footer */
   .client-drawer-foot {
-    padding: 16px 24px; border-top: 1px solid #edf0f7;
-    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
-    background: #fff;
+    padding: 14px 24px !important;
+    border-top: 1px solid #edf0f7 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    background: #fff !important;
+    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.03) !important;
   }
   .client-drawer-foot .cdf-cancel-btn {
-    height: 42px; padding: 0 20px; border-radius: 8px;
-    border: 1px solid #d0d8e8; background: #fff;
-    color: #0f1940; font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: border-color .15s, background .15s;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #fff !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: border-color .15s, background .15s !important;
   }
-  .client-drawer-foot .cdf-cancel-btn:hover {background: #f5f7fb; border-color: #b6c2d6;}
+  .client-drawer-foot .cdf-cancel-btn:hover {background: #f8fafc !important; border-color: #94a3b8 !important;}
   .client-drawer-foot .cdf-save-btn {
-    height: 42px; padding: 0 22px; border-radius: 8px;
-    background: var(--client-primary); border: none;
-    color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: background .15s, opacity .15s;
+    height: 38px !important;
+    padding: 0 20px !important;
+    border-radius: 8px !important;
+    background: #f59e0b !important;
+    border: none !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3) !important;
+    transition: background .15s, opacity .15s !important;
   }
-  .client-drawer-foot .cdf-save-btn:hover {background: #1e4fd4;}
+  .client-drawer-foot .cdf-save-btn:hover {background: #d97706 !important;}
   .client-drawer-foot .cdf-save-btn:disabled {opacity: .7; cursor: not-allowed;}
   .client-drawer-foot .cdf-save-btn .cdf-spinner {
     width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
@@ -1514,7 +1657,7 @@ html, body {
   .client-summary-body p {font-size: 10px; color: #7b8497; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
   .client-summary-edit {border: 0; background: transparent; color: #7b8497; padding: 0;}
   .client-almost-done {margin-top: 14px; padding: 14px; border-radius: 10px; background: #eefbf3; border: 1px solid #d5f0de; text-align: center;}
-  .client-almost-done i {color: #10a66a; font-size: 22px; margin-bottom: 6px;}
+  .client-almost-done i {color: #10a66a; font-size: 14px; margin-bottom: 6px;}
   .client-almost-done h5 {font-size: 12px; font-weight: 600; margin: 0 0 4px; color: var(--client-ink);}
   .client-almost-done p {font-size: 10px; color: #53607e; margin: 0;}
   .client-submit-wrap {text-align: right;}
@@ -1584,34 +1727,6 @@ html, body {
     flex: 1 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
-  }
-
-  /* Wizard Header Card: Sticky directly below top navbar (#kt_header), exactly 5px upper gap & 5px lower gap */
-  .client-top-nav-card {
-    background: #fffdf2 !important;
-    border: 1.5px solid #ffd428 !important;
-    border-radius: 12px !important;
-    padding: 10px 18px !important;
-    box-shadow: 0 4px 12px rgba(10, 22, 71, 0.07) !important;
-    margin-top: 0 !important;
-    margin-bottom: 5px !important;
-    box-sizing: border-box !important;
-    height: 68px !important;
-    min-height: 68px !important;
-    max-height: 68px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    position: sticky !important;
-    top: calc(65px + 5px) !important; /* Exactly 5px below 65px fixed top header */
-    z-index: 95 !important;
-    transition: box-shadow 0.2s ease, top 0.2s ease !important;
-  }
-
-  @media (max-width: 991.98px) {
-    .client-top-nav-card {
-      top: calc(55px + 5px) !important; /* Exactly 5px below 55px mobile top header */
-    }
   }
 
   /* Main Form Shell: 0px top margin/padding to preserve exact 5px lower gap & perfect edge alignment with header */
@@ -1715,40 +1830,47 @@ html, body {
   }
 
   /* =========================================================================
-     TOP UNIFIED HEADER & 5-STEP NAVIGATION BAR CSS (Pixel-matched to user screenshot)
+     TOP UNIFIED HEADER & 6-STEP NAVIGATION BAR CSS (Pixel-matched & Enterprise-Aligned)
      ========================================================================= */
   .client-top-nav-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-    padding: 8px 18px !important;
+    padding: 0 20px !important;
     margin-top: 0 !important;
     margin-bottom: 8px !important;
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 52px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    max-height: 54px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+    position: sticky !important;
+    top: calc(65px + 4px) !important;
+    z-index: 95 !important;
+    transition: box-shadow 0.2s ease, top 0.2s ease !important;
   }
 
   .client-header-grid {
-    display: grid !important;
-    grid-template-columns: auto 1fr auto !important;
+    display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
+    height: 100% !important;
     gap: 16px !important;
     box-sizing: border-box !important;
   }
 
   .client-header-identity {
-    justify-self: start !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    min-width: 0 !important;
+    min-width: 170px !important;
+    max-width: 250px !important;
+    height: 100% !important;
   }
 
   .client-header-titles {
@@ -1756,14 +1878,15 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+    gap: 1px !important;
   }
 
   .client-header-title {
-    font-size: 16px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    margin: 0 0 1px 0 !important;
-    line-height: 1.25 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
     letter-spacing: -0.2px !important;
     white-space: nowrap !important;
     font-family: Poppins, sans-serif !important;
@@ -1772,23 +1895,23 @@ html, body {
   .client-header-subtitle {
     font-size: 11px !important;
     color: #64748b !important;
-    margin: 0 !important;
-    line-height: 1.35 !important;
+    margin: 2px 0 0 0 !important;
+    line-height: 1.25 !important;
     font-weight: 400 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
-    max-width: 360px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 230px !important;
     font-family: Poppins, sans-serif !important;
   }
 
   .client-header-stepper-col {
-    justify-self: center !important;
+    flex: 1 1 auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     min-width: 0 !important;
-    overflow: visible !important;
+    height: 100% !important;
   }
 
   .client-stepper-wrap {
@@ -1796,50 +1919,54 @@ html, body {
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    width: auto !important;
-    margin: 0 auto !important;
+    height: 100% !important;
   }
 
   .client-step-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 6px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
     user-select: none !important;
-    padding: 2px 0 !important;
+    padding: 3px 4px !important;
+    border-radius: 6px !important;
     text-decoration: none !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
   }
 
   .client-step-circle {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    min-height: 26px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
     line-height: 1 !important;
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
     font-family: Poppins, sans-serif !important;
-    position: relative !important;
   }
   .client-step-circle svg {
     display: block !important;
     margin: auto !important;
+    width: 11px !important;
+    height: 11px !important;
   }
 
   .client-step-circle.is-completed {
     background: #10b981 !important;
     color: #ffffff !important;
     border: none !important;
-    font-weight: 700 !important;
     box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25) !important;
   }
 
@@ -1847,7 +1974,7 @@ html, body {
     background: #ffd428 !important;
     color: #0f172a !important;
     border: 2px solid #ffffff !important;
-    box-shadow: 0 0 0 2px #ffd428, 0 2px 6px rgba(245, 196, 0, 0.35) !important;
+    box-shadow: 0 0 0 2px #ffd428, 0 1px 4px rgba(245, 196, 0, 0.35) !important;
     font-weight: 700 !important;
   }
 
@@ -1856,13 +1983,12 @@ html, body {
     color: #64748b !important;
     border: 1.5px solid #cbd5e1 !important;
     font-weight: 600 !important;
+    box-shadow: none !important;
   }
 
   .client-step-name {
     font-size: 11.5px !important;
-    font-weight: 500 !important;
-    color: #64748b !important;
-    line-height: 1.2 !important;
+    line-height: 1 !important;
     white-space: nowrap !important;
     transition: color 0.15s ease !important;
     font-family: Poppins, sans-serif !important;
@@ -1873,6 +1999,16 @@ html, body {
     color: #0f172a !important;
   }
 
+  .client-step-item.is-completed .client-step-name {
+    font-weight: 600 !important;
+    color: #1e293b !important;
+  }
+
+  .client-step-item.is-upcoming .client-step-name {
+    font-weight: 500 !important;
+    color: #64748b !important;
+  }
+
   .client-step-item:hover .client-step-name {
     color: #0f172a !important;
   }
@@ -1881,35 +2017,53 @@ html, body {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 8px !important;
-    color: #94a3b8 !important;
+    margin: 0 7px !important;
+    color: #cbd5e1 !important;
     flex-shrink: 0 !important;
+    line-height: 1 !important;
     transition: color 0.2s ease !important;
+  }
+  .client-step-arrow.is-completed {
+    color: #10b981 !important;
+  }
+  .client-step-arrow.is-completed .client-step-arrow-svg {
+    stroke: #10b981 !important;
+  }
+  .client-step-arrow.is-upcoming {
+    color: #cbd5e1 !important;
+  }
+  .client-step-arrow.is-upcoming .client-step-arrow-svg {
+    stroke: #cbd5e1 !important;
   }
 
   .client-step-arrow-svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 12px !important;
+    height: 12px !important;
     stroke: currentColor !important;
+    stroke-width: 2.2 !important;
+    display: block !important;
   }
 
   .client-header-actions {
-    justify-self: end !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 8px !important;
-    flex: 0 0 auto !important;
+    min-width: 170px !important;
+    height: 100% !important;
   }
 
-  .client-top-close-btn {
+  .client-top-close-btn,
+  .client-top-back-btn {
     background: #ffffff !important;
-    border: 1.5px solid #e2e8f0 !important;
-    color: #0f172a !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #334155 !important;
     font-weight: 600 !important;
-    font-size: 12.5px !important;
-    height: 36px !important;
-    padding: 0 16px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 14px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -1921,35 +2075,11 @@ html, body {
     flex-shrink: 0 !important;
     text-decoration: none !important;
     box-sizing: border-box !important;
+    line-height: 1 !important;
   }
-  .client-top-close-btn:hover {
-    background: #f8fafc !important;
-    border-color: #cbd5e1 !important;
-    color: #0f172a !important;
-    transform: translateY(-1px);
-  }
-
-  .client-top-back-btn {
-    background: #f8fafc !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #334155 !important;
-    font-weight: 600 !important;
-    font-size: 12.5px !important;
-    height: 36px !important;
-    padding: 0 16px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    transition: all 0.15s ease !important;
-    flex-shrink: 0 !important;
-    text-decoration: none !important;
-  }
+  .client-top-close-btn:hover,
   .client-top-back-btn:hover {
-    background: #f1f5f9 !important;
+    background: #f8fafc !important;
     border-color: #94a3b8 !important;
     color: #0f172a !important;
     transform: translateY(-1px);
@@ -1961,9 +2091,10 @@ html, body {
     border: 1px solid #d4a017 !important;
     color: #10143b !important;
     font-weight: 700 !important;
-    font-size: 12.5px !important;
-    height: 36px !important;
-    padding: 0 18px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 16px !important;
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(245, 196, 0, 0.3) !important;
     display: inline-flex !important;
@@ -1974,11 +2105,12 @@ html, body {
     white-space: nowrap !important;
     transition: all 0.15s ease !important;
     flex-shrink: 0 !important;
+    line-height: 1 !important;
   }
   .client-top-next-btn:hover,
   .client-top-submit-btn:hover {
     background: #f5c400 !important;
-    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.4) !important;
+    box-shadow: 0 2px 6px rgba(245, 196, 0, 0.38) !important;
     transform: translateY(-1px);
   }
 
@@ -2517,11 +2649,17 @@ html, body {
 
   /* Responsive Rules: 1400px (15.6-inch laptop), 1200px, 991px, 576px */
   @media (max-width: 1400px) and (min-width: 992px) {
+    .client-top-nav-card {
+      height: 50px !important;
+      min-height: 50px !important;
+      max-height: 50px !important;
+      padding: 0 14px !important;
+    }
     .client-header-identity {
       max-width: 280px !important;
     }
     .client-header-title {
-      font-size: 15px !important;
+      font-size: 13.5px !important;
     }
     .client-header-subtitle {
       font-size: 11px !important;
@@ -2607,7 +2745,7 @@ html, body {
       padding: 12px 14px !important;
     }
     .client-header-title {
-      font-size: 16px !important;
+      font-size: 14px !important;
     }
     .client-header-subtitle {
       font-size: 11.5px !important;
@@ -3088,7 +3226,7 @@ html, body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
     flex-shrink: 0;
   }
 
@@ -4240,39 +4378,39 @@ html, body {
             <div class="row justify-content-center px-0" style="margin:0 !important; padding:0 !important;">
               <div class="col-xl-12 col-xxl-12" style="margin:0 !important; padding:0 !important;">
                 <!--begin::Wizard Form-->
-                <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form" style="margin:0 !important; padding:0 !important;">
+                <form class="form mx-auto" novalidate="novalidate" autocomplete="off" action="javascript:void(0);" method="post" id="kt_form" name="kt_form" style="margin:0 !important; padding:0 !important;">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
                   <input type="hidden" name="idempotency_key" id="kt_form_idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}" />
-                  <!--begin::Client Information-->
-                  @include('service_company.client.components.tab-basic-info')
+                  <!--begin::Client Information (Page 1)-->
+                  @include('service_company.client.components.tab-basic-info', ['page_event' => $page_event])
 
-                  <!--begin::Client Description-->
-                  @include('service_company.client.components.tab-details')
+                  <!--begin::Client Description (Page 2)-->
+                  @include('service_company.client.components.tab-details', ['page_event' => $page_event])
 
-                  <!--begin::Address Details-->
-                  @include('service_company.client.components.tab-locations')
+                  <!--begin::Address Details (Page 3)-->
+                  @include('service_company.client.components.tab-locations', ['page_event' => $page_event])
 
-                  <!--begin::Contact Person-->
+                  <!--begin::Contact Person (Page 4)-->
                   @include('service_company.client.components.tab-contacts', [
-    'client_contact_info' => $client_contact_info ?? [],
-    'client_contact_arr'  => $client_contact_arr ?? ($client_contact_info ?? []),
-    'page_event'          => $page_event,
-    'country_code'        => $country_code ?? 'in'
-])
-
-                  <!--begin::Social Links-->
-                  @include('service_company.client.components.tab-social-links', [
-                    'linkedin_url'  => $linkedin_url ?? '',
-                    'twitter_url'   => $twitter_url ?? '',
-                    'youtube_url'   => $youtube_url ?? '',
-                    'facebook_url'  => $facebook_url ?? '',
-                    'instagram_url' => $instagram_url ?? '',
-                    'github_url'    => $github_url ?? '',
-                    'custom_link'   => $custom_link ?? '',
+                    'client_contact_info' => ($page_event === 'ADD') ? [] : ($client_contact_info ?? []),
+                    'client_contact_arr'  => ($page_event === 'ADD') ? [] : ($client_contact_arr ?? ($client_contact_info ?? [])),
+                    'page_event'          => $page_event,
+                    'country_code'        => $country_code ?? 'in'
                   ])
 
-                  <!--begin::Review and Submit-->
-                  @include('service_company.client.components.tab-review')
+                  <!--begin::Social Links (Page 5)-->
+                  @include('service_company.client.components.tab-social-links', [
+                    'linkedin_url'  => ($page_event === 'ADD') ? '' : ($linkedin_url ?? ''),
+                    'twitter_url'   => ($page_event === 'ADD') ? '' : ($twitter_url ?? ''),
+                    'youtube_url'   => ($page_event === 'ADD') ? '' : ($youtube_url ?? ''),
+                    'facebook_url'  => ($page_event === 'ADD') ? '' : ($facebook_url ?? ''),
+                    'instagram_url' => ($page_event === 'ADD') ? '' : ($instagram_url ?? ''),
+                    'github_url'    => ($page_event === 'ADD') ? '' : ($github_url ?? ''),
+                    'custom_link'   => ($page_event === 'ADD') ? '' : ($custom_link ?? ''),
+                  ])
+
+                  <!--begin::Review and Submit (Page 6)-->
+                  @include('service_company.client.components.tab-review', ['page_event' => $page_event])
                 </form>
                 <!--end::Wizard Form-->
               </div>
@@ -4527,7 +4665,7 @@ html, body {
    			
    			$('#contactPersonId').val(contactPersonId);  			
    			
-    			$('.client-cperson-row').last().append('<div class="row client-cperson-container" data-contact-index="'+contactPersonId+'"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
+    			$('.client-cperson-row').last().append('<div class="row client-cperson-container" data-contact-index="'+contactPersonId+'"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 14px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
           if (window.clientWizardUi) window.clientWizardUi.renderContactTable();
           // Reinitialize intl-tel-input for the newly added cp_number[] field
          var newContactNumberField = $(`input[name='cp_number[]']`).last()[0];
@@ -4585,8 +4723,7 @@ html, body {
            parsed = rawVal.split(',').map(function (s) { return s.trim(); });
          }
        } else if (typeof page_event !== 'undefined' && page_event === 'ADD') {
-         // Default sample services matching reference screenshot
-         parsed = ['Software Development', 'Technology Services', 'Enterprise Platform'];
+         parsed = [];
        }
 
        this.selected = parsed.filter(function (s) { return typeof s === 'string' && s.trim().length > 0; });
@@ -5503,6 +5640,10 @@ html, body {
         if (err) err.style.display = 'none';
         if (dd) dd.classList.remove('active');
         clearFieldError($(searchInput));
+        var $card = $(searchInput).closest('.client-branch-card');
+        if ($card.length && !$card.find('textarea[name="address[]"]').hasClass('is-invalid') && ($card.find('textarea[name="address[]"]').val() || '').trim().length >= 5) {
+            $card.css({ 'border': '1px solid #e2e8f0', 'box-shadow': '0 1px 2px rgba(0,0,0,0.02)' });
+        }
     }
 
     function renderCityAddressDropdown(cid, query) {
@@ -5792,6 +5933,23 @@ html, body {
            $(this).removeClass('is-invalid');
            var errEl = document.getElementById(cid === '0' || cid === 0 ? 'address_err_0' : 'branch_address_err_' + cid);
            if (errEl) errEl.style.display = 'none';
+
+           var $card = $(this).closest('.client-branch-card');
+           if ($card.length && val.trim().length >= 5 && !$card.find('.branch-city-search').hasClass('is-invalid') && ($card.find('.branch-city-search').val() || '').trim()) {
+               $card.css({ 'border': '1px solid #e2e8f0', 'box-shadow': '0 1px 2px rgba(0,0,0,0.02)' });
+           }
+       });
+
+       $(document).on('input', '.branch-city-search, .client-addr-city-search', function () {
+           var cid = $(this).data('cid');
+           $(this).removeClass('is-invalid');
+           var errEl = document.getElementById(cid === '0' || cid === 0 ? 'city_err_0' : 'branch_city_err_' + cid);
+           if (errEl) errEl.style.display = 'none';
+
+           var $card = $(this).closest('.client-branch-card');
+           if ($card.length && $(this).val().trim() && !$card.find('textarea[name="address[]"]').hasClass('is-invalid') && ($card.find('textarea[name="address[]"]').val() || '').trim().length >= 5) {
+               $card.css({ 'border': '1px solid #e2e8f0', 'box-shadow': '0 1px 2px rgba(0,0,0,0.02)' });
+           }
        });
 
        $(document).on('click', function (e) {
@@ -6400,6 +6558,38 @@ $('.remove_address').click(function(){
         if (isClientSubmitting) {
             return false;
         }
+
+        // Validate all wizard steps before submitting!
+        for (var s = 1; s <= 5; s++) {
+          if (typeof validateWizardStep === 'function' && !validateWizardStep(s)) {
+            isClientSubmitting = false;
+            if (typeof goToWizardStep === 'function') {
+              goToWizardStep(s);
+            }
+            if ($firstInvalid && $firstInvalid.length) {
+              $firstInvalid.focus();
+              try {
+                $('html, body').animate({
+                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                }, 300);
+              } catch (err) {}
+            }
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+              var submitErrMsg = (s === 3 && window._lastStep3Error)
+                ? window._lastStep3Error
+                : 'Please complete all required fields in Step ' + s + ' before submitting.';
+              Swal.fire({
+                icon: 'warning',
+                title: 'Incomplete Details',
+                text: submitErrMsg,
+                confirmButtonText: 'Review Step ' + s,
+                customClass: { confirmButton: 'btn btn-warning' }
+              });
+            }
+            return false;
+          }
+        }
+
         var $btn = $(this);
         isClientSubmitting = true;
 
@@ -6495,6 +6685,38 @@ $('.remove_address').click(function(){
         if (isClientSubmitting) {
             return false;
         }
+
+        // Validate all wizard steps before updating!
+        for (var s = 1; s <= 5; s++) {
+          if (typeof validateWizardStep === 'function' && !validateWizardStep(s)) {
+            isClientSubmitting = false;
+            if (typeof goToWizardStep === 'function') {
+              goToWizardStep(s);
+            }
+            if ($firstInvalid && $firstInvalid.length) {
+              $firstInvalid.focus();
+              try {
+                $('html, body').animate({
+                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                }, 300);
+              } catch (err) {}
+            }
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+              var updateErrMsg = (s === 3 && window._lastStep3Error)
+                ? window._lastStep3Error
+                : 'Please complete all required fields in Step ' + s + ' before saving.';
+              Swal.fire({
+                icon: 'warning',
+                title: 'Incomplete Details',
+                text: updateErrMsg,
+                confirmButtonText: 'Review Step ' + s,
+                customClass: { confirmButton: 'btn btn-warning' }
+              });
+            }
+            return false;
+          }
+        }
+
         var $btn = $(this);
         isClientSubmitting = true;
 
@@ -6950,15 +7172,23 @@ $('.remove_address').click(function(){
       }
     }
 
-    // 13. Socials & Accounts Payable Email
-    if (data.linkedin_url) $('#linkedin_url').val(data.linkedin_url).trigger('input');
-    if (data.twitter_url)  $('#twitter_url').val(data.twitter_url).trigger('input');
-    if (data.github_url)   $('#github_url').val(data.github_url).trigger('input');
-    if (data.ap_email)     $('#ap_email').val(data.ap_email).trigger('input');
+    // 13. Social Links & AI Profile Discovery (Strict Fresh & Blank Policy)
+    // Per UX principle: AI discovers -> User reviews -> User adds.
+    // Editable inputs remain fresh and blank until user explicitly clicks "+ Add" on Step 5.
+    if (window.clientSocialManager) {
+      window.clientSocialManager.setDiscoveredUrls({
+        linkedin: data.linkedin_url || null,
+        twitter: data.twitter_url || null,
+        facebook: data.facebook_url || null,
+        instagram: data.instagram_url || null,
+        youtube: data.youtube_url || null,
+        github: data.github_url || null
+      });
+      window.clientSocialManager.syncWebsiteLink();
+      window.clientSocialManager.syncAiButtons();
+    }
 
-    if (data.youtube_url)   { $('#youtube_url').val(data.youtube_url).trigger('input'); $('#extended_socials_collapse').show(); }
-    if (data.facebook_url)  { $('#facebook_url').val(data.facebook_url).trigger('input'); $('#extended_socials_collapse').show(); }
-    if (data.instagram_url) { $('#instagram_url').val(data.instagram_url).trigger('input'); $('#extended_socials_collapse').show(); }
+    if (data.ap_email) $('#ap_email').val(data.ap_email).trigger('input');
 
     // 14. Synchronize Wizard State & Completion Meter
     if (window.clientWizardUi) {
@@ -7143,6 +7373,11 @@ $('.remove_address').click(function(){
   // 3. Website input change / blur triggers auto-fill if not already fetched
   $(document).on('change', '#website', function() { 
     var website = ($(this).val() || '').trim();
+    if (window.clientSocialManager) {
+      window.clientSocialManager.clearDiscoveredUrls();
+      window.clientSocialManager.syncWebsiteLink();
+      window.clientSocialManager.syncAiButtons();
+    }
     if (website && website.length > 3 && website !== window._lastFetchedWebsite) {
       fetchGodLevelCompanyIntelligence(website);
     }
@@ -7186,6 +7421,11 @@ $('.remove_address').click(function(){
     $('#website').val('').trigger('input').focus();
     $(this).hide();
     $('#badge_website').hide();
+    if (window.clientSocialManager) {
+      window.clientSocialManager.clearDiscoveredUrls();
+      window.clientSocialManager.syncWebsiteLink();
+      window.clientSocialManager.syncAiButtons();
+    }
   });
 
   $(document).on('input keyup', '#website', function() {
@@ -7477,9 +7717,17 @@ $('.remove_address').click(function(){
       var self = this;
       var raw = initialList || window.__INITIAL_CONTACTS__ || [];
       self.contacts = [];
+      var seenEmails = {};
       if (Array.isArray(raw) && raw.length > 0) {
         raw.forEach(function (c, idx) {
           if (!c.name && !c.email) return;
+          var emailLower = (c.email || '').trim().toLowerCase();
+          if (emailLower && seenEmails[emailLower]) {
+            return; // Skip duplicate email
+          }
+          if (emailLower) {
+            seenEmails[emailLower] = true;
+          }
           var roleInfo = self.mapDesignationToRole(c.designation);
           self.contacts.push({
             name: (c.name || '').trim(),
@@ -7488,21 +7736,50 @@ $('.remove_address').click(function(){
             phone: (c.phone || '').trim(),
             callingCode: (c.callingCode || '+91').trim(),
             role: c.role || roleInfo.name,
-            isPrimary: (typeof c.isPrimary === 'boolean') ? c.isPrimary : (idx === 0)
+            isPrimary: (typeof c.isPrimary === 'boolean') ? c.isPrimary : (self.contacts.length === 0)
           });
         });
       }
 
-      // Ensure at least 1 contact is primary if list has contacts
+      self.deduplicateContacts();
+      self.renderTable();
+      self.syncHiddenInputs();
+    },
+
+    deduplicateContacts: function () {
+      var self = this;
+      var seen = {};
+      var unique = [];
+      self.contacts.forEach(function (c) {
+        var em = (c.email || '').trim().toLowerCase();
+        if (em && seen[em]) {
+          return; // Skip duplicate contact
+        }
+        if (em) {
+          seen[em] = true;
+        }
+        unique.push(c);
+      });
+      self.contacts = unique;
+
+      // Guarantee at least 1 contact is primary if list is not empty
       if (self.contacts.length > 0) {
         var hasPrimary = self.contacts.some(function (c) { return c.isPrimary; });
         if (!hasPrimary) {
           self.contacts[0].isPrimary = true;
         }
       }
+    },
 
-      self.renderTable();
-      self.syncHiddenInputs();
+    isEmailTaken: function (email, excludeIndex) {
+      var self = this;
+      var target = (email || '').trim().toLowerCase();
+      if (!target) return false;
+      var exIdx = (excludeIndex !== null && excludeIndex !== undefined && excludeIndex !== '') ? parseInt(excludeIndex, 10) : -1;
+      return self.contacts.some(function (c, idx) {
+        if (idx === exIdx) return false;
+        return (c.email || '').trim().toLowerCase() === target;
+      });
     },
 
     getContacts: function () {
@@ -7567,6 +7844,8 @@ $('.remove_address').click(function(){
 
     renderTable: function () {
       var self = this;
+      self.deduplicateContacts();
+
       var $tbody = $('#client_contact_table_body');
       $tbody.find('tr:not(#client_contact_empty_row)').remove();
       var $emptyRow = $('#client_contact_empty_row');
@@ -7588,30 +7867,30 @@ $('.remove_address').click(function(){
         var displayPhoneHtml = formatContactPhone(c.phone, c.callingCode);
 
         var primaryColHtml = c.isPrimary
-          ? '<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700; font-size:11.5px; padding:5px 12px; border-radius:20px; display:inline-flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Primary</span>'
-          : '<button type="button" class="btn btn-link p-0 text-decoration-none client-make-primary-btn" onclick="window.clientContactManager.setPrimary(' + i + ')" title="Set as Primary Contact" style="color:#64748b; font-size:12px; font-weight:500; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:transparent; border:none;"><span class="radio-circle" style="display:inline-block; width:13px; height:13px; border:1.5px solid #94a3b8; border-radius:50%; background:#ffffff; transition:border-color 0.15s ease;"></span> Make Primary</button>';
+          ? '<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700; font-size:11px; padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Primary</span>'
+          : '<button type="button" class="btn btn-link p-0 text-decoration-none client-make-primary-btn" onclick="window.clientContactManager.setPrimary(' + i + ')" title="Set as Primary Contact" style="color:#64748b; font-size:11.5px; font-weight:500; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;"><span class="radio-circle" style="display:inline-block; width:12px; height:12px; border:1.5px solid #94a3b8; border-radius:50%; background:#ffffff; transition:border-color 0.15s ease;"></span> Make Primary</button>';
 
         var rowHtml = '<tr data-contact-index="' + i + '" style="border-bottom:1px solid #f1f5f9;">' +
-          '<td style="padding:12px 20px;">' +
-            '<div class="d-flex align-items-center">' +
-              '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:34px; height:34px; border-radius:50%; margin-right:10px; font-size:12px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
-              '<span style="font-weight:700; color:#101828; font-size:13.5px;">' + escapeHtml(c.name) + '</span>' +
+          '<td style="padding:12px 18px; width:20%; vertical-align:middle; overflow:hidden;">' +
+            '<div class="d-flex align-items-center" style="min-width:0; overflow:hidden;">' +
+              '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:32px; height:32px; border-radius:50%; margin-right:10px; font-size:11.5px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
+              '<span style="font-weight:600; color:#101828; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</span>' +
             '</div>' +
           '</td>' +
-          '<td style="padding:12px 16px; color:#334155; font-size:13px;">' + escapeHtml(c.designation || '—') + '</td>' +
-          '<td style="padding:12px 16px; color:#334155; font-size:13px;">' + escapeHtml(c.email || '—') + '</td>' +
-          '<td style="padding:12px 16px; color:#334155; font-size:13px; font-weight:500;">' + displayPhoneHtml + '</td>' +
-          '<td style="padding:12px 14px;">' +
-            '<span class="badge" style="background:' + roleInfo.bg + '; color:' + roleInfo.text + '; font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:20px; white-space:nowrap;">' + escapeHtml(roleInfo.name) + '</span>' +
+          '<td style="padding:12px 14px; width:18%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.designation || '') + '">' + escapeHtml(c.designation || '—') + '</td>' +
+          '<td style="padding:12px 14px; width:22%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.email || '') + '">' + escapeHtml(c.email || '—') + '</td>' +
+          '<td style="padding:12px 14px; width:16%; vertical-align:middle; color:#334155; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + displayPhoneHtml + '</td>' +
+          '<td style="padding:12px 12px; width:10%; vertical-align:middle; white-space:nowrap;">' +
+            '<span class="badge" style="background:' + roleInfo.bg + '; color:' + roleInfo.text + '; font-weight:600; font-size:11px; padding:4px 10px; border-radius:20px; white-space:nowrap; display:inline-block;">' + escapeHtml(roleInfo.name) + '</span>' +
           '</td>' +
-          '<td style="padding:12px 14px;">' + primaryColHtml + '</td>' +
-          '<td style="padding:12px 20px; text-align:right;">' +
+          '<td style="padding:12px 10px; width:8%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
+          '<td style="padding:12px 16px; width:6%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
-              '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
-                '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
+              '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit Contact" style="width:28px; height:28px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
+                '<i class="la la-pencil" style="font-size:13px; color:#2563eb;"></i>' +
               '</button>' +
-              '<button type="button" class="btn btn-icon client-delete-contact" onclick="window.clientContactManager.deleteContact(' + i + ')" title="Delete" style="width:30px; height:30px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:6px;">' +
-                '<i class="la la-trash" style="font-size:14px; color:#dc2626;"></i>' +
+              '<button type="button" class="btn btn-icon client-delete-contact" onclick="window.clientContactManager.deleteContact(' + i + ')" title="Delete Contact" style="width:28px; height:28px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:4px;">' +
+                '<i class="la la-trash" style="font-size:13px; color:#dc2626;"></i>' +
               '</button>' +
             '</div>' +
           '</td>' +
@@ -7624,14 +7903,10 @@ $('.remove_address').click(function(){
     addContact: function (contactData, isPrimaryReq) {
       var self = this;
       var email = (contactData.email || '').trim().toLowerCase();
-      var exists = self.contacts.some(function (c) {
-        return (c.email || '').trim().toLowerCase() === email;
-      });
-
-      if (exists) {
+      if (email && self.isEmailTaken(email)) {
         if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200 });
-          Toast.fire({ icon: 'info', title: contactData.name + ' is already added!' });
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
+          Toast.fire({ icon: 'warning', title: (contactData.name || 'Contact') + ' with email "' + email + '" is already added!' });
         }
         return false;
       }
@@ -7655,6 +7930,7 @@ $('.remove_address').click(function(){
         isPrimary: makePrimary
       });
 
+      self.deduplicateContacts();
       self.renderTable();
       self.syncHiddenInputs();
       return true;
@@ -7684,6 +7960,7 @@ $('.remove_address').click(function(){
       var idx = parseInt(index, 10);
       if (isNaN(idx) || idx < 0 || idx >= self.contacts.length) return;
 
+      var contactName = self.contacts[idx].name || 'Contact';
       var wasPrimary = self.contacts[idx].isPrimary;
       self.contacts.splice(idx, 1);
 
@@ -7693,6 +7970,11 @@ $('.remove_address').click(function(){
 
       self.renderTable();
       self.syncHiddenInputs();
+
+      if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+        var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1800 });
+        Toast.fire({ icon: 'success', title: contactName + ' removed' });
+      }
     },
 
     syncHiddenInputs: function () {
@@ -7725,28 +8007,57 @@ $('.remove_address').click(function(){
       }
     },
 
+      // Ensure the primary contact is at index 0 in hidden inputs for database storage
+      var sorted = self.contacts.slice().sort(function (a, b) {
+        return (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0);
+      });
+
+      sorted.forEach(function (c, i) {
+        var hHtml = '<div class="row client-cperson-container" data-contact-index="' + i + '">' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.name) + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.phone) + '"><input type="hidden" value="' + escapeHtml(c.callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + i + '"></div></div>' +
+          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + i + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(c.designation) + '"></div></div>' +
+          '</div>';
+        $containerRow.append(hHtml);
+      });
+
+      $('#contactPersonId').val(Math.max(0, sorted.length - 1));
+
+      if (typeof updateCompletion === 'function') {
+        try { updateCompletion(); } catch (e) {}
+      }
+      if (typeof populateReviewSummaries === 'function') {
+        try { populateReviewSummaries(); } catch (e) {}
+      }
+    },
+
     openAddDrawer: function () {
       this._openDrawer(null);
     },
 
     openEditDrawer: function (index) {
-      this._openDrawer(index);
+      var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
+      this._openDrawer(!isNaN(num) ? num : null);
     },
 
     _openDrawer: function (index) {
       var self = this;
+      self._isSaving = false;
       _cdfClearErrors();
-      var isEdit = (typeof index === 'number' && !isNaN(index) && index >= 0);
-      $('#client_drawer_edit_index').val(isEdit ? index : '');
+      var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
+      var isEdit = (!isNaN(num) && num >= 0 && num < self.contacts.length);
+      var editIdx = isEdit ? num : null;
+      $('#client_drawer_edit_index').val(isEdit ? editIdx : '');
       $('#client_contact_drawer_title').text(isEdit ? 'Edit Contact Person' : 'Add Contact Person');
       $('#client_contact_drawer_subtitle').text(isEdit ? 'Update the contact details below.' : 'Add key contacts for recruitment operations with this client.');
       $('#client_save_contact_drawer .cdf-btn-text').text(isEdit ? 'Save Changes' : 'Add Contact Person');
 
       if (isEdit) {
-        var c = self.contacts[index];
-        $('#client_drawer_name').val(c.name);
-        $('#client_drawer_designation').val(c.designation);
-        $('#client_drawer_email').val(c.email);
+        var c = self.contacts[editIdx];
+        $('#client_drawer_name').val(c.name || '');
+        $('#client_drawer_designation').val(c.designation || '');
+        $('#client_drawer_email').val(c.email || '');
         $('#client_drawer_is_primary').prop('checked', Boolean(c.isPrimary));
 
         if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
@@ -7756,9 +8067,9 @@ $('.remove_address').click(function(){
         }
 
         if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
-          window.JeroPhoneBox.setPhone('client_drawer_phone', c.phone);
+          window.JeroPhoneBox.setPhone('client_drawer_phone', c.phone || '');
         } else {
-          $('#client_drawer_phone').val(c.phone).trigger('input');
+          $('#client_drawer_phone').val(c.phone || '').trigger('input');
         }
       } else {
         $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('');
@@ -7788,6 +8099,8 @@ $('.remove_address').click(function(){
     },
 
     closeDrawer: function () {
+      var self = this;
+      self._isSaving = false;
       $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
       _cdfClearErrors();
       $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('').removeClass('is-invalid');
@@ -7807,12 +8120,19 @@ $('.remove_address').click(function(){
 
     saveDrawer: function () {
       var self = this;
+      if (self._isSaving) return false;
+      self._isSaving = true;
+
       _cdfClearErrors();
 
       var name = $('#client_drawer_name').val().trim();
       var designation = $('#client_drawer_designation').val().trim();
-      var email = JeroEmailBoxEngine.cleanDeterministic($('#client_drawer_email').val());
+      var rawEmail = $('#client_drawer_email').val() || '';
+      var email = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.cleanDeterministic === 'function')
+        ? window.JeroEmailBoxEngine.cleanDeterministic(rawEmail)
+        : rawEmail.trim().toLowerCase();
       $('#client_drawer_email').val(email);
+
       var phone = window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function'
         ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone')
         : ($('#client_drawer_phone').val() || '').replace(/[^\d]/g, '');
@@ -7834,7 +8154,10 @@ $('.remove_address').click(function(){
         $firstBad = $firstBad || $('#client_drawer_designation');
         valid = false;
       }
-      var emailSyntax = JeroEmailBoxEngine.validateSyntax(email);
+      var emailSyntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+        ? window.JeroEmailBoxEngine.validateSyntax(email)
+        : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email), error: 'Please enter a valid email address.' };
+
       if (!emailSyntax.isValid) {
         $('#client_drawer_email').addClass('is-invalid');
         $('#cdf_err_email').text(emailSyntax.error).addClass('visible');
@@ -7849,6 +8172,7 @@ $('.remove_address').click(function(){
       }
 
       if (!valid) {
+        self._isSaving = false;
         if ($firstBad) { $firstBad.focus(); }
         return false;
       }
@@ -7857,16 +8181,16 @@ $('.remove_address').click(function(){
       var isEdit = (editIndexStr !== '' && !isNaN(parseInt(editIndexStr, 10)));
       var editIdx = isEdit ? parseInt(editIndexStr, 10) : null;
 
-      // Duplicate check
-      var isDuplicate = self.contacts.some(function (c, idx) {
-        if (isEdit && idx === editIdx) return false;
-        return (c.email || '').trim().toLowerCase() === email.toLowerCase();
-      });
-
-      if (isDuplicate) {
+      // Duplicate check (case-insensitive & trimmed)
+      if (self.isEmailTaken(email, editIdx)) {
+        self._isSaving = false;
         $('#client_drawer_email').addClass('is-invalid');
-        $('#cdf_err_email').text('A contact with this email already exists.').addClass('visible');
+        $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
         $('#client_drawer_email').focus();
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
+          Toast.fire({ icon: 'warning', title: 'A contact with this email already exists!' });
+        }
         return false;
       }
 
@@ -7884,20 +8208,43 @@ $('.remove_address').click(function(){
         self.contacts[editIdx].role = roleInfo.name;
         if (isPrimaryChecked) self.contacts[editIdx].isPrimary = true;
       } else {
-        self.addContact({
+        var isFirst = self.contacts.length === 0;
+        var makePrimary = isFirst || Boolean(isPrimaryChecked);
+        if (makePrimary) {
+          self.contacts.forEach(function (c) { c.isPrimary = false; });
+        }
+        self.contacts.push({
           name: name,
           designation: designation,
           email: email,
           phone: phone,
           callingCode: callingCode,
-          role: roleInfo.name
-        }, isPrimaryChecked);
+          role: roleInfo.name,
+          isPrimary: makePrimary
+        });
+      }
+
+      // Ensure at least 1 contact is primary
+      if (self.contacts.length > 0) {
+        var hasPrimary = self.contacts.some(function (c) { return c.isPrimary; });
+        if (!hasPrimary) {
+          self.contacts[0].isPrimary = true;
+        }
       }
 
       self.renderTable();
       self.syncHiddenInputs();
-      self.syncAiButtons();
       self.closeDrawer();
+
+      if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+        var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        Toast.fire({ icon: 'success', title: isEdit ? (name + ' updated successfully') : (name + ' added to contacts') });
+      }
+
+      setTimeout(function () {
+        self._isSaving = false;
+      }, 200);
+
       return true;
     }
   };
@@ -7947,8 +8294,9 @@ $('.remove_address').click(function(){
 
   function openContactDrawer(index) {
     if (window.clientContactManager) {
-      if (typeof index === 'number' && index >= 0) {
-        window.clientContactManager.openEditDrawer(index);
+      var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
+      if (!isNaN(num) && num >= 0) {
+        window.clientContactManager.openEditDrawer(num);
       } else {
         window.clientContactManager.openAddDrawer();
       }
@@ -7991,7 +8339,17 @@ $('.remove_address').click(function(){
     /* Clear individual field error on input */
   $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
-  $(document).on('input', '#client_drawer_email', function () { $(this).removeClass('is-invalid'); $('#cdf_err_email').removeClass('visible'); });
+  $(document).on('input', '#client_drawer_email', function () {
+    $(this).removeClass('is-invalid');
+    $('#cdf_err_email').removeClass('visible');
+    var raw = $(this).val();
+    var clean = (raw || '').trim().toLowerCase();
+    var editIdx = $('#client_drawer_edit_index').val();
+    if (clean && window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      $(this).addClass('is-invalid');
+      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
+    }
+  });
   $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
 
   // Paste & Blur deterministic cleanup and typo suggestions for Contact Person Drawer Email
@@ -8013,6 +8371,13 @@ $('.remove_address').click(function(){
     }
     var $hint = $('#client_drawer_email_typo_hint');
     if (!clean) {
+      $hint.hide().empty();
+      return;
+    }
+    var editIdx = $('#client_drawer_edit_index').val();
+    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      $('#client_drawer_email').addClass('is-invalid');
+      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
       $hint.hide().empty();
       return;
     }
@@ -8083,6 +8448,15 @@ $('.remove_address').click(function(){
      ========================================================================= */
   window.clientSocialManager = {
     platforms: ['linkedin', 'twitter', 'facebook', 'instagram', 'youtube', 'github'],
+    discoveredUrls: {},
+
+    setDiscoveredUrls: function (urls) {
+      this.discoveredUrls = urls || {};
+    },
+
+    clearDiscoveredUrls: function () {
+      this.discoveredUrls = {};
+    },
 
     getSlug: function () {
       var web = ($('#website').val() || '').trim();
@@ -8109,6 +8483,9 @@ $('.remove_address').click(function(){
     },
 
     getUrlForPlatform: function (platform) {
+      if (this.discoveredUrls && this.discoveredUrls[platform]) {
+        return this.discoveredUrls[platform];
+      }
       var slug = this.getSlug();
       var handle = this.getCleanHandle();
       switch (platform) {
@@ -8129,12 +8506,36 @@ $('.remove_address').click(function(){
       }
     },
 
+    _normalizeUrl: function (url) {
+      if (!url) return '';
+      return String(url)
+        .toLowerCase()
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .replace(/\/+$/, '');
+    },
+
     syncWebsiteLink: function () {
       var self = this;
       this.platforms.forEach(function (plat) {
         var url = self.getUrlForPlatform(plat);
         $('#ai_url_' + plat).text(url).attr('title', url);
       });
+    },
+
+    clearAllSocialInputs: function () {
+      var self = this;
+      this.platforms.forEach(function (plat) {
+        var $inp = $('#' + plat + '_url');
+        if ($inp.length) {
+          $inp.val('');
+        }
+        $('.client-social-clear-btn[data-target="' + plat + '_url"]').hide();
+      });
+      $('#custom_link').val('');
+      $('.client-social-clear-btn[data-target="custom_link"]').hide();
+      self.syncAiButtons();
     },
 
     addPlatform: function (platform) {
@@ -8152,7 +8553,7 @@ $('.remove_address').click(function(){
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
-          timer: 2500,
+          timer: 2000,
           timerProgressBar: true
         });
         var platNames = {
@@ -8205,7 +8606,7 @@ $('.remove_address').click(function(){
           toast: true,
           position: 'top-end',
           showConfirmButton: false,
-          timer: 3000,
+          timer: 2500,
           timerProgressBar: true
         });
         Toast.fire({
@@ -8248,17 +8649,28 @@ $('.remove_address').click(function(){
 
     syncAiButtons: function () {
       var self = this;
-      var allFilled = true;
+      var allAdded = true;
+
       this.platforms.forEach(function (plat) {
-        var val = ($('#' + plat + '_url').val() || '').trim();
+        var inputVal = ($('#' + plat + '_url').val() || '').trim();
+        var suggestedVal = self.getUrlForPlatform(plat);
         var $clearBtn = $('.client-social-clear-btn[data-target="' + plat + '_url"]');
-        if (val) {
-          self.markButtonAdded(plat);
+
+        if (inputVal) {
           $clearBtn.css('display', 'inline-flex');
         } else {
-          self.resetButton(plat);
           $clearBtn.hide();
-          allFilled = false;
+        }
+
+        var normInput = self._normalizeUrl(inputVal);
+        var normSuggested = self._normalizeUrl(suggestedVal);
+
+        // Strictly verify that the input actually matches the suggested AI profile URL
+        if (normInput && normSuggested && normInput === normSuggested) {
+          self.markButtonAdded(plat);
+        } else {
+          self.resetButton(plat);
+          allAdded = false;
         }
       });
 
@@ -8272,7 +8684,7 @@ $('.remove_address').click(function(){
       }
 
       var $btnAll = $('#btn_add_all_social');
-      if (allFilled) {
+      if (allAdded) {
         $btnAll.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> All Added')
                .css({
                  'background': '#ecfdf5',
@@ -8938,6 +9350,7 @@ $('.remove_address').click(function(){
 
     // Section 3: Address Details (Matching media_1792064818634.png)
     if (step === 3) {
+      window._lastStep3Error = null;
       var hqCity = ($('#city_search_0').val() || '').trim();
       var hqTagify = ($('#kt_tagify_work_location_0').val() || '').trim();
       if (!hqCity && !hqTagify) {
@@ -8945,6 +9358,7 @@ $('.remove_address').click(function(){
         $('#city_search_0').addClass('is-invalid');
         $firstInvalid = $firstInvalid || $('#city_search_0');
         isValid = false;
+        window._lastStep3Error = 'City selection is required for Headquarters (Primary Location).';
       } else {
         $('#city_err_0').hide();
         $('#city_search_0').removeClass('is-invalid');
@@ -8957,23 +9371,33 @@ $('.remove_address').click(function(){
       var $hqAddr = $('#address_0');
       var hqAddrVal = ($hqAddr.val() || '').trim();
       if (!hqAddrVal) {
-        $('#address_err_0').find('span').text('Full Address is required for the primary location.');
-        $('#address_err_0').show();
+        var hqAddrMsg = 'Full Address is required for the primary location.';
+        var $hqAddrErr = $('#address_err_0');
+        if ($hqAddrErr.find('span').length) { $hqAddrErr.find('span').text(hqAddrMsg); } else { $hqAddrErr.text(hqAddrMsg); }
+        $hqAddrErr.show();
         $hqAddr.addClass('is-invalid');
         $firstInvalid = $firstInvalid || $hqAddr;
         isValid = false;
+        if (!window._lastStep3Error) {
+          window._lastStep3Error = 'Full Address is required for Headquarters (Primary Location).';
+        }
       } else if (hqAddrVal.length < 5) {
-        $('#address_err_0').find('span').text('Address must be at least 5 characters.');
-        $('#address_err_0').show();
+        var hqMinMsg = 'Address must be at least 5 characters.';
+        var $hqAddrErr = $('#address_err_0');
+        if ($hqAddrErr.find('span').length) { $hqAddrErr.find('span').text(hqMinMsg); } else { $hqAddrErr.text(hqMinMsg); }
+        $hqAddrErr.show();
         $hqAddr.addClass('is-invalid');
         $firstInvalid = $firstInvalid || $hqAddr;
         isValid = false;
+        if (!window._lastStep3Error) {
+          window._lastStep3Error = 'Headquarters address must be at least 5 characters.';
+        }
       } else {
         $('#address_err_0').hide();
         $hqAddr.removeClass('is-invalid');
       }
 
-      // Check any additional branch addresses
+      // Check any additional branch addresses (Any card added MUST be completely filled or removed)
       $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-card.is-additional').each(function(idx) {
         var $card = $(this);
         var cid = $card.data('cid') || (idx + 1);
@@ -8981,33 +9405,77 @@ $('.remove_address').click(function(){
         var $textarea = $card.find('textarea[name="address[]"]');
         var cityVal = ($cityInput.val() || '').trim();
         var textVal = ($textarea.val() || '').trim();
+        var branchNumber = idx + 1;
+        var cardHasError = false;
 
-        if (cityVal || textVal) {
-          if (!cityVal) {
-            $card.find('#branch_city_err_' + cid).show();
-            $cityInput.addClass('is-invalid');
-            $firstInvalid = $firstInvalid || $cityInput;
-            isValid = false;
+        var $cityErr = $card.find('#branch_city_err_' + cid);
+        var $addrErr = $card.find('#branch_address_err_' + cid);
+
+        if (!cityVal) {
+          var cityMsg = 'City / Location is required for Additional Location ' + branchNumber + '. Please select a city or click "Remove".';
+          if ($cityErr.find('span').length) {
+            $cityErr.find('span').text(cityMsg);
           } else {
-            $card.find('#branch_city_err_' + cid).hide();
-            $cityInput.removeClass('is-invalid');
+            $cityErr.text(cityMsg);
           }
-          if (!textVal) {
-            $card.find('#branch_address_err_' + cid).find('span').text('Full Address is required for Additional Location ' + (idx + 1) + '.');
-            $card.find('#branch_address_err_' + cid).show();
-            $textarea.addClass('is-invalid');
-            $firstInvalid = $firstInvalid || $textarea;
-            isValid = false;
-          } else if (textVal.length < 5) {
-            $card.find('#branch_address_err_' + cid).find('span').text('Address must be at least 5 characters for Additional Location ' + (idx + 1) + '.');
-            $card.find('#branch_address_err_' + cid).show();
-            $textarea.addClass('is-invalid');
-            $firstInvalid = $firstInvalid || $textarea;
-            isValid = false;
+          $cityErr.show();
+          $cityInput.addClass('is-invalid');
+          $firstInvalid = $firstInvalid || $cityInput;
+          isValid = false;
+          cardHasError = true;
+          if (!window._lastStep3Error) {
+            window._lastStep3Error = 'Additional Location ' + branchNumber + ' is incomplete. Please select City and enter Full Address, or click "Remove".';
+          }
+        } else {
+          $cityErr.hide();
+          $cityInput.removeClass('is-invalid');
+        }
+
+        if (!textVal) {
+          var addrMsg = 'Full Address is required for Additional Location ' + branchNumber + '. Please enter complete address or click "Remove".';
+          if ($addrErr.find('span').length) {
+            $addrErr.find('span').text(addrMsg);
           } else {
-            $card.find('#branch_address_err_' + cid).hide();
-            $textarea.removeClass('is-invalid');
+            $addrErr.text(addrMsg);
           }
+          $addrErr.show();
+          $textarea.addClass('is-invalid');
+          $firstInvalid = $firstInvalid || $textarea;
+          isValid = false;
+          cardHasError = true;
+          if (!window._lastStep3Error) {
+            window._lastStep3Error = 'Additional Location ' + branchNumber + ' is incomplete. Please select City and enter Full Address, or click "Remove".';
+          }
+        } else if (textVal.length < 5) {
+          var addrMinMsg = 'Address must be at least 5 characters for Additional Location ' + branchNumber + '.';
+          if ($addrErr.find('span').length) {
+            $addrErr.find('span').text(addrMinMsg);
+          } else {
+            $addrErr.text(addrMinMsg);
+          }
+          $addrErr.show();
+          $textarea.addClass('is-invalid');
+          $firstInvalid = $firstInvalid || $textarea;
+          isValid = false;
+          cardHasError = true;
+          if (!window._lastStep3Error) {
+            window._lastStep3Error = 'Additional Location ' + branchNumber + ' address must be at least 5 characters, or click "Remove".';
+          }
+        } else {
+          $addrErr.hide();
+          $textarea.removeClass('is-invalid');
+        }
+
+        if (cardHasError) {
+          $card.css({
+            'border': '1.5px solid #f87171',
+            'box-shadow': '0 0 0 2px rgba(248, 113, 113, 0.15)'
+          });
+        } else {
+          $card.css({
+            'border': '1px solid #e2e8f0',
+            'box-shadow': '0 1px 2px rgba(0,0,0,0.02)'
+          });
         }
       });
     }
@@ -9021,8 +9489,21 @@ $('.remove_address').click(function(){
         $firstInvalid = $firstInvalid || $('#client_open_contact_drawer');
         isValid = false;
       } else {
+        var seenEmailsInStep4 = {};
         for (var i = 0; i < contacts.length; i++) {
           var c = contacts[i];
+          var eLower = (c.email || '').trim().toLowerCase();
+          if (eLower && seenEmailsInStep4[eLower]) {
+            var $dupRow = $('#client_contact_table_body tr').eq(i);
+            showInlineError($dupRow, 'Contact #' + (i + 1) + ' has a duplicate email: ' + eLower + '. Each contact must have a unique email.');
+            $firstInvalid = $firstInvalid || $dupRow;
+            isValid = false;
+            break;
+          }
+          if (eLower) {
+            seenEmailsInStep4[eLower] = true;
+          }
+
           var nameRes = ClientValidationEngine.validateField('cp_name', c.name);
           var emailRes = ClientValidationEngine.validateField('cp_email', c.email);
           var phoneRes = ClientValidationEngine.validateField('cp_number', c.phone);
@@ -9143,43 +9624,28 @@ $('.remove_address').click(function(){
       var $nextArrowSvg = $nextDivider.find('.client-step-arrow-svg');
 
       if (s < activeStep) {
-        $(this).attr('aria-current', 'false');
-        $circle.removeClass('is-active is-upcoming').addClass('is-completed').css({
-          'background': '#10b981',
-          'color': '#ffffff',
-          'border': 'none',
-          'box-shadow': '0 1px 3px rgba(16,185,129,0.25)'
-        }).html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
-        $title.css({ 'color': '#0f172a', 'font-weight': '600' });
+        $(this).removeClass('is-active is-upcoming').addClass('is-completed').attr('aria-current', 'false');
+        $circle.removeClass('is-active is-upcoming').addClass('is-completed').removeAttr('style').html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;"><polyline points="20 6 9 17 4 12"/></svg>');
+        $title.removeAttr('style');
         if ($nextDivider.length) {
-          $nextDivider.css('color', '#10b981');
-          $nextArrowSvg.css('stroke', '#10b981');
+          $nextDivider.removeClass('is-upcoming is-active').addClass('is-completed').removeAttr('style');
+          $nextArrowSvg.removeAttr('style');
         }
       } else if (s === activeStep) {
-        $(this).attr('aria-current', 'step');
-        $circle.removeClass('is-completed is-upcoming').addClass('is-active').css({
-          'background': '#ffd428',
-          'color': '#0f172a',
-          'border': 'none',
-          'box-shadow': 'none'
-        }).text(s);
-        $title.css({ 'color': '#0f172a', 'font-weight': '700' });
+        $(this).removeClass('is-completed is-upcoming').addClass('is-active').attr('aria-current', 'step');
+        $circle.removeClass('is-completed is-upcoming').addClass('is-active').removeAttr('style').text(s);
+        $title.removeAttr('style');
         if ($nextDivider.length) {
-          $nextDivider.css('color', '#d4a017');
-          $nextArrowSvg.css('stroke', '#d4a017');
+          $nextDivider.removeClass('is-completed is-upcoming').addClass('is-active').removeAttr('style');
+          $nextArrowSvg.removeAttr('style');
         }
       } else {
-        $(this).attr('aria-current', 'false');
-        $circle.removeClass('is-completed is-active').addClass('is-upcoming').css({
-          'background': '#ffffff',
-          'color': '#64748b',
-          'border': '1.5px solid #cbd5e1',
-          'box-shadow': 'none'
-        }).text(s);
-        $title.css({ 'color': '#64748b', 'font-weight': '500' });
+        $(this).removeClass('is-completed is-active').addClass('is-upcoming').attr('aria-current', 'false');
+        $circle.removeClass('is-completed is-active').addClass('is-upcoming').removeAttr('style').text(s);
+        $title.removeAttr('style');
         if ($nextDivider.length) {
-          $nextDivider.css('color', '#cbd5e1');
-          $nextArrowSvg.css('stroke', '#cbd5e1');
+          $nextDivider.removeClass('is-completed is-active').addClass('is-upcoming').removeAttr('style');
+          $nextArrowSvg.removeAttr('style');
         }
       }
     });
@@ -9256,9 +9722,133 @@ $('.remove_address').click(function(){
     updateCompletion();
     renderContactTable();
     goToWizardStep(1);
+    @if($page_event == 'ADD')
+    // =========================================================================
+    // GOD-LEVEL FRESH INITIALIZATION & CACHE PURGE ENGINE (Add Client Mode)
+    // Guarantee 100% fresh, blank form across all 6 pages with ZERO lingering cache
+    // =========================================================================
+    purgeAllClientCaches();
+    resetFreshClientForm();
+    @else
     try {
       localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }});
     } catch (e) {}
+    @endif
+
+    function purgeAllClientCaches() {
+      try {
+        // 1. Purge all localStorage entries relating to client onboarding, drafts, and recent items
+        for (var i = localStorage.length - 1; i >= 0; i--) {
+          var k = localStorage.key(i);
+          if (k && (k.indexOf('jero_client_') !== -1 || k.indexOf('client_draft') !== -1 || k.indexOf('recent_industries') !== -1)) {
+            localStorage.removeItem(k);
+          }
+        }
+        // 2. Purge all sessionStorage entries relating to client onboarding and temporary fallbacks
+        for (var j = sessionStorage.length - 1; j >= 0; j--) {
+          var sk = sessionStorage.key(j);
+          if (sk && (sk.indexOf('jero_') !== -1 || sk.indexOf('client_') !== -1 || sk.indexOf('idb_fallback_') !== -1)) {
+            sessionStorage.removeItem(sk);
+          }
+        }
+      } catch (err) {
+        console.warn('[CachePurge] Error clearing browser storage:', err);
+      }
+      // 3. Clear RAM caches
+      window._companyIntelligenceCache = {};
+      window._lastFetchedWebsite = null;
+      window._lastStep3Error = null;
+    }
+
+    function resetFreshClientForm() {
+      // Page 1: Company Profile
+      $('#client_id').val('');
+      $('#website').val('');
+      $('#website_clear_btn').hide();
+      $('#industry').val('');
+      $('#industry_display').val('');
+      $('#custom_industry').val('');
+      $('#company_sizes').val('').trigger('change.select2');
+      $('#company_type').val('').trigger('change.select2');
+      $('#founded').val('').trigger('change');
+      $('#ap_email').val('');
+      $('#career_page_url').val('');
+      $('#tax_id').val('');
+      if (window.JeroFoundedYearEngine && typeof window.JeroFoundedYearEngine.clearYear === 'function') {
+        window.JeroFoundedYearEngine.clearYear();
+      }
+      $('#client_avatar').val('');
+      $('#client_avatar_remove').val('1');
+      $('.client-logo-preview .image-input-wrapper')
+        .css('background-image', 'none')
+        .html('<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;"><i class="la la-building" style="font-size:14px; color:#94a3b8;"></i><span style="font-size:9px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.3px;">Logo</span></div>');
+
+      // Page 2: Description & Services
+      if (typeof window.setClientDescriptionContent === 'function') {
+        window.setClientDescriptionContent('');
+      } else if (window.clientDescQuill) {
+        window.clientDescQuill.root.innerHTML = '';
+      }
+      $('#kt_docs_tinymce_hidden').val('');
+      $('#client_desc_count').text('0');
+      if ($('#client_preview_description').length) {
+        $('#client_preview_description').text('No description provided yet.');
+      }
+      if (window.clientServicesManager) {
+        window.clientServicesManager.selected = [];
+        window.clientServicesManager.renderSelected();
+        window.clientServicesManager.syncHiddenInput();
+      } else {
+        $('#tags').val('');
+      }
+
+      // Page 3: Locations & Address Details
+      $('#city_search_0').val('');
+      $('#kt_tagify_work_location_0').val('');
+      $('#address_0').val('');
+      $('#address_char_count_0').text('0');
+      $('#city_err_0, #address_err_0').hide();
+      $('#city_search_0, #address_0').removeClass('is-invalid');
+      $('#additional_addresses_container').empty();
+      $('#addressId').val('0');
+
+      // Page 4: Client Contacts
+      if (window.clientContactManager) {
+        window.clientContactManager.contacts = [];
+        window.clientContactManager.renderTable();
+        window.clientContactManager.syncHiddenInputs();
+      }
+      $('#contactPersonId').val('0');
+      $('.client-cperson-row').empty();
+
+      // Page 5: Social Links & AI Discovery
+      if (window.clientSocialManager) {
+        window.clientSocialManager.clearAllSocialInputs();
+        window.clientSocialManager.setDiscoveredUrls({});
+        window.clientSocialManager.syncAiButtons();
+      }
+
+      // Page 6: Review Summaries & Stepper Navigation
+      if (typeof populateReviewSummaries === 'function') {
+        try { populateReviewSummaries(); } catch (e) {}
+      }
+      if (typeof updateCompletion === 'function') {
+        try { updateCompletion(); } catch (e) {}
+      }
+      if (typeof goToWizardStep === 'function') {
+        try { goToWizardStep(1); } catch (e) {}
+      }
+    }
+
+    window.purgeAllClientCaches = purgeAllClientCaches;
+    window.resetFreshClientForm = resetFreshClientForm;
+
+    // Handle Back-Forward Cache (bfcache): force fresh reload if navigated back
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted && typeof page_event !== 'undefined' && page_event === 'ADD') {
+        window.location.reload();
+      }
+    });
 
     // Deterministic Step Tracking & Non-locking Debounce Engine
     var currentStepNumber = 1;
@@ -9475,17 +10065,28 @@ $('.remove_address').click(function(){
 
       var currentStep = getCurrentStepNumber();
       if (!validateWizardStep(currentStep)) {
+        if ($firstInvalid && $firstInvalid.length) {
+          $firstInvalid.focus();
+          try {
+            $('html, body').animate({
+              scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+            }, 300);
+          } catch (err) {}
+        }
         if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
           const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
-            timer: 3500,
+            timer: 4500,
             timerProgressBar: true
           });
+          var customMsg = (currentStep === 3 && window._lastStep3Error)
+            ? window._lastStep3Error
+            : 'Please fill in the required fields marked in red.';
           Toast.fire({
             icon: 'warning',
-            title: 'Please fill in the required fields marked in red.'
+            title: customMsg
           });
         }
         return false;
@@ -9580,6 +10181,30 @@ $('.remove_address').click(function(){
       if (targetStep > currentStep) {
         for (var s = currentStep; s < targetStep; s++) {
           if (!validateWizardStep(s)) {
+            if ($firstInvalid && $firstInvalid.length) {
+              $firstInvalid.focus();
+              try {
+                $('html, body').animate({
+                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                }, 300);
+              } catch (err) {}
+            }
+            if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true
+              });
+              var headerMsg = (s === 3 && window._lastStep3Error)
+                ? window._lastStep3Error
+                : 'Please complete the required fields in Step ' + s + ' before continuing.';
+              Toast.fire({
+                icon: 'warning',
+                title: headerMsg
+              });
+            }
             return false;
           }
         }
@@ -9997,7 +10622,7 @@ $('.remove_address').click(function(){
       $('#client_avatar_remove').val('1');
       $('.client-logo-preview .image-input-wrapper')
         .css('background-image', 'none')
-        .html('<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;"><i class="la la-building" style="font-size:24px; color:#94a3b8;"></i><span style="font-size:9px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.3px;">Logo</span></div>');
+        .html('<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:#94a3b8; gap:3px;"><i class="la la-building" style="font-size:14px; color:#94a3b8;"></i><span style="font-size:9px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.3px;">Logo</span></div>');
       $(this).hide();
       if (typeof updateCompletion === 'function') updateCompletion();
     });

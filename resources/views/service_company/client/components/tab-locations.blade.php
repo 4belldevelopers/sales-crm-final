@@ -6,7 +6,7 @@
     $additional_addresses = [];
     $addressId = 0;
 
-    if (isset($client_location_arr) && is_iterable($client_location_arr)) {
+    if (($page_event ?? '') !== 'ADD' && isset($client_location_arr) && is_iterable($client_location_arr)) {
         foreach ($client_location_arr as $idx => $clVal) {
             $cName = $clVal->city ?? '';
             $sName = '';
@@ -79,7 +79,7 @@
               </svg>
             </div>
             <div>
-              <h3 class="client-section-heading mb-0" style="font-size:14.5px; font-weight:700; color:#101828;">Primary Location</h3>
+              <h3 class="client-section-heading mb-0" style="font-size:14px; font-weight:700; color:#101828;">Primary Location</h3>
               <p class="client-section-copy mb-0" style="font-size:11px; color:#64748b;">Company headquarters or main office location.</p>
             </div>
           </div>
@@ -154,7 +154,7 @@
               </svg>
             </div>
             <div>
-              <h3 class="client-section-heading mb-0" style="font-size:14.5px; font-weight:700; color:#101828;">Additional Locations (Optional)</h3>
+              <h3 class="client-section-heading mb-0" style="font-size:14px; font-weight:700; color:#101828;">Additional Locations (Optional)</h3>
               <p class="client-section-copy mb-0" style="font-size:11px; color:#64748b;">Add branch offices, development centres or other locations.</p>
             </div>
           </div>
@@ -162,6 +162,16 @@
 
         <!-- Card Body -->
         <div class="card-body" style="padding:14px 18px !important;">
+          <!-- Informational Notice regarding Additional Locations -->
+          <div class="client-addr-additional-info mb-3" style="background:#fefce8; border:1px solid #fef08a; border-radius:8px; padding:9px 13px; display:flex; align-items:center; gap:8px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span style="font-size:11.5px; color:#854d0e; font-weight:500; line-height:1.4;">Additional locations are optional. If added, both <strong>City / Location</strong> and <strong>Full Address</strong> are required before moving to the next step (or click <strong>Remove</strong> if not needed).</span>
+          </div>
+
           <!-- Dynamic Branches List (Cards inserted above CTA) -->
           <div class="client-additional-list" id="additional_addresses_container">
             @if (!empty($additional_addresses))

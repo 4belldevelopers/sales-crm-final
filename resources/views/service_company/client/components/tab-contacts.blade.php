@@ -7,14 +7,26 @@
             : []);
 
     $initialContacts = [];
-    if (!empty($contactsList) && count($contactsList) > 0) {
+    $seenInitialEmails = [];
+    if (($page_event ?? '') !== 'ADD' && !empty($contactsList) && count($contactsList) > 0) {
         foreach ($contactsList as $idx => $cc) {
             $name = is_object($cc) ? ($cc->contact_person_name ?? '') : ($cc['contact_person_name'] ?? '');
             $email = is_object($cc) ? ($cc->contact_person_email ?? '') : ($cc['contact_person_email'] ?? '');
             $phone = is_object($cc) ? ($cc->contact_person_number ?? '') : ($cc['contact_person_number'] ?? '');
             $calling = is_object($cc) ? ($cc->calling_code ?? '+91') : ($cc['calling_code'] ?? '+91');
             $desig = is_object($cc) ? ($cc->contact_person_designation ?? '') : ($cc['contact_person_designation'] ?? '');
-            if (trim($name) === '' && trim($email) === '') continue;
+            
+            $cleanEmail = strtolower(trim($email));
+            if (trim($name) === '' && $cleanEmail === '') continue;
+            
+            // Prevent duplicate emails from initial dataset
+            if ($cleanEmail !== '' && isset($seenInitialEmails[$cleanEmail])) {
+                continue;
+            }
+            if ($cleanEmail !== '') {
+                $seenInitialEmails[$cleanEmail] = true;
+            }
+
             $initialContacts[] = [
                 'name' => trim($name),
                 'email' => trim($email),
@@ -46,11 +58,11 @@
               </svg>
             </div>
             <div>
-              <h3 style="font-size:15px; font-weight:700; color:#101828; margin:0 0 2px 0;">Client Contacts</h3>
-              <p style="font-size:12px; color:#64748b; margin:0;">Add key stakeholders and recruitment team contacts you work with at this client organization.</p>
+              <h3 style="font-size:14px; font-weight:700; color:#101828; margin:0 0 2px 0;">Client Contacts</h3>
+              <p style="font-size:11.5px; color:#64748b; margin:0;">Add key stakeholders and recruitment team contacts you work with at this client organization.</p>
             </div>
           </div>
-          <button type="button" class="btn client-add-contact-btn" id="client_open_contact_drawer" onclick="window.clientContactManager ? window.clientContactManager.openAddDrawer() : (window.openContactDrawer ? window.openContactDrawer(null) : false);" style="background:#f59e0b !important; border:none !important; color:#ffffff !important; font-weight:700 !important; font-size:13px !important; padding:9px 20px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(245,158,11,0.25) !important; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+          <button type="button" class="btn client-add-contact-btn" id="client_open_contact_drawer" onclick="window.clientContactManager ? window.clientContactManager.openAddDrawer() : (window.openContactDrawer ? window.openContactDrawer(null) : false);" style="background:#f59e0b !important; border:none !important; color:#ffffff !important; font-weight:700 !important; font-size:12.5px !important; padding:9px 20px !important; border-radius:8px !important; box-shadow:0 1px 3px rgba(245,158,11,0.25) !important; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
@@ -63,17 +75,17 @@
 
         <!-- Contacts Table -->
         <div class="card-body p-0">
-          <div class="table-responsive client-contact-table-wrap" style="width:100%;">
-            <table class="table align-middle mb-0" id="client_contact_table" style="width:100%; border-collapse:collapse;">
+          <div class="table-responsive client-contact-table-wrap" style="width:100%; overflow-x:auto;">
+            <table class="table align-middle mb-0" id="client_contact_table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
               <thead>
                 <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
-                  <th style="padding:12px 20px; width:22%;">CONTACT</th>
-                  <th style="padding:12px 16px; width:20%;">DESIGNATION</th>
+                  <th style="padding:12px 20px; width:20%;">CONTACT</th>
+                  <th style="padding:12px 16px; width:18%;">DESIGNATION</th>
                   <th style="padding:12px 16px; width:22%;">EMAIL</th>
                   <th style="padding:12px 16px; width:16%;">PHONE NUMBER</th>
                   <th style="padding:12px 14px; width:10%;">ROLE</th>
-                  <th style="padding:12px 14px; width:10%;">PRIMARY</th>
-                  <th style="padding:12px 20px; width:10%; text-align:right;">ACTIONS</th>
+                  <th style="padding:12px 14px; width:8%; text-align:center;">PRIMARY</th>
+                  <th style="padding:12px 20px; width:6%; text-align:right;">ACTIONS</th>
                 </tr>
               </thead>
               <tbody id="client_contact_table_body">
@@ -88,9 +100,9 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                       </svg>
                     </div>
-                    <h5 style="font-size:14.5px; font-weight:700; color:#1e293b; margin-bottom:6px;">No client contacts added yet</h5>
-                    <p style="font-size:12.5px; color:#64748b; margin-bottom:18px; max-width:440px; margin-left:auto; margin-right:auto;">Add key stakeholders and recruitment team contacts you work with at this client organization.</p>
-                    <button type="button" class="btn btn-warning" onclick="window.clientContactManager ? window.clientContactManager.openAddDrawer() : (window.openContactDrawer ? window.openContactDrawer(null) : false);" style="background:#f59e0b; border:none; color:#ffffff; font-weight:700; font-size:12.5px; padding:9px 22px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(245,158,11,0.25);">
+                    <h5 style="font-size:13.5px; font-weight:700; color:#1e293b; margin-bottom:6px;">No client contacts added yet</h5>
+                    <p style="font-size:11.5px; color:#64748b; margin-bottom:18px; max-width:440px; margin-left:auto; margin-right:auto;">Add key stakeholders and recruitment team contacts you work with at this client organization.</p>
+                    <button type="button" class="btn btn-warning" onclick="window.clientContactManager ? window.clientContactManager.openAddDrawer() : (window.openContactDrawer ? window.openContactDrawer(null) : false);" style="background:#f59e0b; border:none; color:#ffffff; font-weight:700; font-size:12px; padding:9px 22px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(245,158,11,0.25);">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                       <span>Add First Contact</span>
                     </button>
@@ -103,7 +115,7 @@
 
         <!-- Bottom informational banner -->
         <div class="p-4" style="background:#ffffff; border-top:1px solid #f1f5f9;">
-          <div class="client-contacts-info-banner" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:10px; color:#1e40af; font-size:12.5px;">
+          <div class="client-contacts-info-banner" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:10px; color:#1e40af; font-size:12px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -134,8 +146,8 @@
   <!-- Header -->
   <div class="client-drawer-head">
     <div class="client-drawer-head-info">
-      <h4 id="client_contact_drawer_title" style="font-size:16px; font-weight:700; color:#101828; margin:0 0 2px 0;">Add Contact Person</h4>
-      <p class="client-drawer-head-subtitle" id="client_contact_drawer_subtitle" style="font-size:12px; color:#64748b; margin:0;">Add key contacts for recruitment operations with this client.</p>
+      <h4 id="client_contact_drawer_title" style="font-size:14px; font-weight:700; color:#101828; margin:0 0 2px 0;">Add Contact Person</h4>
+      <p class="client-drawer-head-subtitle" id="client_contact_drawer_subtitle" style="font-size:11.5px; color:#64748b; margin:0;">Add key contacts for recruitment operations with this client.</p>
     </div>
     <button type="button" class="client-drawer-close-btn" id="client_close_contact_drawer" onclick="window.closeContactDrawer ? window.closeContactDrawer() : false;" title="Close" aria-label="Close drawer">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -190,11 +202,28 @@
       <div class="cdf-error" id="cdf_err_phone">Please enter a valid phone number.</div>
     </div>
 
-    <!-- Primary Contact Checkbox -->
-    <div class="form-check form-check-custom form-check-solid mb-2">
-      <input class="form-check-input" type="checkbox" id="client_drawer_is_primary" value="1">
-      <label class="form-check-label" for="client_drawer_is_primary" style="font-size:12.5px; font-weight:600; color:#1e293b; cursor:pointer;">
-        Set as Primary Contact for this client
+    <!-- Primary Contact Selection Card (Enterprise Styled & 100% Visible) -->
+    <div class="client-primary-contact-card" id="client_drawer_primary_box">
+      <label class="client-primary-card-label" for="client_drawer_is_primary">
+        <div class="client-primary-card-left">
+          <div class="client-primary-star-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="client-primary-card-texts">
+            <span class="client-primary-card-title">Set as Primary Contact for this client</span>
+            <span class="client-primary-card-subtitle">Primary contact receives official notifications and candidate submissions</span>
+          </div>
+        </div>
+        <div class="client-primary-checkbox-wrapper">
+          <input type="checkbox" id="client_drawer_is_primary" name="client_drawer_is_primary" value="1" class="client-primary-native-checkbox">
+          <span class="client-primary-custom-box">
+            <svg class="client-primary-check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+        </div>
       </label>
     </div>
   </div>
@@ -220,16 +249,18 @@
   .client-contact-layout {
     display: block !important;
     width: 100% !important;
-    max-width: 1320px !important;
-    margin: 0 auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
   }
 
   .client-contact-main-card {
     width: 100% !important;
+    max-width: 100% !important;
   }
 
   .client-contact-table-wrap {
-    max-height: 480px;
+    width: 100% !important;
+    max-height: 520px;
     overflow-y: auto;
     overflow-x: auto;
   }
