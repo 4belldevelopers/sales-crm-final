@@ -124,7 +124,6 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('clients_custom_ajax/custom_client_data', [ServiceCompanyClientController::class, 'custom_client_data_ajax'])->name('clients.custom_client_data_ajax');
                 Route::get('clients/client_request_data', [ServiceCompanyClientController::class, 'client_request_data'])->name('clients.client_request_data');
                 Route::match(['GET', 'POST'], 'clients/request_update', [ServiceCompanyClientController::class, 'request_update'])->name('clients.request_update');
-                Route::get('clients/company-intelligence', [ServiceCompanyClientController::class, 'companyIntelligence'])->name('clients.companyIntelligence');
                 Route::resource('clients', ServiceCompanyClientController::class);
                 Route::get('clients/viewmore/{id?}', [ServiceCompanyClientController::class, 'viewMore'])->name('clients.viewmore');
                 Route::get('clients/dviewmore/{id?}', [ServiceCompanyClientController::class, 'dviewMore'])->name('clients.dviewmore');

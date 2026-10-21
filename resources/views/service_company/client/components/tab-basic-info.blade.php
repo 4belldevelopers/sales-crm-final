@@ -7,9 +7,11 @@
 <?php
   $selectedIndName = '';
   if (!empty($industry) && !empty($department)) {
-      foreach ($department as $val) {
-          if ($val->ind_id == $industry) {
-              $selectedIndName = ucwords($val->ind_name);
+      foreach ($department as $k => $val) {
+          $currId = is_object($val) ? ($val->ind_id ?? $k) : (is_array($val) ? ($val['ind_id'] ?? $k) : $k);
+          $currName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+          if ($currId == $industry && !empty($currName)) {
+              $selectedIndName = ucwords($currName);
               break;
           }
       }
@@ -138,7 +140,13 @@
               <option value="">Select industry</option>
               @if(!empty($department))
                 @foreach($department as $key => $val)
-                  <option value="{{ $val->ind_id }}" {{ $val->ind_id == $industry ? 'selected="selected"' : '' }}>{{ ucwords($val->ind_name) }}</option>
+                  @php
+                    $optId = is_object($val) ? ($val->ind_id ?? $key) : (is_array($val) ? ($val['ind_id'] ?? $key) : $key);
+                    $optName = is_object($val) ? ($val->ind_name ?? $val->name ?? '') : (is_array($val) ? ($val['ind_name'] ?? $val['name'] ?? '') : $val);
+                  @endphp
+                  @if(!empty($optId) && !empty($optName))
+                    <option value="{{ $optId }}" {{ $optId == $industry ? 'selected="selected"' : '' }}>{{ ucwords($optName) }}</option>
+                  @endif
                 @endforeach
               @endif
               @if(!empty($custom_industry) && $industry == 0)

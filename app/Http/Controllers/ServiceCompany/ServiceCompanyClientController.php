@@ -2591,6 +2591,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
             'industry' => $request->industry,
+            'custom_industry' => trim($request->custom_industry ?? ''),
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -2713,6 +2714,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'youtube_url' => $request->youtube_url ?? null,
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
         ]);
         $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
@@ -2765,12 +2767,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $existingLocMap[$loc->city_id.'_'.trim($loc->address)] = $loc;
         }
 
-        $addressId = (int) (@$request->addressId ?? 0);
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
         $locationsToUpdate = [];
         $locationsToInsert = [];
         $addIdGet = [];
 
-        for ($i = 0; $i <= $addressId; $i++) {
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = @$request->address[$i];
             $postcode = '0';
             $work_city = @$request->kt_tagify_work_location[$i];
@@ -2888,6 +2891,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
         }
+
+        if (! empty($contactsToInsert) || ! empty($contactsToUpdate)) {
+            $primaryContact = ! empty($contactsToInsert) ? reset($contactsToInsert) : reset($contactsToUpdate);
+            $client->contact_person_name = substr($primaryContact['contact_person_name'] ?? $client->contact_person_name, 0, 55);
+            $client->email = substr($primaryContact['contact_person_email'] ?? $client->email, 0, 55);
+            $client->contact_number = substr($primaryContact['contact_person_number'] ?? $client->contact_number, 0, 55);
+        } else {
+            $client->contact_person_name = $client->contact_person_name ?? '';
+            $client->email = $client->email ?? '';
+            $client->contact_number = $client->contact_number ?? '';
+        }
+        $client->commission = $client->commission ?? '0';
+        $client->payout = $client->payout ?? '0';
 
         try {
             DB::beginTransaction();
@@ -3191,7 +3207,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (empty(trim($request->name ?? ''))) {
             return Reply::error('Client Name is required.');
         }
-        if (empty($request->industry)) {
+        $hasIndustry = (! empty($request->industry) && (string) $request->industry !== '0') || ! empty(trim($request->custom_industry ?? ''));
+        if (! $hasIndustry) {
             return Reply::error('Industry is required.');
         }
         if (empty($request->company_sizes)) {
@@ -3226,8 +3243,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         // 3. Address Details (Minimum 1 location with City & Full Address)
         $hasValidAddress = false;
-        $addressId = (int) (@$request->addressId ?? 0);
-        for ($i = 0; $i <= $addressId; $i++) {
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = trim(@$request->address[$i] ?? '');
             $work_city = @$request->kt_tagify_work_location[$i];
             if (! empty($address) && ! empty($work_city)) {
@@ -3241,7 +3259,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         // 4. Contact Person (Minimum 1 Contact Person added)
         $hasValidContact = false;
-        $contactPersonId = (int) (@$request->contactPersonId ?? 0);
+        $totalCpNames = is_array($request->cp_name) ? count($request->cp_name) : 0;
+        $contactPersonId = max($totalCpNames - 1, (int) (@$request->contactPersonId ?? 0));
         for ($j = 0; $j <= $contactPersonId; $j++) {
             $cp_name = trim(@$request->cp_name[$j] ?? '');
             $cp_email = trim(@$request->cp_email[$j] ?? '');
@@ -3274,6 +3293,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
             'industry' => $request->industry,
+            'custom_industry' => trim($request->custom_industry ?? ''),
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -3383,6 +3403,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'youtube_url' => $request->youtube_url ?? null,
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
         ];
         $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
@@ -3423,9 +3444,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         // Prepare locations outside database transaction
         $Location = [];
         $locationsToInsert = [];
-        $addressId = (int) (@$request->addressId ?? 0);
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
 
-        for ($i = 0; $i <= $addressId; $i++) {
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = @$request->address[$i];
             $postcode = '0';
             $work_city = @$request->kt_tagify_work_location[$i];
@@ -3520,6 +3542,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $contacDetails[] = (object) $values;
             }
         }
+
+        if (! empty($contactsToInsert)) {
+            $primaryContact = $contactsToInsert[0];
+            $client->contact_person_name = substr($primaryContact['contact_person_name'] ?? '', 0, 55);
+            $client->email = substr($primaryContact['contact_person_email'] ?? '', 0, 55);
+            $client->contact_number = substr($primaryContact['contact_person_number'] ?? '', 0, 55);
+        } else {
+            $client->contact_person_name = $client->contact_person_name ?? '';
+            $client->email = $client->email ?? '';
+            $client->contact_number = $client->contact_number ?? '';
+        }
+        $client->commission = $client->commission ?? '0';
+        $client->payout = $client->payout ?? '0';
 
         DB::beginTransaction();
         try {
@@ -4205,102 +4240,5 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'last_error' => substr($error, 0, 1000),
                 'updated_at' => now(),
             ]);
-    }
-
-    /**
-     * God-Level Company Intelligence Proxy & Local Fallback
-     * Intent: Provide same-origin proxy to Cloudflare Worker to guarantee 100% CORS-proof delivery.
-     * Tenancy Note: Zero database writes; strictly read-only enrichment.
-     */
-    public function companyIntelligence(Request $request)
-    {
-        $domain = trim((string) $request->input('domain', ''));
-        if (empty($domain)) {
-            return response()->json(['error' => 'Domain parameter is required'], 400);
-        }
-
-        $cleanDomain = preg_replace('/^https?:\/\//i', '', $domain);
-        $cleanDomain = preg_replace('/^www\./i', '', $cleanDomain);
-        $cleanDomain = explode('/', $cleanDomain)[0];
-
-        $workerUrl = config('services.company_intelligence.url', 'https://jero-company-intelligence.vibhu21m.workers.dev');
-        $targetUrl = rtrim($workerUrl, '/').'/?domain='.urlencode($cleanDomain);
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::timeout(10)->get($targetUrl);
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-        } catch (\Exception $e) {
-            \Log::warning('[CompanyIntelligence] Worker proxy exception: '.$e->getMessage());
-        }
-
-        // Graceful Local Fallback: Basic metadata extraction with real HTML meta inspection
-        $rawName = ucwords(str_replace(['-', '_'], ' ', explode('.', $cleanDomain)[0]));
-        $description = $rawName.' is an innovative technology organization delivering premier solutions and services across global markets.';
-        $logoUrl = 'https://www.google.com/s2/favicons?domain='.$cleanDomain.'&sz=256';
-
-        try {
-            $siteRes = \Illuminate\Support\Facades\Http::timeout(3)->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            ])->get('https://'.$cleanDomain);
-            if ($siteRes->successful()) {
-                $html = $siteRes->body();
-                if (preg_match('/<meta[^>]+(?:name|property)=["\'](?:description|og:description)["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
-                    $description = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                }
-                if (preg_match('/<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
-                    $rawName = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                } elseif (preg_match('/<title[^>]*>([^<]+)<\/title>/i', $html, $m)) {
-                    $tParts = preg_split('/[|\-–—:]/', $m[1]);
-                    if (! empty($tParts[0])) {
-                        $candName = trim($tParts[0]);
-                        if (strlen($candName) >= 2 && strlen($candName) <= 40) {
-                            $rawName = html_entity_decode($candName, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                        }
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-        }
-
-        try {
-            $iconRes = \Illuminate\Support\Facades\Http::timeout(3)->get('https://www.google.com/s2/favicons?domain='.$cleanDomain.'&sz=256');
-            if ($iconRes->successful() && strlen($iconRes->body()) > 100) {
-                $logoUrl = 'data:'.($iconRes->header('Content-Type') ?: 'image/png').';base64,'.base64_encode($iconRes->body());
-            }
-        } catch (\Exception $e) {
-        }
-
-        return response()->json([
-            'domain' => $cleanDomain,
-            'website' => 'https://'.$cleanDomain,
-            'name' => $rawName,
-            'logo' => $logoUrl,
-            'industry' => 'Information Technology',
-            'company_sizes' => '51-200',
-            'company_type' => 'Corporation',
-            'founded' => null,
-            'career_page_url' => 'https://'.$cleanDomain.'/careers',
-            'description' => $description,
-            'tags' => ['Technology Services', 'Software Development'],
-            'city' => null,
-            'address' => null,
-            'cp_name' => 'Talent Acquisition Team',
-            'cp_email' => 'careers@'.$cleanDomain,
-            'calling_code' => '+91',
-            'cp_number' => null,
-            'cp_desigination' => 'Head of Talent Acquisition',
-            'linkedin_url' => 'https://www.linkedin.com/company/'.explode('.', $cleanDomain)[0],
-            'twitter_url' => 'https://x.com/'.explode('.', $cleanDomain)[0],
-            'github_url' => 'https://github.com/'.explode('.', $cleanDomain)[0],
-            'youtube_url' => null,
-            'facebook_url' => null,
-            'instagram_url' => null,
-            'ap_email' => null,
-            'tax_id' => null,
-            'country_code' => null,
-            'country_name' => null,
-        ]);
     }
 }

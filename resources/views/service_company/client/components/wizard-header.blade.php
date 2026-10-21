@@ -1,6 +1,6 @@
 {{-- 
-  Unified Header & 5-Step Stepper Navigation for Add / Edit Client Workflow
-  Pixel-matched to user specification (Reference: media_1792403786709_d614e0b3.png)
+  Unified Header & 6-Step Stepper Navigation for Add / Edit Client Workflow
+  Pixel-matched to user specification (Reference: media_1792566743106_f52e3a53.png)
   Strictly isolated to Client Wizard (Service Company & Admin)
   Optimized for 15.6" Laptops (1366x768 & 1920x1080) and Smaller Screens
 --}}
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <!-- CENTER: Stepper (1 Company → 2 Description → 3 Address → 4 Contacts → 5 Review) -->
+    <!-- CENTER: Stepper (1 Company → 2 Description → 3 Address → 4 Contacts → 5 Social Links → 6 Review) -->
     <div class="client-header-stepper-col">
       <div class="client-stepper-wrap" id="client_wizard_stepper" role="tablist">
         
@@ -71,9 +71,22 @@
           </svg>
         </div>
 
-        <!-- Step 5: Review -->
-        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Review">
+        <!-- Step 5: Social Links -->
+        <div class="client-step-item" data-step="5" role="tab" aria-label="Step 5: Social Links">
           <div class="client-step-circle client-step-circle-5 is-upcoming">5</div>
+          <span class="client-step-name">Social Links</span>
+        </div>
+
+        <div class="client-step-arrow" data-arrow-after="5" aria-hidden="true">
+          <svg class="client-step-arrow-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </div>
+
+        <!-- Step 6: Review -->
+        <div class="client-step-item" data-step="6" role="tab" aria-label="Step 6: Review">
+          <div class="client-step-circle client-step-circle-6 is-upcoming">6</div>
           <span class="client-step-name">Review</span>
         </div>
 
@@ -91,7 +104,7 @@
         <span>Close</span>
       </button>
 
-      <!-- Steps 2-5: Back Button (Returns to previous step) -->
+      <!-- Steps 2-6: Back Button (Returns to previous step) -->
       <button type="button" class="btn client-top-back-btn client-nav-back" id="client_top_back_btn" title="Back to previous step" style="display:none !important;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"/>
@@ -100,7 +113,7 @@
         <span>Back</span>
       </button>
 
-      <!-- Steps 1-4: Next Page Button -->
+      <!-- Steps 1-5: Next Page Button -->
       <button type="button" class="btn client-top-next-btn client-nav-next" id="client_top_next_btn">
         <span>Next Page</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -109,7 +122,7 @@
         </svg>
       </button>
 
-      <!-- Step 5: Final Submit / Update Button -->
+      <!-- Step 6: Final Submit / Update Button -->
       @if ($page_event == 'EDIT')
         <button type="button" class="btn client-top-submit-btn updatefrm" id="submitBtn" style="display:none !important;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
