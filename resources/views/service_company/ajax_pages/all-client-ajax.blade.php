@@ -127,10 +127,9 @@
                 }
             }
         } else {
+            // Internal client: strictly own uploaded logo or website favicon (never parent agency logo)
             if (!empty(@$row->logo_logical_path) && strlen(@$row->logo_logical_path) > 10) {
                 $background_image = @$row->logo_logical_path;
-            } elseif (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                $background_image = @$row->logo;
             } elseif (!empty(@$row->website)) {
                 $domainGet = GeneralMethod::getDomain($row->website);
                 if ($domainGet) {
