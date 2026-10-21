@@ -10038,6 +10038,28 @@ END:VCALENDAR";
 
             $candidate_relation = [];
 
+            $clientLogo = null;
+            $clientCompanyName = strtolower($row->company_name);
+            if ((int) ($row->self_company ?? 0) === 0) {
+                // Internal client: resolve own company name and logo (never parent agency company name or logo)
+                if (! empty($row->name)) {
+                    $clientCompanyName = strtolower($row->name);
+                }
+                if (! empty($row->logo_logical_path) && strlen($row->logo_logical_path) > 10) {
+                    $clientLogo = $row->logo_logical_path;
+                } elseif (! empty($row->website)) {
+                    $domainGet = self::getDomain($row->website);
+                    if ($domainGet) {
+                        $clientLogo = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
+                        $row->logo_logical_path = $clientLogo;
+                        DB::table('clients')->where('id', $row->client_id)->update(['logo_logical_path' => $clientLogo]);
+                    }
+                }
+            } else {
+                // Direct Company / Agency self record
+                $clientLogo = $row->logo;
+            }
+
             $response = $elasticService->getClient()->update([
                 'index' => ELASTIC_CLIENT_LIST,
                 'id' => $row->client_id,
@@ -10046,10 +10068,10 @@ END:VCALENDAR";
                     'doc' => [
                         'id' => $row->client_id,
                         'company_id' => $row->id,
-                        'company_name' => strtolower($row->company_name),
+                        'company_name' => $clientCompanyName,
                         'industries' => $row->industries,
                         'website' => $row->website,
-                        'logo' => $row->logo,
+                        'logo' => $clientLogo,
                         'company_type' => $row->company_type,
                         'industries_type' => $row->industries_type,
                         'client_id' => $row->client_id,

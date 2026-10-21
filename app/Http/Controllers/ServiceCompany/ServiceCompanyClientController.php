@@ -21,6 +21,8 @@ use App\Models\JobCategory;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\IndustryTaxonomyService;
+use App\Services\InternalClientDuplicateService;
+use App\Services\InternalClientReadinessService;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
@@ -648,10 +650,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         }
                     }
                 } else {
+                    // Internal client: strictly own uploaded logo or website favicon (never parent agency logo)
                     if (! empty($rowObj->logo_logical_path) && strlen($rowObj->logo_logical_path) > 10) {
                         $background_image = $rowObj->logo_logical_path;
-                    } elseif (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
-                        $background_image = $rowObj->logo;
                     } elseif (! empty($rowObj->website)) {
                         $domainGet = GeneralMethod::getDomain($rowObj->website);
                         if ($domainGet) {
@@ -2729,6 +2730,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $client->logo_physical_path = $target_file;
                 $client->logo_logical_path = $fileUrl;
             }
+        } elseif (! empty($client->website) && (empty($client->logo_logical_path) || str_contains($client->logo_logical_path, 'google.com/s2/favicons'))) {
+            $domainGet = GeneralMethod::getDomain($client->website);
+            if ($domainGet) {
+                $client->logo_logical_path = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
+            }
         }
 
         $lock = Cache::lock('client:update:'.$id, 10);
@@ -3238,6 +3244,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return Reply::error('At least 1 Contact Person with Name, Designation, and Email is required.');
         }
 
+        // 5. Authoritative Internal Client Duplicate Validation (Absolute Domain Isolation)
+        // Direct Client records (self_company = 1) must NEVER block an Internal Client.
+        $companyId = (int) ($request->user()?->company_id ?? auth()->user()->company_id);
+        $duplicateService = app(InternalClientDuplicateService::class);
+        $dup = $duplicateService->validateSubmissionDuplicates($companyId, $request->all(), ! empty($request->id) ? (int) $request->id : null);
+        if ($dup !== null) {
+            return Reply::error($dup['message'], $dup['field'] ?? 'duplicate', $dup);
+        }
+
         return null;
     }
 
@@ -3246,6 +3261,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         abort_if(Gate::denies('add_clients'), 403);
 
         if ($validationError = $this->validateClientSubmission($request)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validationError['message'] ?? 'Validation failed',
+                    'error_name' => $validationError['error_name'] ?? 'validation',
+                    'data' => $validationError['data'] ?? [],
+                ], 422);
+            }
             return $validationError;
         }
 
@@ -3319,13 +3342,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $timeStamp = time();
         $client = new Client;
         $client->company_id = $company_id;
+        $client->self_company = 0; // Strictly ensure self_company is 0 for Internal Client!
 
         // FIRST TAB-1
         if (! empty($request->name)) {
-            $client->name = $request->name;
+            $client->name = trim(preg_replace('/\s+/', ' ', $request->name));
         }
         if (! empty($request->website)) {
-            $client->website = $request->website;
+            $canonicalWebsite = InternalClientDuplicateService::canonicalizeDomain($request->website);
+            $client->website = $canonicalWebsite ?: trim($request->website);
         }
         $customIndustry = null;
         if (! empty($request->industry)) {
@@ -3410,6 +3435,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $client->logo = $altfilename;
                 $client->logo_physical_path = $target_file;
                 $client->logo_logical_path = $fileUrl;
+            }
+        } elseif (! empty($client->website) && (empty($client->logo_logical_path) || str_contains($client->logo_logical_path, 'google.com/s2/favicons'))) {
+            $domainGet = GeneralMethod::getDomain($client->website);
+            if ($domainGet) {
+                $client->logo_logical_path = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
             }
         }
 
@@ -3528,10 +3558,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $client->commission = $client->commission ?? '0';
         $client->payout = $client->payout ?? '0';
 
+        $readinessService = app(InternalClientReadinessService::class);
+
         DB::beginTransaction();
         try {
             $client->save();
             $client_id = $client->id;
+
+            // Mark readiness lifecycle: PROCESSING
+            $readinessService->markProcessing($company_id, $client_id);
 
             if (! empty($locationsToInsert)) {
                 foreach ($locationsToInsert as &$loc) {
@@ -3571,6 +3606,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'created_at' => now(),
             ]);
 
+            $checkReadyUrl = route('service_company.clients.checkReady', ['id' => $client_id]);
+            $redirectUrl = route('service_company.clients.custom_client').'/0';
+
+            $responsePayload = [
+                'status' => 'success',
+                'client_id' => $client_id,
+                'check_ready_url' => $checkReadyUrl,
+                'redirect_url' => $redirectUrl,
+                'url' => $redirectUrl,
+                'message' => __('menu.clients').' '.__('messages.createdSuccessfully'),
+            ];
+
             // Update idempotency key to COMPLETED
             if (! empty($idempotencyKey)) {
                 DB::table('sys_idempotency_keys')
@@ -3579,11 +3626,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->update([
                         'status' => 'COMPLETED',
                         'response_status' => 200,
-                        'response_body' => json_encode([
-                            'status' => 'success',
-                            'url' => route('service_company.clients.custom_client').'/0',
-                            'message' => __('menu.clients').' '.__('messages.createdSuccessfully'),
-                        ]),
+                        'response_body' => json_encode($responsePayload),
                         'completed_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -3596,11 +3639,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'operation' => 'create',
             ]);
 
+            // Mark readiness lifecycle: SYNCHRONIZING
+            $readinessService->markSynchronizing($company_id, $client_id);
+
             // Synchronous Elasticsearch Indexing post-commit for authoritative real-time consistency
             $esSyncSuccess = false;
             try {
                 $esResult = GeneralMethod::clientStaffingPartner($client_id);
                 $esSyncSuccess = true;
+                $readinessService->markReady($company_id, $client_id);
                 \Log::info("Client ES sync success for client {$client_id}", [
                     'client_id' => $client_id,
                     'index' => ELASTIC_CLIENT_LIST,
@@ -3693,10 +3740,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ? (__('menu.clients').' '.__('messages.createdSuccessfully'))
                 : (__('menu.clients').' '.__('messages.createdSuccessfully').' (Search index is syncing in background.)');
 
-            return Reply::redirect(route('service_company.clients.custom_client').'/0', $redirectMessage);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json($responsePayload);
+            }
+
+            return Reply::redirect($redirectUrl, $redirectMessage);
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            if (isset($client_id)) {
+                $readinessService->markFailed($company_id, $client_id, $e->getMessage());
+            }
             \Log::error('clients store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             if (! empty($idempotencyKey)) {
@@ -3710,8 +3764,100 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ]);
             }
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'We couldn\'t complete the Internal Client registration. Please review the details and try again.',
+                    'error' => $e->getMessage(),
+                ], 500);
+            }
+
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         }
+    }
+
+    /**
+     * Authoritative Real-Time Duplicate Validation for Internal Client Fields.
+     *
+     * Absolute Domain Isolation Rule:
+     * Evaluates duplicates exclusively within the Internal Client domain (self_company = 0, company_id = tenant).
+     * Direct Client records (self_company = 1) NEVER trigger duplicates or block Internal Client creation.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function validateInternalClientField(Request $request)
+    {
+        abort_if(Gate::denies('add_clients') && Gate::denies('edit_clients'), 403);
+
+        $tenantId = (int) auth()->user()->company_id;
+        $field = $request->input('field');
+        $clientId = $request->filled('client_id') ? (int) $request->input('client_id') : null;
+        $duplicateService = app(InternalClientDuplicateService::class);
+
+        if ($field === 'name') {
+            $name = (string) $request->input('name', '');
+            $dup = $duplicateService->checkCompanyNameDuplicate($tenantId, $name, $clientId);
+            if ($dup) {
+                return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
+            }
+            return response()->json(['status' => 'success', 'valid' => true, 'field' => 'name']);
+        }
+
+        if ($field === 'website') {
+            $website = (string) $request->input('website', '');
+            $dup = $duplicateService->checkDomainDuplicate($tenantId, $website, $clientId);
+            if ($dup) {
+                return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
+            }
+            return response()->json(['status' => 'success', 'valid' => true, 'field' => 'website']);
+        }
+
+        if ($field === 'contact') {
+            $email = (string) $request->input('email', '');
+            $phone = (string) $request->input('phone', '');
+            $callingCode = (string) $request->input('calling_code', '+91');
+            $draftContacts = (array) $request->input('draft_contacts', []);
+
+            $dup = $duplicateService->checkContactDuplicate($tenantId, $email, $phone, $callingCode, $clientId, $draftContacts);
+            if ($dup) {
+                return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
+            }
+            return response()->json(['status' => 'success', 'valid' => true, 'field' => 'contact']);
+        }
+
+        if ($field === 'all') {
+            $dup = $duplicateService->validateSubmissionDuplicates($tenantId, $request->all(), $clientId);
+            if ($dup) {
+                return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
+            }
+            return response()->json(['status' => 'success', 'valid' => true]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Invalid validation field requested'], 400);
+    }
+
+    /**
+     * Authoritative Readiness Verification Probe for Internal Clients.
+     *
+     * Reuses the Add-Job Verification Gate pattern.
+     * Checks Redis fast path first, then Elasticsearch read projection,
+     * ensuring zero partial listing visibility.
+     *
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkReady($id)
+    {
+        abort_if(Gate::denies('view_clients'), 403);
+
+        $tenantId = (int) auth()->user()->company_id;
+        $clientId = (int) $id;
+
+        $readinessService = app(InternalClientReadinessService::class);
+        $result = $readinessService->checkReadiness($tenantId, $clientId);
+
+        return response()->json($result);
     }
 
     public function addresslist($cid)

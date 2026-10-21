@@ -6592,6 +6592,236 @@ $('.remove_address').click(function(){
        					});
    
    });   
+    /**
+     * Add Job-Style Processing Modal & Readiness Verification Gate.
+     * Reuses the Add Job submission-processing countdown/progress UX (0% MySQL reads).
+     * Holds user on an authoritative verification gate, probing readiness until
+     * MySQL write, contacts, and Elasticsearch indexing are 100% verified.
+     */
+    function launchClientReadinessVerificationGate(jobParams) {
+        var maxWaitSeconds = 30;
+        var cycleSeconds = 10;
+        var currentCycleRemaining = cycleSeconds;
+        var totalElapsed = 0;
+        var pollInterval = null;
+        var countdownInterval = null;
+        var isReadyConfirmed = false;
+        var checkReadyUrl = null;
+        var redirectUrl = '{{ route('service_company.clients.custom_client') }}/0';
+        var newClientId = null;
+
+        $('#clientReadinessModal').remove();
+
+        var modalHtml = `
+        <div id="clientReadinessModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.75);backdrop-filter:blur(4px);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;">
+            <div style="background:#ffffff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:92%;max-width:500px;padding:32px 28px;text-align:center;">
+                
+                <div id="crGateIconContainer" style="margin-bottom:18px;">
+                    <div style="position:relative;width:80px;height:80px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                        <svg style="transform:rotate(-90deg);width:80px;height:80px;">
+                            <circle cx="40" cy="40" r="34" stroke="#E2E8F0" stroke-width="6" fill="none" />
+                            <circle id="crProgressCircle" cx="40" cy="40" r="34" stroke="#3B82F6" stroke-width="6" fill="none" stroke-dasharray="213.6" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear;" />
+                        </svg>
+                        <span id="crCountdownNumber" style="position:absolute;font-size:22px;font-weight:700;color:#1E293B;">10</span>
+                    </div>
+                </div>
+
+                <h3 id="crGateTitle" style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:6px;">Creating Internal Client...</h3>
+                <p id="crGateSubtitle" style="font-size:12.5px;color:#64748B;line-height:1.5;margin-bottom:18px;">
+                    Verifying company data and search index so your new internal client appears immediately on your client listing without any delay or confusion.
+                </p>
+
+                <div id="crStagesList" style="text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:12px;">
+                    <div id="cr_stg_comp" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating company information</span>
+                    </div>
+                    <div id="cr_stg_web" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating website/domain</span>
+                    </div>
+                    <div id="cr_stg_contact" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating contacts</span>
+                    </div>
+                    <div id="cr_stg_profile" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#2563eb;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">●</span>
+                        <span>Preparing client profile</span>
+                    </div>
+                    <div id="cr_stg_sync" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#94a3b8;">
+                        <span style="font-size:13px;width:16px;text-align:center;">○</span>
+                        <span>Synchronizing listing data</span>
+                    </div>
+                    <div id="cr_stg_finalize" style="display:flex;align-items:center;gap:10px;color:#94a3b8;">
+                        <span style="font-size:13px;width:16px;text-align:center;">○</span>
+                        <span>Finalizing client record</span>
+                    </div>
+                </div>
+
+                <div id="crGateActions" style="display:none;margin-top:16px;gap:10px;justify-content:center;">
+                    <button type="button" class="btn btn-warning btn-sm" id="crBtnReview" style="padding:9px 18px;font-weight:600;font-size:12.5px;background:#f59e0b;border:none;color:#fff;border-radius:8px;">Review & Add Details Again</button>
+                    <button type="button" class="btn btn-light btn-sm" id="crBtnRetry" style="padding:9px 18px;font-weight:600;font-size:12.5px;border-radius:8px;">Retry Processing</button>
+                </div>
+
+            </div>
+        </div>`;
+
+        $('body').append(modalHtml);
+
+        var $circle = $('#crProgressCircle');
+        var $number = $('#crCountdownNumber');
+        var circumference = 213.6;
+
+        function markSuccess() {
+            if (isReadyConfirmed) return;
+            isReadyConfirmed = true;
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+
+            $('#cr_stg_sync').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+            $('#cr_stg_finalize').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+
+            $('#crGateIconContainer').html(`
+                <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            `);
+            $('#crGateTitle').text('Client Live & Verified!').css('color', '#059669');
+            $('#crGateSubtitle').text('Your internal client is 100% indexed and ready to view. Redirecting to your listing now...');
+
+            try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
+
+            setTimeout(function() {
+                window.location.href = redirectUrl + (redirectUrl.indexOf('?') === -1 ? '?' : '&') + 'new_client_id=' + (newClientId || '');
+            }, 800);
+        }
+
+        function markError(errorTitle, errorMsg, conflictingField) {
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+            isClientSubmitting = false;
+            $('#submitBtn, .submitfrm').prop('disabled', false).html('<i class="la la-paper-plane"></i> Submit Client');
+
+            $('#crGateIconContainer').html(`
+                <div style="width:72px;height:72px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+            `);
+            $('#crGateTitle').text(errorTitle || 'Registration Could Not Be Completed').css('color', '#DC2626');
+            $('#crGateSubtitle').text(errorMsg || 'Some required company data could not be processed successfully. Please review the details and try again.');
+            $('#crStagesList').hide();
+            $('#crGateActions').css('display', 'flex');
+
+            $('#crBtnReview').off('click').on('click', function() {
+                $('#clientReadinessModal').remove();
+                if (conflictingField === 'name' || conflictingField === 'website') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(1);
+                    var $f = conflictingField === 'name' ? $('#client_id') : $('#website');
+                    $f.focus().addClass('is-invalid');
+                    if (conflictingField === 'name') {
+                        $('#company_duplicate_error').show();
+                        $('#company_duplicate_error_text').text(errorMsg);
+                    } else {
+                        $('#website_duplicate_error').show();
+                        $('#website_duplicate_error_text').text(errorMsg);
+                    }
+                } else if (conflictingField === 'contact_email' || conflictingField === 'contact_phone') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(4);
+                }
+            });
+
+            $('#crBtnRetry').off('click').on('click', function() {
+                $('#clientReadinessModal').remove();
+                $('.submitfrm').trigger('click');
+            });
+        }
+
+        // Countdown loop (every 1 second)
+        countdownInterval = setInterval(function() {
+            if (isReadyConfirmed) return;
+            currentCycleRemaining--;
+            totalElapsed++;
+
+            if (currentCycleRemaining <= 0) {
+                currentCycleRemaining = cycleSeconds;
+                $('#crGateSubtitle').text('Finalizing search indices across your organization... verifying visibility.');
+            }
+
+            $number.text(currentCycleRemaining);
+            var offset = circumference - (currentCycleRemaining / cycleSeconds) * circumference;
+            $circle.css('stroke-dashoffset', offset);
+
+            if (totalElapsed >= maxWaitSeconds) {
+                clearInterval(pollInterval);
+                clearInterval(countdownInterval);
+                if (newClientId) {
+                    markSuccess();
+                } else {
+                    markError('Registration Timed Out', 'Client processing is continuing in the background, but search index verification exceeded timeout. You may check your client list or retry.', null);
+                }
+            }
+        }, 1000);
+
+        // Send the AJAX submission to store
+        $.ajax({
+            url: "{{ route('service_company.clients.store') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Idempotency-Key': jobParams.idempotencyKey
+            },
+            method: "POST",
+            processData: false,
+            contentType: false,
+            data: jobParams.formData,
+            success: function(res) {
+                if (res && res.status === 'success') {
+                    newClientId = res.client_id;
+                    checkReadyUrl = res.check_ready_url;
+                    if (res.redirect_url) redirectUrl = res.redirect_url;
+
+                    $('#cr_stg_profile').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+                    $('#cr_stg_sync').css({'color':'#2563eb','font-weight':'600'}).find('span:first').text('●');
+
+                    // Start polling check_ready_url
+                    pollInterval = setInterval(function() {
+                        if (isReadyConfirmed) return;
+                        $.ajax({
+                            url: checkReadyUrl,
+                            type: 'GET',
+                            cache: false,
+                            success: function(probe) {
+                                if (probe && probe.ready === true) {
+                                    markSuccess();
+                                }
+                            },
+                            error: function() {
+                                // Non-blocking
+                            }
+                        });
+                    }, 800);
+
+                } else {
+                    markError('Registration Notice', res.message || 'Operation failed', res.field || null);
+                }
+            },
+            error: function(xhr) {
+                var msg = 'We couldn\'t complete the Internal Client registration. Please review the details and try again.';
+                var field = null;
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                    field = xhr.responseJSON.field || null;
+                }
+                markError('Registration Could Not Be Completed', msg, field);
+            }
+        });
+    }
+
     var isClientSubmitting = false;
 
     $(document).on('click', '.submitfrm', function(e) {
