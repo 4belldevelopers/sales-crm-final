@@ -11,129 +11,191 @@
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
     @php
-    $row = (object) $rowArr;
+        $row = (object) $rowArr;
+        $client_id = $row->id ?? ($row->client_id ?? 0);
+        $client_Or_CompanyName = $row->name ?? '';
 
-    // Custom clients are internal; the client id is the row id.
-    $client_id = $row->id;
+        $departmentArr = '------';
+        if (!empty($department) && !empty($row->industry)) {
+            foreach ($department as $val) {
+                if ($row->industry == $val->id) {
+                    $departmentArr = $val->ind_name;
+                }
+            }
+        }
+        if (!empty($row->ind_name)) {
+            $departmentArr = $row->ind_name;
+        }
 
-    /* ── logo / avatar ── */
-    $background_image = '';
-    if (!empty(@$row->website) && empty(@$row->logo_logical_path)) {
-        $domainGet = GeneralMethod::getDomain($row->website);
-        $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
-        $google = GeneralMethod::getDomainIcon($googleIcon, $row->id, false);
-        $background_image = ($google) ? $googleIcon : '';
-    }
-    if (!empty(@$row->logo_logical_path) && strlen(@$row->logo_logical_path) > 10) {
-        $background_image = @$row->logo_logical_path;
-    }
+        /* ── location ── */
+        $country_name = $stateName = $city = '';
+        if (!empty($row->client_location) && count($row->client_location) > 0) {
+            $country_name = $row->client_location[0]['country_name'] ?? '';
+            $stateName = $row->client_location[0]['state_name'] ?? '';
+            $city = $row->client_location[0]['city_name'] ?? '';
+        }
 
-    // avatar colour class (Metronic light backgrounds, keyed off first letter)
-    $strVal = strtolower(trim(@$row->name)[0] ?? '');
-    $ascii = ord($strVal);
-    if ($ascii >= 97 && $ascii <= 101) {
-        $bgTextDecore = 'bg-light-danger text-danger';
-    } elseif ($ascii >= 102 && $ascii <= 106) {
-        $bgTextDecore = 'bg-light-warning text-warning';
-    } elseif ($ascii >= 107 && $ascii <= 111) {
-        $bgTextDecore = 'bg-light-primary text-primary';
-    } elseif ($ascii >= 112 && $ascii <= 116) {
-        $bgTextDecore = 'bg-light-success text-success';
-    } elseif ($ascii >= 117 && $ascii <= 121) {
-        $bgTextDecore = 'bg-dark text-white';
-    } else {
-        $bgTextDecore = 'bg-light-secondary text-dark';
-    }
-    $initials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1),
-                    array_slice(explode(' ', trim(@$row->name)), 0, 2))));
+        /* ── company size ── */
+        $companySizeText = '';
+        $fromSize = $row->company_size_from ?? null;
+        $toSize = $row->company_sizes ?? $row->company_size ?? null;
+        if (!empty($fromSize) && !empty($toSize)) {
+            $companySizeText = number_format((int)$fromSize) . ' - ' . number_format((int)$toSize) . ' employees';
+        } elseif (!empty($toSize)) {
+            $companySizeText = is_numeric($toSize) ? number_format((int)$toSize) . ' employees' : $toSize . ' employees';
+        }
 
-    $departmentArr = '------';
-    if ($row->industry >= 0) {
-        $departmentArr = $department[@$row->industry] ?? '------';
-    }
+        /* ── jobs (active / closed / hold) ── */
+        $jKey = 'internal_' . $client_id;
+        $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $client_id);
+        $job_active = (int)($jobsCount->job_active ?? 0);
+        $job_closed = (int)($jobsCount->job_inactive ?? 0);
+        $job_hold   = (int)($jobsCount->job_hold ?? 0);
 
-    /* ── location ── */
-    $country_name = $stateName = $city = '';
-    if (count($row->client_location) > 0) {
-        $country_name = ($row->client_location[0]['country_name']);
-        $stateName = ($row->client_location[0]['state_name']);
-        $city = ($row->client_location[0]['city_name']);
-    }
+        /* ── performance funnel ── */
+        $pKey = 'internal_' . $client_id;
+        $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
+        $sourced    = (int)($perf->sourced ?? 0);
+        $evaluated  = (int)($perf->evaluated ?? 0);
+        $interviews = (int)($perf->all_interview ?? 0);
+        $offers     = (int)($perf->offers ?? 0);
+        $joined     = (int)($perf->Joined ?? 0);
 
-    /* ── jobs (active / closed / hold) ── */
-    $jKey = 'internal_' . $client_id;
-    $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $client_id);
-    $job_active = $jobsCount->job_active ?? 0;
-    $job_closed = $jobsCount->job_inactive ?? 0;
-    $job_hold   = $jobsCount->job_hold ?? 0;
+        /* ── connected on ── */
+        $createdTimestamp = $row->created_at ?? null;
+        $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
+        $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
 
-    /* ── performance funnel ── */
-    $pKey = 'internal_' . $client_id;
-    $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
-    $sourced    = $perf->sourced ?? 0;
-    $evaluated  = $perf->evaluated ?? 0;
-    $interviews = $perf->all_interview ?? 0;
-    $offers     = $perf->offers ?? 0;
-    $joined     = $perf->Joined ?? 0;
-
-    /* ── connected on ── */
-    $newDate = date('d M, Y', strtotime($row->created_at));
-    $daysAgo = GeneralMethod::timeAgo($row->created_at);
+        $locMain = '';
+        if ($city && $stateName) {
+            $locMain = ucwords($city) . ', ' . ucwords($stateName);
+        } elseif ($city) {
+            $locMain = ucwords($city);
+        } elseif ($stateName) {
+            $locMain = ucwords($stateName);
+        }
     @endphp
 
     <div class="tbl-r">
-        <input type="checkbox" class="tbl-cb" onclick="event.stopPropagation()">
+        {{-- Checkbox --}}
+        <div class="tbl-cell-check">
+            <input type="checkbox" class="tbl-cb" value="{{ $client_id }}" onclick="event.stopPropagation()">
+        </div>
 
-        <div class="tbl-a">
-            @if (!empty($background_image) && strlen($background_image) > 10)
-                <div class="tbl-av show-detail" data-row-id="{{ $row->id }}">
-                    <img src="{{ $background_image }}" data-row-id="{{ $row->id }}" class="show-detail">
-                </div>
-            @else
-                <div class="tbl-av show-detail {{ $bgTextDecore }}" data-row-id="{{ $row->id }}">{{ $initials }}</div>
+        {{-- Client (NO ICON as requested) --}}
+        <div class="tbl-cell-client show-detail" data-row-id="{{ $client_id }}" title="{{ ucwords(@$client_Or_CompanyName) }}">
+            <div class="cl-name show-detail" data-row-id="{{ $client_id }}">{{ ucwords(@$client_Or_CompanyName) }}</div>
+            @if(!empty($departmentArr))
+                <div class="cl-ind">{{ @$departmentArr }}</div>
             @endif
-            <div class="tbl-ai show-detail" data-row-id="{{ $row->id }}" data-toggle="tooltip1" data-html="true" title="{{ ucwords(@$row->name) }}">
-                <div class="tbl-n">{{ ucwords(mb_substr(@$row->name, 0, 22)) }}</div>
-                <div class="tbl-t">{{ @$departmentArr }}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            @if(!empty($companySizeText))
+                <div class="cl-size">{{ $companySizeText }}</div>
+            @endif
+        </div>
+
+        {{-- Location (NO ICON as requested) --}}
+        <div class="tbl-cell-loc">
+            @if(!empty($locMain))
+                <div class="cl-loc-city" title="{{ $locMain }}">{{ $locMain }}</div>
+            @endif
+            @if(!empty($country_name))
+                <div class="cl-loc-country">{{ ucwords($country_name) }}</div>
+            @endif
+            @if(empty($locMain) && empty($country_name))
+                <div class="cl-loc-empty">-</div>
+            @endif
+        </div>
+
+        {{-- Jobs --}}
+        <div class="tbl-cell-jobs">
+            <div class="cl-job-line {{ $job_active > 0 ? 'cl-job-active-highlight' : '' }}">
+                <span class="cl-job-bullet {{ $job_active > 0 ? 'bullet-blue' : 'bullet-gray' }}"></span>
+                <span class="cl-job-num">{{ $job_active }}</span>
+                <span class="cl-job-label {{ $job_active > 0 ? 'text-blue' : '' }}">Active</span>
+            </div>
+            <div class="cl-job-line">
+                <span class="cl-job-bullet bullet-gray"></span>
+                <span class="cl-job-num">{{ $job_closed }}</span>
+                <span class="cl-job-label">Closed</span>
+            </div>
+            <div class="cl-job-line">
+                <span class="cl-job-bullet bullet-light"></span>
+                <span class="cl-job-num">{{ $job_hold }}</span>
+                <span class="cl-job-label">Hold</span>
+            </div>
+        </div>
+
+        {{-- Hiring Pipeline Funnel --}}
+        <div class="tbl-cell-pipeline">
+            <div class="cl-pipeline-flow">
+                <div class="cl-pipe-step">
+                    <span class="cl-pipe-pill pill-sourced">{{ $sourced }}</span>
+                    <span class="cl-pipe-label">Sourced</span>
+                </div>
+                <div class="cl-pipe-arrow">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                <div class="cl-pipe-step">
+                    <span class="cl-pipe-pill pill-evaluated">{{ $evaluated }}</span>
+                    <span class="cl-pipe-label">Evaluated</span>
+                </div>
+                <div class="cl-pipe-arrow">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                <div class="cl-pipe-step">
+                    <span class="cl-pipe-pill pill-interviews">{{ $interviews }}</span>
+                    <span class="cl-pipe-label">Interviews</span>
+                </div>
+                <div class="cl-pipe-arrow">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                <div class="cl-pipe-step">
+                    <span class="cl-pipe-pill pill-offers">{{ $offers }}</span>
+                    <span class="cl-pipe-label">Offers</span>
+                </div>
+                <div class="cl-pipe-arrow">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                <div class="cl-pipe-step">
+                    <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
+                    <span class="cl-pipe-label">Joined</span>
                 </div>
             </div>
         </div>
 
-        <div class="tbl-l">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div>
-                <div class="tbl-lc">{{ ucwords(mb_substr(@$city, 0, 15)) }}</div>
-                <div class="tbl-ls" title="{{ ucwords(@$stateName) }}{{ $country_name ? ' | ' . ucwords($country_name) : '' }}">{{ ucwords(mb_substr(@$stateName, 0, 15)) }}{{ $country_name ? ' | ' . ucwords(mb_substr($country_name, 0, 6)) : '' }}</div>
+        {{-- Type & Connected On --}}
+        <div class="tbl-cell-type">
+            <div class="cl-date-box">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>{{ $newDate }}</span>
+            </div>
+            <div class="cl-conn-caption">Connected on</div>
+            <div class="cl-type-name type-internal show-detail" data-row-id="{{ $client_id }}">
+                {{ __('messages.internal_client_tag') }}
             </div>
         </div>
 
-        <div class="tbl-j">
-            <div class="tbl-jr"><span class="tbl-jn">{{ $job_active }}</span><span class="tbl-js a">Active</span></div>
-            <div class="tbl-jr"><span class="tbl-jn">{{ $job_closed }}</span><span class="tbl-js c">Closed</span></div>
-            <div class="tbl-jr"><span class="tbl-jn">{{ $job_hold }}</span><span class="tbl-js d">Hold</span></div>
-        </div>
-
-        <div class="tbl-p">
-            <div class="tbl-pi"><div class="tbl-pv">{{ $sourced }}</div><div class="tbl-pl">Sourced</div></div>
-            <div class="tbl-pi"><div class="tbl-pv">{{ $evaluated }}</div><div class="tbl-pl">Evaluated</div></div>
-            <div class="tbl-pi"><div class="tbl-pv">{{ $interviews }}</div><div class="tbl-pl">Interviews</div></div>
-            <div class="tbl-pi"><div class="tbl-pv">{{ $offers }}</div><div class="tbl-pl">Offers</div></div>
-            <div class="tbl-pi"><div class="tbl-pv">{{ $joined }}</div><div class="tbl-pl">Joined</div></div>
-        </div>
-
-        <div>
-            <div class="tbl-co">{{ @$newDate }}</div>
-            <div class="tbl-cv show-detail" data-row-id="{{ $row->id }}">view client</div>
-        </div>
-
-        <div>
-            <span class="tbl-badge">{{ __('messages.internal_client_tag') }}</span>
+        {{-- Last Activity --}}
+        <div class="tbl-cell-activity">
+            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
+            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
         </div>
     </div>
     @endforeach
 @else
-    <div class="tbl-r" style="grid-template-columns: 1fr;">
-        <div class="tbl-empty">No data available in table</div>
+    <div class="cl-empty-state">
+        <div class="cl-empty-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+        </div>
+        <div class="cl-empty-title">No internal clients found</div>
+        <div class="cl-empty-desc">No internal clients match your selected filters.</div>
     </div>
 @endif

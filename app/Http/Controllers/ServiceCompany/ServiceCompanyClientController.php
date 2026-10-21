@@ -462,7 +462,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $responseData = [
             'html' => view('service_company.ajax_pages.all-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
             'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENTS_TIME));
@@ -557,7 +557,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $responseData = [
                 'html' => view('service_company.ajax_pages.direct-client-ajax', ['data' => [], 'userPermissions' => $userPermissions, 'company_id' => $company_id, 'relationMap' => [], 'jobsCountsMap' => [], 'candidateCountsMap' => []])->render(),
                 'total' => 0,
-                'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+                'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
             ];
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_DIRECT_CLIENT_TIME));
 
@@ -747,7 +747,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $responseData = [
             'html' => view('service_company.ajax_pages.direct-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
             'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_DIRECT_CLIENT_TIME));
@@ -979,7 +979,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $responseData = [
             'html' => view('service_company.ajax_pages.custom-client-ajax', compact('data', 'userPermissions', 'company_id', 'department', 'jobsCountsMap', 'candidateCountsMap'))->render(),
             'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CUSTOM_CLIENT_TIME));
@@ -1100,7 +1100,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $responseData = [
             'html' => view('service_company.ajax_pages.client_request_ajax', compact('data', 'userPermissions'))->render(),
             'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_REQUEST_TIME));
@@ -1286,6 +1286,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->count('recommendation_relation.from_company_id');
 
         $clientCounter['clientHiring'] = $internalHiringCount + $directHiringCount;
+
+        // INTENT: Total Active Jobs Count across internal and direct clients. Tenancy: scoped by company_id / to_company_id.
+        $internalActiveJobs = DB::table('jobs')
+            ->join('clients', 'clients.id', '=', 'jobs.client_id')
+            ->where('jobs.company_id', $company_id)
+            ->where('jobs.status', 'active')
+            ->where('clients.company_id', $company_id)
+            ->where('clients.self_company', '!=', 1)
+            ->count('jobs.id');
+
+        $directActiveJobs = DB::table('recommendation_relation')
+            ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+            ->where('recommendation_relation.to_company_id', $company_id)
+            ->where('recommendation_relation.from_company_id', '!=', $company_id)
+            ->where('recommendation_relation.final_status', 1)
+            ->where('jobs.status', 'active')
+            ->count('jobs.id');
+
+        $clientCounter['activeJobs'] = $internalActiveJobs + $directActiveJobs;
 
         return $clientCounter;
     }
