@@ -472,7 +472,7 @@ $(document).ready(function() {
 });
 
 function filtersdataget() {
-    fetchCandidates(1);
+    fetchCandidates(1, true);
 }
 
 // ── Dropdown label sync handlers ──
@@ -634,39 +634,26 @@ $(document).on('click', '.show-detail-direct', function () {
     });
 });
 
-$(document).ready(function() {
-    if ($('#allClients .tbl-r').length === 0) {
-        fetchCandidates(1);
-    }
-
-    $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
-        e.preventDefault();
-        const page = $(this).data('page');
-        if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-        fetchCandidates(page);
-    });
-
-    $(document).on('change', '#pagination .pagi-perpage', function() {
-        var selectedPerPage = $(this).val();
-        localStorage.setItem('candidatePerPage', selectedPerPage);
-        localStorage.setItem('currentPageClients', 1);
-        page_no = 1;
-        fetchCandidates(1);
-    });
-});
-
-// ── Bounded Browser RAM Store (ClientStore) ──
+// ── Bounded Browser RAM Store (ClientStore) with SWR & Request Token Guard ──
 const ClientStore = {
     cache: new Map(),
-    maxEntries: 40,
+    maxEntries: 50,
     currentXhr: null,
+    latestRequestId: 0,
+    maxStaleAgeMs: 5000, // 5 seconds bounded staleness for SWR
 
     getKey: function(tab, page, search, sort, country, hiring, perPage) {
         return `${tab}:${page}:${search || ''}:${sort || ''}:${country || ''}:${hiring || 0}:${perPage || 10}`;
     },
 
     get: function(key) {
-        return this.cache.get(key) || null;
+        const entry = this.cache.get(key);
+        if (!entry) return null;
+        return {
+            data: entry.data,
+            age: Date.now() - entry.timestamp,
+            isStale: (Date.now() - entry.timestamp) > this.maxStaleAgeMs
+        };
     },
 
     set: function(key, data) {
@@ -674,7 +661,10 @@ const ClientStore = {
             const oldestKey = this.cache.keys().next().value;
             this.cache.delete(oldestKey);
         }
-        this.cache.set(key, data);
+        this.cache.set(key, {
+            data: data,
+            timestamp: Date.now()
+        });
     },
 
     invalidateTab: function(tab) {
@@ -692,22 +682,157 @@ const ClientStore = {
 
 @if(!empty($initialHtml))
 (function() {
-    var initKey = ClientStore.getKey('all', 1, '', 'Show All', '', 0, 10);
+    var initTab = {!! json_encode($initialTab ?? 'all') !!};
+    if (initTab === 'requests') initTab = 'request';
+    if (initTab === 'custom') initTab = 'internal';
+    var initKey = ClientStore.getKey(initTab, 1, '', 'Show All', '', (initTab === 'hiring' ? 1 : 0), 10);
     ClientStore.set(initKey, {
         html: {!! json_encode($initialHtml) !!},
         total: {{ (int)($initialTotal ?? 0) }},
-        pagination: {!! json_encode($initialPagination ?? '') !!}
+        pagination: {!! json_encode($initialPagination ?? '') !!},
+        rows: {!! json_encode($initialRows ?? []) !!},
+        data_version: {{ (int)($initialDataVersion ?? 1) }}
     });
 })();
 @endif
 
 var page_no = localStorage.getItem('currentPageClients') || 1;
-var activeClientTab = 'all';
-var hiringFilter = 0;
+var activeClientTab = {!! json_encode($initialTab ?? 'all') !!};
+if (activeClientTab === 'requests') activeClientTab = 'request';
+if (activeClientTab === 'custom') activeClientTab = 'internal';
+var hiringFilter = (activeClientTab === 'hiring') ? 1 : 0;
+var initialOpenClientId = {{ (int)($initialOpenClient ?? 0) }};
 
-function setClientTab(tabName, el) {
+function syncUrlState(replace = false) {
+    try {
+        const url = new URL(window.location);
+        if (activeClientTab && activeClientTab !== 'all') {
+            url.searchParams.set('tab', activeClientTab);
+        } else {
+            url.searchParams.delete('tab');
+        }
+
+        const searchVal = $('#kt_tagify_2').val() || '';
+        if (searchVal.trim()) {
+            url.searchParams.set('search', searchVal.trim());
+        } else {
+            url.searchParams.delete('search');
+        }
+
+        const countryVal = $('#country').val() || '';
+        if (countryVal) {
+            url.searchParams.set('country', countryVal);
+        } else {
+            url.searchParams.delete('country');
+        }
+
+        const sortVal = $('#sortingfilter').val() || '';
+        if (sortVal && sortVal !== 'Show All') {
+            url.searchParams.set('sort', sortVal);
+        } else {
+            url.searchParams.delete('sort');
+        }
+
+        if (page_no > 1) {
+            url.searchParams.set('page', page_no);
+        } else {
+            url.searchParams.delete('page');
+        }
+
+        // Drop open_client after initial consume
+        url.searchParams.delete('open_client');
+
+        if (replace) {
+            window.history.replaceState({ tab: activeClientTab, page: page_no }, '', url);
+        } else {
+            window.history.pushState({ tab: activeClientTab, page: page_no }, '', url);
+        }
+    } catch (e) {
+        // Fallback for sandboxed frames
+    }
+}
+
+function hydrateStateFromUrl(shouldFetch = true) {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        let tab = params.get('tab') || activeClientTab || 'all';
+        if (tab === 'requests') tab = 'request';
+        if (tab === 'custom') tab = 'internal';
+
+        const search = params.get('search') || params.get('q') || '';
+        const country = params.get('country') || '';
+        const sort = params.get('sort') || params.get('sortingfilter') || 'Show All';
+        const page = parseInt(params.get('page'), 10) || 1;
+        const openClient = parseInt(params.get('open_client'), 10) || initialOpenClientId || 0;
+
+        $('#kt_tagify_2').val(search);
+        $('#country').val(country);
+        $('#sortingfilter').val(sort);
+
+        if (country) {
+            const countryText = $('#country option:selected').text();
+            $('#locationDisplay').text(countryText);
+        } else {
+            $('#locationDisplay').text('All Locations');
+        }
+
+        if (sort && sort !== 'Show All') {
+            const sortText = $('#sortingfilter option:selected').text();
+            $('#sortDisplay').text(sortText);
+        } else {
+            $('#sortDisplay').text('Recently Added');
+        }
+
+        setClientTab(tab, null, false);
+        if (shouldFetch) {
+            fetchCandidates(page, false);
+        }
+
+        if (openClient > 0) {
+            setTimeout(function() {
+                triggerOpenClientDrawer(openClient);
+            }, 350);
+        }
+    } catch (e) {
+        // Fallback
+    }
+}
+
+window.addEventListener('popstate', function(event) {
+    hydrateStateFromUrl(true);
+});
+
+function triggerOpenClientDrawer(clientId) {
+    const $target = $(`.cl-name[data-row-id="${clientId}"], .show-detail[data-row-id="${clientId}"], .show-detail-direct[data-row-id="${clientId}"]`).first();
+    if ($target.length) {
+        $target.trigger('click');
+    } else {
+        $('#kt_activitiesClient_toggle').trigger('click');
+        const url = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
+        const baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            beforeSend: function() {
+                $('#kt_activitiesClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+            },
+            success: function(resp) {
+                if (resp && resp.view) {
+                    $('#kt_activitiesDirectClient_body').html('');
+                    $('#kt_activitiesClient_body').html(resp.view);
+                }
+            }
+        });
+    }
+}
+
+function setClientTab(tabName, el, updateUrl = true) {
+    if (tabName === 'requests') tabName = 'request';
+    if (tabName === 'custom') tabName = 'internal';
+
     activeClientTab = tabName;
     hiringFilter = (tabName === 'hiring') ? 1 : 0;
+    page_no = 1;
 
     $('.cl-stat-filter').removeClass('active');
     $('.cl-tab-filter').removeClass('active');
@@ -766,7 +891,7 @@ function setClientTab(tabName, el) {
         `);
     }
 
-    fetchCandidates(1);
+    fetchCandidates(1, updateUrl);
 }
 
 function applyClientResponse(response, targetPage) {
@@ -799,10 +924,14 @@ function applyClientResponse(response, targetPage) {
     });
 }
 
-function fetchCandidates(page) {
+function fetchCandidates(page, updateUrl = true) {
     var targetPage = page || page_no || 1;
     page_no = targetPage;
     localStorage.setItem('currentPageClients', targetPage);
+
+    if (updateUrl) {
+        syncUrlState();
+    }
 
     var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
     var searchVal = $('#kt_tagify_2').val() || '';
@@ -810,22 +939,31 @@ function fetchCandidates(page) {
     var countryVal = $('#country').val() || '';
 
     var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, hiringFilter, perPage);
-    var cachedData = ClientStore.get(cacheKey);
+    var cachedEntry = ClientStore.get(cacheKey);
 
-    if (cachedData) {
-        applyClientResponse(cachedData, targetPage);
-        return;
+    // Stale-While-Revalidate (SWR): Immediate perceived instant render if cache entry exists
+    if (cachedEntry) {
+        applyClientResponse(cachedEntry.data, targetPage);
+        if (!cachedEntry.isStale) {
+            return; // Warm hit within 5s SLA - 0 network requests!
+        }
+        // Stale entry: UI already rendered instantly; background revalidation runs without blocking UI
+    } else {
+        // Cold fetch: show non-blocking progress indicator
+        if (searchVal != '') {
+            $('.loader_search').css({ display: 'block' });
+        } else {
+            $('.loadingMessage').css({ display: 'block' });
+        }
     }
 
+    // Abort previous in-flight request to prevent race conditions
     if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
         ClientStore.currentXhr.abort();
     }
 
-    if (searchVal != '') {
-        $('.loader_search').css({ display: 'block' });
-    } else {
-        $('.loadingMessage').css({ display: 'block' });
-    }
+    // Request Generation Token Guard
+    var requestId = ++ClientStore.latestRequestId;
 
     ClientStore.currentXhr = $.ajax({
         url: `{!! route('service_company.clients.all_clients_data_ajax') !!}?page=${targetPage}`,
@@ -842,11 +980,14 @@ function fetchCandidates(page) {
             per_page: perPage
         },
         success: function(response) {
+            // Discard stale out-of-order response
+            if (requestId !== ClientStore.latestRequestId) return;
+
             ClientStore.set(cacheKey, response);
             applyClientResponse(response, targetPage);
         },
         error: function(xhr, status, error) {
-            if (status !== 'abort') {
+            if (status !== 'abort' && requestId === ClientStore.latestRequestId) {
                 $('.loadingMessage').css({ display: 'none' });
                 $('.loader_search').css({ display: 'none' });
                 $('.page-loader').css('display', 'none');
@@ -854,6 +995,30 @@ function fetchCandidates(page) {
         }
     });
 }
+
+$(document).ready(function() {
+    $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+        fetchCandidates(page, true);
+    });
+
+    $(document).on('change', '#pagination .pagi-perpage', function() {
+        var selectedPerPage = $(this).val();
+        localStorage.setItem('candidatePerPage', selectedPerPage);
+        localStorage.setItem('currentPageClients', 1);
+        page_no = 1;
+        fetchCandidates(1, true);
+    });
+
+    // Hydrate state from URL on page load
+    hydrateStateFromUrl(false);
+
+    if ($('#allClients .tbl-r').length === 0) {
+        fetchCandidates(1, false);
+    }
+});
 
 $(document).on('click', '.request_event', function () {
     var $btn = $(this);
