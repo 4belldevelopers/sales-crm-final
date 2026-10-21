@@ -109,27 +109,42 @@ class RebuildClientElasticsearchCommand extends Command
         $bar->finish();
         $this->newLine();
 
-        // 5. Replay outbox events committed after watermark
-        $this->info('Replaying post-watermark outbox catchup events...');
-        $catchupEvents = DB::table('sys_outbox_events')
-            ->where('aggregate_type', 'Client')
-            ->where('id', '>', $watermarkId)
-            ->orderBy('id', 'asc')
-            ->get();
-
+        // 5. Final Catch-Up Barrier: Multi-pass drain until delta is 0 before alias swap
+        $this->info('Entering Final Catch-Up Barrier drain...');
+        $currentWatermark = $watermarkId;
         $replayedCount = 0;
-        foreach ($catchupEvents as $ev) {
-            $aggId = (int) $ev->aggregate_id;
-            if ($aggId > 0) {
-                try {
-                    GeneralMethod::clientStaffingPartner($aggId);
-                    $replayedCount++;
-                } catch (\Throwable $e) {
-                    Log::warning("RebuildClientElasticsearchCommand: Error replaying outbox event {$ev->id}: ".$e->getMessage());
-                }
+        $maxPasses = 5;
+        $pass = 0;
+
+        do {
+            $pass++;
+            $pendingEvents = DB::table('sys_outbox_events')
+                ->where('aggregate_type', 'Client')
+                ->where('id', '>', $currentWatermark)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            $batchCount = $pendingEvents->count();
+            if ($batchCount === 0) {
+                $this->info("Catch-up barrier reached quiescence on pass {$pass}. Delta = 0 concurrent writes.");
+                break;
             }
-        }
-        $this->info("Replayed {$replayedCount} catchup events.");
+
+            $this->info("Catch-up pass {$pass}: processing {$batchCount} concurrent mutations...");
+            foreach ($pendingEvents as $ev) {
+                $aggId = (int) $ev->aggregate_id;
+                if ($aggId > 0) {
+                    try {
+                        GeneralMethod::clientStaffingPartner($aggId);
+                        $replayedCount++;
+                    } catch (\Throwable $e) {
+                        Log::warning("RebuildClientElasticsearchCommand: Error replaying outbox event {$ev->id}: ".$e->getMessage());
+                    }
+                }
+                $currentWatermark = max($currentWatermark, (int) $ev->id);
+            }
+        } while ($pass < $maxPasses);
+        $this->info("Final catch-up barrier complete. Total replayed events: {$replayedCount}.");
 
         // 6. Zero-downtime atomic alias swap
         $this->info("Executing atomic alias swap to repoint '{$targetAlias}' to '{$backingIndex}'...");

@@ -2783,63 +2783,33 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->whereNotIn('id', $processedContactIds)
                 ->delete();
 
-            // Transactional Outbox Pattern: Atomic event persistence with monotonic aggregate sequencing
-            $existingOutbox = ! empty($idempotencyKey)
-                ? DB::table('sys_outbox_events')
-                    ->where('tenant_id', $company_id)
-                    ->where('idempotency_key', $idempotencyKey)
-                    ->first()
-                : null;
-
+            // Transactional Outbox Pattern: Append-only immutable event persistence with monotonic aggregate sequencing
             $currentAggregateVersion = (int) (DB::table('sys_outbox_events')
                 ->where('tenant_id', $company_id)
                 ->where('aggregate_type', 'Client')
                 ->where('aggregate_id', $client_id)
                 ->max('aggregate_version') ?? 0) + 1;
 
-            if ($existingOutbox) {
-                $outboxId = $existingOutbox->id;
-                DB::table('sys_outbox_events')
-                    ->where('id', $outboxId)
-                    ->update([
-                        'aggregate_id' => $client_id,
-                        'aggregate_version' => $currentAggregateVersion,
-                        'event_type' => 'ClientUpdated',
-                        'payload' => json_encode([
-                            'tenant_id' => $company_id,
-                            'client_id' => $client_id,
-                            'client_name' => $client->name,
-                            'aggregate_version' => $currentAggregateVersion,
-                            'action' => 'ClientUpdated',
-                            'timestamp' => now()->toIso8601String(),
-                        ]),
-                        'status' => 'PENDING',
-                        'attempts' => 0,
-                        'available_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-            } else {
-                $outboxId = DB::table('sys_outbox_events')->insertGetId([
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'Client',
+                'aggregate_id' => $client_id,
+                'aggregate_version' => $currentAggregateVersion,
+                'event_type' => 'ClientUpdated',
+                'payload' => json_encode([
                     'tenant_id' => $company_id,
-                    'idempotency_key' => $idempotencyKey,
-                    'aggregate_type' => 'Client',
-                    'aggregate_id' => $client_id,
+                    'client_id' => $client_id,
+                    'client_name' => $client->name,
                     'aggregate_version' => $currentAggregateVersion,
-                    'event_type' => 'ClientUpdated',
-                    'payload' => json_encode([
-                        'tenant_id' => $company_id,
-                        'client_id' => $client_id,
-                        'client_name' => $client->name,
-                        'aggregate_version' => $currentAggregateVersion,
-                        'action' => 'ClientUpdated',
-                        'timestamp' => now()->toIso8601String(),
-                    ]),
-                    'status' => 'PENDING',
-                    'attempts' => 0,
-                    'available_at' => now(),
-                    'created_at' => now(),
-                ]);
-            }
+                    'action' => 'ClientUpdated',
+                    'timestamp' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
 
             // Mark idempotency key as COMPLETED
             if (! empty($idempotencyKey)) {
@@ -3443,55 +3413,27 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 DB::table('client_contact_info')->insert($contactsToInsert);
             }
 
-            // Transactional Outbox Pattern: Atomic event persistence
-            $existingOutbox = ! empty($idempotencyKey)
-                ? DB::table('sys_outbox_events')
-                    ->where('tenant_id', $company_id)
-                    ->where('idempotency_key', $idempotencyKey)
-                    ->first()
-                : null;
-
-            if ($existingOutbox) {
-                $outboxId = $existingOutbox->id;
-                DB::table('sys_outbox_events')
-                    ->where('id', $outboxId)
-                    ->update([
-                        'aggregate_id' => $client_id,
-                        'aggregate_version' => 1,
-                        'event_type' => 'ClientCreated',
-                        'payload' => json_encode([
-                            'tenant_id' => $company_id,
-                            'client_id' => $client_id,
-                            'client_name' => $client->name,
-                            'action' => 'ClientCreated',
-                            'timestamp' => now()->toIso8601String(),
-                        ]),
-                        'status' => 'PENDING',
-                        'attempts' => 0,
-                        'available_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-            } else {
-                $outboxId = DB::table('sys_outbox_events')->insertGetId([
+            // Transactional Outbox Pattern: Append-only immutable event persistence
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'Client',
+                'aggregate_id' => $client_id,
+                'aggregate_version' => 1,
+                'event_type' => 'ClientCreated',
+                'payload' => json_encode([
                     'tenant_id' => $company_id,
-                    'idempotency_key' => $idempotencyKey,
-                    'aggregate_type' => 'Client',
-                    'aggregate_id' => $client_id,
+                    'client_id' => $client_id,
+                    'client_name' => $client->name,
                     'aggregate_version' => 1,
-                    'event_type' => 'ClientCreated',
-                    'payload' => json_encode([
-                        'tenant_id' => $company_id,
-                        'client_id' => $client_id,
-                        'client_name' => $client->name,
-                        'action' => 'ClientCreated',
-                        'timestamp' => now()->toIso8601String(),
-                    ]),
-                    'status' => 'PENDING',
-                    'attempts' => 0,
-                    'available_at' => now(),
-                    'created_at' => now(),
-                ]);
-            }
+                    'action' => 'ClientCreated',
+                    'timestamp' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
 
             // Update idempotency key to COMPLETED
             if (! empty($idempotencyKey)) {
