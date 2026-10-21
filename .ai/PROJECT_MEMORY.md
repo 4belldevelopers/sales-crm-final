@@ -20,6 +20,29 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Add Client Next Page Navigation & Close Button Restoration (100% COMPLETED & VERIFIED)**:
+  - **Issues Identified**:
+    - "Next Page" button click handler was unresponsive across the entire wizard flow.
+    - Top header "Close" button (`#client_top_close_btn`) was invisible/removed from Step 1.
+  - **Root Cause Analysis**:
+    1. **Fatal JavaScript Syntax Error**:
+       - In commit `2d703fae`, a duplicated chunk of `syncHiddenInputs` code (`var sorted = self.contacts.slice().sort...`) was accidentally left floating directly inside the `window.clientContactManager = { ... }` object literal at lines 8009-8033 of `create.blade.php`.
+       - This caused an unhandled `SyntaxError: Unexpected identifier 'sorted'`, halting compilation of the entire primary UX `<script>` block (lines 7443-10796).
+       - Consequently, `$(function() { ... })`, stepper initialization, `goToWizardStep(1)`, and all delegated navigation click handlers (`#client_top_next_btn`, `.client-nav-next`, `#client_top_close_btn`, `#client_top_back_btn`) were completely dead.
+    2. **Stale 5-Step CSS Rules & Initial Step 1 Visibility**:
+       - CSS rule `body:not(.on-step-1):not(.on-step-5) #client_top_close_btn { display: none !important; }` forcibly hid the Close button because `<body>` starts without `on-step-1` before JavaScript executes. When JS failed, the close button remained hidden indefinitely.
+       - The legacy CSS also referenced `body.on-step-5` for final submit visibility instead of Step 6.
+    3. **ReferenceError on `$firstInvalid`**:
+       - Variable `$firstInvalid` was declared locally inside `validateWizardStep()`, but was referenced directly in outer click handlers without declaration, triggering `ReferenceError: $firstInvalid is not defined` whenever validation failed.
+  - **Architectural Resolution**:
+    1. Removed the accidental duplicated code inside `clientContactManager`, restoring 100% clean JavaScript syntax (verified with Node.js parser).
+    2. Re-architected button visibility CSS rules for the canonical 6-step flow:
+       - Default & Step 1: `#client_top_close_btn` (`inline-flex !important`), `#client_top_back_btn` (`none !important`), `#client_top_next_btn` (`inline-flex !important`), `#submitBtn` (`none !important`).
+       - Steps 2-5: Close hidden, Back visible, Next visible, Submit hidden.
+       - Step 6: Close hidden, Back visible, Next hidden, Submit visible.
+    3. Promoted `$firstInvalid` to `window.$firstInvalid` and safely guarded all references across `.submitfrm`, `.updatefrm`, and step navigation handlers.
+  - **Verification**: `php -l` clean (0 errors), Node.js syntax parsing clean across all script blocks, git diff verified.
+
 - *2026-10-21* — **Service Company Add Client 6-Page Zero-Cache & Fresh Form Guarantee (100% COMPLETED & VERIFIED)**:
   - **Issues Identified**:
     - Users reported lingering cached or previous data appearing across wizard pages when starting fresh client creations (e.g. hardcoded 4Bell Technology text in description, sample tags in services, browser autofill/bfcache restoring past values, storage draft keys lingering, and cached AI intelligence persisting across visits).

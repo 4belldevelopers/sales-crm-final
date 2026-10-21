@@ -2115,6 +2115,20 @@ html, body {
   }
 
   /* Navigation button visibility rules per step */
+  /* Default & Step 1: Close visible, Back hidden, Next visible, Submit hidden */
+  #client_top_close_btn {
+    display: inline-flex !important;
+  }
+  #client_top_back_btn {
+    display: none !important;
+  }
+  #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  #submitBtn {
+    display: none !important;
+  }
+
   body.on-step-1 #client_top_close_btn {
     display: inline-flex !important;
   }
@@ -2128,29 +2142,47 @@ html, body {
     display: none !important;
   }
 
-  body:not(.on-step-1):not(.on-step-5) #client_top_close_btn {
-    display: none !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #client_top_back_btn {
-    display: inline-flex !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #client_top_next_btn {
-    display: inline-flex !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #submitBtn {
-    display: none !important;
-  }
-
+  /* Steps 2-5: Close hidden, Back visible, Next visible, Submit hidden */
+  body.on-step-2 #client_top_close_btn,
+  body.on-step-3 #client_top_close_btn,
+  body.on-step-4 #client_top_close_btn,
   body.on-step-5 #client_top_close_btn {
     display: none !important;
   }
+  body.on-step-2 #client_top_back_btn,
+  body.on-step-3 #client_top_back_btn,
+  body.on-step-4 #client_top_back_btn,
   body.on-step-5 #client_top_back_btn {
     display: inline-flex !important;
   }
+  body.on-step-2 #client_top_next_btn,
+  body.on-step-3 #client_top_next_btn,
+  body.on-step-4 #client_top_next_btn,
   body.on-step-5 #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-2 #submitBtn,
+  body.on-step-3 #submitBtn,
+  body.on-step-4 #submitBtn,
+  body.on-step-5 #submitBtn {
     display: none !important;
   }
-  body.on-step-5 #submitBtn {
+
+  /* Step 6 (Review & Submit): Close hidden, Back visible, Next hidden, Submit visible */
+  body.on-step-6 #client_top_close_btn,
+  body.on-review-step #client_top_close_btn {
+    display: none !important;
+  }
+  body.on-step-6 #client_top_back_btn,
+  body.on-review-step #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-6 #client_top_next_btn,
+  body.on-review-step #client_top_next_btn {
+    display: none !important;
+  }
+  body.on-step-6 #submitBtn,
+  body.on-review-step #submitBtn {
     display: inline-flex !important;
   }
 
@@ -6566,11 +6598,12 @@ $('.remove_address').click(function(){
             if (typeof goToWizardStep === 'function') {
               goToWizardStep(s);
             }
-            if ($firstInvalid && $firstInvalid.length) {
-              $firstInvalid.focus();
+            var $invalidEl = window.$firstInvalid;
+            if ($invalidEl && $invalidEl.length) {
+              $invalidEl.focus();
               try {
                 $('html, body').animate({
-                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                  scrollTop: Math.max(0, $invalidEl.offset().top - 140)
                 }, 300);
               } catch (err) {}
             }
@@ -6693,11 +6726,12 @@ $('.remove_address').click(function(){
             if (typeof goToWizardStep === 'function') {
               goToWizardStep(s);
             }
-            if ($firstInvalid && $firstInvalid.length) {
-              $firstInvalid.focus();
+            var $invalidEl = window.$firstInvalid;
+            if ($invalidEl && $invalidEl.length) {
+              $invalidEl.focus();
               try {
                 $('html, body').animate({
-                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                  scrollTop: Math.max(0, $invalidEl.offset().top - 140)
                 }, 300);
               } catch (err) {}
             }
@@ -8007,31 +8041,6 @@ $('.remove_address').click(function(){
       }
     },
 
-      // Ensure the primary contact is at index 0 in hidden inputs for database storage
-      var sorted = self.contacts.slice().sort(function (a, b) {
-        return (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0);
-      });
-
-      sorted.forEach(function (c, i) {
-        var hHtml = '<div class="row client-cperson-container" data-contact-index="' + i + '">' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.name) + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.phone) + '"><input type="hidden" value="' + escapeHtml(c.callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + i + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + i + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(c.designation) + '"></div></div>' +
-          '</div>';
-        $containerRow.append(hHtml);
-      });
-
-      $('#contactPersonId').val(Math.max(0, sorted.length - 1));
-
-      if (typeof updateCompletion === 'function') {
-        try { updateCompletion(); } catch (e) {}
-      }
-      if (typeof populateReviewSummaries === 'function') {
-        try { populateReviewSummaries(); } catch (e) {}
-      }
-    },
-
     openAddDrawer: function () {
       this._openDrawer(null);
     },
@@ -9244,6 +9253,7 @@ $('.remove_address').click(function(){
     clearInlineErrors();
     var isValid = true;
     var $firstInvalid = null;
+    window.$firstInvalid = null;
 
     // Section 1: Client Information
     if (step === 1) {
@@ -9558,6 +9568,7 @@ $('.remove_address').click(function(){
       });
     }
 
+    window.$firstInvalid = $firstInvalid;
     if (!isValid && $firstInvalid) {
       try {
         $firstInvalid.focus();
@@ -10065,6 +10076,7 @@ $('.remove_address').click(function(){
 
       var currentStep = getCurrentStepNumber();
       if (!validateWizardStep(currentStep)) {
+        var $firstInvalid = window.$firstInvalid;
         if ($firstInvalid && $firstInvalid.length) {
           $firstInvalid.focus();
           try {
@@ -10181,6 +10193,7 @@ $('.remove_address').click(function(){
       if (targetStep > currentStep) {
         for (var s = currentStep; s < targetStep; s++) {
           if (!validateWizardStep(s)) {
+            var $firstInvalid = window.$firstInvalid;
             if ($firstInvalid && $firstInvalid.length) {
               $firstInvalid.focus();
               try {
