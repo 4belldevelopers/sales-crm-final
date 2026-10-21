@@ -7864,7 +7864,17 @@ $('.remove_address').click(function(){
 
   function syncAdditionalAddressEmpty() {
     var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
-    $('#client_additional_empty').toggle($cards.length === 0);
+    var count = $cards.length;
+    if (count === 0) {
+      $('#client_additional_empty_state').show();
+      $('#additional_location_cta_wrap').hide();
+      $('#additional_locations_count_badge').text('0 Locations');
+    } else {
+      $('#client_additional_empty_state').hide();
+      $('#additional_location_cta_wrap').show();
+      $('#additional_locations_count_badge').text(count + (count === 1 ? ' Location' : ' Locations'));
+    }
+    $('#client_additional_empty').toggle(count === 0);
     $cards.each(function(idx) {
       $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
     });

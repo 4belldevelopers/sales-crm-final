@@ -44,11 +44,11 @@
     <!--begin::Container-->
     <div id="kt_content_container" class="container-fluid px-3">
 
-        <!-- ── HEADER ── -->
-        <div class="cl-header">
+        <!-- ── HEADER CARD ── -->
+        <div class="cl-header cl-header-card">
             <div class="cl-header-left">
                 <div class="cl-header-icon-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -59,7 +59,7 @@
                     <div class="cl-header-title-row">
                         <h1 class="cl-header-title">Clients</h1>
                         <span class="cl-verified-badge" title="Verified ATS Module">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                                 <path d="m9 12 2 2 4-4" stroke="#16a34a" stroke-width="2.5"/>
                             </svg>
@@ -71,7 +71,7 @@
 
             <div class="cl-header-actions">
                 <button type="button" class="cl-export-btn" onclick="exportClientsToCsv()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
@@ -81,7 +81,7 @@
 
                 @if(in_array("add_clients", $userPermissions))
                 <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>

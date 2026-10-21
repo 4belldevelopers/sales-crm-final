@@ -795,10 +795,10 @@
 
   /* Empty State */
   .client-addr-empty-state {
-    background: #ffffff !important;
-    border: 1.5px dashed #cbd5e1 !important;
+    background: #fffdf0 !important;
+    border: 1px solid #fde68a !important;
     border-radius: 10px !important;
-    padding: 26px 20px !important;
+    padding: 24px 20px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -809,13 +809,13 @@
   }
   .client-addr-empty-state:hover {
     border-color: #f59e0b !important;
-    background: #fffdf5 !important;
   }
   .empty-state-icon-circle {
     width: 44px !important;
     height: 44px !important;
     border-radius: 50% !important;
-    background: #f1f5f9 !important;
+    background: #eff6ff !important;
+    border: 1px solid #dbeafe !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
