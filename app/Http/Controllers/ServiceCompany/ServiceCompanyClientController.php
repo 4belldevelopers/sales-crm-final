@@ -3797,7 +3797,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $duplicateService = app(InternalClientDuplicateService::class);
 
         if ($field === 'name') {
-            $name = (string) $request->input('name', '');
+            $name = (string) ($request->input('name') ?: $request->input('value', ''));
             $dup = $duplicateService->checkCompanyNameDuplicate($tenantId, $name, $clientId);
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
@@ -3806,7 +3806,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         if ($field === 'website') {
-            $website = (string) $request->input('website', '');
+            $website = (string) ($request->input('website') ?: $request->input('value', ''));
             $dup = $duplicateService->checkDomainDuplicate($tenantId, $website, $clientId);
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
@@ -3815,8 +3815,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         if ($field === 'contact') {
-            $email = (string) $request->input('email', '');
-            $phone = (string) $request->input('phone', '');
+            $email = (string) ($request->input('email') ?: $request->input('value', ''));
+            $phone = (string) ($request->input('phone') ?: $request->input('number', ''));
             $callingCode = (string) $request->input('calling_code', '+91');
             $draftContacts = (array) $request->input('draft_contacts', []);
 
