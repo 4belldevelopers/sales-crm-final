@@ -215,49 +215,6 @@
 @push('footer-script') 
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
 <script>
-$(document).ready(function() {	
-				$('#inputSearch').keyup(function() {
-					   	//  tableLoad('load');
-               fetchCandidates();      
-		   		});
-   });
-   
-var table;
-// tableLoad('load');      
-function tableLoad(type) 
-	{
-			table 						= $('#job_request').dataTable({
-  
-																			responsive     		: true, 
-																			processing      	: true,
-																			ordering			: false, //disable ordering      			
-																			destroy       		: true,   
-																			stateSave     		: true,      
-																			"bLengthChange"   	: false,   
-																			sDom				: 'lrtip',       
-																			
-			ajax			: 	{'url' : '{!! route('service_company.jobs.recommandedrequest') !!}', "data": function ( d ){ d.search = $('#inputSearch').val() } },           
-		   "fnDrawCallback" : 	function (oSettings) {
-														$("body").tooltip({selector: '[data-toggle="tooltip"]' });
-								},				
-		  "initComplete"	:	function( settings, json){ }, 		  
-		   columns			: [             
-									{data: 'chkbox', name: 'chkbox', orderable: false, searchable: false},            
-									{data: 'Requisition', name: 'Requisition',  orderable: false, searchable: false, width: '15%'},
-									{data: 'Exp', name: 'Exp', searchable : false, orderable : false, width: '15%'},
-									{data: 'Salary', name: 'Salary', searchable : false, orderable : false,  width: '5%'},
-									{data: 'Location', name: 'Location',  searchable : false, orderable : false,  width: '10%'},
-									{data: 'Status', name: 'Status', searchable : false, orderable : false},
-									{data: 'Date', name: 'Date',  searchable : false, orderable : false},
-									{data: 'HM', name: 'HM', orderable: false},
-                  {data: 'Terms', name: 'Terms', orderable: false},
-									{data: 'Action', name: 'Action', orderable: false}
-								
-							 ]         
-		 }); 
-		 new $.fn.dataTable.FixedHeader(table);
-	   
-	   } 
 
      $(document).on('click', '.client-show-detail', function ()
    		{
@@ -355,7 +312,7 @@ function tableLoad(type)
 																						}			
                                             // table._fnDraw();
 																						// tableLoad('load');	
-                                            fetchCandidates();																							
+                                            fetchCandidates(currentPageNo);																							
 																			}
 																	});
 														} 
@@ -386,7 +343,7 @@ function tableLoad(type)
             url: url,
             data: { 'jobId': jobId, 'rec_relation_id': recommendation_relation_id, 'status': status },
             success: function (response) {
-                fetchCandidates();
+                fetchCandidates(currentPageNo);
             },
             error: function () {
                 $btn.prop('disabled', false).html(originalHtml);
@@ -397,43 +354,67 @@ function tableLoad(type)
 
 
 
+      var currentPageNo = 1;
+      window.latestJobRequestAjaxId = 0;
+      window.currentJobRequestAjax = null;
+
       $(document).ready(function() {
+            fetchCandidates(1);
 
-            fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
+            $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
                 e.preventDefault();
-
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+                fetchCandidates(page);
             });
 
+            $(document).on('keyup input', '#inputSearch, #search', function() {
+                clearTimeout(window.jobRequestSearchTimeout);
+                var self = this;
+                window.jobRequestSearchTimeout = setTimeout(function() {
+                    fetchCandidates(1, $(self).val());
+                }, 300);
+            });
       });
 
-      function fetchCandidates(page = 1, search = '') {
-            $('.loadingMessage').css({ display: 'block' });
-            $.ajax({
-                url: `{!! route('service_company.jobs.recommandedrequest_ajax') !!}?page=${page}`,
-                type: 'GET',
-                data: { search: $('#inputSearch').val() },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('#span_jobRequest').html(response.total);
-                    $('#pagination').html(response.pagination);
+      function fetchCandidates(page = 1, search = null) {
+            currentPageNo = page || 1;
+            var searchVal = (search !== null && search !== undefined) ? search : ($('#inputSearch').val() || $('#search').val() || '');
+            var customStatus = $('#status').val() || 'all';
+            var customHiringtype = $('#hiringtype').val() || '1';
+            var employmentType = $('#employment_type').val() || 'all';
+            var experienceFilter = $('#experience_filter').val() || 'all';
+            var pageSize = $('#pagination .pagi-perpage').val() || 10;
 
-                    if (!response.total || response.total == 0) {
+            var thisRequestId = ++window.latestJobRequestAjaxId;
+            if (window.currentJobRequestAjax && typeof window.currentJobRequestAjax.abort === 'function') {
+                window.currentJobRequestAjax.abort();
+            }
+
+            $('.loadingMessage').css({ display: 'block' });
+
+            window.currentJobRequestAjax = $.ajax({
+                url: `{!! route('service_company.jobs.all_data_ajax') !!}`,
+                type: 'GET',
+                data: {
+                    page: currentPageNo,
+                    requisition_type: 'job_request',
+                    custom_status: customStatus,
+                    search: searchVal,
+                    custom_hiringtype: customHiringtype,
+                    employment_type: employmentType,
+                    experience_filter: experienceFilter,
+                    custom_search: searchVal,
+                    size: pageSize
+                },
+                success: function(response) {
+                    if (thisRequestId !== window.latestJobRequestAjaxId) return;
+                    $('.loadingMessage').css({ display: 'none' });
+
+                    var total = (response && typeof response.total !== 'undefined') ? response.total : 0;
+                    $('#span_jobRequest').html(total);
+
+                    if (!total || total == 0) {
                         $('#requestJobLists').html(
                             '<div style="text-align:center;padding:60px 20px;font-family:Poppins,sans-serif;">' +
                             '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 16px;display:block;">' +
@@ -444,24 +425,40 @@ function tableLoad(type)
                             '<p style="font-size:12.5px;color:#9CA3AF;margin:0;">There are no pending job requests at the moment.</p>' +
                             '</div>'
                         );
+                        $('#pagination').html('');
                     } else {
-                        $('#requestJobLists').html(response.html);
+                        $('#requestJobLists').html(response.html || '');
+                        $('#pagination').html(response.pagination || '');
                     }
                 },
-                error: function(xhr) {
+                error: function(xhr, status, error) {
+                    if (thisRequestId !== window.latestJobRequestAjaxId || status === 'abort') return;
                     $('.loadingMessage').css({ display: 'none' });
+
                     var msg = (xhr.status === 0 || !navigator.onLine)
                         ? 'You are offline. Please check your connection and try again.'
-                        : 'Could not load job requests (HTTP ' + xhr.status + '). Please refresh the page.';
+                        : 'Could not load job requests (HTTP ' + (xhr.status || 'Error') + '). Please refresh the page.';
+
                     $('#requestJobLists').html(
                         '<div style="text-align:center;padding:60px 20px;font-family:Poppins,sans-serif;">' +
                         '<i class="fa fa-exclamation-triangle" style="font-size:32px;color:#f64e60;margin-bottom:12px;display:block;"></i>' +
                         '<p style="font-size:13px;color:#5e6278;margin:0;">' + msg + '</p>' +
-                        '<button onclick="fetchCandidates()" class="btn btn-sm btn-primary mt-4" style="font-size:12px;">Retry</button>' +
+                        '<button onclick="fetchCandidates(currentPageNo)" class="btn btn-sm btn-primary mt-4" style="font-size:12px;">Retry</button>' +
                         '</div>'
                     );
+                    $('#pagination').html('');
                 }
             });
+        }
+
+        function filterJobsByKpi(kpi) {
+            if (kpi === 'all') {
+                window.location.href = "{{ route('service_company.jobs.index') }}";
+            } else if (kpi === 'direct' || kpi === 'internal') {
+                window.location.href = "{{ route('service_company.jobs.index') }}?kpi=" + encodeURIComponent(kpi);
+            } else if (kpi === 'job_request') {
+                fetchCandidates(1);
+            }
         }
 																      
 </script>

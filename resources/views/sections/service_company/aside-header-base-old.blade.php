@@ -89,7 +89,7 @@ $productAllowCompany = GeneralMethod::companiesType();
 
                 @if (@$productAllowCompany)
                     <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion {{ request()->is('service_company/jobs/job_request*') || request()->is('service_company/clients*') ? 'show' : '' }} ">
+                        class="menu-item menu-accordion {{ request()->is('service_company/jobs/job_request*') || request()->is('service_company/clients*') || (request()->is('service_company/jobs*') && request('kpi') == 'job_request') ? 'show' : '' }} ">
                         <span class="menu-link"> <span class="menu-icon">
                                 <!--begin::Svg Icon-->
                                 <span class="svg-icon svg-icon-2">
@@ -123,8 +123,8 @@ $productAllowCompany = GeneralMethod::companiesType();
                             @endif
                             <!--end::Bench list-->
 
-                            <div class="menu-item"> <a href="{{ asset('service_company/jobs/job_request/0') }}"
-                                    class="menu-link {{ request()->is('service_company/jobs/job_request/0') ? 'active' : '' }}">
+                            <div class="menu-item"> <a href="{{ route('service_company.jobs.index') }}?kpi=job_request"
+                                    class="menu-link {{ (request()->is('service_company/jobs/job_request*') || (request()->is('service_company/jobs*') && request('kpi') == 'job_request')) ? 'active' : '' }}">
                                     <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
                                         class="menu-title">Job Request</span> </a> </div>
 
@@ -135,7 +135,7 @@ $productAllowCompany = GeneralMethod::companiesType();
 
 
                 <div data-kt-menu-trigger="click"
-                    class="menu-item menu-accordion {{ request()->is('service_company/job-onboard') || request()->is('service_company/applicationoffer') || request()->is('service_company/interview-schedule/table-view') || request()->is('service_company/jobs') ? 'show' : '' }} ">
+                    class="menu-item menu-accordion {{ request()->is('service_company/job-onboard') || request()->is('service_company/applicationoffer') || request()->is('service_company/interview-schedule/table-view') || (request()->is('service_company/jobs*') && request('kpi') != 'job_request') ? 'show' : '' }} ">
                     <span class="menu-link"> <span class="menu-icon">
                             <!--begin::Svg Icon-->
                             <span class="svg-icon svg-icon-2">
@@ -161,7 +161,7 @@ $productAllowCompany = GeneralMethod::companiesType();
                                 in_array('edit_jobs', $userPermissions) ||
                                 in_array('delete_jobs', $userPermissions))
                             <div class="menu-item"> <a href="{{ route('service_company.jobs.index') }}"
-                                    class="menu-link {{ request()->is('service_company/jobs') ? 'active' : '' }}">
+                                    class="menu-link {{ (request()->is('service_company/jobs*') && request('kpi') != 'job_request') ? 'active' : '' }}">
                                     <span class="menu-icon"><span class="bullet bullet-dot"></span> </span> <span
                                         class="menu-title">Jobs</span> </a> </div>
                         @endif

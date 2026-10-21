@@ -138,17 +138,18 @@
       $currencySymbole = GeneralMethod::currencySymbole();
       $productAllowCompany = GeneralMethod::companiesType();
       
+        $currentKpi = request('kpi', 'all');
         $tabactive = [
-         'allRequisition_active'=>'tabactive',
+         'allRequisition_active'=> ($currentKpi === 'all' || empty($currentKpi)) ? 'tabactive' : '',
          'allRequisition_url'=> 'javascript:void(0);',
          'allRequisition_id'=>'top_card_all_jobs_count',
-         'customRequisition_active'=>'',
+         'customRequisition_active'=> ($currentKpi === 'internal') ? 'tabactive' : '',
          'customRequisition_url'=> 'javascript:void(0);',
          'customRequisition_id'=>'top_card_custom_requisition_count',
-         'clientRequisition_active'=>'',
+         'clientRequisition_active'=> ($currentKpi === 'direct') ? 'tabactive' : '',
          'clientRequisition_url'=> 'javascript:void(0);',
          'clientRequisition_id'=>'top_card_client_requisition_count',
-         'jobRequest_active'=>'',
+         'jobRequest_active'=> ($currentKpi === 'job_request' || $currentKpi === 'request') ? 'tabactive' : '',
          'jobRequest_url'=> 'javascript:void(0);',
          'jobRequest_id'=>'top_card_job_request_count',
          'allRequisition' =>@$dataCnt['allRequisition'],
@@ -687,13 +688,6 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
     window.currentKpiFilter = (new URLSearchParams(window.location.search)).get('kpi') || 'all';
 
-    // Clean up ?kpi= from address bar if present on page load
-    if ((new URLSearchParams(window.location.search)).has('kpi')) {
-        var cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('kpi');
-        window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-    }
-
     function updateKpiViewToggle(kpiType) {
         if (kpiType === 'job_request' || kpiType === 'request') {
             $('.jh-filter-bar').hide();
@@ -717,6 +711,26 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
         $('.jh-radio-input').prop('checked', false);
         $(`.jh-card[data-kpi="${kpiType}"] .jh-radio-input`).prop('checked', true);
+
+        // Reflect current KPI in address bar without full page reload
+        try {
+            var currentUrl = new URL(window.location.href);
+            if (kpiType && kpiType !== 'all') {
+                currentUrl.searchParams.set('kpi', kpiType);
+            } else {
+                currentUrl.searchParams.delete('kpi');
+            }
+            window.history.replaceState({}, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+        } catch (e) {}
+
+        // Sync sidebar active state between CRM -> Job Request and Hiring -> Job Tracker
+        if (kpiType === 'job_request' || kpiType === 'request') {
+            $('a[href*="kpi=job_request"], a[href*="job_request"]').addClass('active');
+            $('a[href="{{ route('service_company.jobs.index') }}"]').not('[href*="kpi="]').removeClass('active');
+        } else {
+            $('a[href*="kpi=job_request"], a[href*="job_request"]').removeClass('active');
+            $('a[href="{{ route('service_company.jobs.index') }}"]').not('[href*="kpi="]').addClass('active');
+        }
 
         updateKpiViewToggle(kpiType);
 
@@ -1286,6 +1300,13 @@ $(document).on('click', '.client-hm-listing', function ()
 
       $(document).ready(function() {
             // $.noConflict();
+
+            if (window.currentKpiFilter && window.currentKpiFilter !== 'all') {
+                $('.jh-card').removeClass('jh-card-active');
+                $(`.jh-card[data-kpi="${window.currentKpiFilter}"]`).addClass('jh-card-active');
+                $('.jh-radio-input').prop('checked', false);
+                $(`.jh-card[data-kpi="${window.currentKpiFilter}"] .jh-radio-input`).prop('checked', true);
+            }
 
             updateKpiViewToggle(window.currentKpiFilter);
             fetchCandidates();
