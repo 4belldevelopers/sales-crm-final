@@ -33,8 +33,11 @@ class InternalClientDuplicationAndReadinessTest extends TestCase
     use DatabaseTransactions;
 
     protected int $tenantId = 99881;
+
     protected User $testUser;
+
     protected InternalClientDuplicateService $dupService;
+
     protected InternalClientReadinessService $readinessService;
 
     protected function setUp(): void
@@ -51,10 +54,11 @@ class InternalClientDuplicationAndReadinessTest extends TestCase
         DB::setDefaultConnection('mysql');
 
         // Establish tenant user context
-        $this->testUser = new User();
+        $this->testUser = new User;
         $this->testUser->id = 88771;
         $this->testUser->company_id = $this->tenantId;
         $this->testUser->is_superadmin = 0;
+        $this->testUser->status = 'active';
         Auth::setUser($this->testUser);
 
         $this->dupService = app(InternalClientDuplicateService::class);
@@ -372,5 +376,126 @@ class InternalClientDuplicationAndReadinessTest extends TestCase
         // Clean up cache keys
         Cache::forget("internal_client:ready:{$this->tenantId}:{$tempClientId}");
         Cache::forget("internal_client:lifecycle:{$this->tenantId}:{$tempClientId}");
+    }
+
+    /**
+     * Test AJAX endpoint for immediate website duplicate validation:
+     * - Direct client website returns valid: true (allowed).
+     * - Internal client website returns valid: false & duplicate: true (blocked).
+     */
+    public function test_ajax_validate_internal_field_website(): void
+    {
+        $this->withoutMiddleware();
+        \Illuminate\Support\Facades\Gate::define('add_clients', fn () => true);
+        \Illuminate\Support\Facades\Gate::define('edit_clients', fn () => true);
+
+        // Seed Direct Client (self_company = 1)
+        DB::table('clients')->insert([
+            'company_id' => $this->tenantId,
+            'name' => 'Direct Only Company',
+            'website' => 'https://www.direct-only.com',
+            'self_company' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Seed Internal Client (self_company = 0)
+        DB::table('clients')->insert([
+            'company_id' => $this->tenantId,
+            'name' => 'Internal Existing Company',
+            'website' => 'https://www.internal-existing.com',
+            'self_company' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Test 1: Direct Client website -> ALLOW (valid: true)
+        $respDirect = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'website',
+            'website' => 'https://direct-only.com/',
+        ]);
+        $respDirect->assertOk();
+        $respDirect->assertJson(['status' => 'success', 'valid' => true]);
+
+        // Test 2: Internal Client website -> BLOCK (valid: false, duplicate: true)
+        $respInternal = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'website',
+            'website' => 'https://internal-existing.com/',
+        ]);
+        $respInternal->assertOk();
+        $respInternal->assertJson(['status' => 'duplicate', 'valid' => false, 'duplicate' => true]);
+        $this->assertStringContainsString('This website/domain is already registered internally', $respInternal->json('message'));
+    }
+
+    /**
+     * Test AJAX endpoint for immediate contact duplicate validation:
+     * - Direct client contact returns valid: true (allowed).
+     * - Internal client contact returns valid: false & duplicate: true (blocked).
+     */
+    public function test_ajax_validate_internal_field_contact(): void
+    {
+        $this->withoutMiddleware();
+        \Illuminate\Support\Facades\Gate::define('add_clients', fn () => true);
+        \Illuminate\Support\Facades\Gate::define('edit_clients', fn () => true);
+
+        // Seed Direct Client with contact
+        $directClientId = DB::table('clients')->insertGetId([
+            'company_id' => $this->tenantId,
+            'name' => 'Direct Client Contact Corp',
+            'self_company' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('client_contact_info')->insert([
+            'client_id' => $directClientId,
+            'contact_person_name' => 'Direct Contact',
+            'contact_person_email' => 'direct.contact@testcorp.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Seed Internal Client with contact
+        $internalClientId = DB::table('clients')->insertGetId([
+            'company_id' => $this->tenantId,
+            'name' => 'Internal Client Contact Corp',
+            'self_company' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('client_contact_info')->insert([
+            'client_id' => $internalClientId,
+            'contact_person_name' => 'Internal Contact',
+            'contact_person_email' => 'internal.contact@testcorp.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Test 1: Direct Client contact email -> ALLOW (valid: true)
+        $respDirect = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'contact',
+            'email' => 'direct.contact@testcorp.com',
+        ]);
+        $respDirect->assertOk();
+        $respDirect->assertJson(['status' => 'success', 'valid' => true]);
+
+        // Test 2: Internal Client contact email -> BLOCK (valid: false, duplicate: true)
+        $respInternal = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'contact',
+            'email' => 'internal.contact@testcorp.com',
+        ]);
+        $respInternal->assertOk();
+        $respInternal->assertJson(['status' => 'duplicate', 'valid' => false, 'duplicate' => true]);
+        $this->assertStringContainsString('This contact is already registered with another internal company', $respInternal->json('message'));
+
+        // Test 3: Batch check for Step 4 navigation guard
+        $respBatch = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'all',
+            'cp_name' => ['Fresh Person', 'Duplicated Person'],
+            'cp_email' => ['fresh.person@brandnewcorp99.com', 'internal.contact@testcorp.com'],
+            'cp_number' => ['5550192837', '5550192838'],
+            'calling_code' => ['+91', '+91'],
+        ]);
+        $respBatch->assertOk();
+        $respBatch->assertJson(['status' => 'duplicate', 'valid' => false, 'duplicate' => true, 'index' => 1]);
     }
 }
