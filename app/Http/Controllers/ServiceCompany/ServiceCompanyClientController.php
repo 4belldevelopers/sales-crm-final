@@ -2591,6 +2591,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
             'industry' => $request->industry,
+            'custom_industry' => trim($request->custom_industry ?? ''),
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -2713,6 +2714,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'youtube_url' => $request->youtube_url ?? null,
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
         ]);
         $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
@@ -2765,12 +2767,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $existingLocMap[$loc->city_id.'_'.trim($loc->address)] = $loc;
         }
 
-        $addressId = (int) (@$request->addressId ?? 0);
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
         $locationsToUpdate = [];
         $locationsToInsert = [];
         $addIdGet = [];
 
-        for ($i = 0; $i <= $addressId; $i++) {
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = @$request->address[$i];
             $postcode = '0';
             $work_city = @$request->kt_tagify_work_location[$i];
@@ -2888,6 +2891,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
         }
+
+        if (! empty($contactsToInsert) || ! empty($contactsToUpdate)) {
+            $primaryContact = ! empty($contactsToInsert) ? reset($contactsToInsert) : reset($contactsToUpdate);
+            $client->contact_person_name = substr($primaryContact['contact_person_name'] ?? $client->contact_person_name, 0, 55);
+            $client->email = substr($primaryContact['contact_person_email'] ?? $client->email, 0, 55);
+            $client->contact_number = substr($primaryContact['contact_person_number'] ?? $client->contact_number, 0, 55);
+        } else {
+            $client->contact_person_name = $client->contact_person_name ?? '';
+            $client->email = $client->email ?? '';
+            $client->contact_number = $client->contact_number ?? '';
+        }
+        $client->commission = $client->commission ?? '0';
+        $client->payout = $client->payout ?? '0';
 
         try {
             DB::beginTransaction();
@@ -3191,7 +3207,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (empty(trim($request->name ?? ''))) {
             return Reply::error('Client Name is required.');
         }
-        if (empty($request->industry)) {
+        $hasIndustry = (! empty($request->industry) && (string) $request->industry !== '0') || ! empty(trim($request->custom_industry ?? ''));
+        if (! $hasIndustry) {
             return Reply::error('Industry is required.');
         }
         if (empty($request->company_sizes)) {
@@ -3226,8 +3243,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         // 3. Address Details (Minimum 1 location with City & Full Address)
         $hasValidAddress = false;
-        $addressId = (int) (@$request->addressId ?? 0);
-        for ($i = 0; $i <= $addressId; $i++) {
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = trim(@$request->address[$i] ?? '');
             $work_city = @$request->kt_tagify_work_location[$i];
             if (! empty($address) && ! empty($work_city)) {
@@ -3241,7 +3259,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         // 4. Contact Person (Minimum 1 Contact Person added)
         $hasValidContact = false;
-        $contactPersonId = (int) (@$request->contactPersonId ?? 0);
+        $totalCpNames = is_array($request->cp_name) ? count($request->cp_name) : 0;
+        $contactPersonId = max($totalCpNames - 1, (int) (@$request->contactPersonId ?? 0));
         for ($j = 0; $j <= $contactPersonId; $j++) {
             $cp_name = trim(@$request->cp_name[$j] ?? '');
             $cp_email = trim(@$request->cp_email[$j] ?? '');
@@ -3274,6 +3293,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'name' => trim($request->name ?? ''),
             'website' => trim($request->website ?? ''),
             'industry' => $request->industry,
+            'custom_industry' => trim($request->custom_industry ?? ''),
             'company_sizes' => $request->company_sizes,
             'company_type' => $request->company_type,
             'founded' => $request->founded,
@@ -3383,6 +3403,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'youtube_url' => $request->youtube_url ?? null,
             'facebook_url' => $request->facebook_url ?? null,
             'instagram_url' => $request->instagram_url ?? null,
+            'custom_link' => $request->custom_link ?? null,
         ];
         $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
         if (! empty($filteredDetail)) {
@@ -3423,9 +3444,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         // Prepare locations outside database transaction
         $Location = [];
         $locationsToInsert = [];
-        $addressId = (int) (@$request->addressId ?? 0);
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
 
-        for ($i = 0; $i <= $addressId; $i++) {
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
             $address = @$request->address[$i];
             $postcode = '0';
             $work_city = @$request->kt_tagify_work_location[$i];
@@ -3520,6 +3542,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $contacDetails[] = (object) $values;
             }
         }
+
+        if (! empty($contactsToInsert)) {
+            $primaryContact = $contactsToInsert[0];
+            $client->contact_person_name = substr($primaryContact['contact_person_name'] ?? '', 0, 55);
+            $client->email = substr($primaryContact['contact_person_email'] ?? '', 0, 55);
+            $client->contact_number = substr($primaryContact['contact_person_number'] ?? '', 0, 55);
+        } else {
+            $client->contact_person_name = $client->contact_person_name ?? '';
+            $client->email = $client->email ?? '';
+            $client->contact_number = $client->contact_number ?? '';
+        }
+        $client->commission = $client->commission ?? '0';
+        $client->payout = $client->payout ?? '0';
 
         DB::beginTransaction();
         try {

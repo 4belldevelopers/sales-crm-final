@@ -143,8 +143,8 @@
 
       <!-- CARD 2: ADDITIONAL LOCATIONS (OPTIONAL) -->
       <section class="card client-section-card client-addr-additional-card" id="client_addr_additional_card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden;">
-        <!-- Card Header -->
-        <div class="card-header border-0 d-flex align-items-center justify-content-between" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:12px 18px !important;">
+        <!-- Card Header (Title & Subtitle ONLY - No action buttons) -->
+        <div class="card-header border-0 d-flex align-items-center" style="background:#ffffff; border-bottom:1px solid #f8fafc !important; padding:14px 18px !important;">
           <div class="d-flex align-items-center gap-2">
             <div style="width:36px; height:36px; border-radius:9px; background:#fef9c3; display:inline-flex; align-items:center; justify-content:center; color:#ca8a04; flex-shrink:0;">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -158,15 +158,11 @@
               <p class="client-section-copy mb-0" style="font-size:11px; color:#64748b;">Add branch offices, development centres or other locations.</p>
             </div>
           </div>
-          <button type="button" class="btn btn-sm" id="btn_add_another_address" style="background:#ffffff; border:1.5px solid #2563eb; color:#2563eb; border-radius:8px; padding:6px 14px; font-size:11.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:none;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>Add Another Location</span>
-          </button>
         </div>
 
         <!-- Card Body -->
         <div class="card-body" style="padding:14px 18px !important;">
-          <!-- Dynamic Branches List -->
+          <!-- Dynamic Branches List (Cards inserted above CTA) -->
           <div class="client-additional-list" id="additional_addresses_container">
             @if (!empty($additional_addresses))
               @foreach ($additional_addresses as $addIdx => $addrItem)
@@ -179,7 +175,7 @@
                       </div>
                       <div>
                         <div class="d-flex align-items-center gap-2">
-                          <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location ({{ $addIdx + 1 }})</h4>
+                          <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location {{ $addIdx + 1 }}</h4>
                           <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; font-weight:600; padding:2px 6px; border-radius:4px;">OFFICE</span>
                         </div>
                       </div>
@@ -188,9 +184,9 @@
                       <button type="button" class="btn btn-xs" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq({{ $addrItem['id'] }}) : false" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#b45309; border:1px solid #fde68a; background:#fefce8; cursor:pointer;" title="Set as Headquarters">
                         Set as Headquarters
                       </button>
-                      <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, 'clientAddr_{{ $addrItem['id'] }}')" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer;" title="Remove Location">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        Remove
+                      <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, 'clientAddr_{{ $addrItem['id'] }}')" style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer; display:inline-flex; align-items:center; gap:3px;" title="Remove Location">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <span>Remove</span>
                       </button>
                     </div>
                   </div>
@@ -199,12 +195,12 @@
                   <div class="client-branch-body">
                     <!-- Branch City -->
                     <div class="client-addr-field mb-2">
-                      <label class="form-label mb-1" for="branch_city_search_{{ $addrItem['id'] }}" style="font-size:11.5px; font-weight:600; color:#334155;">City <span class="text-danger">*</span></label>
+                      <label class="form-label mb-1" for="branch_city_search_{{ $addrItem['id'] }}" style="font-size:11.5px; font-weight:600; color:#334155;">City / Location <span class="text-danger">*</span></label>
                       <div class="position-relative client-addr-input-wrap">
                         <span class="position-absolute" style="left:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none; z-index:2;">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </span>
-                        <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_{{ $addrItem['id'] }}" data-cid="{{ $addrItem['id'] }}" value="{{ $addrItem['city'] }}" placeholder="Search branch city..." autocomplete="off" style="height:36px; padding:0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">
+                        <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_{{ $addrItem['id'] }}" data-cid="{{ $addrItem['id'] }}" value="{{ $addrItem['city'] }}" placeholder="Search for a city..." autocomplete="off" style="height:36px; padding:0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">
                         <span class="position-absolute" style="right:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none; z-index:2;">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </span>
@@ -221,7 +217,7 @@
                         <span class="position-absolute" style="left:11px; top:9px; color:#94a3b8; pointer-events:none; z-index:2;">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                         </span>
-                        <textarea class="form-control client-addr-textarea" name="address[]" id="address_{{ $addrItem['id'] }}" rows="2" maxlength="500" placeholder="Building name, street, area, landmark, pincode, etc." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">{{ $addrItem['address'] }}</textarea>
+                        <textarea class="form-control client-addr-textarea" name="address[]" id="address_{{ $addrItem['id'] }}" rows="2" maxlength="500" placeholder="Enter complete address..." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">{{ $addrItem['address'] }}</textarea>
                       </div>
                       <div class="d-flex align-items-center justify-content-between mt-1">
                         <span class="text-muted" style="font-size:10.5px;">Accurate branch address.</span>
@@ -235,17 +231,13 @@
             @endif
           </div>
 
-          <!-- Empty State (Matching media_1792565792953_2202cf86.png) -->
-          <div class="client-addr-empty-box" id="client_additional_empty" style="border:1.5px dashed #bfdbfe; background:#f8fafc; border-radius:10px; padding:24px 16px; text-align:center; {{ !empty($additional_addresses) ? 'display:none;' : '' }}">
-            <div style="width:40px; height:40px; border-radius:50%; background:#e0f2fe; display:inline-flex; align-items:center; justify-content:center; margin-bottom:8px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 21h18"></path>
-                <path d="M5 21V7l8-4v18"></path>
-                <path d="M19 21V11l-6-4"></path>
-              </svg>
-            </div>
-            <h5 style="font-size:12.5px; font-weight:700; color:#334155; margin:0 0 3px 0;">No additional locations added yet.</h5>
-            <p style="font-size:11px; color:#64748b; margin:0;">Add branch offices, development centres or other company locations.</p>
+          <!-- Additional Locations Bottom CTA Block (Always below cards) -->
+          <div class="client-additional-cta-wrap pt-1" id="additional_location_cta_wrap">
+            <p class="mb-2" id="additional_location_helper_text" style="font-size:11.5px; color:#64748b; line-height:1.4;">Add branch offices, development centres or other company locations.</p>
+            <button type="button" class="btn btn-sm" id="btn_add_another_address" style="background:#ffffff; border:1.5px solid #2563eb; color:#2563eb; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 2px rgba(37,99,235,0.05); transition:all 0.15s ease;" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#1d4ed8';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#2563eb';">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add Another Location</span>
+            </button>
           </div>
         </div>
       </section>

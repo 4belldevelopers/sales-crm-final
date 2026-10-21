@@ -678,7 +678,7 @@ html, body {
     display: none !important;
   }
 
-  /* Step 2 Right Column: AI Company Assist Card (Soft Lavender) */
+  /* Step 2 Right Column: AI-Generated Company Description Card (Soft Lavender) */
   .client-desc-step .client-side-column .card.client-helper-card.client-ai-assist-card,
   .client-desc-step .client-side-column .card:last-child {
     background: #faf8ff !important;
@@ -693,12 +693,12 @@ html, body {
     background: #ffffff !important;
     border: 1px solid #f1f5f9 !important;
     border-radius: 8px !important;
-    padding: 11px 13px !important;
-    font-size: 11.5px !important;
+    padding: 12px 14px !important;
+    font-size: 12.5px !important;
     color: #334155 !important;
-    line-height: 1.55 !important;
-    margin-bottom: 10px !important;
-    max-height: 88px !important;
+    line-height: 1.6 !important;
+    margin-bottom: 12px !important;
+    max-height: 110px !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
     transition: outline 0.15s ease, box-shadow 0.15s ease !important;
@@ -708,14 +708,35 @@ html, body {
     border: none !important;
     color: #ffffff !important;
     font-weight: 600 !important;
-    font-size: 11px !important;
-    border-radius: 6px !important;
-    padding: 5px 13px !important;
+    font-size: 11.5px !important;
+    border-radius: 7px !important;
+    padding: 6px 14px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    box-shadow: 0 1px 2px rgba(112,64,245,0.25) !important;
+    gap: 5px !important;
+    box-shadow: 0 1px 3px rgba(112,64,245,0.3) !important;
     cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-desc-step #client_apply_desc_suggestion:hover {
+    background: #5b21b6 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(112,64,245,0.35) !important;
+  }
+  .client-desc-step #client_review_edit_desc_btn {
+    background: #ffffff !important;
+    border: 1px solid #c4b5fd !important;
+    color: #6d28d9 !important;
+    border-radius: 7px !important;
+    padding: 5px 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .client-desc-step #client_review_edit_desc_btn:hover {
+    background: #f5f3ff !important;
+    border-color: #a78bfa !important;
   }
 
   /* Compact Viewport Optimization for 15.6" Laptop Screens (1366×768 & 1920×1080 at 125%/150% scaling) */
@@ -730,8 +751,10 @@ html, body {
     }
     .client-desc-step .client-side-column .client-ai-suggested-desc,
     .client-desc-step #client_ai_suggested_desc {
-      max-height: 75px !important;
-      padding: 8px 10px !important;
+      max-height: 95px !important;
+      padding: 10px 12px !important;
+      font-size: 12px !important;
+      line-height: 1.55 !important;
     }
     .client-desc-step .client-main-column > .client-section-card > .card-header,
     .client-desc-step .client-side-column .card.client-helper-card:first-child > .card-header {
@@ -4143,7 +4166,7 @@ html, body {
    
      $background_image		=	url('img/client-default.png'); 
      $name	=	$website	=	$industry	=	$company_sizes	=	$company_type	=	$founded	= $description = $tags	= $client_location_arr = $client_contact_arr =  '';
-     $career_page_url = $tax_id = $linkedin_url = $twitter_url = $github_url = $ap_email = $youtube_url = $facebook_url = $instagram_url = '';
+     $career_page_url = $tax_id = $linkedin_url = $twitter_url = $github_url = $ap_email = $youtube_url = $facebook_url = $instagram_url = $custom_link = '';
 		 if($page_event == 'ADD'){
 			$pagetitle	=	'Add Client';
       $countAddrees= 1;
@@ -4185,6 +4208,7 @@ html, body {
               $youtube_url     = $clientDetailDecoded['youtube_url'] ?? '';
               $facebook_url    = $clientDetailDecoded['facebook_url'] ?? '';
               $instagram_url   = $clientDetailDecoded['instagram_url'] ?? '';
+              $custom_link     = $clientDetailDecoded['custom_link'] ?? '';
           }
       }
      }
@@ -4244,6 +4268,7 @@ html, body {
                     'facebook_url'  => $facebook_url ?? '',
                     'instagram_url' => $instagram_url ?? '',
                     'github_url'    => $github_url ?? '',
+                    'custom_link'   => $custom_link ?? '',
                   ])
 
                   <!--begin::Review and Submit-->
@@ -5442,12 +5467,15 @@ html, body {
             }
         }
         $('#additional_addresses_container .client-branch-card, .client-address-container .client-branch-card').each(function(idx) {
-            $(this).find('.client-branch-title, .ij-location-title').text('Additional Address (' + (idx + 1) + ')');
+            $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
         });
         var remaining = $('#additional_addresses_container .client-branch-card, .client-address-container .is-additional').length;
         $('#client_additional_empty').toggle(remaining === 0);
         if (window.clientLocationManager && typeof window.clientLocationManager.syncAiButtons === 'function') {
             window.clientLocationManager.syncAiButtons();
+        }
+        if (typeof updateCompletion === 'function') {
+            updateCompletion();
         }
     }
     window.removeAddressCard = removeAddressCard;
@@ -6055,7 +6083,7 @@ html, body {
                 '    </div>' +
                 '    <div>' +
                 '      <div class="d-flex align-items-center gap-2">' +
-                '        <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location (' + branchNumber + ')</h4>' +
+                '        <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location ' + branchNumber + '</h4>' +
                 '        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; font-weight:600; padding:2px 6px; border-radius:4px;">OFFICE</span>' +
                 '      </div>' +
                 '    </div>' +
@@ -6064,18 +6092,18 @@ html, body {
                 '    <button type="button" class="btn btn-xs" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#b45309; border:1px solid #fde68a; background:#fefce8; cursor:pointer;" title="Set as Headquarters">' +
                 '      Set as Headquarters' +
                 '    </button>' +
-                '    <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer;" title="Remove Location">' +
-                '      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
-                '      Remove' +
+                '    <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer; display:inline-flex; align-items:center; gap:3px;" title="Remove Location">' +
+                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '      <span>Remove</span>' +
                 '    </button>' +
                 '  </div>' +
                 '</div>' +
                 '<div class="client-branch-body">' +
                 '  <div class="client-addr-field mb-2">' +
-                '    <label class="client-addr-label" for="branch_city_search_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">City <span class="text-danger">*</span></label>' +
+                '    <label class="client-addr-label" for="branch_city_search_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">City / Location <span class="text-danger">*</span></label>' +
                 '    <div class="client-addr-input-wrap position-relative">' +
                 '      <svg class="client-addr-icon-left position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
-                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search branch city..." autocomplete="off" style="height:36px; padding:0 32px 0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">' +
+                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city..." autocomplete="off" style="height:36px; padding:0 32px 0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">' +
                 '      <svg class="client-addr-icon-right position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="right:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
                 '      <div class="client-addr-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
                 '      <input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value=\'' + (tagifyJson || '') + '\'>' +
@@ -6086,7 +6114,7 @@ html, body {
                 '    <label class="client-addr-label" for="address_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">Full Address <span class="text-danger">*</span></label>' +
                 '    <div class="client-addr-textarea-wrap position-relative">' +
                 '      <svg class="client-addr-textarea-icon position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:9px; color:#94a3b8; pointer-events:none;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>' +
-                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Building name, street, area, landmark, pincode, etc." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">' + escapeHtmlText(address || '') + '</textarea>' +
+                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete address..." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">' + escapeHtmlText(address || '') + '</textarea>' +
                 '    </div>' +
                 '    <div class="d-flex align-items-center justify-content-between mt-1">' +
                 '      <span class="text-muted" style="font-size:10.5px;">Accurate branch address.</span>' +
@@ -6752,110 +6780,38 @@ $('.remove_address').click(function(){
       rasterizeAndAttachLogo(data.logo, data.domain);
     }
 
-    // 3. Industry Combobox selection (Smart whole-word matching + exact alias prioritization)
-    if (data.industry && String(data.industry).trim().length > 0) {
-      var rawInd = String(data.industry).trim();
-      var indNorm = rawInd.toLowerCase();
-      var matchedId = null;
-      var matchedName = null;
-      var highestScore = -1;
+    // 3. Industry Combobox selection (Taxonomy-driven mapping layer with 160+ master industries)
+    var indCandidates = [];
+    if (data.industry) indCandidates.push(data.industry);
+    if (Array.isArray(data.industries)) indCandidates = indCandidates.concat(data.industries);
+    if (Array.isArray(data.industry_candidates)) indCandidates = indCandidates.concat(data.industry_candidates);
+    if (Array.isArray(data.candidates)) indCandidates = indCandidates.concat(data.candidates);
+    if (data.sector) indCandidates.push(data.sector);
+    if (data.category) indCandidates.push(data.category);
+    if (Array.isArray(data.tags)) indCandidates = indCandidates.concat(data.tags);
 
-      // 3a. Check JeroIndustryIntelligenceEngine direct exact name match first
-      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.selectByName === 'function') {
+    if (indCandidates.length > 0) {
+      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry === 'function') {
         try {
-          window.JeroIndustryIntelligenceEngine.selectByName(rawInd);
-          var curSelected = window.JeroIndustryIntelligenceEngine.getSelected();
-          if (curSelected && curSelected.id) {
-            matchedId = curSelected.id;
-            matchedName = curSelected.name;
-          }
-        } catch (e) {}
-      }
-
-      // 3b. Smart scoring across select options if not already matched
-      if (!matchedId) {
-        var tokens = indNorm.split(/[\/,&|\s]+/).filter(function(t) { return t.length >= 3; });
-
-        $('#industry option').each(function () {
-          var optVal = $(this).val();
-          var rawOptText = $(this).text().trim();
-          var optText = rawOptText.toLowerCase();
-          if (!optVal || !optText || optText === 'select industry' || optText === 'select') return;
-
-          var score = 0;
-          // Exact match gets highest priority
-          if (optText === indNorm) {
-            score = 1000;
-          }
-          // Exact starts-with
-          else if (optText.indexOf(indNorm) === 0 || indNorm.indexOf(optText) === 0) {
-            score = 600;
-          }
-          // Exact substring phrase match
-          else if (optText.indexOf(indNorm) !== -1 || indNorm.indexOf(optText) !== -1) {
-            score = 400;
-          }
-
-          // Whole-word boundary token matches (e.g., \btechnology\b will NOT match "biotechnology")
-          for (var i = 0; i < tokens.length; i++) {
-            var tok = tokens[i];
-            try {
-              var wordRegex = new RegExp('\\b' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
-              if (wordRegex.test(optText)) {
-                score += 100;
-              }
-            } catch (err) {}
-          }
-
-          // Information Technology / Tech specific synonym boost: if rawInd mentions IT or tech
-          if (/(information\s+technology|\bit\b|software|tech\b)/i.test(indNorm)) {
-            if (/information\s+technology/i.test(optText)) {
-              score += 250;
-            } else if (/(computer\s+software|software\s+development)/i.test(optText)) {
-              score += 150;
+          var mapped = window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry(indCandidates);
+          if (mapped) {
+            $('#industry_display').removeClass('is-invalid');
+            $('#jero_ind_input_box, #jero_ind_select_wrap').removeClass('is-invalid has-validation-error');
+            if (typeof clearFieldError === 'function') {
+              clearFieldError($('#industry'));
+              clearFieldError($('#industry_display'));
             }
           }
-
-          if (score > highestScore && score >= 100) {
-            highestScore = score;
-            matchedId = optVal;
-            matchedName = rawOptText;
-          }
-        });
-      }
-
-      if (matchedId && matchedName) {
-        $('#industry').val(matchedId).trigger('change');
-        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.selectById === 'function') {
-          try { window.JeroIndustryIntelligenceEngine.selectById(matchedId); } catch(e){}
+        } catch (e) {
+          console.warn('[CompanyIntelligence] mapAndSelectIndustry error:', e);
         }
-        $('#industry_display').val(matchedName);
+      } else {
+        var rawInd = String(indCandidates[0]).trim();
+        $('#industry_display').val(rawInd);
         $('#jero_ind_input_box').addClass('has-value');
-        $('#jero_ind_clear_btn').show();
+        $('#jero_ind_clear_btn').css('display', 'inline-flex');
         $('#jero_ind_kbd').hide();
-      } else if (rawInd) {
-        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.commitCustomIndustry === 'function') {
-          try { window.JeroIndustryIntelligenceEngine.commitCustomIndustry(rawInd); } catch(e){}
-        } else {
-          var $sel = $('#industry');
-          $sel.append(new Option(rawInd, rawInd, true, true));
-          $sel.val(rawInd).trigger('change');
-          $('#industry_display').val(rawInd);
-          $('#jero_ind_input_box').addClass('has-value');
-          $('#jero_ind_clear_btn').show();
-          $('#jero_ind_kbd').hide();
-        }
       }
-    } else {
-      // If no industry provided in data, reset/clear cleanly so previous entry is NEVER retained
-      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.clear === 'function') {
-        try { window.JeroIndustryIntelligenceEngine.clear(); } catch(e){}
-      }
-      $('#industry').val('').trigger('change');
-      $('#industry_display').val('');
-      $('#jero_ind_input_box').removeClass('has-value');
-      $('#jero_ind_clear_btn').hide();
-      $('#jero_ind_kbd').show();
     }
 
     // 4. Company Size
@@ -7090,6 +7046,8 @@ $('.remove_address').click(function(){
         domain: cleanDomain,
         website: 'https://' + cleanDomain,
         name: clientSideName,
+        industry: 'Information Technology & Services',
+        industries: ['Information Technology & Services', 'Computer Software'],
         logo: 'https://www.google.com/s2/favicons?domain=' + cleanDomain + '&sz=256',
         description: clientSideName + ' is an innovative technology organization delivering premier solutions and services across global markets.',
         tags: ['Technology Services', 'Software Development']
@@ -7347,7 +7305,7 @@ $('.remove_address').click(function(){
     var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
     $('#client_additional_empty').toggle($cards.length === 0);
     $cards.each(function(idx) {
-      $(this).find('.client-branch-title, .ij-location-title').text('Additional Address (' + (idx + 1) + ')');
+      $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
     });
   }
 
@@ -7502,104 +7460,18 @@ $('.remove_address').click(function(){
   window.formatContactPhone = formatContactPhone;
 
   // =========================================================================
-  // GOD-LEVEL CLIENT CONTACT MANAGER (Step 4: Client Contacts & AI Discovery)
-  // Aligned 100% with Reference media_1792566135420_6aa92088.png
+  // =========================================================================
+  // GOD-LEVEL CLIENT CONTACT MANAGER (Step 4: Client Contacts)
+  // Clean Enterprise Full-Width Layout & Real-Time Contact Management
   // Features:
-  // - 1-Click AI Contact Discovery (Rahul Sharma, Priya Sinha, Vikram Deshpande, Sneha Nair)
   // - Dynamic Role Mapping (HR / TA, Talent Acquisition, Hiring Manager, Recruiter)
   // - Automatic Primary Contact (1st contact = Primary, others = Secondary)
   // - Reactive Primary Reassignment ("Make Primary" click promotes contact)
-  // - Add All Recommended in 1 click
+  // - Clean Drawer for Adding and Editing Contacts with inline validation
   // - Full 15.6" screen optimization & zero server read strain (100% Client-Side)
   // =========================================================================
   window.clientContactManager = {
     contacts: [],
-    aiContacts: [
-      {
-        id: 'ai_rahul',
-        name: 'Rahul Sharma',
-        designation: 'HR Manager',
-        email: 'rahul.sharma@4bell.com',
-        phone: '9876543210',
-        callingCode: '+91',
-        role: 'HR / TA',
-        matchType: 'strong',
-        matchLabel: 'Strong match',
-        matchBadgeBg: '#dcfce7',
-        matchBadgeText: '#15803d',
-        avatarBg: '#f3e8ff',
-        avatarColor: '#7e22ce',
-        initials: 'RS',
-        phoneFound: true,
-        isRecommended: true,
-        context: 'Listed on company website — Careers/Team page.',
-        sourceName: 'Company Website',
-        verifiedText: 'Checked recently'
-      },
-      {
-        id: 'ai_priya',
-        name: 'Priya Sinha',
-        designation: 'Talent Acquisition Lead',
-        email: 'priya.sinha@4bell.com',
-        phone: '9988766554',
-        callingCode: '+91',
-        role: 'Talent Acquisition',
-        matchType: 'likely',
-        matchLabel: 'Likely match',
-        matchBadgeBg: '#dbeafe',
-        matchBadgeText: '#1d4ed8',
-        avatarBg: '#e0e7ff',
-        avatarColor: '#4338ca',
-        initials: 'PS',
-        phoneFound: false,
-        isRecommended: false,
-        context: 'Listed on LinkedIn company page.',
-        sourceName: 'LinkedIn',
-        verifiedText: 'Checked recently'
-      },
-      {
-        id: 'ai_vikram',
-        name: 'Vikram Deshpande',
-        designation: 'Recruitment Manager',
-        email: 'vikram.d@4bell.com',
-        phone: '9123456789',
-        callingCode: '+91',
-        role: 'Recruiter',
-        matchType: 'possible',
-        matchLabel: 'Possible match',
-        matchBadgeBg: '#fef3c7',
-        matchBadgeText: '#b45309',
-        avatarBg: '#fef3c7',
-        avatarColor: '#b45309',
-        initials: 'VK',
-        phoneFound: true,
-        isRecommended: false,
-        context: 'Listed on company website — Leadership page.',
-        sourceName: 'Company Website',
-        verifiedText: 'Checked recently'
-      },
-      {
-        id: 'ai_sneha',
-        name: 'Sneha Nair',
-        designation: 'Recruitment Partner',
-        email: 'sneha.nair@4bell.com',
-        phone: '8765432109',
-        callingCode: '+91',
-        role: 'Recruiter',
-        matchType: 'likely',
-        matchLabel: 'Likely match',
-        matchBadgeBg: '#dbeafe',
-        matchBadgeText: '#1d4ed8',
-        avatarBg: '#e0f2fe',
-        avatarColor: '#0369a1',
-        initials: 'SN',
-        phoneFound: true,
-        isRecommended: false,
-        context: 'Listed on public professional registry & directory.',
-        sourceName: 'Company Directory',
-        verifiedText: 'Checked recently'
-      }
-    ],
 
     init: function (initialList) {
       var self = this;
@@ -7631,8 +7503,6 @@ $('.remove_address').click(function(){
 
       self.renderTable();
       self.syncHiddenInputs();
-      self.syncAiButtons();
-      self.syncWebsiteLink();
     },
 
     getContacts: function () {
@@ -7703,9 +7573,11 @@ $('.remove_address').click(function(){
 
       if (!self.contacts.length) {
         $emptyRow.show();
+        $('#client_contact_table thead').hide();
         return;
       }
       $emptyRow.hide();
+      $('#client_contact_table thead').show();
 
       self.contacts.forEach(function (c, i) {
         var pal = self.getAvatarPalette(c.name, i);
@@ -7720,20 +7592,20 @@ $('.remove_address').click(function(){
           : '<button type="button" class="btn btn-link p-0 text-decoration-none client-make-primary-btn" onclick="window.clientContactManager.setPrimary(' + i + ')" title="Set as Primary Contact" style="color:#64748b; font-size:12px; font-weight:500; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:transparent; border:none;"><span class="radio-circle" style="display:inline-block; width:13px; height:13px; border:1.5px solid #94a3b8; border-radius:50%; background:#ffffff; transition:border-color 0.15s ease;"></span> Make Primary</button>';
 
         var rowHtml = '<tr data-contact-index="' + i + '" style="border-bottom:1px solid #f1f5f9;">' +
-          '<td style="padding:12px 18px;">' +
+          '<td style="padding:12px 20px;">' +
             '<div class="d-flex align-items-center">' +
               '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:34px; height:34px; border-radius:50%; margin-right:10px; font-size:12px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
               '<span style="font-weight:700; color:#101828; font-size:13.5px;">' + escapeHtml(c.name) + '</span>' +
             '</div>' +
           '</td>' +
-          '<td style="padding:12px 14px; color:#334155; font-size:13px;">' + escapeHtml(c.designation || '—') + '</td>' +
-          '<td style="padding:12px 14px; color:#334155; font-size:13px;">' + escapeHtml(c.email || '—') + '</td>' +
-          '<td style="padding:12px 14px; color:#334155; font-size:13px; font-weight:500;">' + displayPhoneHtml + '</td>' +
-          '<td style="padding:12px 12px;">' +
+          '<td style="padding:12px 16px; color:#334155; font-size:13px;">' + escapeHtml(c.designation || '—') + '</td>' +
+          '<td style="padding:12px 16px; color:#334155; font-size:13px;">' + escapeHtml(c.email || '—') + '</td>' +
+          '<td style="padding:12px 16px; color:#334155; font-size:13px; font-weight:500;">' + displayPhoneHtml + '</td>' +
+          '<td style="padding:12px 14px;">' +
             '<span class="badge" style="background:' + roleInfo.bg + '; color:' + roleInfo.text + '; font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:20px; white-space:nowrap;">' + escapeHtml(roleInfo.name) + '</span>' +
           '</td>' +
           '<td style="padding:12px 14px;">' + primaryColHtml + '</td>' +
-          '<td style="padding:12px 18px; text-align:right;">' +
+          '<td style="padding:12px 20px; text-align:right;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
               '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit" style="width:30px; height:30px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
                 '<i class="la la-pencil" style="font-size:14px; color:#2563eb;"></i>' +
@@ -7785,42 +7657,7 @@ $('.remove_address').click(function(){
 
       self.renderTable();
       self.syncHiddenInputs();
-      self.syncAiButtons();
       return true;
-    },
-
-    addAiContact: function (aiId) {
-      var self = this;
-      var found = self.aiContacts.find(function (item) { return item.id === aiId; });
-      if (!found) return;
-
-      var added = self.addContact(found);
-      if (added) {
-        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200 });
-          Toast.fire({ icon: 'success', title: 'Added ' + found.name + ' to contacts!' });
-        }
-      }
-    },
-
-    addAllAiContacts: function () {
-      var self = this;
-      var addedCount = 0;
-      self.aiContacts.forEach(function (ai) {
-        var email = (ai.email || '').trim().toLowerCase();
-        var exists = self.contacts.some(function (c) {
-          return (c.email || '').trim().toLowerCase() === email;
-        });
-        if (!exists) {
-          self.addContact(ai);
-          addedCount++;
-        }
-      });
-
-      if (addedCount > 0 && typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-        var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
-        Toast.fire({ icon: 'success', title: 'Added ' + addedCount + ' recommended contacts!' });
-      }
     },
 
     setPrimary: function (index) {
@@ -7856,7 +7693,6 @@ $('.remove_address').click(function(){
 
       self.renderTable();
       self.syncHiddenInputs();
-      self.syncAiButtons();
     },
 
     syncHiddenInputs: function () {
@@ -7887,47 +7723,6 @@ $('.remove_address').click(function(){
       if (typeof populateReviewSummaries === 'function') {
         try { populateReviewSummaries(); } catch (e) {}
       }
-    },
-
-    syncAiButtons: function () {
-      var self = this;
-      self.aiContacts.forEach(function (ai) {
-        var $btn = $('#ai_btn_' + ai.id.replace('ai_', ''));
-        if (!$btn.length) return;
-
-        var email = (ai.email || '').trim().toLowerCase();
-        var isAdded = self.contacts.some(function (c) {
-          return (c.email || '').trim().toLowerCase() === email;
-        });
-
-        if (isAdded) {
-          $btn.html('✓ Added')
-            .attr('style', 'background:#f0fdf4 !important; color:#15803d !important; border:1px solid #bbf7d0 !important; font-weight:600 !important; font-size:12px !important; padding:5px 12px !important; border-radius:6px !important; cursor:default !important; pointer-events:none !important;');
-        } else {
-          $btn.html('Add to Contacts');
-          if (ai.isRecommended) {
-            $btn.attr('style', 'background:#f59e0b !important; color:#78350f !important; font-weight:700 !important; font-size:12px !important; padding:6px 14px !important; border-radius:6px !important; border:none !important; cursor:pointer !important;');
-          } else {
-            $btn.attr('style', 'background:#ffffff !important; color:#2563eb !important; border:1px solid #2563eb !important; font-weight:600 !important; font-size:12px !important; padding:5px 14px !important; border-radius:6px !important; cursor:pointer !important;');
-          }
-        }
-      });
-    },
-
-    syncWebsiteLink: function () {
-      var self = this;
-      var rawDomain = ($('#website').val() || '').trim().toLowerCase();
-      var domain = '4bell.com';
-      if (rawDomain) {
-        var clean = rawDomain.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].split('?')[0].trim();
-        if (clean && clean.includes('.')) domain = clean;
-      }
-      $('.ai-source-link').each(function () {
-        var sourceText = $(this).text().trim();
-        if (sourceText.includes('Company Website')) {
-          $(this).html('Source: ' + domain + ' <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>');
-        }
-      });
     },
 
     openAddDrawer: function () {
@@ -8282,12 +8077,12 @@ $('.remove_address').click(function(){
 
   /* =========================================================================
      WINDOW.CLIENTSOCIALMANAGER (GOD-LEVEL V6 SOCIAL LINKS & AI DISCOVERY ENGINE)
-     Matches media_1792566743106_f52e3a53.png
-     Strictly 6 platforms: linkedin, twitter, youtube, facebook, instagram, github
+     Matches media_1792575217426_d430168e.png
+     Order: linkedin, twitter, facebook, instagram, youtube, github, custom_link
      Client-First WASM / RAM execution (0% server/DB read strain)
      ========================================================================= */
   window.clientSocialManager = {
-    platforms: ['linkedin', 'twitter', 'youtube', 'facebook', 'instagram', 'github'],
+    platforms: ['linkedin', 'twitter', 'facebook', 'instagram', 'youtube', 'github'],
 
     getSlug: function () {
       var web = ($('#website').val() || '').trim();
@@ -8305,7 +8100,7 @@ $('.remove_address').click(function(){
         slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       }
 
-      return slug || '4bell-technology';
+      return slug || 'clientname';
     },
 
     getCleanHandle: function () {
@@ -8321,12 +8116,12 @@ $('.remove_address').click(function(){
           return 'https://linkedin.com/company/' + slug;
         case 'twitter':
           return 'https://x.com/' + handle;
-        case 'youtube':
-          return 'https://youtube.com/@' + handle;
         case 'facebook':
           return 'https://facebook.com/' + handle;
         case 'instagram':
           return 'https://instagram.com/' + handle;
+        case 'youtube':
+          return 'https://youtube.com/@' + handle;
         case 'github':
           return 'https://github.com/' + handle;
         default:
@@ -8363,9 +8158,9 @@ $('.remove_address').click(function(){
         var platNames = {
           linkedin: 'LinkedIn',
           twitter: 'X / Twitter',
-          youtube: 'YouTube',
           facebook: 'Facebook',
           instagram: 'Instagram',
+          youtube: 'YouTube',
           github: 'GitHub'
         };
         Toast.fire({
@@ -8399,9 +8194,9 @@ $('.remove_address').click(function(){
       var $btnAll = $('#btn_add_all_social');
       $btnAll.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> All Added')
              .css({
-               'background': '#dcfce7',
-               'border': '1px solid #86efac',
-               'color': '#15803d',
+               'background': '#ecfdf5',
+               'border': '1px solid #a7f3d0',
+               'color': '#059669',
                'cursor': 'default'
              });
 
@@ -8429,18 +8224,20 @@ $('.remove_address').click(function(){
 
     markButtonAdded: function (platform) {
       var $btn = $('#btn_ai_add_' + platform);
-      $btn.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> Added')
+      $btn.addClass('is-added')
+          .html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> Added')
           .css({
-            'background': '#f0fdf4',
-            'border': '1px solid #86efac',
-            'color': '#15803d',
+            'background': '#ecfdf5',
+            'border': '1px solid #a7f3d0',
+            'color': '#059669',
             'cursor': 'default'
           });
     },
 
     resetButton: function (platform) {
       var $btn = $('#btn_ai_add_' + platform);
-      $btn.html('Add to Profile')
+      $btn.removeClass('is-added')
+          .html('+ Add')
           .css({
             'background': '#ffffff',
             'border': '1px solid #2563eb',
@@ -8454,21 +8251,33 @@ $('.remove_address').click(function(){
       var allFilled = true;
       this.platforms.forEach(function (plat) {
         var val = ($('#' + plat + '_url').val() || '').trim();
+        var $clearBtn = $('.client-social-clear-btn[data-target="' + plat + '_url"]');
         if (val) {
           self.markButtonAdded(plat);
+          $clearBtn.css('display', 'inline-flex');
         } else {
           self.resetButton(plat);
+          $clearBtn.hide();
           allFilled = false;
         }
       });
+
+      // Also handle Custom Link clear button
+      var customVal = ($('#custom_link').val() || '').trim();
+      var $customClearBtn = $('.client-social-clear-btn[data-target="custom_link"]');
+      if (customVal) {
+        $customClearBtn.css('display', 'inline-flex');
+      } else {
+        $customClearBtn.hide();
+      }
 
       var $btnAll = $('#btn_add_all_social');
       if (allFilled) {
         $btnAll.html('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg> All Added')
                .css({
-                 'background': '#dcfce7',
-                 'border': '1px solid #86efac',
-                 'color': '#15803d',
+                 'background': '#ecfdf5',
+                 'border': '1px solid #a7f3d0',
+                 'color': '#059669',
                  'cursor': 'default'
                });
       } else {
@@ -8482,6 +8291,21 @@ $('.remove_address').click(function(){
       }
     }
   };
+
+  // Clear button click handler for all social inputs
+  $(document).on('click', '.client-social-clear-btn', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var targetId = $(this).data('target');
+    var $input = $('#' + targetId);
+    if ($input.length) {
+      $input.val('').trigger('input').trigger('change');
+    }
+    $(this).hide();
+    if (window.clientSocialManager) {
+      window.clientSocialManager.syncAiButtons();
+    }
+  });
 
   // Sync AI button states when user types or edits social inputs directly
   $(document).on('input change', '.client-social-url-input', function () {
@@ -8692,57 +8516,9 @@ $('.remove_address').click(function(){
 
     if (!contactCards.length) {
       contactCards.push(
-        '<div class="review-contact-mini-card">' +
-          '<div class="d-flex align-items-center justify-content-between gap-2 mb-1">' +
-            '<div class="d-flex align-items-center gap-2 min-w-0">' +
-              '<span class="contact-mini-avatar" style="background-color:#ede9fe; color:#7c3aed;">RS</span>' +
-              '<span class="contact-mini-name text-truncate">Rahul Sharma</span>' +
-            '</div>' +
-            '<span class="contact-primary-badge">Primary Contact</span>' +
-          '</div>' +
-          '<div class="contact-mini-desig">HR Manager</div>' +
-          '<div class="contact-mini-meta-line text-truncate">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
-            '<span class="text-truncate">rahul.sharma@4bell.com</span>' +
-          '</div>' +
-          '<div class="contact-mini-meta-line">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-            '<span>+91 98765 43210</span>' +
-          '</div>' +
-        '</div>',
-        '<div class="review-contact-mini-card">' +
-          '<div class="d-flex align-items-center justify-content-between gap-2 mb-1">' +
-            '<div class="d-flex align-items-center gap-2 min-w-0">' +
-              '<span class="contact-mini-avatar" style="background-color:#ffe4e6; color:#be123c;">PM</span>' +
-              '<span class="contact-mini-name text-truncate">Priya Mehta</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="contact-mini-desig">Talent Acquisition Lead</div>' +
-          '<div class="contact-mini-meta-line text-truncate">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
-            '<span class="text-truncate">priya.sharma@4bell.com</span>' +
-          '</div>' +
-          '<div class="contact-mini-meta-line">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-            '<span>+91 99887 66554</span>' +
-          '</div>' +
-        '</div>',
-        '<div class="review-contact-mini-card">' +
-          '<div class="d-flex align-items-center justify-content-between gap-2 mb-1">' +
-            '<div class="d-flex align-items-center gap-2 min-w-0">' +
-              '<span class="contact-mini-avatar" style="background-color:#dcfce7; color:#15803d;">AK</span>' +
-              '<span class="contact-mini-name text-truncate">Amit Kulkarni</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="contact-mini-desig">Hiring Manager</div>' +
-          '<div class="contact-mini-meta-line text-truncate">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
-            '<span class="text-truncate">amit.kulkarni@4bell.com</span>' +
-          '</div>' +
-          '<div class="contact-mini-meta-line">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-            '<span>+91 91234 56789</span>' +
-          '</div>' +
+        '<div class="review-contact-mini-card" style="grid-column: 1 / -1; padding: 22px; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">' +
+          '<div style="font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 4px;">No contacts added yet</div>' +
+          '<div style="font-size: 11.5px; color: #94a3b8;">Click "Edit" to add recruitment contacts for this client.</div>' +
         '</div>'
       );
     }
@@ -8751,10 +8527,11 @@ $('.remove_address').click(function(){
     // 5. Dedicated Social Links Card (Step 5 Review Summary)
     var linkedinUrl = ($('#linkedin_url').val() || '').trim();
     var twitterUrl = ($('#twitter_url').val() || '').trim();
-    var youtubeUrl = ($('#youtube_url').val() || '').trim();
     var facebookUrl = ($('#facebook_url').val() || '').trim();
     var instagramUrl = ($('#instagram_url').val() || '').trim();
+    var youtubeUrl = ($('#youtube_url').val() || '').trim();
     var githubUrl = ($('#github_url').val() || '').trim();
+    var customLink = ($('#custom_link').val() || '').trim();
 
     var socialItems = [
       {
@@ -8770,12 +8547,6 @@ $('.remove_address').click(function(){
         icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0f172a"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
       },
       {
-        key: 'youtube',
-        name: 'YouTube',
-        url: youtubeUrl,
-        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
-      },
-      {
         key: 'facebook',
         name: 'Facebook',
         url: facebookUrl,
@@ -8788,10 +8559,22 @@ $('.remove_address').click(function(){
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>'
       },
       {
+        key: 'youtube',
+        name: 'YouTube',
+        url: youtubeUrl,
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+      },
+      {
         key: 'github',
         name: 'GitHub',
         url: githubUrl,
         icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#24292f"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>'
+      },
+      {
+        key: 'custom',
+        name: 'Custom Link',
+        url: customLink,
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
       }
     ];
 
@@ -8808,27 +8591,6 @@ $('.remove_address').click(function(){
         );
       }
     });
-
-    if (!socialChips.length) {
-      var slug = (window.clientSocialManager && typeof window.clientSocialManager.getSlug === 'function') ? window.clientSocialManager.getSlug() : '4bell-technology';
-      var handle = slug.replace(/-/g, '');
-      var sampleProfiles = [
-        { icon: socialItems[0].icon, url: 'https://linkedin.com/company/' + slug, disp: 'linkedin.com/company/' + slug },
-        { icon: socialItems[1].icon, url: 'https://x.com/' + handle, disp: 'x.com/' + handle },
-        { icon: socialItems[2].icon, url: 'https://youtube.com/@' + handle, disp: 'youtube.com/@' + handle },
-        { icon: socialItems[3].icon, url: 'https://facebook.com/' + handle, disp: 'facebook.com/' + handle },
-        { icon: socialItems[4].icon, url: 'https://instagram.com/' + handle, disp: 'instagram.com/' + handle },
-        { icon: socialItems[5].icon, url: 'https://github.com/' + handle, disp: 'github.com/' + handle }
-      ];
-      sampleProfiles.forEach(function(sp) {
-        socialChips.push(
-          '<a href="' + escapeHtml(sp.url) + '" target="_blank" rel="noopener noreferrer" class="review-profile-link-item">' +
-            sp.icon +
-            '<span>' + escapeHtml(sp.disp) + '</span>' +
-          '</a>'
-        );
-      });
-    }
 
     if (socialChips.length) {
       $('#client_review_social_list').html(socialChips.join('')).show();
@@ -9116,7 +8878,8 @@ $('.remove_address').click(function(){
 
       var industryVal = ($('#industry').val() || '').trim();
       var customIndVal = ($('#custom_industry').val() || '').trim();
-      if (!industryVal && !indDispVal && !customIndVal) {
+      var hasValidIndustry = (industryVal && industryVal !== '0') || Boolean(customIndVal) || Boolean(indDispVal);
+      if (!hasValidIndustry) {
         showInlineError($('#industry_display'), 'Please select an Industry.');
         $firstInvalid = $firstInvalid || $('#industry_display');
         isValid = false;
@@ -9230,13 +8993,13 @@ $('.remove_address').click(function(){
             $cityInput.removeClass('is-invalid');
           }
           if (!textVal) {
-            $card.find('#branch_address_err_' + cid).find('span').text('Full Address is required for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).find('span').text('Full Address is required for Additional Location ' + (idx + 1) + '.');
             $card.find('#branch_address_err_' + cid).show();
             $textarea.addClass('is-invalid');
             $firstInvalid = $firstInvalid || $textarea;
             isValid = false;
           } else if (textVal.length < 5) {
-            $card.find('#branch_address_err_' + cid).find('span').text('Address must be at least 5 characters for Additional Address (' + (idx + 1) + ').');
+            $card.find('#branch_address_err_' + cid).find('span').text('Address must be at least 5 characters for Additional Location ' + (idx + 1) + '.');
             $card.find('#branch_address_err_' + cid).show();
             $textarea.addClass('is-invalid');
             $firstInvalid = $firstInvalid || $textarea;
@@ -9597,6 +9360,13 @@ $('.remove_address').click(function(){
       // Synchronize Sticky Footer Buttons
       syncWizardNavigationState(targetStep);
 
+      // On Step 1 (Company Info), sync industry engine display state
+      if (targetStep === 1) {
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.sync === 'function') {
+          try { window.JeroIndustryIntelligenceEngine.sync(); } catch (e) {}
+        }
+      }
+
       // On Step 2 (Client Description), ensure Quill editor is initialized & updated, and service tags synced
       if (targetStep === 2) {
         if (typeof initClientDescriptionEditor === 'function') {
@@ -9626,12 +9396,11 @@ $('.remove_address').click(function(){
         }
       }
 
-      // On Step 4 (Contacts), sync AI discovery buttons and website links
+      // On Step 4 (Contacts), render table and sync hidden inputs
       if (targetStep === 4) {
         if (window.clientContactManager) {
           try {
-            window.clientContactManager.syncAiButtons();
-            window.clientContactManager.syncWebsiteLink();
+            window.clientContactManager.renderTable();
           } catch (e) {}
         }
       }
@@ -10433,6 +10202,7 @@ $('.remove_address').click(function(){
     var currentMatches = [];
     var isOpen = false;
     var selectedIndustry = null;
+    var lastAlternatives = [];
     var indBroadcast = null;
     var localManifestVersion = 1;
     var lastFocusCheck = 0;
@@ -10695,6 +10465,23 @@ $('.remove_address').click(function(){
         }
 
         var currentVal = ($('#industry').val() || '').trim();
+
+        // High-confidence AI candidate alternatives pill rack
+        if (!q && lastAlternatives && lastAlternatives.length > 0) {
+            html += '<div class="jero-ind-alt-box" style="padding: 8px 12px; margin: 4px 6px 8px 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">' +
+                '<div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>' +
+                    '<span>AI Detected Alternatives</span>' +
+                '</div>' +
+                '<div style="display: flex; flex-wrap: wrap; gap: 6px;">';
+            for (var a = 0; a < lastAlternatives.length; a++) {
+                var alt = lastAlternatives[a];
+                html += '<button type="button" class="jero-ind-alt-pill" data-alt-id="' + alt.id + '" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 500; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" onmouseover="this.style.borderColor=\'#2563eb\';this.style.color=\'#2563eb\';" onmouseout="this.style.borderColor=\'#cbd5e1\';this.style.color=\'#1e293b\';">' +
+                    escapeHtml(alt.name) +
+                '</button>';
+            }
+            html += '</div></div>';
+        }
 
         // Group by sector when no search query
         var currentSecId = null;
@@ -11160,7 +10947,24 @@ $('.remove_address').click(function(){
         syncInitialState();
     }
 
+    function ensureManifestLoaded() {
+        if (indList && indList.length > 0 && indMap.size > 0) return true;
+        var seedEl = document.getElementById('jero_industry_seed_data');
+        if (seedEl && seedEl.textContent.trim()) {
+            try {
+                var seedManifest = JSON.parse(seedEl.textContent);
+                if (seedManifest && Array.isArray(seedManifest.industries) && seedManifest.industries.length > 0) {
+                    ingestManifest(seedManifest);
+                    return true;
+                }
+            } catch (e) {}
+        }
+        fallbackFromNativeSelect();
+        return indList.length > 0;
+    }
+
     function syncInitialState() {
+        ensureManifestLoaded();
         var select = document.getElementById('industry');
         var displayInput = document.getElementById('industry_display');
         var clearBtn = document.getElementById('jero_ind_clear_btn');
@@ -11178,15 +10982,21 @@ $('.remove_address').click(function(){
             selectedIndustry = curr;
             displayInput.value = curr.name;
             if (inputBox) inputBox.classList.add('has-value');
-            if (clearBtn) clearBtn.style.display = 'flex';
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
             if (kbdEl) kbdEl.style.display = 'none';
             $('.span_industry').text(curr.name);
+        } else if (selectedIndustry && selectedIndustry.name) {
+            displayInput.value = selectedIndustry.name;
+            if (inputBox) inputBox.classList.add('has-value');
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
+            if (kbdEl) kbdEl.style.display = 'none';
+            $('.span_industry').text(selectedIndustry.name);
         } else if (customVal || (currentVal === '0' && select && select.selectedIndex >= 0 && select.options[select.selectedIndex])) {
             var custName = customVal || select.options[select.selectedIndex].text;
             selectedIndustry = { id: 0, name: custName, is_custom: true };
             displayInput.value = custName;
             if (inputBox) inputBox.classList.add('has-value');
-            if (clearBtn) clearBtn.style.display = 'flex';
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
             if (kbdEl) kbdEl.style.display = 'none';
             $('.span_industry').text(custName);
         } else if (currentVal && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
@@ -11194,7 +11004,7 @@ $('.remove_address').click(function(){
             selectedIndustry = { id: currentVal, name: text };
             displayInput.value = text;
             if (inputBox) inputBox.classList.add('has-value');
-            if (clearBtn) clearBtn.style.display = 'flex';
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
             if (kbdEl) kbdEl.style.display = 'none';
             $('.span_industry').text(text);
         } else {
@@ -11208,6 +11018,293 @@ $('.remove_address').click(function(){
             window.updateSuggestedServicesForIndustry(selectedIndustry);
         }
     }
+
+    // =========================================================================
+    // Industry Taxonomy Mapping & Synonyms Layer (160+ Master Industries)
+    // =========================================================================
+    var INDUSTRY_TAXONOMY_SYNONYMS = {
+        // Tech, Software, SaaS, IT
+        'information technology / saas': 64, // Information Technology & Services
+        'information technology & services': 64,
+        'information technology and services': 64,
+        'information technology': 64,
+        'it': 64,
+        'it services': 64,
+        'tech': 64,
+        'technology': 64,
+        'technology services': 64,
+        'saas': 64,
+        'software as a service': 64,
+        'software': 25, // Computer Software
+        'software development': 25,
+        'software engineering': 25,
+        'software company': 25,
+        'computer software': 25,
+        'cloud': 148, // Cloud Infrastructure & DevOps
+        'cloud computing': 148,
+        'devops': 148,
+        'cloud infrastructure': 148,
+        'artificial intelligence': 147, // Artificial Intelligence & Machine Learning
+        'ai': 147,
+        'machine learning': 147,
+        'ai/ml': 147,
+        'cybersecurity': 153, // Cybersecurity & Privacy Infrastructure
+        'cyber security': 153,
+        'infosec': 153,
+        'information security': 21, // Computer & Network Security
+        'computer networking': 24,
+        'networking': 24,
+        'semiconductors': 127,
+        'hardware': 23, // Computer Hardware
+        'computer hardware': 23,
+        'internet': 68,
+        'e-commerce': 152, // E-Commerce & Quick Commerce
+        'ecommerce': 152,
+        'web development': 68,
+        'digital media': 98, // Online Media
+        'gaming': 157, // Gaming, Esports & Interactive Media
+        'video games': 22, // Computer Games
+        'esports': 157,
+
+        // Finance & Banking
+        'fintech': 149, // FinTech & Digital Assets
+        'financial technology': 149,
+        'banking': 11,
+        'financial services': 43,
+        'finance': 43,
+        'investment banking': 69,
+        'investment management': 70,
+        'venture capital': 140,
+        'private equity': 140,
+        'insurance': 65,
+        'insurtech': 65,
+        'accounting': 1,
+        'capital markets': 16,
+
+        // Healthcare & Life Sciences
+        'healthtech': 150, // HealthTech & Digital Health
+        'digital health': 150,
+        'healthcare': 57, // Hospital & Health Care
+        'health care': 57,
+        'hospital': 57,
+        'biotechnology': 12,
+        'biotech': 12,
+        'life sciences': 12,
+        'pharmaceuticals': 104,
+        'pharma': 104,
+        'medical devices': 87,
+        'mental health': 89,
+        'wellness': 55,
+
+        // Professional Services & HR
+        'hrtech': 160, // HRTech & Workforce Platforms
+        'recruiting': 131, // Staffing & Recruiting
+        'recruitment': 131,
+        'staffing': 131,
+        'human resources': 59,
+        'hr': 59,
+        'management consulting': 81,
+        'consulting': 81,
+        'business consulting': 81,
+        'strategy consulting': 81,
+        'marketing': 84, // Marketing & Advertising
+        'advertising': 84,
+        'public relations': 114,
+        'pr': 114,
+        'legal services': 74,
+        'legal': 74,
+        'law practice': 73,
+        'design': 33,
+        'graphic design': 54,
+
+        // Manufacturing, Industrial, Automotive
+        'automotive': 9,
+        'autotech': 158, // AutoTech, EV & Autonomous Mobility
+        'ev': 158,
+        'electric vehicles': 158,
+        'aerospace': 10,
+        'aviation': 10,
+        'defense': 32,
+        'manufacturing': 80, // Machinery
+        'industrial automation': 62,
+        'robotics': 62,
+        'chemicals': 17,
+        'mechanical engineering': 85,
+
+        // Logistics, Supply Chain & Transport
+        'logistics': 78, // Logistics & Supply Chain
+        'supply chain': 78,
+        'supply chain tech': 156, // Supply Chain Tech & Autonomous Logistics
+        'transportation': 138,
+        'trucking': 138,
+        'warehousing': 142,
+        'freight': 78,
+        'shipping': 82, // Maritime
+
+        // Real Estate & Construction
+        'proptech': 159, // PropTech & Smart Spaces
+        'real estate': 119,
+        'commercial real estate': 20,
+        'construction': 26,
+        'civil engineering': 19,
+        'architecture': 7,
+
+        // Energy & CleanTech
+        'cleantech': 154, // ClimateTech, CleanTech & ESG
+        'climatetech': 154,
+        'renewables': 122,
+        'clean energy': 122,
+        'solar': 122,
+        'oil & energy': 97,
+        'oil and gas': 97,
+        'utilities': 139,
+
+        // Education, Media, Public
+        'edtech': 151, // EdTech & Future of Work
+        'e-learning': 34,
+        'education': 35, // Education Management
+        'higher education': 56,
+        'telecommunications': 133,
+        'telecom': 133,
+        'entertainment': 37,
+        'broadcast media': 13,
+        'publishing': 116,
+        'hospitality': 58,
+        'restaurants': 124,
+        'retail': 125,
+        'consumer goods': 28,
+        'fmcg': 28
+    };
+
+    function normalizeTaxonomyTerm(str) {
+        if (!str) return '';
+        return String(str)
+            .toLowerCase()
+            .replace(/&/g, ' and ')
+            .replace(/[\/\\,\-_|]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function mapExtractedIndustry(candidates) {
+        ensureManifestLoaded();
+        if (!candidates) return null;
+
+        var list = Array.isArray(candidates) ? candidates : [candidates];
+        var scoredMap = new Map();
+
+        for (var c = 0; c < list.length; c++) {
+            var raw = String(list[c] || '').trim();
+            if (!raw) continue;
+            var norm = normalizeTaxonomyTerm(raw);
+            if (!norm) continue;
+
+            // 1. Synonym dictionary exact lookup
+            if (INDUSTRY_TAXONOMY_SYNONYMS.hasOwnProperty(norm)) {
+                var synId = INDUSTRY_TAXONOMY_SYNONYMS[norm];
+                var synItem = indMap.get(synId);
+                if (synItem) {
+                    var cur1 = scoredMap.get(synItem.id) || { item: synItem, score: 0 };
+                    cur1.score = Math.max(cur1.score, 10000 - (c * 10));
+                    scoredMap.set(synItem.id, cur1);
+                }
+            }
+
+            // 1b. Partial key match in synonyms
+            var synKeys = Object.keys(INDUSTRY_TAXONOMY_SYNONYMS);
+            for (var k = 0; k < synKeys.length; k++) {
+                var sKey = synKeys[k];
+                if (sKey.length >= 4 && (norm.indexOf(sKey) !== -1 || sKey.indexOf(norm) !== -1)) {
+                    var pId = INDUSTRY_TAXONOMY_SYNONYMS[sKey];
+                    var pItem = indMap.get(pId);
+                    if (pItem) {
+                        var curP = scoredMap.get(pItem.id) || { item: pItem, score: 0 };
+                        curP.score = Math.max(curP.score, 7500 - (c * 10));
+                        scoredMap.set(pItem.id, curP);
+                    }
+                }
+            }
+
+            // 2. Exact / startsWith / substring match against master industries
+            for (var i = 0; i < indList.length; i++) {
+                var item = indList[i];
+                var itemNameNorm = normalizeTaxonomyTerm(item.name);
+                var kwNorm = normalizeTaxonomyTerm(item.keywords || '');
+
+                if (itemNameNorm === norm) {
+                    var cur2 = scoredMap.get(item.id) || { item: item, score: 0 };
+                    cur2.score = Math.max(cur2.score, 10000 - (c * 10));
+                    scoredMap.set(item.id, cur2);
+                    continue;
+                }
+
+                if (itemNameNorm.indexOf(norm) === 0 || norm.indexOf(itemNameNorm) === 0) {
+                    var cur3 = scoredMap.get(item.id) || { item: item, score: 0 };
+                    cur3.score = Math.max(cur3.score, 8000 - (c * 10));
+                    scoredMap.set(item.id, cur3);
+                    continue;
+                }
+
+                if (itemNameNorm.indexOf(norm) !== -1 || norm.indexOf(itemNameNorm) !== -1) {
+                    var cur4 = scoredMap.get(item.id) || { item: item, score: 0 };
+                    cur4.score = Math.max(cur4.score, 6000 - (c * 10));
+                    scoredMap.set(item.id, cur4);
+                    continue;
+                }
+
+                var tokens = norm.split(' ').filter(function(t) { return t.length >= 3; });
+                var matchScore = 0;
+                for (var t = 0; t < tokens.length; t++) {
+                    var tok = tokens[t];
+                    var regex = new RegExp('\\b' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+                    if (regex.test(itemNameNorm)) {
+                        matchScore += 800;
+                    } else if (regex.test(kwNorm)) {
+                        matchScore += 400;
+                    }
+                }
+                if (matchScore >= 800) {
+                    var cur5 = scoredMap.get(item.id) || { item: item, score: 0 };
+                    cur5.score = Math.max(cur5.score, matchScore - (c * 10));
+                    scoredMap.set(item.id, cur5);
+                }
+            }
+        }
+
+        if (scoredMap.size === 0) {
+            return null;
+        }
+
+        var results = Array.from(scoredMap.values());
+        results.sort(function(a, b) { return b.score - a.score; });
+
+        var primary = results[0].item;
+        var alternatives = results.slice(1, 4).map(function(r) { return r.item; });
+
+        return {
+            primary: primary,
+            alternatives: alternatives,
+            confidence: results[0].score
+        };
+    }
+
+    function mapAndSelectIndustry(inputCandidates) {
+        ensureManifestLoaded();
+        var matchResult = mapExtractedIndustry(inputCandidates);
+        if (matchResult && matchResult.primary) {
+            selectItem(matchResult.primary);
+            lastAlternatives = matchResult.alternatives || [];
+            return matchResult.primary;
+        } else if (typeof inputCandidates === 'string' && inputCandidates.trim()) {
+            commitCustomIndustry(inputCandidates.trim());
+            lastAlternatives = [];
+            return selectedIndustry;
+        }
+        return null;
+    }
+
+    // Eager synchronous load on startup
+    ensureManifestLoaded();
 
     async function initCacheAndSync() {
         var cacheKey = 'ind_tenant_' + CURRENT_TENANT_ID;
@@ -11372,6 +11469,17 @@ $('.remove_address').click(function(){
 
         if (container) {
             container.addEventListener('click', function(e) {
+                var altPill = e.target.closest('.jero-ind-alt-pill');
+                if (altPill) {
+                    var altId = altPill.getAttribute('data-alt-id');
+                    if (altId) {
+                        var itm = indMap.get(parseInt(altId, 10));
+                        if (itm) {
+                            selectItem(itm);
+                        }
+                    }
+                    return;
+                }
                 var itemEl = e.target.closest('.jero-ind-item');
                 if (!itemEl) return;
                 var id = itemEl.getAttribute('data-id');
@@ -11476,6 +11584,12 @@ $('.remove_address').click(function(){
             if (item) selectItem(item);
         },
         selectByName: function(name) {
+            var match = mapExtractedIndustry(name);
+            if (match && match.primary) {
+                selectItem(match.primary);
+                lastAlternatives = match.alternatives || [];
+                return;
+            }
             var clean = (name || '').trim().toLowerCase();
             for (var i = 0; i < indList.length; i++) {
                 if (indList[i].name.toLowerCase() === clean) {
@@ -11484,6 +11598,9 @@ $('.remove_address').click(function(){
                 }
             }
         },
+        mapAndSelectIndustry: mapAndSelectIndustry,
+        mapExtractedIndustry: mapExtractedIndustry,
+        sync: syncInitialState,
         clear: clearSelection,
         refresh: function() {
             fetchBundleFromServer(1);
