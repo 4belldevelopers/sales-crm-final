@@ -388,6 +388,10 @@
                     </div>
 
                     <div class="loadingMessage" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:10; background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">Processing...</div>
+                    <div id="cl_search_sync_banner" class="cl-sync-banner" style="display:none; margin: 8px 12px 4px 12px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Showing cached clients. Live search projection is syncing in the background...</span>
+                    </div>
                     <div id="allClients">{!! $initialHtml ?? '' !!}</div>
                 </div>
 
@@ -640,6 +644,7 @@ const ClientStore = {
     maxEntries: 50,
     currentXhr: null,
     latestRequestId: 0,
+    latestMutationVersion: 0,
     maxStaleAgeMs: 5000, // 5 seconds bounded staleness for SWR
 
     getKey: function(tab, page, search, sort, country, hiring, perPage) {
@@ -900,6 +905,14 @@ function applyClientResponse(response, targetPage) {
         $('.loader_search').css({ display: 'none' });
         $('.page-loader').css('display', 'none');
         localStorage.setItem('currentPageClients', targetPage);
+
+        // Honest Search Degradation UX (Invariant I10)
+        if (response.projection_status === 'syncing') {
+            $('#cl_search_sync_banner').show();
+        } else {
+            $('#cl_search_sync_banner').hide();
+        }
+
         $('#allClients').html(response.html);
 
         if (response.total !== undefined) {
@@ -965,9 +978,15 @@ function fetchCandidates(page, updateUrl = true) {
     // Request Generation Token Guard
     var requestId = ++ClientStore.latestRequestId;
 
+    var reqHeaders = {};
+    if (cachedEntry && cachedEntry.data && cachedEntry.data.etag) {
+        reqHeaders['If-None-Match'] = cachedEntry.data.etag;
+    }
+
     ClientStore.currentXhr = $.ajax({
         url: `{!! route('service_company.clients.all_clients_data_ajax') !!}?page=${targetPage}`,
         type: 'GET',
+        headers: reqHeaders,
         data: {
             custom_status: $('#status').val(),
             search: searchVal,
@@ -977,7 +996,20 @@ function fetchCandidates(page, updateUrl = true) {
             hiring: hiringFilter,
             tab: activeClientTab,
             size: perPage,
-            per_page: perPage
+            per_page: perPage,
+            min_version: ClientStore.latestMutationVersion || 0
+        },
+        statusCode: {
+            304: function() {
+                // ETag Match: Server confirmed cached data is authoritative (0 bytes transferred)
+                if (cachedEntry) {
+                    cachedEntry.timestamp = Date.now();
+                    applyClientResponse(cachedEntry.data, targetPage);
+                }
+                $('.loadingMessage').css({ display: 'none' });
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+            }
         },
         success: function(response) {
             // Discard stale out-of-order response
@@ -1065,6 +1097,10 @@ $(document).on('click', '.request_event', function () {
                     ClientStore.invalidateTab('all');
                     ClientStore.invalidateTab('direct');
 
+                    if (response.mutation_version) {
+                        ClientStore.latestMutationVersion = response.mutation_version;
+                    }
+
                     if (response.clientDataCnt) {
                         if ($('#span_clientAll').length) $('#span_clientAll').html(response.clientDataCnt.clientAll);
                         if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
@@ -1077,6 +1113,7 @@ $(document).on('click', '.request_event', function () {
                             type: 'CLIENT_REQUEST_MUTATED',
                             invitationId: id,
                             eventId: event_id,
+                            version: response.mutation_version || null,
                             clientDataCnt: response.clientDataCnt || null
                         });
                     }
@@ -1108,6 +1145,9 @@ $(document).on('click', '.request_event', function () {
             if (!data) return;
 
             if (data.type === 'CLIENT_REQUEST_MUTATED') {
+                if (data.version) {
+                    ClientStore.latestMutationVersion = data.version;
+                }
                 ClientStore.invalidateTab('request');
                 ClientStore.invalidateTab('all');
                 ClientStore.invalidateTab('direct');
