@@ -102,6 +102,11 @@
                 <span>Fetch Details</span>
               </button>
             </div>
+            <!-- Checking indicator for Website -->
+            <div id="website_checking_indicator" style="display:none; font-size:11.5px; color:#2563eb; margin-top:5px; font-weight:500;">
+              <span class="spinner-border spinner-border-sm me-1" style="width:12px;height:12px;border-width:1.5px;" role="status"></span>
+              <span>Checking domain availability...</span>
+            </div>
             <!-- Dedicated Internal Client Domain Duplicate Warning Container -->
             <div class="god-field-inline-error text-danger" id="website_duplicate_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
               <span class="d-inline-flex align-items-center gap-1">
