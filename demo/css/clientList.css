@@ -406,15 +406,15 @@
 }
 
 /* ── Table Grid (Header & Rows) ── */
-/* 7 columns: Checkbox, Client, Location, Jobs, Hiring Pipeline, Type & Connected On, Last Activity */
+/* 7 columns: Checkbox, Company Name, Location, Jobs, Hiring Pipeline, Date, Last Activity */
 /* Tuned for 15.6-inch displays (1366x768 & 1920x1080) with 0 horizontal scroll */
 .tbl-h, .tbl-r {
   display: grid;
-  grid-template-columns: 32px minmax(175px, 1.35fr) minmax(105px, 0.85fr) minmax(80px, 0.65fr) minmax(175px, 1.35fr) minmax(115px, 0.85fr) minmax(105px, 0.8fr);
+  grid-template-columns: 32px minmax(175px, 1.35fr) minmax(110px, 0.85fr) minmax(95px, 0.75fr) minmax(180px, 1.35fr) minmax(115px, 0.85fr) minmax(105px, 0.8fr);
   align-items: center;
-  column-gap: 10px;
-  padding: 12px 16px;
-  min-width: 880px;
+  column-gap: 8px;
+  padding: 8px 12px;
+  min-width: 860px;
   box-sizing: border-box;
 }
 
@@ -424,10 +424,12 @@
   }
 }
 
-/* Requests 5-column variant: Checkbox, Client, Location, Request Date, Action */
+/* Requests 5-column variant: Checkbox, Company Name, Location, Request Date, Action */
 .tbl-req .tbl-h, .tbl-req .tbl-r {
   grid-template-columns: 32px minmax(200px, 1.8fr) minmax(130px, 1.2fr) minmax(120px, 1fr) minmax(150px, 1.2fr);
-  min-width: 680px;
+  column-gap: 8px;
+  padding: 8px 12px;
+  min-width: 660px;
   box-sizing: border-box;
 }
 @media (min-width: 1200px) {
@@ -436,27 +438,110 @@
   }
 }
 
+/* ── Card + Sub-Card Header ── */
 .tbl-h {
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
+  padding: 6px 12px;
 }
-.tbl-h span {
-  font-size: 12px;
+
+/* Sub-card header units */
+.tbl-th-subcard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 28px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  user-select: none;
+  min-width: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.tbl-th-subcard:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+.tbl-th-check {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  justify-content: center;
+  height: auto;
+}
+.tbl-th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.tbl-th-label svg {
   color: #64748b;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+.tbl-th-sort {
+  color: #94a3b8;
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+}
+.tbl-th-info {
+  color: #94a3b8;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+/* Jobs Status Sub-card with aligned status badges */
+.tbl-th-jobs {
+  padding: 3px 6px;
+}
+.tbl-th-jobs .tbl-th-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+.tbl-th-job-chips {
   display: flex;
   align-items: center;
   gap: 4px;
-  user-select: none;
 }
-.tbl-h span svg {
-  color: #94a3b8;
+.th-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1;
+}
+.chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
+.dot-green  { background: #16a34a; }
+.dot-orange { background: #f59e0b; }
+.dot-red    { background: #ef4444; }
 
 .tbl-r {
   border-bottom: 1px solid #f1f5f9;
   background: #ffffff;
+  padding: 7px 12px;
   transition: background-color 0.15s ease;
 }
 .tbl-r:hover {
@@ -470,16 +555,17 @@
 .tbl-cell-check {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 .tbl-cb {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   cursor: pointer;
   accent-color: #2563eb;
   border-radius: 4px;
 }
 
-/* ── Client Column with Company Logo / Initials Avatar ── */
+/* ── Company Name Column (Logo + Meta, Max 12px) ── */
 .tbl-cell-client {
   min-width: 0;
   overflow: hidden;
@@ -488,14 +574,14 @@
 .cl-company-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 .cl-logo-box {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 7px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -524,9 +610,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  border-radius: 7px;
+  border-radius: 6px;
   text-transform: uppercase;
   user-select: none;
 }
@@ -536,10 +622,10 @@
   overflow: hidden;
 }
 .cl-name {
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #0f172a;
-  line-height: 1.3;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -552,97 +638,117 @@
   text-decoration: underline;
 }
 .cl-ind {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
   font-weight: 400;
-  margin-top: 2px;
-  line-height: 1.3;
+  margin-top: 1px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cl-size {
-  font-size: 11.5px;
+  font-size: 10.5px;
   color: #94a3b8;
   font-weight: 400;
-  margin-top: 2px;
-  line-height: 1.3;
+  margin-top: 1px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── Location Column (NO ICON) ── */
+/* ── Location Column (Max 12px) ── */
 .tbl-cell-loc {
   min-width: 0;
   overflow: hidden;
 }
 .cl-loc-city {
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #1e293b;
-  line-height: 1.3;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cl-loc-country {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
   font-weight: 400;
-  margin-top: 2px;
-  line-height: 1.3;
+  margin-top: 1px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cl-loc-empty {
-  font-size: 13px;
+  font-size: 11px;
   color: #94a3b8;
 }
 
-/* ── Jobs Column ── */
+/* ── Jobs Column (Hiring, Hold, Closed with conditional status colors) ── */
 .tbl-cell-jobs {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 .cl-job-line {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  line-height: 1.35;
-  color: #64748b;
+  gap: 5px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #94a3b8;
   font-weight: 500;
 }
 .cl-job-bullet {
-  width: 6px;
-  height: 6px;
+  width: 5.5px;
+  height: 5.5px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.bullet-blue  { background: #2563eb; }
-.bullet-gray  { background: #94a3b8; }
-.bullet-light { background: #cbd5e1; }
+.bullet-hiring { background: #16a34a; }
+.bullet-hold   { background: #f59e0b; }
+.bullet-closed { background: #ef4444; }
+.bullet-neutral{ background: #cbd5e1; }
 
 .cl-job-num {
+  font-size: 11.5px;
   font-weight: 700;
-  min-width: 10px;
-  color: #0f172a;
+  min-width: 9px;
+  color: #94a3b8;
 }
 .cl-job-label {
+  font-size: 11px;
   font-weight: 500;
-}
-.cl-job-label.text-blue {
-  color: #2563eb;
-  font-weight: 700;
-}
-.cl-job-active-highlight .cl-job-num {
-  color: #2563eb;
+  color: #94a3b8;
 }
 
-/* ── Hiring Pipeline Funnel (No arrows, perfectly balanced) ── */
+/* Active status highlighting when count > 0 */
+.cl-job-line.has-count.cl-job-hiring .cl-job-num {
+  color: #16a34a;
+}
+.cl-job-line.has-count.cl-job-hiring .cl-job-label {
+  color: #15803d;
+  font-weight: 600;
+}
+.cl-job-line.has-count.cl-job-hold .cl-job-num {
+  color: #d97706;
+}
+.cl-job-line.has-count.cl-job-hold .cl-job-label {
+  color: #d97706;
+  font-weight: 600;
+}
+.cl-job-line.has-count.cl-job-closed .cl-job-num {
+  color: #dc2626;
+}
+.cl-job-line.has-count.cl-job-closed .cl-job-label {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* ── Hiring Pipeline Funnel (No arrows, max 12px) ── */
 .tbl-cell-pipeline {
   min-width: 0;
 }
@@ -650,7 +756,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: 3px;
   width: 100%;
 }
 .cl-pipe-step {
@@ -661,14 +767,14 @@
   min-width: 0;
 }
 .cl-pipe-pill {
-  min-width: 24px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 10px;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   line-height: 1;
 }
@@ -682,10 +788,10 @@
   display: none !important;
 }
 .cl-pipe-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 500;
   color: #64748b;
-  margin-top: 3px;
+  margin-top: 2px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -700,7 +806,7 @@
 .bg-light-warning { background-color: #fffbeb !important; color: #d97706 !important; }
 .bg-light-info    { background-color: #f0fdf4 !important; color: #0284c7 !important; }
 
-/* ── Type & Connected On ── */
+/* ── Date Column (Max 12px) ── */
 .tbl-cell-type {
   display: flex;
   flex-direction: column;
@@ -709,24 +815,26 @@
 .cl-date-box {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #1e293b;
 }
 .cl-date-box svg {
   color: #64748b;
   flex-shrink: 0;
+  width: 12px;
+  height: 12px;
 }
 .cl-conn-caption {
-  font-size: 11px;
+  font-size: 10px;
   color: #94a3b8;
-  margin-top: 1px;
+  margin-top: 0;
 }
 .cl-type-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  margin-top: 1px;
+  margin-top: 0;
   cursor: pointer;
   line-height: 1.2;
 }
@@ -740,22 +848,22 @@
   color: #2563eb;
 }
 
-/* ── Last Activity ── */
+/* ── Last Activity (Max 12px) ── */
 .tbl-cell-activity {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 .cl-act-main {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #334155;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 .cl-act-desc {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #94a3b8;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 /* ── Empty State ── */

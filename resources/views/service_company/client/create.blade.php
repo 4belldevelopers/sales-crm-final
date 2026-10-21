@@ -6411,9 +6411,79 @@ if ($page_event == 'ADD') {
         }
     });
 
-    $(document).on('input', '#client_id', function() {
+    var _clientIdDupTimer = null;
+    $(document).on('input blur', '#client_id', function() {
         var name = $(this).val().trim();
         $('#ai_suggested_company_name').text(name || 'Jeroworks');
+
+        clearTimeout(_clientIdDupTimer);
+        if (!name || name.length < 2) {
+            window._dupCompanyNameError = null;
+            $('#company_duplicate_error').hide();
+            return;
+        }
+
+        _clientIdDupTimer = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('service_company.clients.validateInternalField') }}",
+                type: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                data: {
+                    field: 'name',
+                    value: name,
+                    client_id: {{ $client->id ?? 'null' }}
+                },
+                success: function(res) {
+                    if (res && res.duplicate) {
+                        window._dupCompanyNameError = res.message;
+                        $('#company_duplicate_error').show();
+                        $('#company_duplicate_error_text').text(res.message);
+                        $('#client_id').addClass('is-invalid');
+                    } else {
+                        window._dupCompanyNameError = null;
+                        $('#company_duplicate_error').hide();
+                        $('#client_id').removeClass('is-invalid');
+                    }
+                }
+            });
+        }, 350);
+    });
+
+    var _websiteDupTimer = null;
+    $(document).on('input blur', '#website', function() {
+        var web = $(this).val().trim();
+
+        clearTimeout(_websiteDupTimer);
+        if (!web) {
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            return;
+        }
+
+        _websiteDupTimer = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('service_company.clients.validateInternalField') }}",
+                type: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                data: {
+                    field: 'website',
+                    value: web,
+                    client_id: {{ $client->id ?? 'null' }}
+                },
+                success: function(res) {
+                    if (res && res.duplicate) {
+                        window._dupWebsiteError = res.message;
+                        $('#website_duplicate_error').show();
+                        $('#website_duplicate_error_text').text(res.message);
+                        $('#website').addClass('is-invalid');
+                    } else {
+                        window._dupWebsiteError = null;
+                        $('#website_duplicate_error').hide();
+                        $('#website').removeClass('is-invalid');
+                    }
+                }
+            });
+        }, 350);
     });
 $('.remove_address').click(function(){
           let container = $('.client-address-container');
@@ -6900,48 +6970,10 @@ $('.remove_address').click(function(){
          return;
      }
 
-    	$.ajax({
-        			url					: '{{route('service_company.clients.store')}}',
-    				headers				: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'X-Idempotency-Key': idempotencyKey
-                    },
-        			method				: "POST",
-        			processData			: false,
-        			contentType			: false,
-       		 	data				: data,
-    				  redirect			: true,
-        			success				: function (data)
-                 {
-                   if(data.status == 'success')
-                   {
-                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                      window.location = data.url || '{{ route('service_company.clients.index') }}';
-                   } else if (data.status === 'processing') {
-                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                      setTimeout(function() {
-                          window.location = data.url || '{{ route('service_company.clients.index') }}';
-                      }, 1000);
-                   } else {
-                      isClientSubmitting = false;
-                      $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                      $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-                      Swal.fire("Notice", data.message || "Operation failed", "warning");
-                   }
-        			},
-        			error				: function (xhr) {
-                     isClientSubmitting = false;
-                     $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-                     if (xhr.status === 0 || !navigator.onLine) {
-                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                     } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                         Swal.fire("Error", xhr.responseJSON.message, "error");
-                     } else {
-                         Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                     }
-        			}
-    			});
+     launchClientReadinessVerificationGate({
+         formData: data,
+         idempotencyKey: idempotencyKey
+     });
 
     });
           
@@ -8429,17 +8461,54 @@ $('.remove_address').click(function(){
       if (self.isEmailTaken(email, editIdx)) {
         self._isSaving = false;
         $('#client_drawer_email').addClass('is-invalid');
-        $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
+        $('#cdf_err_email').text('This contact is already registered with the current company.').addClass('visible');
         $('#client_drawer_email').focus();
         if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
           var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
-          Toast.fire({ icon: 'warning', title: 'A contact with this email already exists!' });
+          Toast.fire({ icon: 'warning', title: 'This contact is already registered with the current company.' });
         }
         return false;
       }
 
       var roleInfo = self.mapDesignationToRole(designation);
 
+      $('#client_save_contact_drawer').prop('disabled', true);
+      $.ajax({
+        url: "{{ route('service_company.clients.validateInternalField') }}",
+        type: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: {
+          field: 'contact',
+          email: email,
+          phone: phone,
+          client_id: {{ $client->id ?? 'null' }}
+        },
+        success: function(resp) {
+          $('#client_save_contact_drawer').prop('disabled', false);
+          if (resp && resp.duplicate) {
+            self._isSaving = false;
+            $('#client_drawer_email').addClass('is-invalid');
+            $('#cdf_err_email').text(resp.message).addClass('visible');
+            $('#client_drawer_email').focus();
+            if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+              var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+              Toast.fire({ icon: 'warning', title: resp.message });
+            }
+            return;
+          }
+          self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
+        },
+        error: function() {
+          $('#client_save_contact_drawer').prop('disabled', false);
+          self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
+        }
+      });
+
+      return false;
+    },
+
+    _commitDrawerSave: function(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo) {
+      var self = this;
       if (isEdit) {
         if (isPrimaryChecked) {
           self.contacts.forEach(function (c) { c.isPrimary = false; });
@@ -9540,6 +9609,12 @@ $('.remove_address').click(function(){
         showInlineError($('#client_id'), clientNameRes.message);
         $firstInvalid = $firstInvalid || $('#client_id');
         isValid = false;
+      } else if (window._dupCompanyNameError) {
+        $('#company_duplicate_error').show();
+        $('#company_duplicate_error_text').text(window._dupCompanyNameError);
+        $('#client_id').addClass('is-invalid');
+        $firstInvalid = $firstInvalid || $('#client_id');
+        isValid = false;
       }
 
       var webVal = ($('#website').val() || '').trim();
@@ -9547,6 +9622,12 @@ $('.remove_address').click(function(){
         var websiteRes = ClientValidationEngine.validateField('website', webVal, $('#website'));
         if (!websiteRes.valid) {
           showInlineError($('#website'), websiteRes.message);
+          $firstInvalid = $firstInvalid || $('#website');
+          isValid = false;
+        } else if (window._dupWebsiteError) {
+          $('#website_duplicate_error').show();
+          $('#website_duplicate_error_text').text(window._dupWebsiteError);
+          $('#website').addClass('is-invalid');
           $firstInvalid = $firstInvalid || $('#website');
           isValid = false;
         }
@@ -9759,7 +9840,7 @@ $('.remove_address').click(function(){
           var eLower = (c.email || '').trim().toLowerCase();
           if (eLower && seenEmailsInStep4[eLower]) {
             var $dupRow = $('#client_contact_table_body tr').eq(i);
-            showInlineError($dupRow, 'Contact #' + (i + 1) + ' has a duplicate email: ' + eLower + '. Each contact must have a unique email.');
+            showInlineError($dupRow, 'This contact is already registered with the current company.');
             $firstInvalid = $firstInvalid || $dupRow;
             isValid = false;
             break;

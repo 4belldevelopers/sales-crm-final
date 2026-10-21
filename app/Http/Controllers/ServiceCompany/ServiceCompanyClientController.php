@@ -706,9 +706,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'client_type_css' => $client_type_css,
                     'client_type' => (string) $client_type,
                     'jobs' => [
-                        'active' => $job_active,
-                        'closed' => $job_closed,
+                        'hiring' => $job_active,
                         'hold' => $job_hold,
+                        'closed' => $job_closed,
+                        'active' => $job_active,
                     ],
                     'pipeline' => [
                         'sourced' => $sourced,

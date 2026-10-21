@@ -106,55 +106,43 @@
             @endif
         </div>
 
-        {{-- Jobs --}}
+        {{-- Jobs (Order: Hiring, Hold, Closed with conditional status colors) --}}
         <div class="tbl-cell-jobs">
-            <div class="cl-job-line {{ $job_active > 0 ? 'cl-job-active-highlight' : '' }}">
-                <span class="cl-job-bullet {{ $job_active > 0 ? 'bullet-blue' : 'bullet-gray' }}"></span>
+            <div class="cl-job-line {{ $job_active > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
+                <span class="cl-job-bullet {{ $job_active > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
                 <span class="cl-job-num">{{ $job_active }}</span>
-                <span class="cl-job-label {{ $job_active > 0 ? 'text-blue' : '' }}">Active</span>
+                <span class="cl-job-label">Hiring</span>
             </div>
-            <div class="cl-job-line">
-                <span class="cl-job-bullet bullet-gray"></span>
-                <span class="cl-job-num">{{ $job_closed }}</span>
-                <span class="cl-job-label">Closed</span>
-            </div>
-            <div class="cl-job-line">
-                <span class="cl-job-bullet bullet-light"></span>
+            <div class="cl-job-line {{ $job_hold > 0 ? 'has-count cl-job-hold' : 'no-count' }}">
+                <span class="cl-job-bullet {{ $job_hold > 0 ? 'bullet-hold' : 'bullet-neutral' }}"></span>
                 <span class="cl-job-num">{{ $job_hold }}</span>
                 <span class="cl-job-label">Hold</span>
             </div>
+            <div class="cl-job-line {{ $job_closed > 0 ? 'has-count cl-job-closed' : 'no-count' }}">
+                <span class="cl-job-bullet {{ $job_closed > 0 ? 'bullet-closed' : 'bullet-neutral' }}"></span>
+                <span class="cl-job-num">{{ $job_closed }}</span>
+                <span class="cl-job-label">Closed</span>
+            </div>
         </div>
 
-        {{-- Hiring Pipeline Funnel --}}
+        {{-- Hiring Pipeline Funnel (No arrows) --}}
         <div class="tbl-cell-pipeline">
             <div class="cl-pipeline-flow">
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-sourced">{{ $sourced }}</span>
                     <span class="cl-pipe-label">Sourced</span>
                 </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-evaluated">{{ $evaluated }}</span>
                     <span class="cl-pipe-label">Evaluated</span>
-                </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-interviews">{{ $interviews }}</span>
                     <span class="cl-pipe-label">Interviews</span>
                 </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-offers">{{ $offers }}</span>
                     <span class="cl-pipe-label">Offers</span>
-                </div>
-                <div class="cl-pipe-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
                 <div class="cl-pipe-step">
                     <span class="cl-pipe-pill pill-joined">{{ $joined }}</span>
@@ -163,10 +151,10 @@
             </div>
         </div>
 
-        {{-- Type & Connected On --}}
+        {{-- Date (formerly Type & Connected On) --}}
         <div class="tbl-cell-type">
             <div class="cl-date-box">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                     <line x1="16" y1="2" x2="16" y2="6"/>
                     <line x1="8" y1="2" x2="8" y2="6"/>
@@ -174,7 +162,6 @@
                 </svg>
                 <span>{{ $newDate }}</span>
             </div>
-            <div class="cl-conn-caption">Connected on</div>
             <div class="cl-type-name type-internal show-detail" data-row-id="{{ $client_id }}">
                 {{ __('messages.internal_client_tag') }}
             </div>
