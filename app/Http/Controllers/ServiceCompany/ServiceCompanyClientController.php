@@ -164,13 +164,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $cachePayload['hiring'] = $hiringFilter;
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $minVersion = (int) $request->input('min_version', 0);
+        if ($minVersion > $tenantVersion) {
+            // Read-Your-Write bounded micro-poll (up to 300ms in 100ms intervals) to satisfy consistency
+            for ($poll = 0; $poll < 3; $poll++) {
+                usleep(100000); // 100ms
+                $freshVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+                if ($freshVersion >= $minVersion) {
+                    $tenantVersion = $freshVersion;
+                    break;
+                }
+            }
+        }
+
+        $schemaVersion = '2.1';
         $cachePayload['version'] = $tenantVersion;
         $hash = md5(json_encode($cachePayload));
         $cacheKeySet = 'ats:v2:clients:'.$company_id.':'.$tenantVersion.':'.$hash;
-        $etag = '"clients-'.$company_id.'-'.$tenantVersion.'-'.$hash.'"';
+        $etag = '"clients-'.$company_id.'-'.$tenantVersion.'-'.$hash.'-'.$schemaVersion.'"';
 
         /* ----------------------------------------------------
         ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
+        Pure derivation: zero Elasticsearch queries or DB reads on warm hit
         ----------------------------------------------------- */
         if ($request->header('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);
@@ -191,18 +206,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $lockKey = 'lock:'.$cacheKeySet;
             $singleFlightLock = cache()->lock($lockKey, 5);
             if (! $singleFlightLock->block(2)) {
+                $singleFlightLock = null;
                 if (cache()->has($cacheKeySet)) {
                     return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
                 }
             } else {
                 if (cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
+                    $singleFlightLock = null;
 
                     return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
                 }
             }
         } catch (\Throwable $e) {
-            // Safe fallback if lock is unsupported
+            $singleFlightLock = null;
         }
 
         $relationIds = $this->elasticService->getClient()->search([
@@ -619,8 +636,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ];
         }
 
-        $minVersion = (int) $request->input('min_version', 0);
-        $projectionStatus = ($minVersion > $tenantVersion) ? 'syncing' : 'synced';
+        $authoritativeVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $projectionVersion = $tenantVersion;
+        $projectionLag = max(0, $authoritativeVersion - $projectionVersion);
+        $projectionStatus = ($minVersion > $projectionVersion || $projectionLag > 0) ? 'syncing' : 'synced';
+        $retryAfterMs = ($projectionStatus === 'syncing') ? 250 : 0;
 
         $responseData = [
             'html' => view('service_company.ajax_pages.all-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
@@ -628,14 +648,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
             'rows' => $rowsDto,
             'data_version' => $tenantVersion,
-            'projection_version' => $tenantVersion,
+            'authoritative_version' => $authoritativeVersion,
+            'projection_version' => $projectionVersion,
+            'projection_lag' => $projectionLag,
             'projection_status' => $projectionStatus,
+            'retry_after_ms' => $retryAfterMs,
             'etag' => $etag,
             'page' => $page,
             'per_page' => $size,
         ];
 
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENTS_TIME));
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
 
         if ($singleFlightLock) {
             try {
@@ -720,13 +743,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ];
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $minVersion = (int) $request->input('min_version', 0);
+        if ($minVersion > $tenantVersion) {
+            // Read-Your-Write bounded micro-poll (up to 300ms in 100ms intervals) to satisfy consistency
+            for ($poll = 0; $poll < 3; $poll++) {
+                usleep(100000); // 100ms
+                $freshVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+                if ($freshVersion >= $minVersion) {
+                    $tenantVersion = $freshVersion;
+                    break;
+                }
+            }
+        }
+
+        $schemaVersion = '2.1';
         $cachePayload['version'] = $tenantVersion;
         $hash = md5(json_encode($cachePayload));
         $cacheKeySet = 'ats:v2:clientrequest:'.$company_id.':'.$tenantVersion.':'.$hash;
-        $etag = '"clientreq-'.$company_id.'-'.$tenantVersion.'-'.$hash.'"';
+        $etag = '"clientreq-'.$company_id.'-'.$tenantVersion.'-'.$hash.'-'.$schemaVersion.'"';
 
         /* ----------------------------------------------------
         ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
+        Pure derivation: zero Elasticsearch queries or DB reads on warm hit
         ----------------------------------------------------- */
         if ($request->header('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);
@@ -747,18 +785,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $lockKey = 'lock:'.$cacheKeySet;
             $singleFlightLock = cache()->lock($lockKey, 5);
             if (! $singleFlightLock->block(2)) {
+                $singleFlightLock = null;
                 if (cache()->has($cacheKeySet)) {
                     return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
                 }
             } else {
                 if (cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
+                    $singleFlightLock = null;
 
                     return response()->json(cache()->get($cacheKeySet))->header('ETag', $etag);
                 }
             }
         } catch (\Throwable $e) {
-            // Graceful fallback
+            $singleFlightLock = null;
         }
 
         // Tenancy & Status Filter Context (utilizes ES bitset cache)
@@ -847,8 +887,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ];
         }
 
-        $minVersion = (int) $request->input('min_version', 0);
-        $projectionStatus = ($minVersion > $tenantVersion) ? 'syncing' : 'synced';
+        $authoritativeVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $projectionVersion = $tenantVersion;
+        $projectionLag = max(0, $authoritativeVersion - $projectionVersion);
+        $projectionStatus = ($minVersion > $projectionVersion || $projectionLag > 0) ? 'syncing' : 'synced';
+        $retryAfterMs = ($projectionStatus === 'syncing') ? 250 : 0;
 
         $userPermissions = $this->userPermissions;
         $responseData = [
@@ -857,14 +900,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
             'rows' => $rowsDto,
             'data_version' => $tenantVersion,
-            'projection_version' => $tenantVersion,
+            'authoritative_version' => $authoritativeVersion,
+            'projection_version' => $projectionVersion,
+            'projection_lag' => $projectionLag,
             'projection_status' => $projectionStatus,
+            'retry_after_ms' => $retryAfterMs,
             'etag' => $etag,
             'page' => $page,
             'per_page' => $size,
         ];
 
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_REQUEST_TIME));
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
 
         if ($singleFlightLock) {
             try {
@@ -2400,8 +2446,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->first();
 
             if ($existing) {
-                // If the exact same request was completed within the last 5 seconds (rapid double-click), return cached redirect
-                if ($existing->status === 'COMPLETED' && $existing->request_hash === $canonicalHash && $existing->completed_at && Carbon::parse($existing->completed_at)->diffInSeconds(now()) < 5) {
+                // If key is reused with a different payload hash, strictly reject with HTTP 409
+                if ($existing->request_hash !== $canonicalHash) {
+                    return response()->json([
+                        'status' => 'error',
+                        'error_code' => 'IDEMPOTENCY_KEY_REUSED',
+                        'message' => 'Idempotency key was previously used with a different request payload.',
+                    ], 409);
+                }
+
+                // If completed, return cached response
+                if ($existing->status === 'COMPLETED') {
                     $cachedBody = json_decode($existing->response_body, true);
 
                     return Reply::redirect($cachedBody['url'] ?? route('service_company.clients.index'), $cachedBody['message'] ?? (__('menu.clients').' '.__('messages.updatedSuccessfully')));
@@ -2412,11 +2467,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     return response()->json(['status' => 'processing', 'message' => 'Update is currently being processed. Please wait.'], 425);
                 }
 
-                // Otherwise, update existing key record to PROCESSING with new canonical hash (allow legitimate modifications)
+                // Otherwise, update existing key record to PROCESSING
                 DB::table('sys_idempotency_keys')
                     ->where('id', $existing->id)
                     ->update([
-                        'request_hash' => $canonicalHash,
                         'status' => 'PROCESSING',
                         'updated_at' => now(),
                     ]);
@@ -2729,7 +2783,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->whereNotIn('id', $processedContactIds)
                 ->delete();
 
-            // Transactional Outbox Pattern: Atomic event persistence
+            // Transactional Outbox Pattern: Atomic event persistence with monotonic aggregate sequencing
             $existingOutbox = ! empty($idempotencyKey)
                 ? DB::table('sys_outbox_events')
                     ->where('tenant_id', $company_id)
@@ -2737,18 +2791,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->first()
                 : null;
 
+            $currentAggregateVersion = (int) (DB::table('sys_outbox_events')
+                ->where('tenant_id', $company_id)
+                ->where('aggregate_type', 'Client')
+                ->where('aggregate_id', $client_id)
+                ->max('aggregate_version') ?? 0) + 1;
+
             if ($existingOutbox) {
                 $outboxId = $existingOutbox->id;
                 DB::table('sys_outbox_events')
                     ->where('id', $outboxId)
                     ->update([
                         'aggregate_id' => $client_id,
-                        'aggregate_version' => 2,
+                        'aggregate_version' => $currentAggregateVersion,
                         'event_type' => 'ClientUpdated',
                         'payload' => json_encode([
                             'tenant_id' => $company_id,
                             'client_id' => $client_id,
                             'client_name' => $client->name,
+                            'aggregate_version' => $currentAggregateVersion,
                             'action' => 'ClientUpdated',
                             'timestamp' => now()->toIso8601String(),
                         ]),
@@ -2763,12 +2824,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'idempotency_key' => $idempotencyKey,
                     'aggregate_type' => 'Client',
                     'aggregate_id' => $client_id,
-                    'aggregate_version' => 2,
+                    'aggregate_version' => $currentAggregateVersion,
                     'event_type' => 'ClientUpdated',
                     'payload' => json_encode([
                         'tenant_id' => $company_id,
                         'client_id' => $client_id,
                         'client_name' => $client->name,
+                        'aggregate_version' => $currentAggregateVersion,
                         'action' => 'ClientUpdated',
                         'timestamp' => now()->toIso8601String(),
                     ]),
@@ -3107,8 +3169,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->first();
 
             if ($existing) {
-                // If the exact same request was completed within the last 5 seconds (rapid double-click), return cached redirect
-                if ($existing->status === 'COMPLETED' && $existing->request_hash === $canonicalHash && $existing->completed_at && Carbon::parse($existing->completed_at)->diffInSeconds(now()) < 5) {
+                // If key is reused with a different payload hash, strictly reject with HTTP 409
+                if ($existing->request_hash !== $canonicalHash) {
+                    return response()->json([
+                        'status' => 'error',
+                        'error_code' => 'IDEMPOTENCY_KEY_REUSED',
+                        'message' => 'Idempotency key was previously used with a different request payload.',
+                    ], 409);
+                }
+
+                // If completed, return cached response
+                if ($existing->status === 'COMPLETED') {
                     $cachedBody = json_decode($existing->response_body, true);
 
                     return Reply::redirect($cachedBody['url'] ?? route('service_company.clients.custom_client').'/0', $cachedBody['message'] ?? (__('menu.clients').' '.__('messages.createdSuccessfully')));
@@ -3119,11 +3190,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     return response()->json(['status' => 'processing', 'message' => 'Client creation is currently being processed. Please wait.'], 425);
                 }
 
-                // Otherwise, update existing key record to PROCESSING with new canonical hash (allow legitimate retries)
+                // Otherwise, update existing key record to PROCESSING
                 DB::table('sys_idempotency_keys')
                     ->where('id', $existing->id)
                     ->update([
-                        'request_hash' => $canonicalHash,
                         'status' => 'PROCESSING',
                         'updated_at' => now(),
                     ]);
