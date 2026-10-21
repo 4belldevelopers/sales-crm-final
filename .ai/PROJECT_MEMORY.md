@@ -67,6 +67,10 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
     6. **Formal Performance SLOs & Security Matrices**:
        - Defined P95 < 50ms warm navigation, P95 < 80ms cold ES read, >94% cache hit ratio, P95 < 250ms RYW lag, 0% MySQL reads on listing paths.
        - Formalized 7-tier Multi-Tenant Security Invariant Matrix, PII Minimization Whitelist, RPO < 1m / RTO < 15m disaster recovery targets, and operational alert thresholds.
+    7. **Single-Flight Lock Exception Immunity & Complete MySQL Read Elimination**:
+       - In `ServiceCompanyClientController.php`, wrapped single-flight locks in `try...finally` blocks to guarantee 100% lock release immunity under any runtime failure.
+       - Replaced direct MySQL `staffing_company_relation` queries with batch `ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX` pre-fetch.
+       - Cached `commonclient()` counters and `hiringFilter` join calculations in Redis/Dragonfly with monotonic tenant version keys (`ats:v2:client_counters:{$company_id}:{$tenantVersion}` and `ats:v2:hiring_clients:...`).
   - **Verification**: `php -l` passed with 0 errors across all modified/created files; `vendor\bin\pint.bat` passed; `php artisan clients:projection:rebuild --dry-run` and `php artisan clients:projection:reconcile --limit=20` verified 100% green.
 
 - *2026-10-21* — **Service Company Clients Platform Architecture v5.0 & Zero-Downtime Rebuild Engine (100% COMPLETED & VERIFIED)**:
