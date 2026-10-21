@@ -212,23 +212,23 @@
         </div>
       </div>
 
-      <!-- Card 2: AI Company Assist (Matching media_1792565672678_434bc36a.jpg) -->
-      <div class="card client-helper-card client-ai-assist-card" style="background:#faf8ff; border:1px solid #ede9fe; border-radius:12px; padding:12px 16px !important; margin-bottom:0 !important;">
+      <!-- Card 2: AI-Generated Company Description -->
+      <div class="card client-helper-card client-ai-assist-card" style="background:#faf8ff; border:1px solid #ede9fe; border-radius:12px; padding:14px 16px !important; margin-bottom:0 !important;">
         <div class="d-flex align-items-center justify-content-between mb-1">
           <div class="d-flex align-items-center gap-2">
-            <div style="width:26px; height:26px; border-radius:7px; background:#ede9fe; display:inline-flex; align-items:center; justify-content:center; color:#7040f5;">
+            <div style="width:26px; height:26px; border-radius:7px; background:#ede9fe; display:inline-flex; align-items:center; justify-content:center; color:#7040f5; flex-shrink:0;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7040f5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/>
               </svg>
             </div>
-            <h4 style="font-size:13.5px; font-weight:700; color:#101828; margin:0;">AI Company Assist</h4>
+            <h4 style="font-size:13.5px; font-weight:700; color:#101828; margin:0; letter-spacing:-0.2px;">AI-Generated Company Description</h4>
           </div>
           <span class="badge" style="background:#ede9fe; color:#7040f5; font-weight:600; font-size:10px; padding:2px 7px; border-radius:6px;">Beta</span>
         </div>
-        <p style="font-size:11px; color:#64748b; line-height:1.45; margin-bottom:8px;">We found useful information from the company website to help you fill this section.</p>
+        <p style="font-size:11.5px; color:#64748b; line-height:1.45; margin-bottom:10px;">AI-powered suggestion based on publicly available company information.</p>
 
-        <!-- Description Box (Strict 1:1 match with screenshot - pure text box) -->
-        <div id="client_ai_suggested_desc" class="client-ai-suggested-desc" style="background:#ffffff; border:1px solid #f1f5f9; border-radius:8px; padding:10px 12px !important; font-size:11.5px; color:#334155; line-height:1.55; margin-bottom:10px !important; max-height:82px; overflow-y:auto;">4bell is an industry-leading Information Technology & Services organization providing end-to-end solutions, enterprise excellence, and specialized operations within the Technology, Software & Telecom sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.</div>
+        <!-- Description Box with enhanced readability, typography, and line-height -->
+        <div id="client_ai_suggested_desc" class="client-ai-suggested-desc" style="background:#ffffff; border:1px solid #f1f5f9; border-radius:8px; padding:12px 14px !important; font-size:12.5px; color:#334155; line-height:1.6; margin-bottom:12px !important; max-height:110px; overflow-y:auto;">4bell is an industry-leading Information Technology & Services organization providing end-to-end solutions, enterprise excellence, and specialized operations within the Technology, Software & Telecom sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.</div>
 
         <!-- Footer Row -->
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -244,11 +244,12 @@
           </div>
 
           <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm" id="client_review_edit_desc_btn" style="background:#ffffff; border:1px solid #c4b5fd; color:#6d28d9; border-radius:6px; padding:4px 11px; font-size:11px; font-weight:600; cursor:pointer;">
+            <button type="button" class="btn btn-sm" id="client_review_edit_desc_btn" style="background:#ffffff; border:1px solid #c4b5fd; color:#6d28d9; border-radius:7px; padding:5px 12px; font-size:11.5px; font-weight:600; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#f5f3ff';" onmouseout="this.style.background='#ffffff';">
               Review & Edit
             </button>
-            <button type="button" class="btn btn-sm" id="client_apply_desc_suggestion" onclick="window.applyDescriptionSuggestion ? window.applyDescriptionSuggestion() : false;" style="background:#7040f5; border:none; color:#ffffff; font-weight:600; font-size:11px; border-radius:6px; padding:5px 13px; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(112,64,245,0.25);">
-              Apply Suggestion
+            <button type="button" class="btn btn-sm" id="client_apply_desc_suggestion" onclick="window.applyDescriptionSuggestion ? window.applyDescriptionSuggestion() : false;" style="background:#7040f5; border:none; color:#ffffff; font-weight:600; font-size:11.5px; border-radius:7px; padding:6px 14px; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(112,64,245,0.3); cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#5b21b6';" onmouseout="this.style.background='#7040f5';">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Apply Suggestion</span>
             </button>
           </div>
         </div>

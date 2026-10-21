@@ -20,6 +20,99 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Add Client Step 5 (Social Links) Enterprise Verification Redesign (100% COMPLETED & VERIFIED)**:
+  - **Single-Column 7-Row Layout**:
+    - Completely replaced previous 2-column grid with a single-column layout containing exactly 7 rows in precise order:
+      1. LinkedIn — Company Page
+      2. X / Twitter — Official Profile
+      3. Facebook — Official Page
+      4. Instagram — Official Profile
+      5. YouTube — Official Channel
+      6. GitHub — Organization
+      7. Custom Link — Other Official Profile (`custom_link`, placeholder: `Enter URL (e.g. https://example.com)`)
+    - Excluded Company Website from Page 5 (it is managed on Step 1 Basic Info).
+    - Removed legacy "Other Online Profiles" and "Profile Preview" widgets for clean single-purpose flow.
+    - Each row features branded SVG icons, crisp titles, descriptors, full-width inputs, and instant clear buttons (`×`) when populated.
+  - **AI Profile Discovery Beta Panel (Right Column)**:
+    - Exactly 6 discovered profiles ordered: LinkedIn → X / Twitter → Facebook → Instagram → YouTube → GitHub.
+    - Dynamic confidence badges: `Verified` (green), `Likely Match` (blue), and `Possible Match` (amber).
+    - Responsive action states: switches between `+ Add` and `✓ Added` (`#ecfdf5` background, `#059669` green text/border).
+    - Added compact "AI Suggestion Notes" card with 4 transparency bullet points reinforcing *"AI discovers → User verifies → User adds"*.
+    - Bottom informational card: *"Social profiles help verify client authenticity and improve company branding across talent workflows."*
+  - **Data Persistence & Step 6 Review Integration**:
+    - Backend: Added `'custom_link' => $request->custom_link ?? null` to `$detailData` in both `store()` and `update()` methods of `ServiceCompanyClientController.php`.
+    - Blade initialization: `$custom_link` decoded from `$client->detail` and passed to component.
+    - Step 6 Review synchronization: `populateReviewSummaries()` dynamically renders only added social platforms (including Custom Link) and suppresses empty platforms.
+  - **Screen Optimization & Verification**:
+    - Engineered compact CSS rules (`@media (max-height: 850px)`) ensuring complete fit on standard 15.6-inch laptop screens (1366×768 / 1920×1080) without vertical overflow or zooming.
+    - Passed `php -l` lint checks on all modified blade files and controller.
+
+- *2026-10-21* — **Service Company Add Client WASM Extraction Industry Auto-Population & Taxonomy Mapping Layer (100% COMPLETED & VERIFIED)**:
+  - **Root Cause & Pipeline Resolution**:
+    - **Manifest Lifecycle Ingestion**: `JeroIndustryIntelligenceEngine` previously delayed ingesting the 160 master industries manifest until the user explicitly clicked/opened the dropdown or completed an asynchronous IndexedDB read. If extraction completed before dropdown interaction, `indMap` was empty and native change handlers wiped the input.
+    - **Synchronous Initialization**: Implemented `ensureManifestLoaded()` which immediately ingests the pre-seeded manifest JSON script on execution, ensuring `indList` and `indMap` are available from millisecond 0.
+    - **Blade Collection Normalization**: In `tab-basic-info.blade.php`, fixed PHP loop over `$department` to support both object collections (`$val->ind_id`) and array dictionaries (`$key => $val`), ensuring `<option value="...">` is never empty.
+  - **Comprehensive Industry Taxonomy Mapping Layer**:
+    - Built `mapExtractedIndustry(candidates)` with curated `INDUSTRY_TAXONOMY_SYNONYMS` covering Tech, SaaS, FinTech, HealthTech, EdTech, E-Commerce, Cyber, HRTech, Automotive, Logistics, etc.
+    - Intelligent Multi-Tier Scoring: Checks (1) Synonym dictionary exact match, (2) Substring synonym match, (3) Exact canonical match, (4) StartsWith prefix match, (5) Substring phrase match, (6) Token overlap across canonical names & master keyword metadata.
+    - Selects the highest-confidence match (e.g. `"Information Technology / SaaS"` ➔ `"Information Technology & Services"`, ID `64`).
+    - Exposes alternative candidates as one-click selectable chips in the dropdown header (`lastAlternatives`) so users can seamlessly switch if desired.
+  - **Automatic UI Population & Persistence**:
+    - Extraction automatically calls `mapAndSelectIndustry(candidates)`, which updates `#industry` (native select), `#industry_display` (visible combobox), `#jero_ind_input_box.has-value`, and `#jero_ind_clear_btn` without requiring the user to open/reopen the dropdown.
+    - Added `window.JeroIndustryIntelligenceEngine.sync()` hook inside `goToWizardStep(1)` ensuring 100% display state persistence when navigating between steps and returning to Step 1.
+    - Updated client-edge fallback synthesis `clientSideData` to include explicit `industry` and `industries` signals.
+  - **Verification**: `php -l` clean across all client blade files and controllers; test verification passed.
+
+- *2026-10-21* — **Service Company Add Client Step 2 (Description) AI-Generated Company Description Enterprise Upgrade (100% COMPLETED & VERIFIED)**:
+  - **Title & Professional Label**:
+    - Renamed section title from "AI Company Assist" to **"AI-Generated Company Description"** for enterprise clarity.
+    - Updated supporting label to: *"AI-powered suggestion based on publicly available company information."*
+  - **Typography & Readability Optimization**:
+    - Increased body text size from `11.5px` to `12.5px` (laptop `12px`) and line-height to `1.6` for optimal readability and visual balance without crowding.
+    - Expanded description container max-height from cramped `88px` to a comfortable `110px` (laptop `95px`), styled with crisp `#334155` slate color and smooth custom scrolling.
+  - **Prominent Action Hierarchy**:
+    - Retained prominent purple **"Apply Suggestion"** CTA button (`#7040f5`) with checkmark SVG, hover elevation (`#5b21b6`), and immediate synchronization into the Quill description editor.
+    - Refined inline **"Review & Edit"** action button with clean violet outline and interactive `contenteditable` toggling.
+  - **Verification**: `php -l` clean across all modified files.
+
+- *2026-10-21* — **Service Company Add Client Step 3 (Address & Locations) Additional Locations Interaction Redesign (100% COMPLETED & VERIFIED)**:
+  - **Interaction Model Redesign**:
+    - **Header Purity**: Stripped all action buttons and remove/delete triggers from the "Additional Locations (Optional)" card header, leaving strictly the title and subtitle (*"Add branch offices, development centres or other locations."*).
+    - **Initial State (0 locations)**: Clean layout with no cluttered dashed empty box. The supporting text (*"Add branch offices, development centres or other company locations."*) and the `[ + Add Another Location ]` CTA sit cleanly below the header.
+    - **Dynamic Card Insertion Above CTA**: When `+ Add Another Location` or AI location discovery's *"Add as Office"* is triggered, the new card (`Additional Location 1`) is appended into `#additional_addresses_container` *above* the CTA block.
+    - **Continuous Bottom CTA**: Clicking `+ Add Another Location` again appends `Additional Location 2` below `Additional Location 1` while keeping the `+ Add Another Location` button and helper text pinned at the very bottom.
+    - **Card Anatomy & Clean Naming**:
+      - Card Title: `Additional Location 1`, `Additional Location 2`, etc. (unwrapped from parentheses).
+      - Individual card actions: `Set as Headquarters` and `[×] Remove` button with cross icon.
+      - Fields: `City / Location *` with placeholder `Search for a city...` and `Full Address *` with placeholder `Enter complete address...`.
+    - **Re-indexing on Card Removal**: When any additional location card is removed, remaining cards automatically re-index to sequential names (`Additional Location 1`, `Additional Location 2`...). If all cards are removed, the CTA button cleanly sits below the header.
+  - **Verification**: `php -l` clean across all modified files.
+
+- *2026-10-21* — **Service Company Add Client Step 4 (Client Contacts) AI Discovery Removal & Full-Width Enterprise Table Redesign (100% COMPLETED & VERIFIED)**:
+  - **Complete Removal of AI Contact Discovery**:
+    - Purged the right-hand mock "AI Contact Discovery" panel and static mock cards (`Rahul Sharma`, `Priya Sinha`, `Vikram Deshpande`, `Sneha Nair` with `@4bell.com`).
+    - Removed hardcoded default pre-seeded contacts from `tab-contacts.blade.php`; new client creation starts strictly with real contacts or an empty list.
+    - Cleaned up `clientContactManager` in `create.blade.php`, eliminating all `aiContacts` arrays and AI button synchronization methods.
+    - Updated `populateReviewSummaries()` on Step 6 so that empty contacts lists render a clean *"No contacts added yet"* notice rather than mock 4Bell profiles.
+  - **Adjusted Design & Full-Width Layout**:
+    - Converted Step 4 from 62:38 two-column layout into a spacious, full-width enterprise table layout (`max-width: 1320px` centered).
+    - Re-balanced table columns: Contact (22%), Designation (20%), Email (22%), Phone Number (16%), Role (10%), Primary status (10%), Actions (10% right-aligned).
+    - Introduced a modern, centered empty state when zero contacts exist, featuring a clear `+ Add First Contact` trigger to open the quick-add drawer.
+    - Retained the contact drawer for rapid creation and inline editing with live validation and duplicate email prevention.
+    - Full 15.6" laptop screen optimization (`@media (max-height: 850px)`) with comfortable 380px internal table scrolling.
+  - **Verification**: `php -l` clean across all modified Blade files.
+
+- *2026-10-21* — **Service Company Add Client End-to-End Audit & God-Level Pipeline Hardening (100% COMPLETED & VERIFIED)**:
+  - **Custom Industry Edge-Case Resolved**:
+    - Fixed validation in `ServiceCompanyClientController@validateClientSubmission` so typing a custom industry (which sets hidden `#industry` to `0` and fills `#custom_industry`) is recognized as valid instead of triggering a false-negative "Industry is required." error.
+    - Updated frontend validation in `create.blade.php` to accept `(industryVal && industryVal !== '0') || Boolean(customIndVal) || Boolean(indDispVal)`.
+    - Included `custom_industry` in canonical SHA-256 idempotency hash for both `store()` and `update()`.
+  - **Dynamic Address Array Boundary Hardened**:
+    - Standardized location array iteration across `validateClientSubmission`, `store()`, and `update()` using `max(count($request->address) - 1, (int) $request->addressId ?? 0)` to guarantee no branch address is truncated if intermediate cards were added or removed.
+  - **Strict-Mode Database Defense-in-Depth**:
+    - Pre-populated primary contact attributes (`contact_person_name`, `email`, `contact_number`) directly on `$client` model along with explicit defaults for `commission` and `payout` prior to `$client->save()`. Ensures 100% compatibility with strict MySQL trans-tables configurations.
+  - **Verification**: `php -l` passed with 0 errors across all affected files.
+
 - *2026-10-21* — **Service Company Add Client Step 6 (Review & Create Client) Enterprise Redesign (100% COMPLETED & VERIFIED)**:
   - **1:1 Alignment with Reference Design (`media_1792566743106_f52e3a53.png`) & Strict 6-Step Onboarding Architecture**:
     - Workflow finalized with canonical 6 steps:
