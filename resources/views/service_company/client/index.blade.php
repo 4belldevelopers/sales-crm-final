@@ -381,21 +381,6 @@
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard tbl-th-jobs" title="Jobs Status: Hiring, Hold, Closed">
-                            <span class="tbl-th-title">Jobs</span>
-                            <div class="tbl-th-job-chips">
-                                <span class="th-chip chip-hiring" title="Hiring"><span class="chip-dot dot-green"></span>Hiring</span>
-                                <span class="th-chip chip-hold" title="Hold"><span class="chip-dot dot-orange"></span>Hold</span>
-                                <span class="th-chip chip-closed" title="Closed"><span class="chip-dot dot-red"></span>Closed</span>
-                            </div>
-                        </div>
-                        <div class="tbl-th-subcard" title="Hiring Pipeline">
-                            <div class="tbl-th-label">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-                                <span>Hiring Pipeline</span>
-                            </div>
-                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                        </div>
                         <div class="tbl-th-subcard" title="Sort by Date">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -409,6 +394,20 @@
                                 <span>Last Activity</span>
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="tbl-th-subcard" title="Sort by Jobs">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                <span>Jobs</span>
+                            </div>
+                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="tbl-th-subcard" title="Hiring Pipeline">
+                            <div class="tbl-th-label">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                                <span>Hiring Pipeline</span>
+                            </div>
+                            <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         </div>
                     </div>
 
@@ -986,21 +985,6 @@ function setClientTab(tabName, el, updateUrl = true) {
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard tbl-th-jobs" title="Jobs Status: Hiring, Hold, Closed">
-                <span class="tbl-th-title">Jobs</span>
-                <div class="tbl-th-job-chips">
-                    <span class="th-chip chip-hiring" title="Hiring"><span class="chip-dot dot-green"></span>Hiring</span>
-                    <span class="th-chip chip-hold" title="Hold"><span class="chip-dot dot-orange"></span>Hold</span>
-                    <span class="th-chip chip-closed" title="Closed"><span class="chip-dot dot-red"></span>Closed</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard" title="Hiring Pipeline">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-                    <span>Hiring Pipeline</span>
-                </div>
-                <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </div>
             <div class="tbl-th-subcard" title="Sort by Date">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -1014,6 +998,20 @@ function setClientTab(tabName, el, updateUrl = true) {
                     <span>Last Activity</span>
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="tbl-th-subcard" title="Sort by Jobs">
+                <div class="tbl-th-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    <span>Jobs</span>
+                </div>
+                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="tbl-th-subcard" title="Hiring Pipeline">
+                <div class="tbl-th-label">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                    <span>Hiring Pipeline</span>
+                </div>
+                <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
         `);
     }

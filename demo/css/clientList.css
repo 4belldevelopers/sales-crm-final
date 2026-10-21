@@ -417,11 +417,11 @@
 }
 
 /* ── Table Grid (Header & Rows) ── */
-/* 7 columns: Checkbox, Company Name, Location, Jobs, Hiring Pipeline, Date, Last Activity */
+/* 7 columns: Checkbox, Company Name, Location, Date, Last Activity, Jobs, Hiring Pipeline */
 /* Tuned for 15.6-inch displays (1366x768 & 1920x1080) with 0 horizontal scroll */
 .tbl-h, .tbl-r {
   display: grid;
-  grid-template-columns: 32px minmax(175px, 1.35fr) minmax(110px, 0.85fr) minmax(95px, 0.75fr) minmax(180px, 1.35fr) minmax(115px, 0.85fr) minmax(105px, 0.8fr);
+  grid-template-columns: 32px minmax(175px, 1.4fr) minmax(115px, 0.9fr) minmax(115px, 0.85fr) minmax(110px, 0.85fr) minmax(85px, 0.65fr) minmax(185px, 1.35fr);
   align-items: center;
   column-gap: 8px;
   padding: 8px 12px;

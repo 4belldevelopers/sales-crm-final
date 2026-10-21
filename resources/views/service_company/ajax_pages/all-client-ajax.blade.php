@@ -215,6 +215,28 @@
             @endif
         </div>
 
+        {{-- Date (formerly Type & Connected On) --}}
+        <div class="tbl-cell-type">
+            <div class="cl-date-box">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>{{ $newDate }}</span>
+            </div>
+            <div class="cl-type-name {{ $isDirect ? 'type-direct' : 'type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
+                {{ $client_type }}
+            </div>
+        </div>
+
+        {{-- Last Activity --}}
+        <div class="tbl-cell-activity">
+            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
+            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
+        </div>
+
         {{-- Jobs (Order: Hiring, Hold, Closed with conditional status colors) --}}
         <div class="tbl-cell-jobs">
             <div class="cl-job-line {{ $job_active > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
@@ -258,28 +280,6 @@
                     <span class="cl-pipe-label">Joined</span>
                 </div>
             </div>
-        </div>
-
-        {{-- Date (formerly Type & Connected On) --}}
-        <div class="tbl-cell-type">
-            <div class="cl-date-box">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span>{{ $newDate }}</span>
-            </div>
-            <div class="cl-type-name {{ $isDirect ? 'type-direct' : 'type-internal' }} {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
-                {{ $client_type }}
-            </div>
-        </div>
-
-        {{-- Last Activity --}}
-        <div class="tbl-cell-activity">
-            <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
-            <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
         </div>
     </div>
     @endforeach
