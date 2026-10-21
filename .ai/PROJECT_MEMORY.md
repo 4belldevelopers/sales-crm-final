@@ -20,6 +20,32 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Add Client Step 3: Additional Locations Section Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Redesign the Additional Locations section of the Add Internal Client wizard (Step 3: Full Address) to match the approved visual reference specification (`media_1792592823243_6f4e2bbd.png`) at a God-Level enterprise SaaS standard.
+    - Card + Sub-Card architecture strictly scoped to Additional Locations:
+      - Row 1: City / Location autocomplete with search icon on left and chevron on right.
+      - Row 2: Full Address textarea with map pin icon on left, placeholder `Enter complete branch address..`, helper text `Include building, street, area, city and postal code.`, and live character counter `0 / 500`.
+      - Header: office building icon + `Additional Location X` + `BRANCH` badge + `Set as Primary` action button (with amber crown SVG) + `Remove` action button (with red trash can SVG).
+    - Dynamic Empty State & Actions Engine:
+      - When 0 locations are present: display centered empty state container (`#client_additional_empty_state`) with circular blue location pin icon, title "No additional locations added yet", helper subtitle, and centered amber "+ Add First Location" CTA button.
+      - When $\ge$ 1 location is added: replace empty state with the location sub-card(s) and display centered "+ Add Additional Location" CTA button directly below the container.
+      - Every added location uses the exact same component structure and automatically increments numbering (`Additional Location 1`, `Additional Location 2`, etc.).
+      - Removing the last location automatically restores the centered empty state, hides the bottom CTA, and updates count badge to `0 Locations`.
+      - Retain all existing validation rules (`address[]`, `kt_tagify_work_location[]`), API endpoints, duplicate checks, persistence, and AI "Add as Office" functionality without page reloads.
+  - **Architectural Enhancements**:
+    - In `tab-locations.blade.php`:
+      - Integrated `#client_additional_empty_state` with centered styling, icons, and `#btn_add_first_location`.
+      - Added `#additional_location_cta_wrap` centered directly below `#additional_addresses_container`.
+      - Redesigned server-rendered sub-cards to match reference layout: office SVG, `BRANCH` tag, `Set as Primary` button, `Remove` button, Row 1 City search with autocomplete dropdown, and Row 2 Full Address with character counter.
+      - Styled `.btn-set-primary`, `.btn-remove-subcard`, `.badge-branch-tag`, `.btn-add-first-location`, and `.btn-add-additional-location`.
+    - In `create.blade.php`:
+      - Updated `createBranchWithData`: generates identical sub-card HTML, hides empty state, shows bottom CTA, updates count badge, and binds character counters.
+      - Updated `removeAddressCard`: removes card, re-numbers remaining cards sequentially, checks count, restores empty state when 0, and updates badge.
+      - Updated `syncAdditionalAddressEmpty`: toggles empty state and CTA visibility based on DOM card count.
+      - Bound `#btn_add_first_location` alongside `#btn_add_another_address` and `.add_address`.
+  - **Verification**: `php -l` passed with 0 errors across all modified blades and scripts; responsive behavior verified for 15.6" screens.
+
 - *2026-10-21* — **Service Company Add Client Step 3 (Full Address) & Step 6 (Review & Summary) Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - **Step 6 (Company Profile / Summary)**:
