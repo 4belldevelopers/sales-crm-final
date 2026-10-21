@@ -7016,9 +7016,15 @@ $('.remove_address').click(function(){
               } catch (err) {}
             }
             if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-              var submitErrMsg = (s === 3 && window._lastStep3Error)
-                ? window._lastStep3Error
-                : 'Please complete all required fields in Step ' + s + ' before submitting.';
+              var submitErrMsg = (s === 1 && window._dupWebsiteError)
+                ? window._dupWebsiteError
+                : ((s === 1 && window._dupCompanyNameError)
+                  ? window._dupCompanyNameError
+                  : ((s === 3 && window._lastStep3Error)
+                    ? window._lastStep3Error
+                    : ((s === 4 && window._lastStep4Error)
+                      ? window._lastStep4Error
+                      : 'Please complete all required fields in Step ' + s + ' before submitting.')));
               Swal.fire({
                 icon: 'warning',
                 title: 'Incomplete Details',
@@ -8262,6 +8268,7 @@ $('.remove_address').click(function(){
       var $tbody = $('#client_contact_table_body');
       $tbody.find('tr:not(#client_contact_empty_row)').remove();
       var $emptyRow = $('#client_contact_empty_row');
+      $('#client_contacts_duplicate_alert').hide();
 
       if (!self.contacts.length) {
         $emptyRow.show();
@@ -10019,22 +10026,29 @@ $('.remove_address').click(function(){
 
     // Section 4: Contact Person
     if (step === 4) {
+      window._lastStep4Error = null;
       var contacts = getContactRowsData();
       if (!contacts.length) {
         var $contactSection = $('.client-contact-toolbar, .client-contact-section, #client_contact_table_body').first();
         showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
         $firstInvalid = $firstInvalid || $('#client_open_contact_drawer');
         isValid = false;
+        window._lastStep4Error = 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.';
       } else {
         var seenEmailsInStep4 = {};
         for (var i = 0; i < contacts.length; i++) {
           var c = contacts[i];
           var eLower = (c.email || '').trim().toLowerCase();
           if (eLower && seenEmailsInStep4[eLower]) {
-            var $dupRow = $('#client_contact_table_body tr').eq(i);
+            var $dupRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
+            if (!$dupRow.length) { $dupRow = $('#client_contact_table_body tr').eq(i); }
+            $dupRow.css({ 'background-color': '#fef2f2', 'border-left': '3px solid #dc2626' });
+            $('#client_contacts_duplicate_alert').show();
+            $('#client_contacts_duplicate_alert_text').text('This contact is already registered with the current company.');
             showInlineError($dupRow, 'This contact is already registered with the current company.');
             $firstInvalid = $firstInvalid || $dupRow;
             isValid = false;
+            window._lastStep4Error = 'This contact is already registered with the current company.';
             break;
           }
           if (eLower) {
@@ -10047,12 +10061,81 @@ $('.remove_address').click(function(){
           var desigRes = ClientValidationEngine.validateField('cp_desigination', c.designation);
 
           if (!nameRes.valid || !emailRes.valid || !phoneRes.valid || !desigRes.valid) {
-            var $contactRow = $('#client_contact_table_body tr').eq(i);
+            var $contactRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
+            if (!$contactRow.length) { $contactRow = $('#client_contact_table_body tr').eq(i); }
             var errMsg = !nameRes.valid ? nameRes.message : (!emailRes.valid ? emailRes.message : (!phoneRes.valid ? phoneRes.message : desigRes.message));
             showInlineError($contactRow, 'Contact #' + (i + 1) + ': ' + errMsg);
             $firstInvalid = $firstInvalid || $contactRow;
             isValid = false;
+            window._lastStep4Error = 'Contact #' + (i + 1) + ': ' + errMsg;
             break;
+          }
+        }
+
+        // Database duplicate validation across Internal Clients before advancing to Step 5
+        if (isValid) {
+          var batchPayload = {
+            field: 'all',
+            client_id: {{ $client->id ?? 'null' }},
+            cp_name: [],
+            cp_email: [],
+            cp_number: [],
+            calling_code: []
+          };
+          contacts.forEach(function (c) {
+            batchPayload.cp_name.push(c.name || '');
+            batchPayload.cp_email.push(c.email || '');
+            batchPayload.cp_number.push(c.phone || '');
+            batchPayload.calling_code.push(c.callingCode || '+91');
+          });
+
+          $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: false,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: batchPayload,
+            success: function (resp) {
+              if (resp && resp.duplicate) {
+                isValid = false;
+                var dupIdx = (typeof resp.index !== 'undefined' && resp.index !== null) ? parseInt(resp.index, 10) : 0;
+                var $badRow = $('#client_contact_table_body tr[data-contact-index="' + dupIdx + '"]');
+                if (!$badRow.length) {
+                  $badRow = $('#client_contact_table_body tr').eq(dupIdx);
+                }
+                $badRow.css({
+                  'background-color': '#fef2f2',
+                  'border-left': '3px solid #dc2626'
+                });
+                $('#client_contacts_duplicate_alert').show();
+                var msg = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
+                $('#client_contacts_duplicate_alert_text').text(msg);
+                showInlineError($badRow, msg);
+                $firstInvalid = $firstInvalid || $badRow;
+                window._lastStep4Error = msg;
+              } else {
+                $('#client_contacts_duplicate_alert').hide();
+                $('#client_contact_table_body tr').css({
+                  'background-color': '',
+                  'border-left': ''
+                });
+              }
+            },
+            error: function () {
+              // Server error / offline fallback
+            }
+          });
+        }
+      }
+
+      if (isValid && $('#client_contact_drawer').hasClass('is-open')) {
+        var drawerEmail = ($('#client_drawer_email').val() || '').trim();
+        if (drawerEmail) {
+          var isDrawerEmailValid = window.checkDrawerEmailDuplicate ? window.checkDrawerEmailDuplicate(drawerEmail, true) : true;
+          if (!isDrawerEmailValid || window._drawerContactEmailDupError) {
+            $firstInvalid = $firstInvalid || $('#client_drawer_email');
+            isValid = false;
+            window._lastStep4Error = window._drawerContactEmailDupError || 'Please resolve the contact email duplicate before continuing.';
           }
         }
       }
@@ -10065,6 +10148,7 @@ $('.remove_address').click(function(){
             showInlineError($('#ap_email'), apRes.message);
             $firstInvalid = $firstInvalid || $('#ap_email');
             isValid = false;
+            window._lastStep4Error = apRes.message;
           }
         }
       }
@@ -10620,9 +10704,15 @@ $('.remove_address').click(function(){
             timer: 4500,
             timerProgressBar: true
           });
-          var customMsg = (currentStep === 3 && window._lastStep3Error)
-            ? window._lastStep3Error
-            : 'Please fill in the required fields marked in red.';
+          var customMsg = (currentStep === 1 && window._dupWebsiteError)
+            ? window._dupWebsiteError
+            : ((currentStep === 1 && window._dupCompanyNameError)
+              ? window._dupCompanyNameError
+              : ((currentStep === 3 && window._lastStep3Error)
+                ? window._lastStep3Error
+                : ((currentStep === 4 && window._lastStep4Error)
+                  ? window._lastStep4Error
+                  : 'Please fill in the required fields marked in red.')));
           Toast.fire({
             icon: 'warning',
             title: customMsg
@@ -10737,9 +10827,15 @@ $('.remove_address').click(function(){
                 timer: 4500,
                 timerProgressBar: true
               });
-              var headerMsg = (s === 3 && window._lastStep3Error)
-                ? window._lastStep3Error
-                : 'Please complete the required fields in Step ' + s + ' before continuing.';
+              var headerMsg = (s === 1 && window._dupWebsiteError)
+                ? window._dupWebsiteError
+                : ((s === 1 && window._dupCompanyNameError)
+                  ? window._dupCompanyNameError
+                  : ((s === 3 && window._lastStep3Error)
+                    ? window._lastStep3Error
+                    : ((s === 4 && window._lastStep4Error)
+                      ? window._lastStep4Error
+                      : 'Please complete the required fields in Step ' + s + ' before continuing.')));
               Toast.fire({
                 icon: 'warning',
                 title: headerMsg
