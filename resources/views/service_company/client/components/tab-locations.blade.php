@@ -200,6 +200,22 @@
             <span>Additional locations are optional. If added, both <strong>City</strong> and <strong>Full Address</strong> are required (or click <strong>Remove</strong> if not needed).</span>
           </div>
 
+          <!-- Centered Empty State (When 0 locations added) -->
+          <div class="client-addr-empty-state" id="client_additional_empty_state" style="{{ empty($additional_addresses) ? 'display:flex;' : 'display:none;' }}">
+            <div class="empty-state-icon-circle">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <h5 class="empty-state-title">No additional locations added yet</h5>
+            <p class="empty-state-subtitle">Add branch offices, development centres or regional hubs for this client organization.</p>
+            <button type="button" class="btn btn-add-first-location" id="btn_add_first_location">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add First Location</span>
+            </button>
+          </div>
+
           <!-- Dynamic Sub-Cards Container (Cards appended directly above CTA action) -->
           <div class="client-additional-subcards-wrap" id="additional_addresses_container">
             @if (!empty($additional_addresses))
@@ -209,19 +225,32 @@
                   <div class="client-subcard-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                     <div class="d-flex align-items-center gap-2">
                       <div class="client-subcard-icon-box office-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                          <path d="M9 22v-4h6v4"/>
+                          <line x1="8" y1="6" x2="8.01" y2="6"/>
+                          <line x1="16" y1="6" x2="16.01" y2="6"/>
+                          <line x1="12" y1="6" x2="12.01" y2="6"/>
+                          <line x1="8" y1="10" x2="8.01" y2="10"/>
+                          <line x1="12" y1="10" x2="12.01" y2="10"/>
+                          <line x1="16" y1="10" x2="16.01" y2="10"/>
+                          <line x1="8" y1="14" x2="8.01" y2="14"/>
+                          <line x1="12" y1="14" x2="12.01" y2="14"/>
+                          <line x1="16" y1="14" x2="16.01" y2="14"/>
+                        </svg>
                       </div>
                       <div class="d-flex align-items-center gap-2">
                         <h4 class="client-subcard-title client-branch-title mb-0">Additional Location {{ $addIdx + 1 }}</h4>
-                        <span class="badge badge-office-tag">BRANCH</span>
+                        <span class="badge badge-branch-tag">BRANCH</span>
                       </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                      <button type="button" class="btn btn-xs btn-set-hq" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq({{ $addrItem['id'] }}) : false" title="Set as Headquarters">
-                        Set as Headquarters
+                      <button type="button" class="btn btn-xs btn-set-primary" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq({{ $addrItem['id'] }}) : false" title="Set as Primary">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" class="me-1"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                        <span>Set as Primary</span>
                       </button>
                       <button type="button" class="btn btn-xs btn-remove-subcard client-branch-remove-btn" onclick="removeAddressCard(this, 'clientAddr_{{ $addrItem['id'] }}')" title="Remove Location">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         <span>Remove</span>
                       </button>
                     </div>
@@ -229,14 +258,14 @@
 
                   <!-- Sub-card Form Fields -->
                   <div class="client-subcard-body">
-                    <!-- Branch City -->
+                    <!-- Row 1: City / Location -->
                     <div class="client-addr-field mb-2">
                       <label class="form-label mb-1" for="branch_city_search_{{ $addrItem['id'] }}">City / Location <span class="text-danger">*</span></label>
                       <div class="position-relative client-addr-input-wrap">
                         <span class="position-absolute client-addr-field-icon-left">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </span>
-                        <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_{{ $addrItem['id'] }}" data-cid="{{ $addrItem['id'] }}" value="{{ $addrItem['city'] }}" placeholder="Search for a city..." autocomplete="off">
+                        <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_{{ $addrItem['id'] }}" data-cid="{{ $addrItem['id'] }}" value="{{ $addrItem['city'] }}" placeholder="Search for a city.." autocomplete="off">
                         <span class="position-absolute client-addr-field-icon-right">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </span>
@@ -246,18 +275,17 @@
                       <div class="client-addr-error text-danger mt-1" id="branch_city_err_{{ $addrItem['id'] }}" style="display:none;">City selection is required.</div>
                     </div>
 
-                    <!-- Branch Address -->
+                    <!-- Row 2: Full Address -->
                     <div class="client-addr-field">
-                      <label class="form-label mb-1" for="address_{{ $addrItem['id'] }}">Full Address <span class="text-danger">*</span></label>
                       <div class="position-relative client-addr-textarea-wrap">
                         <span class="position-absolute client-addr-field-icon-top">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                         </span>
-                        <textarea class="form-control client-addr-textarea" name="address[]" id="address_{{ $addrItem['id'] }}" rows="2" maxlength="500" placeholder="Enter complete branch address...">{{ $addrItem['address'] }}</textarea>
+                        <textarea class="form-control client-addr-textarea" name="address[]" id="address_{{ $addrItem['id'] }}" rows="2" maxlength="500" placeholder="Enter complete branch address..">{{ $addrItem['address'] }}</textarea>
                       </div>
                       <div class="d-flex align-items-center justify-content-between mt-1">
-                        <span class="text-muted client-field-hint">Accurate location address.</span>
-                        <span class="client-addr-counter"><span id="address_char_count_{{ $addrItem['id'] }}">{{ strlen($addrItem['address']) }}</span>/500</span>
+                        <span class="text-muted client-field-hint">Include building, street, area, city and postal code.</span>
+                        <span class="client-addr-counter"><span id="address_char_count_{{ $addrItem['id'] }}">{{ strlen($addrItem['address']) }}</span> / 500</span>
                       </div>
                       <div class="client-addr-error text-danger mt-1" id="branch_address_err_{{ $addrItem['id'] }}" style="display:none;">Full Address is required.</div>
                     </div>
@@ -267,13 +295,12 @@
             @endif
           </div>
 
-          <!-- Additional Locations Bottom Action CTA (Always pinned directly below sub-cards) -->
-          <div class="client-add-location-cta-wrap pt-1" id="additional_location_cta_wrap">
-            <button type="button" class="btn btn-add-location" id="btn_add_another_address">
+          <!-- Additional Locations Bottom Action CTA (Shown when >= 1 location added) -->
+          <div class="client-add-location-cta-wrap text-center mt-3" id="additional_location_cta_wrap" style="{{ empty($additional_addresses) ? 'display:none;' : 'display:flex;' }}">
+            <button type="button" class="btn btn-add-additional-location" id="btn_add_another_address">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>Add Additional Location</span>
             </button>
-            <span class="client-add-location-hint" id="additional_location_helper_text">Click to dynamically add another branch office or regional centre.</span>
           </div>
         </div>
       </section>
@@ -629,49 +656,58 @@
     padding: 2px 7px !important;
     border-radius: 4px !important;
   }
-  .badge-office-tag {
+  .badge-office-tag,
+  .badge-branch-tag {
     background: #f1f5f9 !important;
     color: #475569 !important;
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
-    padding: 2px 7px !important;
-    border-radius: 4px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
+    letter-spacing: 0.3px !important;
   }
 
   /* Sub-card Actions */
+  .btn-set-primary,
   .btn-set-hq {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
-    padding: 3px 8px !important;
-    border-radius: 5px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
     color: #b45309 !important;
     border: 1px solid #fde68a !important;
-    background: #fefce8 !important;
+    background: #fffdf0 !important;
     cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
     transition: all 0.15s ease !important;
   }
+  .btn-set-primary:hover,
   .btn-set-hq:hover {
-    background: #fef08a !important;
+    background: #fef3c7 !important;
     border-color: #f59e0b !important;
+    color: #92400e !important;
   }
 
   .btn-remove-subcard {
     font-size: 11px !important;
     font-weight: 600 !important;
-    padding: 3px 8px !important;
-    border-radius: 5px !important;
-    color: #dc2626 !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    color: #ef4444 !important;
     border: 1px solid #fee2e2 !important;
-    background: #fef2f2 !important;
+    background: #ffffff !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 3px !important;
+    gap: 4px !important;
     transition: all 0.15s ease !important;
   }
   .btn-remove-subcard:hover {
-    background: #fee2e2 !important;
+    background: #fef2f2 !important;
     border-color: #fca5a5 !important;
+    color: #dc2626 !important;
   }
 
   /* Form Controls */
@@ -757,35 +793,84 @@
     font-weight: 600 !important;
   }
 
-  /* Add Location CTA Action */
-  .client-add-location-cta-wrap {
+  /* Empty State */
+  .client-addr-empty-state {
+    background: #ffffff !important;
+    border: 1.5px dashed #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 26px 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin-bottom: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+  .client-addr-empty-state:hover {
+    border-color: #f59e0b !important;
+    background: #fffdf5 !important;
+  }
+  .empty-state-icon-circle {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
-    flex-wrap: wrap !important;
-  }
-  .btn-add-location {
-    background: #ffffff !important;
-    border: 1.5px solid #2563eb !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
     color: #2563eb !important;
-    border-radius: 8px !important;
-    padding: 7px 16px !important;
+  }
+  .empty-state-title {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 0 4px 0 !important;
+  }
+  .empty-state-subtitle {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    margin: 0 0 14px 0 !important;
+    max-width: 480px !important;
+  }
+
+  /* Centered CTA Buttons */
+  .btn-add-first-location,
+  .btn-add-additional-location {
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 8px 20px !important;
     font-size: 12px !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 6px !important;
-    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05) !important;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3) !important;
     transition: all 0.15s ease !important;
   }
-  .btn-add-location:hover {
-    background: #eff6ff !important;
-    border-color: #1d4ed8 !important;
+  .btn-add-first-location:hover,
+  .btn-add-additional-location:hover {
+    background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(245, 158, 11, 0.4) !important;
+    color: #ffffff !important;
   }
-  .client-add-location-hint {
-    font-size: 11.5px !important;
-    color: #64748b !important;
+  .btn-add-first-location:active,
+  .btn-add-additional-location:active {
+    transform: translateY(0) !important;
+  }
+
+  .client-add-location-cta-wrap {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 6px 0 2px 0 !important;
   }
 
   /* Autocomplete Dropdown */

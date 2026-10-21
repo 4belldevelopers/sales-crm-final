@@ -5639,10 +5639,17 @@ if ($page_event == 'ADD') {
         $('#additional_addresses_container .client-branch-card, .client-address-container .client-branch-card').each(function(idx) {
             $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
         });
-        var remaining = $('#additional_addresses_container .client-branch-card, .client-address-container .is-additional').length;
-        $('#client_additional_empty').toggle(remaining === 0);
         var bCount = $('#additional_addresses_container .client-branch-card').length;
-        $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
+        if (bCount === 0) {
+            $('#client_additional_empty_state').show();
+            $('#additional_location_cta_wrap').hide();
+            $('#additional_locations_count_badge').text('0 Locations');
+        } else {
+            $('#client_additional_empty_state').hide();
+            $('#additional_location_cta_wrap').show();
+            $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
+        }
+        $('#client_additional_empty').toggle(bCount === 0);
         if (window.clientLocationManager && typeof window.clientLocationManager.syncAiButtons === 'function') {
             window.clientLocationManager.syncAiButtons();
         }
@@ -6272,31 +6279,39 @@ if ($page_event == 'ADD') {
                 '<div class="client-subcard-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">' +
                 '  <div class="d-flex align-items-center gap-2">' +
                 '    <div class="client-subcard-icon-box office-icon">' +
-                '      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>' +
+                '        <path d="M9 22v-4h6v4"/>' +
+                '        <line x1="8" y1="6" x2="8.01" y2="6"/><line x1="16" y1="6" x2="16.01" y2="6"/><line x1="12" y1="6" x2="12.01" y2="6"/>' +
+                '        <line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/>' +
+                '        <line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/>' +
+                '      </svg>' +
                 '    </div>' +
                 '    <div class="d-flex align-items-center gap-2">' +
                 '      <h4 class="client-subcard-title client-branch-title mb-0">Additional Location ' + branchNumber + '</h4>' +
-                '      <span class="badge badge-office-tag">BRANCH</span>' +
+                '      <span class="badge badge-branch-tag">BRANCH</span>' +
                 '    </div>' +
                 '  </div>' +
                 '  <div class="d-flex align-items-center gap-2">' +
-                '    <button type="button" class="btn btn-xs btn-set-hq" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" title="Set as Headquarters">' +
-                '      Set as Headquarters' +
+                '    <button type="button" class="btn btn-xs btn-set-primary" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" title="Set as Primary">' +
+                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" class="me-1"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>' +
+                '      <span>Set as Primary</span>' +
                 '    </button>' +
                 '    <button type="button" class="btn btn-xs btn-remove-subcard client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" title="Remove Location">' +
-                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
                 '      <span>Remove</span>' +
                 '    </button>' +
                 '  </div>' +
                 '</div>' +
                 '<div class="client-subcard-body">' +
+                '  <!-- Row 1: City / Location -->' +
                 '  <div class="client-addr-field mb-2">' +
                 '    <label class="form-label mb-1" for="branch_city_search_' + cid + '">City / Location <span class="text-danger">*</span></label>' +
                 '    <div class="position-relative client-addr-input-wrap">' +
                 '      <span class="position-absolute client-addr-field-icon-left">' +
                 '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
                 '      </span>' +
-                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city..." autocomplete="off">' +
+                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city.." autocomplete="off">' +
                 '      <span class="position-absolute client-addr-field-icon-right">' +
                 '        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
                 '      </span>' +
@@ -6305,17 +6320,17 @@ if ($page_event == 'ADD') {
                 '    </div>' +
                 '    <div class="client-addr-error text-danger mt-1" id="branch_city_err_' + cid + '" style="display:none;">City selection is required.</div>' +
                 '  </div>' +
+                '  <!-- Row 2: Full Address -->' +
                 '  <div class="client-addr-field">' +
-                '    <label class="form-label mb-1" for="address_' + cid + '">Full Address <span class="text-danger">*</span></label>' +
                 '    <div class="position-relative client-addr-textarea-wrap">' +
                 '      <span class="position-absolute client-addr-field-icon-top">' +
                 '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
                 '      </span>' +
-                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete branch address...">' + escapeHtmlText(address || '') + '</textarea>' +
+                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete branch address..">' + escapeHtmlText(address || '') + '</textarea>' +
                 '    </div>' +
                 '    <div class="d-flex align-items-center justify-content-between mt-1">' +
-                '      <span class="text-muted client-field-hint">Accurate location address.</span>' +
-                '      <span class="client-addr-counter"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span>/500</span>' +
+                '      <span class="text-muted client-field-hint">Include building, street, area, city and postal code.</span>' +
+                '      <span class="client-addr-counter"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span> / 500</span>' +
                 '    </div>' +
                 '    <div class="client-addr-error text-danger mt-1" id="branch_address_err_' + cid + '" style="display:none;">Full Address is required.</div>' +
                 '  </div>' +
@@ -6323,6 +6338,8 @@ if ($page_event == 'ADD') {
                 '</div>';
 
             $('#additional_addresses_container').append(cardHtml);
+            $('#client_additional_empty_state').hide();
+            $('#additional_location_cta_wrap').show();
             $('#client_additional_empty').hide();
             var bCount = $('#additional_addresses_container .client-branch-card').length;
             $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
@@ -6398,7 +6415,7 @@ if ($page_event == 'ADD') {
         }
     };
 
-    $(document).on('click', '#btn_add_another_address, .add_address', function (e) {
+    $(document).on('click', '#btn_add_another_address, #btn_add_first_location, .add_address', function (e) {
         e.preventDefault();
         if (window.clientLocationManager) {
             window.clientLocationManager.addManualBranch();
