@@ -2710,13 +2710,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $directoryPath = GeneralMethod::document_manage_directory($company_id);
             $file = $request->file('logo');
             $ext = strtolower($file->getClientOriginalExtension());
-            $allowed = ['png', 'jpeg', 'jpg'];
+            $allowed = ['png', 'jpeg', 'jpg', 'webp', 'svg'];
             if (in_array($ext, $allowed)) {
                 $filename = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
                 $altfilename = GeneralMethod::getValidUploadFileName($filename).'-'.$timeStamp.'.'.$ext;
                 $target_file = $directoryPath.'/'.$altfilename;
 
-                $file->move($directoryPath, $altfilename);
+                GeneralMethod::compressAndSaveLogo($file->getRealPath(), $target_file, $ext, 500, 500);
 
                 $companyNameR2 = DB::table('companies')
                     ->where('id', $company_id)
@@ -3416,13 +3416,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $directoryPath = GeneralMethod::document_manage_directory($company_id);
             $file = $request->file('logo');
             $ext = strtolower($file->getClientOriginalExtension());
-            $allowed = ['png', 'jpeg', 'jpg'];
+            $allowed = ['png', 'jpeg', 'jpg', 'webp', 'svg'];
             if (in_array($ext, $allowed)) {
                 $origFilename = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
                 $altfilename = GeneralMethod::getValidUploadFileName($origFilename).'-'.$timeStamp.'.'.$ext;
                 $target_file = $directoryPath.'/'.$altfilename;
 
-                $file->move($directoryPath, $altfilename);
+                GeneralMethod::compressAndSaveLogo($file->getRealPath(), $target_file, $ext, 500, 500);
 
                 $companyNameR2 = DB::table('companies')
                     ->where('id', $company_id)
