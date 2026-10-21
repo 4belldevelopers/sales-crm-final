@@ -357,6 +357,14 @@
         .wallet-earn-banner {
             background: linear-gradient(90deg, #6d28d9, #8b5cf6); border-radius: 14px;
             color: #fff; padding: 20px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .wallet-earn-banner.salse-packages {
+            background: linear-gradient(90deg, #0d8a3d, #10a34a);
+        }
+        .wallet-earn-banner[style*="display:none"],
+        .wallet-earn-banner[style*="display: none"] {
+            display: none !important;
         }
         .wallet-earn-banner .fs-8 { color: rgba(255,255,255,.8); }
 
@@ -501,7 +509,7 @@
                                     @else
                                     <div class="cp-no-plan">
                                         <i class="fa fa-info-circle me-2"></i> No active operational plan found.
-                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="switchWalletCenterTab('packages');return false;">Browse Packages &rarr;</a>
+                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="scrollToWalletPackages('operational');return false;">Browse Packages &rarr;</a>
                                     </div>
                                     @endif
                                 </div>
@@ -550,7 +558,7 @@
                                     @else
                                     <div class="cp-no-plan">
                                         <i class="fa fa-info-circle me-2"></i> No active sales plan found.
-                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="switchWalletCenterTab('packages');return false;">Browse Packages &rarr;</a>
+                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="scrollToWalletPackages('sales');return false;">Browse Packages &rarr;</a>
                                     </div>
                                     @endif
                                 </div>
@@ -584,10 +592,10 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-8 operational-packages">
+                                <div class="mt-8 operational-packages" id="wallet-rec-packages-op">
                                     <div class="d-flex flex-stack mb-4">
                                         <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Operational Wallet</h4>
-                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="scrollToWalletPackages('operational');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
                                         @php
@@ -680,12 +688,12 @@
                                     </div>
                                 </div>
 
-                                <div class="wallet-earn-banner d-flex flex-stack operational-packages mb-5">
+                                <div class="wallet-earn-banner flex-stack operational-packages mb-5">
                                     <div>
                                         <div class="fw-bold">Earn More. Save More.</div>
                                         <div class="fs-8">Get exclusive discounts and bonus coins on higher packages.</div>
                                     </div>
-                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="switchWalletCenterTab('packages');return false;">Buy Coins Now</a>
+                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="scrollToWalletPackages('operational');return false;">Buy Coins Now</a>
                                 </div>
                                 <!--end::Overview extras - Operational-->
 
@@ -717,10 +725,10 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-8 salse-packages" style="display:none">
+                                <div class="mt-8 salse-packages" id="wallet-rec-packages-sal" style="display:none">
                                     <div class="d-flex flex-stack mb-4">
                                         <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Sales Wallet</h4>
-                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="scrollToWalletPackages('sales');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
                                         @php
@@ -815,12 +823,12 @@
                                     </div>
                                 </div>
 
-                                <div class="wallet-earn-banner d-flex flex-stack salse-packages mb-5" style="display:none;background:linear-gradient(90deg,#0d8a3d,#10a34a);">
+                                <div class="wallet-earn-banner flex-stack salse-packages mb-5" style="display:none;">
                                     <div>
                                         <div class="fw-bold">Earn More. Save More.</div>
                                         <div class="fs-8">Get exclusive discounts and bonus coins on higher packages.</div>
                                     </div>
-                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="switchWalletCenterTab('packages');return false;">Buy Sales Coins Now</a>
+                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="scrollToWalletPackages('sales');return false;">Buy Sales Coins Now</a>
                                 </div>
                                 <!--end::Overview extras - Sales-->
 
@@ -1401,39 +1409,61 @@
                 }
             });
 
+            // Smoothly scroll to recommended packages on the Overview page without hiding any content.
+            window.scrollToWalletPackages = function(type) {
+                if (!$('#overview-only-section').is(':visible')) {
+                    switchWalletCenterTab('overview', true);
+                }
+                var activePlan = type || ($('.package-switch.salse-tab-plan').length ? 'sales' : 'operational');
+                var targetId = (activePlan === 'sales') ? '#wallet-rec-packages-sal' : '#wallet-rec-packages-op';
+                var $target = $(targetId);
+                if ($target.length) {
+                    $('html, body').animate({ scrollTop: $target.offset().top - 20 }, 250);
+                }
+            };
+
             // Wallet Center tab switching.
             // wallet-pane-overview is a permanent outer wrapper — never hidden.
             // Overview-specific content lives in #overview-only-section inside it.
-            // All other panes (transactions, packages…) are also inside that wrapper.
+            // All other panes (transactions, etc.) are also inside that wrapper.
             // So we hide/show #overview-only-section and the target pane, not the wrapper.
             var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
             var txTabLoaded = false;
             window.switchWalletCenterTab = function(tab, noScroll) {
-                // Hide all inner panes (packages, transactions, etc.) but NOT the outer overview wrapper
-                $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
-
-                if (tab === 'overview') {
+                if (tab === 'packages' || tab === 'overview') {
+                    // Packages are directly integrated on the Overview page.
+                    // Keep overview visible, mark Overview tab active, and scroll to packages if requested.
+                    $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
                     $('#overview-only-section').show();
-                } else {
-                    $('#overview-only-section').hide();
-                    $('#wallet-pane-' + tab).show();
+                    $('.wallet-tab-link').removeClass('wt-active');
+                    $('.wallet-tab-link[data-tab="overview"]').addClass('wt-active');
 
-                    if (tab === 'transactions' && (!txTabLoaded || $('#wallet-pane-transactions .table-responsive').length === 0)) {
-                        txTabLoaded = true;
-                        $('#wallet-pane-transactions').css('opacity', '0.5');
-                        $.ajax({
-                            url: txAjaxUrl,
-                            type: 'GET',
-                            data: { page: 1 },
-                            success: function (res) {
-                                var htmlContent = (res && res.html) ? res.html : res;
-                                $('#wallet-pane-transactions').html(htmlContent).css('opacity', '1');
-                            },
-                            error: function () {
-                                $('#wallet-pane-transactions').css('opacity', '1');
-                            }
-                        });
+                    if (tab === 'packages' && !noScroll) {
+                        scrollToWalletPackages();
                     }
+                    return;
+                }
+
+                // Hide all inner panes (transactions, etc.) but NOT the outer overview wrapper
+                $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
+                $('#overview-only-section').hide();
+                $('#wallet-pane-' + tab).show();
+
+                if (tab === 'transactions' && (!txTabLoaded || $('#wallet-pane-transactions .table-responsive').length === 0)) {
+                    txTabLoaded = true;
+                    $('#wallet-pane-transactions').css('opacity', '0.5');
+                    $.ajax({
+                        url: txAjaxUrl,
+                        type: 'GET',
+                        data: { page: 1 },
+                        success: function (res) {
+                            var htmlContent = (res && res.html) ? res.html : res;
+                            $('#wallet-pane-transactions').html(htmlContent).css('opacity', '1');
+                        },
+                        error: function () {
+                            $('#wallet-pane-transactions').css('opacity', '1');
+                        }
+                    });
                 }
 
                 $('.wallet-tab-link').removeClass('wt-active');
@@ -1461,7 +1491,10 @@
             // On load: switch to hash tab if valid, otherwise default to overview.
             function applyHashTab(fromHashChange) {
                 var match = /tab=([a-z]+)/.exec(window.location.hash || '');
-                if (match && $('#wallet-pane-' + match[1]).length) {
+                var tab = match ? match[1] : 'overview';
+                if (tab === 'packages') {
+                    switchWalletCenterTab('packages', !fromHashChange);
+                } else if (match && $('#wallet-pane-' + match[1]).length) {
                     switchWalletCenterTab(match[1], !fromHashChange);
                 } else {
                     switchWalletCenterTab('overview', !fromHashChange);
