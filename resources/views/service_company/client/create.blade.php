@@ -7905,20 +7905,17 @@ $('.remove_address').click(function(){
           : '<button type="button" class="btn btn-link p-0 text-decoration-none client-make-primary-btn" onclick="window.clientContactManager.setPrimary(' + i + ')" title="Set as Primary Contact" style="color:#64748b; font-size:11.5px; font-weight:500; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;"><span class="radio-circle" style="display:inline-block; width:12px; height:12px; border:1.5px solid #94a3b8; border-radius:50%; background:#ffffff; transition:border-color 0.15s ease;"></span> Make Primary</button>';
 
         var rowHtml = '<tr data-contact-index="' + i + '" style="border-bottom:1px solid #f1f5f9;">' +
-          '<td style="padding:12px 18px; width:20%; vertical-align:middle; overflow:hidden;">' +
+          '<td style="padding:12px 20px; width:24%; vertical-align:middle; overflow:hidden;">' +
             '<div class="d-flex align-items-center" style="min-width:0; overflow:hidden;">' +
               '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:32px; height:32px; border-radius:50%; margin-right:10px; font-size:11.5px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
               '<span style="font-weight:600; color:#101828; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</span>' +
             '</div>' +
           '</td>' +
-          '<td style="padding:12px 14px; width:18%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.designation || '') + '">' + escapeHtml(c.designation || '—') + '</td>' +
-          '<td style="padding:12px 14px; width:22%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.email || '') + '">' + escapeHtml(c.email || '—') + '</td>' +
-          '<td style="padding:12px 14px; width:16%; vertical-align:middle; color:#334155; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + displayPhoneHtml + '</td>' +
-          '<td style="padding:12px 12px; width:10%; vertical-align:middle; white-space:nowrap;">' +
-            '<span class="badge" style="background:' + roleInfo.bg + '; color:' + roleInfo.text + '; font-weight:600; font-size:11px; padding:4px 10px; border-radius:20px; white-space:nowrap; display:inline-block;">' + escapeHtml(roleInfo.name) + '</span>' +
-          '</td>' +
-          '<td style="padding:12px 10px; width:8%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
-          '<td style="padding:12px 16px; width:6%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
+          '<td style="padding:12px 16px; width:18%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.designation || '') + '">' + escapeHtml(c.designation || '—') + '</td>' +
+          '<td style="padding:12px 16px; width:24%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.email || '') + '">' + escapeHtml(c.email || '—') + '</td>' +
+          '<td style="padding:12px 16px; width:16%; vertical-align:middle; color:#334155; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + displayPhoneHtml + '</td>' +
+          '<td style="padding:12px 14px; width:10%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
+          '<td style="padding:12px 20px; width:8%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
               '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit Contact" style="width:28px; height:28px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
                 '<i class="la la-pencil" style="font-size:13px; color:#2563eb;"></i>' +

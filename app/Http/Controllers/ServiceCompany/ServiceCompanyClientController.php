@@ -63,11 +63,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return DB::table('countries')->get();
         });
 
+        $requestedTab = request('tab', 'all');
+        if ($requestedTab === 'requests') {
+            $requestedTab = 'request';
+        }
+        $this->initialTab = request('tab', 'all');
+        $this->initialOpenClient = (int) request('open_client', 0);
+
         // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
         // Eliminates duplicate initial HTTP roundtrip (GET /clients -> GET /clients_ajax)
         try {
             $initialRequest = new Request([
-                'tab' => 'all',
+                'tab' => $requestedTab,
                 'page' => 1,
                 'per_page' => 10,
                 'size' => 10,
@@ -76,26 +83,32 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $initialData = $initialResponse->getData(true);
             $this->initialHtml = $initialData['html'] ?? '';
             $this->initialTotal = $initialData['total'] ?? 0;
-            $this->initialPagination = $initialData['pagination'] ?? '';
+            $this->initialPagination = $initialData['pagination_html'] ?? ($initialData['pagination'] ?? '');
+            $this->initialRows = $initialData['rows'] ?? [];
+            $this->initialDataVersion = $initialData['data_version'] ?? 1;
         } catch (\Throwable $e) {
             $this->initialHtml = '';
             $this->initialTotal = 0;
             $this->initialPagination = '';
+            $this->initialRows = [];
+            $this->initialDataVersion = 1;
         }
 
         return view('service_company.client.index', $this->data);
     }
 
-    public function direct_client($id)
+    /**
+     * Backward-compatible 302 proxy for legacy Direct Clients route.
+     * Preserves deep-links and $id for auto-opening client drawer.
+     */
+    public function direct_client($id = 0)
     {
-        $this->pageTitle = __('Direct Client');
-        $this->clientDataCnt = $this->commonclient();
-        // Countries feed the Location filter dropdown (Cached 24h).
-        $this->countries = cache()->remember('global_countries_list', 86400, function () {
-            return DB::table('countries')->get();
-        });
+        $params = ['tab' => 'direct'];
+        if ((int) $id > 0) {
+            $params['open_client'] = (int) $id;
+        }
 
-        return view('service_company.client.direct_client', $this->data);
+        return redirect()->route('service_company.clients.index', $params, 302);
     }
 
     public function all_clients_data_ajax(Request $request)
@@ -123,6 +136,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $valCheck = request('sortingfilter');
 
         $tabFilter = $request->input('tab', $request->input('type', 'all'));
+        if ($tabFilter === 'requests') {
+            $tabFilter = 'request';
+        }
 
         // If tab is request, delegate to client_request_data method
         if ($tabFilter === 'request') {
@@ -147,9 +163,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
         $cachePayload['hiring'] = $hiringFilter;
 
-        $versionKey = 'allclients_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allclients:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $cachePayload['version'] = $tenantVersion;
+        $cacheKeySet = 'ats:v2:clients:'.$company_id.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -459,10 +475,126 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $userPermissions = $this->userPermissions;
+
+        // ── Phase 4 God-Level Optimization: Client DTO Assembly (zero HTML transfer) ──
+        $rowsDto = [];
+        foreach ($data as $rItem) {
+            $rowObj = (object) $rItem;
+            $cId = $rowObj->company_id ?? 0;
+            $clId = $rowObj->client_id ?? ($rowObj->id ?? 0);
+            $clientsCompId = $rowObj->clients_company_id ?? 0;
+
+            if (isset($relationMap) && isset($relationMap[$cId])) {
+                $relationget = $relationMap[$cId];
+            } else {
+                $relationget = GeneralMethod::getRelationData($company_id, $cId);
+            }
+
+            $from_company_id = $relationget->from_company_id ?? null;
+            $recommendation_id = $relationget->id ?? null;
+            $to_company_id = $relationget->to_company_id ?? null;
+            $from_created_at = $relationget->from_created_at ?? null;
+
+            $isDirect = ($company_id != $cId && ($recommendation_id ?? 0) > 0);
+            $client_type_css = $isDirect ? 'show-detail-direct' : 'show-detail';
+            $client_Or_CompanyName = ($company_id != $cId) ? ($rowObj->company_name ?? $rowObj->name ?? '') : ($rowObj->name ?? '');
+
+            $departmentArr = ($rowObj->ind_name ?? null) ?: ($rowObj->main_ind_name ?? '');
+            $rowTargetId = $isDirect ? ($rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->company_id ?: ($rowObj->id ?? 0)))) : ($rowObj->client_id ?: ($rowObj->id ?? 0));
+
+            $country_name = $stateName = $city = '';
+            if (! empty($rowObj->client_location) && is_array($rowObj->client_location) && count($rowObj->client_location) > 0) {
+                $country_name = $rowObj->client_location[0]['country_name'] ?? '';
+                $stateName = $rowObj->client_location[0]['state_name'] ?? '';
+                $city = $rowObj->client_location[0]['city_name'] ?? '';
+            }
+
+            $companySizeText = '';
+            $fromSize = $rowObj->company_size_from ?? null;
+            $toSize = $rowObj->company_sizes ?? $rowObj->company_size ?? null;
+            if (! empty($fromSize) && ! empty($toSize)) {
+                $companySizeText = number_format((int) $fromSize).' - '.number_format((int) $toSize).' employees';
+            } elseif (! empty($toSize)) {
+                $companySizeText = is_numeric($toSize) ? number_format((int) $toSize).' employees' : $toSize.' employees';
+            }
+
+            if ($company_id == $clientsCompId) {
+                $jKey = 'internal_'.$clId;
+                $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $clId);
+                $pKey = 'internal_'.$clId;
+                $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($clId);
+            } else {
+                $jKey = 'direct_'.($from_company_id ?? 0).'_'.($to_company_id ?? 0);
+                $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::DirectClientJobsCountAllStatus($from_company_id, $to_company_id);
+                $pKey = 'direct_'.($from_company_id ?? 0).'_'.($to_company_id ?? 0);
+                $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::DirectClientCandidatesCountList($from_company_id, $to_company_id);
+            }
+
+            $job_active = (int) ($jobsCount->job_active ?? 0);
+            $job_closed = (int) ($jobsCount->job_inactive ?? 0);
+            $job_hold = (int) ($jobsCount->job_hold ?? 0);
+
+            $sourced = (int) ($perf->sourced ?? 0);
+            $evaluated = (int) ($perf->evaluated ?? 0);
+            $interviews = (int) ($perf->all_interview ?? 0);
+            $offers = (int) ($perf->offers ?? 0);
+            $joined = (int) ($perf->Joined ?? 0);
+
+            if (($recommendation_id ?? 0) > 0 && ($to_company_id ?? 0) == auth()->user()->company_id) {
+                $createdTimestamp = $from_created_at ?: ($rowObj->created_at ?? null);
+            } else {
+                $createdTimestamp = $rowObj->created_at ?? null;
+            }
+            $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
+            $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
+
+            $client_type = ($company_id != $cId) ? __('messages.direct_clinet_tag') : __('messages.internal_client_tag');
+
+            $locMain = '';
+            if ($city && $stateName) {
+                $locMain = ucwords($city).', '.ucwords($stateName);
+            } elseif ($city) {
+                $locMain = ucwords($city);
+            } elseif ($stateName) {
+                $locMain = ucwords($stateName);
+            }
+
+            $rowsDto[] = [
+                'id' => (int) $rowTargetId,
+                'client_id' => (int) $clId,
+                'name' => ucwords($client_Or_CompanyName),
+                'industry' => (string) $departmentArr,
+                'company_size' => (string) $companySizeText,
+                'location_main' => (string) $locMain,
+                'country' => ucwords((string) $country_name),
+                'is_direct' => $isDirect,
+                'client_type_css' => $client_type_css,
+                'client_type' => (string) $client_type,
+                'jobs' => [
+                    'active' => $job_active,
+                    'closed' => $job_closed,
+                    'hold' => $job_hold,
+                ],
+                'pipeline' => [
+                    'sourced' => $sourced,
+                    'evaluated' => $evaluated,
+                    'interviews' => $interviews,
+                    'offers' => $offers,
+                    'joined' => $joined,
+                ],
+                'connected_on' => (string) $newDate,
+                'days_ago' => (string) $daysAgo,
+            ];
+        }
+
         $responseData = [
             'html' => view('service_company.ajax_pages.all-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
+            'rows' => $rowsDto,
+            'data_version' => $tenantVersion,
+            'page' => $page,
+            'per_page' => $size,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENTS_TIME));
@@ -473,527 +605,48 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function client_direct_data_ajax(Request $request)
     {
-
         abort_if(Gate::denies('view_clients'), 403);
 
-        $parentCompanyType = GeneralMethod::parentCompanyType();
-        $accountCompanyType = GeneralMethod::accountCompanyType();
+        $request->merge(['tab' => 'direct']);
 
-        $company_id = auth()->user()->company_id;
-        $department = GeneralMethod::industries();
-
-        $searchTerms = request('cus_search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
-
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
-        if ($size <= 0) {
-            $size = 10;
-        }
-        $from = ($page - 1) * $size;
-        $sort = [];
-        $customSearch = trim($custom_search);
-        $shouldSearch = [];
-        $sort = [];
-        $valCheck = request('sortingfilter');
-
-        $cachePayload = [
-            'page' => $page,
-            'size' => $size,
-            'q' => $searchQuery,
-            'country' => request('country'),
-            'company' => $company_id,
-            'cus_search' => $custom_search,
-            'user_id' => $this->user->id,
-            'valCheck' => $valCheck,
-        ];
-
-        $hiringFilter = (int) $request->input('hiring', 0);
-        $cachePayload['hiring'] = $hiringFilter;
-
-        $versionKey = 'alldirectclient_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:alldirectclient:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
-        }
-
-        $relationIds = $this->elasticService->getClient()->search([
-            'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['to_company_id' => $company_id]],
-                            ['term' => ['final_status' => 1]],
-                        ],
-                    ],
-                ],
-                '_source' => ['from_company_id'],
-            ],
-        ]);
-
-        // Extract company IDs
-        $companyIds = collect($relationIds['hits']['hits'])
-            ->pluck('_source.from_company_id')
-            ->unique()
-            ->values()
-            ->toArray();
-
-        if (empty($companyIds)) {
-            $pagination = [
-                'total' => 0,
-                'current_page' => $page,
-                'last_page' => 1,
-                'per_page' => $size,
-                'listType' => 'allcandidate',
-            ];
-            $userPermissions = $this->userPermissions;
-            $responseData = [
-                'html' => view('service_company.ajax_pages.direct-client-ajax', ['data' => [], 'userPermissions' => $userPermissions, 'company_id' => $company_id, 'relationMap' => [], 'jobsCountsMap' => [], 'candidateCountsMap' => []])->render(),
-                'total' => 0,
-                'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
-            ];
-            cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_DIRECT_CLIENT_TIME));
-
-            return response()->json($responseData);
-        }
-
-        if (! empty($valCheck)) {
-            if ($valCheck == 1) {
-                $sort[] = ['created_at' => ['order' => 'desc']];
-            } elseif ($valCheck == 2) {
-                $sort[] = ['created_at' => ['order' => 'asc']];
-            } else {
-                $sort[] = ['id' => ['order' => 'desc']];
-            }
-        } else {
-            $sort[] = ['id' => ['order' => 'desc']];
-        }
-        $must[] = [
-            'bool' => [
-                'should' => [
-                    // Case 2: self_company = 1 and nested relation matches
-                    [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['self_company' => 1]],
-                                // Case 2: self_company = 1 and nested relation matches
-                                [
-                                    'bool' => [
-                                        'must' => [
-                                            ['term' => ['self_company' => 1]],
-                                            [
-                                                'terms' => [
-                                                    'company_id' => $companyIds, // 🔥 from relation index
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-            ],
-        ];
-
-        if (! empty($customSearch)) {
-            $customSearchLower = strtolower($customSearch); // wildcard is case-sensitive
-            //   dd($customSearchLower);
-            $shouldSearch = [
-                ['match_phrase_prefix' => ['name' => $customSearch]],
-                ['match_phrase_prefix' => ['td_industries.ind_name' => $customSearch]],
-                ['match_phrase_prefix' => ['client_contact_info.contact_person_name' => $customSearch]],
-
-                // Apply wildcard for nested fields
-                [
-                    'nested' => [
-                        'path' => 'client_location', // Specify the nested path
-                        'query' => [
-                            'bool' => [
-                                'should' => [
-                                    ['wildcard' => ['client_location.city_name' => $customSearchLower.'*']],
-                                    ['wildcard' => ['client_location.state_name' => $customSearchLower.'*']],
-                                    ['wildcard' => ['client_location.country_name' => $customSearchLower.'*']],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-
-            $must[] = [
-                'bool' => [
-                    'should' => $shouldSearch,
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
-        // ── Hiring filter: sort direct clients by active job count DESC ──
-        if ($hiringFilter) {
-            // INTENT: Direct clients with active jobs shared via recommendation_relation. Tenancy: to_company_id = $company_id, from_company_id != $company_id.
-            $orderedCompanyIds = DB::table('recommendation_relation')
-                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-                ->where('recommendation_relation.to_company_id', $company_id)
-                ->where('recommendation_relation.from_company_id', '!=', $company_id)
-                ->where('recommendation_relation.final_status', 1)
-                ->where('jobs.status', 'active')
-                ->select('recommendation_relation.from_company_id', DB::raw('COUNT(jobs.id) as active_count'))
-                ->groupBy('recommendation_relation.from_company_id')
-                ->orderByDesc('active_count')
-                ->pluck('from_company_id')
-                ->toArray();
-
-            if (empty($orderedCompanyIds)) {
-                $total = 0;
-                $data = [];
-            } else {
-                $total = count($orderedCompanyIds);
-                $pageIds = array_slice($orderedCompanyIds, $from, $size);
-
-                $hiringMust = $must;
-                $hiringMust[] = ['terms' => ['company_id' => $pageIds]];
-
-                $hiringParams = [
-                    'index' => ELASTIC_CLIENT_LIST,
-                    'body' => [
-                        'size' => $size,
-                        'query' => ['bool' => ['must' => $hiringMust]],
-                    ],
-                ];
-
-                $hiringResp = $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)
-                    ? $this->elasticService->getClient()->search($hiringParams)
-                    : ['hits' => ['hits' => []]];
-
-                $hitsByCompanyId = [];
-                foreach ($hiringResp['hits']['hits'] as $hit) {
-                    $hitsByCompanyId[$hit['_source']['company_id'] ?? ''] = $hit['_source'];
-                }
-                $data = [];
-                foreach ($pageIds as $cid) {
-                    if (isset($hitsByCompanyId[$cid])) {
-                        $data[] = $hitsByCompanyId[$cid];
-                    }
-                }
-            }
-        } else {
-            $params = [
-                'index' => ELASTIC_CLIENT_LIST,
-                'request_cache' => true,
-                'body' => [
-                    'from' => $from,
-                    'size' => $size,
-                    'sort' => $sort,
-                    'query' => ['bool' => ['must' => $must]],
-                ],
-            ];
-            if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
-                $total = 0;
-                $data = [];
-            } else {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
-            }
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / max($size, 1)),
-            'per_page' => $size,
-            'listType' => 'allcandidate',
-        ];
-
-        // ── V2 Optimization: Batch pre-fetch relations, job counts, candidate funnels ──
-        $relationMap = [];
-        $jobsCountsMap = [];
-        $candidateCountsMap = [];
-
-        if (! empty($data)) {
-            $pageCompanyIds = array_filter(array_unique(array_map(fn ($item) => $item['company_id'] ?? null, $data)));
-            if (! empty($pageCompanyIds)) {
-                $relations = DB::table('staffing_company_relation')
-                    ->where('to_company_id', $company_id)
-                    ->whereIn('from_company_id', $pageCompanyIds)
-                    ->get();
-                foreach ($relations as $rel) {
-                    $relationMap[$rel->from_company_id] = $rel;
-                }
-            }
-
-            foreach ($data as $rItem) {
-                $rowObj = (object) $rItem;
-                $cId = $rowObj->company_id ?? 0;
-                $rel = $relationMap[$cId] ?? null;
-                $fromComp = $rel->from_company_id ?? null;
-                $toComp = $rel->to_company_id ?? null;
-                if ($fromComp && $toComp) {
-                    $jobsCountsMap['direct_'.$fromComp.'_'.$toComp] = GeneralMethod::DirectClientJobsCountAllStatus($fromComp, $toComp);
-                    $candidateCountsMap['direct_'.$fromComp.'_'.$toComp] = GeneralMethod::DirectClientCandidatesCountList($fromComp, $toComp);
-                }
-            }
-        }
-
-        $userPermissions = $this->userPermissions;
-        $responseData = [
-            'html' => view('service_company.ajax_pages.direct-client-ajax', compact('data', 'userPermissions', 'company_id', 'relationMap', 'jobsCountsMap', 'candidateCountsMap'))->render(),
-            'total' => $total,
-            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
-        ];
-
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_DIRECT_CLIENT_TIME));
-
-        return response()->json($responseData);
-
+        return $this->all_clients_data_ajax($request);
     }
 
-    public function custom_client($id)
+    /**
+     * Backward-compatible 302 proxy for legacy Custom/Internal Clients route.
+     * Preserves deep-links and $id for auto-opening client drawer.
+     */
+    public function custom_client($id = 0)
     {
-        $this->pageTitle = __('Custom Client');
-        $this->clientDataCnt = $this->commonclient();
-        // Countries feed the Location filter dropdown (Cached 24h).
-        $this->countries = cache()->remember('global_countries_list', 86400, function () {
-            return DB::table('countries')->get();
-        });
+        $params = ['tab' => 'internal'];
+        if ((int) $id > 0) {
+            $params['open_client'] = (int) $id;
+        }
 
-        return view('service_company.client.custom_client', $this->data);
+        return redirect()->route('service_company.clients.index', $params, 302);
     }
 
     public function custom_client_data_ajax(Request $request)
     {
-
         abort_if(Gate::denies('view_clients'), 403);
-        $searchTerms = request('cus_search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
 
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
-        $department = GeneralMethod::industries();
+        $request->merge(['tab' => 'internal']);
 
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
-        if ($size <= 0) {
-            $size = 10;
-        }
-        $from = ($page - 1) * $size;
-        $sort = [];
-        $customSearch = trim($custom_search);
-        $shouldSearch = [];
-        $sort = [];
-        $valCheck = request('sortingfilter');
-
-        $cachePayload = [
-            'page' => $page,
-            'size' => $size,
-            'q' => $searchQuery,
-            'country' => request('country'),
-            'company' => $company_id,
-            'cus_search' => $custom_search,
-            'user_id' => $this->user->id,
-            'valCheck' => $valCheck,
-        ];
-
-        $hiringFilter = (int) $request->input('hiring', 0);
-        $cachePayload['hiring'] = $hiringFilter;
-
-        $versionKey = 'allcustomclient_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allcustomclient:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
-        }
-
-        if (! empty($valCheck)) {
-            if ($valCheck == 1) {
-                $sort[] = ['created_at' => ['order' => 'desc']];
-            } elseif ($valCheck == 2) {
-                $sort[] = ['created_at' => ['order' => 'asc']];
-            } else {
-                $sort[] = ['id' => ['order' => 'desc']];
-            }
-        } else {
-            $sort[] = ['id' => ['order' => 'desc']];
-        }
-        $must[] = [
-            'bool' => [
-                'should' => [
-                    // Case 1: self_company = 0 and from_company_id match
-                    [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['company_id' => $company_id]],
-                                ['term' => ['self_company' => 0]],
-                            ],
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-            ],
-        ];
-
-        if (! empty($customSearch)) {
-            $customSearchLower = strtolower($customSearch); // wildcard is case-sensitive
-            //   dd($customSearchLower);
-            $shouldSearch = [
-                ['match_phrase_prefix' => ['name' => $customSearch]],
-                ['match_phrase_prefix' => ['td_industries.ind_name' => $customSearch]],
-                ['match_phrase_prefix' => ['client_contact_info.contact_person_name' => $customSearch]],
-
-                // Apply wildcard for nested fields
-                [
-                    'nested' => [
-                        'path' => 'client_location', // Specify the nested path
-                        'query' => [
-                            'bool' => [
-                                'should' => [
-                                    ['wildcard' => ['client_location.city_name' => $customSearchLower.'*']],
-                                    ['wildcard' => ['client_location.state_name' => $customSearchLower.'*']],
-                                    ['wildcard' => ['client_location.country_name' => $customSearchLower.'*']],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-
-            $must[] = [
-                'bool' => [
-                    'should' => $shouldSearch,
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
-        if ($hiringFilter) {
-            // INTENT: Sort internal clients by active job count DESC (excluding main company self_company = 1). Tenancy: jobs.company_id = clients.company_id = $company_id.
-            $orderedClientIds = DB::table('jobs')
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('jobs.company_id', $company_id)
-                ->where('jobs.status', 'active')
-                ->where('clients.company_id', $company_id)
-                ->where('clients.self_company', '!=', 1)
-                ->select('jobs.client_id', DB::raw('COUNT(jobs.id) as active_count'))
-                ->groupBy('jobs.client_id')
-                ->orderByDesc('active_count')
-                ->pluck('jobs.client_id')
-                ->toArray();
-
-            if (empty($orderedClientIds)) {
-                $total = 0;
-                $data = [];
-            } else {
-                $total = count($orderedClientIds);
-                $pageIds = array_slice($orderedClientIds, $from, $size);
-                $hiringMust = $must;
-                $hiringMust[] = ['terms' => ['client_id' => $pageIds]];
-                $hiringParams = [
-                    'index' => ELASTIC_CLIENT_LIST,
-                    'body' => [
-                        'size' => count($pageIds),
-                        'query' => ['bool' => ['must' => $hiringMust]],
-                    ],
-                ];
-                if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
-                    $total = 0;
-                    $data = [];
-                } else {
-                    $hiringResponse = $this->elasticService->getClient()->search($hiringParams);
-                    $hits = $hiringResponse['hits']['hits'] ?? [];
-                    $indexed = [];
-                    foreach ($hits as $hit) {
-                        $src = $hit['_source'];
-                        $indexed[$src['client_id'] ?? $src['id'] ?? null] = $src;
-                    }
-                    $data = [];
-                    foreach ($pageIds as $cid) {
-                        if (isset($indexed[$cid])) {
-                            $data[] = $indexed[$cid];
-                        }
-                    }
-                }
-            }
-        } else {
-            $params = [
-                'index' => ELASTIC_CLIENT_LIST,
-                'request_cache' => true,
-                'body' => [
-                    'from' => $from,
-                    'size' => $size,
-                    'sort' => $sort,
-                    'query' => [
-                        'bool' => [
-                            'must' => $must,
-                        ],
-                    ],
-                ],
-            ];
-            if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
-                $total = 0;
-                $data = [];
-            } else {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(function ($hit) {
-                    return $hit['_source'];
-                }, $response['hits']['hits']);
-            }
-        }
-        // dd($total,$data);
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / max($size, 1)),
-            'per_page' => $size,
-            'listType' => 'allcandidate',
-        ];
-
-        // ── V2 Optimization: Batch pre-fetch job counts & candidate funnels ──
-        $jobsCountsMap = [];
-        $candidateCountsMap = [];
-
-        if (! empty($data)) {
-            foreach ($data as $rItem) {
-                $rowObj = (object) $rItem;
-                $clId = $rowObj->id ?? $rowObj->client_id ?? 0;
-                if ($clId) {
-                    $jobsCountsMap['internal_'.$clId] = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $clId);
-                    $candidateCountsMap['internal_'.$clId] = GeneralMethod::InternalClientCandidatesCountList($clId);
-                }
-            }
-        }
-
-        $userPermissions = $this->userPermissions;
-        $responseData = [
-            'html' => view('service_company.ajax_pages.custom-client-ajax', compact('data', 'userPermissions', 'company_id', 'department', 'jobsCountsMap', 'candidateCountsMap'))->render(),
-            'total' => $total,
-            'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
-        ];
-
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CUSTOM_CLIENT_TIME));
-
-        return response()->json($responseData);
-
+        return $this->all_clients_data_ajax($request);
     }
 
-    public function client_request($id)
+    /**
+     * Backward-compatible 302 proxy for legacy Client Requests route.
+     * Preserves deep-links and $id for auto-opening client drawer.
+     */
+    public function client_request($id = 0)
     {
-        $this->pageTitle = __('Client Request');
-        $this->clientDataCnt = $this->commonclient();
+        $params = ['tab' => 'requests'];
+        if ((int) $id > 0) {
+            $params['open_client'] = (int) $id;
+        }
 
-        return view('service_company.client.client_request', $this->data);
+        return redirect()->route('service_company.clients.index', $params, 302);
     }
 
     /**
@@ -1021,9 +674,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'company' => $company_id,
         ];
 
-        $versionKey = 'allclientrequest_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allclientrequest:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $cachePayload['version'] = $tenantVersion;
+        $cacheKeySet = 'ats:v2:clientrequest:'.$company_id.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
 
         /* ----------------------------
         ⚡ DragonflyDB / Redis Cache Hit
@@ -1096,11 +749,37 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
+        $rowsDto = [];
+        foreach ($data as $rowArr) {
+            $rowObj = (object) $rowArr;
+            $created_at = ! empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? '');
+            $newDate = ! empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
+            $daysAgo = ! empty($created_at) ? GeneralMethod::timeAgo($created_at) : '';
+
+            $rowsDto[] = [
+                'id' => (int) ($rowObj->id ?? 0),
+                'client_id' => (int) ($rowObj->client_id ?? 0),
+                'company_name' => ucwords($rowObj->company_name ?? ''),
+                'ind_name' => (string) ($rowObj->ind_name ?? ''),
+                'city_name' => (string) ($rowObj->city_name ?? ''),
+                'country_name' => (string) ($rowObj->country_name ?? ''),
+                'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
+                'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
+                'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
+                'connected_on' => (string) $newDate,
+                'days_ago' => (string) $daysAgo,
+            ];
+        }
+
         $userPermissions = $this->userPermissions;
         $responseData = [
             'html' => view('service_company.ajax_pages.client_request_ajax', compact('data', 'userPermissions'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.client-pagination', compact('pagination'))->render(),
+            'rows' => $rowsDto,
+            'data_version' => $tenantVersion,
+            'page' => $page,
+            'per_page' => $size,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_REQUEST_TIME));
@@ -3090,6 +2769,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
             }
+            GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
 
             $redirectMessage = $esSyncSuccess
                 ? (__('menu.clients').' '.__('messages.updatedSuccessfully'))
@@ -3770,6 +3450,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
             }
+            GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
 
             $redirectMessage = $esSyncSuccess
                 ? (__('menu.clients').' '.__('messages.createdSuccessfully'))
@@ -3913,6 +3594,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
                 }
+                GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
 
                 return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Ignored']);
             } elseif ($event_id == 1) {
@@ -3953,6 +3635,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     foreach ($cachekeys as $key) {
                         GeneralMethod::cacheClean($key);
                     }
+                    GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
 
                 }
 
@@ -4065,6 +3748,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
                 }
+                GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
 
                 return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Accepted']);
             }
