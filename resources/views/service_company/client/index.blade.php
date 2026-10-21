@@ -576,11 +576,39 @@ const DrawerLRUCache = {
     }
 };
 
-$(document).on('click', '.show-detail', function () {
-    $('#kt_activitiesClient_toggle').trigger('click');
+function openClientDrawer(drawerId, toggleId) {
+    var drawerEl = document.getElementById(drawerId);
+    if (drawerEl) {
+        if (typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (!drawer && typeof KTDrawer === 'function') {
+                try {
+                    drawer = new KTDrawer(drawerEl);
+                } catch (e) {}
+            }
+            if (drawer && typeof drawer.show === 'function') {
+                drawer.show();
+                return;
+            }
+        }
+    }
+    if (typeof openMetronicDrawer === 'function') {
+        openMetronicDrawer(drawerId, '#' + toggleId);
+        return;
+    }
+    $('#' + toggleId).trigger('click');
+}
+
+$(document).on('click', '.show-detail', function (e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    openClientDrawer('kt_activitiesClient', 'kt_activitiesClient_toggle');
     var currentPageClients = $('.custom-pagination .page-link.active').data('page') || 1;
     localStorage.setItem('currentPageClients', currentPageClients);
-    var id = $(this).data('row-id');
+    var id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
+    if (!id) return;
 
     var cachedDrawer = DrawerLRUCache.get(`internal_${id}`);
     if (cachedDrawer) {
@@ -608,9 +636,14 @@ $(document).on('click', '.show-detail', function () {
     });
 });
 
-$(document).on('click', '.show-detail-direct', function () {
-    $('#kt_activitiesDirectClient_toggle').trigger('click');
-    var id = $(this).data('row-id');
+$(document).on('click', '.show-detail-direct', function (e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    openClientDrawer('kt_activitiesDirectClient', 'kt_activitiesDirectClient_toggle');
+    var id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
+    if (!id) return;
 
     var cachedDrawer = DrawerLRUCache.get(`direct_${id}`);
     if (cachedDrawer) {
@@ -636,6 +669,28 @@ $(document).on('click', '.show-detail-direct', function () {
             }
         }
     });
+});
+
+$(document).on('click', '#kt_activitiesClient_close', function(e) {
+    e.preventDefault();
+    var drawerEl = document.getElementById('kt_activitiesClient');
+    if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer && typeof drawer.hide === 'function') {
+            drawer.hide();
+        }
+    }
+});
+
+$(document).on('click', '#kt_activitiesDirectClient_close', function(e) {
+    e.preventDefault();
+    var drawerEl = document.getElementById('kt_activitiesDirectClient');
+    if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer && typeof drawer.hide === 'function') {
+            drawer.hide();
+        }
+    }
 });
 
 // ── Bounded Browser RAM Store (ClientStore) with SWR & Request Token Guard ──
@@ -808,11 +863,11 @@ window.addEventListener('popstate', function(event) {
 });
 
 function triggerOpenClientDrawer(clientId) {
-    const $target = $(`.cl-name[data-row-id="${clientId}"], .show-detail[data-row-id="${clientId}"], .show-detail-direct[data-row-id="${clientId}"]`).first();
+    const $target = $(`.show-detail[data-row-id="${clientId}"], .show-detail-direct[data-row-id="${clientId}"], .cl-name[data-row-id="${clientId}"]`).first();
     if ($target.length) {
         $target.trigger('click');
     } else {
-        $('#kt_activitiesClient_toggle').trigger('click');
+        openClientDrawer('kt_activitiesClient', 'kt_activitiesClient_toggle');
         const url = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
         const baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         $.ajax({

@@ -637,10 +637,66 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $locMain = ucwords($stateName);
                 }
 
+                $background_image = '';
+                if ($company_id != $cId) {
+                    if (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
+                        $background_image = $rowObj->logo;
+                    } elseif (! empty($rowObj->website)) {
+                        $domainGet = GeneralMethod::getDomain($rowObj->website);
+                        if ($domainGet) {
+                            $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                        }
+                    }
+                } else {
+                    if (! empty($rowObj->logo_logical_path) && strlen($rowObj->logo_logical_path) > 10) {
+                        $background_image = $rowObj->logo_logical_path;
+                    } elseif (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
+                        $background_image = $rowObj->logo;
+                    } elseif (! empty($rowObj->website)) {
+                        $domainGet = GeneralMethod::getDomain($rowObj->website);
+                        if ($domainGet) {
+                            $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                        }
+                    }
+                }
+                if (! empty($background_image) && ! str_starts_with($background_image, 'http') && ! str_starts_with($background_image, '//')) {
+                    $background_image = asset($background_image);
+                }
+
+                $cleanName = trim($client_Or_CompanyName ?: 'Client');
+                $strVal = strtolower($cleanName[0] ?? 'c');
+                $ascii = ord($strVal);
+                if ($ascii >= 97 && $ascii <= 101) {
+                    $bgTextDecore = 'bg-light-danger text-danger';
+                } elseif ($ascii >= 102 && $ascii <= 106) {
+                    $bgTextDecore = 'bg-light-warning text-warning';
+                } elseif ($ascii >= 107 && $ascii <= 111) {
+                    $bgTextDecore = 'bg-light-primary text-primary';
+                } elseif ($ascii >= 112 && $ascii <= 116) {
+                    $bgTextDecore = 'bg-light-success text-success';
+                } elseif ($ascii >= 117 && $ascii <= 121) {
+                    $bgTextDecore = 'bg-light-info text-info';
+                } else {
+                    $bgTextDecore = 'bg-light-primary text-primary';
+                }
+
+                $nameParts = array_values(array_filter(explode(' ', $cleanName)));
+                $initials = '';
+                if (count($nameParts) >= 2) {
+                    $initials = strtoupper(mb_substr($nameParts[0], 0, 1).mb_substr($nameParts[1], 0, 1));
+                } elseif (count($nameParts) === 1) {
+                    $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+                } else {
+                    $initials = 'CL';
+                }
+
                 $rowsDto[] = [
                     'id' => (int) $rowTargetId,
                     'client_id' => (int) $clId,
                     'name' => ucwords($client_Or_CompanyName),
+                    'logo_url' => (string) $background_image,
+                    'initials' => (string) $initials,
+                    'bg_color' => (string) $bgTextDecore,
                     'industry' => (string) $departmentArr,
                     'company_size' => (string) $companySizeText,
                     'location_main' => (string) $locMain,
@@ -902,10 +958,54 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $newDate = ! empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
                 $daysAgo = ! empty($created_at) ? GeneralMethod::timeAgo($created_at) : '';
 
+                $background_image = '';
+                if (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
+                    $background_image = $rowObj->logo;
+                } elseif (! empty($rowObj->website)) {
+                    $domainGet = GeneralMethod::getDomain($rowObj->website);
+                    if ($domainGet) {
+                        $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                    }
+                }
+                if (! empty($background_image) && ! str_starts_with($background_image, 'http') && ! str_starts_with($background_image, '//')) {
+                    $background_image = asset($background_image);
+                }
+
+                $cName = trim((string) ($rowObj->company_name ?? 'Client'));
+                $cleanName = $cName ?: 'Client';
+                $strVal = strtolower($cleanName[0] ?? 'c');
+                $ascii = ord($strVal);
+                if ($ascii >= 97 && $ascii <= 101) {
+                    $bgTextDecore = 'bg-light-danger text-danger';
+                } elseif ($ascii >= 102 && $ascii <= 106) {
+                    $bgTextDecore = 'bg-light-warning text-warning';
+                } elseif ($ascii >= 107 && $ascii <= 111) {
+                    $bgTextDecore = 'bg-light-primary text-primary';
+                } elseif ($ascii >= 112 && $ascii <= 116) {
+                    $bgTextDecore = 'bg-light-success text-success';
+                } elseif ($ascii >= 117 && $ascii <= 121) {
+                    $bgTextDecore = 'bg-light-info text-info';
+                } else {
+                    $bgTextDecore = 'bg-light-primary text-primary';
+                }
+
+                $nameParts = array_values(array_filter(explode(' ', $cleanName)));
+                $initials = '';
+                if (count($nameParts) >= 2) {
+                    $initials = strtoupper(mb_substr($nameParts[0], 0, 1).mb_substr($nameParts[1], 0, 1));
+                } elseif (count($nameParts) === 1) {
+                    $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+                } else {
+                    $initials = 'CL';
+                }
+
                 $rowsDto[] = [
                     'id' => (int) ($rowObj->id ?? 0),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
                     'company_name' => ucwords($rowObj->company_name ?? ''),
+                    'logo_url' => (string) $background_image,
+                    'initials' => (string) $initials,
+                    'bg_color' => (string) $bgTextDecore,
                     'ind_name' => (string) ($rowObj->ind_name ?? ''),
                     'city_name' => (string) ($rowObj->city_name ?? ''),
                     'country_name' => (string) ($rowObj->country_name ?? ''),
