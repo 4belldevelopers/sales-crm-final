@@ -19,8 +19,8 @@
               </svg>
             </div>
             <div>
-              <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Social Links</h3>
-              <p style="font-size:12px; color:#64748b; margin:0;">Add the client’s official social media and professional profiles.</p>
+              <h3 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Social Links</h3>
+              <p style="font-size:11.5px; color:#64748b; margin:0;">Add the client’s official social media and professional profiles.</p>
             </div>
           </div>
         </div>
@@ -209,7 +209,7 @@
               </svg>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <h4 style="font-size:15px; font-weight:700; color:#1e293b; margin:0;">AI Profile Discovery</h4>
+              <h4 style="font-size:13.5px; font-weight:700; color:#1e293b; margin:0;">AI Profile Discovery</h4>
               <span class="badge" style="background:#ede9fe; color:#7c3aed; font-weight:600; font-size:10.5px; padding:2px 8px; border-radius:6px;">Beta</span>
             </div>
           </div>
@@ -219,7 +219,7 @@
           </button>
         </div>
         
-        <p style="font-size:12px; color:#64748b; line-height:1.45; margin-bottom:14px;">
+        <p style="font-size:11.5px; color:#64748b; line-height:1.45; margin-bottom:14px;">
           We discovered official profiles from publicly available sources. Review and add them to your client profile.
         </p>
 
