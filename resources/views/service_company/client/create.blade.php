@@ -5641,6 +5641,8 @@ if ($page_event == 'ADD') {
         });
         var remaining = $('#additional_addresses_container .client-branch-card, .client-address-container .is-additional').length;
         $('#client_additional_empty').toggle(remaining === 0);
+        var bCount = $('#additional_addresses_container .client-branch-card').length;
+        $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
         if (window.clientLocationManager && typeof window.clientLocationManager.syncAiButtons === 'function') {
             window.clientLocationManager.syncAiButtons();
         }
@@ -6266,58 +6268,64 @@ if ($page_event == 'ADD') {
             var cid = addressId;
             var branchNumber = $('#additional_addresses_container .client-branch-card').length + 1;
 
-            var cardHtml = '<div class="client-branch-card" id="clientAddr_' + cid + '" data-cid="' + cid + '" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">' +
-                '<div class="d-flex align-items-center justify-content-between mb-2">' +
+            var cardHtml = '<div class="client-subcard client-branch-subcard client-branch-card" id="clientAddr_' + cid + '" data-cid="' + cid + '">' +
+                '<div class="client-subcard-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">' +
                 '  <div class="d-flex align-items-center gap-2">' +
-                '    <div style="width:28px; height:28px; border-radius:7px; background:#f1f5f9; display:inline-flex; align-items:center; justify-content:center; color:#475569;">' +
-                '      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '    <div class="client-subcard-icon-box office-icon">' +
+                '      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
                 '    </div>' +
-                '    <div>' +
-                '      <div class="d-flex align-items-center gap-2">' +
-                '        <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location ' + branchNumber + '</h4>' +
-                '        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; font-weight:600; padding:2px 6px; border-radius:4px;">OFFICE</span>' +
-                '      </div>' +
+                '    <div class="d-flex align-items-center gap-2">' +
+                '      <h4 class="client-subcard-title client-branch-title mb-0">Additional Location ' + branchNumber + '</h4>' +
+                '      <span class="badge badge-office-tag">BRANCH</span>' +
                 '    </div>' +
                 '  </div>' +
                 '  <div class="d-flex align-items-center gap-2">' +
-                '    <button type="button" class="btn btn-xs" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#b45309; border:1px solid #fde68a; background:#fefce8; cursor:pointer;" title="Set as Headquarters">' +
+                '    <button type="button" class="btn btn-xs btn-set-hq" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" title="Set as Headquarters">' +
                 '      Set as Headquarters' +
                 '    </button>' +
-                '    <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer; display:inline-flex; align-items:center; gap:3px;" title="Remove Location">' +
+                '    <button type="button" class="btn btn-xs btn-remove-subcard client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" title="Remove Location">' +
                 '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
                 '      <span>Remove</span>' +
                 '    </button>' +
                 '  </div>' +
                 '</div>' +
-                '<div class="client-branch-body">' +
+                '<div class="client-subcard-body">' +
                 '  <div class="client-addr-field mb-2">' +
-                '    <label class="client-addr-label" for="branch_city_search_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">City / Location <span class="text-danger">*</span></label>' +
-                '    <div class="client-addr-input-wrap position-relative">' +
-                '      <svg class="client-addr-icon-left position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
-                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city..." autocomplete="off" style="height:36px; padding:0 32px 0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">' +
-                '      <svg class="client-addr-icon-right position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="right:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+                '    <label class="form-label mb-1" for="branch_city_search_' + cid + '">City / Location <span class="text-danger">*</span></label>' +
+                '    <div class="position-relative client-addr-input-wrap">' +
+                '      <span class="position-absolute client-addr-field-icon-left">' +
+                '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
+                '      </span>' +
+                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city..." autocomplete="off">' +
+                '      <span class="position-absolute client-addr-field-icon-right">' +
+                '        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+                '      </span>' +
                 '      <div class="client-addr-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
                 '      <input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value=\'' + (tagifyJson || '') + '\'>' +
                 '    </div>' +
-                '    <div class="client-addr-error text-danger" id="branch_city_err_' + cid + '" style="display:none; font-size:10.5px; margin-top:3px;">City selection is required.</div>' +
+                '    <div class="client-addr-error text-danger mt-1" id="branch_city_err_' + cid + '" style="display:none;">City selection is required.</div>' +
                 '  </div>' +
                 '  <div class="client-addr-field">' +
-                '    <label class="client-addr-label" for="address_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">Full Address <span class="text-danger">*</span></label>' +
-                '    <div class="client-addr-textarea-wrap position-relative">' +
-                '      <svg class="client-addr-textarea-icon position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:9px; color:#94a3b8; pointer-events:none;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>' +
-                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete address..." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">' + escapeHtmlText(address || '') + '</textarea>' +
+                '    <label class="form-label mb-1" for="address_' + cid + '">Full Address <span class="text-danger">*</span></label>' +
+                '    <div class="position-relative client-addr-textarea-wrap">' +
+                '      <span class="position-absolute client-addr-field-icon-top">' +
+                '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '      </span>' +
+                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete branch address...">' + escapeHtmlText(address || '') + '</textarea>' +
                 '    </div>' +
                 '    <div class="d-flex align-items-center justify-content-between mt-1">' +
-                '      <span class="text-muted" style="font-size:10.5px;">Accurate branch address.</span>' +
-                '      <span class="client-addr-counter" style="font-size:10.5px; color:#94a3b8;"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span>/500</span>' +
+                '      <span class="text-muted client-field-hint">Accurate location address.</span>' +
+                '      <span class="client-addr-counter"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span>/500</span>' +
                 '    </div>' +
-                '    <div class="client-addr-error text-danger" id="branch_address_err_' + cid + '" style="display:none; font-size:10.5px; margin-top:3px;">Full Address is required.</div>' +
+                '    <div class="client-addr-error text-danger mt-1" id="branch_address_err_' + cid + '" style="display:none;">Full Address is required.</div>' +
                 '  </div>' +
                 '</div>' +
                 '</div>';
 
             $('#additional_addresses_container').append(cardHtml);
             $('#client_additional_empty').hide();
+            var bCount = $('#additional_addresses_container .client-branch-card').length;
+            $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
 
             var newCardEl = document.getElementById('clientAddr_' + cid);
             if (window.clientWizardUi && typeof window.clientWizardUi.bindAddressCounters === 'function') {

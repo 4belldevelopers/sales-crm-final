@@ -20,6 +20,34 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-21* — **Service Company Add Client Step 3 (Full Address) & Step 6 (Review & Summary) Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - **Step 6 (Company Profile / Summary)**:
+      - Add Social Links as a dedicated, professionally designed section/card with authentic brand icons (LinkedIn, X, Facebook, Instagram, YouTube, GitHub, Custom Link), clean typography, labels, and clickable external links.
+      - Remove the redundant Submit and Back buttons from the right-side column (since top wizard header provides authoritative actions).
+      - Change the text “Edit Company” to simply “Edit”.
+      - Ensure a clean, compact, information-dense layout suitable for an enterprise CRM.
+    - **Step 3 (Full Address Redesign)**:
+      - Completely redesign using a card + sub-card architecture.
+      - Primary Address Information Card as the main container with logical sub-cards/sections for Headquarters & Registered Office.
+      - Dedicated Additional Locations card containing dynamically created sub-cards (`#additional_addresses_container`).
+      - Clicking “Add Additional Location” dynamically appends a new location sub-card directly above the action CTA.
+      - Each additional location features a clear sub-card boundary, heading, actions (“Set as Headquarters”, “Remove”), and structured fields (City with autocomplete, Full Address with counter).
+      - Compact, balanced vertical layout optimized for 15.6" laptop screens (1366×768 & 1920×1080), removing redundant whitespace and padding.
+  - **Architectural Enhancements**:
+    - In `tab-review.blade.php`:
+      - Changed `<span>Edit Company</span>` to `<span>Edit</span>`.
+      - Removed `.client-sidebar-actions` div completely from the right sidebar.
+      - Polished the Social Links card and `populateReviewSummaries()` in `create.blade.php` to render authentic brand SVG icons, clean host/path labels, and verified clickable links matching `media_1792585740123_d79c635f.png`.
+    - In `tab-locations.blade.php`:
+      - Implemented Card + Sub-card hierarchy: Card 1 (`client-addr-primary-card`) wraps the Headquarters sub-card (`client-hq-subcard`) with clear headings and badges.
+      - Card 2 (`client-addr-additional-card`) features dynamic sub-cards for branch offices, location counter badge (`#additional_locations_count_badge`), and pinned bottom CTA (`#btn_add_another_address`).
+      - Compact input heights (`36px`), textarea heights (`52px`), and responsive `@media (max-height: 850px)` styling for 15.6" screens.
+    - In `create.blade.php`:
+      - Aligned `clientLocationManager.createBranchWithData` to dynamically generate sub-cards matching the redesigned architecture.
+      - Updated `removeAddressCard` and `createBranchWithData` to maintain real-time location count badge synchronization.
+  - **Verification**: `php -l` passed with 0 errors across all modified blades and scripts.
+
 - *2026-10-21* — **Service Company Clients Listing Redesign & Canonical SPA Architecture (Phases 1–5 100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Completely redesign `/service_company/clients` matching the attached visual design specification (`media_1792581837462_ba2ed325.png`).
