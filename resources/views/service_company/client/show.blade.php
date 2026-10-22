@@ -42,14 +42,14 @@ use Carbon\Carbon;
         data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
         data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
         <!--beign::candidate detail-->
-        {{-- ── Redesigned Client Drawer (Enterprise 12px Max Scale — Exact Replica of Mockup) ── --}}
+        {{-- ── Redesigned Client Drawer (Enterprise 14px Max Scale — Proportional Hierarchy) ── --}}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
-          /* ── Enterprise Scoped Reset: MAXIMUM 12PX CEILING ── */
+          /* ── Enterprise Scoped Reset: MAXIMUM 14PX CEILING ── */
           .cd-scope {
             box-sizing: border-box;
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 11px !important;
+            font-size: 12px !important;
             color: #334155;
             background: #f8fafc;
           }
@@ -101,14 +101,14 @@ use Carbon\Carbon;
             flex-wrap: wrap;
           }
           .cd-hdr-btn {
-            height: 28px !important;
-            padding: 0 12px !important;
+            height: 30px !important;
+            padding: 0 13px !important;
             border-radius: 6px !important;
-            font-size: 11px !important;
+            font-size: 12.5px !important;
             font-weight: 500 !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
             cursor: pointer !important;
             text-decoration: none !important;
             transition: all 0.15s ease-in-out !important;
@@ -139,8 +139,8 @@ use Carbon\Carbon;
             color: #009ef7 !important;
           }
           .cd-hdr-btn-close {
-            width: 28px !important;
-            height: 28px !important;
+            width: 30px !important;
+            height: 30px !important;
             padding: 0 !important;
             border-radius: 6px !important;
             background: transparent !important;
@@ -193,7 +193,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px !important;
             font-weight: 600;
             overflow: hidden;
           }
@@ -217,7 +217,7 @@ use Carbon\Carbon;
             box-shadow: 0 1px 4px rgba(0,0,0,0.12);
           }
           .cd-verified-badge i {
-            font-size: 8px !important;
+            font-size: 8.5px !important;
             color: #ffffff;
           }
           .cd-hero-details {
@@ -232,7 +232,7 @@ use Carbon\Carbon;
             flex-wrap: wrap;
           }
           .cd-client-name {
-            font-size: 12px !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
             letter-spacing: -0.2px;
@@ -244,17 +244,17 @@ use Carbon\Carbon;
             background: #e0f2fe;
             color: #0284c7;
             border: 1px solid #bae6fd;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
-            padding: 2px 7px;
+            padding: 2.5px 8px;
             border-radius: 4px;
             line-height: 1.2;
           }
           .cd-meta-row {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 10.5px !important;
+            gap: 7px;
+            font-size: 11.5px !important;
             font-weight: 400 !important;
             color: #64748b;
             margin-bottom: 6px;
@@ -262,7 +262,7 @@ use Carbon\Carbon;
           }
           .cd-meta-sep {
             color: #cbd5e1;
-            font-size: 9px;
+            font-size: 10px;
           }
           .cd-meta-link {
             color: #0284c7 !important;
@@ -283,11 +283,11 @@ use Carbon\Carbon;
           .cd-tag-pill {
             display: inline-flex;
             align-items: center;
-            padding: 2px 8px;
+            padding: 2.5px 9px;
             background: #e0f2fe;
             border: 1px solid #bae6fd;
             color: #0369a1;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
             border-radius: 12px;
             line-height: 1.2;
@@ -310,7 +310,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 5px 12px;
+            padding: 6px 12px;
             border-radius: 8px;
             min-width: 120px;
           }
@@ -327,12 +327,12 @@ use Carbon\Carbon;
             border: 1px solid #e2e8f0 !important;
           }
           .cd-status-card-title {
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 600 !important;
             line-height: 1.2;
           }
           .cd-status-card-sub {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #64748b;
             line-height: 1.1;
@@ -373,7 +373,7 @@ use Carbon\Carbon;
             50% { transform: scale(1.4); opacity: 0; }
           }
           .cd-hero-meta-time {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #64748b;
           }
@@ -405,13 +405,13 @@ use Carbon\Carbon;
             border-color: #cbd5e1;
           }
           .cd-kpi-icon {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px !important;
+            font-size: 13.5px !important;
             flex-shrink: 0;
           }
           .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
@@ -420,27 +420,27 @@ use Carbon\Carbon;
           .cd-kpi-icon-orange { background: #fff7ed; color: #ea580c; }
           .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
           .cd-kpi-num {
-            font-size: 12px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             color: #0f172a;
             line-height: 1.1;
           }
           .cd-kpi-lbl {
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 500 !important;
             color: #1e293b;
             line-height: 1.2;
             margin-top: 1px;
           }
           .cd-kpi-desc {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #94a3b8;
             line-height: 1.1;
             margin-top: 1px;
           }
           .cd-kpi-arrow {
-            font-size: 10px !important;
+            font-size: 11px !important;
             color: #cbd5e1;
             flex-shrink: 0;
           }
@@ -457,22 +457,22 @@ use Carbon\Carbon;
             white-space: nowrap;
           }
           .cd-tabs-bar .nav-link {
-            padding: 10px 14px !important;
+            padding: 10px 15px !important;
             border: none !important;
             border-bottom: 2px solid transparent !important;
             border-radius: 0 !important;
-            font-size: 11px !important;
+            font-size: 12.5px !important;
             font-weight: 500 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 6px !important;
+            gap: 7px !important;
             background: transparent !important;
             transition: all 0.15s ease-in-out !important;
             cursor: pointer !important;
           }
           .cd-tabs-bar .nav-link i {
-            font-size: 11px !important;
+            font-size: 12.5px !important;
           }
           .cd-tabs-bar .nav-link:hover {
             color: #009ef7 !important;
@@ -504,13 +504,13 @@ use Carbon\Carbon;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 17px;
-            height: 15px;
-            padding: 0 4px;
+            min-width: 18px;
+            height: 16px;
+            padding: 0 5px;
             background: #009ef7;
             color: #ffffff;
-            font-size: 9px !important;
-            font-weight: 500;
+            font-size: 10px !important;
+            font-weight: 600;
             border-radius: 8px;
             line-height: 1;
           }
@@ -552,12 +552,12 @@ use Carbon\Carbon;
             gap: 7px;
           }
           .cd-card-hdr-title {
-            font-size: 12px !important;
+            font-size: 13.5px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
           }
           .cd-card-hdr-link {
-            font-size: 11px !important;
+            font-size: 12px !important;
             color: #0284c7 !important;
             font-weight: 500 !important;
             text-decoration: none;
@@ -570,9 +570,9 @@ use Carbon\Carbon;
             text-decoration: underline;
           }
           .cd-about-body {
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 400 !important;
-            line-height: 1.6 !important;
+            line-height: 1.65 !important;
             color: #475569;
           }
 
@@ -616,7 +616,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             border: 2px solid #ffffff;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             z-index: 1;
@@ -630,20 +630,20 @@ use Carbon\Carbon;
             min-width: 0;
           }
           .cd-tl-heading {
-            font-size: 11px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             color: #0f172a;
-            line-height: 1.2;
+            line-height: 1.25;
           }
           .cd-tl-sub {
-            font-size: 10px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #64748b;
-            line-height: 1.2;
+            line-height: 1.25;
             margin-top: 2px;
           }
           .cd-tl-role {
-            font-size: 10.5px !important;
+            font-size: 12px !important;
             font-weight: 500 !important;
             color: #334155;
             min-width: 120px;
@@ -656,15 +656,15 @@ use Carbon\Carbon;
             flex-shrink: 0;
           }
           .cd-tl-time {
-            font-size: 10px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #94a3b8;
             white-space: nowrap;
           }
           .cd-tl-badge {
-            font-size: 9.5px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
-            padding: 2px 8px;
+            padding: 2.5px 8px;
             border-radius: 12px;
             line-height: 1.2;
             white-space: nowrap;
@@ -679,7 +679,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 0;
+            padding: 7px 0;
             border-bottom: 1px dashed #f1f5f9;
             gap: 12px;
           }
@@ -688,13 +688,13 @@ use Carbon\Carbon;
             padding-bottom: 0;
           }
           .cd-kv-lbl {
-            font-size: 10.5px !important;
+            font-size: 11.5px !important;
             color: #64748b;
             font-weight: 400 !important;
             flex-shrink: 0;
           }
           .cd-kv-val {
-            font-size: 11px !important;
+            font-size: 12px !important;
             color: #0f172a;
             font-weight: 500 !important;
             text-align: right;
@@ -715,12 +715,12 @@ use Carbon\Carbon;
             gap: 12px;
           }
           .cd-contact-avatar {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: #dcfce7;
             color: #15803d;
-            font-size: 12px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
             display: flex;
             align-items: center;
@@ -739,20 +739,20 @@ use Carbon\Carbon;
             line-height: 1.2;
           }
           .cd-contact-name {
-            font-size: 11.5px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
             color: #0f172a;
           }
           .cd-contact-primary-tag {
-            font-size: 9.5px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
             background: #dcfce7;
             color: #15803d;
-            padding: 1px 6px;
+            padding: 1.5px 7px;
             border-radius: 10px;
           }
           .cd-contact-title {
-            font-size: 10px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #64748b;
             margin-top: 2px;
@@ -760,9 +760,9 @@ use Carbon\Carbon;
           .cd-contact-links {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            margin-top: 4px;
-            font-size: 10.5px !important;
+            gap: 3px;
+            margin-top: 5px;
+            font-size: 11.5px !important;
             font-weight: 400 !important;
           }
           .cd-contact-link-item {
@@ -777,7 +777,7 @@ use Carbon\Carbon;
             color: #009ef7;
           }
 
-          /* ── Client Tags Card ── */
+          /* ── Client Services Card ── */
           .cd-tags-cloud {
             display: flex;
             align-items: center;
@@ -788,9 +788,9 @@ use Carbon\Carbon;
             border: 1px dashed #009ef7;
             background: transparent;
             color: #009ef7;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
-            padding: 2px 8px;
+            padding: 2.5px 8px;
             border-radius: 12px;
             cursor: pointer;
             line-height: 1.2;
@@ -799,17 +799,23 @@ use Carbon\Carbon;
             background: #f0f9ff;
           }
 
+          /* ── Contacts Tab Header & Search ── */
+          .cd-contacts .cd-tabcard-title { font-size: 13.5px !important; font-weight: 600 !important; color: #0f172a; }
+          .cd-contacts .cd-tabcard-sub { font-size: 11.5px !important; color: #64748b; margin-top: 2px; }
+          .cd-contacts .cd-search input { height: 32px; font-size: 12px !important; border-radius: 6px; border: 1px solid #e2e8f0; padding-left: 30px; padding-right: 12px; width: 220px; }
+          .cd-contacts .cd-search i { position: absolute; left: 10px; top: 10px; font-size: 12px; color: #94a3b8; }
+
           /* ── Drawer Footer ── */
           .cd-drawer-footer {
             padding: 10px 18px;
             background: #ffffff;
             border-top: 1px solid #e2e8f0;
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 400 !important;
             color: #94a3b8;
           }
 
-          /* ── Performance Dashboard Scoped Styles (God-Level Enterprise Analytics) ── */
+          /* ── Performance Dashboard Scoped Styles (God-Level Enterprise Analytics — Max 14px Scale) ── */
           .cd-perf-wrap {
             padding: 14px 18px 24px;
             background: #f8fafc;
@@ -833,26 +839,26 @@ use Carbon\Carbon;
             gap: 10px;
           }
           .cd-perf-icon-box {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 8px;
             background: #eff6ff;
             color: #009ef7;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 14px !important;
             flex-shrink: 0;
             border: 1px solid #dbeafe;
           }
           .cd-perf-title {
-            font-size: 12px !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
             line-height: 1.2;
           }
           .cd-perf-subtitle {
-            font-size: 10.5px !important;
+            font-size: 11.5px !important;
             font-weight: 400 !important;
             color: #64748b !important;
             margin-top: 2px;
@@ -870,15 +876,15 @@ use Carbon\Carbon;
             gap: 6px;
           }
           .cd-perf-select-lbl {
-            font-size: 10.5px !important;
+            font-size: 11.5px !important;
             font-weight: 400 !important;
             color: #64748b;
             white-space: nowrap;
           }
           .cd-perf-select {
-            height: 28px !important;
+            height: 30px !important;
             padding: 0 24px 0 10px !important;
-            font-size: 10.5px !important;
+            font-size: 11.5px !important;
             font-weight: 500 !important;
             color: #1e293b !important;
             background-color: #ffffff !important;
@@ -919,13 +925,13 @@ use Carbon\Carbon;
             justify-content: space-between;
           }
           .cd-perf-kpi-icon {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 13px !important;
             flex-shrink: 0;
           }
           .cd-perf-kpi-icon-green  { background: #ecfdf5; color: #10b981; border: 1.5px solid #d1fae5; }
@@ -935,7 +941,7 @@ use Carbon\Carbon;
           .cd-perf-kpi-icon-cyan   { background: #f0f9ff; color: #0284c7; border: 1.5px solid #bae6fd; }
 
           .cd-perf-pill {
-            font-size: 9.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             padding: 2px 7px;
             border-radius: 12px;
@@ -949,28 +955,28 @@ use Carbon\Carbon;
           .cd-perf-pill-good { background: #ecfdf5; color: #10b981; }
 
           .cd-perf-kpi-num {
-            font-size: 18px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             color: #0f172a;
             line-height: 1.2;
             margin-top: 6px;
           }
           .cd-perf-kpi-lbl {
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 500 !important;
             color: #1e293b;
             margin-top: 2px;
             line-height: 1.2;
           }
           .cd-perf-kpi-sub {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 400 !important;
             color: #64748b;
             margin-top: 3px;
             line-height: 1.2;
           }
           .cd-perf-kpi-comp {
-            font-size: 9px !important;
+            font-size: 10.5px !important;
             font-weight: 400 !important;
             color: #94a3b8;
             margin-top: 1px;
@@ -1017,7 +1023,7 @@ use Carbon\Carbon;
             gap: 8px;
           }
           .cd-perf-card-title {
-            font-size: 11.5px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             color: #0f172a;
             display: inline-flex;
@@ -1025,12 +1031,12 @@ use Carbon\Carbon;
             gap: 6px;
           }
           .cd-perf-card-title i {
-            font-size: 11.5px !important;
+            font-size: 12.5px !important;
           }
           .cd-perf-card-mini-select {
-            height: 24px !important;
+            height: 26px !important;
             padding: 0 18px 0 6px !important;
-            font-size: 9.5px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             border: 1px solid #e2e8f0 !important;
@@ -1044,7 +1050,7 @@ use Carbon\Carbon;
             align-items: center;
             gap: 12px;
             margin-bottom: 6px;
-            font-size: 9.5px !important;
+            font-size: 10.5px !important;
             font-weight: 400 !important;
             color: #64748b;
             flex-wrap: wrap;
@@ -1091,7 +1097,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 10px !important;
+            font-size: 11.5px !important;
             gap: 8px;
           }
           .cd-funnel-stage {
@@ -1111,12 +1117,14 @@ use Carbon\Carbon;
             font-weight: 600 !important;
             color: #0f172a;
             min-width: 18px;
+            font-size: 12px !important;
           }
           .cd-funnel-pct {
             font-weight: 500 !important;
             color: #64748b;
             min-width: 32px;
             text-align: right;
+            font-size: 11.5px !important;
           }
 
           /* Donut Job Type Components */
@@ -1143,13 +1151,13 @@ use Carbon\Carbon;
             pointer-events: none;
           }
           .cd-donut-center-num {
-            font-size: 17px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             color: #0f172a;
             line-height: 1;
           }
           .cd-donut-center-lbl {
-            font-size: 8.5px !important;
+            font-size: 10px !important;
             font-weight: 400 !important;
             color: #94a3b8;
             line-height: 1;
@@ -1165,7 +1173,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 10px !important;
+            font-size: 11.5px !important;
             gap: 6px;
           }
           .cd-donut-item-left {
@@ -1178,12 +1186,14 @@ use Carbon\Carbon;
           .cd-donut-item-count {
             font-weight: 600 !important;
             color: #0f172a;
+            font-size: 12px !important;
           }
           .cd-donut-item-pct {
             font-weight: 500 !important;
             color: #64748b;
             min-width: 28px;
             text-align: right;
+            font-size: 11.5px !important;
           }
 
           /* Tables */
@@ -1192,10 +1202,10 @@ use Carbon\Carbon;
             border-collapse: collapse;
           }
           .cd-perf-table th {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 500 !important;
             color: #64748b;
-            padding: 6px 6px;
+            padding: 7px 6px;
             border-bottom: 1.5px solid #f1f5f9;
             text-align: right;
           }
@@ -1204,9 +1214,9 @@ use Carbon\Carbon;
             text-align: left;
           }
           .cd-perf-table td {
-            font-size: 10px !important;
+            font-size: 11.5px !important;
             color: #334155;
-            padding: 6px 6px;
+            padding: 7px 6px;
             border-bottom: 1px dashed #f1f5f9;
             text-align: right;
             vertical-align: middle;
@@ -1253,7 +1263,7 @@ use Carbon\Carbon;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 8px !important;
+            font-size: 8.5px !important;
             font-weight: 600 !important;
             margin-right: 6px;
             vertical-align: middle;
@@ -1274,18 +1284,18 @@ use Carbon\Carbon;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
           }
           .cd-perf-intel-lbl {
-            font-size: 9.5px !important;
+            font-size: 11px !important;
             font-weight: 500 !important;
             color: #64748b;
           }
           .cd-perf-intel-val {
-            font-size: 13px !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             color: #0f172a;
             margin-top: 3px;
           }
           .cd-perf-intel-sub {
-            font-size: 9px !important;
+            font-size: 10.5px !important;
             font-weight: 400 !important;
             color: #94a3b8;
             margin-top: 2px;
@@ -1302,7 +1312,7 @@ use Carbon\Carbon;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 11px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             color: #1e3a8a;
             margin-bottom: 8px;
@@ -1311,7 +1321,7 @@ use Carbon\Carbon;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px 16px;
-            font-size: 10px !important;
+            font-size: 11.5px !important;
             font-weight: 400 !important;
             color: #334155;
             line-height: 1.5;
@@ -1878,11 +1888,11 @@ use Carbon\Carbon;
                   <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
                     <div class="d-flex align-items-center gap-2">
                       <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
+                      <h4 class="text-white mb-0" style="font-size:13.5px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
                     </div>
-                    <span class="badge bg-secondary text-white" style="font-size:9.5px;">Pending Discussion</span>
+                    <span class="badge bg-secondary text-white" style="font-size:10.5px;">Pending Discussion</span>
                   </div>
-                  <p class="text-gray-400 mb-0" style="font-size:11px; line-height:1.6;">
+                  <p class="text-gray-400 mb-0" style="font-size:12px; line-height:1.6;">
                     This section captures comprehensive timeline actions: candidate submissions, interview logs, offer letter events, job requisitions, and administrative audit trails. Additional widgets and configurations will be integrated as discussed.
                   </p>
                 </div>
@@ -4456,19 +4466,19 @@ use Carbon\Carbon;
             e.preventDefault();
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: '<div style="font-size:12px;font-weight:700;color:#0f172a;">Schedule Client Follow Up</div>',
-                    html: '<div style="text-align:left;font-size:11px;">' +
+                    title: '<div style="font-size:14px;font-weight:600;color:#0f172a;">Schedule Client Follow Up</div>',
+                    html: '<div style="text-align:left;font-size:12px;">' +
                           '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Type</label>' +
-                          '<select id="swal_fu_type" class="form-select form-select-sm mb-2" style="font-size:11px;">' +
+                          '<select id="swal_fu_type" class="form-select form-select-sm mb-2" style="font-size:12px;">' +
                           '<option value="Call">Phone Call</option>' +
                           '<option value="Email">Email Follow-Up</option>' +
                           '<option value="Meeting">Virtual Meeting</option>' +
                           '<option value="Requirement">Requirement Review</option>' +
                           '</select>' +
                           '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Date & Time</label>' +
-                          '<input type="datetime-local" id="swal_fu_time" class="form-control form-control-sm mb-2" style="font-size:11px;" value="' + new Date().toISOString().slice(0, 16) + '">' +
+                          '<input type="datetime-local" id="swal_fu_time" class="form-control form-control-sm mb-2" style="font-size:12px;" value="' + new Date().toISOString().slice(0, 16) + '">' +
                           '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Notes</label>' +
-                          '<textarea id="swal_fu_notes" class="form-control form-control-sm" rows="2" style="font-size:11px;" placeholder="Add discussion agenda or notes..."></textarea>' +
+                          '<textarea id="swal_fu_notes" class="form-control form-control-sm" rows="2" style="font-size:12px;" placeholder="Add discussion agenda or notes..."></textarea>' +
                           '</div>',
                     showCancelButton: true,
                     confirmButtonText: 'Save Follow Up',
@@ -4482,7 +4492,7 @@ use Carbon\Carbon;
                     if (result.isConfirmed) {
                         Swal.fire({
                             icon: 'success',
-                            title: '<span style="font-size:12px;font-weight:600;">Follow Up Recorded</span>',
+                            title: '<span style="font-size:13.5px;font-weight:600;">Follow Up Recorded</span>',
                             text: 'Follow-up agenda has been saved.',
                             timer: 1800,
                             showConfirmButton: false
