@@ -1450,8 +1450,10 @@ use Carbon\Carbon;
 
             // Dynamic Client Since from actual onboarding date
             $clientSinceYear = (!empty($client->created_at)) ? \Carbon\Carbon::parse($client->created_at)->format('Y') : date('Y');
+            $clientCreatedAt = (!empty($client->created_at)) ? \Carbon\Carbon::parse($client->created_at)->format('d M, Y') : date('d M, Y');
             $clientUpdatedAt = @$client->updated_at ? Carbon::parse($client->updated_at)->diffForHumans() : '2 days ago';
             $isClientActive = ($kpiActive > 0);
+            $userPermissions = (isset($userPermissions) && is_array($userPermissions)) ? $userPermissions : [];
         @endphp
 
         <div class="cd-scope">
