@@ -2896,7 +2896,7 @@
         });
     }
 
-    function fetchClientDashboardAnalytics() {
+    function fetchDirectClientDashboardAnalytics() {
         var clientId = '{{ $dc_id }}';
         return $.ajax({
             url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
@@ -2927,7 +2927,7 @@
     }
 
     $(document).ready(function() {
-        fetchClientDashboardAnalytics();
+        fetchDirectClientDashboardAnalytics();
     });
 
 

@@ -918,13 +918,21 @@ $(document).ready(function() {
     $('#kt_tagify_2').on('keyup input', function() {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(function() {
-            fetchCandidates(1);
+            if (typeof loadClientList === 'function') {
+                loadClientList(1);
+            } else if (typeof fetchCandidates === 'function') {
+                fetchCandidates(1);
+            }
         }, 300);
     });
 });
 
 function filtersdataget() {
-    fetchCandidates(1, true);
+    if (typeof loadClientList === 'function') {
+        loadClientList(1, true);
+    } else if (typeof fetchCandidates === 'function') {
+        fetchCandidates(1, true);
+    }
 }
 
 // ── Location Combobox Controls ──
@@ -1305,9 +1313,16 @@ $(document).on('click', function(e) {
 });
 
 $(document).on('keydown', function(e) {
-    if (e.key === 'Escape' && $('#clLocDropdownPanel').hasClass('show')) {
-        $('#clLocDropdownPanel').removeClass('show');
-        $('#clLocBtn').removeClass('active');
+    if (e.key === 'Escape') {
+        if ($('#clLocDropdownPanel').hasClass('show')) {
+            $('#clLocDropdownPanel').removeClass('show');
+            $('#clLocBtn').removeClass('active');
+        }
+        if ($('#kt_activitiesClient').hasClass('drawer-on') || $('#kt_activitiesDirectClient').hasClass('drawer-on') || document.querySelector('.drawer-overlay')) {
+            if (typeof ClientStateManager !== 'undefined' && typeof ClientStateManager.clearDrawerState === 'function') {
+                ClientStateManager.clearDrawerState();
+            }
+        }
     }
 });
 
@@ -1390,8 +1405,334 @@ const DrawerLRUCache = {
     },
 
     invalidate: function(id) {
-        this.cache.delete(`internal_${id}`);
-        this.cache.delete(`direct_${id}`);
+        for (const k of this.cache.keys()) {
+            if (k.includes(`_${id}`)) {
+                this.cache.delete(k);
+            }
+        }
+    },
+
+    clear: function() {
+        this.cache.clear();
+    }
+};
+
+// ── Canonical Architecture & State Machine for Client Management ──
+window.ClientStateManager = {
+    state: {
+        activeTab: {!! json_encode($initialTab ?? 'all') !!},
+        selectedClientId: null,
+        selectedClientType: null, // 'internal' | 'direct' | null
+        selectedClientTab: null,
+        drawerStatus: 'idle', // 'idle' | 'loading' | 'loaded' | 'error'
+        drawerError: null,
+        drawerRequestToken: 0
+    },
+
+    activeDrawerXhr: null,
+
+    getActiveTab: function() {
+        return this.state.activeTab;
+    },
+
+    getSelectedClientId: function() {
+        return this.state.selectedClientId;
+    },
+
+    // ── Deterministic Tab Change Lifecycle (Requirement 4) ──
+    onTabChange: function(newTab, updateUrl = true) {
+        if (newTab === 'requests') newTab = 'request';
+        if (newTab === 'custom') newTab = 'internal';
+
+        // 1. Update activeTab
+        this.state.activeTab = newTab;
+        activeClientTab = newTab;
+        if (window.clientListState) {
+            window.clientListState.tab = newTab;
+        }
+        hiringFilter = (newTab === 'hiring') ? 1 : 0;
+        page_no = 1;
+        try { localStorage.setItem('currentPageClients', 1); } catch (e) {}
+
+        // 2. Invalidate previous tab/client context
+        this.invalidateTabContext();
+
+        // 3. Clear selectedClient
+        this.clearSelectedClient();
+
+        // 4. Clear drawer state
+        this.clearDrawerState();
+
+        // 5. Load
+        this.renderTabHeaders(newTab);
+        if (typeof loadClientList === 'function') {
+            loadClientList(1, updateUrl);
+        } else if (typeof fetchCandidates === 'function') {
+            fetchCandidates(1, updateUrl);
+        }
+    },
+
+    invalidateTabContext: function() {
+        // Abort in-flight drawer request
+        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
+            this.activeDrawerXhr.abort();
+            this.activeDrawerXhr = null;
+        }
+
+        // Abort in-flight listing request
+        if (typeof ClientStore !== 'undefined' && ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
+            ClientStore.currentXhr.abort();
+            ClientStore.currentXhr = null;
+        }
+
+        // Requirement 2: Never Reuse Previous Drawer Data - Purge drawer LRU cache across tab changes
+        if (typeof DrawerLRUCache !== 'undefined' && typeof DrawerLRUCache.clear === 'function') {
+            DrawerLRUCache.clear();
+        }
+
+        // Clean any leftover URL client params so back/forward or reload starts clean
+        try {
+            const url = new URL(window.location);
+            if (url.searchParams.has('open_client')) {
+                url.searchParams.delete('open_client');
+                window.history.replaceState({ tab: this.state.activeTab, page: 1 }, '', url);
+            }
+        } catch (e) {}
+    },
+
+    clearSelectedClient: function() {
+        this.state.selectedClientId = null;
+        this.state.selectedClientType = null;
+        this.state.selectedClientTab = null;
+        window.activeSelectedClientId = null;
+
+        // Clear any selected client attributes from DOM
+        $('[data-selected-client]').removeAttr('data-selected-client');
+        $('.tbl-r.client-selected').removeClass('client-selected');
+
+        // Sanitize any potential localStorage/sessionStorage references
+        try {
+            localStorage.removeItem('selected_client_id');
+            localStorage.removeItem('active_client_id');
+            sessionStorage.removeItem('selected_client_id');
+            sessionStorage.removeItem('active_client_id');
+        } catch (e) {}
+    },
+
+    clearDrawerState: function() {
+        // 1. Close drawers if active
+        closeClientDrawers();
+
+        // 2. Abort any active drawer request
+        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
+            this.activeDrawerXhr.abort();
+            this.activeDrawerXhr = null;
+        }
+
+        // 3. Reset drawer state
+        this.state.drawerStatus = 'idle';
+        this.state.drawerError = null;
+        this.state.drawerRequestToken++;
+
+        // 4. Destroy chart instances
+        if (window.perfChartInstances) {
+            Object.values(window.perfChartInstances).forEach(function(c) {
+                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
+            });
+            window.perfChartInstances = {};
+        }
+        if (window.dcChartInstances) {
+            Object.values(window.dcChartInstances).forEach(function(c) {
+                try { if (c && typeof c.destroy === 'function') c.destroy(); } catch (e) {}
+            });
+            window.dcChartInstances = {};
+        }
+
+        // 5. Empty drawer bodies to guarantee NO leftover HTML, inputs or stale IDs in DOM
+        $('#kt_activitiesClient_body').empty();
+        $('#kt_activitiesDirectClient_body').empty();
+    },
+
+    openClientDrawer: function(clientId, type) {
+        if (!clientId) return;
+        var self = this;
+        var currentTab = this.state.activeTab;
+
+        // Abort previous drawer request if in flight
+        if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
+            this.activeDrawerXhr.abort();
+            this.activeDrawerXhr = null;
+        }
+
+        var isDirect = (type === 'direct');
+        var targetDrawerId = isDirect ? 'kt_activitiesDirectClient' : 'kt_activitiesClient';
+        var toggleId = isDirect ? 'kt_activitiesDirectClient_toggle' : 'kt_activitiesClient_toggle';
+        var bodyId = isDirect ? '#kt_activitiesDirectClient_body' : '#kt_activitiesClient_body';
+        var otherBodyId = isDirect ? '#kt_activitiesClient_body' : '#kt_activitiesDirectClient_body';
+
+        // Set state - Single Source of Truth
+        this.state.selectedClientId = clientId;
+        this.state.selectedClientType = type;
+        this.state.selectedClientTab = currentTab;
+        this.state.drawerStatus = 'loading';
+        this.state.drawerError = null;
+        window.activeSelectedClientId = clientId;
+
+        var token = ++this.state.drawerRequestToken;
+
+        // Highlight selected row in current tab listing
+        $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
+        $(`[data-row-id="${clientId}"]`).closest('.tbl-r').addClass('client-selected');
+
+        // Open target Metronic drawer container
+        openClientDrawer(targetDrawerId, toggleId);
+        $(otherBodyId).empty();
+
+        // Loading skeleton
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        var loadingText = isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...';
+        $(bodyId).html(`
+            <div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height:360px;">
+                <img src="${baseurl}" height="38px" width="38px" style="object-fit:contain;" alt="Loading...">
+                <span class="mt-4 text-gray-700 font-poppins fs-7 fw-500">${loadingText}</span>
+                <span class="text-gray-400 font-poppins fs-8 mt-1">Context: ${currentTab.toUpperCase()} tab</span>
+            </div>
+        `);
+
+        // Check cache (strictly scoped to current tab and destroyed on tab switch)
+        var cacheKey = `${currentTab}_${type}_${clientId}`;
+        var cachedView = DrawerLRUCache.get(cacheKey);
+        if (cachedView) {
+            if (self.state.drawerRequestToken === token && self.state.activeTab === currentTab) {
+                $(bodyId).html(cachedView);
+                self.state.drawerStatus = 'loaded';
+            }
+            return;
+        }
+
+        var endpoint = isDirect
+            ? "{{ route('service_company.clients.dviewmore', ':id') }}".replace(':id', clientId)
+            : "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
+
+        this.activeDrawerXhr = $.ajax({
+            type: 'GET',
+            url: endpoint,
+            success: function(response) {
+                // Invariant: Verify tab and token have not changed while request was in-flight
+                if (token !== self.state.drawerRequestToken || self.state.activeTab !== currentTab) {
+                    console.log(`[Drawer State] Discarded response for client ${clientId} because activeTab or token changed.`);
+                    return;
+                }
+
+                if (response && response.view) {
+                    $(bodyId).html(response.view);
+                    DrawerLRUCache.set(cacheKey, response.view);
+                    self.state.drawerStatus = 'loaded';
+                } else {
+                    $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available for the selected record.</div>');
+                    self.state.drawerStatus = 'error';
+                }
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                if (token !== self.state.drawerRequestToken || self.state.activeTab !== currentTab) return;
+
+                var msg = (xhr.status === 0 || !navigator.onLine)
+                    ? 'You are offline. Please check your network connection.'
+                    : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
+                $(bodyId).html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
+                self.state.drawerStatus = 'error';
+                self.state.drawerError = msg;
+            }
+        });
+    },
+
+    renderTabHeaders: function(tabName) {
+        $('.cl-stat-filter').removeClass('active');
+        $('.cl-tab-filter').removeClass('active');
+
+        $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
+        $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
+
+        if (tabName === 'request') {
+            $('.tbl').addClass('tbl-req');
+            $('#clientTableHead').html(`
+                <div class="tbl-th-subcard tbl-th-check">
+                    <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+                </div>
+                <div class="tbl-th-subcard">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <span>Company Name</span>
+                    </div>
+                </div>
+                <div class="tbl-th-subcard">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span>Location</span>
+                    </div>
+                </div>
+                <div class="tbl-th-subcard">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Request Date</span>
+                    </div>
+                </div>
+                <div class="tbl-th-subcard" style="justify-content:flex-end;">
+                    <span class="tbl-th-label">Action</span>
+                </div>
+            `);
+        } else {
+            $('.tbl').removeClass('tbl-req');
+            $('#clientTableHead').html(`
+                <div class="tbl-th-subcard tbl-th-check">
+                    <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
+                </div>
+                <div class="tbl-th-subcard cl-sortable-th" data-sort-field="name" title="Click to sort by Company Name (A-Z / Z-A)" onclick="handleHeaderSort('name')">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <span>Company Name</span>
+                    </div>
+                    <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="tbl-th-subcard" title="Location">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span>Location</span>
+                    </div>
+                </div>
+                <div class="tbl-th-subcard cl-sortable-th" data-sort-field="date" title="Click to sort by Date Added (Newest / Oldest)" onclick="handleHeaderSort('date')">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Date</span>
+                    </div>
+                    <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="tbl-th-subcard" title="Last Activity">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>Last Activity</span>
+                    </div>
+                </div>
+                <div class="tbl-th-subcard cl-sortable-th" data-sort-field="jobs" title="Click to sort by Most Active Jobs" onclick="handleHeaderSort('jobs')">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        <span>Jobs</span>
+                    </div>
+                    <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="tbl-th-subcard" title="Hiring Pipeline">
+                    <div class="tbl-th-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                        <span>Hiring Pipeline</span>
+                    </div>
+                    <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+            `);
+            if (typeof updateHeaderSortIndicators === 'function' && window.clientListState) {
+                updateHeaderSortIndicators(window.clientListState.sort);
+            }
+        }
     }
 };
 
@@ -1456,7 +1797,7 @@ function openClientDrawer(drawerId, toggleId) {
                 overlay.className = 'drawer-overlay custom-cand-drawer-overlay';
                 overlay.style.zIndex = '999998';
                 overlay.onclick = function() {
-                    closeClientDrawers();
+                    ClientStateManager.clearDrawerState();
                 };
                 document.body.appendChild(overlay);
             }
@@ -1492,44 +1833,9 @@ $(document).on('click', '.show-detail', function (e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    openClientDrawer('kt_activitiesClient', 'kt_activitiesClient_toggle');
-    var currentPageClients = $('.custom-pagination .page-link.active').data('page') || 1;
-    localStorage.setItem('currentPageClients', currentPageClients);
     var id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
     if (!id) return;
-
-    var cachedDrawer = DrawerLRUCache.get(`internal_${id}`);
-    if (cachedDrawer) {
-        $('#kt_activitiesDirectClient_body').html('');
-        $('#kt_activitiesClient_body').html(cachedDrawer);
-        return;
-    }
-
-    var url = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', id);
-    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-
-    $.ajax({
-        type: 'GET',
-        url: url,
-        beforeSend: function() {
-            $('#kt_activitiesClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Client Details...</span></div>');
-        },
-        success: function (response) {
-            $('#kt_activitiesDirectClient_body').html('');
-            if (response && response.view) {
-                $('#kt_activitiesClient_body').html(response.view);
-                DrawerLRUCache.set(`internal_${id}`, response.view);
-            } else {
-                $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available.</div>');
-            }
-        },
-        error: function (xhr) {
-            var msg = (xhr.status === 0 || !navigator.onLine)
-                ? 'You are offline. Please check your connection.'
-                : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
-            $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
-        }
-    });
+    ClientStateManager.openClientDrawer(id, 'internal');
 });
 
 $(document).on('click', '.show-detail-direct', function (e) {
@@ -1537,42 +1843,9 @@ $(document).on('click', '.show-detail-direct', function (e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    openClientDrawer('kt_activitiesDirectClient', 'kt_activitiesDirectClient_toggle');
     var id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
     if (!id) return;
-
-    var cachedDrawer = DrawerLRUCache.get(`direct_${id}`);
-    if (cachedDrawer) {
-        $('#kt_activitiesClient_body').html('');
-        $('#kt_activitiesDirectClient_body').html(cachedDrawer);
-        return;
-    }
-
-    var url = "{{ route('service_company.clients.dviewmore', ':id') }}".replace(':id', id);
-    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-
-    $.ajax({
-        type: 'GET',
-        url: url,
-        beforeSend: function() {
-            $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Direct Client Details...</span></div>');
-        },
-        success: function (response) {
-            $('#kt_activitiesClient_body').html('');
-            if (response && response.view) {
-                $('#kt_activitiesDirectClient_body').html(response.view);
-                DrawerLRUCache.set(`direct_${id}`, response.view);
-            } else {
-                $('#kt_activitiesDirectClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No direct client details available.</div>');
-            }
-        },
-        error: function (xhr) {
-            var msg = (xhr.status === 0 || !navigator.onLine)
-                ? 'You are offline. Please check your connection.'
-                : 'Could not load direct client details (HTTP ' + xhr.status + '). Please try again.';
-            $('#kt_activitiesDirectClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
-        }
-    });
+    ClientStateManager.openClientDrawer(id, 'direct');
 });
 
 $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer, #kt_activitiesClient_close_btn, #kt_activitiesDirectClient_close_btn', function(e) {
@@ -1580,7 +1853,7 @@ $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_
         e.preventDefault();
         e.stopPropagation();
     }
-    closeClientDrawers();
+    ClientStateManager.clearDrawerState();
 });
 
 // ── Canonical Client Listing State (Zero tenant_id, strictly session-scoped) ──
@@ -2191,7 +2464,7 @@ function hydrateStateFromUrl(shouldFetch = true) {
 
         setClientTab(tab, null, false);
         if (shouldFetch) {
-            fetchCandidates(page, false);
+            loadClientList(page, false);
         }
 
         if (openClient > 0) {
@@ -2213,127 +2486,18 @@ function triggerOpenClientDrawer(clientId) {
     if ($target.length) {
         $target.trigger('click');
     } else {
-        openClientDrawer('kt_activitiesClient', 'kt_activitiesClient_toggle');
-        const url = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
-        const baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        $.ajax({
-            type: 'GET',
-            url: url,
-            beforeSend: function() {
-                $('#kt_activitiesClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Client Details...</span></div>');
-            },
-            success: function(resp) {
-                if (resp && resp.view) {
-                    $('#kt_activitiesDirectClient_body').html('');
-                    $('#kt_activitiesClient_body').html(resp.view);
-                } else {
-                    $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available.</div>');
-                }
-            },
-            error: function(xhr) {
-                var msg = (xhr.status === 0 || !navigator.onLine)
-                    ? 'You are offline. Please check your connection.'
-                    : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
-                $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
-            }
-        });
+        var isDirect = (ClientStateManager.state.activeTab === 'direct');
+        ClientStateManager.openClientDrawer(clientId, isDirect ? 'direct' : 'internal');
     }
+    try {
+        const url = new URL(window.location);
+        url.searchParams.delete('open_client');
+        window.history.replaceState({ tab: ClientStateManager.state.activeTab, page: page_no }, '', url);
+    } catch(e) {}
 }
 
 function setClientTab(tabName, el, updateUrl = true) {
-    if (tabName === 'requests') tabName = 'request';
-    if (tabName === 'custom') tabName = 'internal';
-
-    activeClientTab = tabName;
-    clientListState.tab = tabName;
-    hiringFilter = (tabName === 'hiring') ? 1 : 0;
-    page_no = 1;
-
-    $('.cl-stat-filter').removeClass('active');
-    $('.cl-tab-filter').removeClass('active');
-
-    $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
-    $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
-
-    if (tabName === 'request') {
-        $('.tbl').addClass('tbl-req');
-        $('#clientTableHead').html(`
-            <div class="tbl-th-subcard tbl-th-check">
-                <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
-            </div>
-            <div class="tbl-th-subcard">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                    <span>Company Name</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <span>Location</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span>Request Date</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard" style="justify-content:flex-end;">
-                <span class="tbl-th-label">Action</span>
-            </div>
-        `);
-    } else {
-        $('.tbl').removeClass('tbl-req');
-        $('#clientTableHead').html(`
-            <div class="tbl-th-subcard tbl-th-check">
-                <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
-            </div>
-            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="name" title="Click to sort by Company Name (A-Z / Z-A)" onclick="handleHeaderSort('name')">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                    <span>Company Name</span>
-                </div>
-                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="tbl-th-subcard" title="Location">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <span>Location</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="date" title="Click to sort by Date Added (Newest / Oldest)" onclick="handleHeaderSort('date')">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span>Date</span>
-                </div>
-                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="tbl-th-subcard" title="Last Activity">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>Last Activity</span>
-                </div>
-            </div>
-            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="jobs" title="Click to sort by Most Active Jobs" onclick="handleHeaderSort('jobs')">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    <span>Jobs</span>
-                </div>
-                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="tbl-th-subcard" title="Hiring Pipeline">
-                <div class="tbl-th-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-                    <span>Hiring Pipeline</span>
-                </div>
-                <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-        `);
-        updateHeaderSortIndicators(clientListState.sort);
-    }
-
-    fetchCandidates(1, updateUrl);
+    ClientStateManager.onTabChange(tabName, updateUrl);
 }
 
 function applyClientResponse(response, targetPage) {
@@ -2342,7 +2506,7 @@ function applyClientResponse(response, targetPage) {
         $('.loadingMessage').css({ display: 'none' });
         $('.loader_search').css({ display: 'none' });
         $('.page-loader').css('display', 'none');
-        localStorage.setItem('currentPageClients', targetPage);
+        try { localStorage.setItem('currentPageClients', targetPage); } catch (e) {}
 
         // Honest Search Degradation UX (Invariant I10)
         if (response.projection_status === 'syncing') {
@@ -2352,6 +2516,14 @@ function applyClientResponse(response, targetPage) {
         }
 
         $('#allClients').html(response.html);
+
+        // Highlight selected client if one is active on current tab
+        if (typeof ClientStateManager !== 'undefined') {
+            var selectedId = ClientStateManager.getSelectedClientId();
+            if (selectedId) {
+                $(`[data-row-id="${selectedId}"]`).closest('.tbl-r').addClass('client-selected');
+            }
+        }
 
         if (response.total !== undefined) {
             if (activeClientTab === 'all') {
@@ -2378,10 +2550,10 @@ function applyClientResponse(response, targetPage) {
     });
 }
 
-function fetchCandidates(page, updateUrl = true, cursor = null) {
+function loadClientList(page, updateUrl = true, cursor = null) {
     var targetPage = page || page_no || 1;
     page_no = targetPage;
-    localStorage.setItem('currentPageClients', targetPage);
+    try { localStorage.setItem('currentPageClients', targetPage); } catch (e) {}
 
     if (cursor) {
         clientListState.cursor = cursor;
@@ -2495,6 +2667,10 @@ function fetchCandidates(page, updateUrl = true, cursor = null) {
     });
 }
 
+// Preserve backwards-compatible global alias for legacy callers while protecting main function
+window.loadClientList = loadClientList;
+window.fetchCandidates = loadClientList;
+
 $(document).ready(function() {
     // Phase 1: Hydrate static country bundle from IndexedDB / JSON
     initCountryBundle();
@@ -2507,7 +2683,7 @@ $(document).ready(function() {
         const page = $(this).data('page');
         const cursor = $(this).data('cursor') || null;
         if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-        fetchCandidates(page, true, cursor);
+        loadClientList(page, true, cursor);
     });
 
     $(document).on('change', '#pagination .pagi-perpage', function() {
@@ -2515,7 +2691,7 @@ $(document).ready(function() {
         localStorage.setItem('candidatePerPage', selectedPerPage);
         localStorage.setItem('currentPageClients', 1);
         page_no = 1;
-        fetchCandidates(1, true);
+        loadClientList(1, true);
     });
 
     // Hydrate state from URL on page load
@@ -2525,7 +2701,7 @@ $(document).ready(function() {
     const hasFilterParams = urlParams.has('country') || urlParams.has('city') || urlParams.has('industry') || urlParams.has('activity') || urlParams.has('search') || urlParams.has('q') || urlParams.has('tab') || urlParams.has('sort');
 
     if ($('#allClients .tbl-r').length === 0 || hasFilterParams) {
-        fetchCandidates(1, false);
+        loadClientList(1, false);
     }
 });
 
@@ -2597,7 +2773,7 @@ $(document).on('click', '.request_event', function () {
                     }
 
                     if (response.status == 'success') {
-                        fetchCandidates(1);
+                        loadClientList(1);
                         swalWithBootstrapButtons.fire(
                             actionText + 'ed!',
                             response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
@@ -2632,6 +2808,14 @@ function handleClientMutationEvent(data) {
     // Invalidate main browser RAM stores
     ClientStore.clear();
 
+    // Invalidate drawer cache
+    if (typeof DrawerLRUCache !== 'undefined' && typeof DrawerLRUCache.clear === 'function') {
+        DrawerLRUCache.clear();
+    }
+    if (typeof ClientStateManager !== 'undefined' && data.client && ClientStateManager.getSelectedClientId() == data.client.id) {
+        ClientStateManager.clearDrawerState();
+    }
+
     // If a specific client record is attached, delta-upsert directly in Worker
     if (data.client && clWorker && clWorkerReady) {
         clWorker.postMessage({
@@ -2655,7 +2839,7 @@ function handleClientMutationEvent(data) {
     }
 
     // Refresh current view with zero page reload
-    fetchCandidates(page_no, false);
+    loadClientList(page_no, false);
 }
 
 // 1. Cross-Tab Browser Channel (Same Computer / Multiple Tabs)

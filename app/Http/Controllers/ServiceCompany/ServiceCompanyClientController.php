@@ -18,6 +18,7 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
 use App\Models\JobCategory;
+use App\Services\Analytics\ClientPerformanceAnalyticsService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\IndustryTaxonomyService;
@@ -2498,6 +2499,62 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ]);
 
         return response()->json($responseData);
+    }
+
+    /**
+     * Client Performance Tab Analytics API v1.0
+     *
+     * Enterprise CQRS read endpoint executing 100% against Elasticsearch & DragonflyDB.
+     * Enforces IDOR-safe multi-tenant scoping, milestone-based deduplication,
+     * and request correlation headers.
+     *
+     * @param  int  $id  Client ID (or Direct Client company ID)
+     * @param  Request  $request
+     * @param  ClientPerformanceAnalyticsService  $analyticsService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function performanceAnalyticsV1($id, Request $request, ClientPerformanceAnalyticsService $analyticsService)
+    {
+        abort_if(Gate::denies('view_clients'), 403);
+        $companyId = (int) auth()->user()->company_id;
+
+        $range = (string) $request->input('range', '12M');
+        $compare = (string) $request->input('compare', 'previous_period');
+        $clientType = (string) $request->input('client_type', 'auto');
+        $timezone = (string) $request->input('timezone', 'Asia/Kolkata');
+        $requestId = (string) ($request->header('X-Request-ID') ?: $request->input('request_id', ''));
+
+        try {
+            $dashboard = $analyticsService->getPerformanceDashboard(
+                $companyId,
+                (int) $id,
+                $clientType,
+                $range,
+                $compare,
+                $timezone,
+                $requestId ?: null
+            );
+
+            return response()->json($dashboard)
+                ->header('X-Request-ID', $dashboard['meta']['request_id'])
+                ->header('X-Schema-Version', $dashboard['meta']['schema_version']);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (\Throwable $e) {
+            \Log::error('performanceAnalyticsV1 error: '.$e->getMessage(), [
+                'client_id'  => $id,
+                'company_id' => $companyId,
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Unable to generate performance analytics. Please try again.',
+            ], 500);
+        }
     }
 
     public function contactdata(Request $request)
