@@ -548,7 +548,7 @@
             {{-- Card 4: Active Companies --}}
             <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
                 <div class="cl-card-top">
-                    <div class="cl-card-icon orange">
+                    <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="14" rx="2"/>
                             <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
@@ -560,7 +560,7 @@
                         <div class="cl-card-lbl">Active Companies</div>
                     </div>
                 </div>
-                <div class="cl-card-sub orange">
+                <div class="cl-card-sub green">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="4" y1="9" x2="20" y2="9"/>
                         <line x1="4" y1="15" x2="20" y2="15"/>
@@ -571,10 +571,10 @@
                 </div>
             </a>
 
-            {{-- Card 5: Inactive Clients --}}
+            {{-- Card 5: Inactive Companies --}}
             <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-card cl-stat-filter" data-tab="inactive">
                 <div class="cl-card-top">
-                    <div class="cl-card-icon gray">
+                    <div class="cl-card-icon pink">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="10" y1="15" x2="10" y2="9"/>
@@ -583,10 +583,10 @@
                     </div>
                     <div class="cl-card-meta">
                         <div class="cl-card-num" id="span_clientInactive">{{ $inactiveClientsCount }}</div>
-                        <div class="cl-card-lbl">Inactive Clients</div>
+                        <div class="cl-card-lbl">Inactive Companies</div>
                     </div>
                 </div>
-                <div class="cl-card-sub gray">
+                <div class="cl-card-sub pink">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="8" y1="12" x2="16" y2="12"/>
@@ -795,7 +795,7 @@
                     <line x1="10" y1="15" x2="10" y2="9"/>
                     <line x1="14" y1="15" x2="14" y2="9"/>
                 </svg>
-                <span>Inactive Clients</span>
+                <span>Inactive Companies</span>
                 <span class="cl-tab-badge" id="tabBadgeInactive">{{ $inactiveClientsCount }}</span>
             </a>
 
