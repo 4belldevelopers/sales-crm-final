@@ -91,12 +91,24 @@ class ProcessClientOutboxEventJob implements ShouldQueue
 
             $clientId = (int) $event->aggregate_id;
 
-            // 1. Synchronize to Elasticsearch asynchronously
+            // 1. Synchronize to Elasticsearch asynchronously with Tombstone / Delete Protection
             if ($clientId > 0) {
                 try {
-                    GeneralMethod::clientStaffingPartner($clientId);
+                    $clientExists = DB::table('clients')->where('id', $clientId)->exists();
+                    if (! $clientExists || $event->event_type === 'ClientDeleted') {
+                        // Tombstone: Safely purge from Elasticsearch projection so deleted entities never resurrect
+                        $elasticService = app(\App\Services\ElasticService::class);
+                        if ($elasticService->getClient()->exists(['index' => ELASTIC_CLIENT_LIST, 'id' => $clientId])) {
+                            $elasticService->getClient()->delete([
+                                'index' => ELASTIC_CLIENT_LIST,
+                                'id' => $clientId,
+                            ]);
+                        }
+                    } else {
+                        GeneralMethod::clientStaffingPartner($clientId);
+                    }
                 } catch (\Throwable $e) {
-                    Log::warning("ProcessClientOutboxEventJob: ES index sync warning for client {$clientId}: ".$e->getMessage());
+                    Log::warning("ProcessClientOutboxEventJob: ES sync notice for client {$clientId}: ".$e->getMessage());
                 }
             }
 
@@ -111,14 +123,23 @@ class ProcessClientOutboxEventJob implements ShouldQueue
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error("ProcessClientOutboxEventJob failed for event {$eventId}: ".$e->getMessage());
+            Log::error("ProcessClientOutboxEventJob failed for event {$eventId}: ".$e->getMessage(), [
+                'event_id' => $eventId,
+                'aggregate_id' => $event->aggregate_id ?? null,
+                'attempts' => $event->attempts ?? 1,
+                'exception' => $e,
+            ]);
+
+            $attempts = (int) ($event->attempts ?? 1);
+            $isDeadLetter = ($attempts >= $this->tries);
 
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
-                    'status' => 'FAILED',
-                    'last_error' => substr($e->getMessage(), 0, 1000),
-                    'available_at' => now()->addSeconds(30),
+                    'status' => $isDeadLetter ? 'DEAD_LETTER' : 'PENDING',
+                    'last_error' => substr($e->getMessage(), 0, 500),
+                    'available_at' => $isDeadLetter ? now()->addHours(24) : now()->addSeconds(30 * $attempts),
+                    'updated_at' => now(),
                 ]);
         }
     }

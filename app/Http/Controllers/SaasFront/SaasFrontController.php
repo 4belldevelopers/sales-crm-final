@@ -1844,9 +1844,21 @@ class SaasFrontController extends SaasFrontBaseController
                 $clientName = null;
             }
 
-            // Single query leveraging idx_clients_website index with prefix search
-            $matchingClients = DB::table('clients')
-                ->select('id', 'company_id', 'logo', 'logo_logical_path')
+            // Authoritative Internal Client Domain Duplicate Check:
+            // Direct Client records (self_company = 1) must NEVER block an Internal Client.
+            $duplicateService = app(\App\Services\InternalClientDuplicateService::class);
+            $dupResult = $duplicateService->checkDomainDuplicate((int) $company_id, $request->website, !empty($client_id) ? (int) $client_id : null);
+
+            if ($dupResult !== null) {
+                $status = 'fail';
+                $message = $dupResult['message'];
+            } else {
+                $status = 'success';
+            }
+
+            // Optional non-blocking logo suggestion lookup from existing clients across the ecosystem
+            $otherCompanyClient = DB::table('clients')
+                ->select('id', 'logo', 'logo_logical_path')
                 ->where(function ($query) use ($mainDomain, $request) {
                     $query->where('website', $request->website)
                         ->orWhere('website', 'LIKE', 'http://'.$mainDomain.'%')
@@ -1855,37 +1867,11 @@ class SaasFrontController extends SaasFrontBaseController
                         ->orWhere('website', 'LIKE', 'https://www.'.$mainDomain.'%')
                         ->orWhere('website', 'LIKE', $mainDomain.'%');
                 })
-                ->get();
-
-            $userCount = $matchingClients->where('company_id', $company_id)->count();
-            $otherCompanyClient = $matchingClients->where('company_id', '!=', $company_id)->first();
-            $clients_ckeck = $matchingClients->where('id', $client_id)->first();
+                ->whereNotNull('logo')
+                ->first();
 
             if ($otherCompanyClient) {
                 $logo_url = ! empty($otherCompanyClient->logo_logical_path) ? $otherCompanyClient->logo_logical_path : $otherCompanyClient->logo;
-                if (empty($logo_url)) {
-                    try {
-                        $params = [
-                            'index' => ELASTIC_CLIENT_LIST,
-                            'id' => $otherCompanyClient->id,
-                        ];
-                        $response = $this->elasticService->getClient()->get($params);
-                        $client = (object) $response['_source'];
-                        $logo_url = (@$client->logo_logical_path) ? @$client->logo_logical_path : @$client->logo;
-                    } catch (\Exception $e) {
-                        \Log::warning('ES logo fetch fallback failed: '.$e->getMessage());
-                    }
-                }
-            }
-
-            if ($clients_ckeck) {
-                $status = 'success';
-            }
-
-            $message = 'This Client is already exists.';
-
-            if ($userCount == 0) {
-                $status = 'success';
             }
         }
 

@@ -73,25 +73,32 @@
           </button>
         </div>
 
+        <!-- Dedicated Contact Page Duplicate Alert -->
+        <div id="client_contacts_duplicate_alert" style="display:none; margin:12px 20px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#dc2626; font-size:12px; font-weight:600;">
+          <div class="d-flex align-items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="client_contacts_duplicate_alert_text">One or more contacts are already registered with another internal company.</span>
+          </div>
+        </div>
+
         <!-- Contacts Table -->
         <div class="card-body p-0">
           <div class="table-responsive client-contact-table-wrap" style="width:100%; overflow-x:auto;">
             <table class="table align-middle mb-0" id="client_contact_table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
               <thead>
                 <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
-                  <th style="padding:12px 20px; width:20%;">CONTACT</th>
-                  <th style="padding:12px 16px; width:18%;">DESIGNATION</th>
-                  <th style="padding:12px 16px; width:22%;">EMAIL</th>
-                  <th style="padding:12px 16px; width:16%;">PHONE NUMBER</th>
-                  <th style="padding:12px 14px; width:10%;">ROLE</th>
-                  <th style="padding:12px 14px; width:8%; text-align:center;">PRIMARY</th>
-                  <th style="padding:12px 20px; width:6%; text-align:right;">ACTIONS</th>
+                  <th style="padding:12px 20px; width:24%; white-space:nowrap;">CONTACT</th>
+                  <th style="padding:12px 16px; width:18%; white-space:nowrap;">DESIGNATION</th>
+                  <th style="padding:12px 16px; width:24%; white-space:nowrap;">EMAIL</th>
+                  <th style="padding:12px 16px; width:16%; white-space:nowrap;">PHONE NUMBER</th>
+                  <th style="padding:12px 14px; width:10%; text-align:center; white-space:nowrap;">PRIMARY</th>
+                  <th style="padding:12px 20px; width:8%; text-align:right; white-space:nowrap;">ACTIONS</th>
                 </tr>
               </thead>
               <tbody id="client_contact_table_body">
                 <!-- Rendered dynamically via window.clientContactManager -->
                 <tr id="client_contact_empty_row" style="display:none;">
-                  <td colspan="7" class="text-center" style="background:#ffffff; border:none; padding:48px 20px;">
+                  <td colspan="6" class="text-center" style="background:#ffffff; border:none; padding:48px 20px;">
                     <div style="width:56px; height:56px; border-radius:50%; background:#f8fafc; border:1px solid #e2e8f0; display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px; color:#94a3b8;">
                       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -185,6 +192,10 @@
         <i class="la la-envelope cdf-input-icon" aria-hidden="true"></i>
         <input type="email" id="client_drawer_email" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
       </div>
+      <div id="client_drawer_email_checking" style="display: none; margin-top: 5px; font-size: 11.5px; color: #2563eb; font-weight: 500;">
+        <span class="spinner-border spinner-border-sm me-1" style="width: 12px; height: 12px; border-width: 1.5px;" role="status"></span>
+        <span>Checking contact email availability...</span>
+      </div>
       <div id="client_drawer_email_typo_hint" class="client-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
       <div class="cdf-error" id="cdf_err_email">Please enter a valid email address.</div>
     </div>
@@ -263,6 +274,7 @@
     max-height: 520px;
     overflow-y: auto;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .client-contact-table-wrap::-webkit-scrollbar {
     width: 5px;
@@ -273,6 +285,10 @@
     border-radius: 4px;
   }
 
+  #client_contact_table th {
+    white-space: nowrap !important;
+  }
+
   .client-make-primary-btn:hover {
     color: #2563eb !important;
   }
@@ -280,7 +296,7 @@
     border-color: #2563eb !important;
   }
 
-  /* Compact Laptop Screens (1366x768 and Viewports with height <= 850px) */
+  /* Compact Laptop Screens (1366x768 & 1920x1080 with height <= 850px) */
   @media (max-height: 850px) {
     .client-contact-main-card .card-header {
       padding-top: 10px !important;
@@ -288,6 +304,18 @@
     }
     .client-contact-table-wrap {
       max-height: 380px !important;
+    }
+    #client_contact_table th,
+    #client_contact_table td {
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+    }
+  }
+
+  /* Responsive boundary for narrow viewports */
+  @media (max-width: 1199.98px) {
+    #client_contact_table {
+      min-width: 720px !important;
     }
   }
 </style>

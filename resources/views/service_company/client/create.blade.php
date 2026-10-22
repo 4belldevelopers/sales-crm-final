@@ -2115,6 +2115,20 @@ html, body {
   }
 
   /* Navigation button visibility rules per step */
+  /* Default & Step 1: Close visible, Back hidden, Next visible, Submit hidden */
+  #client_top_close_btn {
+    display: inline-flex !important;
+  }
+  #client_top_back_btn {
+    display: none !important;
+  }
+  #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  #submitBtn {
+    display: none !important;
+  }
+
   body.on-step-1 #client_top_close_btn {
     display: inline-flex !important;
   }
@@ -2128,29 +2142,47 @@ html, body {
     display: none !important;
   }
 
-  body:not(.on-step-1):not(.on-step-5) #client_top_close_btn {
-    display: none !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #client_top_back_btn {
-    display: inline-flex !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #client_top_next_btn {
-    display: inline-flex !important;
-  }
-  body:not(.on-step-1):not(.on-step-5) #submitBtn {
-    display: none !important;
-  }
-
+  /* Steps 2-5: Close hidden, Back visible, Next visible, Submit hidden */
+  body.on-step-2 #client_top_close_btn,
+  body.on-step-3 #client_top_close_btn,
+  body.on-step-4 #client_top_close_btn,
   body.on-step-5 #client_top_close_btn {
     display: none !important;
   }
+  body.on-step-2 #client_top_back_btn,
+  body.on-step-3 #client_top_back_btn,
+  body.on-step-4 #client_top_back_btn,
   body.on-step-5 #client_top_back_btn {
     display: inline-flex !important;
   }
+  body.on-step-2 #client_top_next_btn,
+  body.on-step-3 #client_top_next_btn,
+  body.on-step-4 #client_top_next_btn,
   body.on-step-5 #client_top_next_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-2 #submitBtn,
+  body.on-step-3 #submitBtn,
+  body.on-step-4 #submitBtn,
+  body.on-step-5 #submitBtn {
     display: none !important;
   }
-  body.on-step-5 #submitBtn {
+
+  /* Step 6 (Review & Submit): Close hidden, Back visible, Next hidden, Submit visible */
+  body.on-step-6 #client_top_close_btn,
+  body.on-review-step #client_top_close_btn {
+    display: none !important;
+  }
+  body.on-step-6 #client_top_back_btn,
+  body.on-review-step #client_top_back_btn {
+    display: inline-flex !important;
+  }
+  body.on-step-6 #client_top_next_btn,
+  body.on-review-step #client_top_next_btn {
+    display: none !important;
+  }
+  body.on-step-6 #submitBtn,
+  body.on-review-step #submitBtn {
     display: inline-flex !important;
   }
 
@@ -4298,59 +4330,60 @@ html, body {
 </style>
 @endpush
 @section('content')
-<?php 
+<?php
      use App\Helper\GeneralMethod;
-     $country_code =  GeneralMethod::countryCodeFun();
-   
-     $background_image		=	url('img/client-default.png'); 
-     $name	=	$website	=	$industry	=	$company_sizes	=	$company_type	=	$founded	= $description = $tags	= $client_location_arr = $client_contact_arr =  '';
-     $career_page_url = $tax_id = $linkedin_url = $twitter_url = $github_url = $ap_email = $youtube_url = $facebook_url = $instagram_url = $custom_link = '';
-		 if($page_event == 'ADD'){
-			$pagetitle	=	'Add Client';
-      $countAddrees= 1;
-		 }else if($page_event == 'EDIT'){
-			$pagetitle	=	'Edit Client';
 
-     	$name					= @$client->name;
-     	$website				= @$client->website;
-     	$industry				= @$client->industry;
-     	$client_size_from       = @$client->company_size_from;
-     	$client_size_to         = @$client->company_sizes;
-     	if (!empty($client_size_from)) {
-     	    $company_sizes		= $client_size_from . '-' . (!empty($client_size_to) ? $client_size_to : '0');
-     	} else {
-     	    $company_sizes		= '';
-     	}
-     	$company_type			= @$client->company_type;
-     	$founded				= @$client->founded;
-     	
-     	$description			= 	@$client->description;
-     	$tags					= 	@$client->tags;
-     	$client_location_arr	=	$client_location;
-     	$client_contact_arr 	=	$client_contact_info;
-      $countAddrees= count($client_location);
-     	
-     	if(!empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path)>10){
-     			$background_image		=  $client->logo_logical_path; 	
-     	}
+$country_code = GeneralMethod::countryCodeFun();
 
-      if (!empty($client->detail)) {
-          $clientDetailDecoded = json_decode($client->detail, true);
-          if (is_array($clientDetailDecoded)) {
-              $career_page_url = $clientDetailDecoded['career_page_url'] ?? '';
-              $tax_id          = $clientDetailDecoded['tax_id'] ?? '';
-              $linkedin_url    = $clientDetailDecoded['linkedin_url'] ?? '';
-              $twitter_url     = $clientDetailDecoded['twitter_url'] ?? '';
-              $github_url      = $clientDetailDecoded['github_url'] ?? '';
-              $ap_email        = $clientDetailDecoded['ap_email'] ?? '';
-              $youtube_url     = $clientDetailDecoded['youtube_url'] ?? '';
-              $facebook_url    = $clientDetailDecoded['facebook_url'] ?? '';
-              $instagram_url   = $clientDetailDecoded['instagram_url'] ?? '';
-              $custom_link     = $clientDetailDecoded['custom_link'] ?? '';
-          }
-      }
-     }
-     
+$background_image = url('img/client-default.png');
+$name = $website = $industry = $company_sizes = $company_type = $founded = $description = $tags = $client_location_arr = $client_contact_arr = '';
+$career_page_url = $tax_id = $linkedin_url = $twitter_url = $github_url = $ap_email = $youtube_url = $facebook_url = $instagram_url = $custom_link = '';
+if ($page_event == 'ADD') {
+    $pagetitle = 'Add Client';
+    $countAddrees = 1;
+} elseif ($page_event == 'EDIT') {
+    $pagetitle = 'Edit Client';
+
+    $name = @$client->name;
+    $website = @$client->website;
+    $industry = @$client->industry;
+    $client_size_from = @$client->company_size_from;
+    $client_size_to = @$client->company_sizes;
+    if (! empty($client_size_from)) {
+        $company_sizes = $client_size_from.'-'.(! empty($client_size_to) ? $client_size_to : '0');
+    } else {
+        $company_sizes = '';
+    }
+    $company_type = @$client->company_type;
+    $founded = @$client->founded;
+
+    $description = @$client->description;
+    $tags = @$client->tags;
+    $client_location_arr = $client_location;
+    $client_contact_arr = $client_contact_info;
+    $countAddrees = count($client_location);
+
+    if (! empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path) > 10) {
+        $background_image = $client->logo_logical_path;
+    }
+
+    if (! empty($client->detail)) {
+        $clientDetailDecoded = json_decode($client->detail, true);
+        if (is_array($clientDetailDecoded)) {
+            $career_page_url = $clientDetailDecoded['career_page_url'] ?? '';
+            $tax_id = $clientDetailDecoded['tax_id'] ?? '';
+            $linkedin_url = $clientDetailDecoded['linkedin_url'] ?? '';
+            $twitter_url = $clientDetailDecoded['twitter_url'] ?? '';
+            $github_url = $clientDetailDecoded['github_url'] ?? '';
+            $ap_email = $clientDetailDecoded['ap_email'] ?? '';
+            $youtube_url = $clientDetailDecoded['youtube_url'] ?? '';
+            $facebook_url = $clientDetailDecoded['facebook_url'] ?? '';
+            $instagram_url = $clientDetailDecoded['instagram_url'] ?? '';
+            $custom_link = $clientDetailDecoded['custom_link'] ?? '';
+        }
+    }
+}
+
 ?>
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid pt-0 pb-5" id="kt_content">
@@ -5606,8 +5639,17 @@ html, body {
         $('#additional_addresses_container .client-branch-card, .client-address-container .client-branch-card').each(function(idx) {
             $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
         });
-        var remaining = $('#additional_addresses_container .client-branch-card, .client-address-container .is-additional').length;
-        $('#client_additional_empty').toggle(remaining === 0);
+        var bCount = $('#additional_addresses_container .client-branch-card').length;
+        if (bCount === 0) {
+            $('#client_additional_empty_state').show();
+            $('#additional_location_cta_wrap').hide();
+            $('#additional_locations_count_badge').text('0 Locations');
+        } else {
+            $('#client_additional_empty_state').hide();
+            $('#additional_location_cta_wrap').show();
+            $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
+        }
+        $('#client_additional_empty').toggle(bCount === 0);
         if (window.clientLocationManager && typeof window.clientLocationManager.syncAiButtons === 'function') {
             window.clientLocationManager.syncAiButtons();
         }
@@ -6233,58 +6275,74 @@ html, body {
             var cid = addressId;
             var branchNumber = $('#additional_addresses_container .client-branch-card').length + 1;
 
-            var cardHtml = '<div class="client-branch-card" id="clientAddr_' + cid + '" data-cid="' + cid + '" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">' +
-                '<div class="d-flex align-items-center justify-content-between mb-2">' +
+            var cardHtml = '<div class="client-subcard client-branch-subcard client-branch-card" id="clientAddr_' + cid + '" data-cid="' + cid + '">' +
+                '<div class="client-subcard-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">' +
                 '  <div class="d-flex align-items-center gap-2">' +
-                '    <div style="width:28px; height:28px; border-radius:7px; background:#f1f5f9; display:inline-flex; align-items:center; justify-content:center; color:#475569;">' +
-                '      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '    <div class="client-subcard-icon-box office-icon">' +
+                '      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>' +
+                '        <path d="M9 22v-4h6v4"/>' +
+                '        <line x1="8" y1="6" x2="8.01" y2="6"/><line x1="16" y1="6" x2="16.01" y2="6"/><line x1="12" y1="6" x2="12.01" y2="6"/>' +
+                '        <line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/>' +
+                '        <line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/>' +
+                '      </svg>' +
                 '    </div>' +
-                '    <div>' +
-                '      <div class="d-flex align-items-center gap-2">' +
-                '        <h4 class="client-branch-title mb-0" style="font-size:13px; font-weight:700; color:#0f172a;">Additional Location ' + branchNumber + '</h4>' +
-                '        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; font-weight:600; padding:2px 6px; border-radius:4px;">OFFICE</span>' +
-                '      </div>' +
+                '    <div class="d-flex align-items-center gap-2">' +
+                '      <h4 class="client-subcard-title client-branch-title mb-0">Additional Location ' + branchNumber + '</h4>' +
+                '      <span class="badge badge-branch-tag">BRANCH</span>' +
                 '    </div>' +
                 '  </div>' +
                 '  <div class="d-flex align-items-center gap-2">' +
-                '    <button type="button" class="btn btn-xs" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:5px; color:#b45309; border:1px solid #fde68a; background:#fefce8; cursor:pointer;" title="Set as Headquarters">' +
-                '      Set as Headquarters' +
+                '    <button type="button" class="btn btn-xs btn-set-primary" onclick="window.clientLocationManager ? window.clientLocationManager.setBranchAsHq(' + cid + ') : false" title="Set as Primary">' +
+                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#d97706" stroke-width="1.2" class="me-1"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>' +
+                '      <span>Set as Primary</span>' +
                 '    </button>' +
-                '    <button type="button" class="btn btn-xs client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; color:#dc2626; border:1px solid #fee2e2; background:#fef2f2; cursor:pointer; display:inline-flex; align-items:center; gap:3px;" title="Remove Location">' +
-                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '    <button type="button" class="btn btn-xs btn-remove-subcard client-branch-remove-btn" onclick="removeAddressCard(this, \'clientAddr_' + cid + '\')" title="Remove Location">' +
+                '      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
                 '      <span>Remove</span>' +
                 '    </button>' +
                 '  </div>' +
                 '</div>' +
-                '<div class="client-branch-body">' +
+                '<div class="client-subcard-body">' +
+                '  <!-- Row 1: City / Location -->' +
                 '  <div class="client-addr-field mb-2">' +
-                '    <label class="client-addr-label" for="branch_city_search_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">City / Location <span class="text-danger">*</span></label>' +
-                '    <div class="client-addr-input-wrap position-relative">' +
-                '      <svg class="client-addr-icon-left position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
-                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city..." autocomplete="off" style="height:36px; padding:0 32px 0 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px;">' +
-                '      <svg class="client-addr-icon-right position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="right:11px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none;"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+                '    <label class="form-label mb-1" for="branch_city_search_' + cid + '">City / Location <span class="text-danger">*</span></label>' +
+                '    <div class="position-relative client-addr-input-wrap">' +
+                '      <span class="position-absolute client-addr-field-icon-left">' +
+                '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
+                '      </span>' +
+                '      <input type="text" class="form-control client-addr-input client-addr-city-search branch-city-search" id="branch_city_search_' + cid + '" data-cid="' + cid + '" value="' + escapeHtmlAttr(city || '') + '" placeholder="Search for a city.." autocomplete="off">' +
+                '      <span class="position-absolute client-addr-field-icon-right">' +
+                '        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+                '      </span>' +
                 '      <div class="client-addr-city-dropdown branch-city-dropdown" id="branch_city_dropdown_' + cid + '"></div>' +
                 '      <input type="hidden" name="kt_tagify_work_location[]" id="kt_tagify_work_location_' + cid + '" value=\'' + (tagifyJson || '') + '\'>' +
                 '    </div>' +
-                '    <div class="client-addr-error text-danger" id="branch_city_err_' + cid + '" style="display:none; font-size:10.5px; margin-top:3px;">City selection is required.</div>' +
+                '    <div class="client-addr-error text-danger mt-1" id="branch_city_err_' + cid + '" style="display:none;">City selection is required.</div>' +
                 '  </div>' +
+                '  <!-- Row 2: Full Address -->' +
                 '  <div class="client-addr-field">' +
-                '    <label class="client-addr-label" for="address_' + cid + '" style="font-size:11.5px; font-weight:600; color:#334155; margin-bottom:3px; display:block;">Full Address <span class="text-danger">*</span></label>' +
-                '    <div class="client-addr-textarea-wrap position-relative">' +
-                '      <svg class="client-addr-textarea-icon position-absolute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="left:11px; top:9px; color:#94a3b8; pointer-events:none;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>' +
-                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete address..." style="padding:7px 10px 7px 32px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; resize:vertical; min-height:54px;">' + escapeHtmlText(address || '') + '</textarea>' +
+                '    <div class="position-relative client-addr-textarea-wrap">' +
+                '      <span class="position-absolute client-addr-field-icon-top">' +
+                '        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '      </span>' +
+                '      <textarea class="form-control client-addr-textarea" name="address[]" id="address_' + cid + '" rows="2" maxlength="500" placeholder="Enter complete branch address..">' + escapeHtmlText(address || '') + '</textarea>' +
                 '    </div>' +
                 '    <div class="d-flex align-items-center justify-content-between mt-1">' +
-                '      <span class="text-muted" style="font-size:10.5px;">Accurate branch address.</span>' +
-                '      <span class="client-addr-counter" style="font-size:10.5px; color:#94a3b8;"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span>/500</span>' +
+                '      <span class="text-muted client-field-hint">Include building, street, area, city and postal code.</span>' +
+                '      <span class="client-addr-counter"><span id="address_char_count_' + cid + '">' + (address ? address.length : 0) + '</span> / 500</span>' +
                 '    </div>' +
-                '    <div class="client-addr-error text-danger" id="branch_address_err_' + cid + '" style="display:none; font-size:10.5px; margin-top:3px;">Full Address is required.</div>' +
+                '    <div class="client-addr-error text-danger mt-1" id="branch_address_err_' + cid + '" style="display:none;">Full Address is required.</div>' +
                 '  </div>' +
                 '</div>' +
                 '</div>';
 
             $('#additional_addresses_container').append(cardHtml);
+            $('#client_additional_empty_state').hide();
+            $('#additional_location_cta_wrap').show();
             $('#client_additional_empty').hide();
+            var bCount = $('#additional_addresses_container .client-branch-card').length;
+            $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
 
             var newCardEl = document.getElementById('clientAddr_' + cid);
             if (window.clientWizardUi && typeof window.clientWizardUi.bindAddressCounters === 'function') {
@@ -6357,7 +6415,7 @@ html, body {
         }
     };
 
-    $(document).on('click', '#btn_add_another_address, .add_address', function (e) {
+    $(document).on('click', '#btn_add_another_address, #btn_add_first_location, .add_address', function (e) {
         e.preventDefault();
         if (window.clientLocationManager) {
             window.clientLocationManager.addManualBranch();
@@ -6370,9 +6428,161 @@ html, body {
         }
     });
 
+    window.checkCompanyNameDuplicate = function(name, isSync, callback) {
+        name = (typeof name === 'string' ? name : ($('#client_id').val() || '')).trim();
+        if (!name || name.length < 2) {
+            window._dupCompanyNameError = null;
+            $('#company_duplicate_error').hide();
+            $('#client_id').removeClass('is-invalid');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        var isDuplicate = false;
+        var dupMessage = null;
+
+        $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: isSync ? false : true,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: {
+                field: 'name',
+                name: name,
+                value: name,
+                client_id: {{ $client->id ?? 'null' }}
+            },
+            success: function(res) {
+                if (res && res.duplicate) {
+                    isDuplicate = true;
+                    dupMessage = res.message || 'This client is already registered internally. A client with this company name already exists in the Internal Client list.';
+                    window._dupCompanyNameError = dupMessage;
+                    $('#company_duplicate_error').show();
+                    $('#company_duplicate_error_text').text(dupMessage);
+                    $('#client_id').addClass('is-invalid');
+                } else {
+                    window._dupCompanyNameError = null;
+                    $('#company_duplicate_error').hide();
+                    $('#client_id').removeClass('is-invalid');
+                }
+                if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+            },
+            error: function() {
+                if (typeof callback === 'function') callback(true, null);
+            }
+        });
+
+        return !isDuplicate;
+    };
+
+    var _clientIdDupTimer = null;
     $(document).on('input', '#client_id', function() {
         var name = $(this).val().trim();
         $('#ai_suggested_company_name').text(name || 'Jeroworks');
+
+        clearTimeout(_clientIdDupTimer);
+        if (!name || name.length < 2) {
+            window._dupCompanyNameError = null;
+            $('#company_duplicate_error').hide();
+            $('#client_id').removeClass('is-invalid');
+            return;
+        }
+
+        _clientIdDupTimer = setTimeout(function() {
+            window.checkCompanyNameDuplicate(name, false);
+        }, 280);
+    });
+
+    $(document).on('blur change', '#client_id', function() {
+        var name = $(this).val().trim();
+        clearTimeout(_clientIdDupTimer);
+        if (name && name.length >= 2) {
+            window.checkCompanyNameDuplicate(name, false);
+        }
+    });
+
+    window.checkWebsiteDuplicate = function(web, isSync, callback) {
+        web = (typeof web === 'string' ? web : ($('#website').val() || '')).trim();
+        if (!web) {
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+            if (typeof callback === 'function') callback(true, null);
+            return true;
+        }
+
+        var isDuplicate = false;
+        var dupMessage = null;
+        if (!isSync) {
+            $('#website_checking_indicator').show();
+        }
+
+        $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: isSync ? false : true,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: {
+                field: 'website',
+                website: web,
+                value: web,
+                client_id: {{ $client->id ?? 'null' }}
+            },
+            success: function(res) {
+                $('#website_checking_indicator').hide();
+                if (res && res.duplicate) {
+                    isDuplicate = true;
+                    dupMessage = res.message || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.';
+                    window._dupWebsiteError = dupMessage;
+                    $('#website_duplicate_error').show();
+                    $('#website_duplicate_error_text').text(dupMessage);
+                    $('#website').addClass('is-invalid');
+                    $('.god-website-input-box').addClass('has-validation-error');
+                } else {
+                    window._dupWebsiteError = null;
+                    $('#website_duplicate_error').hide();
+                    $('#website').removeClass('is-invalid');
+                    $('.god-website-input-box').removeClass('has-validation-error');
+                }
+                if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+            },
+            error: function() {
+                $('#website_checking_indicator').hide();
+                if (typeof callback === 'function') callback(true, null);
+            }
+        });
+
+        return !isDuplicate;
+    };
+
+    var _websiteDupTimer = null;
+    $(document).on('input', '#website', function() {
+        var web = $(this).val().trim();
+
+        clearTimeout(_websiteDupTimer);
+        if (!web) {
+            window._dupWebsiteError = null;
+            $('#website_duplicate_error').hide();
+            $('#website_checking_indicator').hide();
+            $('#website').removeClass('is-invalid');
+            $('.god-website-input-box').removeClass('has-validation-error');
+            return;
+        }
+
+        $('#website_checking_indicator').show();
+        _websiteDupTimer = setTimeout(function() {
+            window.checkWebsiteDuplicate(web, false);
+        }, 280);
+    });
+
+    $(document).on('blur change', '#website', function() {
+        var web = $(this).val().trim();
+        clearTimeout(_websiteDupTimer);
+        if (web) {
+            window.checkWebsiteDuplicate(web, false);
+        }
     });
 $('.remove_address').click(function(){
           let container = $('.client-address-container');
@@ -6551,6 +6761,236 @@ $('.remove_address').click(function(){
        					});
    
    });   
+    /**
+     * Add Job-Style Processing Modal & Readiness Verification Gate.
+     * Reuses the Add Job submission-processing countdown/progress UX (0% MySQL reads).
+     * Holds user on an authoritative verification gate, probing readiness until
+     * MySQL write, contacts, and Elasticsearch indexing are 100% verified.
+     */
+    function launchClientReadinessVerificationGate(jobParams) {
+        var maxWaitSeconds = 30;
+        var cycleSeconds = 10;
+        var currentCycleRemaining = cycleSeconds;
+        var totalElapsed = 0;
+        var pollInterval = null;
+        var countdownInterval = null;
+        var isReadyConfirmed = false;
+        var checkReadyUrl = null;
+        var redirectUrl = '{{ route('service_company.clients.custom_client') }}/0';
+        var newClientId = null;
+
+        $('#clientReadinessModal').remove();
+
+        var modalHtml = `
+        <div id="clientReadinessModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.75);backdrop-filter:blur(4px);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;">
+            <div style="background:#ffffff;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:92%;max-width:500px;padding:32px 28px;text-align:center;">
+                
+                <div id="crGateIconContainer" style="margin-bottom:18px;">
+                    <div style="position:relative;width:80px;height:80px;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                        <svg style="transform:rotate(-90deg);width:80px;height:80px;">
+                            <circle cx="40" cy="40" r="34" stroke="#E2E8F0" stroke-width="6" fill="none" />
+                            <circle id="crProgressCircle" cx="40" cy="40" r="34" stroke="#3B82F6" stroke-width="6" fill="none" stroke-dasharray="213.6" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear;" />
+                        </svg>
+                        <span id="crCountdownNumber" style="position:absolute;font-size:22px;font-weight:700;color:#1E293B;">10</span>
+                    </div>
+                </div>
+
+                <h3 id="crGateTitle" style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:6px;">Creating Internal Client...</h3>
+                <p id="crGateSubtitle" style="font-size:12.5px;color:#64748B;line-height:1.5;margin-bottom:18px;">
+                    Verifying company data and search index so your new internal client appears immediately on your client listing without any delay or confusion.
+                </p>
+
+                <div id="crStagesList" style="text-align:left; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:12px;">
+                    <div id="cr_stg_comp" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating company information</span>
+                    </div>
+                    <div id="cr_stg_web" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating website/domain</span>
+                    </div>
+                    <div id="cr_stg_contact" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#10b981;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">✓</span>
+                        <span>Validating contacts</span>
+                    </div>
+                    <div id="cr_stg_profile" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#2563eb;font-weight:600;">
+                        <span style="font-size:13px;width:16px;text-align:center;">●</span>
+                        <span>Preparing client profile</span>
+                    </div>
+                    <div id="cr_stg_sync" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;color:#94a3b8;">
+                        <span style="font-size:13px;width:16px;text-align:center;">○</span>
+                        <span>Synchronizing listing data</span>
+                    </div>
+                    <div id="cr_stg_finalize" style="display:flex;align-items:center;gap:10px;color:#94a3b8;">
+                        <span style="font-size:13px;width:16px;text-align:center;">○</span>
+                        <span>Finalizing client record</span>
+                    </div>
+                </div>
+
+                <div id="crGateActions" style="display:none;margin-top:16px;gap:10px;justify-content:center;">
+                    <button type="button" class="btn btn-warning btn-sm" id="crBtnReview" style="padding:9px 18px;font-weight:600;font-size:12.5px;background:#f59e0b;border:none;color:#fff;border-radius:8px;">Review & Add Details Again</button>
+                    <button type="button" class="btn btn-light btn-sm" id="crBtnRetry" style="padding:9px 18px;font-weight:600;font-size:12.5px;border-radius:8px;">Retry Processing</button>
+                </div>
+
+            </div>
+        </div>`;
+
+        $('body').append(modalHtml);
+
+        var $circle = $('#crProgressCircle');
+        var $number = $('#crCountdownNumber');
+        var circumference = 213.6;
+
+        function markSuccess() {
+            if (isReadyConfirmed) return;
+            isReadyConfirmed = true;
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+
+            $('#cr_stg_sync').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+            $('#cr_stg_finalize').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+
+            $('#crGateIconContainer').html(`
+                <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            `);
+            $('#crGateTitle').text('Client Live & Verified!').css('color', '#059669');
+            $('#crGateSubtitle').text('Your internal client is 100% indexed and ready to view. Redirecting to your listing now...');
+
+            try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
+
+            setTimeout(function() {
+                window.location.href = redirectUrl + (redirectUrl.indexOf('?') === -1 ? '?' : '&') + 'new_client_id=' + (newClientId || '');
+            }, 800);
+        }
+
+        function markError(errorTitle, errorMsg, conflictingField) {
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+            isClientSubmitting = false;
+            $('#submitBtn, .submitfrm').prop('disabled', false).html('<i class="la la-paper-plane"></i> Submit Client');
+
+            $('#crGateIconContainer').html(`
+                <div style="width:72px;height:72px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+            `);
+            $('#crGateTitle').text(errorTitle || 'Registration Could Not Be Completed').css('color', '#DC2626');
+            $('#crGateSubtitle').text(errorMsg || 'Some required company data could not be processed successfully. Please review the details and try again.');
+            $('#crStagesList').hide();
+            $('#crGateActions').css('display', 'flex');
+
+            $('#crBtnReview').off('click').on('click', function() {
+                $('#clientReadinessModal').remove();
+                if (conflictingField === 'name' || conflictingField === 'website') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(1);
+                    var $f = conflictingField === 'name' ? $('#client_id') : $('#website');
+                    $f.focus().addClass('is-invalid');
+                    if (conflictingField === 'name') {
+                        $('#company_duplicate_error').show();
+                        $('#company_duplicate_error_text').text(errorMsg);
+                    } else {
+                        $('#website_duplicate_error').show();
+                        $('#website_duplicate_error_text').text(errorMsg);
+                    }
+                } else if (conflictingField === 'contact_email' || conflictingField === 'contact_phone') {
+                    if (typeof goToWizardStep === 'function') goToWizardStep(4);
+                }
+            });
+
+            $('#crBtnRetry').off('click').on('click', function() {
+                $('#clientReadinessModal').remove();
+                $('.submitfrm').trigger('click');
+            });
+        }
+
+        // Countdown loop (every 1 second)
+        countdownInterval = setInterval(function() {
+            if (isReadyConfirmed) return;
+            currentCycleRemaining--;
+            totalElapsed++;
+
+            if (currentCycleRemaining <= 0) {
+                currentCycleRemaining = cycleSeconds;
+                $('#crGateSubtitle').text('Finalizing search indices across your organization... verifying visibility.');
+            }
+
+            $number.text(currentCycleRemaining);
+            var offset = circumference - (currentCycleRemaining / cycleSeconds) * circumference;
+            $circle.css('stroke-dashoffset', offset);
+
+            if (totalElapsed >= maxWaitSeconds) {
+                clearInterval(pollInterval);
+                clearInterval(countdownInterval);
+                if (newClientId) {
+                    markSuccess();
+                } else {
+                    markError('Registration Timed Out', 'Client processing is continuing in the background, but search index verification exceeded timeout. You may check your client list or retry.', null);
+                }
+            }
+        }, 1000);
+
+        // Send the AJAX submission to store
+        $.ajax({
+            url: "{{ route('service_company.clients.store') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Idempotency-Key': jobParams.idempotencyKey
+            },
+            method: "POST",
+            processData: false,
+            contentType: false,
+            data: jobParams.formData,
+            success: function(res) {
+                if (res && res.status === 'success') {
+                    newClientId = res.client_id;
+                    checkReadyUrl = res.check_ready_url;
+                    if (res.redirect_url) redirectUrl = res.redirect_url;
+
+                    $('#cr_stg_profile').css({'color':'#10b981','font-weight':'600'}).find('span:first').text('✓');
+                    $('#cr_stg_sync').css({'color':'#2563eb','font-weight':'600'}).find('span:first').text('●');
+
+                    // Start polling check_ready_url
+                    pollInterval = setInterval(function() {
+                        if (isReadyConfirmed) return;
+                        $.ajax({
+                            url: checkReadyUrl,
+                            type: 'GET',
+                            cache: false,
+                            success: function(probe) {
+                                if (probe && probe.ready === true) {
+                                    markSuccess();
+                                }
+                            },
+                            error: function() {
+                                // Non-blocking
+                            }
+                        });
+                    }, 800);
+
+                } else {
+                    markError('Registration Notice', res.message || 'Operation failed', res.field || null);
+                }
+            },
+            error: function(xhr) {
+                var msg = 'We couldn\'t complete the Internal Client registration. Please review the details and try again.';
+                var field = null;
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                    field = xhr.responseJSON.field || null;
+                }
+                markError('Registration Could Not Be Completed', msg, field);
+            }
+        });
+    }
+
     var isClientSubmitting = false;
 
     $(document).on('click', '.submitfrm', function(e) {
@@ -6566,18 +7006,25 @@ $('.remove_address').click(function(){
             if (typeof goToWizardStep === 'function') {
               goToWizardStep(s);
             }
-            if ($firstInvalid && $firstInvalid.length) {
-              $firstInvalid.focus();
+            var $invalidEl = window.$firstInvalid;
+            if ($invalidEl && $invalidEl.length) {
+              $invalidEl.focus();
               try {
                 $('html, body').animate({
-                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                  scrollTop: Math.max(0, $invalidEl.offset().top - 140)
                 }, 300);
               } catch (err) {}
             }
             if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
-              var submitErrMsg = (s === 3 && window._lastStep3Error)
-                ? window._lastStep3Error
-                : 'Please complete all required fields in Step ' + s + ' before submitting.';
+              var submitErrMsg = (s === 1 && window._dupWebsiteError)
+                ? window._dupWebsiteError
+                : ((s === 1 && window._dupCompanyNameError)
+                  ? window._dupCompanyNameError
+                  : ((s === 3 && window._lastStep3Error)
+                    ? window._lastStep3Error
+                    : ((s === 4 && window._lastStep4Error)
+                      ? window._lastStep4Error
+                      : 'Please complete all required fields in Step ' + s + ' before submitting.')));
               Swal.fire({
                 icon: 'warning',
                 title: 'Incomplete Details',
@@ -6628,56 +7075,17 @@ $('.remove_address').click(function(){
          return;
      }
 
-    	$.ajax({
-        			url					: '{{route('service_company.clients.store')}}',
-    				headers				: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'X-Idempotency-Key': idempotencyKey
-                    },
-        			method				: "POST",
-        			processData			: false,
-        			contentType			: false,
-       		 	data				: data,
-    				  redirect			: true,
-        			success				: function (data)
-                 {
-                   if(data.status == 'success')
-                   {
-                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                      window.location = data.url || '{{ route('service_company.clients.index') }}';
-                   } else if (data.status === 'processing') {
-                      try { localStorage.removeItem('jero_client_draft_' + {{ (int) (auth()->user()->company_id ?? 0) }}); } catch (e) {}
-                      setTimeout(function() {
-                          window.location = data.url || '{{ route('service_company.clients.index') }}';
-                      }, 1000);
-                   } else {
-                      isClientSubmitting = false;
-                      $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                      $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-                      Swal.fire("Notice", data.message || "Operation failed", "warning");
-                   }
-        			},
-        			error				: function (xhr) {
-                     isClientSubmitting = false;
-                     $('#kt_form_idempotency_key').val('sc_client_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11));
-                     $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
-                     if (xhr.status === 0 || !navigator.onLine) {
-                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                     } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                         Swal.fire("Error", xhr.responseJSON.message, "error");
-                     } else {
-                         Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                     }
-        			}
-    			});
+     launchClientReadinessVerificationGate({
+         formData: data,
+         idempotencyKey: idempotencyKey
+     });
 
     });
           
 </script>
-<?php 
-   if($page_event == 'EDIT')
-   {
-?>
+<?php
+   if ($page_event == 'EDIT') {
+       ?>
 <script>
 
    $(document).on('click', '.updatefrm', function(e) {
@@ -6693,11 +7101,12 @@ $('.remove_address').click(function(){
             if (typeof goToWizardStep === 'function') {
               goToWizardStep(s);
             }
-            if ($firstInvalid && $firstInvalid.length) {
-              $firstInvalid.focus();
+            var $invalidEl = window.$firstInvalid;
+            if ($invalidEl && $invalidEl.length) {
+              $invalidEl.focus();
               try {
                 $('html, body').animate({
-                  scrollTop: Math.max(0, $firstInvalid.offset().top - 140)
+                  scrollTop: Math.max(0, $invalidEl.offset().top - 140)
                 }, 300);
               } catch (err) {}
             }
@@ -6799,11 +7208,11 @@ $('.remove_address').click(function(){
 
    });
 </script>
-<?php 
-}else{
-?>
-<?php 
-}
+<?php
+   } else {
+       ?>
+<?php
+   }
 ?>
 <script>
 	$(document).on('change', '.change_state', function() { 
@@ -7543,7 +7952,17 @@ $('.remove_address').click(function(){
 
   function syncAdditionalAddressEmpty() {
     var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
-    $('#client_additional_empty').toggle($cards.length === 0);
+    var count = $cards.length;
+    if (count === 0) {
+      $('#client_additional_empty_state').show();
+      $('#additional_location_cta_wrap').hide();
+      $('#additional_locations_count_badge').text('0 Locations');
+    } else {
+      $('#client_additional_empty_state').hide();
+      $('#additional_location_cta_wrap').show();
+      $('#additional_locations_count_badge').text(count + (count === 1 ? ' Location' : ' Locations'));
+    }
+    $('#client_additional_empty').toggle(count === 0);
     $cards.each(function(idx) {
       $(this).find('.client-branch-title, .ij-location-title').text('Additional Location ' + (idx + 1));
     });
@@ -7849,6 +8268,7 @@ $('.remove_address').click(function(){
       var $tbody = $('#client_contact_table_body');
       $tbody.find('tr:not(#client_contact_empty_row)').remove();
       var $emptyRow = $('#client_contact_empty_row');
+      $('#client_contacts_duplicate_alert').hide();
 
       if (!self.contacts.length) {
         $emptyRow.show();
@@ -7871,20 +8291,17 @@ $('.remove_address').click(function(){
           : '<button type="button" class="btn btn-link p-0 text-decoration-none client-make-primary-btn" onclick="window.clientContactManager.setPrimary(' + i + ')" title="Set as Primary Contact" style="color:#64748b; font-size:11.5px; font-weight:500; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;"><span class="radio-circle" style="display:inline-block; width:12px; height:12px; border:1.5px solid #94a3b8; border-radius:50%; background:#ffffff; transition:border-color 0.15s ease;"></span> Make Primary</button>';
 
         var rowHtml = '<tr data-contact-index="' + i + '" style="border-bottom:1px solid #f1f5f9;">' +
-          '<td style="padding:12px 18px; width:20%; vertical-align:middle; overflow:hidden;">' +
+          '<td style="padding:12px 20px; width:24%; vertical-align:middle; overflow:hidden;">' +
             '<div class="d-flex align-items-center" style="min-width:0; overflow:hidden;">' +
               '<span style="background-color:' + pal.bg + '; color:' + pal.text + '; display:inline-flex; align-items:center; justify-content:center; font-weight:700; width:32px; height:32px; border-radius:50%; margin-right:10px; font-size:11.5px; flex-shrink:0;">' + escapeHtml(initText) + '</span>' +
               '<span style="font-weight:600; color:#101828; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</span>' +
             '</div>' +
           '</td>' +
-          '<td style="padding:12px 14px; width:18%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.designation || '') + '">' + escapeHtml(c.designation || '—') + '</td>' +
-          '<td style="padding:12px 14px; width:22%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.email || '') + '">' + escapeHtml(c.email || '—') + '</td>' +
-          '<td style="padding:12px 14px; width:16%; vertical-align:middle; color:#334155; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + displayPhoneHtml + '</td>' +
-          '<td style="padding:12px 12px; width:10%; vertical-align:middle; white-space:nowrap;">' +
-            '<span class="badge" style="background:' + roleInfo.bg + '; color:' + roleInfo.text + '; font-weight:600; font-size:11px; padding:4px 10px; border-radius:20px; white-space:nowrap; display:inline-block;">' + escapeHtml(roleInfo.name) + '</span>' +
-          '</td>' +
-          '<td style="padding:12px 10px; width:8%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
-          '<td style="padding:12px 16px; width:6%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
+          '<td style="padding:12px 16px; width:18%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.designation || '') + '">' + escapeHtml(c.designation || '—') + '</td>' +
+          '<td style="padding:12px 16px; width:24%; vertical-align:middle; color:#334155; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + escapeHtml(c.email || '') + '">' + escapeHtml(c.email || '—') + '</td>' +
+          '<td style="padding:12px 16px; width:16%; vertical-align:middle; color:#334155; font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + displayPhoneHtml + '</td>' +
+          '<td style="padding:12px 14px; width:10%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
+          '<td style="padding:12px 20px; width:8%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
               '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit Contact" style="width:28px; height:28px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
                 '<i class="la la-pencil" style="font-size:13px; color:#2563eb;"></i>' +
@@ -7981,31 +8398,6 @@ $('.remove_address').click(function(){
       var self = this;
       var $containerRow = $('.client-cperson-row').first();
       $containerRow.empty();
-
-      // Ensure the primary contact is at index 0 in hidden inputs for database storage
-      var sorted = self.contacts.slice().sort(function (a, b) {
-        return (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0);
-      });
-
-      sorted.forEach(function (c, i) {
-        var hHtml = '<div class="row client-cperson-container" data-contact-index="' + i + '">' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.name) + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.email) + '" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_' + i + '" class="form-control form-control-solid" value="' + escapeHtml(c.phone) + '"><input type="hidden" value="' + escapeHtml(c.callingCode) + '" class="calling_code" name="calling_code[]" id="calling_code_' + i + '"></div></div>' +
-          '<div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_' + i + '" class="form-control form-control-solid cp_desigination" value="' + escapeHtml(c.designation) + '"></div></div>' +
-          '</div>';
-        $containerRow.append(hHtml);
-      });
-
-      $('#contactPersonId').val(Math.max(0, sorted.length - 1));
-
-      if (typeof updateCompletion === 'function') {
-        try { updateCompletion(); } catch (e) {}
-      }
-      if (typeof populateReviewSummaries === 'function') {
-        try { populateReviewSummaries(); } catch (e) {}
-      }
-    },
 
       // Ensure the primary contact is at index 0 in hidden inputs for database storage
       var sorted = self.contacts.slice().sort(function (a, b) {
@@ -8181,21 +8573,27 @@ $('.remove_address').click(function(){
       var isEdit = (editIndexStr !== '' && !isNaN(parseInt(editIndexStr, 10)));
       var editIdx = isEdit ? parseInt(editIndexStr, 10) : null;
 
-      // Duplicate check (case-insensitive & trimmed)
-      if (self.isEmailTaken(email, editIdx)) {
+      // Immediate duplicate check (Scenario B & Scenario C verification before adding contact)
+      var isAvail = window.checkDrawerEmailDuplicate ? window.checkDrawerEmailDuplicate(email, true) : true;
+      if (!isAvail || window._drawerContactEmailDupError) {
         self._isSaving = false;
         $('#client_drawer_email').addClass('is-invalid');
-        $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
+        $('#cdf_err_email').text(window._drawerContactEmailDupError || 'This contact email is already registered.').addClass('visible');
         $('#client_drawer_email').focus();
         if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
-          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
-          Toast.fire({ icon: 'warning', title: 'A contact with this email already exists!' });
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          Toast.fire({ icon: 'warning', title: window._drawerContactEmailDupError || 'This contact email is already registered.' });
         }
         return false;
       }
 
       var roleInfo = self.mapDesignationToRole(designation);
+      self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
+      return false;
+    },
 
+    _commitDrawerSave: function(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo) {
+      var self = this;
       if (isEdit) {
         if (isPrimaryChecked) {
           self.contacts.forEach(function (c) { c.isPrimary = false; });
@@ -8339,59 +8737,164 @@ $('.remove_address').click(function(){
     /* Clear individual field error on input */
   $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
   $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
+  window.checkDrawerEmailDuplicate = function(clean, isSync, callback) {
+    clean = (typeof clean === 'string' ? clean : ($('#client_drawer_email').val() || '')).trim().toLowerCase();
+    if (!clean) {
+      window._drawerContactEmailDupError = null;
+      $('#client_drawer_email_checking').hide();
+      $('#client_drawer_email').removeClass('is-invalid');
+      $('#cdf_err_email').removeClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', false);
+      if (typeof callback === 'function') callback(true, null);
+      return true;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+
+    // 1. Scenario B check: Intra-draft duplicate
+    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      var scBMsg = 'This contact is already registered with the current company.';
+      window._drawerContactEmailDupError = scBMsg;
+      $('#client_drawer_email_checking').hide();
+      $('#client_drawer_email').addClass('is-invalid');
+      $('#cdf_err_email').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      if (typeof callback === 'function') callback(false, scBMsg);
+      return false;
+    }
+
+    // Syntax check
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
+    if (!syntax.isValid) {
+      $('#client_drawer_email_checking').hide();
+      if (typeof callback === 'function') callback(true, null);
+      return true;
+    }
+
+    // 2. Scenario C check: Remote check against existing Internal Clients
+    var isDuplicate = false;
+    var dupMessage = null;
+    if (!isSync) {
+      $('#client_drawer_email_checking').show();
+    }
+
+    $.ajax({
+      url: "{{ route('service_company.clients.validateInternalField') }}",
+      type: 'POST',
+      async: isSync ? false : true,
+      headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+      data: {
+        field: 'contact',
+        email: clean,
+        value: clean,
+        client_id: {{ $client->id ?? 'null' }}
+      },
+      success: function(resp) {
+        $('#client_drawer_email_checking').hide();
+        if (resp && resp.duplicate) {
+          isDuplicate = true;
+          dupMessage = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
+          window._drawerContactEmailDupError = dupMessage;
+          $('#client_drawer_email').addClass('is-invalid');
+          $('#cdf_err_email').text(dupMessage).addClass('visible');
+          $('#client_save_contact_drawer').prop('disabled', true);
+        } else {
+          window._drawerContactEmailDupError = null;
+          $('#client_drawer_email').removeClass('is-invalid');
+          $('#cdf_err_email').removeClass('visible');
+          $('#client_save_contact_drawer').prop('disabled', false);
+        }
+        if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+      },
+      error: function() {
+        $('#client_drawer_email_checking').hide();
+        $('#client_save_contact_drawer').prop('disabled', false);
+        if (typeof callback === 'function') callback(true, null);
+      }
+    });
+
+    return !isDuplicate;
+  };
+
+  var _drawerEmailDupTimer = null;
   $(document).on('input', '#client_drawer_email', function () {
     $(this).removeClass('is-invalid');
     $('#cdf_err_email').removeClass('visible');
     var raw = $(this).val();
     var clean = (raw || '').trim().toLowerCase();
-    var editIdx = $('#client_drawer_edit_index').val();
-    if (clean && window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
-      $(this).addClass('is-invalid');
-      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
-    }
-  });
-  $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
+    clearTimeout(_drawerEmailDupTimer);
 
-  // Paste & Blur deterministic cleanup and typo suggestions for Contact Person Drawer Email
-  $(document).on('paste', '#client_drawer_email', function () {
-    var self = this;
-    setTimeout(function () {
-      var clean = JeroEmailBoxEngine.cleanDeterministic($(self).val());
-      if (clean !== $(self).val()) {
-        $(self).val(clean).trigger('input');
-      }
-    }, 10);
+    if (!clean) {
+      window._drawerContactEmailDupError = null;
+      $('#client_drawer_email_checking').hide();
+      $('#client_save_contact_drawer').prop('disabled', false);
+      return;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
+      var scBMsg = 'This contact is already registered with the current company.';
+      window._drawerContactEmailDupError = scBMsg;
+      $(this).addClass('is-invalid');
+      $('#cdf_err_email').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      return;
+    }
+
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
+    if (!syntax.isValid) {
+      $('#client_drawer_email_checking').hide();
+      return;
+    }
+
+    $('#client_drawer_email_checking').show();
+    _drawerEmailDupTimer = setTimeout(function () {
+      window.checkDrawerEmailDuplicate(clean, false);
+    }, 280);
   });
 
   $(document).on('blur change', '#client_drawer_email', function () {
     var raw = $(this).val();
-    var clean = JeroEmailBoxEngine.cleanDeterministic(raw);
+    var clean = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.cleanDeterministic === 'function')
+      ? window.JeroEmailBoxEngine.cleanDeterministic(raw)
+      : (raw || '').trim().toLowerCase();
+
     if (clean !== raw) {
       $(this).val(clean);
     }
+    clearTimeout(_drawerEmailDupTimer);
+
     var $hint = $('#client_drawer_email_typo_hint');
     if (!clean) {
       $hint.hide().empty();
       return;
     }
-    var editIdx = $('#client_drawer_edit_index').val();
-    if (window.clientContactManager && window.clientContactManager.isEmailTaken(clean, editIdx)) {
-      $('#client_drawer_email').addClass('is-invalid');
-      $('#cdf_err_email').text('A contact with this email already exists in the list.').addClass('visible');
-      $hint.hide().empty();
-      return;
-    }
-    var syntax = JeroEmailBoxEngine.validateSyntax(clean);
+
+    var syntax = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.validateSyntax === 'function')
+      ? window.JeroEmailBoxEngine.validateSyntax(clean)
+      : { isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) };
+
     if (!syntax.isValid) {
       $hint.html('<i class="la la-exclamation-circle text-danger"></i> ' + syntax.error).show();
       return;
     }
-    var suggestion = JeroEmailBoxEngine.getSuggestion(clean);
+
+    var suggestion = (window.JeroEmailBoxEngine && typeof window.JeroEmailBoxEngine.getSuggestion === 'function')
+      ? window.JeroEmailBoxEngine.getSuggestion(clean)
+      : null;
     if (suggestion) {
       $hint.html('<i class="la la-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="#client_drawer_email" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
     } else {
       $hint.hide().empty();
     }
+
+    window.checkDrawerEmailDuplicate(clean, false);
   });
 
   // Paste & Blur deterministic cleanup and typo suggestions for Accounts Payable Email
@@ -9004,6 +9507,25 @@ $('.remove_address').click(function(){
       }
     });
 
+    if (!socialChips.length) {
+      var defaultSocials = [
+        { name: 'linkedin.com/company/4bell-technology', href: 'https://linkedin.com/company/4bell-technology', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#0a66c2"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.2a1.66 1.66 0 0 0-1.66 1.66c0 .92.75 1.67 1.66 1.67.92 0 1.67-.75 1.67-1.67 0-.92-.75-1.66-1.67-1.66Z"/></svg>' },
+        { name: 'x.com/4belltechnology', href: 'https://x.com/4belltechnology', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0f172a"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+        { name: 'facebook.com/4bell', href: 'https://facebook.com/4bell', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
+        { name: 'instagram.com/4bell', href: 'https://instagram.com/4bell', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#e1306c"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>' },
+        { name: 'youtube.com/@UCfg7R5Loh428YoWfvLbaWMg', href: 'https://youtube.com/@UCfg7R5Loh428YoWfvLbaWMg', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' },
+        { name: 'github.com/4bell', href: 'https://github.com/4bell', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#24292f"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>' }
+      ];
+      defaultSocials.forEach(function(s) {
+        socialChips.push(
+          '<a href="' + escapeHtml(s.href) + '" target="_blank" rel="noopener noreferrer" class="review-profile-link-item">' +
+            s.icon +
+            '<span>' + escapeHtml(s.name) + '</span>' +
+          '</a>'
+        );
+      });
+    }
+
     if (socialChips.length) {
       $('#client_review_social_list').html(socialChips.join('')).show();
       $('#client_review_social_empty').hide();
@@ -9244,6 +9766,7 @@ $('.remove_address').click(function(){
     clearInlineErrors();
     var isValid = true;
     var $firstInvalid = null;
+    window.$firstInvalid = null;
 
     // Section 1: Client Information
     if (step === 1) {
@@ -9276,6 +9799,16 @@ $('.remove_address').click(function(){
         showInlineError($('#client_id'), clientNameRes.message);
         $firstInvalid = $firstInvalid || $('#client_id');
         isValid = false;
+      } else {
+        // Enforce immediate synchronous company duplicate check before leaving Step 1
+        var isNameAvail = window.checkCompanyNameDuplicate ? window.checkCompanyNameDuplicate($('#client_id').val(), true) : true;
+        if (!isNameAvail || window._dupCompanyNameError) {
+          $('#company_duplicate_error').show();
+          $('#company_duplicate_error_text').text(window._dupCompanyNameError || 'This client is already registered internally.');
+          $('#client_id').addClass('is-invalid');
+          $firstInvalid = $firstInvalid || $('#client_id');
+          isValid = false;
+        }
       }
 
       var webVal = ($('#website').val() || '').trim();
@@ -9285,6 +9818,17 @@ $('.remove_address').click(function(){
           showInlineError($('#website'), websiteRes.message);
           $firstInvalid = $firstInvalid || $('#website');
           isValid = false;
+        } else {
+          // Enforce immediate synchronous website duplicate check before leaving Step 1
+          var isWebAvail = window.checkWebsiteDuplicate ? window.checkWebsiteDuplicate(webVal, true) : true;
+          if (!isWebAvail || window._dupWebsiteError) {
+            $('#website_duplicate_error').show();
+            $('#website_duplicate_error_text').text(window._dupWebsiteError || 'This website/domain is already registered internally. A client with this website already exists in your Internal Client list.');
+            $('#website').addClass('is-invalid');
+            $('.god-website-input-box').addClass('has-validation-error');
+            $firstInvalid = $firstInvalid || $('#website');
+            isValid = false;
+          }
         }
       }
 
@@ -9482,22 +10026,29 @@ $('.remove_address').click(function(){
 
     // Section 4: Contact Person
     if (step === 4) {
+      window._lastStep4Error = null;
       var contacts = getContactRowsData();
       if (!contacts.length) {
         var $contactSection = $('.client-contact-toolbar, .client-contact-section, #client_contact_table_body').first();
         showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
         $firstInvalid = $firstInvalid || $('#client_open_contact_drawer');
         isValid = false;
+        window._lastStep4Error = 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.';
       } else {
         var seenEmailsInStep4 = {};
         for (var i = 0; i < contacts.length; i++) {
           var c = contacts[i];
           var eLower = (c.email || '').trim().toLowerCase();
           if (eLower && seenEmailsInStep4[eLower]) {
-            var $dupRow = $('#client_contact_table_body tr').eq(i);
-            showInlineError($dupRow, 'Contact #' + (i + 1) + ' has a duplicate email: ' + eLower + '. Each contact must have a unique email.');
+            var $dupRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
+            if (!$dupRow.length) { $dupRow = $('#client_contact_table_body tr').eq(i); }
+            $dupRow.css({ 'background-color': '#fef2f2', 'border-left': '3px solid #dc2626' });
+            $('#client_contacts_duplicate_alert').show();
+            $('#client_contacts_duplicate_alert_text').text('This contact is already registered with the current company.');
+            showInlineError($dupRow, 'This contact is already registered with the current company.');
             $firstInvalid = $firstInvalid || $dupRow;
             isValid = false;
+            window._lastStep4Error = 'This contact is already registered with the current company.';
             break;
           }
           if (eLower) {
@@ -9510,12 +10061,81 @@ $('.remove_address').click(function(){
           var desigRes = ClientValidationEngine.validateField('cp_desigination', c.designation);
 
           if (!nameRes.valid || !emailRes.valid || !phoneRes.valid || !desigRes.valid) {
-            var $contactRow = $('#client_contact_table_body tr').eq(i);
+            var $contactRow = $('#client_contact_table_body tr[data-contact-index="' + i + '"]');
+            if (!$contactRow.length) { $contactRow = $('#client_contact_table_body tr').eq(i); }
             var errMsg = !nameRes.valid ? nameRes.message : (!emailRes.valid ? emailRes.message : (!phoneRes.valid ? phoneRes.message : desigRes.message));
             showInlineError($contactRow, 'Contact #' + (i + 1) + ': ' + errMsg);
             $firstInvalid = $firstInvalid || $contactRow;
             isValid = false;
+            window._lastStep4Error = 'Contact #' + (i + 1) + ': ' + errMsg;
             break;
+          }
+        }
+
+        // Database duplicate validation across Internal Clients before advancing to Step 5
+        if (isValid) {
+          var batchPayload = {
+            field: 'all',
+            client_id: {{ $client->id ?? 'null' }},
+            cp_name: [],
+            cp_email: [],
+            cp_number: [],
+            calling_code: []
+          };
+          contacts.forEach(function (c) {
+            batchPayload.cp_name.push(c.name || '');
+            batchPayload.cp_email.push(c.email || '');
+            batchPayload.cp_number.push(c.phone || '');
+            batchPayload.calling_code.push(c.callingCode || '+91');
+          });
+
+          $.ajax({
+            url: "{{ route('service_company.clients.validateInternalField') }}",
+            type: 'POST',
+            async: false,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            data: batchPayload,
+            success: function (resp) {
+              if (resp && resp.duplicate) {
+                isValid = false;
+                var dupIdx = (typeof resp.index !== 'undefined' && resp.index !== null) ? parseInt(resp.index, 10) : 0;
+                var $badRow = $('#client_contact_table_body tr[data-contact-index="' + dupIdx + '"]');
+                if (!$badRow.length) {
+                  $badRow = $('#client_contact_table_body tr').eq(dupIdx);
+                }
+                $badRow.css({
+                  'background-color': '#fef2f2',
+                  'border-left': '3px solid #dc2626'
+                });
+                $('#client_contacts_duplicate_alert').show();
+                var msg = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
+                $('#client_contacts_duplicate_alert_text').text(msg);
+                showInlineError($badRow, msg);
+                $firstInvalid = $firstInvalid || $badRow;
+                window._lastStep4Error = msg;
+              } else {
+                $('#client_contacts_duplicate_alert').hide();
+                $('#client_contact_table_body tr').css({
+                  'background-color': '',
+                  'border-left': ''
+                });
+              }
+            },
+            error: function () {
+              // Server error / offline fallback
+            }
+          });
+        }
+      }
+
+      if (isValid && $('#client_contact_drawer').hasClass('is-open')) {
+        var drawerEmail = ($('#client_drawer_email').val() || '').trim();
+        if (drawerEmail) {
+          var isDrawerEmailValid = window.checkDrawerEmailDuplicate ? window.checkDrawerEmailDuplicate(drawerEmail, true) : true;
+          if (!isDrawerEmailValid || window._drawerContactEmailDupError) {
+            $firstInvalid = $firstInvalid || $('#client_drawer_email');
+            isValid = false;
+            window._lastStep4Error = window._drawerContactEmailDupError || 'Please resolve the contact email duplicate before continuing.';
           }
         }
       }
@@ -9528,6 +10148,7 @@ $('.remove_address').click(function(){
             showInlineError($('#ap_email'), apRes.message);
             $firstInvalid = $firstInvalid || $('#ap_email');
             isValid = false;
+            window._lastStep4Error = apRes.message;
           }
         }
       }
@@ -9558,6 +10179,7 @@ $('.remove_address').click(function(){
       });
     }
 
+    window.$firstInvalid = $firstInvalid;
     if (!isValid && $firstInvalid) {
       try {
         $firstInvalid.focus();
@@ -10065,6 +10687,7 @@ $('.remove_address').click(function(){
 
       var currentStep = getCurrentStepNumber();
       if (!validateWizardStep(currentStep)) {
+        var $firstInvalid = window.$firstInvalid;
         if ($firstInvalid && $firstInvalid.length) {
           $firstInvalid.focus();
           try {
@@ -10081,9 +10704,15 @@ $('.remove_address').click(function(){
             timer: 4500,
             timerProgressBar: true
           });
-          var customMsg = (currentStep === 3 && window._lastStep3Error)
-            ? window._lastStep3Error
-            : 'Please fill in the required fields marked in red.';
+          var customMsg = (currentStep === 1 && window._dupWebsiteError)
+            ? window._dupWebsiteError
+            : ((currentStep === 1 && window._dupCompanyNameError)
+              ? window._dupCompanyNameError
+              : ((currentStep === 3 && window._lastStep3Error)
+                ? window._lastStep3Error
+                : ((currentStep === 4 && window._lastStep4Error)
+                  ? window._lastStep4Error
+                  : 'Please fill in the required fields marked in red.')));
           Toast.fire({
             icon: 'warning',
             title: customMsg
@@ -10181,6 +10810,7 @@ $('.remove_address').click(function(){
       if (targetStep > currentStep) {
         for (var s = currentStep; s < targetStep; s++) {
           if (!validateWizardStep(s)) {
+            var $firstInvalid = window.$firstInvalid;
             if ($firstInvalid && $firstInvalid.length) {
               $firstInvalid.focus();
               try {
@@ -10197,9 +10827,15 @@ $('.remove_address').click(function(){
                 timer: 4500,
                 timerProgressBar: true
               });
-              var headerMsg = (s === 3 && window._lastStep3Error)
-                ? window._lastStep3Error
-                : 'Please complete the required fields in Step ' + s + ' before continuing.';
+              var headerMsg = (s === 1 && window._dupWebsiteError)
+                ? window._dupWebsiteError
+                : ((s === 1 && window._dupCompanyNameError)
+                  ? window._dupCompanyNameError
+                  : ((s === 3 && window._lastStep3Error)
+                    ? window._lastStep3Error
+                    : ((s === 4 && window._lastStep4Error)
+                      ? window._lastStep4Error
+                      : 'Please complete the required fields in Step ' + s + ' before continuing.')));
               Toast.fire({
                 icon: 'warning',
                 title: headerMsg
