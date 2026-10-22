@@ -397,7 +397,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         foreach ($jobRes['aggregations']['active_clients']['buckets'] ?? [] as $b) {
                             $activeInternalClientIds[] = (int) $b['key'];
                         }
-                    } catch (\Throwable $e) {}
+                    } catch (\Throwable $e) {
+                    }
                 }
 
                 if (! empty($activeInternalClientIds)) {
@@ -1736,7 +1737,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $directHiringCount = count($directBuckets);
 
                 } catch (\Throwable $e) {
-                    \Log::warning('ServiceCompanyClientController::commonclient ES agg fallback: ' . $e->getMessage());
+                    \Log::warning('ServiceCompanyClientController::commonclient ES agg fallback: '.$e->getMessage());
                 }
             }
 
@@ -3825,7 +3826,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $cacheKey = "ats:v2:clients_projection:{$company_id}:{$tenantVersion}";
-        $data = cache()->remember($cacheKey, 86400, function () use ($company_id) {
+        $data = cache()->remember($cacheKey, 86400, function () {
             $projectionRequest = new Request([
                 'tab' => 'all',
                 'page' => 1,
