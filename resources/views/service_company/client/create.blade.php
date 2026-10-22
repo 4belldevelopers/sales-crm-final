@@ -5641,12 +5641,12 @@ if ($page_event == 'ADD') {
         });
         var bCount = $('#additional_addresses_container .client-branch-card').length;
         if (bCount === 0) {
-            $('#client_additional_empty_state').show();
-            $('#additional_location_cta_wrap').hide();
+            $('#client_additional_empty_state').removeClass('d-none').css('display', 'flex').show();
+            $('#additional_location_cta_wrap').addClass('d-none').css('display', 'none').hide();
             $('#additional_locations_count_badge').text('0 Locations');
         } else {
-            $('#client_additional_empty_state').hide();
-            $('#additional_location_cta_wrap').show();
+            $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+            $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
             $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
         }
         $('#client_additional_empty').toggle(bCount === 0);
@@ -6268,8 +6268,11 @@ if ($page_event == 'ADD') {
 
         createBranchWithData: function(city, tagifyJson, address) {
             var addressId = parseInt($('#addressId').val(), 10) || 0;
-            if (!addressId) {
-                addressId = $('#additional_addresses_container .client-branch-card').length + 1;
+            if (!addressId || document.getElementById('clientAddr_' + addressId)) {
+                addressId = Math.max(addressId, $('#additional_addresses_container .client-branch-card').length) + 1;
+                while (document.getElementById('clientAddr_' + addressId)) {
+                    addressId++;
+                }
                 $('#addressId').val(addressId);
             }
             var cid = addressId;
@@ -6338,8 +6341,8 @@ if ($page_event == 'ADD') {
                 '</div>';
 
             $('#additional_addresses_container').append(cardHtml);
-            $('#client_additional_empty_state').hide();
-            $('#additional_location_cta_wrap').show();
+            $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+            $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
             $('#client_additional_empty').hide();
             var bCount = $('#additional_addresses_container .client-branch-card').length;
             $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
@@ -7954,12 +7957,12 @@ $('.remove_address').click(function(){
     var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
     var count = $cards.length;
     if (count === 0) {
-      $('#client_additional_empty_state').show();
-      $('#additional_location_cta_wrap').hide();
+      $('#client_additional_empty_state').removeClass('d-none').css('display', 'flex').show();
+      $('#additional_location_cta_wrap').addClass('d-none').css('display', 'none').hide();
       $('#additional_locations_count_badge').text('0 Locations');
     } else {
-      $('#client_additional_empty_state').hide();
-      $('#additional_location_cta_wrap').show();
+      $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+      $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
       $('#additional_locations_count_badge').text(count + (count === 1 ? ' Location' : ' Locations'));
     }
     $('#client_additional_empty').toggle(count === 0);

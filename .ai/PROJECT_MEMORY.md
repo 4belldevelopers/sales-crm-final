@@ -51,6 +51,20 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
       - Reordered row cells to: `tbl-cell-check`, `tbl-cell-client`, `tbl-cell-loc`, `tbl-cell-type` (Date), `tbl-cell-activity` (Last Activity), `tbl-cell-jobs` (Jobs with Hiring/Hold/Closed lines and conditional status colors), `tbl-cell-pipeline` (Hiring Pipeline).
   - **Verification**: `php -l` passed with 0 errors across all 6 blade files.
 
+- *2026-10-22* — **Service Company Add Client Step 3: Additional Locations UI Fix & Button Alignment (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Fix Page 3 Additional Location UI (`service_company/clients/create`):
+      - Replace "Add First Location" with "Add Additional Location".
+      - When clicked, dynamically create a new location card above the "Add Additional Location" card/action.
+      - Keep layout clean, consistent, and enterprise-level.
+  - **Root Cause & Architectural Fixes**:
+    - Identified CSS specificity bug: `display: flex !important;` on `.client-addr-empty-state` and `.client-add-location-cta-wrap` was overriding inline `style="display: none"` and jQuery `.hide()`, causing both the empty state container and the bottom CTA button to remain simultaneously visible across 0 and 1+ location states.
+    - Replaced button text in `#client_additional_empty_state` from `Add First Location` to `Add Additional Location` (`btn-add-additional-location`).
+    - Fixed CSS rules in `tab-locations.blade.php`: removed `!important` from `display: flex;` and added deterministic `.d-none` / `[style*="display: none"]` rules with `display: none !important;`.
+    - Updated `createBranchWithData`, `removeAddressCard`, and `syncAdditionalAddressEmpty` in `create.blade.php` to deterministically toggle `.d-none`, `.css('display', ...)`, and `.show()`/`.hide()`, ensuring the empty state immediately disappears when a location is added and the location card appears directly above the "Add Additional Location" CTA button.
+    - Hardened `createBranchWithData` with collision-safe unique `addressId` generation.
+  - **Verification**: `php -l` passed with 0 errors across `tab-locations.blade.php` and `create.blade.php`. Verified 15.6" screen responsiveness.
+
 - *2026-10-21* — **Service Company Add Client Step 3: Additional Locations Section Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Redesign the Additional Locations section of the Add Internal Client wizard (Step 3: Full Address) to match the approved visual reference specification (`media_1792592823243_6f4e2bbd.png`) at a God-Level enterprise SaaS standard.
