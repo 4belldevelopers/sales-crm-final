@@ -1832,6 +1832,10 @@ function initClientWorker() {
         clWorker.onmessage = function(e) {
             handleWorkerMessage(e.data);
         };
+        clWorker.onerror = function(err) {
+            console.warn('[CL Worker] Worker runtime error:', err);
+            clWorkerReady = false;
+        };
 
         // Seed with initial rows if present
         @if(!empty($initialRows))
@@ -2306,41 +2310,13 @@ function fetchCandidates(page, updateUrl = true, cursor = null) {
         }
         // Stale entry: UI already rendered instantly; background revalidation runs without blocking UI
     } else {
-        // Cold fetch: show non-blocking progress indicator
+        // Cold fetch: clear container to prevent showing previous tab's stale HTML/empty state
+        $('#allClients').html('<div class="d-flex align-items-center justify-content-center py-15"><div class="spinner-border text-warning" role="status" style="width: 2.2rem; height: 2.2rem;"><span class="visually-hidden">Loading...</span></div></div>');
         if (searchVal != '') {
             $('.loader_search').css({ display: 'block' });
         } else {
             $('.loadingMessage').css({ display: 'block' });
         }
-    }
-
-    // In-Browser OLAP Query via Web Worker (0ms main thread latency, 0% server read strain)
-    if (clWorker && clWorkerReady && activeClientTab !== 'request') {
-        const queryId = ++ClientStore.latestRequestId;
-        pendingWorkerQuery = {
-            id: queryId,
-            cacheKey: cacheKey,
-            page: targetPage
-        };
-        clWorker.postMessage({
-            type: 'QUERY_DATASET',
-            queryId: queryId,
-            filters: {
-                tab: activeClientTab,
-                search: searchVal,
-                country_id: countryVal,
-                country_name: clientListState.country_name,
-                city_id: cityVal,
-                city_name: clientListState.city_name,
-                unspecified_location: unspecifiedVal,
-                industry: industryVal,
-                activity: activityVal,
-                sort: sortVal,
-                page: targetPage,
-                per_page: perPage
-            }
-        });
-        return;
     }
 
     // Abort previous in-flight request to prevent race conditions
