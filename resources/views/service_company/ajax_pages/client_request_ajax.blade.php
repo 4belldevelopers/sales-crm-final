@@ -59,7 +59,7 @@
         }
     @endphp
 
-        <div class="tbl-r">
+        <div class="tbl-r is-pending-request" data-pending-id="{{ $staffing_company_invitation_id }}">
             {{-- Checkbox --}}
             <div class="tbl-cell-check">
                 <input type="checkbox" class="tbl-cb" value="{{ $client_id }}" onclick="event.stopPropagation()">
@@ -77,8 +77,9 @@
                         @endif
                     </div>
                     <div class="cl-details-box">
-                        <div class="cl-name">
-                            {{ $company_name }}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="cl-name">{{ $company_name }}</span>
+                            <span class="badge" style="background:#fef3c7; color:#d97706; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
                         </div>
                         @if(!empty($ind_name))
                             <div class="cl-ind" title="{{ $ind_name }}">{{ $ind_name }}</div>
@@ -125,8 +126,9 @@
                 @elseif(($row->to_invitation_status ?? 0) == 2)
                     <span class="badge bg-light-danger text-danger fw-bold px-3 py-2">Expired</span>
                 @else
-                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-light fw-bold px-3 py-1.5 request_event" style="background:#f1f5f9; color:#475569; border-radius:6px;">Ignore</a>
-                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-primary fw-bold px-3 py-1.5 request_event" style="background:#2563eb; color:#fff; border-radius:6px;">Accept</a>
+                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-light fw-bold px-3 py-1.5 request_event" style="background:#ef4444; color:#fff; border-radius:6px; border:none;">Decline</a>
+                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-primary fw-bold px-3 py-1.5 request_event" style="background:#10b981; color:#fff; border-radius:6px; border:none;">Accept</a>
+                    <a href="javascript:void(0);" data-row-id="{{ $client_id }}" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px;" title="View Terms & Details">Terms</a>
                 @endif
             </div>
         </div>
@@ -135,12 +137,11 @@
 @else
     <div class="cl-empty-state">
         <div class="cl-empty-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/>
             </svg>
         </div>
-        <div class="cl-empty-title">No pending job requests</div>
-        <div class="cl-empty-desc">You are all caught up! There are currently no pending requests.</div>
+        <div class="cl-empty-title">No Pending Client Requests</div>
+        <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
     </div>
 @endif

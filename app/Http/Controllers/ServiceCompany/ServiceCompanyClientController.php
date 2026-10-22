@@ -813,6 +813,99 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
 
+            // ── Phase 3 God-Level Standard: Prepend Pending Direct Client Requests on All Clients Tab (Page 1) ──
+            $pendingRequests = [];
+            $pendingJobsCountMap = [];
+
+            if ($tabFilter === 'all' && (int)$page === 1 && ! $hiringFilter && ! $inactiveFilter && $this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
+                try {
+                    $reqBool = [
+                        'must' => [
+                            ['term' => ['to_company_id' => (int) $company_id]],
+                            ['term' => ['to_invitation_status' => 0]],
+                        ],
+                    ];
+
+                    if (! empty($customSearch)) {
+                        $reqBool['must'][] = [
+                            'multi_match' => [
+                                'query' => $customSearch,
+                                'fields' => ['company_name^3', 'ind_name^2', 'city_name', 'country_name'],
+                                'type' => 'phrase_prefix',
+                            ],
+                        ];
+                    }
+
+                    $pendingEsResp = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CLIENT_REQUEST,
+                        'size' => 20,
+                        'body' => [
+                            'query' => ['bool' => $reqBool],
+                            'sort' => [
+                                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
+                                ['id' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                            ],
+                        ],
+                    ]);
+
+                    if (! empty($pendingEsResp['hits']['hits'])) {
+                        $pendingFromCompanyIds = [];
+                        foreach ($pendingEsResp['hits']['hits'] as $pHit) {
+                            $pSrc = $pHit['_source'];
+                            $pSrc['is_pending_request'] = true;
+                            $pSrc['_es_id'] = $pHit['_id'] ?? null;
+                            $fromComp = (int) ($pSrc['from_company_id'] ?? 0);
+                            if ($fromComp > 0) {
+                                $pendingFromCompanyIds[] = $fromComp;
+                            }
+                            $pendingRequests[] = $pSrc;
+                        }
+
+                        // Batch count shared requisitions from ELASTIC_JOB_REQUEST for pending direct clients
+                        if (! empty($pendingFromCompanyIds) && $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                            try {
+                                $jobReqResp = $this->elasticService->getClient()->search([
+                                    'index' => ELASTIC_JOB_REQUEST,
+                                    'size' => 0,
+                                    'body' => [
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['to_company_id' => (int) $company_id]],
+                                                    ['terms' => ['from_company_id' => array_values(array_unique($pendingFromCompanyIds))]],
+                                                ],
+                                            ],
+                                        ],
+                                        'aggs' => [
+                                            'by_from_company' => [
+                                                'terms' => [
+                                                    'field' => 'from_company_id',
+                                                    'size' => 50,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ]);
+                                foreach ($jobReqResp['aggregations']['by_from_company']['buckets'] ?? [] as $b) {
+                                    $pendingJobsCountMap[(int) $b['key']] = (int) $b['doc_count'];
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+
+                        foreach ($pendingRequests as &$pItem) {
+                            $fId = (int) ($pItem['from_company_id'] ?? 0);
+                            $pItem['requisition_count'] = $pendingJobsCountMap[$fId] ?? ($pItem['requisition_count'] ?? 0);
+                        }
+                        unset($pItem);
+
+                        $data = array_merge($pendingRequests, $data);
+                        $total += count($pendingRequests);
+                    }
+                } catch (\Throwable $esReqEx) {
+                    \Log::warning('Error querying ELASTIC_CLIENT_REQUEST for All Clients pinned tab: ' . $esReqEx->getMessage());
+                }
+            }
+
             $pagination = [
                 'total' => $total,
                 'current_page' => $page,
@@ -827,7 +920,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $candidateCountsMap = [];
 
             if (! empty($data)) {
-                $pageCompanyIds = array_filter(array_unique(array_map(fn ($item) => $item['company_id'] ?? null, $data)));
+                $pageCompanyIds = array_filter(array_unique(array_map(fn ($item) => empty($item['is_pending_request']) ? ($item['company_id'] ?? null) : null, $data)));
                 if (! empty($pageCompanyIds)) {
                     try {
                         $esRelResp = $this->elasticService->getClient()->search([
@@ -865,6 +958,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
                 foreach ($data as $rItem) {
                     $rowObj = (object) $rItem;
+                    if (! empty($rowObj->is_pending_request)) {
+                        continue;
+                    }
                     $cId = $rowObj->company_id ?? 0;
                     $clId = $rowObj->client_id ?? 0;
                     $clientsCompId = $rowObj->clients_company_id ?? 0;
@@ -890,6 +986,105 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $rowsDto = [];
             foreach ($data as $rItem) {
                 $rowObj = (object) $rItem;
+
+                if (! empty($rowObj->is_pending_request)) {
+                    $cName = trim((string) ($rowObj->company_name ?? 'Client'));
+                    $cleanName = $cName ?: 'Client';
+                    $strVal = strtolower($cleanName[0] ?? 'c');
+                    $ascii = ord($strVal);
+                    if ($ascii >= 97 && $ascii <= 101) {
+                        $bgTextDecore = 'bg-light-danger text-danger';
+                    } elseif ($ascii >= 102 && $ascii <= 106) {
+                        $bgTextDecore = 'bg-light-warning text-warning';
+                    } elseif ($ascii >= 107 && $ascii <= 111) {
+                        $bgTextDecore = 'bg-light-primary text-primary';
+                    } elseif ($ascii >= 112 && $ascii <= 116) {
+                        $bgTextDecore = 'bg-light-success text-success';
+                    } elseif ($ascii >= 117 && $ascii <= 121) {
+                        $bgTextDecore = 'bg-light-info text-info';
+                    } else {
+                        $bgTextDecore = 'bg-light-primary text-primary';
+                    }
+
+                    $nameParts = array_values(array_filter(explode(' ', $cleanName)));
+                    $initials = '';
+                    if (count($nameParts) >= 2) {
+                        $initials = strtoupper(mb_substr($nameParts[0], 0, 1).mb_substr($nameParts[1], 0, 1));
+                    } elseif (count($nameParts) === 1) {
+                        $initials = strtoupper(mb_substr($nameParts[0], 0, 2));
+                    } else {
+                        $initials = 'CL';
+                    }
+
+                    $createdTimestamp = ! empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? null);
+                    $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
+                    $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
+                    $expiresAt = ! empty($rowObj->expires_at) ? $rowObj->expires_at : ($createdTimestamp ? date('Y-m-d H:i:s', strtotime($createdTimestamp.' +7 days')) : null);
+                    $expiresFormatted = $expiresAt ? date('d M, Y', strtotime($expiresAt)) : 'in 7 days';
+
+                    $background_image = '';
+                    if (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
+                        $background_image = $rowObj->logo;
+                    } elseif (! empty($rowObj->website)) {
+                        $domainGet = GeneralMethod::getDomain($rowObj->website);
+                        if ($domainGet) {
+                            $background_image = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=128";
+                        }
+                    }
+                    if (! empty($background_image) && ! str_starts_with($background_image, 'http') && ! str_starts_with($background_image, '//')) {
+                        $background_image = asset($background_image);
+                    }
+
+                    $reqCount = (int) ($rowObj->requisition_count ?? 0);
+                    $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
+
+                    $rowsDto[] = [
+                        'id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
+                        'client_id' => (int) ($rowObj->client_id ?? 0),
+                        'target_id' => (int) $rowTargetId,
+                        'name' => ucwords($cleanName),
+                        'logo_url' => (string) $background_image,
+                        'initials' => (string) $initials,
+                        'bg_color' => (string) $bgTextDecore,
+                        'industry' => (string) ($rowObj->ind_name ?? ''),
+                        'industry_id' => null,
+                        'company_size' => (string) ($rowObj->company_size ?? ''),
+                        'location_main' => (string) ($rowObj->city_name ?? ''),
+                        'country' => ucwords((string) ($rowObj->country_name ?? '')),
+                        'country_id' => null,
+                        'country_ids' => [],
+                        'locations' => [],
+                        'city_id' => null,
+                        'state_id' => null,
+                        'is_direct' => true,
+                        'is_pending_request' => true,
+                        'client_type_css' => 'show-detail-direct',
+                        'client_type' => 'Direct Client',
+                        'is_active_hiring' => ($reqCount > 0),
+                        'is_inactive' => false,
+                        'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
+                        'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
+                        'jobs' => [
+                            'hiring' => $reqCount,
+                            'hold' => 0,
+                            'closed' => 0,
+                            'active' => $reqCount,
+                        ],
+                        'pipeline' => [
+                            'sourced' => 0,
+                            'evaluated' => 0,
+                            'interviews' => 0,
+                            'offers' => 0,
+                            'joined' => 0,
+                        ],
+                        'connected_on' => (string) $newDate,
+                        'expires_on' => (string) $expiresFormatted,
+                        'days_ago' => (string) $daysAgo,
+                        'projection_version' => (int) $tenantVersion,
+                    ];
+                    continue;
+                }
+
                 $cId = $rowObj->company_id ?? 0;
                 $clId = $rowObj->client_id ?? ($rowObj->id ?? 0);
                 $clientsCompId = $rowObj->clients_company_id ?? 0;
@@ -4753,37 +4948,40 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $lock = Cache::lock($lockKey, 8);
 
         if (! $lock->get()) {
-            return Reply::dataOnly([
-                'status' => 'success',
+            return response()->json([
+                'status' => 'processing',
+                'retry_after_ms' => 250,
                 'clientDataCnt' => $this->commonclient(),
                 'message' => 'Request is already being processed.',
-            ]);
+            ], 202);
         }
 
         try {
-            // Tenancy & Current State verification (Idempotency Check)
-            $invitationRow = DB::table('staffing_company_invitation')
+            // Tenancy & Current State verification with Atomic CAS (Compare-And-Swap)
+            $affected = DB::table('staffing_company_invitation')
                 ->where('id', $invitation_id)
                 ->where('to_company_id', $company_id)
-                ->first();
-
-            if (! $invitationRow) {
-                return Reply::dataOnly(['status' => 'error', 'message' => 'Invitation not found or access denied.']);
-            }
-
-            // If already resolved to -1 or 1, return idempotent success immediately
-            if (in_array((int) $invitationRow->to_invitation_status, [-1, 1])) {
-                return Reply::dataOnly([
-                    'status' => 'success',
-                    'clientDataCnt' => $this->commonclient(),
-                    'message' => ((int) $invitationRow->to_invitation_status === 1) ? 'Request has already been Accepted' : 'Request has already been Ignored',
+                ->where('to_invitation_status', 0)
+                ->update([
+                    'to_invitation_status' => (int) $event_id,
+                    'to_user_id' => $user_id,
+                    'updated_at' => now(),
                 ]);
+
+            if ($affected === 0) {
+                try { $lock->release(); } catch (\Throwable $e) {}
+                $existingInv = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
+                $alreadyStatus = ($existingInv && (int)$existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+                return response()->json([
+                    'status' => 'conflict',
+                    'code' => 'REQUEST_ALREADY_PROCESSED',
+                    'message' => "This request has already been {$alreadyStatus}.",
+                    'clientDataCnt' => $this->commonclient(),
+                ], 409);
             }
 
             if ($event_id == -1) {
-                // CLIENT INVIDATION IGNORE
-                $updateArr = ['to_invitation_status' => -1];
-                DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
+                // CLIENT INVITATION IGNORE
                 $exists = $this->elasticService->getClient()->exists([
                     'index' => ELASTIC_CLIENT_REQUEST,
                     'id' => $invitation_id,
