@@ -15,15 +15,11 @@
      @php
         $row = (object) $rowArr;
         $row->id = $row->job_id;
-        $client_loc = DB::table('client_city_jobs')
-                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                    ->select('city_list.city as city_name', 'countries.country_name')
-                                    ->where('client_city_jobs.job_id', $row->id)
-                                    ->first();
-        $city = mb_substr(@$client_loc->city_name, 0, 21);
-        $country_name = mb_substr(@$client_loc->country_name, 0, 6);
+        // ── 0% in-Blade DB reads: retrieved from ES projection or batch-prehydrated map ──
+        $clientLocCity = @$row->city_name ?: (@$locationsMap[$row->id]->city_name ?? '');
+        $clientLocCountry = @$row->country_name ?: (@$locationsMap[$row->id]->country_name ?? '');
+        $city = mb_substr($clientLocCity, 0, 21);
+        $country_name = mb_substr($clientLocCountry, 0, 6);
 
 
         $profile_detail_class = "client-show-detail";
@@ -65,8 +61,7 @@
             $skilltagclass = 'd-none';
         }
             
-        $departmentRow = DB::table('job_categories')->where('id','=',@$row->category_id)->first();
-        $department = $departmentRow->name ?? '';
+        $department = @$row->department ?: (@$categoriesMap[@$row->category_id] ?? '');
 
         $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = '';
         // $min_sal_mode = $salaryMode[$row->min_sal_mode];
@@ -137,18 +132,14 @@
 
         $hiringManager = $hiringManagerdesignation ='--------';
                     
-        // dd($row); from_company_id job_assign
-        $captain = DB::table('job_assign')
-        ->select('users.name','users_profile.designation')
-        ->join('users','users.id','=','job_assign.spok_user_id')
-        ->leftJoin('users_profile','users_profile.user_id','=','users.id')
-        ->where('job_assign.company_id','=',$row->from_company_id)
-        ->where('job_assign.job_id','=',$row->id)
-        ->where('job_assign.spok_user_id','!=','')
-        ->first();
+        // ── 0% in-Blade DB reads: retrieved from pre-hydrated captain map or ES projection ──
+        $captain = @$captainsMap[$row->id] ?? null;
         if($captain){
             $hiringManager = $captain->name ?? null;
             $hiringManagerdesignation = $captain->designation ?? null;
+        } elseif(!empty(@$row->hiring_manager)) {
+            $hiringManager = $row->hiring_manager;
+            $hiringManagerdesignation = $row->hiring_manager_designation ?? '--------';
         }
 
 

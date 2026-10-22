@@ -5550,6 +5550,36 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }, $response['hits']['hits']);
         }
 
+        // ── Canonical Architecture: Batch Pre-hydration to eliminate in-Blade queries ──
+        $jobIds = array_filter(array_map(fn($item) => (int)($item['job_id'] ?? ($item['id'] ?? 0)), $data));
+        $categoriesMap = cache()->remember('global_job_categories_id_name_map', 86400, function() {
+            return DB::table('job_categories')->pluck('name', 'id')->toArray();
+        });
+
+        $locationsMap = [];
+        $captainsMap = [];
+        if (!empty($jobIds)) {
+            $locationsMap = DB::table('client_city_jobs')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('client_city_jobs.job_id', 'city_list.city as city_name', 'countries.country_name')
+                ->whereIn('client_city_jobs.job_id', $jobIds)
+                ->get()
+                ->keyBy('job_id')
+                ->toArray();
+
+            $captainsMap = DB::table('job_assign')
+                ->select('job_assign.job_id', 'users.name', 'users_profile.designation')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+                ->whereIn('job_assign.job_id', $jobIds)
+                ->where('job_assign.spok_user_id', '!=', '')
+                ->get()
+                ->keyBy('job_id')
+                ->toArray();
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -5560,7 +5590,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions'))->render(),
+            'html' => view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions', 'locationsMap', 'categoriesMap', 'captainsMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'status_counts' => [

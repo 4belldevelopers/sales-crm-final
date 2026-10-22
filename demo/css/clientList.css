@@ -1154,22 +1154,80 @@
 
 /* ── Empty State ── */
 .cl-empty-state {
-  text-align: center;
-  padding: 48px 20px;
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 56px 20px !important;
+  box-sizing: border-box !important;
   color: #64748b;
 }
 .cl-empty-icon {
-  margin-bottom: 12px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+  background: #f1f5f9 !important;
+  margin: 0 auto 14px auto !important;
 }
 .cl-empty-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 4px;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 4px !important;
+  font-family: 'Poppins', sans-serif !important;
 }
 .cl-empty-desc {
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  max-width: 420px !important;
+  line-height: 1.5 !important;
+  margin: 0 auto !important;
+}
+
+/* ── Pending Request Ambient Accent (Approved Standard) ── */
+.tbl-r.is-pending-request {
+  border-left: 3px solid #f59e0b !important;
+  background: #fffdfa !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.tbl-r.is-pending-request:hover {
+  background: #fff9ed !important;
+}
+
+/* ── Inline Action Group ── */
+.tbl-cell-req-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-right: 4px;
+  box-sizing: border-box;
+}
+.tbl-cell-req-actions .btn {
+  white-space: nowrap;
+  border-radius: 6px;
   font-size: 12px;
-  color: #94a3b8;
+  font-weight: 600;
+  transition: all 0.15s ease-in-out;
+}
+.tbl-cell-req-actions .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Pulse Status Indicator ── */
+.animate-pulse {
+  animation: cl-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes cl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
 }
 
 /* ── Pagination Bar ── */

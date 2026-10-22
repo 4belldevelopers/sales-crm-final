@@ -1529,10 +1529,11 @@ window.ClientStateManager = {
             this.activeDrawerXhr = null;
         }
 
-        // 3. Reset drawer state
+        // 3. Reset drawer state & context shield
         this.state.drawerStatus = 'idle';
         this.state.drawerError = null;
         this.state.drawerRequestToken++;
+        this.state.currentDrawerContext = null;
 
         // 4. Destroy chart instances
         if (window.perfChartInstances) {
@@ -1564,11 +1565,22 @@ window.ClientStateManager = {
             this.activeDrawerXhr = null;
         }
 
-        var isDirect = (type === 'direct');
+        var isDirect = (type === 'direct' || type === 'request');
         var targetDrawerId = isDirect ? 'kt_activitiesDirectClient' : 'kt_activitiesClient';
         var toggleId = isDirect ? 'kt_activitiesDirectClient_toggle' : 'kt_activitiesClient_toggle';
         var bodyId = isDirect ? '#kt_activitiesDirectClient_body' : '#kt_activitiesClient_body';
         var otherBodyId = isDirect ? '#kt_activitiesClient_body' : '#kt_activitiesDirectClient_body';
+
+        // Multi-Vector Drawer Context Shield (Approved Standard)
+        var contextToken = 'ctx_' + (++this.state.drawerRequestToken) + '_' + Date.now();
+        var drawerContext = {
+            contextToken: contextToken,
+            clientId: clientId,
+            clientType: type,
+            tab: currentTab,
+            openedAt: Date.now()
+        };
+        this.state.currentDrawerContext = drawerContext;
 
         // Set state - Single Source of Truth
         this.state.selectedClientId = clientId;
@@ -1577,8 +1589,6 @@ window.ClientStateManager = {
         this.state.drawerStatus = 'loading';
         this.state.drawerError = null;
         window.activeSelectedClientId = clientId;
-
-        var token = ++this.state.drawerRequestToken;
 
         // Highlight selected row in current tab listing
         $('[data-row-id]').closest('.tbl-r').removeClass('client-selected');
@@ -1590,7 +1600,7 @@ window.ClientStateManager = {
 
         // Loading skeleton
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        var loadingText = isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...';
+        var loadingText = (type === 'request') ? 'Loading Request & Commercial Terms...' : (isDirect ? 'Loading Direct Client Details...' : 'Loading Client Details...');
         $(bodyId).html(`
             <div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height:360px;">
                 <img src="${baseurl}" height="38px" width="38px" style="object-fit:contain;" alt="Loading...">
@@ -1603,24 +1613,31 @@ window.ClientStateManager = {
         var cacheKey = `${currentTab}_${type}_${clientId}`;
         var cachedView = DrawerLRUCache.get(cacheKey);
         if (cachedView) {
-            if (self.state.drawerRequestToken === token && self.state.activeTab === currentTab) {
+            var activeCtx = self.state.currentDrawerContext;
+            if (activeCtx && activeCtx.contextToken === contextToken && self.state.activeTab === currentTab) {
                 $(bodyId).html(cachedView);
                 self.state.drawerStatus = 'loaded';
             }
             return;
         }
 
-        var endpoint = isDirect
-            ? "{{ route('service_company.clients.dviewmore', ':id') }}".replace(':id', clientId)
-            : "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
+        var endpoint;
+        if (type === 'request') {
+            endpoint = "{{ route('service_company.clients.requestviewmore', ':id') }}".replace(':id', clientId);
+        } else if (isDirect) {
+            endpoint = "{{ route('service_company.clients.dviewmore', ':id') }}".replace(':id', clientId);
+        } else {
+            endpoint = "{{ route('service_company.clients.viewmore', ':id') }}".replace(':id', clientId);
+        }
 
         this.activeDrawerXhr = $.ajax({
             type: 'GET',
             url: endpoint,
             success: function(response) {
-                // Invariant: Verify tab and token have not changed while request was in-flight
-                if (token !== self.state.drawerRequestToken || self.state.activeTab !== currentTab) {
-                    console.log(`[Drawer State] Discarded response for client ${clientId} because activeTab or token changed.`);
+                // Multi-Vector Shield: Verify contextToken, clientId, and tab have not changed while request was in-flight
+                var activeCtx = self.state.currentDrawerContext;
+                if (!activeCtx || activeCtx.contextToken !== contextToken || activeCtx.clientId !== clientId || self.state.activeTab !== currentTab) {
+                    console.log(`[Drawer Shield] Discarded stale response for client ${clientId}. Current token: ${activeCtx ? activeCtx.contextToken : 'null'}`);
                     return;
                 }
 
@@ -1635,7 +1652,8 @@ window.ClientStateManager = {
             },
             error: function(xhr, status) {
                 if (status === 'abort') return;
-                if (token !== self.state.drawerRequestToken || self.state.activeTab !== currentTab) return;
+                var activeCtx = self.state.currentDrawerContext;
+                if (!activeCtx || activeCtx.contextToken !== contextToken || self.state.activeTab !== currentTab) return;
 
                 var msg = (xhr.status === 0 || !navigator.onLine)
                     ? 'You are offline. Please check your network connection.'
@@ -1848,6 +1866,16 @@ $(document).on('click', '.show-detail-direct', function (e) {
     ClientStateManager.openClientDrawer(id, 'direct');
 });
 
+$(document).on('click', '.view-request-terms', function (e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var id = $(this).data('client-id') || $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
+    if (!id) return;
+    ClientStateManager.openClientDrawer(id, 'request');
+});
+
 $(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer, #kt_activitiesClient_close_btn, #kt_activitiesDirectClient_close_btn', function(e) {
     if (e) {
         e.preventDefault();
@@ -1982,6 +2010,78 @@ function renderClientRows(rows) {
         if (r.location_main) locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
         if (r.country) locHtml += `<div class="cl-loc-country">${escapeAttr(r.country)}</div>`;
         if (!locHtml) locHtml = `<div class="cl-loc-empty">-</div>`;
+
+        if (r.is_pending_request) {
+            const invId = r.staffing_company_invitation_id || r.id;
+            const fromComp = r.from_company_id || 0;
+            const targetId = r.target_id || r.client_id || fromComp || r.id;
+            const hiringCount = (r.jobs && (r.jobs.hiring || r.jobs.active)) ? (r.jobs.hiring || r.jobs.active) : 0;
+            const expiresFormatted = r.expires_on || 'in 7 days';
+            const daysAgo = r.days_ago || 'Just now';
+
+            return `
+            <div class="tbl-r is-pending-request" data-pending-id="${invId}">
+                <div class="tbl-cell-check">
+                    <input type="checkbox" class="tbl-cb" value="${targetId}" onclick="event.stopPropagation()">
+                </div>
+                <div class="tbl-cell-client show-detail-direct" data-row-id="${targetId}" title="${escapeAttr(r.name)}">
+                    <div class="cl-company-wrapper">
+                        <div class="cl-logo-box">${logoHtml}</div>
+                        <div class="cl-details-box">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cl-name">${escapeAttr(r.name)}</span>
+                                <span class="badge" style="background:#fef3c7; color:#d97706; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
+                            </div>
+                            ${indHtml}
+                        </div>
+                    </div>
+                </div>
+                <div class="tbl-cell-loc">${locHtml}</div>
+                <div class="tbl-cell-type">
+                    <div class="cl-date-box">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span class="fw-bold text-gray-800">${escapeAttr(r.connected_on || '-')}</span>
+                    </div>
+                    <div class="cl-conn-caption text-danger" style="font-size:11px; font-weight:500;">Expires ${escapeAttr(expiresFormatted)}</div>
+                    <div class="cl-type-name type-direct fw-bold" style="color:#2563eb; font-size:11px;">Direct Client</div>
+                </div>
+                <div class="tbl-cell-activity">
+                    <div class="cl-act-main fw-bold text-gray-800">Received ${escapeAttr(daysAgo)}</div>
+                    <div class="cl-act-desc text-muted">Active in system</div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
+                        <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                    </div>
+                </div>
+                <div class="tbl-cell-jobs">
+                    <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                        <span class="cl-job-bullet ${hiringCount > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                        <span class="cl-job-num">${hiringCount}</span>
+                        <span class="cl-job-label">Hiring</span>
+                    </div>
+                    <div class="cl-job-line no-count">
+                        <span class="cl-job-bullet bullet-neutral"></span>
+                        <span class="cl-job-num">0</span>
+                        <span class="cl-job-label">Hold</span>
+                    </div>
+                    <div class="cl-job-line no-count">
+                        <span class="cl-job-bullet bullet-neutral"></span>
+                        <span class="cl-job-num">0</span>
+                        <span class="cl-job-label">Closed</span>
+                    </div>
+                </div>
+                <div class="tbl-cell-req-actions">
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none;" title="Accept Direct Client Partnership">Accept</button>
+                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none;" title="Decline Partnership Request">Decline</button>
+                    <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 show-detail-direct" data-row-id="${targetId}" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0;" title="View Client Details & Terms">Terms</button>
+                </div>
+            </div>`;
+        }
 
         const jobActive = r.jobs ? (r.jobs.hiring || r.jobs.active || 0) : 0;
         const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
@@ -2712,7 +2812,7 @@ $(document).on('click', '.request_event', function () {
     var id = $btn.data('row-id');
     var event_id = $btn.data('row-event');
     var from_company = $btn.data('row-from_company');
-    var actionText = (event_id == -1) ? 'Ignore' : 'Accept';
+    var actionText = (event_id == -1) ? 'Decline' : 'Accept';
     var confirmBtnClass = (event_id == -1) ? 'btn btn-danger' : 'btn btn-success';
 
     const swalWithBootstrapButtons = Swal.mixin({
@@ -2733,9 +2833,35 @@ $(document).on('click', '.request_event', function () {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            $btn.closest('.tbl-r').find('.request_event').prop('disabled', true).addClass('disabled').css('pointer-events', 'none');
+            var $row = $btn.closest('.tbl-r');
+            var originalRowHtml = $row.html();
+            var originalClasses = $row.attr('class');
+            var $actionContainer = $btn.parent();
+            var originalActionsHtml = $actionContainer.html();
 
+            // Optimistic Perceived 0ms UI Transition
+            $actionContainer.html(`
+                <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
+                    <span class="spinner-border spinner-border-sm me-1" role="status" style="width:10px;height:10px;"></span>
+                    ${event_id == 1 ? 'Accepting...' : 'Declining...'}
+                </span>
+            `);
+
+            // Optimistically decrement request counters
+            var $reqBadges = $('#span_clientRequest, #tabBadgeRequest');
+            var origReqCount = parseInt($reqBadges.first().text(), 10) || 0;
+            if (origReqCount > 0) {
+                $reqBadges.text(origReqCount - 1);
+            }
+            var $dirBadges = $('#span_clientDirect, #tabBadgeDirect');
+            var origDirCount = parseInt($dirBadges.first().text(), 10) || 0;
+            if (event_id == 1) {
+                $dirBadges.text(origDirCount + 1);
+            }
+
+            var mutationId = 'mut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             var url = "{{ route('service_company.clients.request_update') }}";
+
             $.ajax({
                 type: 'POST',
                 url: url,
@@ -2743,7 +2869,8 @@ $(document).on('click', '.request_event', function () {
                     '_token': '{{ csrf_token() }}',
                     'invitation_id': id,
                     'event_id': event_id,
-                    'from_company': from_company
+                    'from_company': from_company,
+                    'mutation_id': mutationId
                 },
                 success: function (response) {
                     ClientStore.invalidateTab('request');
@@ -2762,9 +2889,11 @@ $(document).on('click', '.request_event', function () {
                         if ($('#span_clientInactive').length && response.clientDataCnt.clientInactive !== undefined) $('#span_clientInactive').html(response.clientDataCnt.clientInactive);
                         if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
                     }
+
                     if (window.clientSyncChannel) {
                         window.clientSyncChannel.postMessage({
                             type: 'CLIENT_REQUEST_MUTATED',
+                            mutationId: mutationId,
                             invitationId: id,
                             eventId: event_id,
                             version: response.mutation_version || null,
@@ -2772,17 +2901,56 @@ $(document).on('click', '.request_event', function () {
                         });
                     }
 
-                    if (response.status == 'success') {
-                        loadClientList(1);
-                        swalWithBootstrapButtons.fire(
-                            actionText + 'ed!',
-                            response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
-                            'success'
-                        );
+                    $actionContainer.html(`
+                        <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
+                            ${event_id == 1 ? '✓ Accepted' : '✕ Declined'}
+                        </span>
+                    `);
+
+                    swalWithBootstrapButtons.fire(
+                        actionText + 'ed!',
+                        response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
+                        'success'
+                    );
+
+                    if (ClientStateManager.state.activeTab === 'request') {
+                        $row.slideUp(250, function() {
+                            $(this).remove();
+                            if ($('#allClients .tbl-r').length === 0) {
+                                $('#allClients').html(`
+                                    <div class="cl-empty-state">
+                                        <div class="cl-empty-icon">
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                                        </div>
+                                        <div class="cl-empty-title">No Pending Client Requests</div>
+                                        <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
+                                    </div>
+                                `);
+                            }
+                        });
+                    } else {
+                        // Refresh after brief delay so ES projection index propagates and row becomes normal Direct Client
+                        setTimeout(function() {
+                            loadClientList(1, false);
+                        }, 500);
                     }
                 },
-                error: function() {
-                    $btn.closest('.tbl-r').find('.request_event').prop('disabled', false).removeClass('disabled').css('pointer-events', 'auto');
+                error: function(xhr) {
+                    // Deterministic Rollback
+                    $actionContainer.html(originalActionsHtml);
+                    $row.attr('class', originalClasses);
+                    $reqBadges.text(origReqCount);
+                    if (event_id == 1) {
+                        $('#span_clientDirect, #tabBadgeDirect').text(origDirCount);
+                    }
+
+                    if (xhr.status === 409) {
+                        var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed by another recruiter.';
+                        swalWithBootstrapButtons.fire('Already Handled', conflictMsg, 'warning');
+                        loadClientList(1, false);
+                    } else {
+                        swalWithBootstrapButtons.fire('Error', 'Failed to update request status. Please check your connection and try again.', 'error');
+                    }
                 }
             });
         }
