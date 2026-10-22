@@ -20,6 +20,43 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-22* — **Service Company Clients Listing: Card-Based Header Design Specification (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Wrap the "Clients" title, subtitle ("Manage client relationships, hiring activity and recruitment performance."), Export button, and "+ Add Internal Client" button in a standalone card-based design matching the visual reference (`media_1792648940542_adc07df6.png`).
+  - **Architectural Enhancements**:
+    - In `demo/css/clientList.css` & `resources/views/service_company/client/index.blade.php`:
+      - Standardized `.cl-header.cl-header-card` with `background: #ffffff`, `border: 1px solid #e2e8f0`, `border-radius: 12px`, `padding: 14px 20px`, and soft elevation shadow (`0 1px 3px rgba(0,0,0,0.03)`).
+      - Left column: Amber squircle icon container (`width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; border: 1px solid #fde68a;`) with amber users outline SVG (`#d97706`).
+      - Title row: "Clients" heading (`font-size: 20px; font-weight: 700; color: #0f172a;`) with green verified shield badge (`stroke: #16a34a`).
+      - Subtext: "Manage client relationships, hiring activity and recruitment performance." (`font-size: 13px; color: #64748b;`).
+      - Actions right column:
+        - **Export button**: White card button with `border: 1px solid #e2e8f0`, tray download icon (`#0f172a`), and bold text `Export`.
+        - **+ Add Internal Client button**: Warm golden amber button (`background: #f59e0b; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 700; color: #0f172a;`) with dark plus icon.
+      - Scoped guaranteed inline `<style>` block in `index.blade.php` and dynamic cache-buster (`?v={{ time() }}`) to prevent stale stylesheet caching.
+    - In `resources/views/sections/service_company/clientHero.blade.php`:
+      - Synchronized the shared hero component to the identical card-based header structure, ensuring complete visual parity across all client sub-routes.
+  - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
+
+- *2026-10-22* — **Service Company Clients Listing: Header "Date" & Content-Based Column Sizing with Full Pipeline Stage Visibility (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Change “Connected On” to “Date” in the header only (retaining “Connected on” caption in row date cells).
+    - Set each column width based on its content/text only (e.g., Last Activity, Jobs); avoid unnecessary extra width.
+    - Increase the Hiring Pipeline column width enough so all stage text displays clearly without truncation or awkward wrapping.
+  - **Architectural Enhancements**:
+    - In `demo/css/clientList.css`:
+      - Replaced generic fractional distribution on content columns with exact, content-based sizing: `32px minmax(180px, 1.2fr) minmax(115px, 125px) minmax(102px, 110px) minmax(108px, 116px) minmax(72px, 80px) minmax(310px, 2fr)`.
+      - **Last Activity**: Fixed/tightened to `minmax(108px, 116px)` based on header and "5 minutes ago" / "Active in system" content, eliminating unused space.
+      - **Jobs**: Fixed/tightened to `minmax(72px, 80px)` based on header and "• 0 Hiring/Hold/Closed" status items, eliminating unused space.
+      - **Date**: Tightened to `minmax(102px, 110px)` for compact fit of date icon, date, caption, and client type badge.
+      - **Location**: Tightened to `minmax(115px, 125px)`.
+      - **Hiring Pipeline**: Expanded to `minmax(310px, 2fr)` with `letter-spacing: -0.01em` on `.cl-pipe-label`, guaranteeing $\ge$62px per stage at minimum width and $\ge$80px–120px on standard desktop screens, ensuring all 5 stages ("Sourced", "Evaluated", "Interviews", "Offers", "Joined") display completely with zero truncation and zero awkward wrapping.
+    - In `resources/views/service_company/client/index.blade.php`:
+      - Updated `#clientTableHead` static header sub-card from "Connected On" to "Date" (`title="Sort by Date"` and `<span>Date</span>`).
+      - Updated `#clientTableHead` dynamic JavaScript rendering (`setClientTab`) to also label the sub-card as "Date" across all client tab switches.
+    - In `resources/views/service_company/client/custom_client.blade.php` & `direct_client.blade.php`:
+      - Synced column header sub-card label to "Date".
+  - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
+
 - *2026-10-21* — **Service Company Clients Listing: Restore "Connected On" on Date Column (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Restore the "Connected on" text on the date column.

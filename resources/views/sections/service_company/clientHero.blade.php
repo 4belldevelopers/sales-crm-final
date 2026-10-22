@@ -12,14 +12,133 @@
 @endphp
 
 <style>
-/* ── Client Hero (shared) ── */
-.cl-hero { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; gap:12px; }
-.cl-hero-left { display:flex; flex-direction:column; gap:3px; }
-.cl-hero-title { display:flex; align-items:center; gap:8px; font-size:20px; font-weight:700; color:#181c32; line-height:1.2; }
-.cl-hero-title svg { width:20px; height:20px; flex-shrink:0; }
-.cl-hero-sub { font-size:12px; color:#7e8299; margin-top:2px; }
-.cl-add-btn { display:inline-flex; align-items:center; gap:6px; background:#1b84ff; color:#fff; border:none; border-radius:7px; padding:9px 18px; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; white-space:nowrap; }
-.cl-add-btn:hover { background:#056ee9; color:#fff; }
+/* ── Guaranteed Card-Based Header Design ── */
+.cl-header, .cl-header-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 14px 20px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+.cl-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+.cl-header-icon-box {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  background: #fef3c7 !important;
+  border: 1px solid #fde68a !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #d97706 !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.06) !important;
+}
+.cl-header-icon-box svg {
+  color: #d97706 !important;
+  stroke: #d97706 !important;
+}
+.cl-header-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.cl-header-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.015em !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+.cl-verified-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.cl-verified-badge svg {
+  color: #16a34a !important;
+  stroke: #16a34a !important;
+}
+.cl-header-subtitle {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  margin-top: 3px !important;
+  line-height: 1.35 !important;
+}
+.cl-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+.cl-export-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-export-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.cl-export-btn svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+.cl-add-btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #f59e0b !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25) !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease !important;
+  white-space: nowrap !important;
+}
+.cl-add-btn-primary:hover {
+  background: #d97706 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35) !important;
+  transform: translateY(-0.5px) !important;
+}
+.cl-add-btn-primary svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+/* ── Client Hero (shared fallback) ── */
+.cl-hero { display:none; }
 
 /* Stat cards */
 .cl-stats { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
@@ -51,24 +170,51 @@
 .cl-tab svg { width:14px; height:14px; }
 </style>
 
-<!-- HERO -->
-<div class="cl-hero">
-    <div class="cl-hero-left">
-        <div class="cl-hero-title">
-            {{ $heroTitle }}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <path d="m9 12 2 2 4-4" stroke="#16A34A" stroke-width="2.5"/>
+<!-- ── HEADER CARD (Card-based design) ── -->
+<div class="cl-header cl-header-card">
+    <div class="cl-header-left">
+        <div class="cl-header-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
         </div>
-        <div class="cl-hero-sub">Manage and track your clients, relationships and business performance.</div>
+        <div>
+            <div class="cl-header-title-row">
+                <h1 class="cl-header-title">Clients</h1>
+                <span class="cl-verified-badge" title="Verified ATS Module">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
+                    </svg>
+                </span>
+            </div>
+            <div class="cl-header-subtitle">Manage client relationships, hiring activity and recruitment performance.</div>
+        </div>
     </div>
-    @if(!empty($userPermissions) && in_array("add_clients", $userPermissions) && !in_array($activeTab, ['request', 'direct']))
-    <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Client
-    </a>
-    @endif
+
+    <div class="cl-header-actions">
+        <button type="button" class="cl-export-btn" onclick="if(typeof exportClientsToCsv==='function'){exportClientsToCsv();}else{window.location.reload();}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Export</span>
+        </button>
+
+        @if(!empty($userPermissions) && in_array("add_clients", $userPermissions))
+        <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Add Internal Client</span>
+        </a>
+        @endif
+    </div>
 </div>
 
 <!-- STAT CARDS -->

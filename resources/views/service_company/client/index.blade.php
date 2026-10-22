@@ -2,7 +2,133 @@
 @push('head-script')
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/clientList.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/clientList.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
+<style>
+/* ── Guaranteed Card-Based Header Design ── */
+.cl-header, .cl-header-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 14px 20px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+.cl-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+.cl-header-icon-box {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 10px !important;
+  background: #fef3c7 !important;
+  border: 1px solid #fde68a !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #d97706 !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.06) !important;
+}
+.cl-header-icon-box svg {
+  color: #d97706 !important;
+  stroke: #d97706 !important;
+}
+.cl-header-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.cl-header-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.015em !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+.cl-verified-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.cl-verified-badge svg {
+  color: #16a34a !important;
+  stroke: #16a34a !important;
+}
+.cl-header-subtitle {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  margin-top: 3px !important;
+  line-height: 1.35 !important;
+}
+.cl-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+.cl-export-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-export-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.cl-export-btn svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+.cl-add-btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #f59e0b !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25) !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease !important;
+  white-space: nowrap !important;
+}
+.cl-add-btn-primary:hover {
+  background: #d97706 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35) !important;
+  transform: translateY(-0.5px) !important;
+}
+.cl-add-btn-primary svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+</style>
 @endpush
 @section('content')
 @php
@@ -48,7 +174,7 @@
         <div class="cl-header cl-header-card">
             <div class="cl-header-left">
                 <div class="cl-header-icon-box">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -59,9 +185,9 @@
                     <div class="cl-header-title-row">
                         <h1 class="cl-header-title">Clients</h1>
                         <span class="cl-verified-badge" title="Verified ATS Module">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <path d="m9 12 2 2 4-4" stroke="#16a34a" stroke-width="2.5"/>
+                                <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
                             </svg>
                         </span>
                     </div>
@@ -71,7 +197,7 @@
 
             <div class="cl-header-actions">
                 <button type="button" class="cl-export-btn" onclick="exportClientsToCsv()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
@@ -81,7 +207,7 @@
 
                 @if(in_array("add_clients", $userPermissions))
                 <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn-primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
@@ -381,10 +507,10 @@
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Connected On">
+                        <div class="tbl-th-subcard" title="Sort by Date">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                <span>Connected On</span>
+                                <span>Date</span>
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
@@ -985,10 +1111,10 @@ function setClientTab(tabName, el, updateUrl = true) {
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard" title="Sort by Connected On">
+            <div class="tbl-th-subcard" title="Sort by Date">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span>Connected On</span>
+                    <span>Date</span>
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
