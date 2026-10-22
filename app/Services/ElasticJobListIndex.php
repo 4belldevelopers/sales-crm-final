@@ -216,9 +216,18 @@ class ElasticJobListIndex
                                     'client_company_id' => $row->client_company_id,
                                     'company_name' => strtolower($row->company_name),
                                     'logo' => $row->logo
-                                ]
+                                ],
+                                'doc_as_upsert' => true
                             ]
                     ]);
+
+                    // Invalidate client jobs KPI cache and tenant client projection version
+                    if (!empty($row->company_id)) {
+                        \App\Helper\GeneralMethod::cacheClean('tenant_' . $row->company_id . '_client_version');
+                    }
+                    if (!empty($row->client_id) && !empty($row->company_id)) {
+                        cache()->forget('ats:kpi:internal_client_jobs:' . $row->company_id . ':' . $row->client_id);
+                    }
                 }
                 
             Log::info('Elasticsearch bulk response', ['response' => $response]);

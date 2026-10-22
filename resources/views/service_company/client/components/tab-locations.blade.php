@@ -201,7 +201,7 @@
           </div>
 
           <!-- Centered Empty State (When 0 locations added) -->
-          <div class="client-addr-empty-state" id="client_additional_empty_state" style="{{ empty($additional_addresses) ? 'display:flex;' : 'display:none;' }}">
+          <div class="client-addr-empty-state {{ empty($additional_addresses) ? '' : 'd-none' }}" id="client_additional_empty_state" style="{{ empty($additional_addresses) ? 'display:flex;' : 'display:none;' }}">
             <div class="empty-state-icon-circle">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -210,9 +210,9 @@
             </div>
             <h5 class="empty-state-title">No additional locations added yet</h5>
             <p class="empty-state-subtitle">Add branch offices, development centres or regional hubs for this client organization.</p>
-            <button type="button" class="btn btn-add-first-location" id="btn_add_first_location">
+            <button type="button" class="btn btn-add-additional-location btn-add-first-location" id="btn_add_first_location">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>Add First Location</span>
+              <span>Add Additional Location</span>
             </button>
           </div>
 
@@ -296,7 +296,7 @@
           </div>
 
           <!-- Additional Locations Bottom Action CTA (Shown when >= 1 location added) -->
-          <div class="client-add-location-cta-wrap text-center mt-3" id="additional_location_cta_wrap" style="{{ empty($additional_addresses) ? 'display:none;' : 'display:flex;' }}">
+          <div class="client-add-location-cta-wrap text-center mt-3 {{ empty($additional_addresses) ? 'd-none' : '' }}" id="additional_location_cta_wrap" style="{{ empty($additional_addresses) ? 'display:none;' : 'display:flex;' }}">
             <button type="button" class="btn btn-add-additional-location" id="btn_add_another_address">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>Add Additional Location</span>
@@ -799,13 +799,18 @@
     border: 1px solid #fde68a !important;
     border-radius: 10px !important;
     padding: 24px 20px !important;
-    display: flex !important;
+    display: flex;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
     margin-bottom: 8px !important;
     transition: all 0.2s ease !important;
+  }
+  .client-addr-empty-state.d-none,
+  .client-addr-empty-state[style*="display: none"],
+  .client-addr-empty-state[style*="display:none"] {
+    display: none !important;
   }
   .client-addr-empty-state:hover {
     border-color: #f59e0b !important;
@@ -866,11 +871,16 @@
   }
 
   .client-add-location-cta-wrap {
-    display: flex !important;
+    display: flex;
     justify-content: center !important;
     align-items: center !important;
     width: 100% !important;
     padding: 6px 0 2px 0 !important;
+  }
+  .client-add-location-cta-wrap.d-none,
+  .client-add-location-cta-wrap[style*="display: none"],
+  .client-add-location-cta-wrap[style*="display:none"] {
+    display: none !important;
   }
 
   /* Autocomplete Dropdown */

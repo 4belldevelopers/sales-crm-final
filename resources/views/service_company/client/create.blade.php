@@ -1455,8 +1455,8 @@ html, body {
   }
   .cdf-input-wrap input.is-invalid {border-color: #ef4444;}
   .cdf-input-wrap input.is-invalid:focus {border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.10);}
-  .cdf-error {display: none; margin-top: 5px; font-size: 11px; color: #dc2626; line-height: 1.4;}
-  .cdf-error.visible {display: block;}
+  .cdf-error {display: none; margin-top: 6px; font-size: 11.5px; font-weight: 600; color: #be123c; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; padding: 5px 10px; line-height: 1.4; box-shadow: 0 1px 2px rgba(225,29,72,0.04);}
+  .cdf-error.visible {display: inline-flex; align-items: center; gap: 6px;}
 
   /* Primary Contact Enterprise Toggle Card in Drawer */
   .client-primary-contact-card {
@@ -5014,12 +5014,18 @@ if ($page_event == 'ADD') {
      window.clientServicesManager.init();
    });
    
-   // ---------- GLOBAL INLINE ERROR UTILITIES ----------
+   // ---------- GLOBAL INLINE ERROR UTILITIES (ENTERPRISE METRONIC STANDARD) ----------
    function clearFieldError($field) {
      if (!$field) return;
      var $f = ($field instanceof jQuery) ? $field : $($field);
      if (!$f.length) return;
      $f.removeClass('is-invalid');
+     if ($f.is('tr') || $f.closest('#client_contact_table').length) {
+       var $row = $f.is('tr') ? $f : $f.closest('tr');
+       $row.removeClass('is-invalid is-invalid-row').css({ 'background-color': '', 'border-left': '' });
+       $row.next('.client-row-error-notice').remove();
+       return;
+     }
      if ($f.attr('id') === 'industry' || $f.attr('id') === 'industry_display') {
        $('#industry_display').removeClass('is-invalid');
        $('#jero_ind_input_box').removeClass('has-validation-error');
@@ -5051,6 +5057,33 @@ if ($page_event == 'ADD') {
      if (!$f.length) return;
      clearFieldError($f);
      $f.addClass('is-invalid');
+
+     // God-level table row error presentation (for client contacts & table entities)
+     if ($f.is('tr') || $f.closest('#client_contact_table').length) {
+       var $row = $f.is('tr') ? $f : $f.closest('tr');
+       $row.addClass('is-invalid is-invalid-row').css({
+         'background-color': '#fff1f2',
+         'border-left': '3.5px solid #e11d48'
+       });
+       $row.next('.client-row-error-notice').remove();
+
+       var safeMsg = $('<div>').text(message).html();
+       var errNoticeHtml = '<tr class="client-row-error-notice" style="background:#fff1f2;">' +
+         '<td colspan="6" style="padding:6px 20px 10px 20px; border-bottom:1px solid #fecdd3; border-left:3.5px solid #e11d48; background:#fff1f2;">' +
+           '<div style="display:inline-flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #fecdd3; padding:6px 14px; border-radius:6px; color:#be123c; font-size:11.5px; font-weight:600; box-shadow:0 1px 2px rgba(225,29,72,0.06);">' +
+             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">' +
+               '<circle cx="12" cy="12" r="10"></circle>' +
+               '<line x1="12" y1="8" x2="12" y2="12"></line>' +
+               '<line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+             '</svg>' +
+             '<span>' + safeMsg + '</span>' +
+           '</div>' +
+         '</td>' +
+       '</tr>';
+       $row.after(errNoticeHtml);
+       return;
+     }
+
      if ($f.attr('id') === 'industry' || $f.attr('id') === 'industry_display') {
        $('#industry_display').addClass('is-invalid');
        $('#jero_ind_input_box').addClass('has-validation-error');
@@ -5066,11 +5099,22 @@ if ($page_event == 'ADD') {
        $('#jero_founded_input_box').addClass('has-validation-error');
        $('#jero_founded_select_wrap').addClass('has-validation-error');
      }
+
+     var safeFieldMsg = $('<div>').text(message).html();
+     var badgeHtml = '<div class="client-inline-error" style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; padding:4px 10px; background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; color:#be123c; font-size:11.5px; font-weight:600; line-height:1.4; box-shadow:0 1px 2px rgba(225,29,72,0.04);">' +
+       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">' +
+         '<circle cx="12" cy="12" r="10"></circle>' +
+         '<line x1="12" y1="8" x2="12" y2="12"></line>' +
+         '<line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+       '</svg>' +
+       '<span>' + safeFieldMsg + '</span>' +
+     '</div>';
+
      var $container = $f.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
      if ($container.length) {
-       $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+       $container.append(badgeHtml);
      } else {
-       $f.after('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+       $f.after(badgeHtml);
      }
    }
    window.showInlineError = showInlineError;
@@ -5641,12 +5685,12 @@ if ($page_event == 'ADD') {
         });
         var bCount = $('#additional_addresses_container .client-branch-card').length;
         if (bCount === 0) {
-            $('#client_additional_empty_state').show();
-            $('#additional_location_cta_wrap').hide();
+            $('#client_additional_empty_state').removeClass('d-none').css('display', 'flex').show();
+            $('#additional_location_cta_wrap').addClass('d-none').css('display', 'none').hide();
             $('#additional_locations_count_badge').text('0 Locations');
         } else {
-            $('#client_additional_empty_state').hide();
-            $('#additional_location_cta_wrap').show();
+            $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+            $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
             $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
         }
         $('#client_additional_empty').toggle(bCount === 0);
@@ -6268,8 +6312,11 @@ if ($page_event == 'ADD') {
 
         createBranchWithData: function(city, tagifyJson, address) {
             var addressId = parseInt($('#addressId').val(), 10) || 0;
-            if (!addressId) {
-                addressId = $('#additional_addresses_container .client-branch-card').length + 1;
+            if (!addressId || document.getElementById('clientAddr_' + addressId)) {
+                addressId = Math.max(addressId, $('#additional_addresses_container .client-branch-card').length) + 1;
+                while (document.getElementById('clientAddr_' + addressId)) {
+                    addressId++;
+                }
                 $('#addressId').val(addressId);
             }
             var cid = addressId;
@@ -6338,8 +6385,8 @@ if ($page_event == 'ADD') {
                 '</div>';
 
             $('#additional_addresses_container').append(cardHtml);
-            $('#client_additional_empty_state').hide();
-            $('#additional_location_cta_wrap').show();
+            $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+            $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
             $('#client_additional_empty').hide();
             var bCount = $('#additional_addresses_container .client-branch-card').length;
             $('#additional_locations_count_badge').text(bCount + (bCount === 1 ? ' Location' : ' Locations'));
@@ -7954,12 +8001,12 @@ $('.remove_address').click(function(){
     var $cards = $('#additional_addresses_container .client-branch-card, .client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional');
     var count = $cards.length;
     if (count === 0) {
-      $('#client_additional_empty_state').show();
-      $('#additional_location_cta_wrap').hide();
+      $('#client_additional_empty_state').removeClass('d-none').css('display', 'flex').show();
+      $('#additional_location_cta_wrap').addClass('d-none').css('display', 'none').hide();
       $('#additional_locations_count_badge').text('0 Locations');
     } else {
-      $('#client_additional_empty_state').hide();
-      $('#additional_location_cta_wrap').show();
+      $('#client_additional_empty_state').addClass('d-none').css('display', 'none').hide();
+      $('#additional_location_cta_wrap').removeClass('d-none').css('display', 'flex').show();
       $('#additional_locations_count_badge').text(count + (count === 1 ? ' Location' : ' Locations'));
     }
     $('#client_additional_empty').toggle(count === 0);
@@ -8201,6 +8248,18 @@ $('.remove_address').click(function(){
       });
     },
 
+    isPhoneTaken: function (phone, excludeIndex) {
+      var self = this;
+      var target = (phone || '').replace(/[^\d]/g, '');
+      if (!target || target.length < 6) return false;
+      var exIdx = (excludeIndex !== null && excludeIndex !== undefined && excludeIndex !== '') ? parseInt(excludeIndex, 10) : -1;
+      return self.contacts.some(function (c, idx) {
+        if (idx === exIdx) return false;
+        var other = (c.phone || '').replace(/[^\d]/g, '');
+        return other === target;
+      });
+    },
+
     getContacts: function () {
       return this.contacts;
     },
@@ -8303,11 +8362,11 @@ $('.remove_address').click(function(){
           '<td style="padding:12px 14px; width:10%; vertical-align:middle; text-align:center; white-space:nowrap;">' + primaryColHtml + '</td>' +
           '<td style="padding:12px 20px; width:8%; vertical-align:middle; text-align:right; white-space:nowrap;">' +
             '<div class="d-inline-flex align-items-center gap-1 justify-content-end">' +
-              '<button type="button" class="btn btn-icon client-edit-contact" onclick="window.clientContactManager.openEditDrawer(' + i + ')" title="Edit Contact" style="width:28px; height:28px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
-                '<i class="la la-pencil" style="font-size:13px; color:#2563eb;"></i>' +
+              '<button type="button" class="btn btn-icon client-edit-contact" data-index="' + i + '" onclick="if(event){event.preventDefault();event.stopPropagation();} window.clientContactManager.openEditDrawer(' + i + ')" title="Edit Contact" style="width:28px; height:28px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer;">' +
+                '<i class="la la-pencil" style="font-size:13px; color:#2563eb; pointer-events:none;"></i>' +
               '</button>' +
-              '<button type="button" class="btn btn-icon client-delete-contact" onclick="window.clientContactManager.deleteContact(' + i + ')" title="Delete Contact" style="width:28px; height:28px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:4px;">' +
-                '<i class="la la-trash" style="font-size:13px; color:#dc2626;"></i>' +
+              '<button type="button" class="btn btn-icon client-delete-contact" data-index="' + i + '" onclick="if(event){event.preventDefault();event.stopPropagation();} window.clientContactManager.deleteContact(' + i + ')" title="Delete Contact" style="width:28px; height:28px; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; margin-left:4px;">' +
+                '<i class="la la-trash" style="font-size:13px; color:#dc2626; pointer-events:none;"></i>' +
               '</button>' +
             '</div>' +
           '</td>' +
@@ -8437,6 +8496,11 @@ $('.remove_address').click(function(){
       var self = this;
       self._isSaving = false;
       _cdfClearErrors();
+
+      if ($('#client_contact_drawer').length && $('#client_contact_drawer').parent()[0] !== document.body) {
+        $('body').append($('#client_contact_drawer_backdrop'), $('#client_contact_drawer'));
+      }
+
       var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
       var isEdit = (!isNaN(num) && num >= 0 && num < self.contacts.length);
       var editIdx = isEdit ? num : null;
@@ -8452,35 +8516,42 @@ $('.remove_address').click(function(){
         $('#client_drawer_email').val(c.email || '');
         $('#client_drawer_is_primary').prop('checked', Boolean(c.isPrimary));
 
-        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
-          window.JeroPhoneBox.setCountry('client_drawer_phone', c.callingCode || '+91');
-        } else {
-          $('#client_drawer_calling_code').val(c.callingCode || '+91').trigger('change');
+        var cc = c.callingCode || '+91';
+        try {
+          if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+            window.JeroPhoneBox.setCountry('client_drawer_phone', cc);
+          }
+        } catch (e) {
+          console.warn('JeroPhoneBox.setCountry error:', e);
         }
+        $('#client_drawer_calling_code').val(cc).trigger('change');
 
-        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
-          window.JeroPhoneBox.setPhone('client_drawer_phone', c.phone || '');
-        } else {
-          $('#client_drawer_phone').val(c.phone || '').trigger('input');
+        var ph = c.phone || '';
+        try {
+          if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+            window.JeroPhoneBox.setPhone('client_drawer_phone', ph);
+          }
+        } catch (e) {
+          console.warn('JeroPhoneBox.setPhone error:', e);
         }
+        $('#client_drawer_phone').val(ph).trigger('input');
       } else {
         $('#client_drawer_name, #client_drawer_designation, #client_drawer_email').val('');
         $('#client_drawer_is_primary').prop('checked', self.contacts.length === 0);
 
-        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
-          window.JeroPhoneBox.setCountry('client_drawer_phone', '+91');
-        } else {
-          $('#client_drawer_calling_code').val('+91').trigger('change');
-        }
-        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
-          window.JeroPhoneBox.setPhone('client_drawer_phone', '');
-        } else {
-          $('#client_drawer_phone').val('').trigger('input');
-        }
-      }
+        try {
+          if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+            window.JeroPhoneBox.setCountry('client_drawer_phone', '+91');
+          }
+        } catch (e) {}
+        $('#client_drawer_calling_code').val('+91').trigger('change');
 
-      if ($('#client_contact_drawer').length && $('#client_contact_drawer').parent()[0] !== document.body) {
-        $('body').append($('#client_contact_drawer_backdrop'), $('#client_contact_drawer'));
+        try {
+          if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+            window.JeroPhoneBox.setPhone('client_drawer_phone', '');
+          }
+        } catch (e) {}
+        $('#client_drawer_phone').val('').trigger('input');
       }
 
       if (window.JeroPhoneBox && typeof window.JeroPhoneBox.closeAllDropdowns === 'function') {
@@ -8587,6 +8658,20 @@ $('.remove_address').click(function(){
         return false;
       }
 
+      // Immediate phone duplicate check (Scenario B, Scenario C & Main Account verification before saving)
+      var isAvailPhone = window.checkDrawerPhoneDuplicate ? window.checkDrawerPhoneDuplicate(phone, callingCode, true) : true;
+      if (!isAvailPhone || window._drawerContactPhoneDupError) {
+        self._isSaving = false;
+        $('#client_drawer_phone').addClass('is-invalid');
+        $('#cdf_err_phone').text(window._drawerContactPhoneDupError || 'This contact phone number is already registered.').addClass('visible');
+        $('#client_drawer_phone').focus();
+        if (typeof Swal !== 'undefined' && typeof Swal.mixin === 'function') {
+          var Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          Toast.fire({ icon: 'warning', title: window._drawerContactPhoneDupError || 'This contact phone number is already registered.' });
+        }
+        return false;
+      }
+
       var roleInfo = self.mapDesignationToRole(designation);
       self._commitDrawerSave(name, designation, email, phone, callingCode, isPrimaryChecked, isEdit, editIdx, roleInfo);
       return false;
@@ -8651,6 +8736,9 @@ $('.remove_address').click(function(){
     $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').removeClass('is-invalid');
     $('.cdf-error').removeClass('visible');
     $('#client_drawer_email_typo_hint').hide().empty();
+    window._drawerContactEmailDupError = null;
+    window._drawerContactPhoneDupError = null;
+    $('#client_save_contact_drawer').prop('disabled', false);
   }
 
   function getContactRowsData() {
@@ -8895,6 +8983,120 @@ $('.remove_address').click(function(){
     }
 
     window.checkDrawerEmailDuplicate(clean, false);
+  });
+
+  window.checkDrawerPhoneDuplicate = function(cleanPhone, callingCode, isSync, callback) {
+    cleanPhone = (typeof cleanPhone === 'string' ? cleanPhone : (window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function' ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone') : ($('#client_drawer_phone').val() || ''))).replace(/[^\d]/g, '');
+    callingCode = (typeof callingCode === 'string' ? callingCode : ($('#client_drawer_calling_code').val() || '+91')).trim();
+
+    if (!cleanPhone || cleanPhone.length < 6) {
+      window._drawerContactPhoneDupError = null;
+      $('#client_drawer_phone').removeClass('is-invalid');
+      $('#cdf_err_phone').removeClass('visible');
+      if (!window._drawerContactEmailDupError) {
+        $('#client_save_contact_drawer').prop('disabled', false);
+      }
+      if (typeof callback === 'function') callback(true, null);
+      return true;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+
+    // 1. Scenario B check: Intra-draft duplicate
+    if (window.clientContactManager && typeof window.clientContactManager.isPhoneTaken === 'function' && window.clientContactManager.isPhoneTaken(cleanPhone, editIdx)) {
+      var scBMsg = 'This phone number is already registered with the current company.';
+      window._drawerContactPhoneDupError = scBMsg;
+      $('#client_drawer_phone').addClass('is-invalid');
+      $('#cdf_err_phone').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      if (typeof callback === 'function') callback(false, scBMsg);
+      return false;
+    }
+
+    // 2. Scenario C & Main Account check: Remote check against existing Internal Clients
+    var isDuplicate = false;
+    var dupMessage = null;
+
+    $.ajax({
+      url: "{{ route('service_company.clients.validateInternalField') }}",
+      type: 'POST',
+      async: isSync ? false : true,
+      headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+      data: {
+        field: 'phone',
+        phone: cleanPhone,
+        value: cleanPhone,
+        calling_code: callingCode,
+        client_id: {{ $client->id ?? 'null' }}
+      },
+      success: function(resp) {
+        if (resp && resp.duplicate) {
+          isDuplicate = true;
+          dupMessage = resp.message || 'This contact phone number is already registered with another internal company. Please verify the contact details before adding this person.';
+          window._drawerContactPhoneDupError = dupMessage;
+          $('#client_drawer_phone').addClass('is-invalid');
+          $('#cdf_err_phone').text(dupMessage).addClass('visible');
+          $('#client_save_contact_drawer').prop('disabled', true);
+        } else {
+          window._drawerContactPhoneDupError = null;
+          $('#client_drawer_phone').removeClass('is-invalid');
+          $('#cdf_err_phone').removeClass('visible');
+          if (!window._drawerContactEmailDupError) {
+            $('#client_save_contact_drawer').prop('disabled', false);
+          }
+        }
+        if (typeof callback === 'function') callback(!isDuplicate, dupMessage);
+      },
+      error: function() {
+        if (!window._drawerContactEmailDupError) {
+          $('#client_save_contact_drawer').prop('disabled', false);
+        }
+        if (typeof callback === 'function') callback(true, null);
+      }
+    });
+
+    return !isDuplicate;
+  };
+
+  var _drawerPhoneDupTimer = null;
+  $(document).on('input', '#client_drawer_phone', function () {
+    $(this).removeClass('is-invalid');
+    $('#cdf_err_phone').removeClass('visible');
+    clearTimeout(_drawerPhoneDupTimer);
+
+    var cleanPhone = (window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function' ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone') : ($(this).val() || '')).replace(/[^\d]/g, '');
+    var callingCode = ($('#client_drawer_calling_code').val() || '+91').trim();
+
+    if (!cleanPhone || cleanPhone.length < 6) {
+      window._drawerContactPhoneDupError = null;
+      if (!window._drawerContactEmailDupError) {
+        $('#client_save_contact_drawer').prop('disabled', false);
+      }
+      return;
+    }
+
+    var editIdx = $('#client_drawer_edit_index').val();
+    if (window.clientContactManager && typeof window.clientContactManager.isPhoneTaken === 'function' && window.clientContactManager.isPhoneTaken(cleanPhone, editIdx)) {
+      var scBMsg = 'This phone number is already registered with the current company.';
+      window._drawerContactPhoneDupError = scBMsg;
+      $(this).addClass('is-invalid');
+      $('#cdf_err_phone').text(scBMsg).addClass('visible');
+      $('#client_save_contact_drawer').prop('disabled', true);
+      return;
+    }
+
+    _drawerPhoneDupTimer = setTimeout(function () {
+      window.checkDrawerPhoneDuplicate(cleanPhone, callingCode, false);
+    }, 300);
+  });
+
+  $(document).on('blur change', '#client_drawer_phone, #client_drawer_calling_code', function () {
+    clearTimeout(_drawerPhoneDupTimer);
+    var cleanPhone = (window.JeroPhoneBox && typeof window.JeroPhoneBox.getCleanNumber === 'function' ? window.JeroPhoneBox.getCleanNumber('client_drawer_phone') : ($('#client_drawer_phone').val() || '')).replace(/[^\d]/g, '');
+    var callingCode = ($('#client_drawer_calling_code').val() || '+91').trim();
+    if (cleanPhone && cleanPhone.length >= 6) {
+      window.checkDrawerPhoneDuplicate(cleanPhone, callingCode, false);
+    }
   });
 
   // Paste & Blur deterministic cleanup and typo suggestions for Accounts Payable Email
@@ -9687,6 +9889,9 @@ $('.remove_address').click(function(){
   function clearInlineErrors() {
     $('.is-invalid').removeClass('is-invalid');
     $('.client-inline-error').remove();
+    $('.client-row-error-notice').remove();
+    $('#client_contact_table_body tr').removeClass('is-invalid-row').css({ 'background-color': '', 'border-left': '' });
+    $('#client_contacts_duplicate_alert').hide();
     $('#jero_ind_select_wrap, #jero_ind_input_box').removeClass('has-validation-error');
     $('#jero_csize_select_wrap, #jero_csize_input_box').removeClass('has-validation-error');
     $('#jero_ctype_select_wrap, #jero_ctype_input_box').removeClass('has-validation-error');
@@ -9696,6 +9901,12 @@ $('.remove_address').click(function(){
   function clearFieldError($field) {
     if (!$field || !$field.length) return;
     $field.removeClass('is-invalid');
+    if ($field.is('tr') || $field.closest('#client_contact_table').length) {
+      var $row = $field.is('tr') ? $field : $field.closest('tr');
+      $row.removeClass('is-invalid is-invalid-row').css({ 'background-color': '', 'border-left': '' });
+      $row.next('.client-row-error-notice').remove();
+      return;
+    }
     if ($field.attr('id') === 'industry' || $field.attr('id') === 'industry_display') {
       $('#industry_display').removeClass('is-invalid');
       $('#jero_ind_input_box').removeClass('has-validation-error');
@@ -9716,13 +9927,13 @@ $('.remove_address').click(function(){
       $('#jero_founded_input_box').removeClass('has-validation-error');
       $('#jero_founded_select_wrap').removeClass('has-validation-error');
     }
-    var $container = $field.closest('.client-field, .fv-plugins-icon-container');
+    var $container = $field.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
     if ($container.length) {
       $container.find('.client-inline-error').remove();
     }
     $field.next('.client-inline-error').remove();
     if ($field.parent().length) {
-      $field.parent().next('.client-inline-error').remove();
+      $field.parent().find('.client-inline-error').remove();
     }
   }
   window.clearFieldError = clearFieldError;
@@ -9731,6 +9942,33 @@ $('.remove_address').click(function(){
     if (!$field || !$field.length) return;
     clearFieldError($field);
     $field.addClass('is-invalid');
+
+    // God-level table row error presentation (for client contacts & table entities)
+    if ($field.is('tr') || $field.closest('#client_contact_table').length) {
+      var $row = $field.is('tr') ? $field : $field.closest('tr');
+      $row.addClass('is-invalid is-invalid-row').css({
+        'background-color': '#fff1f2',
+        'border-left': '3.5px solid #e11d48'
+      });
+      $row.next('.client-row-error-notice').remove();
+
+      var safeMsg = $('<div>').text(message).html();
+      var errNoticeHtml = '<tr class="client-row-error-notice" style="background:#fff1f2;">' +
+        '<td colspan="6" style="padding:6px 20px 10px 20px; border-bottom:1px solid #fecdd3; border-left:3.5px solid #e11d48; background:#fff1f2;">' +
+          '<div style="display:inline-flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #fecdd3; padding:6px 14px; border-radius:6px; color:#be123c; font-size:11.5px; font-weight:600; box-shadow:0 1px 2px rgba(225,29,72,0.06);">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">' +
+              '<circle cx="12" cy="12" r="10"></circle>' +
+              '<line x1="12" y1="8" x2="12" y2="12"></line>' +
+              '<line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+            '</svg>' +
+            '<span>' + safeMsg + '</span>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+      $row.after(errNoticeHtml);
+      return;
+    }
+
     if ($field.attr('id') === 'industry' || $field.attr('id') === 'industry_display') {
       $('#industry_display').addClass('is-invalid');
       $('#jero_ind_input_box').addClass('has-validation-error');
@@ -9751,12 +9989,24 @@ $('.remove_address').click(function(){
       $('#jero_founded_input_box').addClass('has-validation-error');
       $('#jero_founded_select_wrap').addClass('has-validation-error');
     }
-    var $container = $field.closest('.client-field, .fv-plugins-icon-container');
+
+    var safeFieldMsg = $('<div>').text(message).html();
+    var badgeHtml = '<div class="client-inline-error" style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; padding:4px 10px; background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; color:#be123c; font-size:11.5px; font-weight:600; line-height:1.4; box-shadow:0 1px 2px rgba(225,29,72,0.04);">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">' +
+        '<circle cx="12" cy="12" r="10"></circle>' +
+        '<line x1="12" y1="8" x2="12" y2="12"></line>' +
+        '<line x1="12" y1="16" x2="12.01" y2="16"></line>' +
+      '</svg>' +
+      '<span>' + safeFieldMsg + '</span>' +
+    '</div>';
+
+    var $container = $field.closest('.client-field, .fv-plugins-icon-container, .ij-location-input-wrap');
     if ($container.length) {
-      $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+      $container.append(badgeHtml);
     } else {
       var $target = $field.closest('.input-group').length ? $field.closest('.input-group') : $field;
-      $target.after('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+      $target.next('.client-inline-error').remove();
+      $target.after(badgeHtml);
     }
   }
   window.showInlineError = showInlineError;
@@ -10103,10 +10353,6 @@ $('.remove_address').click(function(){
                 if (!$badRow.length) {
                   $badRow = $('#client_contact_table_body tr').eq(dupIdx);
                 }
-                $badRow.css({
-                  'background-color': '#fef2f2',
-                  'border-left': '3px solid #dc2626'
-                });
                 $('#client_contacts_duplicate_alert').show();
                 var msg = resp.message || 'This contact is already registered with another internal company. Please verify the contact details before adding this person.';
                 $('#client_contacts_duplicate_alert_text').text(msg);
@@ -10115,10 +10361,11 @@ $('.remove_address').click(function(){
                 window._lastStep4Error = msg;
               } else {
                 $('#client_contacts_duplicate_alert').hide();
-                $('#client_contact_table_body tr').css({
+                $('#client_contact_table_body tr').removeClass('is-invalid is-invalid-row').css({
                   'background-color': '',
                   'border-left': ''
                 });
+                $('.client-row-error-notice').remove();
               }
             },
             error: function () {
@@ -10136,6 +10383,16 @@ $('.remove_address').click(function(){
             $firstInvalid = $firstInvalid || $('#client_drawer_email');
             isValid = false;
             window._lastStep4Error = window._drawerContactEmailDupError || 'Please resolve the contact email duplicate before continuing.';
+          }
+        }
+        var drawerPhone = ($('#client_drawer_phone').val() || '').trim();
+        var drawerCalling = ($('#client_drawer_calling_code').val() || '+91').trim();
+        if (isValid && drawerPhone) {
+          var isDrawerPhoneValid = window.checkDrawerPhoneDuplicate ? window.checkDrawerPhoneDuplicate(drawerPhone, drawerCalling, true) : true;
+          if (!isDrawerPhoneValid || window._drawerContactPhoneDupError) {
+            $firstInvalid = $firstInvalid || $('#client_drawer_phone');
+            isValid = false;
+            window._lastStep4Error = window._drawerContactPhoneDupError || 'Please resolve the contact phone duplicate before continuing.';
           }
         }
       }
@@ -11204,15 +11461,37 @@ $('.remove_address').click(function(){
     $(document).off('click', '.client-edit-contact').on('click', '.client-edit-contact', function (e) {
       if (e && e.preventDefault) e.preventDefault();
       if (e && e.stopPropagation) e.stopPropagation();
-      var index = $(this).attr('data-index');
-      openContactDrawer(index);
+      var $btn = $(this).closest('.client-edit-contact');
+      var index = $btn.attr('data-index');
+      if (index === undefined || index === null || index === '') {
+        index = $btn.closest('tr').attr('data-contact-index');
+      }
+      var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
+      if (!isNaN(num) && num >= 0) {
+        if (window.clientContactManager && typeof window.clientContactManager.openEditDrawer === 'function') {
+          window.clientContactManager.openEditDrawer(num);
+        } else if (typeof openContactDrawer === 'function') {
+          openContactDrawer(num);
+        }
+      }
     });
 
     $(document).off('click', '.client-delete-contact').on('click', '.client-delete-contact', function (e) {
       if (e && e.preventDefault) e.preventDefault();
       if (e && e.stopPropagation) e.stopPropagation();
-      var index = parseInt($(this).attr('data-index'), 10);
-      deleteContactRow(index);
+      var $btn = $(this).closest('.client-delete-contact');
+      var index = $btn.attr('data-index');
+      if (index === undefined || index === null || index === '') {
+        index = $btn.closest('tr').attr('data-contact-index');
+      }
+      var num = (index !== null && index !== undefined && index !== '') ? parseInt(index, 10) : NaN;
+      if (!isNaN(num) && num >= 0) {
+        if (window.clientContactManager && typeof window.clientContactManager.deleteContact === 'function') {
+          window.clientContactManager.deleteContact(num);
+        } else if (typeof deleteContactRow === 'function') {
+          deleteContactRow(num);
+        }
+      }
     });
 
     $(document).off('keydown', '#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').on('keydown', '#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone', function (e) {

@@ -52,6 +52,7 @@ class JobStatusChanged implements ShouldBroadcast
             'oldStatus' => $this->oldStatus,
             'newStatus' => $this->newStatus,
             'jobTitle' => $this->jobTitle,
+            'version' => (int) cache()->get('tenant_'.$this->companyId.'_client_version', 1),
             'timestamp' => now()->toIso8601String(),
         ];
     }
