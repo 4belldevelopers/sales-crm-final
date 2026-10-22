@@ -99,6 +99,12 @@ Route::group(['middleware' => 'auth'], function () {
             });
             // ─────────────────────────────────────────────────────────────────────────
 
+            // ─── ATS Client Drawer Candidates Tab 0-MySQL-Read Architecture Routes ───
+            Route::get('clients/{clientId}/candidate-version', [\App\Http\Controllers\ServiceCompany\CandidateVersionApiController::class, 'getVersion'])->name('clients.candidate-version');
+            Route::get('client-candidate-list', [\App\Http\Controllers\ServiceCompany\ClientCandidateDrawerApiController::class, 'clientCandidateList'])->name('job-applications.client-candidates');
+            Route::get('direct-client-candidate-list', [\App\Http\Controllers\ServiceCompany\ClientCandidateDrawerApiController::class, 'directclientCandidateList'])->name('job-applications.direct-client-candidates');
+            // ─────────────────────────────────────────────────────────────────────────
+
             Route::group(['middleware' => ['custom-package']], function () {
                 Route::get('/dashboard', [ServiceCompanyDashboardController::class, 'index'])->name('dashboard');
                 Route::get('meetingstoreScheduleList', [ServiceCompanyDashboardController::class, 'meetingScheduleList'])->name('dashboard.meeting-schedule-list');
@@ -271,10 +277,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('preview-offer-letter/{id?}', [ServiceCompanyCvTrackerController::class, 'previewOfferLettetr'])->name('cvtracker.previewOfferLettetr');
                 Route::post('terms-save-create-offer', [ServiceCompanyJobApplicationController::class, 'termsSaveCreateOffer'])->name('job-applications.terms_save_create_offer');
                 /** custom ajax route define */
-                Route::get('client-candidate-list', [ServiceCompanyJobApplicationController::class, 'clientCandidateList'])->name('job-applications.client-candidates');
                 Route::get('client-candidate-join-list', [ServiceCompanyJobApplicationController::class, 'clientCandidateJoinList'])->name('job-applications.client-candidates-join-list');
                 Route::get('client-candidate-interview-tracker', [ServiceCompanyJobApplicationController::class, 'clientCandidateInterviewTracker'])->name('job-applications.client-candidates-interview-tracker');
-                Route::get('direct-client-candidate-list', [ServiceCompanyJobApplicationController::class, 'directclientCandidateList'])->name('job-applications.direct-client-candidates');
                 Route::get('direct-client-candidate-join-list', [ServiceCompanyJobApplicationController::class, 'directclientCandidateJoinList'])->name('job-applications.direct-client-candidates-join-list');
                 Route::get('direct-client-candidate-interview-tracker', [ServiceCompanyJobApplicationController::class, 'directclientCandidateInterviewTracker'])->name('job-applications.direct-client-candidates-interview-tracker');
                 Route::get('staffing-client-candidate-list', [ServiceCompanyJobApplicationController::class, 'staffingclientCandidateList'])->name('job-applications.staffing-client-candidates');

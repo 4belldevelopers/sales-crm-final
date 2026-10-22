@@ -3088,7 +3088,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->take(1)->get();
         $this->client_contact_count = DB::table('client_contact_info')->select('*')->where('client_id', $id)->count();
-        $this->active_requisition = DB::table('jobs')->select('jobs.id')->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')->where('recommendation_relation.to_company_id', $company_id)->where('jobs.status', 'active')->count();
+
+        // Scoped strictly to the specific direct client, partner company, and active recommendation relation
+        $this->active_requisition = DB::table('jobs')
+            ->join('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+            ->where('recommendation_relation.to_company_id', $company_id)
+            ->where('recommendation_relation.from_company_id', $from_company_id)
+            ->where('recommendation_relation.final_status', 1)
+            ->where('jobs.client_id', $id)
+            ->whereIn('jobs.status', ['active', 'hiring'])
+            ->count();
 
         $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
         $endOfMonth = Carbon::now()->endOfMonth();

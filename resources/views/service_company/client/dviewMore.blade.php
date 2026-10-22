@@ -1990,40 +1990,79 @@
                     </div>
                     <!--begin::candidate_list Candidate List-->
                     <div class="tab-pane" id="candidate_list" role="tabpanel">
+                        <!-- Candidate Search & Filter Toolbar -->
+                        <div class="card-header border-0 pt-3 pb-2 px-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 420px;">
+                                <div class="position-relative w-100">
+                                    <span class="position-absolute top-50 translate-middle-y ms-3 text-muted">
+                                        <i class="fas fa-search fa-solid"></i>
+                                    </span>
+                                    <input type="text" id="cdCandSearchInputDirect" class="form-control form-control-sm form-control-solid ps-9" placeholder="Search direct candidates by name, email, skills..." autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <select id="cdCandStatusFilterDirect" class="form-select form-select-sm form-select-solid" style="min-width: 140px;">
+                                    <option value="">All Statuses</option>
+                                    <option value="1">Sourced</option>
+                                    <option value="2">Screening</option>
+                                    <option value="3">Interview</option>
+                                    <option value="4">Shortlisted</option>
+                                    <option value="5">Offer</option>
+                                    <option value="6">Joined</option>
+                                    <option value="7">On Hold</option>
+                                    <option value="8">Rejected</option>
+                                </select>
+                                <button type="button" id="cdCandResetBtnDirect" class="btn btn-sm btn-icon btn-light-secondary" title="Reset Filters">
+                                    <i class="fas fa-sync-alt fa-solid"></i>
+                                </button>
+                                <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2" id="cdCandidateCountBadgeDirect">
+                                    <span id="cdCandidateCountTextDirect">0</span> Candidates
+                                </span>
+                            </div>
+                        </div>
 
-                      <div class="card-body px-0 py-7">
-                          <!--begin::Table-->
-                          <table class="table align-middle table-row-dashed fs-6 gy-5">
-                              <!--begin::Table head-->
-                              <thead>
-                                  <!--begin::Table row-->
+                        <!-- Local Skeleton Loader (Zero Main-Thread / Full-Screen Freeze) -->
+                        <div id="cdCandSkeletonLoaderDirect" style="display:none;" class="py-4">
+                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
+                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
+                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
+                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
+                        </div>
 
-                                  <tr class="fw-bolder text-muted">
+                        <!-- Empty State -->
+                        <div id="cdCandEmptyStateDirect" class="text-center py-12" style="display:none;">
+                            <div class="text-muted fs-5 fw-bold mb-2">No candidates found</div>
+                            <div class="text-gray-400 fs-7">Try adjusting your search query or filters.</div>
+                        </div>
 
-                                      <th class="min-w-150px">Name</th>
-                                      <th class="min-w-15px">Exp.</th>
-                                      <th class="min-w-15px">Salary</th>
-                                      <th class="min-w-15px">Notice Period</th>
-                                      <th class="min-w-15px">Location</th>
-                                      <th class="min-w-15px"> Source</th>
-                                      <th class="min-w-15px">Upload Date</th>
-                                      <th class="min-w-15px">Jobs</th>
-                                      <th class="min-w-15px">Stage</th>
-                                  </tr>
-                                  <!--end::Table row-->
-                              </thead>
-                              <!--end::Table head-->
-                              <tbody id="candidatetList">
-
-                              </tbody>
-
-                          </table>
-                          <!--end::Table-->
-                          <div id="paginationcandidate">
-                              <!-- Pagination links will be appended here -->
-                          </div>
-                      </div>
-                      <!--end::Contacts Content-->
+                        <div class="card-body px-0 py-2" id="cdCandidateTableWrapDirect">
+                            <!--begin::Table-->
+                            <div class="table-responsive">
+                                <table class="table align-middle table-row-dashed fs-7 gy-4">
+                                    <!--begin::Table head-->
+                                    <thead>
+                                        <tr class="fw-bolder text-muted text-uppercase fs-8 gs-0">
+                                            <th class="min-w-200px">Name</th>
+                                            <th class="min-w-70px">Exp.</th>
+                                            <th class="min-w-100px">Salary</th>
+                                            <th class="min-w-90px">Notice</th>
+                                            <th class="min-w-110px">Location</th>
+                                            <th class="min-w-110px">Source</th>
+                                            <th class="min-w-80px">Added</th>
+                                            <th class="min-w-120px">Job</th>
+                                            <th class="min-w-90px text-end">Stage</th>
+                                        </tr>
+                                    </thead>
+                                    <!--end::Table head-->
+                                    <tbody id="candidatetList">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!--end::Table-->
+                            <div id="paginationcandidate" class="d-flex align-items-center justify-content-between pt-4">
+                                <!-- Pagination links rendered dynamically by ClientCandidateStoreDirect -->
+                            </div>
+                        </div>
                     </div>
                     <!--end::candidate_list Candidate List-->
 
@@ -3703,13 +3742,32 @@
         });
         new $.fn.dataTable.FixedHeader(dcontactList);
     }
+</script>
 
+<!-- Stage & Sub-Stage Modal Shell -->
+<div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header flex-stack py-4 px-6">
+        <h3 class="fw-bolder mb-0">Candidate Stage Management</h3>
+        <button type="button" class="btn btn-sm btn-icon btn-light-danger" data-bs-dismiss="modal" data-dismiss="modal" id="stage_sub_stage_close">
+          <i class="fas fa-times fa-solid"></i>
+        </button>
+      </div>
+      <div class="modal-body p-6">
+        <div class="stage_body_content" id="stage_body_content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
     $(document).ready(function() {
         var loadedTabs = {};
+        var dcClientId = parseInt('{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}', 10);
 
         if ($('#candidate_list').hasClass('active') || $('a[href="#candidate_list"]').hasClass('active')) {
-            directfetchCandidates();
-            loadedTabs['candidate_list'] = true;
+            window.ClientCandidateStoreDirect.init({{ auth()->user()->company_id }}, dcClientId, 'direct');
         } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
             initDContactsDataTable();
             loadedTabs['contacts'] = true;
@@ -3720,13 +3778,19 @@
             if (!target) return;
             target = target.replace('#', '');
 
+            if (target === 'candidate_list') {
+                if (!window.ClientCandidateStoreDirect.companyId || window.ClientCandidateStoreDirect.clientId !== dcClientId || window.ClientCandidateStoreDirect.state === 'IDLE') {
+                    window.ClientCandidateStoreDirect.init({{ auth()->user()->company_id }}, dcClientId, 'direct');
+                } else {
+                    window.ClientCandidateStoreDirect.reconcileVersion();
+                }
+                return;
+            }
+
             if (loadedTabs[target]) return;
 
             if (target === 'contacts') {
                 initDContactsDataTable();
-                loadedTabs[target] = true;
-            } else if (target === 'candidate_list') {
-                directfetchCandidates();
                 loadedTabs[target] = true;
             } else if (target === 'requisitions') {
                 fetchJobsClientdirect();
@@ -3739,6 +3803,8 @@
                 directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
             } else if (target === 'candidateDashboard') {
                 initPerformanceDashboard();
+            }
+        });
                 setTimeout(function() {
                     if (window.perfChartInstances) {
                         Object.values(window.perfChartInstances).forEach(function(c) {
@@ -3817,22 +3883,542 @@
 
     });
 
-    function directfetchCandidates(page = 1, search = '') {
-        $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
-        return $.ajax({
-            url: `{{ url('service_company/direct-client-candidate-list') }}?page=${page}`,
-            type: 'GET',
-            data: {
-                search: search,
-                clientid: clientid
-            },
-            success: function(response) {
-                $('.page-loader').css('display', 'none');
-                $('#candidatetList').html(response.html);
-                $('#paginationcandidate').html(response.pagination);
+    /**
+     * ── ClientCandidateStoreDirect (User RAM Virtual State Machine & DOM Engine) ──
+     * Dedicated Direct Client Candidate Drawer implementation.
+     * Enforces bounded 60ms coalescing, OCC version checks, Reverb real-time sync, and 0% MySQL reads.
+     */
+    window.ClientCandidateStoreDirect = {
+        state: 'IDLE',
+        companyId: null,
+        clientId: null,
+        clientType: 'direct',
+        clientCandidateVersion: 0,
+        queryFingerprint: null,
+        candidateVersions: {},
+        processedEventIds: new Set(),
+        maxProcessedEventIds: 500,
+        latestRequestId: 0,
+
+        filters: {
+            search: '',
+            status_id: '',
+            job_id: '',
+            page: 1,
+            cursor: null,
+            sort: 'created_at:desc,wiseId:desc'
+        },
+        data: [],
+        pagination: {},
+
+        QUERY_DEPENDENCIES: {
+            search: { fields: ['full_name', 'current_designation', 'skills', 'email', 'phone'] },
+            status_id: { fields: ['master_status_id', 'job_master_status_id'], filter_key: 'status_id' },
+            job_id: { fields: ['jobId', 'job_id'], filter_key: 'job_id' },
+            sort: { fields: ['created_at', 'wiseId'] },
+            visibility: {
+                excluded_values: {
+                    master_status_id: [9],
+                    job_master_status_id: [9]
+                }
             }
-        });
+        },
+
+        reconcileTimer: null,
+        coalesceDelayMs: 60,
+
+        markEventProcessed: function(eventId) {
+            if (!eventId) return;
+            this.processedEventIds.add(eventId);
+            if (this.processedEventIds.size > this.maxProcessedEventIds) {
+                var oldest = this.processedEventIds.values().next().value;
+                this.processedEventIds.delete(oldest);
+            }
+        },
+
+        init: function(companyId, clientId, clientType) {
+            if (this.clientId !== clientId || this.companyId !== companyId) {
+                this.destroy();
+            }
+
+            this.companyId = companyId;
+            this.clientId = clientId;
+            this.clientType = clientType || 'direct';
+            this.state = 'IDLE';
+            this.clientCandidateVersion = 0;
+            this.queryFingerprint = null;
+            this.candidateVersions = {};
+            this.processedEventIds.clear();
+            this.bindEvents();
+            this.subscribeReverb();
+            this.fetch(1);
+        },
+
+        destroy: function() {
+            if (this.reconcileTimer) {
+                clearTimeout(this.reconcileTimer);
+                this.reconcileTimer = null;
+            }
+            if (window.Echo && this.companyId && this.clientId) {
+                var channel = 'private-company.' + this.companyId + '.client.' + this.clientId + '.candidates';
+                try { window.Echo.leave(channel); } catch (e) {}
+            }
+        },
+
+        scheduleReconcile: function(resetToPageOne) {
+            var self = this;
+            if (resetToPageOne) {
+                this.filters.page = 1;
+                this.filters.cursor = null;
+            }
+            if (this.reconcileTimer) {
+                clearTimeout(this.reconcileTimer);
+            }
+            this.reconcileTimer = setTimeout(function() {
+                self.reconcileTimer = null;
+                self.fetch(self.filters.page, self.filters.cursor);
+            }, this.coalesceDelayMs);
+        },
+
+        fetch: function(page, cursor) {
+            var self = this;
+            this.latestRequestId++;
+            var requestId = this.latestRequestId;
+
+            this.state = (this.state === 'READY') ? 'REFRESHING' : 'LOADING';
+            this.filters.page = page || 1;
+            this.filters.cursor = cursor || null;
+
+            if (this.state === 'LOADING') {
+                $('#cdCandSkeletonLoaderDirect').show();
+                $('#cdCandidateTableWrapDirect').hide();
+                $('#cdCandEmptyStateDirect').hide();
+            }
+
+            $.ajax({
+                url: '{{ url("service_company/direct-client-candidate-list") }}',
+                type: 'GET',
+                headers: { 'Accept': 'application/json' },
+                data: {
+                    clientid: this.clientId,
+                    search: this.filters.search,
+                    status_id: this.filters.status_id,
+                    job_id: this.filters.job_id,
+                    page: this.filters.page,
+                    cursor: this.filters.cursor,
+                    size: 25
+                },
+                success: function(res) {
+                    if (requestId !== self.latestRequestId) return;
+
+                    self.data = res.data || [];
+                    self.pagination = res.pagination || {};
+                    self.clientCandidateVersion = res.meta?.client_candidate_version || self.clientCandidateVersion;
+                    self.queryFingerprint = res.meta?.query_fingerprint || null;
+
+                    self.candidateVersions = {};
+                    self.data.forEach(function(cand) {
+                        var cid = cand.id || cand.wiseId;
+                        if (cid && cand.aggregate_version !== undefined) {
+                            self.candidateVersions[cid] = cand.aggregate_version;
+                        }
+                    });
+
+                    self.state = 'READY';
+                    $('#cdCandSkeletonLoaderDirect').hide();
+                    $('#cdCandidateTableWrapDirect').show();
+                    self.renderRows();
+                    self.updateCounts(self.pagination.total, self.pagination.total_relation);
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    if (requestId !== self.latestRequestId) return;
+
+                    $('#cdCandSkeletonLoaderDirect').hide();
+                    $('#cdCandidateTableWrapDirect').show();
+
+                    if (xhr.status === 409) {
+                        self.scheduleReconcile(true);
+                        return;
+                    }
+
+                    self.state = 'ERROR';
+                    var msg = (xhr.status === 403)
+                        ? 'Access denied to this direct client.'
+                        : (xhr.status === 503)
+                            ? 'Candidate search service temporarily unavailable. Please retry.'
+                            : (xhr.responseJSON?.message || 'Failed to load candidates.');
+
+                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#paginationcandidate').empty();
+                }
+            });
+        },
+
+        updateCounts: function(total, relation) {
+            var num = Number(total || 0);
+            var formatted = (relation === 'gte') ? (num.toLocaleString() + '+') : num.toLocaleString();
+            $('#cdCandidateCountTextDirect').text(formatted);
+            $('#tabBadgeCandidates').text(formatted).show();
+        },
+
+        renderRows: function() {
+            if (!this.data || this.data.length === 0) {
+                $('#candidatetList').empty();
+                $('#cdCandEmptyStateDirect').show();
+                $('#cdCandidateTableWrapDirect table').hide();
+                $('#paginationcandidate').empty();
+                return;
+            }
+
+            $('#cdCandEmptyStateDirect').hide();
+            $('#cdCandidateTableWrapDirect table').show();
+
+            var html = '';
+            var self = this;
+
+            this.data.forEach(function(row) {
+                html += self.buildRowHtml(row);
+            });
+
+            $('#candidatetList').html(html);
+            this.renderPagination();
+        },
+
+        buildRowHtml: function(row) {
+            var cid = row.id || row.wiseId || 0;
+            var fullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
+            var firstChar = (fullName.charAt(0) || 'C').toUpperCase();
+            var designation = row.current_designation || '----';
+
+            var code = firstChar.charCodeAt(0) % 5;
+            var badgeClasses = ['bg-light-primary text-primary', 'bg-light-success text-success', 'bg-light-warning text-warning', 'bg-light-danger text-danger', 'bg-light-info text-info'];
+            var avatarClass = badgeClasses[code];
+
+            var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + ' Y') : '----';
+            var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + ' Y rel.') : '';
+
+            var salCur = row.salary_currency || row.job_currency || '₹';
+            var ectc = (row.salary || row.ectc_yearly) ? (salCur + ' ' + (row.salary || row.ectc_yearly)) : '----';
+            var ctc = row.ctc_yearly ? (salCur + ' ' + row.ctc_yearly) : '';
+
+            var notice = row.notice ? (row.notice + ' Days') : 'Immediate';
+            var currentCo = row.current_company || '----';
+
+            var location = row.city_name || '----';
+            if (row.country_name && row.country_name !== '----') {
+                location += ', ' + row.country_name.substring(0, 2).toUpperCase();
+            }
+
+            var source = row.source || 'Direct';
+            var postedBy = row.posted_by_name || row.submitted_by_company_name || 'Recruiter';
+            var addedDate = row.created_at ? row.created_at.substring(0, 10) : '----';
+
+            var jobTitle = row.job_title || ('Job #' + (row.jobId || '----'));
+            var stageName = row.child_status_name || row.master_status_name || 'Sourced';
+            var stageCss = row.master_status_css || 'badge-light-primary';
+
+            return `
+                <tr data-candidate-id="${cid}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-circle symbol-35px me-3">
+                                <span class="symbol-label fw-bolder ${avatarClass}">${firstChar}</span>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail" data-row-id="${cid}">
+                                    ${fullName}
+                                </a>
+                                <span class="text-muted fw-bold fs-8">${designation}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="text-dark fw-bold fs-7">${totalExp}</span>
+                            <span class="text-muted fs-8">${relExp}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="text-dark fw-bold fs-7">${ectc}</span>
+                            ${ctc ? `<span class="text-muted fs-8">${ctc}</span>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="text-dark fw-bold fs-7">${notice}</span>
+                            <span class="text-muted fs-8 text-truncate" style="max-width: 100px;">${currentCo}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-dark fw-bold fs-7">${location}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="text-dark fw-bold fs-7">${source}</span>
+                            <span class="text-muted fs-8">${postedBy}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted fw-bold fs-7">${addedDate}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="text-dark fw-bold fs-7 text-truncate" style="max-width: 130px;" title="${jobTitle}">${jobTitle}</span>
+                            <span class="text-muted fs-8">#${row.jobId || ''}</span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a href="javascript:void(0);" class="badge ${stageCss} fs-8 fw-bolder stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage">
+                            ${stageName}
+                        </a>
+                    </td>
+                </tr>
+            `;
+        },
+
+        renderPagination: function() {
+            var p = this.pagination;
+            if (!p || (!p.has_more && (!p.current_page || p.current_page <= 1))) {
+                $('#paginationcandidate').empty();
+                return;
+            }
+
+            var totalRelation = p.total_relation || 'eq';
+            var totalStr = (totalRelation === 'gte') ? (Number(p.total).toLocaleString() + '+') : Number(p.total).toLocaleString();
+            var currentPage = p.current_page || 1;
+            var hasMore = p.has_more || false;
+            var nextCursor = p.next_cursor || null;
+
+            var html = `
+                <div class="text-muted fs-7">
+                    Showing page <span class="fw-bolder text-dark">${currentPage}</span> of ${totalStr} candidates
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-light ${currentPage <= 1 ? 'disabled' : ''}" id="cdCandPrevBtnDirect" ${currentPage <= 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left fa-solid fs-8 me-1"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light-primary ${!hasMore ? 'disabled' : ''}" id="cdCandNextBtnDirect" ${!hasMore ? 'disabled' : ''} data-next-cursor="${nextCursor || ''}">
+                        Next <i class="fas fa-chevron-right fa-solid fs-8 ms-1"></i>
+                    </button>
+                </div>
+            `;
+
+            $('#paginationcandidate').html(html);
+        },
+
+        bindEvents: function() {
+            var self = this;
+
+            var searchDebounceTimer = null;
+            $(document).off('input', '#cdCandSearchInputDirect');
+            $(document).on('input', '#cdCandSearchInputDirect', function() {
+                var val = $(this).val();
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    self.filters.search = val;
+                    self.filters.page = 1;
+                    self.filters.cursor = null;
+                    self.fetch(1);
+                }, 300);
+            });
+
+            $(document).off('change', '#cdCandStatusFilterDirect');
+            $(document).on('change', '#cdCandStatusFilterDirect', function() {
+                self.filters.status_id = $(this).val();
+                self.filters.page = 1;
+                self.filters.cursor = null;
+                self.fetch(1);
+            });
+
+            $(document).off('click', '#cdCandResetBtnDirect');
+            $(document).on('click', '#cdCandResetBtnDirect', function() {
+                $('#cdCandSearchInputDirect').val('');
+                $('#cdCandStatusFilterDirect').val('');
+                self.filters.search = '';
+                self.filters.status_id = '';
+                self.filters.job_id = '';
+                self.filters.page = 1;
+                self.filters.cursor = null;
+                self.fetch(1);
+            });
+
+            $(document).off('click', '#cdCandNextBtnDirect');
+            $(document).on('click', '#cdCandNextBtnDirect', function() {
+                if ($(this).hasClass('disabled')) return;
+                var cursor = $(this).data('next-cursor');
+                if (cursor) {
+                    self.fetch(self.filters.page + 1, cursor);
+                } else {
+                    self.fetch(self.filters.page + 1);
+                }
+            });
+
+            $(document).off('click', '#cdCandPrevBtnDirect');
+            $(document).on('click', '#cdCandPrevBtnDirect', function() {
+                if ($(this).hasClass('disabled')) return;
+                var prevPage = Math.max(self.filters.page - 1, 1);
+                self.filters.cursor = null;
+                self.fetch(prevPage);
+            });
+
+            $(document).off('click', '.stage_sub_stage');
+            $(document).on('click', '.stage_sub_stage', function(e) {
+                e.preventDefault();
+                var id = $(this).data('row-id');
+                if (!id) return;
+                $('#stage_body_content').html('<div class="text-center py-10 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading stage details...</div>');
+                var url = '{{ route("service_company.job-applications.stage_body_content", ":id") }}'.replace(':id', id);
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    success: function(res) {
+                        if (res && res.status === 'success') {
+                            $('#stage_body_content').html(res.view);
+                        } else if (res && res.html) {
+                            $('#stage_body_content').html(res.html);
+                        }
+                    },
+                    error: function() {
+                        $('#stage_body_content').html('<div class="text-center py-10 text-danger">Failed to load stage configuration.</div>');
+                    }
+                });
+            });
+        },
+
+        mutationAffectsCurrentQuery: function(e) {
+            var fields = e.changed_fields || {};
+            var changedKeys = Object.keys(fields);
+            if (changedKeys.length === 0) return false;
+
+            var visibility = this.QUERY_DEPENDENCIES.visibility;
+            if (visibility && visibility.excluded_values) {
+                for (var visField in visibility.excluded_values) {
+                    if (fields[visField] !== undefined) {
+                        var excludedArr = visibility.excluded_values[visField];
+                        var val = parseInt(fields[visField], 10);
+                        if (excludedArr.indexOf(val) !== -1) return true;
+                    }
+                }
+            }
+
+            var isCurrentlyVisible = this.candidateVersions.hasOwnProperty(e.candidate_id);
+            if (!isCurrentlyVisible) {
+                var entersActiveScope = true;
+                for (var depKey in this.QUERY_DEPENDENCIES) {
+                    var def = this.QUERY_DEPENDENCIES[depKey];
+                    if (def && def.filter_key && this.filters[def.filter_key]) {
+                        var activeFilterVal = parseInt(this.filters[def.filter_key], 10);
+                        var matchedField = false;
+                        for (var f = 0; f < def.fields.length; f++) {
+                            var fieldName = def.fields[f];
+                            if (fields[fieldName] !== undefined) {
+                                if (parseInt(fields[fieldName], 10) === activeFilterVal) {
+                                    matchedField = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!matchedField) {
+                            entersActiveScope = false;
+                            break;
+                        }
+                    }
+                }
+                if (entersActiveScope) return true;
+            }
+
+            for (var filterKey in this.filters) {
+                if (this.filters.hasOwnProperty(filterKey) && this.filters[filterKey] && this.QUERY_DEPENDENCIES[filterKey]) {
+                    var depFields = this.QUERY_DEPENDENCIES[filterKey].fields || [];
+                    for (var i = 0; i < depFields.length; i++) {
+                        if (fields[depFields[i]] !== undefined) return true;
+                    }
+                }
+            }
+
+            if (this.QUERY_DEPENDENCIES.sort && this.QUERY_DEPENDENCIES.sort.fields) {
+                var sortFields = this.QUERY_DEPENDENCIES.sort.fields;
+                for (var s = 0; s < sortFields.length; s++) {
+                    if (fields[sortFields[s]] !== undefined) return true;
+                }
+            }
+
+            return false;
+        },
+
+        patchCandidateRow: function(candidateId, changedFields, newVersion) {
+            this.candidateVersions[candidateId] = newVersion;
+            var $row = $(`tr[data-candidate-id="${candidateId}"]`);
+            if (!$row.length) return;
+
+            if (changedFields.master_status_name || changedFields.child_status_name) {
+                var name = changedFields.child_status_name || changedFields.master_status_name;
+                var css = changedFields.master_status_css || 'badge-light-primary';
+                $row.find('.stage_sub_stage').text(name).removeClass().addClass('badge ' + css + ' fs-8 fw-bolder stage_sub_stage');
+            }
+        },
+
+        subscribeReverb: function() {
+            if (!window.Echo || !this.companyId || !this.clientId) return;
+            var self = this;
+            var channel = 'private-company.' + this.companyId + '.client.' + this.clientId + '.candidates';
+
+            window.Echo.private(channel)
+                .listen('.CandidateStatusChanged', function(e) {
+                    if (!e || !e.candidate_id) return;
+                    if (e.event_id && self.processedEventIds.has(e.event_id)) return;
+                    self.markEventProcessed(e.event_id);
+
+                    if (self.candidateVersions[e.candidate_id] && e.aggregate_version <= self.candidateVersions[e.candidate_id]) {
+                        return;
+                    }
+
+                    if (self.mutationAffectsCurrentQuery(e)) {
+                        self.scheduleReconcile();
+                    } else {
+                        self.patchCandidateRow(e.candidate_id, e.changed_fields || {}, e.aggregate_version);
+                    }
+                })
+                .listen('.ClientCandidateVersionUpdated', function(e) {
+                    if (!e || !e.client_candidate_version) return;
+                    if (e.event_id && self.processedEventIds.has(e.event_id)) return;
+                    self.markEventProcessed(e.event_id);
+
+                    if (e.client_candidate_version <= self.clientCandidateVersion) {
+                        return;
+                    }
+
+                    self.clientCandidateVersion = e.client_candidate_version;
+                    self.scheduleReconcile();
+                });
+
+            if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                window.Echo.connector.pusher.connection.bind('connected', function() {
+                    if (self.state === 'READY' && self.clientId) {
+                        self.reconcileVersion();
+                    }
+                });
+            }
+        },
+
+        reconcileVersion: function() {
+            var self = this;
+            $.get('/service_company/clients/' + this.clientId + '/candidate-version', function(res) {
+                if (res && res.client_candidate_version > self.clientCandidateVersion) {
+                    self.clientCandidateVersion = res.client_candidate_version;
+                    self.scheduleReconcile();
+                }
+            });
+        }
+    };
+
+    function directfetchCandidates(page = 1, search = '') {
+        if (search) {
+            window.ClientCandidateStoreDirect.filters.search = search;
+        }
+        return window.ClientCandidateStoreDirect.fetch(page);
     }
 
     window.currentOjSegmentDirect = 'all';
@@ -4307,23 +4893,59 @@
         });
     }
 
-    function fetchJobsClientdirect(page = 1, search = '') {
+    function fetchJobsClientdirect(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
+        var activeStatus = status || window.currentJobStatusDirect || 'all';
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
             data: {
-                search: search || $('#inputJobSearch').val(),
+                search: search || $('#inputJobSearch').val() || '',
+                status: activeStatus,
                 client_id: $('#direct_client_id').val() || '{{ $directClientDetail->client_id }}',
-                custom:false
+                from_company_id: '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? 0 }}',
+                custom: false
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
                 $('#directclientJobsListajax').html(response.html);
                 $('#directpaginationclientjobs').html(response.pagination);
+
+                if (response.kpi) {
+                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-val').text(response.kpi.hiring);
+                    $('a[href="#requisitions"] .badge').text(response.kpi.hiring);
+                }
+            },
+            error: function() {
+                $('.page-loader').css('display', 'none');
             }
         });
     }
+
+    // Direct Client Jobs Tab: Filter Button Interaction
+    $(document).on('click', '#directclientJobsListajax .js-job-filter-btn', function() {
+        var status = $(this).data('status') || 'all';
+        window.currentJobStatusDirect = status;
+        $('#directclientJobsListajax .js-job-filter-btn').removeClass('active');
+        $(this).addClass('active');
+        fetchJobsClientdirect(1, $('#inputJobSearch').val(), status);
+    });
+
+    // Direct Client Jobs Tab: Click Routing (Fixing Drawer Click Collision Bug)
+    $(document).on('click', '#directclientJobsListajax .js-job-drawer-trigger', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var jobId = $(this).data('job-id');
+        if (!jobId) return;
+
+        if (typeof openJobDetailsDrawer === 'function') {
+            openJobDetailsDrawer(jobId);
+        } else if (typeof JobStateManager !== 'undefined' && JobStateManager.openJobDrawer) {
+            JobStateManager.openJobDrawer(jobId);
+        } else {
+            window.open(`{{ url('service_company/jobs/viewmore') }}/${jobId}`, '_blank');
+        }
+    });
 
     $(document).ready(function() {
         if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {

@@ -1276,114 +1276,26 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function clientCandidateList(Request $request)
     {
-        $startTime = microtime(true);
-        $company_id = (int) auth()->user()->company_id;
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
-        $from = ($page - 1) * $size;
+        $companyId = (int) auth()->user()->company_id;
+        $clientId = (int) ($request->input('clientid') ?: $request->input('client_id'));
 
-        $sort[] = ['wiseId' => ['order' => 'desc', 'unmapped_type' => 'long']];
-        $boolQuery = [
-            'bool' => [
-                'should' => [
-                    // First condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['client_id' => $request->clientid]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
-            ],
-        ];
+        /** @var \App\Services\Candidate\CandidateDrawerQueryService $queryService */
+        $queryService = app(\App\Services\Candidate\CandidateDrawerQueryService::class);
+        $result = $queryService->getCandidates(
+            $companyId,
+            $clientId,
+            'internal',
+            [
+                'search' => $request->input('search', $request->input('q', '')),
+                'status_id' => $request->input('status_id'),
+                'job_id' => $request->input('job_id'),
+                'page' => $request->input('page', 1),
+                'size' => $request->input('size', 25),
+                'cursor' => $request->input('cursor'),
+            ]
+        );
 
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => $sort,
-                'query' => $boolQuery,
-            ],
-        ];
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
-        }
-
-        // Phase 5 & 10 Optimization: Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
-        $jobIds = array_filter(array_column($data, 'jobId'));
-        $cityIds = array_filter(array_column($data, 'city_id'));
-
-        $jobsMap = [];
-        if (! empty($jobIds)) {
-            $jobsMap = DB::table('jobs')
-                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
-                ->whereIn('id', array_unique($jobIds))
-                ->get()
-                ->keyBy('id')
-                ->toArray();
-        }
-
-        $citiesMap = [];
-        if (! empty($cityIds)) {
-            $citiesMap = DB::table('city_list')
-                ->whereIn('city_id', array_unique($cityIds))
-                ->pluck('city', 'city_id')
-                ->toArray();
-        }
-
-        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
-            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
-        });
-
-        $jobAssignMap = [];
-        foreach ($data as $candidateRow) {
-            $cObj = (object) $candidateRow;
-            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0) {
-                $spok = DB::table('job_assign')
-                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
-                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
-                    ->where('job_assign.job_id', @$cObj->jobId)
-                    ->where('job_assign.company_id', @$cObj->ClientComID)
-                    ->first();
-                if ($spok) {
-                    $jobAssignMap[$cObj->jobId.'_'.$cObj->ClientComID] = $spok->name;
-                }
-            }
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'listType' => 'allcandidate',
-        ];
-
-        \Log::info('CLIENT_DETAILS_APM: clientCandidateList completed', [
-            'client_id' => $request->clientid,
-            'company_id' => $company_id,
-            'page' => $page,
-            'item_count' => count($data),
-            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
-        ]);
-
-        return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap'))->render(),
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+        return response()->json($result);
     }
 
     public function clientCandidateJoinList(Request $request)
@@ -1398,7 +1310,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Fail-closed Dragonfly/Redis tenant authorization (0% MySQL reads on fast path)
         $authorizedClients = Cache::remember("tenant:{$company_id}:authorized_client_ids", 300, function () use ($company_id) {
-            return DB::table('client')->where('company_id', $company_id)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+            return DB::table('client')->where('company_id', $company_id)->pluck('id')->map(fn ($id) => (int) $id)->toArray();
         });
         if (! in_array($clientId, $authorizedClients, true)) {
             $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
@@ -1409,7 +1321,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->pluck('from_company_id')
                     ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
                     ->unique()
-                    ->map(fn($id) => (int) $id)
+                    ->map(fn ($id) => (int) $id)
                     ->toArray();
             });
             if (! in_array($clientId, $authorizedDirectClients, true)) {
@@ -1601,7 +1513,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
-        if (!empty($cursorParam)) {
+        if (! empty($cursorParam)) {
             $decoded = json_decode(base64_decode($cursorParam), true);
             if (is_array($decoded)) {
                 $searchAfter = $decoded;
@@ -1674,8 +1586,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $readModels = \App\Services\Interview\InterviewReadModel::collection($rawHits, $company_id);
 
-            $lastHit = !empty($rawHits) ? end($rawHits) : null;
-            $nextCursor = ($lastHit && !empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
+            $lastHit = ! empty($rawHits) ? end($rawHits) : null;
+            $nextCursor = ($lastHit && ! empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
         }
 
         $pagination = [
@@ -1713,135 +1625,26 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function directclientCandidateList(Request $request)
     {
-        $from_company_id = (int) $request->clientid;
-        $to_company_id = (int) auth()->user()->company_id;
-        $company_id = (int) auth()->user()->company_id;
+        $companyId = (int) auth()->user()->company_id;
+        $clientId = (int) ($request->input('clientid') ?: $request->input('client_id'));
 
-        $searchQuery = $request->input('search', $request->input('q'));
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
-        $from = ($page - 1) * $size;
-
-        $must = [
+        /** @var \App\Services\Candidate\CandidateDrawerQueryService $queryService */
+        $queryService = app(\App\Services\Candidate\CandidateDrawerQueryService::class);
+        $result = $queryService->getCandidates(
+            $companyId,
+            $clientId,
+            'direct',
             [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['from_company_id' => $from_company_id]],
-                        ['term' => ['company_id' => $from_company_id]],
-                        ['term' => ['client_id' => $from_company_id]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['ClientComID' => $to_company_id]],
-                        ['term' => ['to_company_id' => $to_company_id]],
-                        ['term' => ['company_id' => $to_company_id]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-        ];
+                'search' => $request->input('search', $request->input('q', '')),
+                'status_id' => $request->input('status_id'),
+                'job_id' => $request->input('job_id'),
+                'page' => $request->input('page', 1),
+                'size' => $request->input('size', 25),
+                'cursor' => $request->input('cursor'),
+            ]
+        );
 
-        $mustNot = [
-            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-        ];
-
-        if (! empty($searchQuery)) {
-            $must[] = [
-                'bool' => [
-                    'should' => [
-                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
-                        ['match_phrase_prefix' => ['current_designation' => $searchQuery]],
-                        ['match_phrase_prefix' => ['email' => $searchQuery]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
-
-        $boolQuery = [
-            'bool' => [
-                'must' => $must,
-                'must_not' => $mustNot,
-            ],
-        ];
-
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                ],
-                'query' => $boolQuery,
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'listType' => 'allcandidate',
-        ];
-
-        // Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
-        $jobIds = array_filter(array_column($data, 'jobId'));
-        $cityIds = array_filter(array_column($data, 'city_id'));
-
-        $jobsMap = [];
-        $jobSkillsMap = [];
-        if (! empty($jobIds)) {
-            $uniqueJobIds = array_unique($jobIds);
-            $jobsMap = DB::table('jobs')
-                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
-                ->whereIn('id', $uniqueJobIds)
-                ->get()
-                ->keyBy('id')
-                ->toArray();
-
-            $skillsRows = DB::table('job_metronics_skills')
-                ->whereIn('job_id', $uniqueJobIds)
-                ->select('job_id', 'skill_name')
-                ->get();
-            foreach ($skillsRows as $sr) {
-                $jobSkillsMap[$sr->job_id][] = $sr->skill_name;
-            }
-        }
-
-        $citiesMap = [];
-        if (! empty($cityIds)) {
-            $citiesMap = DB::table('city_list')
-                ->whereIn('city_id', array_unique($cityIds))
-                ->pluck('city', 'city_id')
-                ->toArray();
-        }
-
-        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
-            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
-        });
-
-        $jobAssignMap = [];
-
-        return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
+        return response()->json($result);
     }
 
     public function directclientCandidateJoinList(Request $request)
@@ -1864,7 +1667,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->pluck('from_company_id')
                 ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
                 ->unique()
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->toArray();
         });
         if (! in_array($from_company_id, $authorizedDirectClients, true)) {
@@ -2119,7 +1922,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
-        if (!empty($cursorParam)) {
+        if (! empty($cursorParam)) {
             $decoded = json_decode(base64_decode($cursorParam), true);
             if (is_array($decoded)) {
                 $searchAfter = $decoded;
@@ -2192,8 +1995,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $readModels = \App\Services\Interview\InterviewReadModel::collection($rawHits, $company_id);
 
-            $lastHit = !empty($rawHits) ? end($rawHits) : null;
-            $nextCursor = ($lastHit && !empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
+            $lastHit = ! empty($rawHits) ? end($rawHits) : null;
+            $nextCursor = ($lastHit && ! empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
         }
 
         $pagination = [

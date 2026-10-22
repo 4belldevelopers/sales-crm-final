@@ -142,8 +142,9 @@ Opening **one single client drawer** triggers **6 HTTP requests**, **11 Elastics
 - **Backend Flow**: AJAX GET `service_company/jobs_side_bar_job_ajax/data`. Queries `ELASTIC_JOBS` index.
 - **Finding**: `_source` filtering is missing in the ES search parameters. Full ES job documents are retrieved, including heavy `job_description` and `job_requirement` text fields, inflating ES response payload size by 10x.
 
-### 5.4 Tab 4 — Candidate Audit (Internal & Direct Clients God-Level V2 Specification)
+### 5.4 Tab 4 — Candidate Audit (Internal & Direct Clients God-Level V2.3 Master Specification)
 > **Authoritative Specification & Architecture Contract**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for the complete production contract, failure-mode matrix, and implementation blueprints.
+> **Status:** FROZEN ARCHITECTURAL SPECIFICATION — PENDING EMPIRICAL VERIFICATION
 
 #### 5.4.1 Architectural Scope & Core Invariants
 - **Source Files**: 
@@ -156,8 +157,8 @@ Opening **one single client drawer** triggers **6 HTTP requests**, **11 Elastics
   - **MySQL**: Authoritative Transactional Source of Truth (SSOT).
   - **Elasticsearch (`ELASTIC_CANDIDATES`)**: Authoritative Candidate Read Model. Browsers NEVER write to ES directly.
   - **Zero-MySQL Scoped Rule**: Candidate Drawer read paths must execute strictly 0 MySQL SELECT queries.
-  - **Dragonfly / Redis**: Fail-closed authorization projections (`auth:tenant_clients:{company_id}`) and version counters.
-  - **Browser (User RAM)**: `ClientCandidateStore` state machine with `DocumentFragment` rendering.
+  - **Dragonfly Authorization**: Fail-closed tenancy check (`auth:tenant_clients:{company_id}`). Never falls back to candidate ES documents.
+  - **Browser (User RAM)**: `ClientCandidateStore` state machine with `DocumentFragment` rendering, request ID race protection, and Rule 8 filter-aware collection reconciliation.
 
 #### 5.4.2 Root-Cause Defect Matrix & Line-Level Audit
 1. **Critical Direct Client Count Inconsistency (P0)**:
@@ -194,13 +195,19 @@ Opening **one single client drawer** triggers **6 HTTP requests**, **11 Elastics
    - `loadedTabs['candidate_list'] = true` permanently short-circuits tab clicks. Switching tabs and returning never re-fetches updated candidate pipeline data.
    - Zero Laravel Reverb WebSocket integration for live candidate status updates.
 
-#### 5.4.3 Unified V2 Production Implementation Blueprint
-1. **ES Read Model Denormalization**: Ensure `ELASTIC_CANDIDATES` contains all display attributes (`job_title`, `city_name`, `country_name`, `stage_name`, `stage_css`, `skills_array`, `skill_match_percentage`, `aggregate_version`, `projection_version`, `indexed_at`).
-2. **Unified Query Service**: Construct `CandidateDrawerQueryService` to power both Internal and Direct clients, enforcing fail-closed Dragonfly authorization (`Cache::store('dragonfly')->sismember("auth:tenant_clients:{$companyId}", $clientId)`).
-3. **Pure JSON API with Deep Pagination**: Return `< 15KB` JSON with `track_total_hits: true` and `search_after` cursor navigation for large pipelines.
-4. **Optimistic Concurrency Control (OCC)**: Require `expected_version` on all candidate mutation commands; return `HTTP 409 Conflict` on race conditions.
-5. **State-Machine Client Store (`ClientCandidateStore`)**: Browser User RAM store with IDLE/LOADING/READY/REFRESHING/ERROR states, `requestId` race protection, 300ms debounced search, status filter dropdown, local card skeleton loader, and Reverb version-fenced DOM patching.
-6. **Failure-Mode Circuit Breaker**: Strictly 0 fallback to MySQL SELECT queries on Elasticsearch cluster outages.
+#### 5.4.3 Unified V2.4 Production Implementation Blueprint
+1. **ES Read Model Denormalization & Field-Level Minimization**: Ensure `ELASTIC_CANDIDATES` contains all display attributes. Query engine strictly limits `_source.includes` to 28 lightweight listing fields (eliminating resume text/transcripts/notes and preventing PII leakage). Direct cluster administrative access classified as Privileged Infrastructure Access.
+2. **Unified Query Service & Atomic Version Store**: Construct `CandidateDrawerQueryService` and `ClientCandidateVersionStore` to power both Internal and Direct clients, enforcing fail-closed Dragonfly authorization (`ClientAccessGuard`) before ES queries with zero ES candidate document fallback. Single-operation atomic Lua bootstrap (`EXISTS -> SETNX 0 -> return 0`) and fail-closed version coordination (`HTTP 503` if Dragonfly is offline).
+3. **Atomic Lua Version Advancement with 7-Day Replay Ledger**: Single-threaded Redis Lua script with 7-day TTL ledger (`event_idempotency:{company}:{client}:{event_id}`) exceeds 72h outbox redelivery horizon, guaranteeing zero duplicate version increments under concurrent worker replays.
+4. **Pure JSON API with Mutation-Aware HMAC Cursor & Bounded Count Relation**: Return `< 15KB` JSON with `track_total_hits`, `search_after` cursor navigation (`created_at DESC`, `wiseId DESC` immutable tie-breaker), mathematical `size + 1` boundary evaluation, and HMAC signature verification bound to `company_id`, `client_id`, `client_type`, sort order, canonical SHA-256 query fingerprint, schema version, and 15-minute TTL lifecycle. When bounded tracking triggers at 10,000 matches, `total_relation` returns `"gte"`, `last_page` is set to `null` to avoid bogus page counts, and the UI displays `"10,000+ Candidates"`.
+5. **Optimistic Concurrency Control (OCC)**: Require `expected_version` on all candidate mutation commands; return `HTTP 409 Conflict` on race conditions.
+6. **State-Machine Client Store (`ClientCandidateStore`)**: Browser User RAM store with IDLE/LOADING/READY/REFRESHING/ERROR states, `requestId` race protection, tenant context isolation (`companyId`, `clientId`, `clientType`), `queryFingerprint` tracking, event idempotency via bounded `processedEventIds`, candidate OCC filtering via `candidateVersions`, 300ms debounced search, status filter dropdown, local card skeleton loader, and Reverb version-fenced DOM patching.
+7. **Fully Generic Declarative Query Dependency Model (Rule 8)**: Browser store evaluates `mutationAffectsCurrentQuery(event)` using a formal Query Dependency Manifest (search, status, job, sort, archive visibility). Evaluator operates purely from manifest definitions without hardcoded status logic. Membership-altering mutations trigger clean collection refetches; non-membership mutations safely patch the row in-place.
+8. **Bounded 60ms Event Coalescer**: Store debounces Reverb bursts within a 60ms window, yielding at most one ES refresh per active reconciliation window.
+9. **Differentiated Rate Limiting**: Three independent token buckets for interactive reads (20/10s), background reconciliations (60/min), and reconnect syncs (30/min), sharing a 500 req/min tenant safety ceiling.
+10. **Failure-Mode Circuit Breaker & Deterministic Status Codes**: Strictly 0 fallback to MySQL SELECT queries on Elasticsearch cluster outages (`HTTP 503`). Deterministic HTTP status mapping across all failure modes (403 for unauthorized access, 503 for infrastructure outages, 422 for cursor/pagination/expiry errors, 409 for stale cursor).
+11. **Reconnect Reconciliation Endpoint**: `GET /service_company/clients/{clientId}/candidate-version` operates strictly from `ClientCandidateVersionStore` (0 MySQL reads), enforces `ClientAccessGuard`, and fails closed with `HTTP 503` if Dragonfly is offline.
+12. **Mandatory Full HTTP Lifecycle CI Test Gates**: Automated enforcement across full middleware stack via 8 CI assertion tests: `CandidateDrawerReadTest` (0 SQL across entire middleware stack, 1 ES), `CandidateDrawerUnauthorizedTest` (0 SQL, 0 ES, 403), `CandidateDrawerCircuitBreakerTest` (0 SQL, 503 on ES timeout), `CandidateDrawerFailClosedVersionTest` (0 SQL, 0 ES, 503 on Dragonfly downtime), `CandidateDrawerCursorSecurityTest` (422 on tampered/expired cursor), `CandidateDrawerSnapshotConsistencyTest` (409 on stale collection version), `CandidateVersionReconnectReadTest` (0 SQL, 200/403/503 matrix), and `CandidateDrawerRevocationSocketTest` (socket channel invalidation and 403 API denial).
 
 ### 5.5 Tab 5 — Interview Tracker Audit
 - **Files**: [ServiceCompanyJobApplicationController.php:L807-L870](file:///c:/xampp/htdocs/git/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L807-L870), [custom_client_candidates_interview_tracker.blade.php](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_interview_tracker.blade.php)
