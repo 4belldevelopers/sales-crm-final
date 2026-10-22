@@ -19,7 +19,7 @@
               </svg>
             </div>
             <div>
-              <h3 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Social Links</h3>
+              <h3 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 2px 0;">Social Links (Optional)</h3>
               <p style="font-size:11.5px; color:#64748b; margin:0;">Add the client’s official social media and professional profiles.</p>
             </div>
           </div>
