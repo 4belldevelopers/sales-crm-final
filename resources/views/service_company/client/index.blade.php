@@ -414,9 +414,10 @@
     $totalClientsCount = (int)($clientDataCnt['clientAll'] ?? 0);
     $internalClientsCount = (int)($clientDataCnt['clientCustom'] ?? 0);
     $directClientsCount = (int)($clientDataCnt['clientDirect'] ?? 0);
-    $activeJobsCount = (int)($clientDataCnt['activeJobs'] ?? ($clientDataCnt['clientHiring'] ?? 0));
-    $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
     $hiringClientsCount = (int)($clientDataCnt['clientHiring'] ?? 0);
+    $inactiveClientsCount = (int)($clientDataCnt['clientInactive'] ?? max(0, $totalClientsCount - $hiringClientsCount));
+    $activeJobsCount = (int)($clientDataCnt['activeJobs'] ?? 0);
+    $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
 
     $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 100;
 @endphp
@@ -549,7 +550,7 @@
                 </div>
             </a>
 
-            {{-- Card 4: Active Jobs --}}
+            {{-- Card 4: Active Hiring Clients --}}
             <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
                 <div class="cl-card-top">
                     <div class="cl-card-icon orange">
@@ -560,18 +561,18 @@
                         </svg>
                     </div>
                     <div class="cl-card-meta">
-                        <div class="cl-card-num" id="span_clientHiring">{{ $activeJobsCount }}</div>
-                        <div class="cl-card-lbl">Active Jobs</div>
+                        <div class="cl-card-num" id="span_clientHiring">{{ $hiringClientsCount }}</div>
+                        <div class="cl-card-lbl">Active Hiring</div>
                     </div>
                 </div>
                 <div class="cl-card-sub orange">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="4" y1="9" x2="20" y2="9"/>
                         <line x1="4" y1="15" x2="20" y2="15"/>
                         <line x1="10" y1="3" x2="8" y2="21"/>
                         <line x1="16" y1="3" x2="14" y2="21"/>
                     </svg>
-                    <span>Across {{ max($hiringClientsCount, ($totalClientsCount > 0 ? 1 : 0)) }} client{{ max($hiringClientsCount, ($totalClientsCount > 0 ? 1 : 0)) > 1 ? 's' : '' }}</span>
+                    <span>{{ $activeJobsCount > 0 ? $activeJobsCount . ' active position' . ($activeJobsCount > 1 ? 's' : '') : 'No active jobs' }}</span>
                 </div>
             </a>
 
@@ -767,6 +768,16 @@
                 </svg>
                 <span>Active Hiring</span>
                 <span class="cl-tab-badge" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
+            </a>
+
+            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-tab-item cl-tab-filter" id="tab-inactive" data-tab="inactive">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="10" y1="15" x2="10" y2="9"/>
+                    <line x1="14" y1="15" x2="14" y2="9"/>
+                </svg>
+                <span>Inactive Clients</span>
+                <span class="cl-tab-badge" id="tabBadgeInactive">{{ $inactiveClientsCount }}</span>
             </a>
 
             <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab-item cl-tab-filter" data-tab="request">
@@ -1797,6 +1808,9 @@ function handleWorkerMessage(data) {
             $('#span_clientCustom, #tabBadgeInternal').text(data.counts.internal);
             $('#span_clientDirect, #tabBadgeDirect').text(data.counts.direct);
             $('#span_clientHiring, #tabBadgeHiring').text(data.counts.hiring);
+            if (data.counts.inactive !== undefined) {
+                $('#tabBadgeInactive').text(data.counts.inactive);
+            }
         }
 
         const syntheticResp = {
@@ -1859,17 +1873,22 @@ function initClientWorker() {
 }
 
 function fetchActiveProjection() {
-    const cachedEtag = localStorage.getItem('jero_cl_projection_etag');
+    const companyId = {{ (int)auth()->user()->company_id }};
+    const userId = {{ (int)auth()->id() }};
+    const etagKey = 'jero_cl_etag_tenant_' + companyId + '_user_' + userId;
+    const cachedEtag = localStorage.getItem(etagKey);
     const headers = {};
     if (cachedEtag) {
         headers['If-None-Match'] = cachedEtag;
     }
 
+    const idbStoreKey = 'jero_client_projection:tenant=' + companyId + ':user=' + userId + ':projection=clients:schema=2';
+
     fetch('{{ route("service_company.clients.activeClientProjection") }}', {
         headers: headers
     }).then(async function(res) {
         if (res.status === 304) {
-            const stored = await ClientLocationDB.get('client_active_projection');
+            const stored = await ClientLocationDB.get(idbStoreKey);
             if (stored && stored.rows && stored.rows.length > 0 && clWorker) {
                 clWorker.postMessage({
                     type: 'INIT_DATASET',
@@ -1882,16 +1901,20 @@ function fetchActiveProjection() {
         }
         if (res.ok) {
             const newEtag = res.headers.get('ETag');
-            if (newEtag) localStorage.setItem('jero_cl_projection_etag', newEtag);
+            if (newEtag) localStorage.setItem(etagKey, newEtag);
             const data = await res.json();
             if (data && data.rows && clWorker) {
+                if (ClientStore.latestMutationVersion && data.data_version && data.data_version < ClientStore.latestMutationVersion) {
+                    console.warn('[Sync] Ignored stale projection version:', data.data_version, 'current mutation:', ClientStore.latestMutationVersion);
+                    return;
+                }
                 clWorker.postMessage({
                     type: 'INIT_DATASET',
                     rows: data.rows,
                     version: data.data_version || 1
                 });
                 clWorkerReady = true;
-                ClientLocationDB.set('client_active_projection', data);
+                ClientLocationDB.set(idbStoreKey, data);
             }
         }
     }).catch(function(err) {
@@ -2266,6 +2289,8 @@ function applyClientResponse(response, targetPage) {
             } else if (activeClientTab === 'hiring') {
                 $('#span_clientHiring').html(response.total);
                 $('#tabBadgeHiring').html(response.total);
+            } else if (activeClientTab === 'inactive') {
+                $('#tabBadgeInactive').html(response.total);
             } else if (activeClientTab === 'request') {
                 $('#span_clientRequest').html(response.total);
                 $('#tabBadgeRequest').html(response.total);
@@ -2418,7 +2443,10 @@ $(document).ready(function() {
     // Hydrate state from URL on page load
     hydrateStateFromUrl(false);
 
-    if ($('#allClients .tbl-r').length === 0) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilterParams = urlParams.has('country') || urlParams.has('city') || urlParams.has('industry') || urlParams.has('activity') || urlParams.has('search') || urlParams.has('q') || urlParams.has('tab') || urlParams.has('sort');
+
+    if ($('#allClients .tbl-r').length === 0 || hasFilterParams) {
         fetchCandidates(1, false);
     }
 });
@@ -2511,8 +2539,16 @@ function handleClientMutationEvent(data) {
     if (!data) return;
 
     if (data.version) {
+        if (ClientStore.latestMutationVersion && data.version < ClientStore.latestMutationVersion) {
+            console.warn('[Sync] Dropped stale out-of-order mutation version:', data.version, 'current:', ClientStore.latestMutationVersion);
+            return;
+        }
         ClientStore.latestMutationVersion = data.version;
     }
+
+    const companyId = {{ (int)auth()->user()->company_id }};
+    const userId = {{ (int)auth()->id() }};
+    localStorage.removeItem('jero_cl_etag_tenant_' + companyId + '_user_' + userId);
 
     // Invalidate main browser RAM stores
     ClientStore.clear();
@@ -2530,11 +2566,12 @@ function handleClientMutationEvent(data) {
     }
 
     if (data.clientDataCnt) {
-        if ($('#span_clientAll').length) $('#span_clientAll').html(data.clientDataCnt.clientAll);
-        if ($('#span_clientDirect').length) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
-        if ($('#span_clientCustom').length) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
-        if ($('#span_clientHiring').length) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
-        if ($('#span_clientRequest').length) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
+        if ($('#span_clientAll').length && data.clientDataCnt.clientAll !== undefined) $('#span_clientAll').html(data.clientDataCnt.clientAll);
+        if ($('#span_clientDirect').length && data.clientDataCnt.clientDirect !== undefined) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
+        if ($('#span_clientCustom').length && data.clientDataCnt.clientCustom !== undefined) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
+        if ($('#span_clientHiring').length && data.clientDataCnt.clientHiring !== undefined) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
+        if ($('#span_clientRequest').length && data.clientDataCnt.clientRequest !== undefined) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
+        if ($('#tabBadgeInactive').length && data.clientDataCnt.clientInactive !== undefined) $('#tabBadgeInactive').html(data.clientDataCnt.clientInactive);
     }
 
     // Refresh current view with zero page reload
@@ -2550,7 +2587,7 @@ function handleClientMutationEvent(data) {
             const data = event.data;
             if (!data) return;
 
-            if (data.type === 'CLIENT_REQUEST_MUTATED' || data.type === 'CLIENT_MUTATED') {
+            if (data.type === 'CLIENT_REQUEST_MUTATED' || data.type === 'CLIENT_MUTATED' || data.type === 'JOB_MUTATED' || data.type === 'JOB_STATUS_CHANGED') {
                 handleClientMutationEvent(data);
             }
         };
@@ -2563,10 +2600,19 @@ function handleClientMutationEvent(data) {
         try {
             const companyId = {{ (int)auth()->user()->company_id }};
             window.Echo.private('company.' + companyId)
+                .listen('.client.mutated', function(e) {
+                    handleClientMutationEvent(e);
+                })
                 .listen('.ClientMutated', function(e) {
                     handleClientMutationEvent(e);
                 })
                 .listen('.ClientRequestMutated', function(e) {
+                    handleClientMutationEvent(e);
+                })
+                .listen('.JobStatusChanged', function(e) {
+                    handleClientMutationEvent(e);
+                })
+                .listen('.JobMutated', function(e) {
                     handleClientMutationEvent(e);
                 });
         } catch(echoErr) {
