@@ -1314,6 +1314,13 @@ function toggleSelectAllClients(master) {
 
 // ── Client-side CSV Exporter ──
 function exportClientsToCsv() {
+    if (clWorker && clWorkerReady) {
+        clWorker.postMessage({
+            type: 'EXPORT_CSV'
+        });
+        return;
+    }
+
     var rows = [];
     rows.push(['Company Name', 'Industry', 'Location', 'Jobs Hiring', 'Jobs Hold', 'Jobs Closed', 'Sourced', 'Evaluated', 'Interviews', 'Offers', 'Joined', 'Client Type', 'Date', 'Last Activity']);
 
@@ -1521,6 +1528,372 @@ if (window.clientListState.tab === 'custom') window.clientListState.tab = 'inter
 
 window.initialLocationFacets = {!! json_encode($locationFacets ?? ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []]) !!};
 window.allCountriesList = {!! json_encode($countries ?? []) !!};
+
+// ── Offline & Zero-Server IndexedDB Reference Cache ──
+const ClientLocationDB = {
+    dbName: 'jero_client_db',
+    storeName: 'reference_data',
+    version: 1,
+
+    open: function() {
+        return new Promise(function(resolve, reject) {
+            if (!window.indexedDB) return reject(new Error('IndexedDB not supported'));
+            const req = indexedDB.open(ClientLocationDB.dbName, ClientLocationDB.version);
+            req.onupgradeneeded = function(e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(ClientLocationDB.storeName)) {
+                    db.createObjectStore(ClientLocationDB.storeName, { keyPath: 'key' });
+                }
+            };
+            req.onsuccess = function(e) { resolve(e.target.result); };
+            req.onerror = function(e) { reject(e.target.error); };
+        });
+    },
+
+    get: function(key) {
+        return new Promise(function(resolve) {
+            ClientLocationDB.open().then(function(db) {
+                const tx = db.transaction(ClientLocationDB.storeName, 'readonly');
+                const store = tx.objectStore(ClientLocationDB.storeName);
+                const req = store.get(key);
+                req.onsuccess = function() { resolve(req.result ? req.result.value : null); };
+                req.onerror = function() { resolve(null); };
+            }).catch(function() { resolve(null); });
+        });
+    },
+
+    set: function(key, value) {
+        return new Promise(function(resolve) {
+            ClientLocationDB.open().then(function(db) {
+                const tx = db.transaction(ClientLocationDB.storeName, 'readwrite');
+                const store = tx.objectStore(ClientLocationDB.storeName);
+                store.put({ key: key, value: value });
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            }).catch(function() { resolve(false); });
+        });
+    }
+};
+
+function initCountryBundle() {
+    if (window.allCountriesList && window.allCountriesList.length > 0) {
+        ClientLocationDB.set('countries_list', window.allCountriesList);
+        return;
+    }
+    ClientLocationDB.get('countries_list').then(function(cached) {
+        if (cached && cached.length > 0) {
+            window.allCountriesList = cached;
+            renderLocationDropdown($('#clLocSearchInp').val() || '');
+            return;
+        }
+        fetch('{{ asset("assets/service_company/client/countries.json") }}')
+            .then(function(res) { return res.ok ? res.json() : null; })
+            .then(function(countries) {
+                if (countries && countries.length > 0) {
+                    window.allCountriesList = countries;
+                    ClientLocationDB.set('countries_list', countries);
+                    renderLocationDropdown($('#clLocSearchInp').val() || '');
+                }
+            }).catch(function(err) {
+                console.warn('[Countries Bundle] Offline fetch fallback:', err);
+            });
+    });
+}
+
+// ── Web Worker In-Browser OLAP Engine (Zero Server Read Strain) ──
+let clWorker = null;
+let clWorkerReady = false;
+let pendingWorkerQuery = null;
+
+function renderClientRows(rows) {
+    if (!rows || rows.length === 0) {
+        return `
+        <div class="cl-empty-state">
+            <div class="cl-empty-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="10" r="10"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+            </div>
+            <div class="cl-empty-title">No clients found</div>
+            <div class="cl-empty-desc">No clients match your selected filters or search query.</div>
+        </div>`;
+    }
+
+    return rows.map(function(r) {
+        const logoHtml = (r.logo_url && r.logo_url.length > 10)
+            ? `<img src="${r.logo_url}" alt="${escapeAttr(r.initials)}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+               <span class="cl-initials-fallback ${r.bg_color || 'bg-light-primary text-primary'}" style="display:none;">${escapeAttr(r.initials)}</span>`
+            : `<span class="cl-initials-fallback ${r.bg_color || 'bg-light-primary text-primary'}">${escapeAttr(r.initials)}</span>`;
+
+        const indHtml = r.industry ? `<div class="cl-ind" title="${escapeAttr(r.industry)}">${escapeAttr(r.industry)}</div>` : '';
+        const sizeHtml = r.company_size ? `<div class="cl-size">${escapeAttr(r.company_size)}</div>` : '';
+
+        let locHtml = '';
+        if (r.location_main) locHtml += `<div class="cl-loc-city" title="${escapeAttr(r.location_main)}">${escapeAttr(r.location_main)}</div>`;
+        if (r.country) locHtml += `<div class="cl-loc-country">${escapeAttr(r.country)}</div>`;
+        if (!locHtml) locHtml = `<div class="cl-loc-empty">-</div>`;
+
+        const jobActive = r.jobs ? (r.jobs.hiring || r.jobs.active || 0) : 0;
+        const jobHold = r.jobs ? (r.jobs.hold || 0) : 0;
+        const jobClosed = r.jobs ? (r.jobs.closed || 0) : 0;
+
+        const sourced = r.pipeline ? (r.pipeline.sourced || 0) : 0;
+        const evaluated = r.pipeline ? (r.pipeline.evaluated || 0) : 0;
+        const interviews = r.pipeline ? (r.pipeline.interviews || 0) : 0;
+        const offers = r.pipeline ? (r.pipeline.offers || 0) : 0;
+        const joined = r.pipeline ? (r.pipeline.joined || 0) : 0;
+
+        const daysAgo = r.days_ago || '';
+        const clientTypeClass = r.is_direct ? 'type-direct' : 'type-internal';
+        const clientTypeCss = r.client_type_css || (r.is_direct ? 'show-detail-direct' : 'show-detail');
+        const clientTypeLabel = r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client');
+
+        return `
+        <div class="tbl-r">
+            <div class="tbl-cell-check">
+                <input type="checkbox" class="tbl-cb" value="${r.id}" onclick="event.stopPropagation()">
+            </div>
+            <div class="tbl-cell-client ${clientTypeCss}" data-row-id="${r.id}" title="${escapeAttr(r.name)}">
+                <div class="cl-company-wrapper">
+                    <div class="cl-logo-box">${logoHtml}</div>
+                    <div class="cl-details-box">
+                        <div class="cl-name">${escapeAttr(r.name)}</div>
+                        ${indHtml}
+                        ${sizeHtml}
+                    </div>
+                </div>
+            </div>
+            <div class="tbl-cell-loc">${locHtml}</div>
+            <div class="tbl-cell-type">
+                <div class="cl-date-box">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>${escapeAttr(r.connected_on || '-')}</span>
+                </div>
+                <div class="cl-conn-caption">Connected on</div>
+                <div class="cl-type-name ${clientTypeClass} ${clientTypeCss}" data-row-id="${r.id}">
+                    ${escapeAttr(clientTypeLabel)}
+                </div>
+            </div>
+            <div class="tbl-cell-activity">
+                <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
+                <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
+            </div>
+            <div class="tbl-cell-jobs">
+                <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobActive > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobActive}</span>
+                    <span class="cl-job-label">Hiring</span>
+                </div>
+                <div class="cl-job-line ${jobHold > 0 ? 'has-count cl-job-hold' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobHold > 0 ? 'bullet-hold' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobHold}</span>
+                    <span class="cl-job-label">Hold</span>
+                </div>
+                <div class="cl-job-line ${jobClosed > 0 ? 'has-count cl-job-closed' : 'no-count'}">
+                    <span class="cl-job-bullet ${jobClosed > 0 ? 'bullet-closed' : 'bullet-neutral'}"></span>
+                    <span class="cl-job-num">${jobClosed}</span>
+                    <span class="cl-job-label">Closed</span>
+                </div>
+            </div>
+            <div class="tbl-cell-pipeline">
+                <div class="cl-pipeline-flow">
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-sourced">${sourced}</span>
+                        <span class="cl-pipe-label">Sourced</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-evaluated">${evaluated}</span>
+                        <span class="cl-pipe-label">Evaluated</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-interviews">${interviews}</span>
+                        <span class="cl-pipe-label">Interviews</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-offers">${offers}</span>
+                        <span class="cl-pipe-label">Offers</span>
+                    </div>
+                    <div class="cl-pipe-step">
+                        <span class="cl-pipe-pill pill-joined">${joined}</span>
+                        <span class="cl-pipe-label">Joined</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderClientPagination(pagi) {
+    if (!pagi || pagi.total <= 0) return '';
+    const perPage = pagi.per_page || 10;
+    const total = pagi.total;
+    const totalPages = pagi.last_page || Math.ceil(total / perPage);
+    const curPage = pagi.current_page || 1;
+    const from = (curPage - 1) * perPage + 1;
+    const to = Math.min(curPage * perPage, total);
+
+    let pagesHtml = '';
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= curPage - 2 && i <= curPage + 2)) {
+            const isActive = (i === curPage);
+            pagesHtml += `<button class="cl-pagi-page pagi-page ${isActive ? 'pagi-active pagi-active-disabled' : ''}" data-page="${i}" data-listType="allcandidate">${i}</button>`;
+        } else if (i === curPage - 3 || i === curPage + 3) {
+            pagesHtml += `<span class="cl-pagi-dots">…</span>`;
+        }
+    }
+
+    return `
+    <div class="cl-pagi-bar">
+        <div class="cl-pagi-info">
+            Showing ${from} to ${to} of ${total} clients
+        </div>
+        <div class="cl-pagi-controls">
+            <div class="cl-pagi-perpage-wrap">
+                <span class="cl-pagi-perpage-lbl">Rows per page:</span>
+                <select class="cl-pagi-perpage-select pagi-perpage">
+                    <option value="10" ${perPage == 10 ? 'selected' : ''}>10</option>
+                    <option value="25" ${perPage == 25 ? 'selected' : ''}>25</option>
+                    <option value="50" ${perPage == 50 ? 'selected' : ''}>50</option>
+                    <option value="100" ${perPage == 100 ? 'selected' : ''}>100</option>
+                </select>
+            </div>
+            <button class="cl-pagi-btn pagi-arrow ${curPage <= 1 ? 'pagi-disabled' : ''}" data-page="${curPage - 1}" data-listType="allcandidate" aria-label="Previous page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            ${pagesHtml}
+            <button class="cl-pagi-btn pagi-arrow ${curPage >= totalPages ? 'pagi-disabled' : ''}" data-page="${curPage + 1}" data-listType="allcandidate" aria-label="Next page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+    </div>`;
+}
+
+function handleWorkerMessage(data) {
+    if (!data || !data.type) return;
+
+    if (data.type === 'INIT_COMPLETE') {
+        clWorkerReady = true;
+    } else if (data.type === 'QUERY_RESULT') {
+        const q = pendingWorkerQuery;
+        if (!q || q.id !== data.queryId) return;
+        pendingWorkerQuery = null;
+
+        const renderedHtml = renderClientRows(data.rows);
+        const renderedPagi = renderClientPagination({
+            total: data.total,
+            per_page: data.per_page,
+            current_page: data.page,
+            last_page: Math.ceil(data.total / data.per_page)
+        });
+
+        if (data.counts) {
+            $('#span_clientAll, #tabBadgeAll').text(data.counts.all);
+            $('#span_clientCustom, #tabBadgeInternal').text(data.counts.internal);
+            $('#span_clientDirect, #tabBadgeDirect').text(data.counts.direct);
+            $('#span_clientHiring, #tabBadgeHiring').text(data.counts.hiring);
+        }
+
+        const syntheticResp = {
+            html: renderedHtml,
+            total: data.total,
+            pagination: renderedPagi,
+            rows: data.rows,
+            projection_status: 'synced'
+        };
+
+        if (q.cacheKey) {
+            ClientStore.set(q.cacheKey, syntheticResp);
+        }
+
+        applyClientResponse(syntheticResp, data.page);
+    } else if (data.type === 'CSV_READY') {
+        const blob = new Blob([data.csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "clients_export_" + new Date().toISOString().slice(0, 10) + ".csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+}
+
+function initClientWorker() {
+    if (!window.Worker) return;
+    try {
+        clWorker = new Worker('{{ asset("assets/service_company/client/cl-data-worker.js") }}');
+        clWorker.onmessage = function(e) {
+            handleWorkerMessage(e.data);
+        };
+
+        // Seed with initial rows if present
+        @if(!empty($initialRows))
+        const initialRows = {!! json_encode($initialRows) !!};
+        if (initialRows && initialRows.length > 0) {
+            clWorker.postMessage({
+                type: 'INIT_DATASET',
+                rows: initialRows,
+                version: {{ (int)($initialDataVersion ?? 1) }}
+            });
+            clWorkerReady = true;
+        }
+        @endif
+
+        // Hydrate from active projection in background
+        fetchActiveProjection();
+    } catch(e) {
+        console.warn('[CL Worker] Web Worker init skipped:', e);
+        clWorker = null;
+    }
+}
+
+function fetchActiveProjection() {
+    const cachedEtag = localStorage.getItem('jero_cl_projection_etag');
+    const headers = {};
+    if (cachedEtag) {
+        headers['If-None-Match'] = cachedEtag;
+    }
+
+    fetch('{{ route("service_company.clients.activeClientProjection") }}', {
+        headers: headers
+    }).then(async function(res) {
+        if (res.status === 304) {
+            const stored = await ClientLocationDB.get('client_active_projection');
+            if (stored && stored.rows && stored.rows.length > 0 && clWorker) {
+                clWorker.postMessage({
+                    type: 'INIT_DATASET',
+                    rows: stored.rows,
+                    version: stored.data_version || 1
+                });
+                clWorkerReady = true;
+            }
+            return;
+        }
+        if (res.ok) {
+            const newEtag = res.headers.get('ETag');
+            if (newEtag) localStorage.setItem('jero_cl_projection_etag', newEtag);
+            const data = await res.json();
+            if (data && data.rows && clWorker) {
+                clWorker.postMessage({
+                    type: 'INIT_DATASET',
+                    rows: data.rows,
+                    version: data.data_version || 1
+                });
+                clWorkerReady = true;
+                ClientLocationDB.set('client_active_projection', data);
+            }
+        }
+    }).catch(function(err) {
+        console.warn('[CL Worker] Background activeClientProjection fetch skipped:', err);
+    });
+}
 
 // ── Bounded Browser RAM Store (ClientStore) with SWR & Request Token Guard ──
 const ClientStore = {
@@ -1941,6 +2314,35 @@ function fetchCandidates(page, updateUrl = true, cursor = null) {
         }
     }
 
+    // In-Browser OLAP Query via Web Worker (0ms main thread latency, 0% server read strain)
+    if (clWorker && clWorkerReady && activeClientTab !== 'request') {
+        const queryId = ++ClientStore.latestRequestId;
+        pendingWorkerQuery = {
+            id: queryId,
+            cacheKey: cacheKey,
+            page: targetPage
+        };
+        clWorker.postMessage({
+            type: 'QUERY_DATASET',
+            queryId: queryId,
+            filters: {
+                tab: activeClientTab,
+                search: searchVal,
+                country_id: countryVal,
+                country_name: clientListState.country_name,
+                city_id: cityVal,
+                city_name: clientListState.city_name,
+                unspecified_location: unspecifiedVal,
+                industry: industryVal,
+                activity: activityVal,
+                sort: sortVal,
+                page: targetPage,
+                per_page: perPage
+            }
+        });
+        return;
+    }
+
     // Abort previous in-flight request to prevent race conditions
     if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
         ClientStore.currentXhr.abort();
@@ -2015,6 +2417,12 @@ function fetchCandidates(page, updateUrl = true, cursor = null) {
 }
 
 $(document).ready(function() {
+    // Phase 1: Hydrate static country bundle from IndexedDB / JSON
+    initCountryBundle();
+
+    // Phase 2: Start background Web Worker OLAP engine
+    initClientWorker();
+
     $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
         e.preventDefault();
         const page = $(this).data('page');
@@ -2122,7 +2530,42 @@ $(document).on('click', '.request_event', function () {
     });
 });
 
-// ── Native Browser Cross-Tab Synchronization Channel ──
+// ── Universal Real-Time Multi-Account Synchronization (Phase 3) ──
+function handleClientMutationEvent(data) {
+    if (!data) return;
+
+    if (data.version) {
+        ClientStore.latestMutationVersion = data.version;
+    }
+
+    // Invalidate main browser RAM stores
+    ClientStore.clear();
+
+    // If a specific client record is attached, delta-upsert directly in Worker
+    if (data.client && clWorker && clWorkerReady) {
+        clWorker.postMessage({
+            type: 'DELTA_UPSERT',
+            client: data.client,
+            version: data.version || null
+        });
+    } else {
+        // Re-hydrate active projection in background
+        fetchActiveProjection();
+    }
+
+    if (data.clientDataCnt) {
+        if ($('#span_clientAll').length) $('#span_clientAll').html(data.clientDataCnt.clientAll);
+        if ($('#span_clientDirect').length) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
+        if ($('#span_clientCustom').length) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
+        if ($('#span_clientHiring').length) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
+        if ($('#span_clientRequest').length) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
+    }
+
+    // Refresh current view with zero page reload
+    fetchCandidates(page_no, false);
+}
+
+// 1. Cross-Tab Browser Channel (Same Computer / Multiple Tabs)
 (function() {
     if (typeof BroadcastChannel !== 'undefined') {
         window.clientSyncChannel = new BroadcastChannel('jero_clients_cross_tab_sync');
@@ -2131,28 +2574,34 @@ $(document).on('click', '.request_event', function () {
             const data = event.data;
             if (!data) return;
 
-            if (data.type === 'CLIENT_REQUEST_MUTATED') {
-                if (data.version) {
-                    ClientStore.latestMutationVersion = data.version;
-                }
-                ClientStore.invalidateTab('request');
-                ClientStore.invalidateTab('all');
-                ClientStore.invalidateTab('direct');
-
-                if (data.clientDataCnt) {
-                    if ($('#span_clientAll').length) $('#span_clientAll').html(data.clientDataCnt.clientAll);
-                    if ($('#span_clientDirect').length) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
-                    if ($('#span_clientCustom').length) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
-                    if ($('#span_clientHiring').length) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
-                    if ($('#span_clientRequest').length) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
-                }
-
-                if (activeClientTab === 'request') {
-                    fetchCandidates(1);
-                }
+            if (data.type === 'CLIENT_REQUEST_MUTATED' || data.type === 'CLIENT_MUTATED') {
+                handleClientMutationEvent(data);
             }
         };
     }
 })();
+
+// 2. Laravel Reverb WebSocket Push (Across All Team Recruiters in Organization)
+(function() {
+    if (typeof window.Echo !== 'undefined') {
+        try {
+            const companyId = {{ (int)auth()->user()->company_id }};
+            window.Echo.private('company.' + companyId)
+                .listen('.ClientMutated', function(e) {
+                    handleClientMutationEvent(e);
+                })
+                .listen('.ClientRequestMutated', function(e) {
+                    handleClientMutationEvent(e);
+                });
+        } catch(echoErr) {
+            console.warn('[Echo] Reverb listener registration skipped:', echoErr);
+        }
+    }
+})();
+
+// 3. Tab Focus / Sleep Recovery Guard
+window.addEventListener('focus', function() {
+    fetchActiveProjection();
+});
 </script>
 @endpush

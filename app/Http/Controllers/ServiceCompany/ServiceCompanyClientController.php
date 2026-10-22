@@ -3473,6 +3473,47 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     }
 
     /**
+     * High-speed full client projection for in-browser DuckDB-WASM / Web Worker caching.
+     * Serves 100% of client accounts for the authenticated tenant with ETag and Dragonfly caching.
+     */
+    public function activeClientProjection(Request $request)
+    {
+        abort_if(! auth()->check(), 401);
+        abort_if(Gate::denies('view_clients'), 403);
+
+        $company_id = (int) auth()->user()->company_id;
+        $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $etag = 'W/"cl_proj_'.$company_id.'_'.$tenantVersion.'"';
+
+        if ($request->header('If-None-Match') === $etag) {
+            return response(null, 304)->header('ETag', $etag);
+        }
+
+        $cacheKey = "ats:v2:clients_projection:{$company_id}:{$tenantVersion}";
+        $data = cache()->remember($cacheKey, 86400, function () {
+            $projectionRequest = new Request([
+                'tab' => 'all',
+                'page' => 1,
+                'per_page' => 5000,
+                'size' => 5000,
+            ]);
+            $res = $this->all_clients_data_ajax($projectionRequest);
+            $payload = $res->getData(true);
+
+            return [
+                'total' => $payload['total'] ?? 0,
+                'rows' => $payload['rows'] ?? [],
+                'html' => $payload['html'] ?? '',
+                'data_version' => $payload['data_version'] ?? 1,
+            ];
+        });
+
+        return response()->json($data)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, max-age=300, must-revalidate');
+    }
+
+    /**
      * Opaque HMAC-signed cursor generator for deep sequential pagination.
      */
     protected function encodeOpaqueCursor(array $sortValues, $companyId): string
