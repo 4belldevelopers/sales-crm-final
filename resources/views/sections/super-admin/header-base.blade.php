@@ -1,269 +1,22 @@
+{{-- Superadmin top header - Search option removed --}}
 <style>
-
-[type="search"] {
-    outline-offset: -2px;
-    -webkit-appearance: textfield;
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.9;
-    color: #181c32;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #e4e6ef;
-    appearance: none;
-    border-radius: 0.6rem 0rem 0rem 0.6rem;
-    outline: none;
-    padding: 0.3em 0.9em;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-  height: 80px;
-  background-color: #318ebb;
-  box-shadow: 0 0px 8px rgba(212, 212, 212, 0.4);
-}
-header .logo {
-  display: flex;
-  flex: 2;
-  justify-content: flex-start;
-  align-items: center;
-  height: 100%;
-  color: #FFF;
-  font-size: 3rem;
-  padding-left: 2rem;
-  cursor: pointer;
-}
-header nav {
-  display: flex;
-  flex: 7;
-}
-header nav .search-bar {
-  display: flex;
-  flex: 1;
-  max-width: 800px;
-  margin: 0 auto;
-}
-header nav .search-bar .search {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-header nav .search-bar .search .search__input {
-  display: flex;
-  flex: 1;
-  padding: 1.2rem 1rem 1.2rem 4rem;
-  height: 40px;
-  font-size: 0.9rem;
-  color: #4a4a4a;
-  border: none;
-  border-radius: 0;
-  position: relative;
-  right: 0;
-  letter-spacing: 0.05rem;
-  background: url(https://cdn1.iconfinder.com/data/icons/hawcons/32/698956-icon-111-search-128.png) #ececec;
-  background-repeat: no-repeat;
-  background-position: 1rem 50%;
-  background-size: 2rem;
-  outline: 0;
-  transition: background 0.3s ease-out, opacity 0.5s ease-out;
-}
-header nav .search-bar .search .search__input:focus {
-  background: url(https://cdn1.iconfinder.com/data/icons/hawcons/32/698956-icon-111-search-128.png) no-repeat 1rem 50% #FFFFFF;
-  background-size: 2rem;
-}
-header nav .search-bar .search .search__btn {
-  background: #36474f;
-  height: 40px;
-  border: none;
-  width: 120px;
-  color: #FFF;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1rem;
-  cursor: pointer;
-  outline: 0;
-  transition: all 0.4s ease-out;
-}
-header nav .search-bar .search .search__btn:hover {
-  background: #263137;
-}
-header nav .search-bar .search .search__icon {
-  display: none;
-}
-header .menu {
-  display: flex;
-  flex: 2;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 2rem;
-  font-size: 2rem;
-  color: #FFF;
-  height: 80px;
-  line-height: 80px;
-  cursor: pointer;
-}
-
-.suggestion {
-  display: flex;
-  position: absolute;
-  top: 55px;
-  border-top: 1px solid #F1F1F1;
-  opacity: 0;
-  visibility: hidden;
-  width: 270px!important;
-}
-.suggestion.active {
-  opacity: 1;
-  visibility: visible;
-  transform-origin: center top;
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-  -webkit-animation: rotation-show 0.5s 0.3s;
-          animation: rotation-show 0.5s 0.3s;
-  -webkit-animation-fill-mode: backwards;
-          animation-fill-mode: backwards;
-}
-.suggestion__content {
-  background: #fff;
-  display: flex;
-  flex: 1;
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-  padding: 0.5em 1em;
-  font-size: 0.8rem;
-}
-.suggestion__content .suggestion__content-right-side,
-.suggestion__content .suggestion__content-left-side {
-  flex: 1;
-  padding: 1em;
-}
-.suggestion__content .suggestion__content-right-side h5,
-.suggestion__content .suggestion__content-left-side h5 {
-  margin: 0;
-  padding: 0;
-  font-size: 0.9rem;
-  color: #757575;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-.suggestion__content .suggestion__content-right-side ul,
-.suggestion__content .suggestion__content-left-side ul {
-  margin: 0;
-  padding: 0;
-}
-.suggestion__content .suggestion__content-right-side ul li,
-.suggestion__content .suggestion__content-left-side ul li {
-  list-style-type: none;
-  padding: 2px 0;
-}
-.suggestion__content .suggestion__content-left-side ul li {
-  list-style-type: none;
-  padding: 2px 0;
-  color: #328dbb;
-  cursor: pointer;
-  transition: color 0.4s ease-out, transform 0.4s ease;
-}
-.suggestion__content .suggestion__content-left-side ul li:hover {
-  color: #13587b;
-  transform: translateX(3px);
-}
-.suggestion__content .suggestion__content-right-side h5 {
-  text-align: center;
-}
-.suggestion__content .suggestion__content-right-side ul {
-  padding: 0;
-  max-width: 200px;
-  margin: auto;
-}
-.suggestion__content .suggestion__content-right-side ul li {
-  border: 1px solid #f3f3f3;
-  background: #FFF;
-  text-align: center;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease-out, border 0.4s ease-in-out;
-}
-.suggestion__content .suggestion__content-right-side ul li:hover {
-  border: 1px solid #607D8B;
-  background: #f1f1f1;
-}
-
-.hide-element {
-  display: none !important;
-}
-
-.mobile-search {
-  margin: 0 1em;
-  opacity: 1 !important;
-  visibility: visible !important;
-  width: 100%;
-}
-
-.close-icon {
-  color: #909090 !important;
-  position: absolute !important;
-  right: 8% !important;
-  font-size: 1rem;
-}
-
-@-webkit-keyframes rotation-show {
-  0% {
-    transform: perspective(1000px) rotateX(-90deg);
-  }
-  100% {
-    transform: perspective(1000px) translateY(0);
-  }
-}
-
-@keyframes rotation-show {
-  0% {
-    transform: perspective(1000px) rotateX(-90deg);
-  }
-  100% {
-    transform: perspective(1000px) translateY(0);
-  }
-}
-@media only screen and (max-width: 600px) {
-  .search__input {
-    font-size: 16px !important;
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-  }
-
-  .search__btn {
-    display: none !important;
-  }
-
-  .search__icon {
-    display: flex !important;
-    color: #FFF;
-    align-items: center;
-    flex: 6;
-    position: absolute;
-    right: 5rem;
-    cursor: pointer;
-    height: 80px;
-    line-height: 80px;
-  }
-
-  .message {
-    position: relative;
-    top: 80px;
-    background: #f3f3f3;
-    padding: 0.5rem 1.5rem;
-    display: block !important;
-    text-align: center;
-  }
-}
+    #kt_header_nav .page-title {
+        display: flex !important;
+        align-items: center !important;
+    }
+    #kt_header_nav .page-title h1 {
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 1.35rem !important;
+        font-weight: 600 !important;
+        color: #181c32 !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+    }
+    @media (max-width: 991.98px) {
+        #kt_header_nav .page-title h1 {
+            font-size: 1.1rem !important;
+        }
+    }
 </style>
 <div id="kt_header" style="" class="header align-items-stretch">
 <!--begin::Container-->
@@ -292,42 +45,28 @@ header .menu {
 <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1">
 <!--begin::Navbar-->
 <div class="d-flex align-items-stretch" id="kt_header_nav">
+@php
+    $resolvedHeaderTitle = \App\Helper\GeneralMethod::getSuperAdminPageTitle($pageTitle ?? null);
+@endphp
+@if(View::hasSection('header_title'))
+<!--begin::Page title from section-->
+<div class="d-flex align-items-center me-3">
+    @yield('header_title')
+</div>
+<!--end::Page title from section-->
+@elseif(!empty($resolvedHeaderTitle))
+<!--begin::Page title from controller/route-->
+<div class="d-flex align-items-center me-3">
+    <div class="page-title d-flex align-items-center flex-wrap my-0">
+        <h1 class="d-flex align-items-center text-gray-900 fw-bold fs-3 my-0">{{ $resolvedHeaderTitle }}</h1>
+    </div>
+</div>
+<!--end::Page title from controller/route-->
+@endif
 <!--begin::Menu wrapper-->
 <div class="header-menu align-items-stretch" data-kt-drawer="true" data-kt-drawer-name="header-menu" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_header_menu_mobile_toggle" data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_body', lg: '#kt_header_nav'}">
-<!--begin::New search-->
-<div class="search-bar d-flex align-items-center">
-<form class="search">
-  <input type="search" class="search__input" name="search" placeholder="Search" onload="equalWidth()" required>
-  <button class="search__btn btn btn-sm btn-primary btn-active-light-primary" style="position: absolute;border-radius: 0rem 0.475rem 0.475rem 0rem;">Search</button>
-  <i class="ion-ios-search search__icon"></i>
-</form>
-<div class="suggestion">
-<div class="suggestion__content">
-<div class="suggestion__content-left-side">
-<h5>Popular Categories</h5>
-<ul>
-<li>Marketing Material</li>
-<li>Just Sold</li>
-<li>Small Business Card</li>
-<li>Mailing</li>
-<li>Just List</li>
-<ul>
-</div>
-<div class="suggestion__content-right-side">
-  <h5>Popular Keywords</h5>
-  <ul>
-    <li>Business Card</li>
-    <li>Brochures</li>
-    <li>Just List Just Sold</li>
-    <li>Flyers</li>
-  </ul>
-</div>
-</div>
-</div>
-</div>
-<!--end::New search-->
 <!--begin::Previous Search-->
-<div class="d-flex align-items-stretch ms-1 ms-lg-3">
+<div class="d-flex align-items-stretch ms-1 ms-lg-3 d-none">
   <!--begin::Search-->
   <div id="kt_header_search" class="d-flex align-items-stretch" data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter" data-kt-search-layout="menu" data-kt-menu-trigger="auto" data-kt-menu-overflow="false" data-kt-menu-permanent="true" data-kt-menu-placement="bottom-start" data-kt-menu-flip="bottom">
     <!--begin::Search toggle-->
@@ -2809,24 +2548,31 @@ header .menu {
     <div class="d-flex align-items-center ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
       <!--begin::Menu wrapper-->
       <div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-flip="bottom">
-        <!-- <img src="{{ $user->
-        profile_image_url  }}" alt="{{ $user->name  }}" /> -->
-        <?php 
-		//echo '<pre>'; print_r($user->image); exit; 
-		
-	$background_image					=	url('public/user-uploads/team_profile_img/avatar.png'); 
-	if(!empty(@$user->image) && strlen(@$user->image)>10){
-		$background_image			=  url('public/user-uploads/team_profile_img/'.@$user->image);  	
-	}
-?>
-        <img src="<?php echo @$background_image; ?>" alt="{{ $user->name  }}" /> </div>
+        <?php
+        $background_image = '';
+        if (! empty(@$user->image) && strlen(@$user->image) > 5) {
+            if (file_exists(public_path('user-uploads/profile/'.@$user->image))) {
+                $background_image = asset('user-uploads/profile/'.@$user->image);
+            } elseif (file_exists(public_path('user-uploads/team_profile_img/'.@$user->image))) {
+                $background_image = asset('user-uploads/team_profile_img/'.@$user->image);
+            } elseif (filter_var(@$user->image, FILTER_VALIDATE_URL)) {
+                $background_image = @$user->image;
+            } elseif (! empty($user->profile_image_url)) {
+                $background_image = $user->profile_image_url;
+            }
+        }
+        if (empty($background_image)) {
+            $background_image = asset('avatar.png');
+        }
+        ?>
+        <img src="<?php echo @$background_image; ?>" alt="{{ $user->name }}" onerror="this.onerror=null; this.src='{{ asset('avatar.png') }}';" /> </div>
       <!--begin::Menu-->
       <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px" data-kt-menu="true">
         <!--begin::Menu item-->
         <div class="menu-item px-3">
           <div class="menu-content d-flex align-items-center px-3">
             <!--begin::Avatar-->
-            <div class="symbol symbol-50px me-5"> <img alt="Logo" src="<?php echo @$background_image; ?>" /> </div>
+            <div class="symbol symbol-50px me-5"> <img alt="{{ $user->name }}" src="<?php echo @$background_image; ?>" onerror="this.onerror=null; this.src='{{ asset('avatar.png') }}';" /> </div>
             <!--end::Avatar-->
             <!--begin::Username-->
             <div class="d-flex flex-column">
@@ -2884,78 +2630,4 @@ header .menu {
 </div>
 <!--end::Container-->
 </div>
-<script>
-    var input = document.querySelector('.search__input');
-    var inputWidth = input.offsetWidth;
-    var suggestion = document.querySelector('.suggestion');
-    var mobileSearch = document.querySelector('.search__icon');
-    var menu = document.querySelector('.menu');
-    var logo = document.querySelector('.logo');
-    var logoIcon = logo.querySelector('.logo__icon');
-      
-    function equalWidth()
-    {
-      var input = document.querySelector('.search__input');
-      var inputWidth = input.offsetWidth;
-      suggestion.style.width = inputWidth + "px" ;
-    }
 
-    function showSuggestion()
-    {
-      suggestion.classList.add('active');
-    }
-
-    function hideSuggestion()
-    {
-      suggestion.classList.remove('active');
-    }
-
-    document.addEventListener('DOMContentLoaded', function()
-    {
-      equalWidth();
-      input.addEventListener('focus', showSuggestion);
-    })
-
-    document.addEventListener('click', function(e)
-    {
-      var target = e.target.className;
-      e.stopPropagation();
-      if (target != "search__input" && target != "suggestion__content-left-side" && target != "suggestion__content-right-side" && target != "suggestion__content" ) {
-        hideSuggestion();
-        console.log(target);
-      }
-    });
-
-    var addEvent = function(object, type, callback)
-    {
-        if (object == null || typeof(object) == 'undefined') return;
-        if (object.addEventListener) {
-            object.addEventListener(type, callback, false);
-        } else if (object.attachEvent) {
-            object.attachEvent("on" + type, callback);
-        } else {
-            object["on"+type] = callback;
-        }
-    };
-
-    addEvent(window, 'resize', function(event)
-    {
-      suggestion.style.width = '';
-      equalWidth();
-    });
-
-    function openMobileSearch()
-    {
-      logo.classList.toggle('hide-element');
-      menu.classList.toggle('hide-element');
-      input.classList.toggle('mobile-search');
-      mobileSearch.classList.toggle('ion-ios-search');
-      mobileSearch.classList.toggle('ion-close-round');
-      mobileSearch.classList.toggle('close-icon');
-    }
-
-    mobileSearch.addEventListener('click', function()
-    {
-      openMobileSearch();
-    })
-</script>

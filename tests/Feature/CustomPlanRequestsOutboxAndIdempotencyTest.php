@@ -390,4 +390,17 @@ class CustomPlanRequestsOutboxAndIdempotencyTest extends TestCase
         $this->assertTrue((bool) $channelCallback($this->superAdmin), 'Superadmin must be authorized to subscribe');
         $this->assertFalse((bool) $channelCallback($this->regularUser), 'Regular user must be forbidden from subscribing');
     }
+
+    /**
+     * Test 9: Custom Plan Requests index page renders cleanly.
+     */
+    public function test_index_page_renders_successfully(): void
+    {
+        $response = $this->actingAs($this->superAdmin)
+            ->get(route('superadmin.custom-plan-requests.index'));
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('Custom Plan Requests', $response->getContent());
+        $this->assertStringContainsString('cpr-hero-wrapper', $response->getContent());
+    }
 }

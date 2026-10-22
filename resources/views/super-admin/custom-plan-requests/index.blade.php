@@ -1,10 +1,81 @@
 @extends('layouts.superadmin_layout')
 
+@section('header_title')
+<div class="cpr-header-title d-flex flex-column justify-content-center my-0">
+    <h1 class="d-flex align-items-center text-gray-900 fw-bold my-0">Custom Plan Requests</h1>
+    <span class="header-subtitle">Custom Plan Enquiries</span>
+</div>
+@endsection
+
+@push('head-script')
 <style>
+/* Top Navigation Header Title Stack & Subtitle */
+.cpr-header-title h1 {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+    color: #181c32 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+.cpr-header-title .header-subtitle {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: #7e8299 !important;
+    line-height: 1.2 !important;
+    margin-top: 3px !important;
+}
+@media (max-width: 991.98px) {
+    .cpr-header-title h1 {
+        font-size: 1.1rem !important;
+    }
+    .cpr-header-title .header-subtitle {
+        display: none !important;
+    }
+}
+
+/* Top Space & Header Gap Management (Collapse redundant toolbar whitespace) */
+#kt_header_search {
+    display: none !important;
+}
+#kt_header {
+    border-bottom: 1px solid #eff2f5 !important;
+}
+#kt_toolbar {
+    display: none !important;
+}
+@media (min-width: 992px) {
+    .sa-cpr-page {
+        margin-top: -48px !important;
+    }
+}
+@media (max-width: 991.98px) {
+    .sa-cpr-page {
+        margin-top: -38px !important;
+    }
+}
+.sa-cpr-page #kt_content {
+    padding-top: 0.5rem !important;
+}
+
+.cpr-hero-wrapper {
+    margin-bottom: 24px !important;
+}
+.cpr-hero-wrapper .col {
+    display: flex !important;
+}
 .cpr-stat-card {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 86px;
     border-radius: 8px !important;
     border: 1px solid #EFF2F5;
     background: #ffffff;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 1rem 1.15rem !important;
+    box-sizing: border-box !important;
     transition: all 0.2s ease-in-out;
 }
 .cpr-stat-card:hover {
@@ -12,14 +83,19 @@
     transform: translateY(-2px);
 }
 .cpr-stat-title {
-    font-size: 0.85rem;
+    font-size: 0.825rem;
     color: #7E8299;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 .cpr-stat-value {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.2;
+    margin-top: 4px;
     transition: transform 0.3s ease, color 0.3s ease;
 }
 .table td, .table th {
@@ -31,9 +107,6 @@
 .cpr-stat-card.active-filter-card {
     box-shadow: 0 0 0 2px #009ef7, 0 4px 14px rgba(0,158,247,0.18) !important;
     transform: translateY(-2px);
-}
-.cpr-hero-wrapper {
-    margin-bottom: 24px !important;
 }
 @keyframes cprHighlightPulse {
     0% { background-color: rgba(0, 158, 247, 0.22) !important; }
@@ -78,77 +151,48 @@
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(80, 205, 137, 0); }
 }
 </style>
+@endpush
 
 @section('content')
-<!--begin::Toolbar-->
-<div class="toolbar py-3" id="kt_toolbar">
-    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-        <div class="page-title d-flex align-items-center flex-wrap me-3 mb-2 mb-lg-0">
-            <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">
-                Custom Plan Requests
-            </h1>
-            <span class="h-20px border-gray-200 border-start mx-4"></span>
-            <ul class="breadcrumb breadcrumb-separatorless fw-bold fs-7 my-1">
-                <li class="breadcrumb-item text-muted">
-                    <a href="{{ route('superadmin.dashboard.index') }}" class="text-muted text-hover-primary">Home</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <span class="bullet bg-gray-200 w-5px h-2px"></span>
-                </li>
-                <li class="breadcrumb-item text-dark">Custom Plan Enquiries</li>
-            </ul>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="live-sync-indicator" title="Real-Time Data Synchronization Active across all tabs & sessions">
-                <span class="live-sync-dot"></span>
-                <span>Live Sync Active</span>
-            </span>
-            <button type="button" id="btn-manual-sync" class="btn btn-sm btn-icon btn-light" title="Refresh Live Data">
-                <i class="fa fa-sync-alt fs-7"></i>
-            </button>
-        </div>
-    </div>
-</div>
-<!--end::Toolbar-->
-
+<div class="sa-cpr-page">
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4 pt-lg-6" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
     <div class="container-fluid px-4">
 
         <!--begin::Summary Stat Cards (Hero Section)-->
-        <div class="row g-4 mb-5 cpr-hero-wrapper">
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 cursor-pointer" data-filter-status="all" title="Click to view All Requests">
+        <div class="row g-3 g-xl-4 mb-5 cpr-hero-wrapper row-cols-2 row-cols-md-3 row-cols-xl-6">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #0095e8 !important;" data-filter-status="all" title="Click to view All Requests">
                     <div class="cpr-stat-title">Total Requests</div>
-                    <div class="cpr-stat-value text-dark" id="stat-total">{{ $summaryCounts['total'] ?? 0 }}</div>
+                    <div class="cpr-stat-value text-primary" id="stat-total">{{ $summaryCounts['total'] ?? 0 }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 border-start border-4 border-info cursor-pointer" data-filter-status="New" title="Click to view New Requests">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #7239ea !important;" data-filter-status="New" title="Click to view New Requests">
                     <div class="cpr-stat-title">New Requests</div>
-                    <div class="cpr-stat-value text-info" id="stat-new">{{ $summaryCounts['new'] ?? 0 }}</div>
+                    <div class="cpr-stat-value" style="color: #7239ea !important;" id="stat-new">{{ $summaryCounts['new'] ?? 0 }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 border-start border-4 border-warning cursor-pointer" data-filter-status="In Progress" title="Click to view In Progress Requests">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #ffab00 !important;" data-filter-status="In Progress" title="Click to view In Progress Requests">
                     <div class="cpr-stat-title">In Progress</div>
                     <div class="cpr-stat-value text-warning" id="stat-in-progress">{{ $summaryCounts['in_progress'] ?? 0 }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 border-start border-4 border-primary cursor-pointer" data-filter-status="Contacted" title="Click to view Contacted Requests">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #00c2ff !important;" data-filter-status="Contacted" title="Click to view Contacted Requests">
                     <div class="cpr-stat-title">Contacted</div>
-                    <div class="cpr-stat-value text-primary" id="stat-contacted">{{ $summaryCounts['contacted'] ?? 0 }}</div>
+                    <div class="cpr-stat-value text-info" id="stat-contacted">{{ $summaryCounts['contacted'] ?? 0 }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 border-start border-4 border-success cursor-pointer" data-filter-status="Resolved" title="Click to view Resolved Requests">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #50cd89 !important;" data-filter-status="Resolved" title="Click to view Resolved Requests">
                     <div class="cpr-stat-title">Resolved</div>
                     <div class="cpr-stat-value text-success" id="stat-resolved">{{ $summaryCounts['resolved'] ?? 0 }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
-                <div class="card cpr-stat-card p-4 border-start border-4 border-secondary cursor-pointer" data-filter-status="Closed" title="Click to view Closed Requests">
+            <div class="col">
+                <div class="card cpr-stat-card cursor-pointer" style="border-left: 4px solid #7e8299 !important;" data-filter-status="Closed" title="Click to view Closed Requests">
                     <div class="cpr-stat-title">Closed</div>
                     <div class="cpr-stat-value text-muted" id="stat-closed">{{ $summaryCounts['closed'] ?? 0 }}</div>
                 </div>
@@ -158,18 +202,18 @@
 
         <!--begin::Main Card-->
         <div class="card shadow-sm">
-            <div class="card-header border-0 pt-4">
-                <div class="card-title d-flex align-items-center flex-wrap gap-3">
-                    <!-- Search Input -->
-                    <div class="d-flex align-items-center position-relative my-1">
+            <div class="card-header border-0 pt-4 pb-2 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="card-title d-flex align-items-center flex-grow-1 me-3 my-1 gap-3">
+                    <!-- Search Input (Full Width) -->
+                    <div class="d-flex align-items-center position-relative flex-grow-1 my-1">
                         <span class="svg-icon svg-icon-2 position-absolute ms-3">
                             <i class="fa fa-search text-gray-500"></i>
                         </span>
-                        <input type="text" id="cpr-search" class="form-control form-control-solid w-250px ps-10" placeholder="Search reference, customer..." />
+                        <input type="text" id="cpr-search" class="form-control form-control-solid w-100 ps-10" placeholder="Search reference, customer..." />
                     </div>
 
                     <!-- Status Filter -->
-                    <div class="d-flex align-items-center my-1">
+                    <div class="d-flex align-items-center flex-shrink-0 my-1">
                         <select id="cpr-status-filter" class="form-select form-select-solid w-180px">
                             <option value="all">All Statuses</option>
                             @foreach($allowedStatuses as $status)
@@ -179,9 +223,22 @@
                     </div>
 
                     <!-- Reset Filter Button -->
-                    <button type="button" id="btn-reset-filters" class="btn btn-sm btn-light">
+                    <button type="button" id="btn-reset-filters" class="btn btn-sm btn-light flex-shrink-0 my-1">
                         <i class="fa fa-undo me-1"></i>Reset
                     </button>
+                </div>
+
+                <!-- Shifted Live Sync Indicator & Manual Sync Button -->
+                <div class="card-toolbar flex-shrink-0 my-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="live-sync-indicator" title="Real-Time Data Synchronization Active across all tabs & sessions">
+                            <span class="live-sync-dot"></span>
+                            <span>Live Sync Active</span>
+                        </span>
+                        <button type="button" id="btn-manual-sync" class="btn btn-sm btn-icon btn-light" title="Refresh Live Data">
+                            <i class="fa fa-sync-alt fs-7"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -211,6 +268,8 @@
     </div>
 </div>
 <!--end::Content-->
+</div>
+<!--end::sa-cpr-page-->
 
 <!--begin::View Details Modal-->
 <div class="modal fade" id="modalViewDetails" tabindex="-1" aria-hidden="true">

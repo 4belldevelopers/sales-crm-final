@@ -64,9 +64,15 @@ END:VCALENDAR";
      *
      * @return array
      */
+    protected static ?array $cachedSuperAdminCompanyIds = null;
+
     public static function superAdminCompanyIds()
     {
-        return Cache::remember('jero_super_admin_company_ids', 300, function () {
+        if (static::$cachedSuperAdminCompanyIds !== null) {
+            return static::$cachedSuperAdminCompanyIds;
+        }
+
+        return static::$cachedSuperAdminCompanyIds = Cache::remember('jero_super_admin_company_ids', 86400, function () {
             $companyIds = DB::table('users')
                 ->where(function ($q) {
                     $q->where('is_superadmin', 1)
@@ -199,11 +205,11 @@ END:VCALENDAR";
      * for PNG and WebP, and applies optimal compression (level 8 for PNG, 85% quality for JPEG/WebP).
      * Non-raster formats like SVG are safely copied without alteration.
      *
-     * @param string $sourcePath
-     * @param string $destinationPath
-     * @param string $ext
-     * @param int $maxWidth
-     * @param int $maxHeight
+     * @param  string  $sourcePath
+     * @param  string  $destinationPath
+     * @param  string  $ext
+     * @param  int  $maxWidth
+     * @param  int  $maxHeight
      * @return bool
      */
     public static function compressAndSaveLogo($sourcePath, $destinationPath, $ext, $maxWidth = 500, $maxHeight = 500)
@@ -264,6 +270,7 @@ END:VCALENDAR";
             return true;
         } catch (\Throwable $e) {
             \Log::warning('Logo compression fallback to copy: '.$e->getMessage());
+
             return @copy($sourcePath, $destinationPath);
         }
     }
@@ -17007,5 +17014,213 @@ END:VCALENDAR";
         }
 
         return str_starts_with($rawPhone, '+') ? ('+'.$cleanDigits) : $cleanDigits;
+    }
+
+    /**
+     * Authoritative Page Title Resolver for Super Admin Pages.
+     *
+     * Resolves high-precision, clean, translated, human-readable titles for Super Admin
+     * navbar and document head across all super admin pages.
+     */
+    public static function getSuperAdminPageTitle(?string $pageTitle = null): string
+    {
+        // 1. High-precision URL pattern matching for Super Admin routes
+        if (request()->is('super-admin/dashboard*')) {
+            return 'Dashboard';
+        }
+        if (request()->is('super-admin/subscription*')) {
+            return 'Subscription';
+        }
+        if (request()->is('super-admin/custom-plan-requests*')) {
+            return 'Custom Plan Requests';
+        }
+        if (request()->is('super-admin/jobs/job-lists*') || request()->is('super-admin/jobs/joblists*')) {
+            return 'All Jobs';
+        }
+        if (request()->is('super-admin/jobs/job_request_accept*')) {
+            return 'Accepted Job Requests';
+        }
+        if (request()->is('super-admin/jobs/job_request*')) {
+            return 'Job Requests';
+        }
+        if (request()->is('super-admin/jobs/recommandedrequest*')) {
+            return 'Recommended Requests';
+        }
+        if (request()->is('super-admin/jobs/hmlisting*') || request()->is('super-admin/jobs/hiring_manager*')) {
+            return 'Hiring Managers';
+        }
+        if (request()->is('super-admin/jobs/recruiter*')) {
+            return 'Recruiters';
+        }
+        if (request()->is('super-admin/jobs/editJobStatus*')) {
+            return 'Edit Job Status';
+        }
+        if (request()->is('super-admin/candidate-lists*') || request()->is('super-admin/candidatedata*')) {
+            return 'All Candidates';
+        }
+        if (request()->is('super-admin/candidatedatashow*')) {
+            return 'Candidate Details';
+        }
+        if (request()->is('super-admin/meetingstoreScheduleList*') || request()->is('super-admin/meeting-schedule*') || request()->is('super-admin/add-meeting*')) {
+            return 'Meeting Tracker';
+        }
+        if (request()->is('super-admin/meeting-comment*')) {
+            return 'Meeting Comments';
+        }
+        if (request()->is('super-admin/jd-list*') || request()->is('super-admin/jdlist*')) {
+            return 'JD Details';
+        }
+        if (request()->is('super-admin/createjd*')) {
+            return 'Create Job Description';
+        }
+        if (request()->is('super-admin/offer-amount-change*')) {
+            return 'Salary Breakup';
+        }
+        if (request()->is('super-admin/bench-candidates*') || request()->is('super-admin/showdetails-bench-candidates*') || request()->is('super-admin/ajax-bench-candidates*')) {
+            return 'Bench Candidates';
+        }
+        if (request()->is('super-admin/marketplace*') || request()->is('super-admin/job-public-market*')) {
+            return 'Marketplace Operations Command Center';
+        }
+        if (request()->is('super-admin/coin-features*') || request()->is('super-admin/add-edit-coin-featutes*')) {
+            return 'Coin Features';
+        }
+        if (request()->is('super-admin/coin-packages*') || request()->is('super-admin/add-edit-coin-packages*')) {
+            return 'Coin Packages';
+        }
+        if (request()->is('super-admin/topup-coin-packages*') || request()->is('super-admin/add-edit-top-up-coin-packages*')) {
+            return 'Top-Up Coin Packages';
+        }
+        if (request()->is('super-admin/coupons*')) {
+            return 'Coupons';
+        }
+        if (request()->is('super-admin/list-default-terms*') || request()->is('super-admin/default-terms*')) {
+            return 'Default Terms';
+        }
+        if (request()->is('super-admin/whatsapp-themes*')) {
+            return 'WhatsApp Templates';
+        }
+        if (request()->is('super-admin/transaction-history*')) {
+            return 'Transaction History';
+        }
+        if (request()->is('super-admin/email-themes*')) {
+            return 'Email Themes';
+        }
+        if (request()->is('super-admin/notification*')) {
+            return 'Notifications';
+        }
+        if (request()->is('super-admin/smtp-settings*')) {
+            return 'SMTP Settings';
+        }
+        if (request()->is('super-admin/ticket-list*') || request()->is('super-admin/ticketcreate*') || request()->is('super-admin/sdshow-tickets*')) {
+            return 'Support Tickets';
+        }
+        if (request()->is('super-admin/custompackages*') || request()->is('super-admin/generatecustompackages*')) {
+            return 'Custom Packages';
+        }
+        if (request()->is('super-admin/defaultpackages*')) {
+            return 'Default Packages';
+        }
+        if (request()->is('super-admin/package-features*') || request()->is('super-admin/add-edit-package-features*') || request()->is('super-admin/packages*')) {
+            return 'Packages';
+        }
+        if (request()->is('super-admin/currency-settings*')) {
+            return 'Currency Settings';
+        }
+        if (request()->is('super-admin/payment-settings*')) {
+            return 'Payment Settings';
+        }
+        if (request()->is('super-admin/sms-settings*')) {
+            return 'SMS Settings';
+        }
+        if (request()->is('super-admin/language-settings*')) {
+            return 'Language Settings';
+        }
+        if (request()->is('super-admin/theme-settings*')) {
+            return 'Theme Settings';
+        }
+        if (request()->is('super-admin/linkedin-settings*')) {
+            return 'LinkedIn Settings';
+        }
+        if (request()->is('super-admin/footer-settings*')) {
+            return 'Footer Settings';
+        }
+        if (request()->is('super-admin/global-settings*')) {
+            return 'Settings';
+        }
+        if (request()->is('super-admin/front-cms*')) {
+            return 'Front CMS';
+        }
+        if (request()->is('super-admin/icon-features*')) {
+            return 'Icon Features';
+        }
+        if (request()->is('super-admin/client-feedbacks*')) {
+            return 'Client Feedbacks';
+        }
+        if (request()->is('super-admin/invoices*')) {
+            return 'Invoices';
+        }
+        if (request()->is('super-admin/custom-modules*')) {
+            return 'Custom Modules';
+        }
+        if (request()->is('super-admin/superadmins*')) {
+            return 'Super Admins';
+        }
+        if (request()->is('super-admin/recruiter-note*')) {
+            return 'Recruiter Note Templates';
+        }
+        if (request()->is('super-admin/rm-note*')) {
+            return 'Relationship Manager Note Templates';
+        }
+        if (request()->is('super-admin/skills*') || request()->is('super-admin/skill*')) {
+            return 'Skills';
+        }
+        if (request()->is('super-admin/super-admin-access*') || request()->is('super-admin/access-company*')) {
+            return 'Super Admin Access';
+        }
+        if (request()->is('super-admin/google-meeting-setting*')) {
+            return 'Google Meet Settings';
+        }
+        if (request()->is('super-admin/team-meeting-setting*')) {
+            return 'Microsoft Teams Settings';
+        }
+        if (request()->is('super-admin/zoom-setting*')) {
+            return 'Zoom Settings';
+        }
+        if (request()->is('super-admin/features-list*')) {
+            return 'Features List';
+        }
+        if (request()->is('super-admin/team*')) {
+            return 'Team';
+        }
+        if (request()->is('super-admin/profile*')) {
+            return 'My Profile';
+        }
+        if (request()->is('super-admin/update-application*')) {
+            return 'Update Application';
+        }
+        if (request()->is('super-admin/company*')) {
+            return 'Companies';
+        }
+
+        // 2. Fallback to passed $pageTitle if provided and valid
+        if (! empty($pageTitle)) {
+            if (\Illuminate\Support\Facades\Lang::has($pageTitle)) {
+                return (string) __($pageTitle);
+            }
+            if (\Illuminate\Support\Facades\Lang::has('app.'.$pageTitle)) {
+                return (string) __('app.'.$pageTitle);
+            }
+            if (\Illuminate\Support\Facades\Lang::has('menu.'.$pageTitle)) {
+                return (string) __('menu.'.$pageTitle);
+            }
+
+            return (string) __($pageTitle);
+        }
+
+        // 3. Fallback from URL segment
+        $seg = request()->segment(2);
+
+        return $seg ? ucwords(str_replace(['-', '_'], ' ', (string) $seg)) : 'Super Admin';
     }
 }
