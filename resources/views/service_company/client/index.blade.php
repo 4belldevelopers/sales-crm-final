@@ -1520,16 +1520,21 @@ window.ClientStateManager = {
     },
 
     clearDrawerState: function() {
-        // 1. Close drawers if active
+        // 1. Invalidate drawer cache for closed client to guarantee 100% fresh data on reopening
+        if (typeof DrawerLRUCache !== 'undefined' && this.state.selectedClientId) {
+            DrawerLRUCache.invalidate(this.state.selectedClientId);
+        }
+
+        // 2. Close drawers if active
         closeClientDrawers();
 
-        // 2. Abort any active drawer request
+        // 3. Abort any active drawer request
         if (this.activeDrawerXhr && this.activeDrawerXhr.readyState !== 4) {
             this.activeDrawerXhr.abort();
             this.activeDrawerXhr = null;
         }
 
-        // 3. Reset drawer state & context shield
+        // 4. Reset drawer state & context shield
         this.state.drawerStatus = 'idle';
         this.state.drawerError = null;
         this.state.drawerRequestToken++;

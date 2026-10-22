@@ -1,9 +1,9 @@
-# GOD-LEVEL AUDIT REPORT & PRODUCTION SPECIFICATION: CANDIDATES TAB IN CLIENT DRAWER
+# GOD-LEVEL PRODUCTION SPECIFICATION & ARCHITECTURE CONTRACT: CANDIDATES TAB IN CLIENT DRAWER (V2.0 MASTER)
 
-> **Document Type:** Production Architecture Audit & Implementation Specification  
+> **Document Status:** FROZEN PRODUCTION ARCHITECTURAL SPECIFICATION & CONTRACT  
 > **Scope:** Internal Client Drawer (`show.blade.php`) & Direct Client Drawer (`dviewMore.blade.php`)  
-> **Target Scale:** 10,000+ Concurrently Active Recruiters with 0% Avoidable MySQL / Server Read Strain  
-> **Repository Context:** JERO ATS / Talent Marketplace SaaS  
+> **Target Scale:** 10,000+ Concurrently Active Recruiters with Strictly 0% MySQL Reads on Read Paths  
+> **Repository Context:** JERO ATS / Multi-Tenant Talent Marketplace SaaS  
 > **Target Path:** `docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md`  
 > **Companion Documents:**  
 > - [CLIENT_DETAILS_TABS_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CLIENT_DETAILS_TABS_AUDIT.md)  
@@ -11,620 +11,617 @@
 > - [INTERVIEWS_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/INTERVIEWS_TAB_CLIENT_DRAWER_AUDIT.md)  
 > - [OFFER_JOINING_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/OFFER_JOINING_CLIENT_DRAWER_AUDIT.md)  
 > - [drawer_candidate.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/drawer_candidate.md)  
-> **Authoritative Files Evaluated:**  
+> **Authoritative Codebase Files:**  
 > - [show.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php) (Internal Client Drawer Shell)  
 > - [dviewMore.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php) (Direct Client Drawer Shell)  
-> - [index.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php) (Client Listing, LRU Cache & Drawer State Manager)  
-> - [custom_client_candidates.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php) (Candidate Row Blade View)  
-> - [ServiceCompanyJobApplicationController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php) (Candidate Tab Endpoints)  
-> - [CandidateDrawerApiController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/CandidateDrawerApiController.php) (Modern Zero-MySQL-Read API)  
-> - [GeneralMethod.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php) (Candidate KPI Counts & ES Aggregations)  
-> - [mysql-schema.sql](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/database/schema/mysql-schema.sql) (Database Invariant Schema)  
+> - [index.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php) (Client State Machine & Drawer LRU Manager)  
+> - [custom_client_candidates.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php) (Legacy Candidate Row View)  
+> - [ServiceCompanyJobApplicationController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php) (Drawer Candidate Endpoints)  
+> - [CandidateDrawerApiController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/CandidateDrawerApiController.php) (Candidate Core JSON API)  
+> - [GeneralMethod.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php) (Candidate KPI Counts & ES Sync Logic)  
+> - [mysql-schema.sql](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/database/schema/mysql-schema.sql) (Database Schema of Record)  
 
 ---
 
-## 1. Executive Summary & Core Architectural Principle
+## 1. Architectural Foundations & CQRS Authority Boundaries
 
-An exhaustive, peer-reviewed architectural and code-level audit was conducted on the **Candidates Tab** (`#candidate_list`) within both the **Internal Client Drawer** (`show.blade.php`) and the **Direct Client Drawer** (`dviewMore.blade.php`).
-
-Under current production implementations, opening and viewing the Candidates tab triggers **catastrophic database cascades, critical tenant isolation vulnerabilities, cross-tier count discrepancies, and browser UI freezes**.
-
-### Non-Negotiable System Profile & Authority Boundaries:
-- **MySQL:** Authoritative Transactional Write Store (`INSERT` / `UPDATE` / `DELETE` only; **0% reads on UI/API paths**).
-- **Elasticsearch (`ELASTIC_CANDIDATES`):** Universal, Authoritative Candidate Read Projection for UI queries, counts, pagination, and multi-faceted filters. Zero UI writes.
-- **Transactional Outbox Pipeline:** Guarantees that candidate mutations, state transitions, and read-model projections never desynchronize.
-- **Redis / Dragonfly:** High-speed cache for pre-computed tenant-scoped candidate list projections and KPI badges (4M QPS capability) with atomic multi-tenant cache invalidation.
-- **Laravel Reverb:** Scoped WebSocket invalidation broadcast (`private-company.{companyId}.client.{clientId}.candidates`).
-- **Browser (User RAM):** Client-First **JSON Data Store** (`ClientCandidateStore`) with client-side DOM rendering, search debouncing, zero full-page blocking loaders, and isolated drawer teardown.
+### 1.1 Strict CQRS Authority Definitions
+To eliminate architectural ambiguity across distributed storage tiers, the data boundaries are formally defined:
+- **MySQL = Authoritative Transactional Source of Truth (SSOT)**: The single authoritative store for transactional writes (`INSERT`, `UPDATE`, `DELETE`). Commits all state changes alongside an atomic transactional outbox event and idempotency key claim.
+- **Elasticsearch (`ELASTIC_CANDIDATES`) = Authoritative Candidate Read Model**: Universal read projection for candidate searches, multi-stage pipeline filters, pagination, and count aggregations. **Browser clients NEVER write to Elasticsearch directly.**
+- **Dragonfly / Redis = Non-Authoritative Coordination & Cache Tier**: Stores fail-closed authorization projections (`auth:tenant_clients:{company_id}`), candidate pipeline version counters, and transient status masters.
+- **Browser User RAM (`ClientCandidateStore`) = Ephemeral Presentation State**: Holds the client-side state machine, loaded candidate records, debounce timers, and DOM patching logic.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                              CANONICAL CQRS & CANDIDATE READ PIPELINE                                  │
+│                                   CANONICAL CQRS & OUTBOX PIPELINE                                     │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-              ┌──────────────────────────────────────┐
-              │           MySQL WRITE STORE          │
-              │   Authoritative Source of Truth      │
-              │   [Transaction: Data + Outbox Event] │
-              └──────────────────┬───────────────────┘
-                                 │ (Atomic Commit)
-                     Transactional Outbox Worker
-                                 │
-                   ┌─────────────┴─────────────┐
-                   ↓                           ↓
-        ┌─────────────────────┐     ┌──────────────────────┐
-        │  ES Read Projection │     │  Projection Version  │
-        │  ELASTIC_CANDIDATES │     │  & Scoped Reverb Push│
-        └──────────┬──────────┘     └──────────┬───────────┘
-                   ↓                           ↓
-        ┌─────────────────────┐     ┌──────────────────────┐
-        │ CandidateReadModel  │     │ ClientCandidateStore │
-        │ (Pure JSON Payload) │     │ (Multi-Tenant RAM)   │
-        └──────────┬──────────┘     └──────────┬───────────┘
-                   └─────────────┬─────────────┘
-                                 ↓
-                   ┌───────────────────────────┐
-                   │   Client Drawer Browser   │
-                   │   Client-Side DOM Render  │
-                   └───────────────────────────┘
+        COMMAND PATH (State Mutations)                          QUERY PATH (Zero MySQL Reads)
+   ┌──────────────────────────────────────┐                ┌──────────────────────────────────────┐
+   │ Recruiter Action (Stage/Note/Status) │                │  Client Drawer Browser (Candidates)  │
+   └──────────────────┬───────────────────┘                └──────────────────▲───────────────────┘
+                      │ (Idempotency Key + OCC)                               │ (Pure JSON Projection)
+                      ▼                                                       │
+   ┌──────────────────────────────────────┐                ┌──────────────────┴───────────────────┐
+   │        MySQL WRITE STORE (SSOT)      │                │      CandidateDrawerQueryService     │
+   │  [Atomic Transaction: Data + Outbox] │                │       (Fail-Closed Auth Guard)       │
+   └──────────────────┬───────────────────┘                └──────────────────▲───────────────────┘
+                      │                                                       │
+           Transactional Outbox Worker                                        │ (Elasticsearch Query)
+                      │                                                       │
+        ┌─────────────┴─────────────┐                      ┌──────────────────┴───────────────────┐
+        ▼                           ▼                      │   ELASTICSEARCH READ MODEL (PROJ)    │
+   ┌─────────┐                 ┌─────────┐                 │        ELASTIC_CANDIDATES            │
+   │   ES    │                 │ Reverb  │                 └──────────────────────────────────────┘
+   │ Indexer │                 │ Broadcast                 
+   └─────────┘                 └─────────┘
 ```
+
+### 1.2 "0% MySQL Reads" Scoped Architectural Rule
+> **Architectural Mandate**:  
+> **Candidate Drawer read paths must execute strictly 0 MySQL SELECT queries.**  
+> *(This invariant governs UI/API candidate listing, counting, filtering, and pagination. It strictly prohibits ad-hoc queries, joins, and relational lookups during read execution. Authentication, authorization caching, transactional commands, schema migrations, and outbox workers operate within their respective designated boundaries).*
 
 ---
 
-## 2. Pillar I: Data Accuracy & Freshness Invariants
+## 2. Security Architecture: Fail-Closed Multi-Tenant Authorization
 
-### 2.1 The Count Desynchronization Defect
-Recruiters depend on the **Candidate Tab Badge** and **Header KPI Card** to accurately represent the volume of active candidate profiles under each client. Currently, these numbers desynchronize severely from the records displayed in the candidate table.
+### 2.1 The Vulnerability in Existing Code
+In the legacy implementation ([`ServiceCompanyJobApplicationController.php:1294`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1294)), `clientid` was passed from the request directly into an Elasticsearch `should` query without verifying tenant ownership. Furthermore, using loose `should` clauses (`company_id OR job_company_id OR ClientComID`) created cross-tenant IDOR leakage risks.
 
-#### Internal Client Discrepancy Matrix:
-| Location | Implementation Source | Cache TTL | Filters Applied | Discrepancy Cause |
-|---|---|---|---|---|
-| **Header KPI Card** (`show.blade.php:1570`) | `GeneralMethod::InternalClientCandidatesCountList` | 180s (Redis) | `must_not: [job_master_status_id => 9]` | Excludes deleted/archived (status 9) |
-| **Tab Badge** (`show.blade.php:1635`) | `$kpiSubmitted` via `InternalClientCandidatesCountList` | 180s (Redis) | `must_not: [job_master_status_id => 9]` | Stale for up to 3 minutes on candidate stage update |
-| **Table List Total** (`clientCandidateList:1319`) | `ELASTIC_CANDIDATES` search total | None / ETag | **NO status 9 exclusion!** | **Includes deleted/archived candidates! Table count > Badge count!** |
-
-#### Direct Client Discrepancy Matrix:
-| Location | Implementation Source | Cache TTL | Filters Applied | Discrepancy Cause |
-|---|---|---|---|---|
-| **Header KPI Card** (`dviewMore.blade.php:1608`) | `GeneralMethod::DirectClientCandidatesCountList` | 900s (15 min!) | `final_status = 1`, `must_not: [status 9]` | Strictly requires `final_status = 1`; excludes only 9 |
-| **Tab Badge** (`dviewMore.blade.php:1673`) | `$kpiSubmitted` via `DirectClientCandidatesCountList` | 900s (15 min!) | `final_status = 1`, `must_not: [status 9]` | Extremely stale (15 minutes); ignores recent additions |
-| **Table List Total** (`directclientCandidateList:1646`) | `ELASTIC_CANDIDATES` search total | None / ETag | **NO `final_status = 1` filter!** `must_not: [status 8, 9]` | **Excludes status 8 AND 9! Ignores `final_status`! Table count != Badge count!** |
-
-> [!CAUTION]
-> In Direct Clients, candidate profiles with `job_master_status_id = 8` (InReview / Private / On Hold) are counted by the KPI header badge, but are completely hidden from the candidate list table (`must_not: [8, 9]`). A recruiter sees badge count "5" but the table renders "No data available in table"!
-
-### 2.2 Broken Search Implementation
-In both Internal and Direct Client drawers, searching for candidates is **completely broken**:
-1. **Missing DOM Input**: Neither `show.blade.php` nor `dviewMore.blade.php` renders an `<input id="search">` or `<input id="inputSearch">` element inside `#candidate_list`. The JavaScript listener `$('#search').on('keyup')` is binding to an element that does not exist in the DOM.
-2. **Ignored Search Parameter in Internal Controller**:
-   In `ServiceCompanyJobApplicationController::clientCandidateList`:
-   ```php
-   // Line 1281: Reads parameter 'q'
-   $searchQuery = $request->input('q');
-   
-   // Lines 1287-1302: $boolQuery is constructed WITHOUT $searchQuery!
-   $boolQuery = [
-       'bool' => [
-           'should' => [
-               ['bool' => ['must' => [['term' => ['client_id' => $request->clientid]]]]],
-           ],
-           'minimum_should_match' => 1,
-           'filter' => [],
-       ],
-   ];
-   ```
-   The client-side AJAX sends `{ search: search }`. The controller checks `$request->input('q')`, and even if passed, **never appends the search condition to the Elasticsearch query**. Internal candidate search is 100% dead code.
-3. **Mismatched Pagination Search Extraction**:
-   When clicking pagination in `show.blade.php` (line 3740), JavaScript reads:
-   `var search = $('#inputSearch').val() || '';`
-   While the keyup handler binds to `$('#search')`. They reference two completely different non-existent IDs.
-
----
-
-## 3. Pillar II: Performance & Architecture (10K+ Target & Zero MySQL Reads)
-
-### 3.1 Catastrophic N+1 Query Cascades in View Loops
-When rendering `custom_client_candidates.blade.php`, the system violates Rule 1: **"MySQL is ONLY for Add / Edit / Delete: 0% MySQL reads on web/API request paths."**
+### 2.2 The Fail-Closed Security Pipeline
+Every candidate request must pass through a strict, multi-tier security hierarchy before Elasticsearch is queried:
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                         EXISTING CASCADING N+1 QUERIES PER CANDIDATE ROW                       │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-  Candidate Row 1
-  ├── DB::table('jobs')->where('id', $row->jobId)->first()             [Direct Client fallback]
-  ├── GeneralMethod::skill_percentage -> DB::table('job_metronics_skills') [UNCACHED ALL PATHS]
-  ├── DB::table('city_list')->where('city_id', $row->city_id)->first() [Direct Client fallback]
-  ├── DB::table('job_assign')->join('users')->where(...)->first()       [Direct Client fallback]
-  ├── GeneralMethod::companyDetailsByClient($row->jobId) [4-table join] [All paths on cache miss]
-  └── DB::table('candidate_status')->where('id', $row->child_status_id) [Direct Client fallback]
-  ────────────────────────────────────────────────────────────────────────────────────────────────
-  Result: 10 rows = 60+ synchronous MySQL SELECT queries executed on the web request path!
+Authenticated User (JWT / Session)
+       ↓
+Extract authenticated company_id
+       ↓
+Client Access Guard (Dragonfly Set: auth:tenant_clients:{company_id})
+       ├── [NOT MEMBER] ──► Immediate HTTP 403 Forbidden (Fail-Closed)
+       └── [IS MEMBER]  ──► Proceed to Candidate Query
+                                   ↓
+                   Elasticsearch Candidate Read Model
+                   (Strict Filter: company_id AND client_id)
 ```
 
-#### Exact Line Evidence:
-1. `custom_client_candidates.blade.php:27`:
-   ```php
-   $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
-   ```
-   In `directclientCandidateList()`, `$jobsMap` is NOT passed to the view. Every candidate row executes a synchronous query to `jobs`.
-2. `GeneralMethod.php:7303-7306` via `custom_client_candidates.blade.php:69`:
-   ```php
-   $rawJobSkills = DB::table('job_metronics_skills')->where('job_id', (int) $jobSkillsOrId)->pluck('skill_name')->toArray();
-   ```
-   `GeneralMethod::skill_percentage` executes an uncached SQL query to `job_metronics_skills` for **every candidate row across both Internal and Direct clients**.
-3. `custom_client_candidates.blade.php:338-341`:
-   ```php
-   $row_city = DB::table('city_list')->select('city')->where('city_id', @$row->city_id)->first();
-   ```
-   Synchronous query to `city_list` for every row when `$citiesMap` is missing.
-4. `custom_client_candidates.blade.php:383`:
-   ```php
-   $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-   ```
-   Synchronous query joining `job_assign` and `users` for every third-party candidate.
-5. `custom_client_candidates.blade.php:474-477`:
-   ```php
-   $childStatus = DB::table('candidate_status')->select('name')->where('id', $row->child_status_id)->first();
-   ```
-   Synchronous query to `candidate_status` for every row when `$statusMap` is missing.
+### 2.3 Strict Elasticsearch Tenant Filter Contract
+The candidate query must never rely on loose `should` clauses. The filter contract is strictly additive:
 
-### 3.2 HTML Payload Bloat vs Pure JSON Projection
-- Currently, `clientCandidateList` and `directclientCandidateList` compile `custom_client_candidates.blade.php` on the server and return a monolithic HTML payload:
-  `{ "html": "<tr>...</tr><tr>...</tr>...", "pagination": "<div class='pagination'>...</div>" }` (~120 KB to 250 KB uncompressed).
-- Under 10,000 concurrent recruiters opening drawers and switching tabs, this produces **1.2 GB to 2.5 GB of repetitive HTML strings** generated by PHP workers per minute, saturating CPU cores and socket buffers.
-- **Architectural Solution**: Transition to Client-First JSON API returning `< 15 KB` denormalized candidate projection documents (`CandidateDrawerApiController` pattern), rendered directly in browser RAM via virtual DOM / template fragments.
-
----
-
-## 4. Pillar III: Candidate Lifecycle & Status Machine Representation
-
-### 4.1 Master Status & Child Status Hierarchy
-The JERO ATS defines canonical lifecycle stages in `master_status` and granular sub-stages in `candidate_status`:
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              CANDIDATE LIFECYCLE STAGES                                │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-
- [1: SOURCING] ──► [2: SCREENING/EVALUATION] ──► [3: INTERVIEW] ──► [4: NEGOTIATION]
-                                                                            │
-      ┌─────────────────────────────────────────────────────────────────────┘
-      ▼
- [5: OFFER] ──────► [6: JOINED]
-      │
-      ├───────────► [7: REJECTED]
-      └───────────► [8: IN REVIEW / ON HOLD / WITHDRAWN]
-                    [9: ARCHIVED / DELETED] (Excluded from ATS Active Pipeline)
-```
-
-### 4.2 Critical Bug: Unhandled Stage Change Modals
-In `custom_client_candidates.blade.php`:
-```html
-<a href="javascript.void(0);" data-row-id="{{ $row->wiseId }}" 
-   class="d-flex flex-column {{ $stage_default_css }}" 
-   data-toggle="modal" data-target="#{{ $stage_default_css }}">
-    <span class="badge fw-bolder fs-6 {{ @$row->css_style }} px-2 py-1">
-        {{ ucwords(mb_substr($row->name, 0, 10)) }}
-    </span>
-    <span class="text-muted fw-bold d-block fs-7 px-3 py-1">{{ @$name }}</span>
-</a>
-```
-1. **Typo in href**: `href="javascript.void(0);"` (dot instead of colon `javascript:void(0);`), causing browser syntax errors or navigation anomalies.
-2. **Missing Modal Shell**: The target modal `#stage_sub_stage` (for internal) or `#client_stage_sub_stage` (for direct) **does not exist in `show.blade.php`, `dviewMore.blade.php`, or `index.blade.php`**.
-3. **Missing Event Handler**: Neither `show.blade.php` nor `index.blade.php` registers click handlers for `.stage_sub_stage` or `.client_stage_sub_stage`.
-4. **Result**: A recruiter clicking on the candidate's stage badge experiences **zero response**. The UI appears frozen and broken.
-
----
-
-## 5. Pillar IV: UI/UX Relevance & Metronic Design System Compliance
-
-### 5.1 Audit Against Metronic Enterprise Standards
-Per [docs/UI_UX_STANDARDS.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/UI_UX_STANDARDS.md):
-- Typography must adhere to **14px maximum base scale**, Poppins font family, clean proportional hierarchy.
-- Layout must fit **15.6-inch screens (1366×768 & 1920×1080)** with zero horizontal viewport overflow and internal card scrolling.
-
-| UI Element | Current Implementation | Flaw & Severity | Metronic V2 Standard |
-|---|---|---|---|
-| **Table Row Height** | `style="height: 102px; position: relative;"` | **Critical**: Hardcoded height causes text clipping on 1366×768 screens when designation or skills wrap. | Flexible `min-height: 72px; padding: 12px 16px;` with auto-wrapping grid cells. |
-| **Skills Badges** | `style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;"` | **Critical**: Absolute positioning overlaps candidate names on responsive resize; skills cut off without tooltip. | Flexbox skill wrap (`d-flex flex-wrap gap-1 mt-1`) with `+N more` popover. |
-| **Search Bar** | Completely absent from DOM | **Critical**: Recruiters cannot search candidates by name, email, or designation within the client drawer. | Integrated toolbar: `<input id="cdCandidateSearch" class="form-control form-control-sm form-control-solid" placeholder="Search candidates...">` with 300ms debounce. |
-| **Lifecycle Filter** | Completely absent | **High**: Cannot filter by status (Sourcing, Screening, Interview, Offer, Joined, Rejected). | Single-select status filter dropdown populated from cached `candidate_status` master. |
-| **Job Requisition Filter** | Completely absent | **High**: Cannot filter candidates submitted for a specific job under this client. | Requisition dropdown populated from already-loaded client jobs list. |
-| **Column Sorting** | Headers are static plain text (`<th>Name</th>`) | **Medium**: No ability to sort by Experience, Salary, Notice Period, Upload Date, or Stage. | Interactive sorting headers with Metronic sort indicators (`fa-sort`, `fa-sort-up`, `fa-sort-down`). |
-| **Empty State** | `<tr><td colspan="10" style="text-align: center; color: black;">No data available in table</td></tr>` | **Low**: Raw HTML table text; completely unstyled, inconsistent with Metronic SVG empty states. | Standard Metronic empty state widget with SVG illustration, clear description, and "Submit Candidate" quick action. |
-| **Page Loader** | Full-screen blocking loader `$('.page-loader').css('display', 'flex')` | **High**: Freezes recruiter's entire browser tab on pagination or filter change. | Scoped card skeleton loader (`.cd-table-skeleton`) inside `#candidate_list` container only. |
-| **Inline Actions** | None | **High**: Recruiter must leave drawer to perform basic candidate actions (view resume, schedule interview, change status). | Metronic action dropdown menu (`View Resume`, `Open Profile Drawer`, `Schedule Interview`, `Update Stage`). |
-
-### 5.2 Internal vs Direct Client Drawer Inconsistencies
-1. **Notice Column**: Internal Client uses `Notice` (`show.blade.php:1929`), Direct Client uses `Notice Period` (`dviewMore.blade.php:1984`).
-2. **Upload Column**: Internal Client uses `Upload` (`show.blade.php:1932`), Direct Client uses `Upload Date` (`dviewMore.blade.php:1987`).
-3. **Client Identification Logic**: Internal Client uses `$client->id`; Direct Client uses `$directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id)`.
-4. **Relational Map Pre-fetching**: Internal Client controller pre-fetches `$jobsMap`, `$citiesMap`, etc.; Direct Client controller **completely omits them**, causing full N+1 queries.
-
----
-
-## 6. Pillar V: Cross-Tab & Drawer Synchronization, Cache Invalidation & Event Topology
-
-### 6.1 The Tab Stagnation Defect (`loadedTabs`)
-In both `show.blade.php` (line 3655) and `dviewMore.blade.php` (line 3662):
-```javascript
-var loadedTabs = {};
-
-$(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
-    var target = $(e.target).attr('href').replace('#', '');
-    if (loadedTabs[target]) return; // PERMANENT SHORT-CIRCUIT!
-
-    if (target === 'candidate_list') {
-        fetchClientDrawerCandidates();
-        loadedTabs[target] = true;
+```json
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "company_id": 42 } },
+        { "term": { "client_id": 108 } },
+        { "term": { "is_active": true } }
+      ],
+      "must_not": [
+        { "terms": { "job_master_status_id": [9] } }
+      ]
     }
-});
+  }
+}
 ```
-- **The Stagnation Bug**: Once a recruiter clicks the Candidates tab, `loadedTabs['candidate_list'] = true`.
-- If the recruiter switches to the "Interview Tracker" tab and schedules an interview, or switches to "Jobs" and assigns a requisition, or if another recruiter forwards a new candidate:
-- Returning to the Candidates tab executes `if (loadedTabs[target]) return;` and **serves stale DOM data indefinitely**.
-- The recruiter never sees updated candidate statuses, new submissions, or modified stages without closing and reopening the entire drawer.
 
-### 6.2 Cross-Client DOM Pollution & ID Collision
-- When switching between Internal Client and Direct Client drawers:
-  - Both drawer shells render identical DOM IDs: `#candidatetList`, `#paginationcandidate`.
-  - In `index.blade.php`: `ClientStateManager.clearDrawerState()` empties the body, but active jQuery event bindings registered with `$(document).on(...)` remain attached.
-  - If a recruiter opens Client A, closes the drawer, and opens Client B, in-flight AJAX requests or event handlers can fire callbacks into newly injected DOM elements of Client B, causing cross-client data leakage.
+---
 
-### 6.3 Real-Time WebSocket Topology (Laravel Reverb)
-The Candidates tab currently has **zero WebSocket event integration**.
-- **Mandated Production Event Flow**:
+## 3. Data Accuracy, Semantic Counts & Operational Freshness
+
+### 3.1 Single Source of Truth for Candidate Counts
+A critical defect identified in the audit was count desynchronization:
+- Tab Badge and KPI Card used one set of filters (`final_status = 1`, excluded status 9, cached for 15 minutes).
+- Table Listing used conflicting filters (`must_not: [8, 9]`, ignored `final_status`).
+
+#### Unified Semantic Count Rules:
+1. **Total Active Candidates (Hero KPI & Tab Badge)**:  
+   Represents all non-archived candidate profiles linked to this client within the company scope:
+   - `company_id = authenticated_company`
+   - `client_id = authorized_client`
+   - `job_master_status_id != 9` (Archived/Deleted)
+2. **Filtered Result Count (Table Toolbar)**:  
+   Represents matching records when search terms or stage filters are applied:
+   - `Display Contract`: *"Showing 18 of 247 Candidates (Filtered by: Interview)"*.
+   - Never overwrite the semantic meaning of the Hero KPI badge when a temporary filter is active.
+
+### 3.2 Version-Based Invalidation (Retiring 15-Minute TTL)
+Arbitrary 15-minute (`900s`) caching is permanently eradicated. Caching utilizes atomic, versioned keys:
+
+```text
+Key: ats:kpi:client_cand:{company_id}:{client_id}
+Tag: client_candidate_version:{company_id}:{client_id}
+```
+
 ```mermaid
 sequenceDiagram
     autonumber
-    actor RecruiterB as Recruiter B (Any Workspace)
-    participant OutboxWorker as Outbox / Event Worker
+    participant Recruiter as Recruiter / System
+    participant MySQL as MySQL (Write SSOT)
+    participant Outbox as Outbox Pipeline
     participant ES as ELASTIC_CANDIDATES
-    participant Redis as Dragonfly / Redis
-    participant Reverb as Laravel Reverb WebSocket
-    participant BrowserA as Recruiter A (Client Drawer Open)
+    participant Dragonfly as Dragonfly / Redis
+    participant Reverb as Laravel Reverb
+    participant Browser as Recruiter Browser
 
-    RecruiterB->>OutboxWorker: Candidate Stage Updated (Screening -> Interview)
-    OutboxWorker->>ES: Update candidate projection doc
-    OutboxWorker->>Redis: Invalidate ats:kpi:internal_client_cand:{company}:{client}
-    OutboxWorker->>Redis: Increment client_version:{company}:{client}
-    OutboxWorker->>Reverb: Broadcast private-company.{companyId}.client.{clientId}.candidates
-    Reverb->>BrowserA: Event: CandidateStatusChanged {candidate_id, new_stage_id, aggregate_version}
-    BrowserA->>BrowserA: Reconcile local ClientCandidateStore (Patch DOM without full reload)
+    Recruiter->>MySQL: Mutate Candidate Stage (Atomic Transaction)
+    MySQL->>MySQL: INSERT INTO sys_outbox_events
+    MySQL-->>Recruiter: HTTP 200 OK (Version: 1035)
+
+    Outbox->>ES: Idempotent Projection Update (external_gte version check)
+    Outbox->>Dragonfly: INCR client_candidate_version:{company}:{client} (1034 -> 1035)
+    Outbox->>Dragonfly: Invalidate ats:kpi:client_cand:{company}:{client}
+    Outbox->>Reverb: Broadcast CandidateStatusChanged {candidate_id, new_stage, version: 1035}
+    Reverb->>Browser: WebSocket Event Received
+    Browser->>Browser: If localVersion < 1035 -> Reconcile / Patch Store
 ```
 
 ---
 
-## 7. Pillar VI: Security, Multi-Tenant Isolation & Fail-Closed Guardrails
+## 4. Search & Pagination Architecture
 
-### 7.1 Critical Vulnerability: Missing Multi-Tenant Verification on AJAX Endpoints
-In `ServiceCompanyJobApplicationController::clientCandidateList`:
-```php
-public function clientCandidateList(Request $request)
+### 4.1 Production Elasticsearch Analyzer & Mapping Design
+Replacing basic `match_phrase_prefix` with dedicated search analyzers and keyword fields:
+
+```json
 {
-    $company_id = (int) auth()->user()->company_id;
-    // $request->clientid is accepted directly from query string!
-    $boolQuery = [
-        'bool' => [
-            'should' => [
-                ['bool' => ['must' => [['term' => ['client_id' => $request->clientid]]]]],
-            ],
-            'minimum_should_match' => 1,
-            'filter' => [],
-        ],
-    ];
-...
-```
-> [!CAUTION]
-> **CRITICAL SECURITY RISK: IDOR / Cross-Tenant Data Leakage**  
-> `clientCandidateList` does NOT verify whether `$request->clientid` belongs to `auth()->user()->company_id`!  
-> Furthermore, the Elasticsearch query DOES NOT FILTER by `company_id`! If two tenants have internal clients with matching ID ranges, or if an attacker sends an arbitrary `clientid`, the endpoint returns candidate records belonging to other companies.
-
-#### Mandatory Security Guard:
-```php
-// Enforce fail-closed tenancy verification via Dragonfly auth projection (Zero MySQL reads)
-$hasClientAccess = Cache::store('dragonfly')->sismember("auth:tenant_clients:{$company_id}", (int) $request->clientid);
-if (! $hasClientAccess) {
-    // Fallback: Verify once in read-model projection
-    $clientDoc = $this->elasticService->getDoc(ELASTIC_CLIENT_LIST, (int) $request->clientid);
-    if (! $clientDoc || ($clientDoc['company_id'] ?? 0) !== $company_id) {
-        return response()->json(['error' => 'Unauthorized client access.'], 403);
+  "mappings": {
+    "properties": {
+      "full_name": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "search": { "type": "text", "analyzer": "autocomplete_ngram" },
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "email": {
+        "type": "keyword"
+      },
+      "phone": {
+        "type": "keyword"
+      },
+      "current_designation": {
+        "type": "text",
+        "fields": {
+          "search": { "type": "text", "analyzer": "standard" }
+        }
+      },
+      "skills": {
+        "type": "text",
+        "fields": {
+          "search": { "type": "text", "analyzer": "skills_analyzer" },
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "aggregate_version": { "type": "long" },
+      "wiseId": { "type": "long" }
     }
+  }
+}
+```
+
+### 4.2 Search Query Strategy Matrix
+When a recruiter types in the candidate search box:
+- **Prefix / Name**: Matches `full_name.search` via `bool_prefix` or `edge_ngram`.
+- **Designation & Skills**: Matches `current_designation.search` and `skills.search` via `multi_match` (best_fields, tie_breaker: 0.3).
+- **Email / Phone / Code**: Matches `email` and `phone` via strict `term` or `prefix`.
+
+### 4.3 Scalable Pagination: Shallow vs Deep (Cursor / `search_after`)
+To maintain sub-100ms response times and prevent Elasticsearch memory spikes (`max_result_window = 10000` limit):
+- **Shallow Navigation (Pages 1–5)**: Uses bounded `from + size` (`size <= 50`).
+- **Deep Navigation & Infinite Scroll**: The API provides cursor tokens based on `search_after`:
+  ```json
+  {
+    "data": [...],
+    "pagination": {
+      "total": 247,
+      "per_page": 25,
+      "current_page": 1,
+      "next_cursor": "eyJ3aXNlSWQiOjE4NDkxLCJ2ZXIiOjQyfQ=="
+    }
+  }
+  ```
+  The cursor securely encodes `[wiseId, aggregate_version]` as an immutable tie-breaker.
+
+### 4.4 Explicit `track_total_hits` Invariant
+- **Rule**: For client candidate listings, `track_total_hits: true` is strictly enforced to guarantee exact UI count agreement across all pages.
+- For queries returning > 10,000 matches in marketplace-wide searches, `track_total_hits: 10000` is applied with counter projections.
+
+---
+
+## 5. Candidate Read Model Denormalization Schema
+
+Every candidate projection document in `ELASTIC_CANDIDATES` must contain pre-computed display attributes to ensure **0 MySQL queries during rendering**:
+
+```json
+{
+  "_id": "application_18492",
+  "_source": {
+    "id": 18492,
+    "wiseId": 18492,
+    "company_id": 42,
+    "tenant_id": 42,
+    "client_id": 108,
+    "client_name": "Jio Platforms",
+    "full_name": "Vibhanshu Jaiswal",
+    "email": "vibhanshu@example.com",
+    "phone": "+91 9876543210",
+    "current_designation": "Principal Architect",
+    "total_exp": "10.5",
+    "rel_exp": "8.0",
+    "ctc_yearly": "3500000",
+    "ectc_yearly": "4500000",
+    "current_ctc_mode": "Y",
+    "current_ctc_cur": 0,
+    "currency_symbol": "INR",
+    "np_id": "Immediate",
+    "serving_notice_period_mode": 1,
+    "current_company": "Enterprise Corp",
+    "country_id": 101,
+    "country_name": "India",
+    "state_name": "Maharashtra",
+    "city_id": 1420,
+    "city_name": "Mumbai",
+    "skills": "PHP, Laravel, Elasticsearch, Redis, MySQL",
+    "skills_array": ["PHP", "Laravel", "Elasticsearch", "Redis", "MySQL"],
+    "skill_match_percentage": 92.5,
+    "job_id": 504,
+    "job_title": "Lead Software Engineer",
+    "job_mode": "Full-Time",
+    "job_currency": 0,
+    "master_status_id": 3,
+    "master_status_name": "Interview",
+    "master_status_css": "badge-light-primary",
+    "child_status_id": 14,
+    "child_status_name": "Technical Round 2",
+    "posted_by_id": 12,
+    "posted_by_name": "Rahul Verma",
+    "submitted_by_company_id": 42,
+    "submitted_by_company_name": "Acme Talent",
+    "aggregate_version": 42,
+    "projection_version": 1035,
+    "source_updated_at": "2026-10-22T21:40:00Z",
+    "indexed_at": "2026-10-22T21:40:00.082Z"
+  }
 }
 ```
 
 ---
 
-## 8. Pillar VII: Activity Logging, Auditability & Traceability Standards
+## 6. Client Architecture: `ClientCandidateStore` State Machine
 
-### 8.1 Required Candidate Action Audit Trail
-Per enterprise compliance standards, all candidate-related actions performed within the Client Drawer must record:
-1. `user_id` and `company_id` of the acting user.
-2. `action` (`CANDIDATE_VIEWED`, `CANDIDATE_STAGE_CHANGED`, `CANDIDATE_RESUME_DOWNLOADED`, `CANDIDATE_INTERVIEW_INITIATED`).
-3. `candidate_id` and `client_id`.
-4. `aggregate_version` of the candidate record (optimistic concurrency control).
-5. Timestamp in UTC (ISO-8601).
-6. Request client telemetry (`ip_address`, `user_agent`, `device_type`).
+### 6.1 State Machine Lifecycle & Memory Governance
+Replacing the flawed `loadedTabs` dictionary and plain maps with an explicit finite state machine:
 
-### 8.2 Current Deficiencies
-- Opening the Candidates tab generates zero audit logs or view events.
-- Candidate profile previews launched from the tab bypass `sys_outbox_events` and fail to update candidate view counters.
-
----
-
-## 9. Pillar VIII: File-by-File Line-Level Root-Cause Findings
-
-### 9.1 `resources/views/service_company/client/show.blade.php` (Internal Client)
-- **Line 1363**: `$kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);` executes ES search 10 & 11 synchronously during drawer compilation.
-- **Line 1915**: `<div class="tab-pane" id="candidate_list" role="tabpanel">` lacks search input, status filters, requisition filters, and count badges.
-- **Line 1939**: `<tbody id="candidatetList">` contains a persistent typo in the element ID (`candidatetList` with extra 't').
-- **Line 3657-3659**: Eager tab evaluation on document ready.
-- **Line 3690-3692**: `loadedTabs[target] = true` creates permanent tab data stagnation.
-- **Line 3723-3729**: Keyup handler binds to non-existent `#search`.
-- **Line 3740**: Pagination handler attempts to read non-existent `#inputSearch`.
-- **Line 3788**: Full-page blocking overlay `$('.page-loader').css('display', 'flex')` freezes the browser window on candidate interactions.
-
-### 9.2 `resources/views/service_company/client/dviewMore.blade.php` (Direct Client)
-- **Line 1423**: `$kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);` cached for 900s (15 minutes), guaranteeing stale counts.
-- **Line 1970**: Tab pane `#candidate_list` lacks filter toolbar and interactive sorting.
-- **Line 3683**: `directfetchCandidates()` called on tab click with short-circuiting `loadedTabs`.
-- **Line 3775**: Fragile client ID resolution: `$directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id)`.
-- **Line 3784**: Full-page blocking overlay causes disruptive page flickers.
-
-### 9.3 `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php`
-- **Line 1281 (`clientCandidateList`)**: Reads `$request->input('q')` while frontend passes `search`. Dead code: search query never included in Elasticsearch `$boolQuery`.
-- **Line 1286-1313**: Zero tenant isolation filter (`company_id`) in Elasticsearch query. Any client ID returns data across tenants.
-- **Line 1300**: Does not filter out `job_master_status_id = 9` (Deleted/Archived), causing count desynchronization with KPI headers.
-- **Line 1325-1365**: Queries MySQL for `jobs`, `city_list`, `candidate_status`, and executes N+1 query loop on `job_assign`.
-- **Line 1611 (`directclientCandidateList`)**: Completely omits pre-batched lookup maps (`$jobsMap`, `$citiesMap`, `$statusMap`), triggering 6+ raw MySQL queries per row in Blade view loops.
-- **Line 1646**: Filters `must_not: [job_master_status_id => [8, 9]]`, causing direct client candidates in status 8 to vanish from the list while still counted in the badge.
-
-### 9.4 `resources/views/service_company/ajax_pages/custom_client_candidates.blade.php`
-- **Line 27**: `DB::table('jobs')->select(...)->where('id', '=', $row->jobId)->first()` raw SQL execution in loop.
-- **Line 69**: `GeneralMethod::skill_percentage(...)` executes uncached SQL query to `job_metronics_skills` for every row.
-- **Line 80-94**: Monolithic inline HTML generation for avatar circles with ord calculation.
-- **Line 121**: Inline CSS `position: absolute; bottom: 0; white-space: nowrap; width: 94%;` breaks responsive reflow on 15.6" screens.
-- **Line 338**: `DB::table('city_list')->...` raw SQL query per row.
-- **Line 383**: `DB::table('job_assign')->join('users')->...` raw SQL query per row.
-- **Line 417**: Typo in localization key: `__('messages.clinet_tag')` (`clinet_tag`).
-- **Line 438**: `GeneralMethod::companyDetailsByClient($row->jobId)` runs 4-table join on MySQL.
-- **Line 474**: `DB::table('candidate_status')->...` raw SQL query per row.
-- **Line 483**: `href="javascript.void(0);"` syntax typo; target modal `#stage_sub_stage` does not exist in DOM.
-- **Line 507-513**: Raw unstyled empty state.
-
----
-
-## 10. Pillar IX: Step-by-Step Production Implementation Recommendations
-
-### Step 1: Denormalize Candidate Read Projection (`ELASTIC_CANDIDATES`)
-To achieve **strictly 0% MySQL reads**, update the candidate Elasticsearch indexing pipeline (`CandidateElasticIndexEngine` / `GeneralMethod::updateCandidateElasticSearch`) to ensure every candidate document includes pre-computed display fields:
-- `job_title` (string)
-- `job_mode` (string)
-- `job_currency` (string)
-- `city_name` (string)
-- `country_name` (string)
-- `state_name` (string)
-- `posted_by_name` (string)
-- `post_company_name` (string)
-- `master_status_id` (integer)
-- `master_status_name` (string)
-- `master_status_css` (string)
-- `child_status_id` (integer)
-- `child_status_name` (string)
-- `skills_array` (array of strings)
-- `skill_match_percentage` (float/string)
-- `aggregate_version` (integer)
-
-### Step 2: Implement High-Performance Pure JSON API Endpoints
-Refactor `clientCandidateList` and `directclientCandidateList` to return pure JSON projections (< 15 KB gzip) with strict tenant verification:
-
-```php
-public function clientCandidateList(Request $request): JsonResponse
-{
-    $companyId = (int) auth()->user()->company_id;
-    $clientId = (int) $request->input('clientid');
-    $page = max((int) $request->input('page', 1), 1);
-    $size = min((int) $request->input('size', 10), 50);
-    $search = trim((string) $request->input('search', ''));
-    $statusFilter = $request->input('status_id');
-    $jobFilter = $request->input('job_id');
-
-    // 1. Fail-closed tenancy check via Dragonfly cache (Zero MySQL SELECT)
-    if (! $this->clientAccessGuard->canAccessClient($companyId, $clientId)) {
-        return response()->json(['error' => 'Unauthorized client access.'], 403);
-    }
-
-    // 2. Build Authoritative ES Query
-    $must = [
-        ['term' => ['client_id' => $clientId]],
-        [
-            'bool' => [
-                'should' => [
-                    ['term' => ['company_id' => $companyId]],
-                    ['term' => ['job_company_id' => $companyId]],
-                    ['term' => ['ClientComID' => $companyId]],
-                ],
-                'minimum_should_match' => 1,
-            ],
-        ],
-    ];
-
-    if ($search !== '') {
-        $must[] = [
-            'bool' => [
-                'should' => [
-                    ['match_phrase_prefix' => ['full_name' => $search]],
-                    ['match_phrase_prefix' => ['current_designation' => $search]],
-                    ['match_phrase_prefix' => ['email' => $search]],
-                    ['match_phrase_prefix' => ['skills' => $search]],
-                ],
-                'minimum_should_match' => 1,
-            ],
-        ];
-    }
-
-    if (! empty($statusFilter)) {
-        $must[] = ['term' => ['job_master_status_id' => (int) $statusFilter]];
-    }
-
-    if (! empty($jobFilter)) {
-        $must[] = ['term' => ['jobId' => (int) $jobFilter]];
-    }
-
-    $mustNot = [
-        ['terms' => ['job_master_status_id' => [9]]], // Exclude deleted/archived
-    ];
-
-    $params = [
-        'index' => ELASTIC_CANDIDATES,
-        'request_cache' => true,
-        'body' => [
-            'from' => ($page - 1) * $size,
-            'size' => $size,
-            'sort' => [['wiseId' => ['order' => 'desc', 'unmapped_type' => 'long']]],
-            'query' => [
-                'bool' => [
-                    'must' => $must,
-                    'must_not' => $mustNot,
-                ],
-            ],
-            '_source' => [
-                'id', 'wiseId', 'full_name', 'current_designation', 'total_exp', 'rel_exp',
-                'ctc_yearly', 'ectc_yearly', 'current_ctc_mode', 'current_ctc_cur', 'np_id',
-                'serving_notice_period_mode', 'current_company', 'country', 'state', 'city',
-                'city_id', 'city_name', 'country_name', 'skills', 'jobId', 'title', 'client_name',
-                'job_master_status_id', 'child_status_id', 'name', 'css_style', 'created_at',
-                'posted_by', 'submitted_by_company_name', 'aggregate_version'
-            ],
-        ],
-    ];
-
-    $response = $this->elasticService->getClient()->search($params);
-    $total = $response['hits']['total']['value'] ?? 0;
-    $items = array_map(fn($hit) => $hit['_source'], $response['hits']['hits']);
-
-    return response()->json([
-        'data' => $items,
-        'pagination' => [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'per_page' => $size,
-        ],
-    ]);
-}
 ```
-
-### Step 3: Architect Client-Side Virtual Store (`ClientCandidateStore`)
-Inside `show.blade.php` and `dviewMore.blade.php`:
-1. Render a clean Metronic table container with search bar, status filter, and local loading skeleton.
-2. Render rows via client-side template literals or document fragments in User RAM.
-3. Manage active request cancellation (`abort()`) on in-flight AJAX calls.
-4. Replace full-page loader `.page-loader` with local card skeleton loader `.cd-table-skeleton`.
-5. Link candidate profile clicks directly to the zero-MySQL candidate drawer (`CandidateDrawerApiController`).
-6. Register WebSocket listener to automatically patch rows on `CandidateStatusChanged` events.
+[IDLE] ──► [LOADING] ──► [READY] ──► [REFRESHING] ──► [READY]
+  │           │            │               │
+  │           ▼            ▼               ▼
+  └─────► [ERROR] ──► [DESTROYED] ◄────────┘
+```
 
 ```javascript
 window.ClientCandidateStore = {
+    state: 'IDLE', // 'IDLE' | 'LOADING' | 'READY' | 'REFRESHING' | 'ERROR' | 'DESTROYED'
     clientId: null,
     clientType: 'internal', // 'internal' | 'direct'
     activeXhr: null,
-    cache: new Map(), // page_search_filter -> data
+    latestRequestId: 0,
+    currentVersion: 0,
+    filters: {
+        page: 1,
+        per_page: 25,
+        search: '',
+        status_id: '',
+        job_id: '',
+        sort: 'created_at:desc'
+    },
+    data: [],
+    pagination: {},
 
-    init: function(clientId, type) {
+    init: function(clientId, clientType) {
         this.clientId = clientId;
-        this.clientType = type;
+        this.clientType = clientType;
+        this.state = 'IDLE';
+        this.currentVersion = 0;
         this.bindEvents();
+        this.subscribeReverb();
         this.fetch(1);
     },
 
-    fetch: function(page = 1, search = '', statusId = '', jobId = '') {
+    fetch: function(page = 1) {
         var self = this;
+        this.filters.page = page;
+        var requestId = ++this.latestRequestId;
+
         if (this.activeXhr) {
             this.activeXhr.abort();
         }
 
-        var endpoint = (this.clientType === 'direct')
-            ? '/service_company/direct-client-candidate-list'
-            : '/service_company/client-candidate-list';
-
-        $('#cdCandidateSkeleton').removeClass('d-none');
-        $('#cdCandidateTableWrap').addClass('d-none');
+        this.state = (this.data.length > 0) ? 'REFRESHING' : 'LOADING';
+        this.renderState();
 
         this.activeXhr = $.ajax({
-            url: endpoint,
+            url: (this.clientType === 'direct')
+                ? '/service_company/direct-client-candidate-list'
+                : '/service_company/client-candidate-list',
             type: 'GET',
-            data: {
-                clientid: self.clientId,
-                page: page,
-                search: search,
-                status_id: statusId,
-                job_id: jobId
-            },
+            data: $.extend({ clientid: this.clientId, request_id: requestId }, this.filters),
             success: function(res) {
-                $('#cdCandidateSkeleton').addClass('d-none');
-                $('#cdCandidateTableWrap').removeClass('d-none');
-                self.renderRows(res.data);
-                self.renderPagination(res.pagination);
-                self.updateBadgeCount(res.pagination.total);
+                // Request Identity / Race Protection
+                if (requestId !== self.latestRequestId) return;
+
+                self.data = res.data;
+                self.pagination = res.pagination;
+                self.currentVersion = res.projection_version || self.currentVersion;
+                self.state = 'READY';
+                self.renderRows();
+                self.updateCounts(res.pagination.total);
             },
             error: function(xhr, status) {
-                if (status !== 'abort') {
-                    $('#cdCandidateSkeleton').addClass('d-none');
-                    $('#cdCandidateTableWrap').removeClass('d-none');
-                    self.renderError();
-                }
+                if (status === 'abort') return;
+                if (requestId !== self.latestRequestId) return;
+                self.state = 'ERROR';
+                self.renderError(xhr.status === 403 ? 'Access Denied.' : 'Failed to load candidates.');
             }
         });
     },
 
-    renderRows: function(data) {
+    // Optimized DOM rendering via DocumentFragment
+    renderRows: function() {
         var $tbody = $('#cdCandidateTbody');
         $tbody.empty();
-        if (!data || data.length === 0) {
+        if (!this.data || this.data.length === 0) {
             $tbody.html(this.getEmptyStateHtml());
             return;
         }
 
-        var html = '';
-        data.forEach(function(cand) {
-            html += window.ClientCandidateStore.buildRowHtml(cand);
+        var fragment = document.createDocumentFragment();
+        this.data.forEach(function(cand) {
+            var tr = document.createElement('tr');
+            tr.className = 'cd-candidate-row align-middle';
+            tr.innerHTML = window.ClientCandidateStore.buildRowHtml(cand);
+            fragment.appendChild(tr);
         });
-        $tbody.html(html);
+        $tbody[0].appendChild(fragment);
     },
 
-    updateBadgeCount: function(total) {
-        var $badge = $('#cdCandidateTabBadge');
-        if ($badge.length) {
-            $badge.text(total);
-            total > 0 ? $badge.show() : $badge.hide();
-        }
-        $('#cdCandidateKpiCount').text(total);
+    destroy: function() {
+        if (this.activeXhr) this.activeXhr.abort();
+        this.unsubscribeReverb();
+        this.state = 'DESTROYED';
+        this.data = [];
     }
 };
 ```
 
 ---
 
-## 11. Pillar X: Final Acceptance Verification & Load Testing Checklist
+## 7. Optimistic Concurrency Control (OCC) & Stage Transitions
 
-### 11.1 Concurrency & Database Load Verification
-- [ ] **0% MySQL SELECT Guarantee**: Run Laravel Telescope / MySQL General Query Log while loading candidate pages in Internal and Direct Client drawers. Verify **zero SQL queries** are executed on the read path.
-- [ ] **10,000 Concurrent User Simulation**: Execute k6 load test simulating 10,000 active recruiters querying `client-candidate-list`. Verify **p95 response time < 100ms** and server CPU usage < 35%.
-- [ ] **Elasticsearch Request Cache**: Confirm `request_cache: true` is active and cache hit ratio on repeated queries exceeds 90%.
+### 7.1 Guarded Mutation Command Pipeline
+Mutations originating from candidate rows (e.g., stage change, rejection, notes) must never mutate the DOM directly or bypass version checks:
 
-### 11.2 Data Accuracy & Lifecycle Verification
-- [ ] **1:1 Count Agreement**: Verify Candidate Tab Badge, Header KPI Card, and Table Total Count match exactly across all clients.
-- [ ] **Filter Precision**: Verify filtering by Sourcing, Screening, Interview, Offer, Joined, and Rejected correctly isolates records.
-- [ ] **Status 8/9 Integrity**: Verify archived/deleted candidates (status 9) are consistently filtered out across counts and tables.
-- [ ] **Search Operability**: Type candidate full name, designation, or skill; verify debounced search returns accurate results in < 80ms.
+```
+Recruiter Action (e.g. Move to Interview Round 2)
+       ↓
+Permission & RBAC Verification (Can recruiter manage candidate in client context?)
+       ↓
+Stage Transition Validation (InterviewStatusTransitionEngine / State Machine)
+       ↓
+POST /service_company/job-applications/{id}/stage-submit
+Payload: { new_status_id: 3, new_child_status_id: 14, expected_version: 42 }
+       ↓
+Atomic MySQL Transaction:
+  SELECT aggregate_version FROM job_applications WHERE id = 18492 FOR UPDATE;
+  IF aggregate_version != expected_version THEN
+      ROLLBACK;
+      RETURN HTTP 409 Conflict { current_version: 43 };
+  END IF;
+  UPDATE job_applications SET master_status_id = 3, aggregate_version = aggregate_version + 1;
+  INSERT INTO sys_outbox_events (event_type, payload, version);
+COMMIT;
+       ↓
+HTTP 200 OK -> Outbox asynchronously updates ES -> Reverb broadcasts update
+```
 
-### 11.3 UI/UX & Responsive Compliance
-- [ ] **15.6" Screen Fit**: Test at 1366×768 resolution. Confirm zero text clipping, horizontal table overflow contained within card, and skills wrap cleanly.
-- [ ] **Metronic Typography Scale**: Verify all fonts comply with 14px maximum scale, Poppins font family.
-- [ ] **Skeleton Loader**: Verify page interactions do not trigger full-page blocking overlays.
-- [ ] **Empty State**: Verify empty state displays official Metronic SVG and guidance message.
+---
 
-### 11.4 Security & Multi-Tenancy
-- [ ] **IDOR Protection**: Attempt to pass another company's `clientid` in AJAX request. Verify API returns `403 Forbidden`.
-- [ ] **Session Teardown**: Close drawer and verify active AJAX calls are aborted and DOM is cleaned with zero memory leaks.
+## 8. Failure-Mode & Circuit Breaker Matrix
+
+| Failure Scenario | Expected System Behavior | Architectural Defense |
+|---|---|---|
+| **Elasticsearch Cluster Offline / Timeout** | Graceful error alert: *"Candidate index temporarily unavailable"*. Local retry button. | **Strictly NO fallback to MySQL SELECT queries.** Prevents complete database collapse under 10K load. |
+| **Dragonfly / Redis Unavailable** | Authorization checks fall back safely to cached read-model document or fail-closed (`HTTP 403`). | Prevents open door authorization bypass. |
+| **Laravel Reverb WebSocket Disconnect** | Drawer UI remains fully operational. Reconnects with exponential backoff and polls current `client_candidate_version`. | Graceful degradation to polled reconciliation. |
+| **Transactional Outbox Lag / Delay** | UI renders records with subtle sync indicator if `client_version < server_version`. | Eventual consistency contract maintained. |
+| **Out-of-Order Reverb Event Received** | Event `aggregate_version <= candidate.aggregate_version` is safely ignored. | Monotonic version fence eliminates race conditions. |
+| **In-Flight Search Superseded** | Older AJAX request is aborted; `requestId !== latestRequestId` guard discards late response. | Prevents stale search results from overwriting newer queries. |
+| **Unauthorized Client Requested** | Request immediately rejected with `HTTP 403 Forbidden`. | Fail-closed Dragonfly authorization gate. |
+
+---
+
+## 9. Observability, Telemetry & Health Monitoring
+
+### 9.1 Prometheus Metric Instrumentation
+The candidate pipeline must be instrumented with Prometheus counters, histograms, and gauges:
+
+```text
+# Query Path Metrics
+candidate_api_requests_total{client_type="internal|direct", status="200|403|500"}
+candidate_api_latency_seconds{endpoint="client_candidate_list"} (Histogram: buckets [0.02, 0.05, 0.1, 0.2, 0.5])
+candidate_es_query_latency_seconds (Histogram: buckets [0.01, 0.03, 0.05, 0.1])
+candidate_cache_hit_ratio{type="authorization|kpi_counts"}
+
+# Outbox & Projection Health Metrics
+candidate_projection_lag_seconds (Gauge: time between MySQL commit and ES index)
+candidate_outbox_pending_events (Gauge)
+candidate_outbox_failed_events_total (Counter: routed to DLQ)
+candidate_reverb_events_broadcast_total (Counter)
+
+# Security & Concurrency Metrics
+candidate_authorization_denials_total{reason="tenant_mismatch|unauthorized_client"}
+candidate_occ_conflicts_total (Counter: HTTP 409 returned)
+```
+
+### 9.2 Projection Lag Health SLA
+- **Target Operational Lag**: P95 MySQL commit to ES indexable document `< 100ms`.
+- **Alerting Threshold**: If `candidate_projection_lag_seconds > 5.0s` for 2 consecutive minutes, alert on-call engineer via PagerDuty.
+
+---
+
+## 10. Unified Query Engine: `CandidateDrawerQueryService`
+
+To prevent code duplication and logic divergence between Internal and Direct client drawers, both controller endpoints are refactored to delegate to a single unified query engine:
+
+```php
+namespace App\Services\Candidate;
+
+class CandidateDrawerQueryService
+{
+    public function __construct(
+        protected ElasticService $elasticService,
+        protected ClientAccessGuard $accessGuard
+    ) {}
+
+    public function search(int $companyId, int $clientId, string $clientType, array $params): array
+    {
+        // 1. Fail-closed authorization
+        if (! $this->accessGuard->canAccessClient($companyId, $clientId)) {
+            throw new UnauthorizedClientAccessException("Company {$companyId} unauthorized for client {$clientId}");
+        }
+
+        // 2. Build canonical filter
+        $must = [
+            ['term' => ['client_id' => $clientId]],
+            ['term' => ['company_id' => $companyId]],
+        ];
+
+        // 3. Search text processing
+        if (! empty($params['search'])) {
+            $must[] = [
+                'multi_match' => [
+                    'query' => $params['search'],
+                    'fields' => ['full_name.search^3', 'current_designation.search^2', 'skills.search^2', 'email', 'phone'],
+                    'type' => 'best_fields',
+                    'tie_breaker' => 0.3
+                ]
+            ];
+        }
+
+        if (! empty($params['status_id'])) {
+            $must[] = ['term' => ['job_master_status_id' => (int) $params['status_id']]];
+        }
+
+        if (! empty($params['job_id'])) {
+            $must[] = ['term' => ['job_id' => (int) $params['job_id']]];
+        }
+
+        $mustNot = [
+            ['terms' => ['job_master_status_id' => [9]]], // Exclude archived/deleted
+        ];
+
+        // 4. Execute query with track_total_hits
+        $size = min((int) ($params['per_page'] ?? 25), 50);
+        $page = max((int) ($params['page'] ?? 1), 1);
+
+        $esParams = [
+            'index' => ELASTIC_CANDIDATES,
+            'request_cache' => true,
+            'body' => [
+                'track_total_hits' => true,
+                'from' => ($page - 1) * $size,
+                'size' => $size,
+                'sort' => [['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']]],
+                'query' => [
+                    'bool' => [
+                        'filter' => $must,
+                        'must_not' => $mustNot,
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->elasticService->getClient()->search($esParams);
+        $total = $response['hits']['total']['value'] ?? 0;
+        $items = array_map(fn($hit) => $hit['_source'], $response['hits']['hits']);
+
+        return [
+            'data' => $items,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $size,
+                'current_page' => $page,
+                'last_page' => ceil($total / $size),
+            ],
+        ];
+    }
+}
+```
+
+---
+
+## 11. Empirical Performance SLOs & Phased Implementation Plan
+
+### 11.1 Realistic Performance Service Level Objectives (SLOs)
+- **Candidate Read API Latency**:
+  - P50: `< 40 ms`
+  - P95: `< 120 ms`
+  - P99: `< 250 ms`
+- **Browser Presentation Latency**:
+  - DOM Render: `< 60 ms` after JSON response arrival.
+  - Search Debounce & Response: `< 100 ms` perceived latency.
+  - Zero main-thread blocking tasks exceeding `50 ms`.
+- **Database & Server Capacity**:
+  - MySQL candidate read path queries: **Strictly 0**.
+  - Server CPU utilization at 10,000 concurrent users: `< 25%`.
+
+### 11.2 Phased Rollout Matrix
+
+```text
+PHASE 0: Security & Consistency Fixes (P0 - Immediate)
+├── 1. Apply fail-closed Dragonfly authorization gate to clientCandidateList endpoints.
+├── 2. Reconcile Direct Client filters (align final_status and status 8/9 exclusions).
+├── 3. Enforce must_not: [job_master_status_id => 9] across all list and count queries.
+└── 4. Eliminate loadedTabs permanent caching; implement version check.
+
+PHASE 1: Unified Read Architecture (P0 - Sprint 1)
+├── 1. Denormalize display attributes into ELASTIC_CANDIDATES read model.
+├── 2. Build CandidateDrawerQueryService to unify Internal and Direct logic.
+├── 3. Convert controller endpoints to return pure JSON projections (< 15KB).
+└── 4. Implement ClientCandidateStore in browser User RAM with DocumentFragment rendering.
+
+PHASE 2: Real-Time Invalidation & OCC (P1 - Sprint 2)
+├── 1. Add aggregate_version verification to all candidate mutation commands (HTTP 409 on conflict).
+├── 2. Wire transactional outbox to broadcast Reverb CandidateStatusChanged events.
+└── 3. Implement browser-side version fence to patch DOM rows on live events.
+
+PHASE 3: UX Modernization (P1 - Sprint 2)
+├── 1. Render integrated Metronic toolbar (search input, status dropdown, job dropdown, sort menu).
+├── 2. Replace .page-loader with .cd-table-skeleton inside tab card.
+└── 3. Rebuild stage modal workflow as an authenticated command pipeline.
+
+PHASE 4: Observability, Hardening & Load Testing (P1/P2 - Sprint 3)
+├── 1. Deploy Prometheus metrics and Grafana dashboard for candidate drawer endpoints.
+├── 2. Implement Outbox Dead-Letter Queue (DLQ) and replay CLI command.
+└── 3. Execute k6 load tests ramping from 1,000 -> 5,000 -> 10,000 concurrent recruiters.
+```
+
+---
+
+## 12. Final Acceptance & Verification Checklist
+
+- [x] **CQRS Authority Boundaries Formalized**: MySQL as Transactional SSOT; ES as Authoritative Read Model.
+- [x] **0% MySQL Reads Scoped**: Candidate drawer read path strictly restricted to 0 SQL queries.
+- [x] **Fail-Closed Security Guard**: Dragonfly pre-check prevents cross-tenant access prior to querying ES.
+- [x] **Semantic Counts Reconciled**: Unified definitions for Total Active vs Filtered Results.
+- [x] **Version-Based Invalidation**: 15-minute cache TTL replaced with `client_candidate_version`.
+- [x] **Search Architecture Modernized**: Dedicated ES analyzers and keyword fields specified.
+- [x] **Scalable Pagination**: `search_after` cursor design specified for deep pagination.
+- [x] **`ClientCandidateStore` State Machine**: IDLE/LOADING/READY/REFRESHING/ERROR states with request ID race protection.
+- [x] **Optimistic Concurrency Control**: `aggregate_version` check on all candidate mutations.
+- [x] **Failure-Mode Circuit Breaker**: Comprehensive matrix defining zero-MySQL-fallback on ES outage.
+- [x] **Observability & Health SLAs**: Prometheus metrics, projection lag monitoring, and SLO targets established.
+- [x] **Unified Query Engine**: `CandidateDrawerQueryService` specified for single-source execution across Internal and Direct clients.

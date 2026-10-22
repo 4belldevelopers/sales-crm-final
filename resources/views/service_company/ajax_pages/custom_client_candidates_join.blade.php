@@ -286,12 +286,8 @@
 
                     if (isset($citiesMap[@$row->city_id])) {
                         $row_city_name = $citiesMap[@$row->city_id];
-                    } elseif (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('city')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
+                    } elseif (!empty(@$row->city_name)) {
+                        $row_city_name = @$row->city_name;
                     } else {
                         $row_city_name = @$row->city;
                     }
@@ -403,15 +399,12 @@
                         $name = '';
                     }
 
-                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->child_status_id)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
-                        }
+                    if (isset($statusMap[@$row->child_status_id])) {
+                        $name = $statusMap[@$row->child_status_id];
+                    } elseif (!empty($row->child_status_name)) {
+                        $name = $row->child_status_name;
+                    } else {
+                        $name = '';
                     }
                     echo '<div class="d-flex flex-column">
                     <a href="javascript.void(0);" data-row-id="' .
