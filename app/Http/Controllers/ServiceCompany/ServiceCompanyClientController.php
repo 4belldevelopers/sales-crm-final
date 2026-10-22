@@ -967,7 +967,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
                     if ($company_id == $clientsCompId) {
                         $jobsCountsMap['internal_'.$clId] = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $clId);
-                        $candidateCountsMap['internal_'.$clId] = GeneralMethod::InternalClientCandidatesCountList($clId);
+                        $candidateCountsMap['internal_'.$clId] = GeneralMethod::InternalClientCandidatesCountList($clId, $company_id);
                     } else {
                         $rel = $relationMap[$cId] ?? null;
                         $fromComp = $rel->from_company_id ?? null;
@@ -1127,7 +1127,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $jKey = 'internal_'.$clId;
                     $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $clId);
                     $pKey = 'internal_'.$clId;
-                    $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($clId);
+                    $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($clId, $company_id);
                 } else {
                     $jKey = 'direct_'.($from_company_id ?? 0).'_'.($to_company_id ?? 0);
                     $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::DirectClientJobsCountAllStatus($from_company_id, $to_company_id);

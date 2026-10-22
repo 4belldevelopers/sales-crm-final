@@ -6,30 +6,9 @@
     $feedback_status  = GeneralMethod::feedback_status();
     $available_status = GeneralMethod::available_status();
 
-    // Follow-up statuses — read-only display only (no actions)
+    // 0% MySQL reads: Follow-up statuses and spokperson maps resolved from ES source
     $followupMap = $followupMap ?? collect();
-    if ($followupMap->isEmpty() && \Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
-        $followupMap = DB::table('interview_schedules')
-            ->whereIn('id', collect($data)->pluck('id')->all())
-            ->get(['id', 'followup_status', 'followup_status_at'])
-            ->keyBy('id');
-    }
-
-    // Pre-hydrate $spokpersonMap if not passed into view
-    if (!isset($spokpersonMap) || !is_object($spokpersonMap)) {
-        $spokpersonMap = collect();
-        $jobIds = collect($data)->pluck('jobId')->filter()->concat(collect($data)->pluck('job_id')->filter())->unique()->all();
-        if (!empty($jobIds)) {
-            $spokRows = DB::table('job_assign')
-                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
-                ->whereIn('job_assign.job_id', $jobIds)
-                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
-                ->get();
-            foreach ($spokRows as $spok) {
-                $spokpersonMap->put($spok->job_id . '_' . $spok->company_id, $spok->name);
-            }
-        }
-    }
+    $spokpersonMap = $spokpersonMap ?? collect();
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -135,26 +114,25 @@
                 </div>
             </td>
 
-            {{-- Interviewers: name + company (view-only, matches screenshot layout) --}}
+            {{-- Interviewers: name + company (view-only, 0 MySQL reads) --}}
             <td>
                 @php
-                    $interviewerRows = collect();
+                    $interviewerNames = [];
                     if (!empty($row->interviewers)) {
-                        $interviewersArr = array_filter(array_map('trim', explode(',', $row->interviewers)));
-                        $interviewerRows = DB::table('users')
-                            ->select('users.id', 'users.name')
-                            ->where('users.company_id', '=', $row->company_id)
-                            ->whereIn('users.name', $interviewersArr)
-                            ->get();
+                        $interviewerNames = is_array($row->interviewers)
+                            ? $row->interviewers
+                            : array_filter(array_map('trim', explode(',', (string) $row->interviewers)));
+                    } elseif (!empty($row->interviewer_name)) {
+                        $interviewerNames = [$row->interviewer_name];
                     }
-                    $companyShort = ucwords(mb_substr(@$row->company_name, 0, 14));
+                    $companyShort = ucwords(mb_substr(@$row->company_name ?: 'Panel', 0, 14));
                 @endphp
                 <div class="d-flex flex-column gap-1">
-                    @if ($interviewerRows->isNotEmpty())
-                        @foreach ($interviewerRows as $intVal)
+                    @if (!empty($interviewerNames))
+                        @foreach ($interviewerNames as $intName)
                             <div class="d-flex flex-column" style="line-height:1.4;">
                                 <span class="fw-bold text-dark" style="font-size:12.5px;">
-                                    {{ ucwords($intVal->name) }}
+                                    {{ ucwords($intName) }}
                                 </span>
                                 <span style="font-size:11px; color:#009ef7; font-weight:500;">
                                     {{ $companyShort }}
@@ -251,12 +229,8 @@
             {{-- Stage badge (view-only) --}}
             <td>
                 @php
-                    $stageSub = '';
-                    if ((@$row->master_status_id ?? 0) == 8) { $stageSub = 'Private'; }
-                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = DB::table('candidate_status')->select('*')->where('id', $row->child_status_id)->first();
-                        if (!empty($childStatus)) { $stageSub = @$childStatus->name; }
-                    }
+                    $stageSub = !empty(@$row->child_status_name) ? @$row->child_status_name : '';
+                    if ((@$row->master_status_id ?? 0) == 8 && empty($stageSub)) { $stageSub = 'Private'; }
                 @endphp
                 <div class="d-flex flex-column align-items-start">
                     <span class="badge fw-bolder {{ @$row->css_style }} px-2 py-1" style="font-size:11px">

@@ -1493,113 +1493,119 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     {
         $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
+        $client_id = (int) $request->clientid;
+        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+
+        $cursorParam = $request->input('cursor');
+        $searchAfter = null;
+        if (!empty($cursorParam)) {
+            $decoded = json_decode(base64_decode($cursorParam), true);
+            if (is_array($decoded)) {
+                $searchAfter = $decoded;
+            }
+        }
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 10 results per page
-        $from = ($page - 1) * $size;
+        $from = $searchAfter ? 0 : (($page - 1) * $size);
 
-        $client_id = (int) $request->clientid;
         $sort = [
-            ['schedule_date' => ['order' => 'desc']],
+            ['schedule_date' => ['order' => 'desc', 'unmapped_type' => 'long']],
             ['id' => ['order' => 'desc']],
         ];
 
-        $must = [
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['job_company_id' => $company_id]],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['ClientComID' => $company_id]],
-                                    ['term' => ['candidate_type' => 'other']],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['client_id' => $client_id]],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['from_company_id' => $client_id]],
-                                    ['term' => ['to_company_id' => $company_id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-        ];
+        // Authoritative Tenancy Scoping (Pure Normalized Envelope + Migration Guard)
+        $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'internal');
 
-        $boolQuery = [
-            'bool' => [
-                'must' => $must,
-                'filter' => [],
-            ],
-        ];
-
-        // Phase 6 Optimization: Restrict _source fields to payload attributes required for Interview Tracker view
         $sourceFields = [
-            'id', 'full_name', 'current_designation', 'candidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
+            'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
             'company_id', 'job_company_id', 'company_name', 'client_name', 'recommendation_id', 'to_company_id', 'from_company_id',
-            'schedule_date', 'schedule_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
-            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
-            'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
-            'average_star_rating', 'created_at',
+            'schedule_date', 'schedule_time', 'schedule_from_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
+            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'interview_mention_link', 'url_link', 'status',
+            'available_status', 'feedback', 'source', 'round_name', 'comments', 'master_status_id', 'master_status_name',
+            'child_status_id', 'child_status_name', 'css_style', 'average_star_rating', 'created_at',
             'posted_by', 'submitted_by', 'submitted_by_name', 'submitted_by_company_name', 'post_company_name',
             'uc_company_name', 'from_company_name', 'spokperson_name', 'upload_by_name', 'ClientComID', 'thirdparty_company_id',
         ];
 
+        // Exact hits for initial page / KPI badge; lower bound for deep cursor pagination
+        $trackTotalHits = $searchAfter ? 10000 : true;
+        $countMode = $searchAfter ? 'LOWER_BOUND' : 'EXACT';
+
+        $body = [
+            '_source' => $sourceFields,
+            'size' => $size,
+            'sort' => $sort,
+            'query' => $query,
+            'track_total_hits' => $trackTotalHits,
+        ];
+
+        if ($searchAfter) {
+            $body['search_after'] = $searchAfter;
+        } else {
+            $body['from'] = $from;
+        }
+
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
-            'body' => [
-                '_source' => $sourceFields,
-                'from' => $from,
-                'size' => $size,
-                'sort' => $sort,
-                'query' => $boolQuery,
-            ],
+            'body' => $body,
         ];
+
         if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $total = 0;
-            $data = [];
+            $totalRelation = 'eq';
+            $rawHits = [];
+            $rawSourceData = [];
+            $readModels = [];
+            $nextCursor = null;
         } else {
             $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
+            $totalHitData = $response['hits']['total'] ?? 0;
+            $total = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
+            $totalRelation = is_array($totalHitData) ? ($totalHitData['relation'] ?? 'eq') : 'eq';
+
+            $rawHits = $response['hits']['hits'] ?? [];
+            $rawSourceData = array_map(function ($hit) {
                 return $hit['_source'];
-            }, $response['hits']['hits']);
+            }, $rawHits);
+
+            $readModels = \App\Services\Interview\InterviewReadModel::collection($rawHits, $company_id);
+
+            $lastHit = !empty($rawHits) ? end($rawHits) : null;
+            $nextCursor = ($lastHit && !empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
 
         \Log::info('CLIENT_DETAILS_APM: clientCandidateInterviewTracker completed', [
-            'client_id' => $request->clientid,
+            'client_id' => $client_id,
             'company_id' => $company_id,
-            'page' => $page,
-            'item_count' => count($data),
+            'count_mode' => $countMode,
+            'item_count' => count($readModels),
+            'has_next' => (bool) $nextCursor,
             'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
         ]);
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', compact('data', 'company_id'))->render(),
+            'success' => true,
+            'count_mode' => $countMode,
+            'total' => $total,
+            'total_relation' => $totalRelation,
+            'data' => $readModels,
+            'next_cursor' => $nextCursor,
+            'page_size' => $size,
+            'version' => 1,
+            'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', [
+                'data' => $rawSourceData,
+                'company_id' => $company_id,
+            ])->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     public function directclientCandidateList(Request $request)
@@ -1807,92 +1813,85 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $startTime = microtime(true);
         $client_id = (int) $request->clientid;
         $company_id = (int) auth()->user()->company_id;
+        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+
+        $cursorParam = $request->input('cursor');
+        $searchAfter = null;
+        if (!empty($cursorParam)) {
+            $decoded = json_decode(base64_decode($cursorParam), true);
+            if (is_array($decoded)) {
+                $searchAfter = $decoded;
+            }
+        }
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
-        $from = ($page - 1) * $size;
+        $from = $searchAfter ? 0 : (($page - 1) * $size);
 
         $sort = [
-            ['schedule_date' => ['order' => 'desc']],
+            ['schedule_date' => ['order' => 'desc', 'unmapped_type' => 'long']],
             ['id' => ['order' => 'desc']],
         ];
 
-        // Scoped by company_id tenancy AND client_id (direct client's jobs)
-        $must = [
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['ClientComID' => $company_id]],
-                        ['term' => ['thirdparty_company_id' => $company_id]],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['job_company_id' => $company_id]],
-                                    ['term' => ['candidate_type' => 'other']],
-                                ],
-                            ],
-                        ],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['company_id' => $company_id]],
-                                    ['term' => ['candidate_type' => 'other']],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['client_id' => $client_id]],
-                        ['term' => ['from_company_id' => $client_id]],
-                        ['term' => ['company_id' => $client_id]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ],
-        ];
+        // Authoritative Tenancy Scoping for Direct Client
+        $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
 
         $sourceFields = [
-            'id', 'full_name', 'current_designation', 'candidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
+            'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
             'company_id', 'job_company_id', 'company_name', 'client_name', 'recommendation_id', 'to_company_id', 'from_company_id',
-            'schedule_date', 'schedule_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
-            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
-            'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
-            'average_star_rating', 'created_at',
+            'schedule_date', 'schedule_time', 'schedule_from_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
+            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'interview_mention_link', 'url_link', 'status',
+            'available_status', 'feedback', 'source', 'round_name', 'comments', 'master_status_id', 'master_status_name',
+            'child_status_id', 'child_status_name', 'css_style', 'average_star_rating', 'created_at',
             'posted_by', 'submitted_by', 'submitted_by_name', 'submitted_by_company_name', 'post_company_name',
             'uc_company_name', 'from_company_name', 'spokperson_name', 'upload_by_name', 'ClientComID', 'thirdparty_company_id',
         ];
 
+        // Exact hits for initial page / KPI badge; lower bound for deep cursor pagination
+        $trackTotalHits = $searchAfter ? 10000 : true;
+        $countMode = $searchAfter ? 'LOWER_BOUND' : 'EXACT';
+
+        $body = [
+            '_source' => $sourceFields,
+            'size' => $size,
+            'sort' => $sort,
+            'query' => $query,
+            'track_total_hits' => $trackTotalHits,
+        ];
+
+        if ($searchAfter) {
+            $body['search_after'] = $searchAfter;
+        } else {
+            $body['from'] = $from;
+        }
+
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
-            'body' => [
-                '_source' => $sourceFields,
-                'from' => $from,
-                'size' => $size,
-                'sort' => $sort,
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                        'filter' => [],
-                    ],
-                ],
-            ],
+            'body' => $body,
         ];
 
         if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $total = 0;
-            $data = [];
+            $totalRelation = 'eq';
+            $rawHits = [];
+            $rawSourceData = [];
+            $readModels = [];
+            $nextCursor = null;
         } else {
             $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
+            $totalHitData = $response['hits']['total'] ?? 0;
+            $total = is_array($totalHitData) ? ($totalHitData['value'] ?? 0) : (int) $totalHitData;
+            $totalRelation = is_array($totalHitData) ? ($totalHitData['relation'] ?? 'eq') : 'eq';
+
+            $rawHits = $response['hits']['hits'] ?? [];
+            $rawSourceData = array_map(function ($hit) {
                 return $hit['_source'];
-            }, $response['hits']['hits']);
+            }, $rawHits);
+
+            $readModels = \App\Services\Interview\InterviewReadModel::collection($rawHits, $company_id);
+
+            $lastHit = !empty($rawHits) ? end($rawHits) : null;
+            $nextCursor = ($lastHit && !empty($lastHit['sort'])) ? base64_encode(json_encode($lastHit['sort'])) : null;
         }
 
         $pagination = [
@@ -1905,13 +1904,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         \Log::info('CLIENT_DETAILS_APM: directclientCandidateInterviewTracker completed', [
             'client_id' => $client_id,
             'company_id' => $company_id,
-            'page' => $page,
-            'item_count' => count($data),
+            'count_mode' => $countMode,
+            'item_count' => count($readModels),
+            'has_next' => (bool) $nextCursor,
             'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
         ]);
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', compact('data', 'company_id'))->render(),
+            'success' => true,
+            'count_mode' => $countMode,
+            'total' => $total,
+            'total_relation' => $totalRelation,
+            'data' => $readModels,
+            'next_cursor' => $nextCursor,
+            'page_size' => $size,
+            'version' => 1,
+            'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', [
+                'data' => $rawSourceData,
+                'company_id' => $company_id,
+            ])->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
     }
