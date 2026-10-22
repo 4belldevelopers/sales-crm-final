@@ -386,6 +386,21 @@
     padding: 0 10px !important;
   }
 }
+.cd-activities-drawer {
+  width: 90% !important;
+  max-width: 1220px !important;
+}
+@media (max-width: 1400px) {
+  .cd-activities-drawer {
+    width: 95% !important;
+    max-width: 1120px !important;
+  }
+}
+@media (max-width: 768px) {
+  .cd-activities-drawer {
+    width: 100% !important;
+  }
+}
 </style>
 @endpush
 @section('content')
@@ -442,7 +457,7 @@
                 </div>
                 <div>
                     <div class="cl-header-title-row">
-                        <h1 class="cl-header-title">Clients</h1>
+                        <h1 class="cl-header-title">Clients Tracker</h1>
                         <span class="cl-verified-badge" title="Verified ATS Module">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -476,7 +491,7 @@
             </div>
         </div>
 
-        <!-- ── 5 STAT CARDS ── -->
+        <!-- ── 6 STAT CARDS ── -->
         <div class="cl-stat-grid">
             {{-- Card 1: Total Clients --}}
             <a href="#" onclick="setClientTab('all', this); return false;" class="cl-card cl-stat-filter active" data-tab="all">
@@ -550,7 +565,7 @@
                 </div>
             </a>
 
-            {{-- Card 4: Active Hiring Clients --}}
+            {{-- Card 4: Active Companies --}}
             <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
                 <div class="cl-card-top">
                     <div class="cl-card-icon orange">
@@ -562,7 +577,7 @@
                     </div>
                     <div class="cl-card-meta">
                         <div class="cl-card-num" id="span_clientHiring">{{ $hiringClientsCount }}</div>
-                        <div class="cl-card-lbl">Active Hiring</div>
+                        <div class="cl-card-lbl">Active Companies</div>
                     </div>
                 </div>
                 <div class="cl-card-sub orange">
@@ -576,7 +591,31 @@
                 </div>
             </a>
 
-            {{-- Card 5: Pending Requests --}}
+            {{-- Card 5: Inactive Clients --}}
+            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-card cl-stat-filter" data-tab="inactive">
+                <div class="cl-card-top">
+                    <div class="cl-card-icon gray">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="10" y1="15" x2="10" y2="9"/>
+                            <line x1="14" y1="15" x2="14" y2="9"/>
+                        </svg>
+                    </div>
+                    <div class="cl-card-meta">
+                        <div class="cl-card-num" id="span_clientInactive">{{ $inactiveClientsCount }}</div>
+                        <div class="cl-card-lbl">Inactive Clients</div>
+                    </div>
+                </div>
+                <div class="cl-card-sub gray">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    <span>0 active positions</span>
+                </div>
+            </a>
+
+            {{-- Card 6: Pending Requests --}}
             <a href="#" onclick="setClientTab('request', this); return false;" class="cl-card cl-stat-filter" data-tab="request">
                 <div class="cl-card-top">
                     <div class="cl-card-icon purple">
@@ -766,7 +805,7 @@
                     <rect x="2" y="7" width="20" height="14" rx="2"/>
                     <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
                 </svg>
-                <span>Active Hiring</span>
+                <span>Active Companies</span>
                 <span class="cl-tab-badge" id="tabBadgeHiring">{{ $hiringClientsCount }}</span>
             </a>
 
@@ -865,52 +904,18 @@
 
 <!-- ── DRAWER FOR INTERNAL CLIENT ── -->
 <div id="kt_activitiesClient_toggle"></div>
-<div id="kt_activitiesClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close">
+<div id="kt_activitiesClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close" data-kt-drawer-width="{default:'100%', 'md': '92%', 'lg': '88%', 'xl': '1180px'}">
   <div class="card shadow-none rounded-0 w-100">
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-      <div class="d-flex align-items-center py-1">
-        <h3 class="card-title fw-bolder text-dark">Internal Client</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-      </div>
-      <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_activitiesClient_close">
-          <span class="svg-icon svg-icon-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
-                <rect x="0" y="7" width="16" height="2" rx="1" />
-                <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-              </g>
-            </svg>
-          </span>
-        </button>
-      </div>
-    </div>
+    <button type="button" id="kt_activitiesClient_close" class="d-none" aria-hidden="true"></button>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesClient_body"> &nbsp; </div>
   </div>
 </div>
 
 <!-- ── DRAWER FOR DIRECT CLIENT ── -->
 <div id="kt_activitiesDirectClient_toggle"></div>
-<div id="kt_activitiesDirectClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close">
+<div id="kt_activitiesDirectClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close" data-kt-drawer-width="{default:'100%', 'md': '92%', 'lg': '88%', 'xl': '1180px'}">
   <div class="card shadow-none rounded-0 w-100">
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-      <div class="d-flex align-items-center py-1">
-        <h3 class="card-title fw-bolder text-dark">Direct Client</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-      </div>
-      <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesDirectClient_close">
-          <span class="svg-icon svg-icon-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-                <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-              </g>
-            </svg>
-          </span>
-        </button>
-      </div>
-    </div>
+    <button type="button" id="kt_activitiesDirectClient_close" class="d-none" aria-hidden="true"></button>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
   </div>
 </div>
@@ -1496,7 +1501,7 @@ $(document).on('click', '.show-detail-direct', function (e) {
     });
 });
 
-$(document).on('click', '#kt_activitiesClient_close', function(e) {
+$(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer', function(e) {
     e.preventDefault();
     var drawerEl = document.getElementById('kt_activitiesClient');
     if (drawerEl && typeof KTDrawer !== 'undefined') {
@@ -1505,15 +1510,11 @@ $(document).on('click', '#kt_activitiesClient_close', function(e) {
             drawer.hide();
         }
     }
-});
-
-$(document).on('click', '#kt_activitiesDirectClient_close', function(e) {
-    e.preventDefault();
-    var drawerEl = document.getElementById('kt_activitiesDirectClient');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer && typeof drawer.hide === 'function') {
-            drawer.hide();
+    var drawerDirectEl = document.getElementById('kt_activitiesDirectClient');
+    if (drawerDirectEl && typeof KTDrawer !== 'undefined') {
+        var drawerD = KTDrawer.getInstance(drawerDirectEl);
+        if (drawerD && typeof drawerD.hide === 'function') {
+            drawerD.hide();
         }
     }
 });
@@ -1694,6 +1695,10 @@ function renderClientRows(rows) {
             <div class="tbl-cell-activity">
                 <div class="cl-act-main">${escapeAttr(daysAgo || 'No activity yet')}</div>
                 <div class="cl-act-desc">${daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.'}</div>
+                <div class="cl-act-status ${jobActive > 0 ? 'status-active' : 'status-inactive'}">
+                    <span class="cl-act-status-dot"></span>
+                    <span>${jobActive > 0 ? 'Active' : 'Inactive'}</span>
+                </div>
             </div>
             <div class="tbl-cell-jobs">
                 <div class="cl-job-line ${jobActive > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
@@ -1809,7 +1814,7 @@ function handleWorkerMessage(data) {
             $('#span_clientDirect, #tabBadgeDirect').text(data.counts.direct);
             $('#span_clientHiring, #tabBadgeHiring').text(data.counts.hiring);
             if (data.counts.inactive !== undefined) {
-                $('#tabBadgeInactive').text(data.counts.inactive);
+                $('#span_clientInactive, #tabBadgeInactive').text(data.counts.inactive);
             }
         }
 
@@ -2290,6 +2295,7 @@ function applyClientResponse(response, targetPage) {
                 $('#span_clientHiring').html(response.total);
                 $('#tabBadgeHiring').html(response.total);
             } else if (activeClientTab === 'inactive') {
+                $('#span_clientInactive').html(response.total);
                 $('#tabBadgeInactive').html(response.total);
             } else if (activeClientTab === 'request') {
                 $('#span_clientRequest').html(response.total);
@@ -2505,6 +2511,7 @@ $(document).on('click', '.request_event', function () {
                         if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
                         if ($('#span_clientCustom').length) $('#span_clientCustom').html(response.clientDataCnt.clientCustom);
                         if ($('#span_clientHiring').length) $('#span_clientHiring').html(response.clientDataCnt.clientHiring);
+                        if ($('#span_clientInactive').length && response.clientDataCnt.clientInactive !== undefined) $('#span_clientInactive').html(response.clientDataCnt.clientInactive);
                         if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
                     }
                     if (window.clientSyncChannel) {
@@ -2570,6 +2577,7 @@ function handleClientMutationEvent(data) {
         if ($('#span_clientDirect').length && data.clientDataCnt.clientDirect !== undefined) $('#span_clientDirect').html(data.clientDataCnt.clientDirect);
         if ($('#span_clientCustom').length && data.clientDataCnt.clientCustom !== undefined) $('#span_clientCustom').html(data.clientDataCnt.clientCustom);
         if ($('#span_clientHiring').length && data.clientDataCnt.clientHiring !== undefined) $('#span_clientHiring').html(data.clientDataCnt.clientHiring);
+        if ($('#span_clientInactive').length && data.clientDataCnt.clientInactive !== undefined) $('#span_clientInactive').html(data.clientDataCnt.clientInactive);
         if ($('#span_clientRequest').length && data.clientDataCnt.clientRequest !== undefined) $('#span_clientRequest').html(data.clientDataCnt.clientRequest);
         if ($('#tabBadgeInactive').length && data.clientDataCnt.clientInactive !== undefined) $('#tabBadgeInactive').html(data.clientDataCnt.clientInactive);
     }

@@ -145,18 +145,18 @@
   stroke: #0f172a;
 }
 
-/* ── 5 Stat Cards Row ── */
+/* ── 6 Stat Cards Row ── */
 .cl-stat-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
   margin-bottom: 20px;
 }
 .cl-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -180,13 +180,13 @@
 .cl-card-top {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 .cl-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,20 +197,21 @@
 .cl-card-icon.green  { background: #ecfdf5; color: #059669; }
 .cl-card-icon.orange { background: #fff7ed; color: #ea580c; }
 .cl-card-icon.purple { background: #faf5ff; color: #9333ea; }
+.cl-card-icon.gray, .cl-card-icon.slate { background: #f1f5f9; color: #64748b; }
 
 .cl-card-meta {
   min-width: 0;
   overflow: hidden;
 }
 .cl-card-num {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.1;
   white-space: nowrap;
 }
 .cl-card-lbl {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #64748b;
   margin-top: 2px;
@@ -222,7 +223,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
@@ -233,6 +234,7 @@
 .cl-card-sub.blue   { color: #3b82f6; }
 .cl-card-sub.orange { color: #ea580c; }
 .cl-card-sub.purple { color: #9333ea; }
+.cl-card-sub.gray, .cl-card-sub.slate { color: #64748b; }
 .cl-card-sub svg { flex-shrink: 0; }
 
 /* ── Filter Bar ── */
@@ -802,11 +804,11 @@
   font-weight: 700;
   line-height: 1;
 }
-.pill-sourced    { background: #eff6ff; color: #2563eb; }
-.pill-evaluated  { background: #f5f3ff; color: #7c3aed; }
-.pill-interviews { background: #fffbeb; color: #d97706; }
-.pill-offers     { background: #ecfdf5; color: #059669; }
-.pill-joined     { background: #fef2f2; color: #dc2626; }
+.pill-sourced    { background: #f1f5f9; color: #475569; }
+.pill-evaluated  { background: #eff6ff; color: #2563eb; }
+.pill-interviews { background: #faf5ff; color: #7c3aed; }
+.pill-offers     { background: #fff7ed; color: #ea580c; }
+.pill-joined     { background: #ecfdf5; color: #059669; }
 
 .cl-pipe-arrow {
   display: none !important;
@@ -889,6 +891,35 @@
   font-size: 10.5px;
   color: #94a3b8;
   line-height: 1.2;
+}
+.cl-act-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4.5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+.cl-act-status.status-active {
+  color: #16a34a;
+}
+.cl-act-status.status-inactive {
+  color: #94a3b8;
+}
+.cl-act-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.cl-act-status.status-active .cl-act-status-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18);
+}
+.cl-act-status.status-inactive .cl-act-status-dot {
+  background: #cbd5e1;
 }
 
 /* ── Empty State ── */
@@ -1012,10 +1043,11 @@
   padding: 0 4px;
 }
 
-/* ── Screen Adaptability (Responsive for < 1200px & Mobile) ── */
-@media (max-width: 1200px) {
+/* ── Screen Adaptability (Responsive for < 1400px & Mobile) ── */
+@media (max-width: 1400px) {
   .cl-stat-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
   }
 }
 @media (max-width: 768px) {

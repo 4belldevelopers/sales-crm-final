@@ -3,12 +3,12 @@
 @php
     $activeTab = $activeTab ?? 'all';
     $heroTitles = [
-        'all'      => 'Clients',
+        'all'      => 'Clients Tracker',
         'direct'   => 'Direct Clients',
         'internal' => 'Internal Clients',
         'request'  => 'Client Requests',
     ];
-    $heroTitle = $heroTitles[$activeTab] ?? 'Clients';
+    $heroTitle = $heroTitles[$activeTab] ?? 'Clients Tracker';
 @endphp
 
 <style>
@@ -151,6 +151,7 @@
 .cl-stat-icon.green  { background:#f0fdf4; color:#16a34a; }
 .cl-stat-icon.orange { background:#fff7ed; color:#ea580c; }
 .cl-stat-icon.purple { background:#faf5ff; color:#7c3aed; }
+.cl-stat-icon.gray   { background:#f1f5f9; color:#64748b; }
 .cl-stat-num { font-size:20px; font-weight:700; color:#181c32; line-height:1.1; }
 .cl-stat-label { font-size:11px; color:#7e8299; margin-top:2px; }
 
@@ -183,7 +184,7 @@
         </div>
         <div>
             <div class="cl-header-title-row">
-                <h1 class="cl-header-title">Clients</h1>
+                <h1 class="cl-header-title">Clients Tracker</h1>
                 <span class="cl-verified-badge" title="Verified ATS Module">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -252,7 +253,16 @@
         </div>
         <div>
             <div class="cl-stat-num" id="span_clientHiring">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
-            <div class="cl-stat-label">Clients Actively Hiring</div>
+            <div class="cl-stat-label">Active Companies</div>
+        </div>
+    </a>
+    <a href="#" onclick="if(typeof setClientTab==='function'){setClientTab('inactive', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='inactive' ? 'active' : '' }}" data-tab="inactive">
+        <div class="cl-stat-icon gray">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+        </div>
+        <div>
+            <div class="cl-stat-num" id="span_clientInactive">{{ $clientDataCnt['clientInactive'] ?? max(0, ($clientDataCnt['clientAll'] ?? 0) - ($clientDataCnt['clientHiring'] ?? 0)) }}</div>
+            <div class="cl-stat-label">Inactive Clients</div>
         </div>
     </a>
     <a href="{{ url('service_company/clients/client_request/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('request', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='request' ? 'active' : '' }}" data-tab="request">
@@ -282,9 +292,12 @@
     </a>
     <a href="#" onclick="if(typeof setClientTab==='function'){setClientTab('hiring', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='hiring' ? 'active' : '' }}" id="tab-hiring" data-tab="hiring">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        Hiring
+        Active Companies
     </a>
-
+    <a href="#" onclick="if(typeof setClientTab==='function'){setClientTab('inactive', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='inactive' ? 'active' : '' }}" id="tab-inactive" data-tab="inactive">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+        Inactive Clients
+    </a>
     <a href="{{ url('service_company/clients/client_request/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('request', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='request' ? 'active' : '' }}" data-tab="request">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Pending Job Requests

@@ -127,6 +127,10 @@
         <div class="tbl-cell-activity">
             <div class="cl-act-main">{{ $daysAgo ? $daysAgo : 'No activity yet' }}</div>
             <div class="cl-act-desc">{{ $daysAgo ? 'Active in system' : 'Be the first to add a job or candidate.' }}</div>
+            <div class="cl-act-status {{ $job_active > 0 ? 'status-active' : 'status-inactive' }}">
+                <span class="cl-act-status-dot"></span>
+                <span>{{ $job_active > 0 ? 'Active' : 'Inactive' }}</span>
+            </div>
         </div>
 
         {{-- Jobs (Order: Hiring, Hold, Closed with conditional status colors) --}}
