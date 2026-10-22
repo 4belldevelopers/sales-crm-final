@@ -145,52 +145,59 @@
   stroke: #0f172a;
 }
 
-/* ── 6 Stat Cards Row ── */
+/* ── 6 Stat Cards Row (Strictly 1 Single Horizontal Row — Never Wraps) ── */
 .cl-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 20px;
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .cl-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 11px;
+  padding: 10px 11px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   min-width: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 .cl-card:hover {
   transform: translateY(-1px);
-  border-color: #3b82f6;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   text-decoration: none;
 }
 .cl-card.active {
-  border-color: #2563eb;
-  background: #ffffff;
-  box-shadow: 0 0 0 1px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.08);
+  text-decoration: none;
 }
 .cl-card-top {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 6px;
+  min-width: 0;
 }
 .cl-card-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.cl-card-icon svg {
+  width: 17px;
+  height: 17px;
 }
 .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
 .cl-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
@@ -201,41 +208,159 @@
 
 .cl-card-meta {
   min-width: 0;
+  flex: 1;
   overflow: hidden;
 }
 .cl-card-num {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.1;
   white-space: nowrap;
 }
 .cl-card-lbl {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   color: #64748b;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 .cl-card-sub {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10px;
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 2px;
 }
 .cl-card-sub.green  { color: #16a34a; }
 .cl-card-sub.blue   { color: #3b82f6; }
 .cl-card-sub.orange { color: #ea580c; }
 .cl-card-sub.purple { color: #9333ea; }
 .cl-card-sub.gray, .cl-card-sub.slate { color: #64748b; }
-.cl-card-sub svg { flex-shrink: 0; }
+.cl-card-sub svg { flex-shrink: 0; width: 11px; height: 11px; }
+
+/* ── KPI Selected States: Highlighted Background using corresponding KPI color ── */
+/* 1. Total Clients (Blue) */
+.cl-card.active[data-tab="all"] {
+  background: #eff6ff !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.cl-card.active[data-tab="all"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
+.cl-card.active[data-tab="all"] .cl-card-num {
+  color: #1d4ed8 !important;
+}
+.cl-card.active[data-tab="all"] .cl-card-lbl {
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+
+/* 2. Internal Clients (Indigo) */
+.cl-card.active[data-tab="internal"] {
+  background: #eef2ff !important;
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 14px rgba(79, 70, 229, 0.12) !important;
+}
+.cl-card.active[data-tab="internal"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15) !important;
+}
+.cl-card.active[data-tab="internal"] .cl-card-num {
+  color: #3730a3 !important;
+}
+.cl-card.active[data-tab="internal"] .cl-card-lbl {
+  color: #4338ca !important;
+  font-weight: 700 !important;
+}
+
+/* 3. Direct Clients (Green) */
+.cl-card.active[data-tab="direct"] {
+  background: #ecfdf5 !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
+}
+.cl-card.active[data-tab="direct"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #059669 !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
+.cl-card.active[data-tab="direct"] .cl-card-num {
+  color: #065f46 !important;
+}
+.cl-card.active[data-tab="direct"] .cl-card-lbl {
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Active Companies (Orange) */
+.cl-card.active[data-tab="hiring"] {
+  background: #fff7ed !important;
+  border-color: #fb923c !important;
+  box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
+}
+.cl-card.active[data-tab="hiring"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #ea580c !important;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
+}
+.cl-card.active[data-tab="hiring"] .cl-card-num {
+  color: #9a3412 !important;
+}
+.cl-card.active[data-tab="hiring"] .cl-card-lbl {
+  color: #c2410c !important;
+  font-weight: 700 !important;
+}
+
+/* 5. Inactive Clients (Slate) */
+.cl-card.active[data-tab="inactive"] {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 1.5px #64748b, 0 4px 14px rgba(100, 116, 139, 0.14) !important;
+}
+.cl-card.active[data-tab="inactive"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 3px rgba(100, 116, 139, 0.15) !important;
+}
+.cl-card.active[data-tab="inactive"] .cl-card-num {
+  color: #0f172a !important;
+}
+.cl-card.active[data-tab="inactive"] .cl-card-lbl {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+/* 6. Pending Requests (Purple) */
+.cl-card.active[data-tab="request"] {
+  background: #faf5ff !important;
+  border-color: #c084fc !important;
+  box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+}
+.cl-card.active[data-tab="request"] .cl-card-icon {
+  background: #ffffff !important;
+  color: #9333ea !important;
+  box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+}
+.cl-card.active[data-tab="request"] .cl-card-num {
+  color: #6b21a8 !important;
+}
+.cl-card.active[data-tab="request"] .cl-card-lbl {
+  color: #7e22ce !important;
+  font-weight: 700 !important;
+}
 
 /* ── Filter Bar ── */
 .cl-filter-bar {
@@ -348,9 +473,10 @@
 .cl-nav-tabs {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 8px;
   border-bottom: 1.5px solid #e2e8f0;
   margin-bottom: 16px;
+  padding: 2px 0 8px 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -360,48 +486,149 @@
 .cl-tab-item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 2px;
-  font-size: 12.5px;
+  gap: 6.5px;
+  padding: 6.5px 12px;
+  font-size: 12px;
   font-weight: 500;
   color: #64748b;
   text-decoration: none;
-  border-bottom: 2.5px solid transparent;
-  margin-bottom: -1.5px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.15s ease;
+  user-select: none;
+  background: transparent;
 }
 .cl-tab-item:hover {
   color: #0f172a;
+  background: #f8fafc;
+  border-color: #e2e8f0;
   text-decoration: none;
-}
-.cl-tab-item.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-  font-weight: 600;
 }
 .cl-tab-item svg {
   flex-shrink: 0;
+  width: 14.5px;
+  height: 14.5px;
+  transition: color 0.15s ease, stroke 0.15s ease;
 }
 .cl-tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
+  min-width: 19px;
+  height: 18px;
+  padding: 0 5.5px;
+  border-radius: 9px;
   font-size: 11px;
   font-weight: 600;
   background: #f1f5f9;
   color: #64748b;
   line-height: 1;
+  transition: all 0.15s ease;
 }
-.cl-tab-item.active .cl-tab-badge {
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 700;
+
+/* ── Tabs Selected States: Highlighted Background matching corresponding KPI ── */
+/* 1. All Clients (Blue) */
+.cl-tab-item.active[data-tab="all"] {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="all"] svg {
+  color: #2563eb !important;
+  stroke: #2563eb !important;
+}
+.cl-tab-item.active[data-tab="all"] .cl-tab-badge {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+
+/* 2. Internal Clients (Indigo) */
+.cl-tab-item.active[data-tab="internal"] {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #c7d2fe !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="internal"] svg {
+  color: #4f46e5 !important;
+  stroke: #4f46e5 !important;
+}
+.cl-tab-item.active[data-tab="internal"] .cl-tab-badge {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  font-weight: 700 !important;
+}
+
+/* 3. Direct Clients (Green) */
+.cl-tab-item.active[data-tab="direct"] {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="direct"] svg {
+  color: #059669 !important;
+  stroke: #059669 !important;
+}
+.cl-tab-item.active[data-tab="direct"] .cl-tab-badge {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Active Companies (Orange) */
+.cl-tab-item.active[data-tab="hiring"] {
+  background: #fff7ed !important;
+  color: #c2410c !important;
+  border-color: #fed7aa !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="hiring"] svg {
+  color: #ea580c !important;
+  stroke: #ea580c !important;
+}
+.cl-tab-item.active[data-tab="hiring"] .cl-tab-badge {
+  background: #ffedd5 !important;
+  color: #9a3412 !important;
+  font-weight: 700 !important;
+}
+
+/* 5. Inactive Clients (Slate) */
+.cl-tab-item.active[data-tab="inactive"] {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="inactive"] svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+}
+.cl-tab-item.active[data-tab="inactive"] .cl-tab-badge {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* 6. Pending Requests (Purple) */
+.cl-tab-item.active[data-tab="request"] {
+  background: #faf5ff !important;
+  color: #7e22ce !important;
+  border-color: #e9d5ff !important;
+  font-weight: 600 !important;
+}
+.cl-tab-item.active[data-tab="request"] svg {
+  color: #9333ea !important;
+  stroke: #9333ea !important;
+}
+.cl-tab-item.active[data-tab="request"] .cl-tab-badge {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  font-weight: 700 !important;
 }
 
 /* ── Table Card Container ── */
@@ -1043,16 +1270,126 @@
   padding: 0 4px;
 }
 
-/* ── Screen Adaptability (Responsive for < 1400px & Mobile) ── */
-@media (max-width: 1400px) {
+/* ── Locked Single Horizontal Row Responsive Scaling (Never Wraps) ── */
+/* 15.6-inch laptop screens (1366x768 & scaled 1920x1080) */
+@media (max-width: 1440px) {
   .cl-stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .cl-card {
+    padding: 8px 8px !important;
+  }
+  .cl-card-top {
+    gap: 7px !important;
+    margin-bottom: 5px !important;
+  }
+  .cl-card-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 7px !important;
+  }
+  .cl-card-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+  .cl-card-num {
+    font-size: 17px !important;
+  }
+  .cl-card-lbl {
+    font-size: 10px !important;
+  }
+  .cl-card-sub {
+    font-size: 9.5px !important;
+    gap: 3.5px !important;
+    margin-top: 2px !important;
+  }
+  .cl-card-sub svg {
+    width: 10px !important;
+    height: 10px !important;
   }
 }
+
+/* Medium laptop & tablet screens */
+@media (max-width: 1150px) {
+  .cl-stat-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+  .cl-card {
+    padding: 7px 6px !important;
+    border-radius: 9px !important;
+  }
+  .cl-card-top {
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+  }
+  .cl-card-icon {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 6px !important;
+  }
+  .cl-card-icon svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+  .cl-card-num {
+    font-size: 15.5px !important;
+  }
+  .cl-card-lbl {
+    font-size: 9.5px !important;
+  }
+  .cl-card-sub {
+    font-size: 9px !important;
+    gap: 3px !important;
+    margin-top: 1px !important;
+  }
+  .cl-card-sub svg {
+    width: 9.5px !important;
+    height: 9.5px !important;
+  }
+}
+
+/* Compact screens */
 @media (max-width: 768px) {
   .cl-stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+  .cl-card {
+    padding: 6px 4px !important;
+    border-radius: 7px !important;
+  }
+  .cl-card-top {
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+  .cl-card-icon {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 5px !important;
+  }
+  .cl-card-icon svg {
+    width: 11px !important;
+    height: 11px !important;
+  }
+  .cl-card-num {
+    font-size: 14px !important;
+  }
+  .cl-card-lbl {
+    font-size: 8.5px !important;
+  }
+  .cl-card-sub {
+    font-size: 8px !important;
+    gap: 2px !important;
+    margin-top: 1px !important;
+  }
+  .cl-card-sub svg {
+    width: 8.5px !important;
+    height: 8.5px !important;
   }
   .cl-header {
     flex-direction: column;
@@ -1065,11 +1402,6 @@
   .cl-pagi-bar {
     flex-direction: column;
     align-items: flex-start;
-  }
-}
-@media (max-width: 480px) {
-  .cl-stat-grid {
-    grid-template-columns: 1fr;
   }
 }
 
