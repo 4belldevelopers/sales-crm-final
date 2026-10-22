@@ -150,10 +150,10 @@
             color: #0f172a !important;
           }
 
-          /* ── Client Hero Banner: DIRECT CLIENT (SOFT GREEN THEME) ── */
+          /* ── Client Hero Banner: DIRECT CLIENT (Clean Neutral Enterprise UI) ── */
           .cd-hero-banner-green {
-            background: linear-gradient(180deg, #ecfdf5 0%, #f4fcf7 70%, #ffffff 100%);
-            border-bottom: 1px solid #d1fae5;
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
             padding: 14px 18px 12px;
           }
           .cd-hero-top {
@@ -314,6 +314,10 @@
             background: #ecfdf5;
             border: 1px solid #a7f3d0;
           }
+          .cd-status-card-grey {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+          }
           .cd-status-card-title {
             font-size: 11px !important;
             font-weight: 600 !important;
@@ -349,6 +353,12 @@
             border-radius: 50%;
             border: 1.5px solid #059669;
             animation: cdpulse 2s infinite;
+          }
+          .cd-pulse-grey {
+            background: #94a3b8 !important;
+          }
+          .cd-pulse-grey::after {
+            display: none !important;
           }
           @keyframes cdpulse {
             0%, 100% { transform: scale(1); opacity: 1; }
@@ -949,10 +959,15 @@
             $primaryInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($primaryName)), 0, 2)))) ?: 'PC';
             $primaryDesignation = @$directClientDetail->designation ?? 'Hiring Lead';
             $primaryEmail = $emailClean ?: 'contact@client.com';
-            $primaryPhone = $phoneClean ?: '+91 98765 43210';
+            
+            // Fix double plus: ensure strictly single '+' before country code and number
+            $rawPhone = (string)($phoneClean ?: '+91 98765 43210');
+            $primaryPhone = preg_replace('/^\++/', '+', trim($rawPhone));
 
-            $clientCreatedAt = @$directClientDetail->created_at ? date('d M Y', strtotime($directClientDetail->created_at)) : (@$directClientDetail->to_created_at ? date('d M Y', strtotime($directClientDetail->to_created_at)) : '15 Jan 2023');
+            // Dynamic Client Since from actual onboarding date
+            $clientSinceYear = (!empty(@$directClientDetail->created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->created_at)->format('Y') : ((!empty(@$directClientDetail->to_created_at)) ? \Carbon\Carbon::parse(@$directClientDetail->to_created_at)->format('Y') : date('Y'));
             $clientUpdatedAt = @$directClientDetail->updated_at ? Carbon::parse($directClientDetail->updated_at)->diffForHumans() : '1 day ago';
+            $isClientActive = ($kpiActive > 0);
         @endphp
 
         <input type="hidden" name="direct_client_id" id="direct_client_id" value="{{ $directClientDetail->client_id ?? $directClientDetail->id }}" />
@@ -962,15 +977,15 @@
           <div class="cd-top-bar">
             <div class="cd-top-actions">
               <button type="button" class="cd-hdr-btn cd-hdr-btn-outline-green cd-btn-followup" data-client-id="{{ $directClientDetail->client_id ?? $directClientDetail->id }}">
-                <i class="fas fa-calendar-check fa-solid"></i> Follow Up
+                <i class="fas fa-calendar-check fa-solid" style="color:#0284c7;"></i> Follow Up
               </button>
             </div>
             <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesDirectClient_close_btn" title="Close Drawer">
-              <i class="fas fa-times fa-solid fa-xmark"></i>
+              <i class="fas fa-times fa-solid fa-xmark" style="color:#64748b;"></i>
             </button>
           </div>
 
-          <!-- ── Hero Banner: Direct Client (Soft Green Gradient) ── -->
+          <!-- ── Hero Banner: Direct Client (Clean Neutral Enterprise UI) ── -->
           <div class="cd-hero-banner-green">
             <div class="cd-hero-top">
               <div class="cd-hero-left">
@@ -989,22 +1004,24 @@
                 <div class="cd-hero-details">
                   <div class="cd-title-row">
                     <span class="cd-client-name">{{ $detailName }}</span>
-                    <span class="cd-pill-type-direct"><i class="fas fa-building fa-solid"></i> Direct Client</span>
+                    <span class="cd-pill-type-direct"><i class="fas fa-building fa-solid" style="color:#059669;"></i> Direct Client</span>
                   </div>
                   <div class="cd-meta-row">
                     @if ($industries_name)
-                    <span><i class="fas fa-building fa-solid me-1 text-muted"></i>{{ $industries_name }}</span>
+                    <span><i class="fas fa-building fa-solid me-1" style="color:#3b82f6;"></i>{{ $industries_name }}</span>
                     <span class="cd-meta-sep">|</span>
                     @endif
-                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1 text-muted"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1" style="color:#ef4444;"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
                     @if (!empty($webClean))
                     <span class="cd-meta-sep">|</span>
                     <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
-                      <i class="fas fa-link fa-solid me-1"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                      <i class="fas fa-link fa-solid me-1" style="color:#06b6d4;"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
                     </a>
                     @endif
+                    @if(!empty(@$directClientDetail->vendor_id))
                     <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">VEN-{{ @$directClientDetail->id ?: @$directClientDetail->client_id }}</span></span>
+                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">{{ @$directClientDetail->vendor_id }}</span></span>
+                    @endif
                   </div>
                   <div class="cd-tag-row">
                     @foreach ($tagsArr as $val)
@@ -1015,23 +1032,40 @@
               </div>
               <div class="cd-hero-right">
                 <div class="cd-status-group">
-                  <div class="cd-status-card cd-status-card-green">
-                    <span class="cd-pulse-dot cd-pulse-green"></span>
-                    <div>
-                      <div class="cd-status-card-title text-success">Client Active</div>
-                      <div class="cd-status-card-sub">Direct partnership</div>
+                  @if ($isClientActive)
+                    <div class="cd-status-card cd-status-card-green">
+                      <span class="cd-pulse-dot cd-pulse-green"></span>
+                      <div>
+                        <div class="cd-status-card-title text-success">Client Active</div>
+                        <div class="cd-status-card-sub text-success">Account is active</div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="cd-status-card cd-status-card-teal">
-                    <span class="cd-pulse-dot cd-pulse-teal"></span>
-                    <div>
-                      <div class="cd-status-card-title" style="color:#059669;">Hiring</div>
-                      <div class="cd-status-card-sub">{{ $kpiActive }} active jobs</div>
+                    <div class="cd-status-card cd-status-card-green">
+                      <span class="cd-pulse-dot cd-pulse-green"></span>
+                      <div>
+                        <div class="cd-status-card-title text-success">Hiring</div>
+                        <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
+                      </div>
                     </div>
-                  </div>
+                  @else
+                    <div class="cd-status-card cd-status-card-grey">
+                      <span class="cd-pulse-dot cd-pulse-grey"></span>
+                      <div>
+                        <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
+                        <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
+                      </div>
+                    </div>
+                    <div class="cd-status-card cd-status-card-grey">
+                      <span class="cd-pulse-dot cd-pulse-grey"></span>
+                      <div>
+                        <div class="cd-status-card-title" style="color:#64748b;">Not Hiring</div>
+                        <div class="cd-status-card-sub" style="color:#94a3b8;">0 active jobs</div>
+                      </div>
+                    </div>
+                  @endif
                 </div>
                 <div class="cd-hero-meta-time">
-                  Connected: {{ @$directClientDetail->to_created_at ? date('d M Y', strtotime(@$directClientDetail->to_created_at)) : '2023' }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
+                  Client since {{ $clientSinceYear }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
                 </div>
               </div>
             </div>
@@ -1041,7 +1075,7 @@
           <div class="cd-kpi-grid">
             <div class="cd-kpi-card" data-target-tab="#requisitions">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid" style="color:#2563eb;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
@@ -1052,7 +1086,7 @@
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_list">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-user fa-solid"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
                   <div class="cd-kpi-lbl">Candidates Submitted</div>
@@ -1063,7 +1097,7 @@
             </div>
             <div class="cd-kpi-card" data-target-tab="#interview_tracker">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
                 <div>
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCount">{{ $kpiInterviews }}</div>
                   <div class="cd-kpi-lbl">Interviews Scheduled</div>
@@ -1074,7 +1108,7 @@
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_joining">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-alt fa-solid fa-file-lines"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers Generated</div>
@@ -1085,7 +1119,7 @@
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_joining">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Successful Joins</div>
@@ -1101,46 +1135,46 @@
             <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
               <li class="nav-item">
                 <a class="nav-link active" data-toggle="tab" href="#overview">
-                  <i class="fas fa-home fa-solid fa-house"></i> Overview
+                  <i class="fas fa-house fa-solid" style="color:#3b82f6;"></i> Overview
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
-                  <i class="fas fa-clock fa-solid"></i> Recent Activity
+                  <i class="fas fa-clock fa-solid" style="color:#f59e0b;"></i> Recent Activity
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#contacts">
-                  <i class="fas fa-users fas fa-user fa-solid-group"></i> Contacts
+                  <i class="fas fa-address-book fa-solid" style="color:#10b981;"></i> Contacts
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#requisitions">
-                  <i class="fas fa-briefcase fa-solid"></i> Jobs
+                  <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Jobs
                   @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                  <i class="fas fa-users fa-solid"></i> Candidates
+                  <i class="fas fa-user-tie fa-solid" style="color:#06b6d4;"></i> Candidates
                   @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                  <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i> Interviews
+                  <i class="fas fa-calendar-days fa-solid" style="color:#f43f5e;"></i> Interviews
                   <span class="cd-tab-badge" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                  <i class="fas fa-file-alt fa-solid fa-file-lines"></i> Offers &amp; Joinings
+                  <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
                   @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                  <i class="fas fa-chart-bar fa-solid fa-chart-column"></i> Performance
+                  <i class="fas fa-chart-column fa-solid" style="color:#6366f1;"></i> Performance
                 </a>
               </li>
             </ul>
@@ -1269,7 +1303,7 @@
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-bookmark fa-solid" style="font-size:12px; color:#10b981;"></i>
+                        <i class="fas fa-circle-info fa-solid" style="color:#6366f1; font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Client Information</span>
                       </div>
                     </div>
@@ -1288,14 +1322,6 @@
                         </span>
                       </div>
                       @endif
-                      @if (!empty($emailClean))
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Email</span>
-                        <span class="cd-kv-val">
-                          <a href="mailto:{{ $emailClean }}">{{ $emailClean }}</a>
-                        </span>
-                      </div>
-                      @endif
                       @if ($industries_name)
                       <div class="cd-kv-row">
                         <span class="cd-kv-lbl">Industry</span>
@@ -1306,10 +1332,12 @@
                         <span class="cd-kv-lbl">Company Type</span>
                         <span class="cd-kv-val">{{ $d_company_type_val }}</span>
                       </div>
+                      @if(!empty(@$directClientDetail->vendor_id))
                       <div class="cd-kv-row">
                         <span class="cd-kv-lbl">Vendor ID</span>
-                        <span class="cd-kv-val">VEN-{{ @$directClientDetail->id ?: @$directClientDetail->client_id }}</span>
+                        <span class="cd-kv-val">{{ @$directClientDetail->vendor_id }}</span>
                       </div>
+                      @endif
                       @if (@$directClientDetail->founded)
                       <div class="cd-kv-row">
                         <span class="cd-kv-lbl">Founded</span>
@@ -1328,10 +1356,6 @@
                         <span class="cd-kv-val">{{ date('d M, Y', strtotime(@$directClientDetail->to_created_at)) }}</span>
                       </div>
                       @endif
-                      <div class="cd-kv-row">
-                        <span class="cd-kv-lbl">Specialties</span>
-                        <span class="cd-kv-val">{{ ucwords(implode(', ', $tagsArr)) }}</span>
-                      </div>
                     </div>
                   </div>
 
@@ -1339,7 +1363,7 @@
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-users fas fa-user fa-solid-group" style="font-size:12px; color:#10b981;"></i>
+                        <i class="fas fa-id-badge fa-solid" style="color:#10b981; font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Primary Contact</span>
                       </div>
                       <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
@@ -1356,30 +1380,28 @@
                         <div class="cd-contact-title">{{ $primaryDesignation }}</div>
                         <div class="cd-contact-links">
                           <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
-                            <i class="fas fa-envelope fa-solid text-muted"></i> {{ $primaryEmail }}
+                            <i class="fas fa-envelope fa-solid" style="color:#2563eb;"></i> {{ $primaryEmail }}
                           </a>
                           <span class="cd-contact-link-item">
-                            <i class="fas fa-phone fa-solid text-muted"></i> {{ $primaryPhone }}
+                            <i class="fas fa-phone fa-solid" style="color:#10b981;"></i> {{ $primaryPhone }}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Card: Client Tags -->
+                  <!-- Card: Client Services -->
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fas fa-tag fa-solid" style="font-size:12px; color:#10b981;"></i>
-                        <span class="cd-card-hdr-title">Client Tags</span>
+                        <i class="fas fa-layer-group fa-solid" style="color:#ec4899; font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">Client Services</span>
                       </div>
-                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-btn-edit-tags">Edit Tags</a>
                     </div>
                     <div class="cd-tags-cloud">
                       @foreach ($tagsArr as $tag)
                         <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
                       @endforeach
-                      <button type="button" class="cd-btn-add-tag cd-btn-add-tag-trigger"><i class="fas fa-plus fa-solid me-1"></i>Add Tag</button>
                     </div>
                   </div>
                 </div>
