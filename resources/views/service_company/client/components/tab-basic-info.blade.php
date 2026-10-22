@@ -56,7 +56,7 @@
           <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="website">Company Website</label>
+              <label class="god-field-label" for="website">Company Website (Optional)</label>
             </div>
 
             <div class="god-website-control-row">
@@ -485,7 +485,7 @@
           <!-- ROW 5, COL 2: Tax ID / Business Reg No -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="tax_id">Tax ID / Business Reg No</label>
+              <label class="god-field-label" for="tax_id">Tax ID / Business Reg No / GST / Service Number (Optional)</label>
             </div>
             <div class="god-input-box">
               <span class="god-input-left-icon">
