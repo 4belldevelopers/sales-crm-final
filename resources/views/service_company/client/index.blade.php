@@ -405,27 +405,6 @@
 @endpush
 @section('content')
 @php
-    $tabactive = [
-         'allClient_active'=>'tabactive',
-         'allClient_url'=> route('service_company.clients.index'),
-         'span_clientAll'=>'span_clientAll',
-         'clientDirect_active'=>'',
-         'clientDirect_url'=> url('service_company/clients/direct_client/0'),
-         'span_clientDirect'=>'span_clientDirect',
-         'customClient_active'=>'',
-         'customClient_url'=> url('service_company/clients/custom_client/0'),
-         'span_clientcustom'=>'span_clientCustom',
-         'clientRequest_active'=>'',
-         'clientRequest_url'=> url('service_company/clients/client_request/0'),
-         'span_clientRequest'=>'span_clientRequest',
-         'clientAll' => @$clientDataCnt['clientAll'],
-         'clientDirect' => @$clientDataCnt['clientDirect'],
-         'clientCustom' => @$clientDataCnt['clientCustom'],
-         'clientRequest' => @$clientDataCnt['clientRequest'],
-         'clientHiring' => @$clientDataCnt['clientHiring'],
-         'activeJobs' => @$clientDataCnt['activeJobs'],
-    ];
-
     $totalClientsCount = (int)($clientDataCnt['clientAll'] ?? 0);
     $internalClientsCount = (int)($clientDataCnt['clientCustom'] ?? 0);
     $directClientsCount = (int)($clientDataCnt['clientDirect'] ?? 0);
