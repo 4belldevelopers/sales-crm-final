@@ -20,6 +20,34 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, and `test_phase5_idempotency.php` / `load_test_10k.php` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-22* — **Client Drawer UI/UX Redesign: Typography & Visual Hierarchy Optimization (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Correct typography and visual hierarchy throughout the entire Client Drawer for both Internal Client (`show.blade.php`) and Direct Client (`dviewMore.blade.php`).
+    - Eliminate excessive font-weight density; adopt clean enterprise Poppins hierarchy.
+    - Specific rules:
+      - Default UI & descriptions: 400 Regular
+      - Metadata, timestamps & labels: 400 Regular
+      - Navigation / tabs: 500 Medium (not bold)
+      - Buttons: 500 Medium
+      - Section headings: 600 Semi-Bold
+      - Client / company name: 600 Semi-Bold
+      - KPI values: 700 Bold (compact, $\le$12px), KPI labels: 500 Medium, KPI descriptions: 400 Regular
+      - Key-Value pairs (Client Information): Label: 400, Value: 500 (do NOT bold both)
+      - Selected tab: Blue highlight treatment (`#eff6ff`, border `#009ef7`) for Internal Client, Green highlight treatment (`#ecfdf5`, border `#10b981`) for Direct Client.
+    - Permanent AI Redesign Record rule:
+      > *"Typography must not be uniformly bold. Poppins 400–600 should be the primary range, with 700 reserved only for major KPI values or exceptional emphasis. The interface must use typography hierarchy rather than excessive font weight."*
+  - **Architectural Enhancements**:
+    - In `resources/views/service_company/client/show.blade.php` & `dviewMore.blade.php`:
+      - Replaced excessive 700/800 font weights with balanced Poppins 400 / 500 / 600 / 700 hierarchy.
+      - Updated `.cd-tabs-bar .nav-link.active` with proper background highlight and 500 weight.
+      - Removed inline `<strong>` tags on Vendor ID; replaced with `font-weight: 500`.
+      - Bumped internal KPI cache keys to `_v9`.
+    - In `app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php`:
+      - Bumped DragonflyDB cache keys from `_v8` to `_v9` for `clientsviewmore` and `clientsdviewmore`.
+    - In `docs/UI_UX_STANDARDS.md`:
+      - Codified the mandatory typography hierarchy rule into Section 2.
+  - **Verification**: `php -l` checks passed with 0 syntax errors, and `php artisan view:clear` executed successfully.
+
 - *2026-10-22* — **Service Company Clients Listing: Card-Based Header Design Specification (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Wrap the "Clients" title, subtitle ("Manage client relationships, hiring activity and recruitment performance."), Export button, and "+ Add Internal Client" button in a standalone card-based design matching the visual reference (`media_1792648940542_adc07df6.png`).
