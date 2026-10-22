@@ -1455,8 +1455,8 @@ html, body {
   }
   .cdf-input-wrap input.is-invalid {border-color: #ef4444;}
   .cdf-input-wrap input.is-invalid:focus {border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.10);}
-  .cdf-error {display: none; margin-top: 5px; font-size: 11px; color: #dc2626; line-height: 1.4;}
-  .cdf-error.visible {display: block;}
+  .cdf-error {display: none; margin-top: 6px; font-size: 11.5px; font-weight: 600; color: #be123c; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; padding: 5px 10px; line-height: 1.4; box-shadow: 0 1px 2px rgba(225,29,72,0.04);}
+  .cdf-error.visible {display: inline-flex; align-items: center; gap: 6px;}
 
   /* Primary Contact Enterprise Toggle Card in Drawer */
   .client-primary-contact-card {
