@@ -1388,63 +1388,150 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function clientCandidateJoinList(Request $request)
     {
-        // $candidates = JobApplication::query();
+        $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
+        $clientId = (int) $request->clientid;
+
+        if (! $clientId) {
+            return response()->json(['error' => 'Client ID is required'], 400);
+        }
+
+        // Fail-closed Dragonfly/Redis tenant authorization (0% MySQL reads on fast path)
+        $authorizedClients = Cache::remember("tenant:{$company_id}:authorized_client_ids", 300, function () use ($company_id) {
+            return DB::table('client')->where('company_id', $company_id)->pluck('id')->map(fn($id) => (int) $id)->toArray();
+        });
+        if (! in_array($clientId, $authorizedClients, true)) {
+            $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
+                return DB::table('client_invitations')
+                    ->where(function ($q) use ($company_id) {
+                        $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
+                    })
+                    ->pluck('from_company_id')
+                    ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                    ->unique()
+                    ->map(fn($id) => (int) $id)
+                    ->toArray();
+            });
+            if (! in_array($clientId, $authorizedDirectClients, true)) {
+                return response()->json(['error' => 'Unauthorized tenant access to client'], 403);
+            }
+        }
+
+        $segment = (string) $request->input('segment', 'all');
+        $searchQuery = trim((string) $request->input('search', $request->input('q', '')));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
-        $boolQuery = [
-            'bool' => [
-                'should' => [
-                    // First condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['client_id' => $request->clientid]],
-                                ['term' => ['job_master_status_id' => 6]],
-                            ]),
-                        ],
+        $baseMust = [
+            ['term' => ['client_id' => $clientId]],
+            ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
+        ];
+
+        if (! empty($searchQuery)) {
+            $baseMust[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['current_designation' => $searchQuery]],
+                        ['match_phrase_prefix' => ['email' => $searchQuery]],
                     ],
+                    'minimum_should_match' => 1,
                 ],
-                'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
+            ];
+        }
+
+        $baseBoolQuery = [
+            'bool' => [
+                'must' => $baseMust,
+                'must_not' => [
+                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                ],
             ],
         ];
+
+        // Segment filter applied post-aggregation to hits
+        $postFilter = null;
+        if ($segment === 'offers') {
+            $postFilter = ['terms' => ['job_master_status_id' => [5, '5']]];
+        } elseif ($segment === 'joined') {
+            $postFilter = ['terms' => ['job_master_status_id' => [6, '6']]];
+        } elseif ($segment === 'joining') {
+            $postFilter = ['terms' => ['job_master_status_id' => [5, '5']]];
+        }
+
+        $body = [
+            'from' => $from,
+            'size' => $size,
+            'sort' => [
+                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
+            ],
+            'query' => $baseBoolQuery,
+            'aggs' => [
+                'total_offers' => [
+                    'filter' => ['terms' => ['job_master_status_id' => [5, '5']]],
+                ],
+                'total_joined' => [
+                    'filter' => ['terms' => ['job_master_status_id' => [6, '6']]],
+                ],
+            ],
+        ];
+
+        if ($postFilter) {
+            $body['post_filter'] = $postFilter;
+        }
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [],
-                'query' => $boolQuery,
-            ],
+            'body' => $body,
         ];
+
         if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $total = 0;
             $data = [];
+            $offersCount = 0;
+            $joinedCount = 0;
         } else {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
             $data = array_map(function ($hit) {
                 return $hit['_source'];
             }, $response['hits']['hits']);
+
+            $offersCount = (int) ($response['aggregations']['total_offers']['doc_count'] ?? 0);
+            $joinedCount = (int) ($response['aggregations']['total_joined']['doc_count'] ?? 0);
+        }
+        $allCount = $offersCount + $joinedCount;
+
+        // ETag 304 Validation
+        $etag = 'W/"'.md5("oj_{$company_id}_{$clientId}_{$page}_{$size}_{$segment}_{$total}_{$allCount}").'"';
+        if ($request->header('If-None-Match') === $etag) {
+            return response('', 304)->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
         }
 
-        // Phase 5 & 10 Optimization: Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
+        // Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
         $jobIds = array_filter(array_column($data, 'jobId'));
         $cityIds = array_filter(array_column($data, 'city_id'));
 
         $jobsMap = [];
+        $jobSkillsMap = [];
         if (! empty($jobIds)) {
+            $uniqueJobIds = array_unique($jobIds);
             $jobsMap = DB::table('jobs')
                 ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
-                ->whereIn('id', array_unique($jobIds))
+                ->whereIn('id', $uniqueJobIds)
                 ->get()
                 ->keyBy('id')
                 ->toArray();
+
+            $skillsRows = DB::table('job_metronics_skills')
+                ->whereIn('job_id', $uniqueJobIds)
+                ->select('job_id', 'skill_name')
+                ->get();
+            foreach ($skillsRows as $sr) {
+                $jobSkillsMap[$sr->job_id][] = $sr->skill_name;
+            }
         }
 
         $citiesMap = [];
@@ -1459,19 +1546,29 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return DB::table('candidate_status')->pluck('name', 'id')->toArray();
         });
 
+        // Batch resolve spokesperson names in 1 query instead of N queries in foreach loop
         $jobAssignMap = [];
+        $assignPairs = [];
         foreach ($data as $candidateRow) {
             $cObj = (object) $candidateRow;
-            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0) {
-                $spok = DB::table('job_assign')
-                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
-                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
-                    ->where('job_assign.job_id', @$cObj->jobId)
-                    ->where('job_assign.company_id', @$cObj->ClientComID)
-                    ->first();
-                if ($spok) {
-                    $jobAssignMap[$cObj->jobId.'_'.$cObj->ClientComID] = $spok->name;
-                }
+            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0 && ! empty($cObj->jobId)) {
+                $assignPairs[] = [
+                    'job_id' => $cObj->jobId,
+                    'company_id' => $cObj->ClientComID,
+                ];
+            }
+        }
+        if (! empty($assignPairs)) {
+            $uniqueAssignedJobIds = array_unique(array_column($assignPairs, 'job_id'));
+            $uniqueCompIds = array_unique(array_column($assignPairs, 'company_id'));
+            $spoks = DB::table('job_assign')
+                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->whereIn('job_assign.job_id', $uniqueAssignedJobIds)
+                ->whereIn('job_assign.company_id', $uniqueCompIds)
+                ->get();
+            foreach ($spoks as $spok) {
+                $jobAssignMap[$spok->job_id.'_'.$spok->company_id] = $spok->name;
             }
         }
 
@@ -1483,10 +1580,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+            'counts' => [
+                'all' => $allCount,
+                'offers' => $offersCount,
+                'joining' => 0,
+                'joined' => $joinedCount,
+            ],
+            'current_segment' => $segment,
+        ])->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
     }
 
     public function clientCandidateInterviewTracker(Request $request)
@@ -1697,24 +1800,84 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'listType' => 'allcandidate',
         ];
 
+        // Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
+        $jobIds = array_filter(array_column($data, 'jobId'));
+        $cityIds = array_filter(array_column($data, 'city_id'));
+
+        $jobsMap = [];
+        $jobSkillsMap = [];
+        if (! empty($jobIds)) {
+            $uniqueJobIds = array_unique($jobIds);
+            $jobsMap = DB::table('jobs')
+                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
+                ->whereIn('id', $uniqueJobIds)
+                ->get()
+                ->keyBy('id')
+                ->toArray();
+
+            $skillsRows = DB::table('job_metronics_skills')
+                ->whereIn('job_id', $uniqueJobIds)
+                ->select('job_id', 'skill_name')
+                ->get();
+            foreach ($skillsRows as $sr) {
+                $jobSkillsMap[$sr->job_id][] = $sr->skill_name;
+            }
+        }
+
+        $citiesMap = [];
+        if (! empty($cityIds)) {
+            $citiesMap = DB::table('city_list')
+                ->whereIn('city_id', array_unique($cityIds))
+                ->pluck('city', 'city_id')
+                ->toArray();
+        }
+
+        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
+            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
+        });
+
+        $jobAssignMap = [];
+
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
     }
 
     public function directclientCandidateJoinList(Request $request)
     {
+        $startTime = microtime(true);
         $from_company_id = (int) $request->clientid;
         $to_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
-        $searchQuery = $request->input('search', $request->input('q'));
+        if (! $from_company_id) {
+            return response()->json(['error' => 'Client ID is required'], 400);
+        }
+
+        // Fail-closed authorization check using tenant cache (0% MySQL reads)
+        $authorizedDirectClients = Cache::remember("tenant:{$company_id}:authorized_direct_client_ids", 300, function () use ($company_id) {
+            return DB::table('client_invitations')
+                ->where(function ($q) use ($company_id) {
+                    $q->where('from_company_id', $company_id)->orWhere('to_company_id', $company_id);
+                })
+                ->pluck('from_company_id')
+                ->merge(DB::table('client_invitations')->where('to_company_id', $company_id)->pluck('to_company_id'))
+                ->unique()
+                ->map(fn($id) => (int) $id)
+                ->toArray();
+        });
+        if (! in_array($from_company_id, $authorizedDirectClients, true)) {
+            return response()->json(['error' => 'Unauthorized tenant access to direct client'], 403);
+        }
+
+        $segment = (string) $request->input('segment', 'all');
+        $searchQuery = trim((string) $request->input('search', $request->input('q', '')));
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
-        $must = [
+        $baseMust = [
             [
                 'bool' => [
                     'should' => [
@@ -1738,21 +1901,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             [
                 'bool' => [
                     'should' => [
-                        ['term' => ['job_master_status_id' => 6]],
-                        ['term' => ['job_master_status_id' => '6']],
-                        ['term' => ['master_status_id' => 6]],
+                        ['terms' => ['job_master_status_id' => [5, 6, '5', '6']]],
+                        ['terms' => ['master_status_id' => [5, 6, '5', '6']]],
                     ],
                     'minimum_should_match' => 1,
                 ],
             ],
         ];
 
-        $mustNot = [
-            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-        ];
-
         if (! empty($searchQuery)) {
-            $must[] = [
+            $baseMust[] = [
                 'bool' => [
                     'should' => [
                         ['match_phrase_prefix' => ['full_name' => $searchQuery]],
@@ -1764,35 +1922,172 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ];
         }
 
-        $boolQuery = [
-            'bool' => [
-                'must' => $must,
-                'must_not' => $mustNot,
+        $postFilter = null;
+        if ($segment === 'offers') {
+            $postFilter = [
+                'bool' => [
+                    'should' => [
+                        ['terms' => ['job_master_status_id' => [5, '5']]],
+                        ['terms' => ['master_status_id' => [5, '5']]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        } elseif ($segment === 'joined') {
+            $postFilter = [
+                'bool' => [
+                    'should' => [
+                        ['terms' => ['job_master_status_id' => [6, '6']]],
+                        ['terms' => ['master_status_id' => [6, '6']]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        } elseif ($segment === 'joining') {
+            $postFilter = [
+                'bool' => [
+                    'should' => [
+                        ['terms' => ['job_master_status_id' => [5, '5']]],
+                        ['terms' => ['master_status_id' => [5, '5']]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
+        $body = [
+            'from' => $from,
+            'size' => $size,
+            'sort' => [
+                ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
+            ],
+            'query' => [
+                'bool' => [
+                    'must' => $baseMust,
+                    'must_not' => [
+                        ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+                    ],
+                ],
+            ],
+            'aggs' => [
+                'total_offers' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['terms' => ['job_master_status_id' => [5, '5']]],
+                                ['terms' => ['master_status_id' => [5, '5']]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
+                'total_joined' => [
+                    'filter' => [
+                        'bool' => [
+                            'should' => [
+                                ['terms' => ['job_master_status_id' => [6, '6']]],
+                                ['terms' => ['master_status_id' => [6, '6']]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
             ],
         ];
+
+        if ($postFilter) {
+            $body['post_filter'] = $postFilter;
+        }
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
-                ],
-                'query' => $boolQuery,
-            ],
+            'body' => $body,
         ];
 
         if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $total = 0;
             $data = [];
+            $offersCount = 0;
+            $joinedCount = 0;
         } else {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
             $data = array_map(function ($hit) {
                 return $hit['_source'];
             }, $response['hits']['hits']);
+
+            $offersCount = (int) ($response['aggregations']['total_offers']['doc_count'] ?? 0);
+            $joinedCount = (int) ($response['aggregations']['total_joined']['doc_count'] ?? 0);
+        }
+        $allCount = $offersCount + $joinedCount;
+
+        // ETag 304 Validation
+        $etag = 'W/"'.md5("direct_oj_{$company_id}_{$from_company_id}_{$page}_{$size}_{$segment}_{$total}_{$allCount}").'"';
+        if ($request->header('If-None-Match') === $etag) {
+            return response('', 304)->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
+        }
+
+        // Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
+        $jobIds = array_filter(array_column($data, 'jobId'));
+        $cityIds = array_filter(array_column($data, 'city_id'));
+
+        $jobsMap = [];
+        $jobSkillsMap = [];
+        if (! empty($jobIds)) {
+            $uniqueJobIds = array_unique($jobIds);
+            $jobsMap = DB::table('jobs')
+                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
+                ->whereIn('id', $uniqueJobIds)
+                ->get()
+                ->keyBy('id')
+                ->toArray();
+
+            $skillsRows = DB::table('job_metronics_skills')
+                ->whereIn('job_id', $uniqueJobIds)
+                ->select('job_id', 'skill_name')
+                ->get();
+            foreach ($skillsRows as $sr) {
+                $jobSkillsMap[$sr->job_id][] = $sr->skill_name;
+            }
+        }
+
+        $citiesMap = [];
+        if (! empty($cityIds)) {
+            $citiesMap = DB::table('city_list')
+                ->whereIn('city_id', array_unique($cityIds))
+                ->pluck('city', 'city_id')
+                ->toArray();
+        }
+
+        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
+            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
+        });
+
+        // Batch resolve spokesperson names in 1 query instead of N queries in foreach loop
+        $jobAssignMap = [];
+        $assignPairs = [];
+        foreach ($data as $candidateRow) {
+            $cObj = (object) $candidateRow;
+            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0 && ! empty($cObj->jobId)) {
+                $assignPairs[] = [
+                    'job_id' => $cObj->jobId,
+                    'company_id' => $cObj->ClientComID,
+                ];
+            }
+        }
+        if (! empty($assignPairs)) {
+            $uniqueAssignedJobIds = array_unique(array_column($assignPairs, 'job_id'));
+            $uniqueCompIds = array_unique(array_column($assignPairs, 'company_id'));
+            $spoks = DB::table('job_assign')
+                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->whereIn('job_assign.job_id', $uniqueAssignedJobIds)
+                ->whereIn('job_assign.company_id', $uniqueCompIds)
+                ->get();
+            foreach ($spoks as $spok) {
+                $jobAssignMap[$spok->job_id.'_'.$spok->company_id] = $spok->name;
+            }
         }
 
         $pagination = [
@@ -1803,9 +2098,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
+            'counts' => [
+                'all' => $allCount,
+                'offers' => $offersCount,
+                'joining' => 0,
+                'joined' => $joinedCount,
+            ],
+            'current_segment' => $segment,
+        ])->header('ETag', $etag)->header('Cache-Control', 'private, no-cache');
     }
 
     public function directclientCandidateInterviewTracker(Request $request)

@@ -142,22 +142,65 @@ Opening **one single client drawer** triggers **6 HTTP requests**, **11 Elastics
 - **Backend Flow**: AJAX GET `service_company/jobs_side_bar_job_ajax/data`. Queries `ELASTIC_JOBS` index.
 - **Finding**: `_source` filtering is missing in the ES search parameters. Full ES job documents are retrieved, including heavy `job_description` and `job_requirement` text fields, inflating ES response payload size by 10x.
 
-### 5.4 Tab 4 — Candidate Audit
-> **Dedicated Master Specification**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for the exhaustive God-Level audit and production blueprint.
-- **Files**: [ServiceCompanyJobApplicationController.php:L1277-L1387](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1277-L1387) (`clientCandidateList`), [ServiceCompanyJobApplicationController.php:L1611-L1704](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1611-L1704) (`directclientCandidateList`), [custom_client_candidates.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php), [show.blade.php:L1915-L1951](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L1915-L1951), [dviewMore.blade.php:L1970-L2005](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1970-L2005)
-- **Backend Flow**: AJAX GET `service_company/client-candidate-list` (Internal) and `service_company/direct-client-candidate-list` (Direct).
-- **Finding (SEVERE P0 N+1 & MySQL Read Violation)**: `custom_client_candidates.blade.php` executes **6 raw SQL queries per candidate row** inside `@foreach ($data as $rowArr)`:
-  - `DB::table('jobs')->select(...)->where('id', '=', $row->jobId)->first()` (Line 27)
-  - `GeneralMethod::skill_percentage($row->jobId, $skillArr)` -> queries `job_metronics_skills` uncached (Line 69)
-  - `DB::table('city_list')->select('city')->where('city_id', @$row->city_id)->first()` (Line 338)
-  - `DB::table('job_assign')->select('users.name')->join('users', ...)->first()` (Line 383)
-  - `GeneralMethod::companyDetailsByClient($row->jobId)` -> 4-table join on cache miss (Line 438)
-  - `DB::table('candidate_status')->select('name')->where('id', $row->child_status_id)->first()` (Line 474)
-- **Query Count Impact**: In Direct Client drawer, lookup maps are completely omitted by the controller, forcing **60+ synchronous MySQL queries per 10 candidate rows**.
-- **Finding (P0 Tenant Isolation Vulnerability)**: `clientCandidateList` accepts `clientid` from query parameter without validating tenant ownership and fails to include `company_id` filter in Elasticsearch `$boolQuery`.
-- **Finding (P0 Count Desynchronization)**: In Direct Client drawer, header KPI badge filters by `final_status = 1` and excludes status 9 (cached 15 min), while the table controller does NOT filter by `final_status` and excludes status 8 and 9 (`must_not: [8, 9]`). Candidate badge numbers consistently contradict table totals.
-- **Finding (P0 Dead Code Search & Broken UI)**: Search input is completely absent from the DOM in both drawers. Controller searches on `$request->input('q')` while JS sends `search`, and `$searchQuery` is never appended to `$boolQuery`.
-- **Finding (P1 Stage Modal Failure)**: Stage badge links to `#stage_sub_stage` with syntax error `href="javascript.void(0);"`, but the modal shell and click listeners are completely absent from the client drawer view.
+### 5.4 Tab 4 — Candidate Audit (Internal & Direct Clients God-Level V2 Specification)
+> **Authoritative Specification & Architecture Contract**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for the complete production contract, failure-mode matrix, and implementation blueprints.
+
+#### 5.4.1 Architectural Scope & Core Invariants
+- **Source Files**: 
+  - [`show.blade.php:L1915-L1951, L3657-L3802`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L1915-L1951) (Internal Client Drawer Shell & Scripts)
+  - [`dviewMore.blade.php:L1970-L2005, L3664-L3789`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1970-L2005) (Direct Client Drawer Shell & Scripts)
+  - [`custom_client_candidates.blade.php:L1-L514`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php#L1-L514) (Candidate Row Blade View)
+  - [`ServiceCompanyJobApplicationController.php:L1277-L1387, L1611-L1704`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1277-L1387) (`clientCandidateList`, `directclientCandidateList`)
+  - [`GeneralMethod.php:L15669-L15760, L15835-L15911`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php#L15669-L15760) (`InternalClientCandidatesCountList`, `DirectClientCandidatesCountList`)
+- **Authority Boundaries**:
+  - **MySQL**: Authoritative Transactional Source of Truth (SSOT).
+  - **Elasticsearch (`ELASTIC_CANDIDATES`)**: Authoritative Candidate Read Model. Browsers NEVER write to ES directly.
+  - **Zero-MySQL Scoped Rule**: Candidate Drawer read paths must execute strictly 0 MySQL SELECT queries.
+  - **Dragonfly / Redis**: Fail-closed authorization projections (`auth:tenant_clients:{company_id}`) and version counters.
+  - **Browser (User RAM)**: `ClientCandidateStore` state machine with `DocumentFragment` rendering.
+
+#### 5.4.2 Root-Cause Defect Matrix & Line-Level Audit
+1. **Critical Direct Client Count Inconsistency (P0)**:
+   - Header KPI Card ([`dviewMore.blade.php:1608`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1608)) and Tab Badge ([`dviewMore.blade.php:1673`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1673)) invoke [`DirectClientCandidatesCountList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php#L15835), filtering strictly on `final_status = 1`, excluding only status `9` (Archived), cached for 15 minutes.
+   - The table list endpoint [`directclientCandidateList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1646) does NOT filter by `final_status = 1` and excludes statuses `8` (InReview/OnHold) and `9` (`must_not: [8, 9]`).
+   - **Impact**: Candidate profiles in status 8 appear in the count badge but vanish from the table; badge says "5", table shows "No data available in table".
+2. **Internal Client Deleted Candidate Leakage (P0)**:
+   - [`InternalClientCandidatesCountList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php#L15711) excludes status `9` (`must_not: [9]`).
+   - [`clientCandidateList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1287-L1313) has **no status 9 exclusion**, allowing deleted/archived candidates to show in the table, creating persistent count mismatch.
+3. **Severe N+1 SQL Cascade on Web Read Path (P0 — Rule 1 Violation)**:
+   - In [`directclientCandidateList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1701), lookup maps (`$jobsMap`, `$citiesMap`, `$statusMap`, `$jobAssignMap`) are completely omitted.
+   - For every candidate row in [`custom_client_candidates.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php), 6 raw SQL queries fire synchronously:
+     - `DB::table('jobs')->where('id', $row->jobId)->first()` (Line 27)
+     - `DB::table('job_metronics_skills')` via `GeneralMethod::skill_percentage` (Line 69) (Uncached across all paths!)
+     - `DB::table('city_list')->where('city_id', $row->city_id)->first()` (Line 338)
+     - `DB::table('job_assign')->join('users', ...)->where(...)` (Line 383)
+     - `GeneralMethod::companyDetailsByClient($row->jobId)` 4-table join on cache miss (Line 438)
+     - `DB::table('candidate_status')->where('id', $row->child_status_id)->first()` (Line 474)
+   - **Impact**: 10 candidates = **60+ raw MySQL SELECT queries**. At 10K concurrent users = 600,000 queries, locking MySQL.
+4. **Tenant Isolation Vulnerability / IDOR (P0)**:
+   - [`clientCandidateList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1294) accepts `clientid` without verifying tenant ownership (`auth()->user()->company_id`) and the ES query contains no `company_id` filter. Cross-tenant data leakage is possible.
+5. **Completely Dead Search Code (P0)**:
+   - Neither drawer shell renders `<input id="search">` in `#candidate_list`. The JS keyup handler binds to a non-existent element.
+   - In [`clientCandidateList`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1281), `$searchQuery = $request->input('q')` is extracted but **never appended to `$boolQuery`**. Internal search is 100% dead code.
+   - Pagination click handler reads `#inputSearch` (different non-existent ID).
+6. **Stage Modal Failure & Syntax Error (P1)**:
+   - Stage badge links with syntax error `href="javascript.void(0);"` ([Line 483](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php#L483)).
+   - Target modals `#stage_sub_stage` and `#client_stage_sub_stage` do not exist in the DOM; click listeners are absent. Clicking stage does nothing.
+7. **UI/UX Layout Clipping & Disruptive Loader (P1)**:
+   - Hardcoded `style="height: 102px; position: relative;"` and `style="position: absolute; bottom: 0; white-space: nowrap; width: 94%;"` cause skills and titles to clip on 15.6" (1366×768) screens.
+   - `$('.page-loader').css('display', 'flex')` freezes the entire browser window on pagination instead of using local card skeleton loaders.
+   - Typo in table body ID: `<tbody id="candidatetList">` (extra 't').
+8. **Tab Stagnation Defect (P1)**:
+   - `loadedTabs['candidate_list'] = true` permanently short-circuits tab clicks. Switching tabs and returning never re-fetches updated candidate pipeline data.
+   - Zero Laravel Reverb WebSocket integration for live candidate status updates.
+
+#### 5.4.3 Unified V2 Production Implementation Blueprint
+1. **ES Read Model Denormalization**: Ensure `ELASTIC_CANDIDATES` contains all display attributes (`job_title`, `city_name`, `country_name`, `stage_name`, `stage_css`, `skills_array`, `skill_match_percentage`, `aggregate_version`, `projection_version`, `indexed_at`).
+2. **Unified Query Service**: Construct `CandidateDrawerQueryService` to power both Internal and Direct clients, enforcing fail-closed Dragonfly authorization (`Cache::store('dragonfly')->sismember("auth:tenant_clients:{$companyId}", $clientId)`).
+3. **Pure JSON API with Deep Pagination**: Return `< 15KB` JSON with `track_total_hits: true` and `search_after` cursor navigation for large pipelines.
+4. **Optimistic Concurrency Control (OCC)**: Require `expected_version` on all candidate mutation commands; return `HTTP 409 Conflict` on race conditions.
+5. **State-Machine Client Store (`ClientCandidateStore`)**: Browser User RAM store with IDLE/LOADING/READY/REFRESHING/ERROR states, `requestId` race protection, 300ms debounced search, status filter dropdown, local card skeleton loader, and Reverb version-fenced DOM patching.
+6. **Failure-Mode Circuit Breaker**: Strictly 0 fallback to MySQL SELECT queries on Elasticsearch cluster outages.
 
 ### 5.5 Tab 5 — Interview Tracker Audit
 - **Files**: [ServiceCompanyJobApplicationController.php:L807-L870](file:///c:/xampp/htdocs/git/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L807-L870), [custom_client_candidates_interview_tracker.blade.php](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_interview_tracker.blade.php)

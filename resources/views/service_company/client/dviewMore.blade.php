@@ -1,4 +1,4 @@
-﻿@php
+@php
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
 @endphp
@@ -1642,21 +1642,21 @@
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers">
               <div class="d-flex align-items-center gap-3">
                 <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
                 <div>
-                  <div class="cd-kpi-num">{{ $kpiOffers }}</div>
+                  <div class="cd-kpi-num" id="kpiOffersCountDirect">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined">
               <div class="d-flex align-items-center gap-3">
                 <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
                 <div>
-                  <div class="cd-kpi-num">{{ $kpiJoins }}</div>
+                  <div class="cd-kpi-num" id="kpiJoinsCountDirect">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Joined</div>
                 </div>
               </div>
@@ -1703,7 +1703,8 @@
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_joining">
                   <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
-                  @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
+                  @php $totalOffersJoinsDirect = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
+                  <span class="cd-tab-badge" id="ojDirectTabBadge" @if($totalOffersJoinsDirect <= 0) style="display:none;" @endif>{{ $totalOffersJoinsDirect }}</span>
                 </a>
               </li>
               <li class="nav-item">
@@ -2068,6 +2069,33 @@
                     <div class="tab-pane" id="candidate_joining" role="tabpanel">
 
                       <div class="card-body px-0 py-7">
+                          <!--begin::Offer & Joining Milestone Filter Toolbar-->
+                          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5 px-2">
+                              <div class="btn-group btn-group-sm" role="group" id="ojSegmentGroupDirect" aria-label="Offer and Joining Milestone Filter">
+                                  <button type="button" class="btn btn-sm btn-outline-secondary active fw-bold cd-oj-seg-btn-direct" data-segment="all">
+                                      All <span class="badge badge-secondary ms-1" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                  </button>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="offers">
+                                      Offers <span class="badge badge-light-warning text-warning ms-1" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
+                                  </button>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="joining">
+                                      Joining <span class="badge badge-light-primary text-primary ms-1" id="ojCountJoiningDirect">0</span>
+                                  </button>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="joined">
+                                      Joined <span class="badge badge-light-success text-success ms-1" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
+                                  </button>
+                              </div>
+                              <div class="d-flex align-items-center gap-2">
+                                  <div class="position-relative">
+                                      <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                                          <i class="fas fa-search fs-7"></i>
+                                      </span>
+                                      <input type="text" id="ojSearchInputDirect" class="form-control form-control-sm ps-9 fs-7 font-poppins" placeholder="Search offers & joined..." style="width: 220px; border-radius: 6px;">
+                                  </div>
+                              </div>
+                          </div>
+                          <!--end::Offer & Joining Milestone Filter Toolbar-->
+
                           <!--begin::Table-->
                           <table class="table align-middle table-row-dashed fs-6 gy-5">
                               <!--begin::Table head-->
@@ -3707,8 +3735,8 @@
                 directfetchCandidatesInverViewTracker();
                 loadedTabs[target] = true;
             } else if (target === 'candidate_joining') {
-                directfetchCandidatesJoin();
-                loadedTabs[target] = true;
+                var search = $('#ojSearchInputDirect').val() || '';
+                directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
             } else if (target === 'candidateDashboard') {
                 initPerformanceDashboard();
                 setTimeout(function() {
@@ -3755,8 +3783,9 @@
             var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            var search = $('#inputSearch').val() || '';
-            directfetchCandidatesJoin(page, search);
+            var search = $('#ojSearchInputDirect').val() || '';
+            var segment = window.currentOjSegmentDirect || 'all';
+            directfetchCandidatesJoin(page, search, segment);
         });
 
         $(document).off('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow');
@@ -3806,7 +3835,19 @@
         });
     }
 
-    function directfetchCandidatesJoin(page = 1, search = '') {
+    window.currentOjSegmentDirect = 'all';
+
+    function directfetchCandidatesJoin(page = 1, search = '', segment = null) {
+        if (segment === null || segment === undefined) {
+            segment = window.currentOjSegmentDirect || 'all';
+        } else {
+            window.currentOjSegmentDirect = segment;
+        }
+
+        if (search === null || search === undefined) {
+            search = $('#ojSearchInputDirect').val() || '';
+        }
+
         $('.page-loader').css('display', 'flex');
         var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
         return $.ajax({
@@ -3814,15 +3855,56 @@
             type: 'GET',
             data: {
                 search: search,
+                segment: segment,
                 clientid: clientid
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
+                if (response.counts) {
+                    $('#ojCountAllDirect').text(response.counts.all || 0);
+                    $('#ojCountOffersDirect').text(response.counts.offers || 0);
+                    $('#ojCountJoiningDirect').text(response.counts.joining || 0);
+                    $('#ojCountJoinedDirect').text(response.counts.joined || 0);
+                    if ($('#ojDirectTabBadge').length) {
+                        if (response.counts.all > 0) {
+                            $('#ojDirectTabBadge').text(response.counts.all).show();
+                        } else {
+                            $('#ojDirectTabBadge').hide();
+                        }
+                    }
+                    if ($('#kpiOffersCountDirect').length) {
+                        $('#kpiOffersCountDirect').text(response.counts.offers || 0);
+                    }
+                    if ($('#kpiJoinsCountDirect').length) {
+                        $('#kpiJoinsCountDirect').text(response.counts.joined || 0);
+                    }
+                }
+            },
+            error: function() {
+                $('.page-loader').css('display', 'none');
             }
         });
     }
+
+    $(document).on('click', '.cd-oj-seg-btn-direct', function() {
+        var segment = $(this).data('segment');
+        $('.cd-oj-seg-btn-direct').removeClass('active');
+        $(this).addClass('active');
+        window.currentOjSegmentDirect = segment;
+        var search = $('#ojSearchInputDirect').val() || '';
+        directfetchCandidatesJoin(1, search, segment);
+    });
+
+    var ojSearchTimerDirect = null;
+    $(document).on('keyup', '#ojSearchInputDirect', function() {
+        clearTimeout(ojSearchTimerDirect);
+        var search = $(this).val();
+        ojSearchTimerDirect = setTimeout(function() {
+            directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
+        }, 300);
+    });
 
     // ══════════════════════════════════════════════════════════════════════════
     // GOD-LEVEL CLIENT-FIRST INTERVIEW STORE (DIRECT CLIENT DRAWER)
@@ -4252,8 +4334,15 @@
     // Direct Client Drawer Interactive Handlers
     $(document).on('click', '.cd-kpi-card, .cd-nav-tab', function() {
         var targetTab = $(this).data('target-tab') || $(this).data('target');
+        var segment = $(this).data('segment');
         if (targetTab) {
             $('.cd-tabs-bar a[href="' + targetTab + '"], a[href="' + targetTab + '"]').tab('show');
+            if (targetTab === '#candidate_joining' && segment) {
+                window.currentOjSegmentDirect = segment;
+                $('.cd-oj-seg-btn-direct').removeClass('active');
+                $('.cd-oj-seg-btn-direct[data-segment="' + segment + '"]').addClass('active');
+                directfetchCandidatesJoin(1, '', segment);
+            }
         }
     });
 

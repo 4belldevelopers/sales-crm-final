@@ -1604,21 +1604,21 @@ use Carbon\Carbon;
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="offers">
               <div class="d-flex align-items-center gap-3">
                 <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
                 <div>
-                  <div class="cd-kpi-num">{{ $kpiOffers }}</div>
+                  <div class="cd-kpi-num" id="kpiOffersCountInternal">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
-            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining" data-segment="joined">
               <div class="d-flex align-items-center gap-3">
                 <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
                 <div>
-                  <div class="cd-kpi-num">{{ $kpiJoins }}</div>
+                  <div class="cd-kpi-num" id="kpiJoinsCountInternal">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Joined</div>
                 </div>
               </div>
@@ -1665,7 +1665,8 @@ use Carbon\Carbon;
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_joining">
                   <i class="fas fa-file-signature fa-solid" style="color:#d97706;"></i> Offers &amp; Joinings
-                  @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
+                  @php $totalOffersJoinsInternal = ($kpiOffers ?? 0) + ($kpiJoins ?? 0); @endphp
+                  <span class="cd-tab-badge" id="ojInternalTabBadge" @if($totalOffersJoinsInternal <= 0) style="display:none;" @endif>{{ $totalOffersJoinsInternal }}</span>
                 </a>
               </li>
               <li class="nav-item">
@@ -2014,6 +2015,33 @@ use Carbon\Carbon;
                     <div class="tab-pane" id="candidate_joining" role="tabpanel">
 
                         <div class="card-body px-0 py-7">
+                            <!--begin::Offer & Joining Milestone Filter Toolbar-->
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5 px-2">
+                                <div class="btn-group btn-group-sm" role="group" id="ojSegmentGroupInternal" aria-label="Offer and Joining Milestone Filter">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary active fw-bold cd-oj-seg-btn" data-segment="all">
+                                        All <span class="badge badge-secondary ms-1" id="ojCountAllInternal">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="offers">
+                                        Offers <span class="badge badge-light-warning text-warning ms-1" id="ojCountOffersInternal">{{ $kpiOffers ?? 0 }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="joining">
+                                        Joining <span class="badge badge-light-primary text-primary ms-1" id="ojCountJoiningInternal">0</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn" data-segment="joined">
+                                        Joined <span class="badge badge-light-success text-success ms-1" id="ojCountJoinedInternal">{{ $kpiJoins ?? 0 }}</span>
+                                    </button>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="position-relative">
+                                        <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                                            <i class="fas fa-search fs-7"></i>
+                                        </span>
+                                        <input type="text" id="ojSearchInputInternal" class="form-control form-control-sm ps-9 fs-7 font-poppins" placeholder="Search offers & joined..." style="width: 220px; border-radius: 6px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Offer & Joining Milestone Filter Toolbar-->
+
                             <!--begin::Table-->
                             <table class="table align-middle table-row-dashed fs-6 gy-5">
                                 <!--begin::Table head-->
@@ -3717,8 +3745,8 @@ use Carbon\Carbon;
                 fetchCandidatesInverViewTracker();
                 loadedTabs[target] = true;
             } else if (target === 'candidate_joining') {
-                fetchCandidatesJoin();
-                loadedTabs[target] = true;
+                var search = $('#ojSearchInputInternal').val() || '';
+                fetchCandidatesJoin(1, search, window.currentOjSegmentInternal || 'all');
             } else if (target === 'candidateDashboard') {
                 fetchInternalClientDashboardAnalytics();
                 loadedTabs[target] = true;
@@ -3770,8 +3798,9 @@ use Carbon\Carbon;
             var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            var search = $('#inputSearch').val() || '';
-            fetchCandidatesJoin(page, search);
+            var search = $('#ojSearchInputInternal').val() || '';
+            var segment = window.currentOjSegmentInternal || 'all';
+            fetchCandidatesJoin(page, search, segment);
         });
 
         $(document).off('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow');
@@ -3821,23 +3850,76 @@ use Carbon\Carbon;
         });
     }
 
-    function fetchCandidatesJoin(page = 1, search = '') {
+    window.currentOjSegmentInternal = 'all';
+
+    function fetchCandidatesJoin(page = 1, search = '', segment = null) {
         var clientid = '{{ $client->id }}';
+        if (segment === null || segment === undefined) {
+            segment = window.currentOjSegmentInternal || 'all';
+        } else {
+            window.currentOjSegmentInternal = segment;
+        }
+
+        if (search === null || search === undefined) {
+            search = $('#ojSearchInputInternal').val() || '';
+        }
+
         $('.page-loader').css('display', 'flex');
         return $.ajax({
             url: `{{ url('service_company/client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
             data: {
                 search: search,
+                segment: segment,
                 clientid: clientid
             },
             success: function(response) {
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListJoin').html(response.html);
                 $('#paginationcandidatejoin').html(response.pagination);
+                if (response.counts) {
+                    $('#ojCountAllInternal').text(response.counts.all || 0);
+                    $('#ojCountOffersInternal').text(response.counts.offers || 0);
+                    $('#ojCountJoiningInternal').text(response.counts.joining || 0);
+                    $('#ojCountJoinedInternal').text(response.counts.joined || 0);
+                    if ($('#ojInternalTabBadge').length) {
+                        if (response.counts.all > 0) {
+                            $('#ojInternalTabBadge').text(response.counts.all).show();
+                        } else {
+                            $('#ojInternalTabBadge').hide();
+                        }
+                    }
+                    if ($('#kpiOffersCountInternal').length) {
+                        $('#kpiOffersCountInternal').text(response.counts.offers || 0);
+                    }
+                    if ($('#kpiJoinsCountInternal').length) {
+                        $('#kpiJoinsCountInternal').text(response.counts.joined || 0);
+                    }
+                }
+            },
+            error: function() {
+                $('.page-loader').css('display', 'none');
             }
         });
     }
+
+    $(document).on('click', '.cd-oj-seg-btn', function() {
+        var segment = $(this).data('segment');
+        $('.cd-oj-seg-btn').removeClass('active');
+        $(this).addClass('active');
+        window.currentOjSegmentInternal = segment;
+        var search = $('#ojSearchInputInternal').val() || '';
+        fetchCandidatesJoin(1, search, segment);
+    });
+
+    var ojSearchTimerInternal = null;
+    $(document).on('keyup', '#ojSearchInputInternal', function() {
+        clearTimeout(ojSearchTimerInternal);
+        var search = $(this).val();
+        ojSearchTimerInternal = setTimeout(function() {
+            fetchCandidatesJoin(1, search, window.currentOjSegmentInternal || 'all');
+        }, 300);
+    });
 
     // ══════════════════════════════════════════════════════════════════════════
     // GOD-LEVEL CLIENT-FIRST INTERVIEW STORE (INTERNAL CLIENT DRAWER)
@@ -4553,8 +4635,15 @@ use Carbon\Carbon;
     $(document).ready(function() {
         $(document).on('click', '.cd-kpi-card[data-target-tab]', function(e) {
             var tabId = $(this).data('target-tab');
+            var segment = $(this).data('segment');
             if (tabId) {
                 $('a[href="' + tabId + '"]').tab('show');
+                if (tabId === '#candidate_joining' && segment) {
+                    window.currentOjSegmentInternal = segment;
+                    $('.cd-oj-seg-btn').removeClass('active');
+                    $('.cd-oj-seg-btn[data-segment="' + segment + '"]').addClass('active');
+                    fetchCandidatesJoin(1, '', segment);
+                }
             }
         });
 
