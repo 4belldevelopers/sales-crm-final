@@ -62,6 +62,22 @@ function normalizeRow(r) {
     const country = (r.country || loc.country || '').trim();
     const hasLocation = Boolean(city || state || country);
 
+    const countryId = (r.country_id !== undefined && r.country_id !== null) ? Number(r.country_id) : (loc.country_id ? Number(loc.country_id) : null);
+    const cityId = (r.city_id !== undefined && r.city_id !== null) ? Number(r.city_id) : (loc.city_id ? Number(loc.city_id) : null);
+    const stateId = (r.state_id !== undefined && r.state_id !== null) ? Number(r.state_id) : (loc.state_id || loc.state ? Number(loc.state_id || loc.state) : null);
+    const industryId = (r.industry_id !== undefined && r.industry_id !== null) ? Number(r.industry_id) : null;
+
+    const rawCountryIds = Array.isArray(r.country_ids) ? r.country_ids : [];
+    const locations = Array.isArray(r.locations) ? r.locations : (Array.isArray(r.client_location) ? r.client_location : []);
+    const countryIdsSet = new Set(rawCountryIds.map(Number));
+    if (countryId) countryIdsSet.add(countryId);
+    for (let li = 0; li < locations.length; li++) {
+        if (locations[li] && locations[li].country_id) {
+            countryIdsSet.add(Number(locations[li].country_id));
+        }
+    }
+    const countryIds = Array.from(countryIdsSet);
+
     const jobs = r.jobs || {};
     const pipeline = r.pipeline || {};
 
@@ -69,6 +85,8 @@ function normalizeRow(r) {
     if (r.connected_on || r.date) {
         createdTimestamp = new Date(r.connected_on || r.date).getTime() || 0;
     }
+
+    const activeJobs = Number(jobs.active || jobs.hiring || 0);
 
     return {
         id: r.id,
@@ -79,19 +97,24 @@ function normalizeRow(r) {
         client_type: r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client'),
         industry: r.industry || '',
         industry_lower: (r.industry || '').toLowerCase(),
+        industry_id: industryId,
         has_location: hasLocation,
         country_name: country,
         country_name_lower: country.toLowerCase(),
-        country_id: r.country_id || null,
+        country_id: countryId,
+        country_ids: countryIds,
+        state_id: stateId,
         city_name: city,
         city_name_lower: city.toLowerCase(),
-        city_id: r.city_id || null,
+        city_id: cityId,
         company_size: r.company_size || '',
+        is_active_hiring: activeJobs > 0,
+        is_inactive: activeJobs === 0,
         jobs: {
-            active: Number(jobs.active || jobs.hiring || 0),
+            active: activeJobs,
             hold: Number(jobs.hold || 0),
             closed: Number(jobs.closed || 0),
-            total: Number(jobs.total || (Number(jobs.active || jobs.hiring || 0) + Number(jobs.hold || 0) + Number(jobs.closed || 0)))
+            total: Number(jobs.total || (activeJobs + Number(jobs.hold || 0) + Number(jobs.closed || 0)))
         },
         pipeline: {
             sourced: Number(pipeline.sourced || 0),
@@ -128,16 +151,17 @@ function queryDataset(msg) {
     const perPage = Math.max(1, parseInt(f.per_page, 10) || 10);
 
     let filtered = [];
+    let allCount = 0;
+    let internalCount = 0;
+    let directCount = 0;
+    let hiringCount = 0;
+    let inactiveCount = 0;
 
     for (let i = 0; i < self.dataset.length; i++) {
         const item = self.dataset[i];
 
-        // 1. Tab filter
-        if (tab === 'internal' && item.is_direct) continue;
-        if (tab === 'direct' && !item.is_direct) continue;
-        if (tab === 'hiring' && item.jobs.active <= 0) continue;
-
-        // 2. Search filter (multi-field substring)
+        // 1. Non-tab filters define the scoped client universe
+        // Search filter (multi-field substring)
         if (search) {
             const matchesSearch = item.name_lower.includes(search) ||
                                   item.industry_lower.includes(search) ||
@@ -146,12 +170,14 @@ function queryDataset(msg) {
             if (!matchesSearch) continue;
         }
 
-        // 3. Location filter
+        // Location filter
         if (unspecifiedLoc) {
             if (item.has_location) continue;
         } else if (countryId || countryName) {
             let matchCountry = false;
-            if (countryId && item.country_id && String(item.country_id) === String(countryId)) {
+            if (countryId && item.country_ids && item.country_ids.some(cid => String(cid) === String(countryId))) {
+                matchCountry = true;
+            } else if (countryId && item.country_id && String(item.country_id) === String(countryId)) {
                 matchCountry = true;
             } else if (countryName && item.country_name_lower.includes(countryName)) {
                 matchCountry = true;
@@ -174,12 +200,12 @@ function queryDataset(msg) {
             }
         }
 
-        // 4. Industry filter
+        // Industry filter
         if (industry) {
             if (!item.industry_lower.includes(industry)) continue;
         }
 
-        // 5. Activity filter
+        // Activity filter
         if (activity === 'hiring') {
             if (item.jobs.active <= 0) continue;
         } else if (activity === 'pipeline') {
@@ -189,6 +215,26 @@ function queryDataset(msg) {
             const actSum = item.jobs.active + item.pipeline.sourced + item.pipeline.evaluated;
             if (actSum > 0) continue;
         }
+
+        // Item belongs to the scoped client universe: evaluate universal tab counters
+        allCount++;
+        if (item.is_direct) {
+            directCount++;
+        } else {
+            internalCount++;
+        }
+
+        if (item.jobs.active > 0) {
+            hiringCount++;
+        } else {
+            inactiveCount++;
+        }
+
+        // 2. Tab filter determines which rows are rendered in the current tab view
+        if (tab === 'internal' && item.is_direct) continue;
+        if (tab === 'direct' && !item.is_direct) continue;
+        if (tab === 'hiring' && item.jobs.active <= 0) continue;
+        if (tab === 'inactive' && item.jobs.active > 0) continue;
 
         filtered.push(item);
     }
@@ -215,17 +261,6 @@ function queryDataset(msg) {
     const from = (page - 1) * perPage;
     const pageRows = filtered.slice(from, from + perPage);
 
-    let allCount = self.dataset.length;
-    let internalCount = 0;
-    let directCount = 0;
-    let hiringCount = 0;
-    for (let i = 0; i < self.dataset.length; i++) {
-        const dItem = self.dataset[i];
-        if (dItem.is_direct) directCount++;
-        else internalCount++;
-        if (dItem.jobs.active > 0) hiringCount++;
-    }
-
     const elapsed = performance.now() - t0;
 
     self.postMessage({
@@ -239,7 +274,8 @@ function queryDataset(msg) {
             all: allCount,
             internal: internalCount,
             direct: directCount,
-            hiring: hiringCount
+            hiring: hiringCount,
+            inactive: inactiveCount
         },
         elapsed_ms: elapsed.toFixed(2)
     });

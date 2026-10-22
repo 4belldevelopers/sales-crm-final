@@ -9712,6 +9712,14 @@ END:VCALENDAR";
 
             self::addUpdateCompanyJob($row->company_id, $row->id);
 
+            // Rule 6: Invalidate client jobs KPI cache and tenant client projection version
+            if (!empty($row->company_id)) {
+                self::cacheClean('tenant_' . $row->company_id . '_client_version');
+            }
+            if (!empty($row->client_id) && !empty($row->company_id)) {
+                cache()->forget('ats:kpi:internal_client_jobs:' . $row->company_id . ':' . $row->client_id);
+            }
+
         }
 
         return $response;

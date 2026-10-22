@@ -85,12 +85,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
         // Eliminates duplicate initial HTTP roundtrip (GET /clients -> GET /clients_ajax)
         try {
-            $initialRequest = new Request([
+            $initialRequest = new Request(array_merge([
                 'tab' => $requestedTab,
                 'page' => 1,
                 'per_page' => 10,
                 'size' => 10,
-            ]);
+            ], request()->only(['country', 'country_id', 'city', 'city_id', 'industry', 'industry_id', 'activity', 'q', 'search', 'sort', 'sortingfilter'])));
             $initialResponse = $this->all_clients_data_ajax($initialRequest);
             $initialData = $initialResponse->getData(true);
             $this->initialHtml = $initialData['html'] ?? '';
@@ -168,6 +168,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if ($tabFilter === 'hiring' || $activityParam === 'hiring') {
             $hiringFilter = 1;
         }
+        $inactiveFilter = ($tabFilter === 'inactive') ? 1 : 0;
 
         $cachePayload = [
             'page' => $page,
@@ -184,6 +185,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'tab' => $tabFilter,
             'hiring' => $hiringFilter,
+            'inactive' => $inactiveFilter,
             'cursor' => $cursorParam,
         ];
 
@@ -366,6 +368,58 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ];
             }
 
+            // ── Inactive Filter: Exclude clients that have active jobs ──
+            if ($inactiveFilter) {
+                $hiringCacheKey = "ats:v2:hiring_clients:{$company_id}:{$tenantVersion}";
+                $hiringItemsForInactive = cache()->get($hiringCacheKey);
+                $activeInternalClientIds = [];
+                $activeDirectCompanyIds = [];
+                if ($hiringItemsForInactive) {
+                    $activeInternalClientIds = $hiringItemsForInactive->where('type', 'internal')->pluck('id')->map('intval')->toArray();
+                    $activeDirectCompanyIds = $hiringItemsForInactive->where('type', 'direct')->pluck('id')->map('intval')->toArray();
+                } elseif ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+                    try {
+                        $jobRes = $this->elasticService->getClient()->search([
+                            'index' => ELASTIC_JOBS,
+                            'body' => [
+                                'size' => 0,
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['comId' => (int) $company_id]],
+                                            ['term' => ['status' => 'active']],
+                                        ],
+                                    ],
+                                ],
+                                'aggs' => ['active_clients' => ['terms' => ['field' => 'client_id', 'size' => 10000]]],
+                            ],
+                        ]);
+                        foreach ($jobRes['aggregations']['active_clients']['buckets'] ?? [] as $b) {
+                            $activeInternalClientIds[] = (int) $b['key'];
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
+                if (! empty($activeInternalClientIds)) {
+                    $must[] = [
+                        'bool' => [
+                            'must_not' => [
+                                ['terms' => ['client_id' => $activeInternalClientIds]],
+                            ],
+                        ],
+                    ];
+                }
+                if (! empty($activeDirectCompanyIds)) {
+                    $must[] = [
+                        'bool' => [
+                            'must_not' => [
+                                ['terms' => ['company_id' => $activeDirectCompanyIds]],
+                            ],
+                        ],
+                    ];
+                }
+            }
+
             if (! empty($customSearch)) {
                 $customSearchLower = strtolower($customSearch); // wildcard is case-sensitive
                 //   dd($customSearchLower);
@@ -497,65 +551,195 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ],
                 ];
             }
+
             // ── Hiring filter: sort internal & direct clients by active job count DESC (excluding main company) ──
             if ($hiringFilter) {
                 $hiringCacheKey = "ats:v2:hiring_clients:{$company_id}:{$tenantVersion}";
                 $allHiringItems = cache()->remember($hiringCacheKey, 300, function () use ($company_id) {
-                    // INTENT: Get active internal client job counts (excluding main company self_company = 1). Tenancy: company_id bound.
-                    $internalHiring = DB::table('jobs')
-                        ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                        ->where('jobs.company_id', $company_id)
-                        ->where('jobs.status', 'active')
-                        ->where('clients.company_id', $company_id)
-                        ->where('clients.self_company', '!=', 1)
-                        ->select('jobs.client_id as id', DB::raw("'internal' as type"), DB::raw('COUNT(jobs.id) as active_count'))
-                        ->groupBy('jobs.client_id')
-                        ->get();
+                    $items = collect();
+                    if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+                        try {
+                            $selfClientId = null;
+                            if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+                                $selfResp = $this->elasticService->getClient()->search([
+                                    'index' => ELASTIC_CLIENT_LIST,
+                                    'body' => [
+                                        'size' => 1,
+                                        '_source' => ['client_id', 'id'],
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['company_id' => (int) $company_id]],
+                                                    ['term' => ['self_company' => 1]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ]);
+                                if (! empty($selfResp['hits']['hits'])) {
+                                    $selfClientId = (int) ($selfResp['hits']['hits'][0]['_source']['client_id'] ?? $selfResp['hits']['hits'][0]['_source']['id']);
+                                }
+                            }
 
-                    // INTENT: Get active direct client job counts shared via recommendation_relation. Tenancy: to_company_id bound.
-                    $directHiring = DB::table('recommendation_relation')
-                        ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-                        ->where('recommendation_relation.to_company_id', $company_id)
-                        ->where('recommendation_relation.from_company_id', '!=', $company_id)
-                        ->where('recommendation_relation.final_status', 1)
-                        ->where('jobs.status', 'active')
-                        ->select('recommendation_relation.from_company_id as id', DB::raw("'direct' as type"), DB::raw('COUNT(jobs.id) as active_count'))
-                        ->groupBy('recommendation_relation.from_company_id')
-                        ->get();
+                            $jobRes = $this->elasticService->getClient()->search([
+                                'index' => ELASTIC_JOBS,
+                                'body' => [
+                                    'size' => 0,
+                                    'query' => [
+                                        'bool' => [
+                                            'must' => [
+                                                ['term' => ['comId' => (int) $company_id]],
+                                                ['term' => ['status' => 'active']],
+                                            ],
+                                        ],
+                                    ],
+                                    'aggs' => [
+                                        'active_clients' => [
+                                            'terms' => [
+                                                'field' => 'client_id',
+                                                'size' => 10000,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ]);
+                            $buckets = $jobRes['aggregations']['active_clients']['buckets'] ?? [];
+                            foreach ($buckets as $b) {
+                                $clId = (int) $b['key'];
+                                if ($selfClientId !== null && $clId === $selfClientId) {
+                                    continue;
+                                }
+                                $items->push((object) [
+                                    'id' => $clId,
+                                    'type' => 'internal',
+                                    'active_count' => (int) $b['doc_count'],
+                                ]);
+                            }
 
-                    return $internalHiring->concat($directHiring)
-                        ->sortByDesc('active_count')
-                        ->values();
+                            $directJobRes = $this->elasticService->getClient()->search([
+                                'index' => ELASTIC_JOBS,
+                                'body' => [
+                                    'size' => 0,
+                                    'query' => [
+                                        'bool' => [
+                                            'must' => [
+                                                ['term' => ['status' => 'active']],
+                                                [
+                                                    'nested' => [
+                                                        'path' => 'recommendation_relation',
+                                                        'query' => [
+                                                            'bool' => [
+                                                                'must' => [
+                                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                                                    ['term' => ['recommendation_relation.final_status' => 1]],
+                                                                ],
+                                                                'must_not' => [
+                                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $company_id]],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    'aggs' => [
+                                        'direct_companies' => [
+                                            'nested' => [
+                                                'path' => 'recommendation_relation',
+                                            ],
+                                            'aggs' => [
+                                                'filtered_companies' => [
+                                                    'filter' => [
+                                                        'bool' => [
+                                                            'must' => [
+                                                                ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                                                ['term' => ['recommendation_relation.final_status' => 1]],
+                                                            ],
+                                                            'must_not' => [
+                                                                ['term' => ['recommendation_relation.from_company_id' => (int) $company_id]],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                    'aggs' => [
+                                                        'by_from_company' => [
+                                                            'terms' => [
+                                                                'field' => 'recommendation_relation.from_company_id',
+                                                                'size' => 1000,
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ]);
+                            $directBuckets = $directJobRes['aggregations']['direct_companies']['filtered_companies']['by_from_company']['buckets'] ?? [];
+                            foreach ($directBuckets as $db) {
+                                $items->push((object) [
+                                    'id' => (int) $db['key'],
+                                    'type' => 'direct',
+                                    'active_count' => (int) $db['doc_count'],
+                                ]);
+                            }
+                        } catch (\Throwable $e) {
+                            \Log::warning('Hiring items ES fallback: '.$e->getMessage());
+                        }
+                    }
+
+                    if ($items->isEmpty()) {
+                        $internalHiring = DB::table('jobs')
+                            ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                            ->where('jobs.company_id', $company_id)
+                            ->where('jobs.status', 'active')
+                            ->where('clients.company_id', $company_id)
+                            ->where('clients.self_company', '!=', 1)
+                            ->select('jobs.client_id as id', DB::raw("'internal' as type"), DB::raw('COUNT(jobs.id) as active_count'))
+                            ->groupBy('jobs.client_id')
+                            ->get();
+
+                        $directHiring = DB::table('recommendation_relation')
+                            ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                            ->where('recommendation_relation.to_company_id', $company_id)
+                            ->where('recommendation_relation.from_company_id', '!=', $company_id)
+                            ->where('recommendation_relation.final_status', 1)
+                            ->where('jobs.status', 'active')
+                            ->select('recommendation_relation.from_company_id as id', DB::raw("'direct' as type"), DB::raw('COUNT(jobs.id) as active_count'))
+                            ->groupBy('recommendation_relation.from_company_id')
+                            ->get();
+
+                        $items = $internalHiring->concat($directHiring);
+                    }
+
+                    return $items->sortByDesc('active_count')->values();
                 });
 
                 if ($allHiringItems->isEmpty()) {
                     $total = 0;
                     $data = [];
                 } else {
-                    $total = $allHiringItems->count();
-                    $pageItems = $allHiringItems->slice($from, $size)->values();
-
-                    $pageInternalClientIds = $pageItems->where('type', 'internal')->pluck('id')->toArray();
-                    $pageDirectCompanyIds = $pageItems->where('type', 'direct')->pluck('id')->toArray();
+                    $allInternalClientIds = $allHiringItems->where('type', 'internal')->pluck('id')->toArray();
+                    $allDirectCompanyIds = $allHiringItems->where('type', 'direct')->pluck('id')->toArray();
 
                     $shouldClause = [];
-                    if (! empty($pageInternalClientIds)) {
+                    if (! empty($allInternalClientIds)) {
                         $shouldClause[] = [
                             'bool' => [
                                 'must' => [
                                     ['term' => ['company_id' => (int) $company_id]],
                                     ['term' => ['self_company' => 0]],
-                                    ['terms' => ['client_id' => array_map('intval', $pageInternalClientIds)]],
+                                    ['terms' => ['client_id' => array_map('intval', $allInternalClientIds)]],
                                 ],
                             ],
                         ];
                     }
-                    if (! empty($pageDirectCompanyIds)) {
+                    if (! empty($allDirectCompanyIds)) {
                         $shouldClause[] = [
                             'bool' => [
                                 'must' => [
                                     ['term' => ['self_company' => 1]],
-                                    ['terms' => ['company_id' => array_map('intval', $pageDirectCompanyIds)]],
+                                    ['terms' => ['company_id' => array_map('intval', $allDirectCompanyIds)]],
                                 ],
                                 'must_not' => [
                                     ['term' => ['company_id' => (int) $company_id]],
@@ -577,36 +761,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $hiringParams = [
                         'index' => ELASTIC_CLIENT_LIST,
                         'body' => [
+                            'from' => $from,
                             'size' => $size,
+                            'sort' => $sort,
                             'query' => ['bool' => ['must' => $hiringMust]],
                         ],
                     ];
 
                     $hiringResp = $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)
                         ? $this->elasticService->getClient()->search($hiringParams)
-                        : ['hits' => ['hits' => []]];
+                        : ['hits' => ['hits' => [], 'total' => ['value' => 0]]];
 
-                    $indexedHits = [];
-                    foreach ($hiringResp['hits']['hits'] as $hit) {
-                        $src = $hit['_source'];
-                        $isSelf = (int) ($src['self_company'] ?? 0);
-                        $cCompId = (int) ($src['company_id'] ?? 0);
-                        $cClientId = (int) ($src['client_id'] ?? 0);
-
-                        if ($isSelf === 0 && $cCompId === (int) $company_id) {
-                            $indexedHits['internal_'.$cClientId] = $src;
-                        } elseif ($isSelf === 1 && $cCompId !== (int) $company_id) {
-                            $indexedHits['direct_'.$cCompId] = $src;
-                        }
-                    }
-
-                    $data = [];
-                    foreach ($pageItems as $pItem) {
-                        $key = $pItem->type.'_'.$pItem->id;
-                        if (isset($indexedHits[$key])) {
-                            $data[] = $indexedHits[$key];
-                        }
-                    }
+                    $total = (int) ($hiringResp['hits']['total']['value'] ?? 0);
+                    $data = array_map(function ($hit) {
+                        return $hit['_source'];
+                    }, $hiringResp['hits']['hits']);
                 }
             } else {
                 $params = [
@@ -850,6 +1019,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $initials = 'CL';
                 }
 
+                $countryId = null;
+                $cityId = null;
+                $stateId = null;
+                $countryIds = [];
+                if (! empty($rowObj->client_location) && (is_array($rowObj->client_location) || is_iterable($rowObj->client_location))) {
+                    $matchedLoc = null;
+                    foreach ($rowObj->client_location as $locItem) {
+                        $locArr = (array) $locItem;
+                        if (! empty($locArr['country_id'])) {
+                            $cIdVal = (int) $locArr['country_id'];
+                            $countryIds[] = $cIdVal;
+                            if (! empty($countryParam) && $cIdVal === (int) $countryParam && $matchedLoc === null) {
+                                $matchedLoc = $locArr;
+                            }
+                        }
+                    }
+                    $chosenLoc = $matchedLoc ?? ((array) ($rowObj->client_location[0] ?? []));
+                    $countryId = isset($chosenLoc['country_id']) ? (int) $chosenLoc['country_id'] : null;
+                    $cityId = isset($chosenLoc['city_id']) ? (int) $chosenLoc['city_id'] : null;
+                    $stateId = isset($chosenLoc['state']) ? (int) $chosenLoc['state'] : (isset($chosenLoc['state_id']) ? (int) $chosenLoc['state_id'] : null);
+                }
+
                 $rowsDto[] = [
                     'id' => (int) $rowTargetId,
                     'client_id' => (int) $clId,
@@ -858,12 +1049,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
                     'industry' => (string) $departmentArr,
+                    'industry_id' => isset($rowObj->industry) ? (int) $rowObj->industry : null,
                     'company_size' => (string) $companySizeText,
                     'location_main' => (string) $locMain,
                     'country' => ucwords((string) $country_name),
+                    'country_id' => $countryId,
+                    'country_ids' => array_values(array_unique($countryIds)),
+                    'locations' => $rowObj->client_location ?? [],
+                    'city_id' => $cityId,
+                    'state_id' => $stateId,
                     'is_direct' => $isDirect,
                     'client_type_css' => $client_type_css,
                     'client_type' => (string) $client_type,
+                    'is_active_hiring' => ($job_active > 0),
+                    'is_inactive' => ($job_active === 0),
                     'jobs' => [
                         'hiring' => $job_active,
                         'hold' => $job_hold,
@@ -879,6 +1078,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ],
                     'connected_on' => (string) $newDate,
                     'days_ago' => (string) $daysAgo,
+                    'projection_version' => (int) $tenantVersion,
                 ];
             }
 
@@ -1407,43 +1607,178 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $clientCounter['clientAll'] = $clientCustom + $clientDirect;
 
             // INTENT: Clients Actively Hiring Count (unique internal clients + direct clients with active jobs, excluding main company self_company = 1). Tenancy: scoped by company_id / to_company_id.
-            $internalHiringCount = DB::table('jobs')
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('jobs.company_id', $company_id)
-                ->where('jobs.status', 'active')
-                ->where('clients.company_id', $company_id)
-                ->where('clients.self_company', '!=', 1)
-                ->distinct()
-                ->count('clients.id');
+            // 0% MySQL Reads: Uses high-performance Elasticsearch terms aggregations on ELASTIC_JOBS
+            $internalHiringCount = 0;
+            $internalActiveJobs = 0;
+            $directHiringCount = 0;
+            $directActiveJobs = 0;
 
-            $directHiringCount = DB::table('recommendation_relation')
-                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-                ->where('recommendation_relation.to_company_id', $company_id)
-                ->where('recommendation_relation.from_company_id', '!=', $company_id)
-                ->where('recommendation_relation.final_status', 1)
-                ->where('jobs.status', 'active')
-                ->distinct()
-                ->count('recommendation_relation.from_company_id');
+            if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+                try {
+                    // Resolve self company client_id to exclude from internal client counts
+                    $selfClientId = null;
+                    if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+                        $selfResp = $this->elasticService->getClient()->search([
+                            'index' => ELASTIC_CLIENT_LIST,
+                            'body' => [
+                                'size' => 1,
+                                '_source' => ['client_id', 'id'],
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['company_id' => (int) $company_id]],
+                                            ['term' => ['self_company' => 1]],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ]);
+                        if (! empty($selfResp['hits']['hits'])) {
+                            $selfClientId = (int) ($selfResp['hits']['hits'][0]['_source']['client_id'] ?? $selfResp['hits']['hits'][0]['_source']['id']);
+                        }
+                    }
+
+                    // 1. Internal clients active jobs aggregation via Elasticsearch
+                    $jobRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'body' => [
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['comId' => (int) $company_id]],
+                                        ['term' => ['status' => 'active']],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'active_clients' => [
+                                    'terms' => [
+                                        'field' => 'client_id',
+                                        'size' => 10000,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $buckets = $jobRes['aggregations']['active_clients']['buckets'] ?? [];
+                    foreach ($buckets as $b) {
+                        $clId = (int) $b['key'];
+                        if ($selfClientId !== null && $clId === $selfClientId) {
+                            continue; // Exclude main self company
+                        }
+                        $internalHiringCount++;
+                        $internalActiveJobs += (int) $b['doc_count'];
+                    }
+
+                    // 2. Direct partner clients active jobs aggregation via Elasticsearch
+                    $directJobRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'body' => [
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['status' => 'active']],
+                                        [
+                                            'nested' => [
+                                                'path' => 'recommendation_relation',
+                                                'query' => [
+                                                    'bool' => [
+                                                        'must' => [
+                                                            ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                                            ['term' => ['recommendation_relation.final_status' => 1]],
+                                                        ],
+                                                        'must_not' => [
+                                                            ['term' => ['recommendation_relation.from_company_id' => (int) $company_id]],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'direct_companies' => [
+                                    'nested' => [
+                                        'path' => 'recommendation_relation',
+                                    ],
+                                    'aggs' => [
+                                        'filtered_companies' => [
+                                            'filter' => [
+                                                'bool' => [
+                                                    'must' => [
+                                                        ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                                        ['term' => ['recommendation_relation.final_status' => 1]],
+                                                    ],
+                                                    'must_not' => [
+                                                        ['term' => ['recommendation_relation.from_company_id' => (int) $company_id]],
+                                                    ],
+                                                ],
+                                            ],
+                                            'aggs' => [
+                                                'by_from_company' => [
+                                                    'terms' => [
+                                                        'field' => 'recommendation_relation.from_company_id',
+                                                        'size' => 1000,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $directActiveJobs = (int) ($directJobRes['hits']['total']['value'] ?? 0);
+                    $directBuckets = $directJobRes['aggregations']['direct_companies']['filtered_companies']['by_from_company']['buckets'] ?? [];
+                    $directHiringCount = count($directBuckets);
+
+                } catch (\Throwable $e) {
+                    \Log::warning('ServiceCompanyClientController::commonclient ES agg fallback: ' . $e->getMessage());
+                }
+            }
+
+            // Fallback only if Elasticsearch yielded 0 and is unavailable
+            if ($internalHiringCount === 0 && $directHiringCount === 0 && ! $this->elasticService->indexExists(ELASTIC_JOBS)) {
+                $internalHiringCount = DB::table('jobs')
+                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->where('jobs.company_id', $company_id)
+                    ->where('jobs.status', 'active')
+                    ->where('clients.company_id', $company_id)
+                    ->where('clients.self_company', '!=', 1)
+                    ->distinct()
+                    ->count('clients.id');
+
+                $directHiringCount = DB::table('recommendation_relation')
+                    ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                    ->where('recommendation_relation.to_company_id', $company_id)
+                    ->where('recommendation_relation.from_company_id', '!=', $company_id)
+                    ->where('recommendation_relation.final_status', 1)
+                    ->where('jobs.status', 'active')
+                    ->distinct()
+                    ->count('recommendation_relation.from_company_id');
+
+                $internalActiveJobs = DB::table('jobs')
+                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->where('jobs.company_id', $company_id)
+                    ->where('jobs.status', 'active')
+                    ->where('clients.company_id', $company_id)
+                    ->where('clients.self_company', '!=', 1)
+                    ->count('jobs.id');
+
+                $directActiveJobs = DB::table('recommendation_relation')
+                    ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                    ->where('recommendation_relation.to_company_id', $company_id)
+                    ->where('recommendation_relation.from_company_id', '!=', $company_id)
+                    ->where('recommendation_relation.final_status', 1)
+                    ->where('jobs.status', 'active')
+                    ->count('jobs.id');
+            }
 
             $clientCounter['clientHiring'] = $internalHiringCount + $directHiringCount;
-
-            // INTENT: Total Active Jobs Count across internal and direct clients. Tenancy: scoped by company_id / to_company_id.
-            $internalActiveJobs = DB::table('jobs')
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->where('jobs.company_id', $company_id)
-                ->where('jobs.status', 'active')
-                ->where('clients.company_id', $company_id)
-                ->where('clients.self_company', '!=', 1)
-                ->count('jobs.id');
-
-            $directActiveJobs = DB::table('recommendation_relation')
-                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-                ->where('recommendation_relation.to_company_id', $company_id)
-                ->where('recommendation_relation.from_company_id', '!=', $company_id)
-                ->where('recommendation_relation.final_status', 1)
-                ->where('jobs.status', 'active')
-                ->count('jobs.id');
-
+            $clientCounter['clientInactive'] = max(0, $clientCounter['clientAll'] - $clientCounter['clientHiring']);
             $clientCounter['activeJobs'] = $internalActiveJobs + $directActiveJobs;
 
             return $clientCounter;
@@ -3490,7 +3825,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         $cacheKey = "ats:v2:clients_projection:{$company_id}:{$tenantVersion}";
-        $data = cache()->remember($cacheKey, 86400, function () {
+        $data = cache()->remember($cacheKey, 86400, function () use ($company_id) {
             $projectionRequest = new Request([
                 'tab' => 'all',
                 'page' => 1,
