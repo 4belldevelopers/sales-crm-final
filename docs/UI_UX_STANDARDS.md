@@ -28,9 +28,13 @@ Standard enterprise B2B SaaS typography scale aligned with the Metronic design s
 | Dense micro-badges / counters | 10px–11px | 600 | 1.2 |
 
 Rules:
-- Standard enterprise typographic hierarchy with clear visual contrast.
-- Visual hierarchy driven by scale, font-weight, and color.
-- Poppins weights: **400 / 500 / 600 / 700**.
+- **Mandatory Typography Hierarchy Rule**: Typography must not be uniformly bold. Poppins 400–600 should be the primary range, with 700 reserved only for major KPI values or exceptional emphasis. The interface must use typography hierarchy (font weight, size, spacing, and color) rather than excessive font weight.
+- Visual hierarchy driven by scale, font-weight, and color:
+  - **Primary**: Client/entity name (600), section headings (600), KPI values (600–700).
+  - **Secondary**: Main data values (500), navigation tabs (500), buttons (500–600), badges (500).
+  - **Supporting**: Labels (400), descriptions (400), metadata (400), timestamps (400).
+  - **Key-Value Rows**: Label: 400, Value: 500 — never bold both label and value.
+- Poppins weights: **400 / 500 / 600 / 700** (avoid unnecessary 700 bold).
 - Numeric columns: `font-variant-numeric: tabular-nums` for aligned figures.
 - Clean line-heights (1.35–1.45 body, 1.25 table rows).
 

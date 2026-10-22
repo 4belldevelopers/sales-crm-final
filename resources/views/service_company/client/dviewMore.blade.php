@@ -111,7 +111,7 @@
             padding: 0 12px !important;
             border-radius: 6px !important;
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 5px !important;
@@ -186,7 +186,7 @@
             align-items: center;
             justify-content: center;
             font-size: 12px !important;
-            font-weight: 700;
+            font-weight: 600;
             overflow: hidden;
           }
           .cd-avatar-circle img {
@@ -225,7 +225,7 @@
           }
           .cd-client-name {
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a !important;
             letter-spacing: -0.2px;
           }
@@ -237,7 +237,7 @@
             color: #15803d;
             border: 1px solid #bbf7d0;
             font-size: 10px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             padding: 2px 7px;
             border-radius: 4px;
             line-height: 1.2;
@@ -247,6 +247,7 @@
             align-items: center;
             gap: 6px;
             font-size: 10.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
             margin-bottom: 6px;
             flex-wrap: wrap;
@@ -279,7 +280,7 @@
             border: 1px solid #bbf7d0;
             color: #15803d;
             font-size: 10px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             border-radius: 12px;
             line-height: 1.2;
           }
@@ -315,11 +316,12 @@
           }
           .cd-status-card-title {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             line-height: 1.2;
           }
           .cd-status-card-sub {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
             line-height: 1.1;
           }
@@ -354,6 +356,7 @@
           }
           .cd-hero-meta-time {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
           }
 
@@ -400,19 +403,20 @@
           .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
           .cd-kpi-num {
             font-size: 12px !important;
-            font-weight: 800 !important;
+            font-weight: 700 !important;
             color: #0f172a;
             line-height: 1.1;
           }
           .cd-kpi-lbl {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 500 !important;
             color: #1e293b;
             line-height: 1.2;
             margin-top: 1px;
           }
           .cd-kpi-desc {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #94a3b8;
             line-height: 1.1;
             margin-top: 1px;
@@ -440,7 +444,7 @@
             border-bottom: 2px solid transparent !important;
             border-radius: 0 !important;
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -457,22 +461,26 @@
             background: rgba(16, 185, 129, 0.04) !important;
           }
           .cd-tabs-bar .nav-link.active {
-            color: #10b981 !important;
-            border-bottom-color: #10b981 !important;
-            font-weight: 700 !important;
-            background: transparent !important;
+            color: #059669 !important;
+            border-bottom: 2px solid #10b981 !important;
+            font-weight: 500 !important;
+            background: #ecfdf5 !important;
+            border-radius: 6px 6px 0 0 !important;
           }
           /* Recent Activity Tab: EXPLICITLY BLACK */
           .cd-tabs-bar .nav-link.cd-tab-black {
-            color: #000000 !important;
-            font-weight: 700 !important;
+            color: #0f172a !important;
+            font-weight: 500 !important;
           }
           .cd-tabs-bar .nav-link.cd-tab-black i {
-            color: #000000 !important;
+            color: #0f172a !important;
           }
           .cd-tabs-bar .nav-link.cd-tab-black.active {
-            color: #000000 !important;
-            border-bottom-color: #000000 !important;
+            color: #0f172a !important;
+            border-bottom: 2px solid #0f172a !important;
+            font-weight: 500 !important;
+            background: #f1f5f9 !important;
+            border-radius: 6px 6px 0 0 !important;
           }
           .cd-tab-badge {
             display: inline-flex;
@@ -484,7 +492,7 @@
             background: #10b981;
             color: #ffffff;
             font-size: 9px !important;
-            font-weight: 700;
+            font-weight: 500;
             border-radius: 8px;
             line-height: 1;
           }
@@ -527,13 +535,13 @@
           }
           .cd-card-hdr-title {
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a !important;
           }
           .cd-card-hdr-link {
             font-size: 11px !important;
             color: #059669 !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -545,6 +553,7 @@
           }
           .cd-about-body {
             font-size: 11px !important;
+            font-weight: 400 !important;
             line-height: 1.6 !important;
             color: #475569;
           }
@@ -604,19 +613,20 @@
           }
           .cd-tl-heading {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a;
             line-height: 1.2;
           }
           .cd-tl-sub {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #64748b;
             line-height: 1.2;
             margin-top: 2px;
           }
           .cd-tl-role {
             font-size: 10.5px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             color: #334155;
             min-width: 120px;
             text-align: left;
@@ -629,12 +639,13 @@
           }
           .cd-tl-time {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #94a3b8;
             white-space: nowrap;
           }
           .cd-tl-badge {
             font-size: 9.5px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             padding: 2px 8px;
             border-radius: 12px;
             line-height: 1.2;
@@ -661,13 +672,13 @@
           .cd-kv-lbl {
             font-size: 10.5px !important;
             color: #64748b;
-            font-weight: 500;
+            font-weight: 400 !important;
             flex-shrink: 0;
           }
           .cd-kv-val {
             font-size: 11px !important;
             color: #0f172a;
-            font-weight: 600;
+            font-weight: 500 !important;
             text-align: right;
             word-break: break-word;
           }
@@ -692,7 +703,7 @@
             background: #dcfce7;
             color: #15803d;
             font-size: 12px !important;
-            font-weight: 700;
+            font-weight: 600 !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -711,12 +722,12 @@
           }
           .cd-contact-name {
             font-size: 11.5px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a;
           }
           .cd-contact-primary-tag {
             font-size: 9.5px !important;
-            font-weight: 600;
+            font-weight: 500 !important;
             background: #dcfce7;
             color: #15803d;
             padding: 1px 6px;
@@ -724,6 +735,7 @@
           }
           .cd-contact-title {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #64748b;
             margin-top: 2px;
           }
@@ -733,12 +745,14 @@
             gap: 2px;
             margin-top: 4px;
             font-size: 10.5px !important;
+            font-weight: 400 !important;
           }
           .cd-contact-link-item {
             display: inline-flex;
             align-items: center;
             gap: 5px;
             color: #334155;
+            font-weight: 400 !important;
             text-decoration: none;
           }
           .cd-contact-link-item:hover {
@@ -757,7 +771,7 @@
             background: transparent;
             color: #10b981;
             font-size: 10px !important;
-            font-weight: 600;
+            font-weight: 500 !important;
             padding: 2px 8px;
             border-radius: 12px;
             cursor: pointer;
@@ -770,6 +784,12 @@
           /* ── Drawer Footer ── */
           .cd-drawer-footer {
             padding: 10px 18px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10px !important;
+            font-weight: 400 !important;
+            color: #94a3b8;
+          }
             background: #ffffff;
             border-top: 1px solid #e2e8f0;
             font-size: 10px !important;
@@ -846,7 +866,7 @@
 
           /* Contacts tab styles */
           .cd-contacts .cd-tabcard { background:#fff; border-radius:8px; border:1px solid #eef2f6; padding:16px; margin:12px; }
-          .cd-contacts .cd-tabcard-title { font-size:12px !important; font-weight:700 !important; color:#0f172a; }
+          .cd-contacts .cd-tabcard-title { font-size:12px !important; font-weight:600 !important; color:#0f172a; }
           .cd-contacts .cd-tabcard-sub { font-size:10.5px !important; color:#64748b; margin-top:2px; }
           .cd-contacts .cd-search { position:relative; }
           .cd-contacts .cd-search input { height:30px; font-size:11px !important; border-radius:6px; border:1px solid #e2e8f0; padding-left:30px; padding-right:12px; width:220px; }
@@ -857,7 +877,7 @@
             $cur_company_id = auth()->user()->company_id;
             $detail_from = @$directClientDetail->from_company_id ?: (@$directClientDetail->companies_id ?: (@$directClientDetail->company_id ?: @$directClientDetail->client_id));
             $dc_id = $detail_from;
-            $kpiCacheKey = "ats:direct_client_kpi_v7:{$cur_company_id}:{$detail_from}";
+            $kpiCacheKey = "ats:direct_client_kpi_v9:{$cur_company_id}:{$detail_from}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($detail_from, $cur_company_id) {
                 $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
                 $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);
@@ -984,7 +1004,7 @@
                     </a>
                     @endif
                     <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <strong style="color:#0f172a;">VEN-{{ @$directClientDetail->id ?: @$directClientDetail->client_id }}</strong></span>
+                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">VEN-{{ @$directClientDetail->id ?: @$directClientDetail->client_id }}</span></span>
                   </div>
                   <div class="cd-tag-row">
                     @foreach ($tagsArr as $val)
@@ -1373,7 +1393,7 @@
                   <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
                     <div class="d-flex align-items-center gap-2">
                       <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:700;">Recent Activity &amp; Audit Logs</h4>
+                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
                     </div>
                     <span class="badge bg-secondary text-white" style="font-size:9.5px;">Pending Discussion</span>
                   </div>

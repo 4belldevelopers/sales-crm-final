@@ -105,7 +105,7 @@ use Carbon\Carbon;
             padding: 0 12px !important;
             border-radius: 6px !important;
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 5px !important;
@@ -191,7 +191,7 @@ use Carbon\Carbon;
             align-items: center;
             justify-content: center;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 600;
             overflow: hidden;
           }
           .cd-avatar-circle img {
@@ -230,7 +230,7 @@ use Carbon\Carbon;
           }
           .cd-client-name {
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a !important;
             letter-spacing: -0.2px;
           }
@@ -242,7 +242,7 @@ use Carbon\Carbon;
             color: #0284c7;
             border: 1px solid #bae6fd;
             font-size: 10px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             padding: 2px 7px;
             border-radius: 4px;
             line-height: 1.2;
@@ -252,6 +252,7 @@ use Carbon\Carbon;
             align-items: center;
             gap: 6px;
             font-size: 10.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
             margin-bottom: 6px;
             flex-wrap: wrap;
@@ -284,7 +285,7 @@ use Carbon\Carbon;
             border: 1px solid #bae6fd;
             color: #0369a1;
             font-size: 10px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             border-radius: 12px;
             line-height: 1.2;
           }
@@ -320,11 +321,12 @@ use Carbon\Carbon;
           }
           .cd-status-card-title {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             line-height: 1.2;
           }
           .cd-status-card-sub {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
             line-height: 1.1;
           }
@@ -359,6 +361,7 @@ use Carbon\Carbon;
           }
           .cd-hero-meta-time {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #64748b;
           }
 
@@ -405,19 +408,20 @@ use Carbon\Carbon;
           .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
           .cd-kpi-num {
             font-size: 12px !important;
-            font-weight: 800 !important;
+            font-weight: 700 !important;
             color: #0f172a;
             line-height: 1.1;
           }
           .cd-kpi-lbl {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 500 !important;
             color: #1e293b;
             line-height: 1.2;
             margin-top: 1px;
           }
           .cd-kpi-desc {
             font-size: 9.5px !important;
+            font-weight: 400 !important;
             color: #94a3b8;
             line-height: 1.1;
             margin-top: 1px;
@@ -445,7 +449,7 @@ use Carbon\Carbon;
             border-bottom: 2px solid transparent !important;
             border-radius: 0 !important;
             font-size: 11px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -463,21 +467,25 @@ use Carbon\Carbon;
           }
           .cd-tabs-bar .nav-link.active {
             color: #009ef7 !important;
-            border-bottom-color: #009ef7 !important;
-            font-weight: 700 !important;
-            background: transparent !important;
+            border-bottom: 2px solid #009ef7 !important;
+            font-weight: 500 !important;
+            background: #eff6ff !important;
+            border-radius: 6px 6px 0 0 !important;
           }
           /* Recent Activity Tab: EXPLICITLY BLACK */
           .cd-tabs-bar .nav-link.cd-tab-black {
-            color: #000000 !important;
-            font-weight: 700 !important;
+            color: #0f172a !important;
+            font-weight: 500 !important;
           }
           .cd-tabs-bar .nav-link.cd-tab-black i {
-            color: #000000 !important;
+            color: #0f172a !important;
           }
           .cd-tabs-bar .nav-link.cd-tab-black.active {
-            color: #000000 !important;
-            border-bottom-color: #000000 !important;
+            color: #0f172a !important;
+            border-bottom: 2px solid #0f172a !important;
+            font-weight: 500 !important;
+            background: #f1f5f9 !important;
+            border-radius: 6px 6px 0 0 !important;
           }
           .cd-tab-badge {
             display: inline-flex;
@@ -489,7 +497,7 @@ use Carbon\Carbon;
             background: #009ef7;
             color: #ffffff;
             font-size: 9px !important;
-            font-weight: 700;
+            font-weight: 500;
             border-radius: 8px;
             line-height: 1;
           }
@@ -532,13 +540,13 @@ use Carbon\Carbon;
           }
           .cd-card-hdr-title {
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a !important;
           }
           .cd-card-hdr-link {
             font-size: 11px !important;
             color: #0284c7 !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -550,6 +558,7 @@ use Carbon\Carbon;
           }
           .cd-about-body {
             font-size: 11px !important;
+            font-weight: 400 !important;
             line-height: 1.6 !important;
             color: #475569;
           }
@@ -609,19 +618,20 @@ use Carbon\Carbon;
           }
           .cd-tl-heading {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a;
             line-height: 1.2;
           }
           .cd-tl-sub {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #64748b;
             line-height: 1.2;
             margin-top: 2px;
           }
           .cd-tl-role {
             font-size: 10.5px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             color: #334155;
             min-width: 120px;
             text-align: left;
@@ -634,12 +644,13 @@ use Carbon\Carbon;
           }
           .cd-tl-time {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #94a3b8;
             white-space: nowrap;
           }
           .cd-tl-badge {
             font-size: 9.5px !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             padding: 2px 8px;
             border-radius: 12px;
             line-height: 1.2;
@@ -666,13 +677,13 @@ use Carbon\Carbon;
           .cd-kv-lbl {
             font-size: 10.5px !important;
             color: #64748b;
-            font-weight: 500;
+            font-weight: 400 !important;
             flex-shrink: 0;
           }
           .cd-kv-val {
             font-size: 11px !important;
             color: #0f172a;
-            font-weight: 600;
+            font-weight: 500 !important;
             text-align: right;
             word-break: break-word;
           }
@@ -697,7 +708,7 @@ use Carbon\Carbon;
             background: #dcfce7;
             color: #15803d;
             font-size: 12px !important;
-            font-weight: 700;
+            font-weight: 600 !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -716,12 +727,12 @@ use Carbon\Carbon;
           }
           .cd-contact-name {
             font-size: 11.5px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a;
           }
           .cd-contact-primary-tag {
             font-size: 9.5px !important;
-            font-weight: 600;
+            font-weight: 500 !important;
             background: #dcfce7;
             color: #15803d;
             padding: 1px 6px;
@@ -729,6 +740,7 @@ use Carbon\Carbon;
           }
           .cd-contact-title {
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #64748b;
             margin-top: 2px;
           }
@@ -738,12 +750,14 @@ use Carbon\Carbon;
             gap: 2px;
             margin-top: 4px;
             font-size: 10.5px !important;
+            font-weight: 400 !important;
           }
           .cd-contact-link-item {
             display: inline-flex;
             align-items: center;
             gap: 5px;
             color: #334155;
+            font-weight: 400 !important;
             text-decoration: none;
           }
           .cd-contact-link-item:hover {
@@ -762,7 +776,7 @@ use Carbon\Carbon;
             background: transparent;
             color: #009ef7;
             font-size: 10px !important;
-            font-weight: 600;
+            font-weight: 500 !important;
             padding: 2px 8px;
             border-radius: 12px;
             cursor: pointer;
@@ -778,6 +792,7 @@ use Carbon\Carbon;
             background: #ffffff;
             border-top: 1px solid #e2e8f0;
             font-size: 10px !important;
+            font-weight: 400 !important;
             color: #94a3b8;
           }
         </style>
@@ -785,7 +800,7 @@ use Carbon\Carbon;
         @php
             // KPI counts for Internal Client cached in Redis / Dragonfly
             $cur_company_id = auth()->user()->company_id;
-            $kpiCacheKey = "ats:client_kpi_v7:{$cur_company_id}:{$client->id}";
+            $kpiCacheKey = "ats:client_kpi_v9:{$cur_company_id}:{$client->id}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($cur_company_id, $client) {
                 $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
                 $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);
@@ -925,7 +940,7 @@ use Carbon\Carbon;
                       <i class="fas fa-link fa-solid me-1"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
                     </a>
                     <span class="cd-meta-sep">|</span>
-                    <span>Vendor ID: <strong style="color:#0f172a;">VEN-{{ @$client->id }}</strong></span>
+                    <span>Vendor ID: <span style="font-weight:500; color:#0f172a;">VEN-{{ @$client->id }}</span></span>
                   </div>
                   <div class="cd-tag-row">
                     @foreach ($tagsArr as $val)
@@ -1293,7 +1308,7 @@ use Carbon\Carbon;
                   <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
                     <div class="d-flex align-items-center gap-2">
                       <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
-                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:700;">Recent Activity &amp; Audit Logs</h4>
+                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:600;">Recent Activity &amp; Audit Logs</h4>
                     </div>
                     <span class="badge bg-secondary text-white" style="font-size:9.5px;">Pending Discussion</span>
                   </div>
