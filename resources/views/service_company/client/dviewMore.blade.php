@@ -1034,13 +1034,6 @@
                       <span class="cd-pulse-dot cd-pulse-green"></span>
                       <div>
                         <div class="cd-status-card-title text-success">Client Active</div>
-                        <div class="cd-status-card-sub text-success">Account is active</div>
-                      </div>
-                    </div>
-                    <div class="cd-status-card cd-status-card-green">
-                      <span class="cd-pulse-dot cd-pulse-green"></span>
-                      <div>
-                        <div class="cd-status-card-title text-success">Hiring</div>
                         <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
                       </div>
                     </div>
@@ -1050,13 +1043,6 @@
                       <div>
                         <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
                         <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
-                      </div>
-                    </div>
-                    <div class="cd-status-card cd-status-card-grey">
-                      <span class="cd-pulse-dot cd-pulse-grey"></span>
-                      <div>
-                        <div class="cd-status-card-title" style="color:#64748b;">Not Hiring</div>
-                        <div class="cd-status-card-sub" style="color:#94a3b8;">0 active jobs</div>
                       </div>
                     </div>
                   @endif
@@ -1076,7 +1062,6 @@
                 <div>
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
-                  <div class="cd-kpi-desc">Currently hiring positions</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1086,8 +1071,7 @@
                 <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
-                  <div class="cd-kpi-lbl">Candidates Submitted</div>
-                  <div class="cd-kpi-desc">Total in pipeline</div>
+                  <div class="cd-kpi-lbl">Candidates</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1097,8 +1081,7 @@
                 <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
                 <div>
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCount">{{ $kpiInterviews }}</div>
-                  <div class="cd-kpi-lbl">Interviews Scheduled</div>
-                  <div class="cd-kpi-desc">Across all rounds</div>
+                  <div class="cd-kpi-lbl">Interviews</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1108,8 +1091,7 @@
                 <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiOffers }}</div>
-                  <div class="cd-kpi-lbl">Offers Generated</div>
-                  <div class="cd-kpi-desc">Offer letters sent</div>
+                  <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1119,8 +1101,7 @@
                 <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiJoins }}</div>
-                  <div class="cd-kpi-lbl">Successful Joins</div>
-                  <div class="cd-kpi-desc">Placements closed</div>
+                  <div class="cd-kpi-lbl">Joined</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>

@@ -1799,7 +1799,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsviewmore_v10:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
@@ -2578,7 +2578,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:clientsdviewmore_v10:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v11:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
