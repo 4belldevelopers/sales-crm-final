@@ -26,12 +26,15 @@ use App\Models\JobCategory;
 use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
+use App\DTO\ServiceCompany\ClientAccessContext;
+use App\DTO\ServiceCompany\ClientJobsQuery;
 use App\Services\ElasticService;
 use App\Services\JobIdempotencyService;
 use App\Services\JobService;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
+use App\Services\ServiceCompany\ClientJobsReadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -70,7 +73,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function __construct(MailService $mailService, MassMailService $massMailService, NotificationMailService $notificationMailService, ElasticService $elasticService)
     {
-        parent::__construct();
+        if (! request()->is('*jobs_side_bar_job_ajax*')) {
+            parent::__construct();
+        }
         $this->pageTitle = 'Requisition';
         $this->pageIcon = 'icon-badge';
         $this->mailService = $mailService;
@@ -1577,148 +1582,52 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         return $dataCnt;
     }
 
-    public function client_job_data_ajax(Request $request)
+    public function client_job_data_ajax(Request $request, ClientJobsReadService $readService)
     {
         $startTime = microtime(true);
         abort_if(Gate::denies('view_jobs'), 403);
 
-        $company_id = auth()->user()->company_id;
+        // 1. Resolve Authorization Context with STRICTLY 0% MySQL Reads (Pre-ES Gate)
+        $authContext = ClientAccessContext::fromRequest($request);
 
-        $chkAdminRole = $this->user->hasRole('admin');
-
-        $job_status = GeneralMethod::job_status();
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-
-        $client_id = request('client_id');
-        $requisitionRow = DB::table('clients')->where('id', $client_id)->first();
-        $toCompanyId = (int) ($requisitionRow->company_id ?? 0);
-        if (! $toCompanyId && $client_id) {
-            $toCompanyId = (int) $client_id;
+        // 2. Tenancy Shield: Abort 403 immediately if unauthorized
+        if (! $authContext->isAuthorized) {
+            abort(403, 'Unauthorized access: Client is outside authenticated tenant boundary.');
         }
-        $custom = request('custom');
 
-        $searchQuery = $request->input('q');
-        $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 10 results per page
-        $from = ($page - 1) * $size;
-        $custom_status = request('custom_status');
-        $custom_hiringtype = request('custom_hiringtype');
-        $custom_search = trim(request('custom_search'));
+        // 3. Construct Dedicated Read Query from Authorized Context
+        $query = ClientJobsQuery::fromAuthorizedContext($authContext, $request);
 
-        // Phase 4 Optimization: Restrict _source fields to display columns to reduce payload by 85%
-        $sourceFields = [
-            'id', 'title', 'status', 'min_exp', 'max_exp', 'min_salary', 'max_salary',
-            'min_salary_currency', 'max_salary_currency', 'min_sal_mode', 'max_sal_mode',
-            'created_at', 'hiring_manager', 'skills', 'total_positions', 'client_id',
-            'comId', 'location_id', 'category_id', 'client_name', 'client_company',
-            'company_name', 'self_company', 'work_type', 'employment_type', 'client_city_jobs',
-            'client_contact_info_jobs', 'job_assign', 'recommendation_relation', 'matching_agency_count',
-        ];
+        // 4. Execute Read Service (Bounded O(1) ES Queries + Redis Caching)
+        $viewModel = $readService->getJobs($query);
 
-        if (request('custom') == 'true') {
-            $must[] = [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['client_id' => $client_id]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-
-            // FINAL ELASTIC PARAMS
-            $params = [
-                'index' => ELASTIC_JOBS,
-                'request_cache' => true,
-                'body' => [
-                    '_source' => $sourceFields,
-                    'from' => $from,
-                    'size' => $size,
-                    'sort' => [],
-                    'query' => [
-                        'bool' => [
-                            'must' => $must,
-                            'filter' => [],
-                        ],
-                    ],
-                ],
-            ];
-        } else {
-            // 4. COMPANY ACCESS CONDITIONS
-            $must[] = [
-                'bool' => [
-                    'should' => [
-                        [
-                            'nested' => [
-                                'path' => 'recommendation_relation',
-                                'query' => [
-                                    'bool' => [
-                                        'must' => [
-                                            ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
-                                            ['term' => ['recommendation_relation.from_company_id' => (int) $toCompanyId]],
-                                            ['term' => ['recommendation_relation.final_status' => 1]],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-
-            // FINAL ELASTIC PARAMS
-            $params = [
-                'index' => ELASTIC_JOBS,
-                'request_cache' => true,
-                'body' => [
-                    '_source' => $sourceFields,
-                    'from' => $from,
-                    'size' => $size,
-                    'sort' => [],
-                    'query' => [
-                        'bool' => [
-                            'must' => $must,
-                            'filter' => [],
-                        ],
-                    ],
-                ],
-            ];
-
-        }
-        if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
-        }
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'per_page' => $size,
-            'listType' => 'allcandidate',
-        ];
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
+        $company_id = $query->serviceCompanyId;
+        $custom = $query->clientType === 'internal' ? 'true' : 'false';
 
         \Log::info('CLIENT_DETAILS_APM: client_job_data_ajax completed', [
-            'client_id' => $client_id,
-            'company_id' => $company_id,
-            'page' => $page,
-            'item_count' => count($data),
-            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+            'client_id'   => $query->clientId,
+            'company_id'  => $query->serviceCompanyId,
+            'client_type' => $query->clientType,
+            'page'        => $query->page,
+            'item_count'  => count($viewModel->jobs),
+            'total'       => $viewModel->totalCount,
+            'filtered'    => $viewModel->filteredCount,
+            'latency_ms'  => round((microtime(true) - $startTime) * 1000, 2),
         ]);
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'custom'))->render(),
-            'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'html'       => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('viewModel', 'userPermissions', 'company_id', 'custom'))->render(),
+            'total'      => $viewModel->filteredCount,
+            'kpi'        => [
+                'total'    => $viewModel->totalCount,
+                'hiring'   => $viewModel->hiringCount,
+                'hold'     => $viewModel->holdCount,
+                'closed'   => $viewModel->closedCount,
+                'inactive' => $viewModel->inactiveCount,
+            ],
+            'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
         ]);
-
     }
 
     public function data(Request $request)
@@ -2904,7 +2813,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ];
 
         session()->forget('UrlMailJobId');
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
 
         /**
          * Serialize job DTOs for client-side rendering and instant browser filtering.
@@ -3854,7 +3763,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $responseData = [
             'html' => view('service_company.ajax_pages.client_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'total' => $total,
@@ -4103,7 +4012,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'per_page' => $size,
             'listType' => 'allcandidate',
         ];
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $responseData = [
             'html' => view('service_company.ajax_pages.custom_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'total' => $total,
@@ -4276,7 +4185,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $responseData = [
             'html' => view('service_company.ajax_pages.market_jobs_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole', 'sal_mode', 'sal_mode_set', 'salary_currency_set', 'min_salary_currency', 'job_status', 'company_id'))->render(),
             'total' => $total,
@@ -5588,7 +5497,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $responseData = [
             'html' => view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions', 'locationsMap', 'categoriesMap', 'captainsMap'))->render(),
             'total' => $total,
@@ -10061,7 +9970,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ];
 
         $page_view = 'find_agency_recom_ajax';
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $app_int_outsource = request('app_int_outsource');
         $parent_employment_type = request('app_int_outsource');
         $hiringtype = $app_int_outsource;
@@ -11312,7 +11221,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $responseData = [
             'html' => view('service_company.ajax_pages.assigned_gency_ajax', compact('data', 'userPermissions'))->render(),
             'total' => $total,
@@ -11887,7 +11796,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // dd($data);
 
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
         $app_int_outsource = request('app_int_outsource');
         $parent_employment_type = request('app_int_outsource');
         // $hiringtype = $app_int_outsource ;
@@ -12052,7 +11961,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ];
 
         // dd($pagination,$data);
-        $userPermissions = $this->userPermissions;
+        $userPermissions = $this->userPermissions ?? [];
 
         return response()->json([
             'html' => view('service_company.ajax_pages.rec_register_agency_ajax', compact('data', 'userPermissions', 'company_id', 'currentRowJob', 'currentJobSkill', 'currentJobLocation', 'hiringtype', 'jobMinExp', 'jobMaxExp', 'jobSalaryMode', 'jobSalaryCurrency', 'jobId'))->render(),

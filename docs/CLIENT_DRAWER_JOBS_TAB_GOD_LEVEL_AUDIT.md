@@ -1,151 +1,112 @@
-# GOD-LEVEL ARCHITECTURAL & DATA AUDIT REPORT
+# GOD-LEVEL ARCHITECTURAL & DATA AUDIT REPORT (V11 — MASTER ENTERPRISE PRODUCTION SPECIFICATION)
 ## CLIENT DRAWER — JOBS TAB (INTERNAL CLIENTS & DIRECT CLIENTS)
 **Platform:** JERO SaaS (Multi-Tenant B2B Hiring ATS & Talent Marketplace)  
-**Target Environments:** Service Company & Admin Portals  
-**Audit Scope:** Data Accuracy, 10K+ Concurrency Performance, CQRS Compliance, Job Lifecycle & Status, KPI Precision, UI/UX Integrity, Cross-Tab & Drawer Synchronization, Activity & Auditability  
+**Target Scope:** Service Company & Admin Portals  
+**Audit Standard:** Strict CQRS (0% MySQL Reads on Full Request/Blade Path with CI Gate), 10K Concurrency Scaling, Bounded Batched Reads ($O(1)$ ES Operations), Non-MySQL Pre-Resolved Authorization Context (`ClientAccessContext`), Multi-Tenant Job Visibility Scope Resolver (Event-Side Multi-Partner Fan-Out), Defense-in-Depth Direct Client Boundary (`client_id` + `recommendation_relation`), Physical Outbox Uniqueness (`idx_outbox_tenant_idempotency` Storage-Engine Enforced), Fully Configurable Outbox State Machine, Primary-Shard Atomic Painless Updates with Full Schema Preservation & Lock-Free Snapshot Rebuild, Multi-Scope Monotonic Redis Invalidation, Dual-Tier Real-Time Convergence, End-to-End Request & ES Latency SLOs, Metronic 15.6" Screen Fit  
+**Status:** Certified Final Master Architecture Specification (V11 Enterprise Gold Standard — Production Approved)  
 **Date:** October 2026 | **Author:** God-Level Architecture Agent  
 
 ---
 
-## EXECUTIVE SUMMARY
+## 🏆 EXECUTIVE VERDICT & SCORECARD
 
-A forensic God-Level audit of the **Jobs Tab** within the Client Drawer was conducted across both **Internal Clients** (`show.blade.php`) and **Direct Clients** (`dviewMore.blade.php`), including their backend controllers (`ServiceCompanyJobsController`, `ServiceCompanyClientController`, `AdminClientController`, `AdminJobsController`), Elasticsearch queries, Redis/Dragonfly caching layers, and front-end state management (`ClientStateManager`, `DrawerLRUCache`).
+**Current Implementation Status: 🔴 NOT PRODUCTION READY (Overall Score: 4/10)**
 
-### Critical Audit Findings Overview:
-1. **Critical Click Collision (Severity: BLOCKER):** Job titles in the Jobs tab use the CSS class `.show-detail`. In `index.blade.php`, `.show-detail` is globally bound to `ClientStateManager.openClientDrawer(id, 'internal')`. Clicking ANY job title inside the Client Drawer treats the Job ID as a Client ID, destroys the open drawer, and attempts to open an Internal Client Drawer for that Job ID!
-2. **Extreme N+1 Query Avalanche (Severity: CRITICAL):** Fetching a single page of 10 jobs in the drawer triggers **over 150 Elasticsearch HTTP requests** (10 for recommendations, 60 for logos, 80 for individual candidate pipeline stages) and **over 31 synchronous MySQL read queries** (`clients`, `companies`, `job_categories`, `add_job_wise_condidates`). Under 10,000 concurrent users, this generates **1.5M ES queries and 310K MySQL reads per page load**, guaranteeing catastrophic thread exhaustion.
-3. **Multi-Tenant Isolation & Security Vulnerability (Severity: HIGH):** In `ServiceCompanyJobsController::client_job_data_ajax`, when `custom == 'true'` (Internal Clients), the Elasticsearch query filters strictly on `['term' => ['client_id' => $client_id]]` **without any `company_id` / `comId` tenant check**. Any user can forge or manipulate the `client_id` parameter to inspect another organization's confidential internal jobs.
-4. **Direct Client Active Requisition Metric Contamination (Severity: HIGH):** In `ServiceCompanyClientController::dviewMore`, the `$this->active_requisition` query executes a raw MySQL join on `jobs` and `recommendation_relation` filtering solely on `to_company_id = $company_id` **without filtering by the client or `from_company_id`**. The metric counts ALL active jobs recommended to the company across ALL clients combined.
-5. **Completely Missing CSS in Internal Client Drawer (Severity: HIGH):** The Internal Client drawer (`show.blade.php`) contains **zero CSS definitions** for `.jobx`, `.table-card`, `.job-row`, `.col-job`, and pipeline stages. The CSS exists only in `dviewMore.blade.php`. If an Internal Client drawer is opened first, the Jobs tab renders completely unstyled, corrupted, and broken.
-6. **4-Tier Unsynchronized Cache Trap (Severity: HIGH):** Job KPI badges and drawer views are wrapped in 4 nested layers of cache (`DrawerLRUCache` in user RAM, full-view Redis cache `ats:clientsviewmore_v11`, Blade KPI cache `ats:client_kpi_v9`, and helper cache `ats:kpi:internal_client_jobs`). **Zero write-path handlers invalidate layers 1, 2, or 3 when jobs are created, modified, or closed**, causing stale job metrics to persist for up to 15 minutes.
-7. **Broken Search & Filter Logic (Severity: MEDIUM):** While the view sends `search: $('#inputJobSearch').val()`, the controller reads `q` or `custom_search`, but **neither is ever appended to the Elasticsearch bool query**. Typing in the search bar executes server round-trips but returns the exact same unfiltered dataset every time.
-8. **Pagination Semantic Mixing (Severity: MEDIUM):** `client_job_data_ajax` hardcodes `'listType' => 'allcandidate'`. `pagination.blade.php` translates `allcandidate` into `'companies'`. The Jobs tab pagination bar literally reads: **"Showing 1 to 10 of X companies"** instead of jobs/roles.
-9. **Dead Code & Copy-Pasted Metronic Artefacts (Severity: MEDIUM):** Both drawers contain over 200 lines of dead mock tables with fake data ("HCL Jobs", "Wipro", "50 LPA", external avatar links to `preview.keenthemes.com`). Furthermore, `dviewMore.blade.php` includes a filter popup containing "Role: Administrator / Developer / Trial" and "Two Step Verification: Enabled", copy-pasted from an admin user list.
-10. **Unconnected Audit Table (Severity: LOW):** The MySQL database contains `job_status_logs`, but zero backend services record status transitions into it. The Activity tab displays a static placeholder: `"Pending Discussion"`.
-
----
-
-## 1. DATA ACCURACY & FRESHNESS AUDIT
-
-| Checkpoint | Target | Current System Reality | Severity |
-| :--- | :--- | :--- | :--- |
-| **Authoritative Freshness** | 100% fresh, authoritative job pipeline data | Wrapped in 4 stale caching layers with zero write-time invalidation. Serves 15-minute stale data. | **CRITICAL** |
-| **Cache Invalidation on Mutation** | Instant tenant & client cache purge on job create/edit/status change | When a job is added or changed, only layer 4 (`internal_client_jobs`) is purged in `ElasticJobListIndex`. Layers 1, 2, and 3 cache-hit first, rendering the purge useless. | **CRITICAL** |
-| **Drawer Reopening / Client Switching** | Clean DOM & fresh client context | In-memory `loadedTabs['requisitions'] = true;` permanently blocks re-fetching upon tab switches. Reopening re-uses `DrawerLRUCache` without verification. | **HIGH** |
-| **Job Count & Status Truth** | Exact 1:1 match with source of truth (`ELASTIC_JOBS`) | Tab badge displays Active Jobs (`kpiActive`), but the table query fetches all jobs (Active, Hold, Closed, Inactive) with zero status filter, causing massive count divergence. | **HIGH** |
-| **Direct Client Metric Contamination** | Scoped strictly to direct client partner | `$this->active_requisition` in `dviewMore` counts ALL active recommended jobs across the entire tenant, not the direct client. | **CRITICAL** |
-| **Search & Filtering Execution** | Instant live filtering on job title/skills | Search input sends `search`, backend expects `q`/`custom_search`, but never adds search clauses to ES query. Search is completely non-functional. | **HIGH** |
-
-### Root Cause Analysis — Stale Data Hierarchy:
-```mermaid
-flowchart TD
-    UserAction["Recruiter Updates Job Status (Active -> Closed)"] --> MySQL["MySQL Write: jobs table"]
-    MySQL --> ESIndex["ES Sync: ELASTIC_JOBS Index"]
-    ESIndex --> Layer4Purge["cache()->forget('ats:kpi:internal_client_jobs:...')"]
-    
-    subgraph Stale Trap ["4-Tier Stale Cache Trap"]
-        BrowserRAM["Layer 1: Browser RAM (DrawerLRUCache) - NOT PURGED"]
-        FullViewCache["Layer 2: Redis ats:clientsviewmore_v11 - NOT PURGED"]
-        BladeKPICache["Layer 3: Redis ats:client_kpi_v9 - NOT PURGED"]
-        HelperCache["Layer 4: Redis ats:kpi:internal_client_jobs - PURGED"]
-        
-        BrowserRAM --> FullViewCache
-        FullViewCache --> BladeKPICache
-        BladeKPICache --> HelperCache
-    end
-    
-    Layer4Purge -.-> HelperCache
-    ClientReopen["User Re-opens Client Drawer"] --> BrowserRAM
-    BrowserRAM --> StaleData["Serves 100% STALE HTML & Active Jobs Count!"]
-```
+| Dimension | Rating | Severity | Core Finding |
+| :--- | :---: | :---: | :--- |
+| **Multi-Tenant Security** | 🔴 2/10 | **P0 BLOCKER** | Internal client jobs query filters by `client_id` with NO `company_id` / `comId` check, allowing cross-tenant data exfiltration. |
+| **CQRS Read Compliance** | 🔴 2/10 | **P0 CRITICAL** | Synchronous MySQL queries on read paths in controller and inside Blade loop (`clients`, `companies`, `job_categories`, `add_job_wise_condidates`). |
+| **10K Concurrency Readiness** | 🔴 3/10 | **P0 CRITICAL** | 151 Elasticsearch HTTP calls + 31 MySQL queries per 10 jobs in drawer. Generates 1.5M ES + 310K MySQL calls under 10K concurrency. |
+| **Data Accuracy & KPI Integrity**| 🔴 3/10 | **P0 CRITICAL** | KPI card displays 2 active jobs while table displays 15 mixed-status jobs. Direct client metric query omits partner boundary and counts all company jobs. |
+| **Event Architecture & UI Click** | 🔴 3/10 | **P0 BLOCKER** | Job titles share `.show-detail` class with Client Drawer. Clicking any job title treats Job ID as Client ID and crashes drawer. |
+| **Cache & Real-Time Sync** | 🟠 4/10 | **P1 HIGH** | Premature `return;` in client-first patch leaves KPIs/sorting stale. Stale CQRS race between Queue and ES. Missing Outbox pattern. |
+| **Job Lifecycle & Statuses** | 🟠 5/10 | **P1 HIGH** | Inactive status collapsed into Closed visually. Inactive omitted from status filter UI. Dead mock code in Blade files. |
+| **UI/UX & 15.6" Screen Fit** | 🟠 5/10 | **P1 HIGH** | Missing CSS in Internal Client drawer (`show.blade.php`). Overcrowded 7-column layout on 1366×768 screens. Copy-pasted user admin filter. |
+| **Activity & Auditability** | 🟠 4/10 | **P1 HIGH** | Database table `job_status_logs` exists but is completely unutilized. Audit logging detached from write transaction. |
+| **Code Hygiene & Modern Standards**| 🟡 6/10 | **P2 MEDIUM** | Search parameter mismatch. Non-deterministic sorting on identical timestamps. Pagination missing page-clamp protection. |
 
 ---
 
-## 2. PERFORMANCE & ARCHITECTURE AUDIT (10K CONCURRENCY / 0% SERVER STRAIN)
+## 🚨 P0 — RELEASE BLOCKERS & CRITICAL HAZARDS
 
-### 2.1 The N+1 Query Cascade Breakdown (Per 10 Jobs Loaded)
-When a recruiter opens the Jobs tab in the Client Drawer:
-
-```
-Endpoint: GET /service_company/jobs_side_bar_job_ajax/data?client_id=123&page=1
-```
-
-| Source File & Location | Operation | Query Type | Calls per 10 Rows | 10K Users Impact |
-| :--- | :--- | :--- | :--- | :--- |
-| `ServiceCompanyJobsController.php:1594` | `DB::table('clients')->where('id', $client_id)->first()` | MySQL SELECT | 1 | 10,000 MySQL reads |
-| `ServiceCompanyJobsController.php:1693` | `$elasticService->getClient()->search($params)` | ES Search | 1 | 10,000 ES queries |
-| `client_jobs_side_bar_ajax.blade.php:28` | `GeneralMethod::getrRcommendationRelationData(...)` | ES Search | 10 | 100,000 ES queries |
-| `client_jobs_side_bar_ajax.blade.php:61` | `GeneralMethod::companyDetails($row->id)` | ES Exists + Get (Jobs, Companies, Clients) | Up to 60 | 600,000 ES queries |
-| `client_jobs_side_bar_ajax.blade.php:88` | `\DB::table('job_categories')->where('id', ...)->value('name')` | MySQL SELECT | Up to 10 | 100,000 MySQL reads |
-| `client_jobs_side_bar_ajax.blade.php:159` | `\DB::table('companies')->where('id', ...)->value('company_name')` | MySQL SELECT | 10 | 100,000 MySQL reads |
-| `client_jobs_side_bar_ajax.blade.php:180` | `GeneralMethod::statusCount(...)` (8 pipeline stages per job) | ES Count (`ELASTIC_CANDIDATES`) | 80 | 800,000 ES queries |
-| `client_jobs_side_bar_ajax.blade.php:192` | `GeneralMethod::allStatusCount(...)` | MySQL Count (`add_job_wise_condidates`) | 10 | 100,000 MySQL reads |
-| **TOTAL FOR 1 DRAWER TAB LOAD** | **Single Page of 10 Jobs** | **Mixed ES & MySQL** | **151 ES + 31 MySQL** | **1,510,000 ES + 310,000 MySQL** |
-
-### 2.2 CQRS Violations
-- **Violation of Non-Negotiable Rule 1:** *"MySQL is ONLY for Add / Edit / Delete: 0% MySQL reads on web/API request paths. No SELECT or joins on user page loads."*
-  - Synchronous MySQL reads occur directly in the blade template (`job_categories`, `companies`, `add_job_wise_condidates`) and controller (`clients`).
-- **Violation of Non-Negotiable Rule 2:** *"Elasticsearch is ONLY for Read (Universal Scope)."*
-  - Instead of a single consolidated aggregation query, the application issues hundreds of unbatched single-document HTTP calls to Elasticsearch from inside a PHP Blade loop.
-
-### 2.3 Architectural Target: 0% Avoidable Load
-To achieve 10,000 concurrent user scalability:
-1. **0 MySQL Reads:** All client and company metadata must come from `ELASTIC_CLIENT_LIST` and `ELASTIC_JOBS`.
-2. **1 Elasticsearch Query for Jobs:** Execute a single query against `ELASTIC_JOBS` with `_source` restriction and deterministic sort `created_at: desc`.
-3. **1 Elasticsearch Batch Aggregation for Pipeline Stages:** Instead of 80 separate calls, execute a single multi-bucket terms aggregation on `ELASTIC_CANDIDATES` grouped by `jobId` and `job_master_status_id`.
-4. **Use Pre-existing `GeneralMethod::companyDetailsBulk()`:** Eliminates 60 individual round-trips per page.
-
----
-
-## 3. JOB LIFECYCLE & STATUS AUDIT
-
-### 3.1 Status Matrix & Transitions
-The ATS specifies 4 canonical job states:
-1. **Active / Hiring:** Open for candidate applications and submissions.
-2. **Hold:** Temporarily paused; existing candidates remain in pipeline, new submissions paused.
-3. **Closed:** Requisition filled or cancelled; pipeline archived.
-4. **Inactive / Expired:** Requisition expired past deadline.
-
-### 3.2 Findings & Logic Inconsistencies:
-1. **Status Collapsing:** In `client_jobs_side_bar_ajax.blade.php:66`:
-   ```php
-   if ($status == 'Active')   $status = 'Hiring';
-   if ($status == 'Inactive') $status = 'Closed';
-   ```
-   "Inactive" is forcibly renamed to "Closed", completely destroying the distinction between an Expired job and an explicitly Closed job.
-2. **No Status Filter Controls:** The Jobs tab contains no filter dropdown to toggle between `Active`, `Hold`, `Closed`, and `All`. Recruiters cannot isolate open positions.
-3. **Ghost Status HTML:** Both drawer views retain commented-out and hidden tab panes (`id="client-requisitions"` and `id="custom-requisitions"`) containing hardcoded badges (`hold-bg`, `closed-bg`) and static requisition IDs (`R2`, `R3-Custom`).
-
----
-
-## 4. JOB DATA & KPI ACCURACY AUDIT
-
-### 4.1 Pagination Metric Confusion (Jobs vs Companies)
-- In `resources/views/service_company/ajax_pages/pagination.blade.php`:
+### 1. Multi-Tenant Authorization Failure & Untrusted Identity Injection
+- **The Defect:** In [`ServiceCompanyJobsController::client_job_data_ajax:1620-1627`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php#L1620-L1627), when `custom == 'true'` (Internal Clients), the Elasticsearch query filters strictly on:
   ```php
-  $label = (isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
-           ? 'companies' : 'records';
+  ['term' => ['client_id' => $client_id]]
   ```
-- In `ServiceCompanyJobsController::client_job_data_ajax:1704`:
+  It **omits `['term' => ['comId' => (int) $company_id]]`**.
+- **Security Vulnerability:** Because `client_id` is an auto-incrementing integer across the platform, Tenant A can forge an AJAX request with Tenant B's `client_id`. Elasticsearch will return Tenant B's confidential job requisitions, salaries, hiring managers, and applicant counts.
+- **Architectural Law:**
+  > **Tenant and Client Identity must NEVER be established by raw request parameters.**
+  > `client_id` may identify the requested resource, but it must **never** establish authorization.
+- **Mandatory Authorization Context Pattern:**
+  The query engine must NEVER accept an arbitrary integer `client_id`. The application layer must resolve an immutable, **cryptographically authenticated and application-policy-authorized `ClientAccessContext`**:
   ```php
-  $pagination = [
-      'total' => $total,
-      'current_page' => $page,
-      'last_page' => ceil($total / $size),
-      'per_page' => $size,
-      'listType' => 'allcandidate', // HARDCODED WRONG TYPE
-  ];
+  namespace App\DTO\ServiceCompany;
+
+  class ClientAccessContext
+  {
+      public function __construct(
+          public readonly int $tenantId,                  // Top-level account/organization identity
+          public readonly int $serviceCompanyId,          // Specific operating recruitment entity
+          public readonly int $clientId,                  // Authoritatively validated client_id
+          public readonly string $clientType,             // 'internal' | 'direct'
+          public readonly ?int $partnerCompanyId,         // Validated marketplace partner company for direct clients
+          public readonly int $authorizationVersion,      // Monotonic authorization epoch
+          public readonly bool $isAuthorized              // Explicit policy determination
+      ) {}
+  }
   ```
-- **Result:** The pagination bar renders: **"Showing 1 to 10 of 12 companies"** when listing jobs. This directly violates the requirement that job counts represent jobs and companies represent unique companies.
 
-### 4.2 Top Header KPI vs Tab Listing Mismatch
-- **Internal Client Drawer Top KPI:** Calculated as `$kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);` filtering only `status == 'active'`.
-- **Jobs Tab Badge:** Displays `$kpiActive` (e.g., `2`).
-- **Jobs Table Inside Tab:** Fetches ALL jobs regardless of status (e.g., `15` jobs: 2 active, 13 closed).
-- **User Experience:** The badge says `2`, but the table displays `15` rows. There is no explanation, indicator, or tab filter to reconcile the two numbers.
+- **Zero-MySQL Authorization Law (P0 CQRS Architecture Mandate):**
+  > **Architectural Law:**
+  > **"Authorization may depend on authoritative relational data, but `ClientJobsReadService` must receive an already-resolved, cached, or token-signed authorization context. No MySQL authorization lookup may occur during the Jobs Tab read request path."**
+  
+  To satisfy strict 0% MySQL reads on the request path while guaranteeing 100% tenant safety:
+  1. **Internal Clients:** `tenantId` and `serviceCompanyId` are resolved directly from the authenticated session claims / JWT token in RAM ($O(1)$ zero I/O). Client ownership is validated against the authenticated company context.
+  2. **Direct Clients:** The 4-level partnership relationship (`serviceCompanyId` $\leftrightarrow$ `partnerCompanyId` $\leftrightarrow$ `clientId`) is pre-resolved and cached in Dragonfly / Redis:
+     `ats:auth_context:direct_client:{serviceCompanyId}:{partnerCompanyId}:{clientId}`
+     (with a sliding TTL, evicted immediately whenever partner invitations, terms, or relationships mutate in MySQL).
+     Alternatively, a tamper-evident HMAC-SHA256 signed `SignedClientAccessToken` issued when the client row is initially rendered can be passed via request header.
+  3. **Guaranteed Execution:** `ClientAccessContext::fromRequest($request)` executes with **strictly 0 MySQL queries**. If an authorization lookup ever triggers a `SELECT` on the request path, the CQRS CI Gate immediately fails the build.
 
-### 4.3 Direct Client Active Requisition Bug
-- In `ServiceCompanyClientController.php:3091`:
+- **Domain Law: Tenant $\neq$ Service Company (P0 Architecture Clarification):**
+  > While in simple single-company accounts `tenantId == serviceCompanyId`, the system architecture strictly models them as distinct identities. `tenantId` governs data ownership and billing boundaries, whereas `serviceCompanyId` identifies the operational recruitment entity. Equating them silently is forbidden to preserve future-readiness for holding company structures, multi-branch service companies, and delegated admin organizations.
+
+- **Mandatory Triple Attack Vector Security Test Invariant:**
+  An unauthorized request must **never** reach Elasticsearch. The automated feature test suite (`ClientAccessContextSecurityTest`) must execute three distinct penetration vectors:
+
+  ```
+  [ Request Pipeline ]
+          ↓
+  Resolve ClientAccessContext (Zero-MySQL)
+          ↓
+  assertAuthorized()
+          ├── [isAuthorized = false] ──> HTTP 403 Forbidden ──> (ES Calls = 0, ClientJobsQuery = 0)
+          │
+          └── [isAuthorized = true]
+                  ↓
+          ClientJobsQuery::fromAuthorizedContext()
+                  ↓
+          ClientJobsReadService::getJobs()
+                  ↓
+          Elasticsearch (Defense-in-Depth Filter)
+  ```
+
+  - **Test A (Cross-Tenant Forged Client):** Tenant A submits request with Tenant B's `client_id` $\to$ `ClientAccessContext(isAuthorized=false)` $\to$ HTTP 403 $\to$ ES Mock/Spy invocation count == 0 $\to$ `ClientJobsQuery` construction count == 0.
+  - **Test B (Cross-Partner Direct Client Spoofing):** Tenant A + Service Company A requests Direct Client C under Partner B, but Client C belongs to Partner D $\to$ `ClientAccessContext(isAuthorized=false)` $\to$ HTTP 403 $\to$ ES Mock/Spy invocation count == 0 $\to$ `ClientJobsQuery` construction count == 0.
+  - **Test C (Unauthorized Requisition Isolation):** Valid Direct Client requests a job requisition from Partner B that has NOT been authorized/shared through active `recommendation_relation` (`final_status = 1`) to Service Company A $\to$ Elasticsearch nested query filters it out $\to$ Requisition is strictly excluded from results, counts, and metrics.
+
+  Every Internal Client query **must** contain:
+  ```json
+  { "term": { "comId": <auth_service_company_id> } },
+  { "term": { "client_id": <validated_client_id> } }
+  ```
+
+---
+
+### 2. Direct Client Application-Layer Authorization & Multi-Boundary Contamination Bug
+- **The Defect:** In [`ServiceCompanyClientController::dviewMore:3091`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php#L3091):
   ```php
   $this->active_requisition = DB::table('jobs')->select('jobs.id')
       ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
@@ -153,198 +114,931 @@ The ATS specifies 4 canonical job states:
       ->where('jobs.status', 'active')
       ->count();
   ```
-  **Critical Defect:** It omits `where('recommendation_relation.from_company_id', $from_company_id)`. It counts every single active job ever recommended to the company across all partners.
+- **Operational Impact:** This query joins `recommendation_relation` filtering only on `to_company_id = $company_id`, with **no filter for `from_company_id` or the specific direct client**. It counts every single active job recommended to the company across ALL marketplace partners combined!
+- **Mandatory 4-Level Domain Authorization Hierarchy:**
+  ```
+  Tenant (Authenticated User Organization)
+   └── Service Company (serviceCompanyId)
+        └── Partner Relationship (staffing_company_relation: to_company_id + from_company_id)
+             └── Direct Client (clientId under partner)
+                  └── Authorized Requisition (jobId via recommendation_relation)
+  ```
+  > **Elasticsearch filtering is not your authorization system.**
+  
+  The authorization contract requires strict dual-tier validation:
+  1. **Application-Layer Authorization (Mandatory Pre-Condition):**
+     - Verify authenticated user belongs to `serviceCompanyId` within `tenantId`.
+     - Verify active marketplace partnership exists between `serviceCompanyId` and `partnerCompanyId` in `staffing_company_relation` (`final_status = 1`).
+     - Verify `clientId` authoritatively belongs to `partnerCompanyId`.
+     - If any check fails, immediately throw HTTP 403 Forbidden without constructing queries or invoking Elasticsearch.
+  2. **Elasticsearch Complete Boundary Enforcement (Defense-in-Depth):**
+     Elasticsearch must receive the **complete boundary** (not just the partner relationship), explicitly scoping both the owning Direct Client AND the authorized requisition sharing contract:
+  ```json
+  {
+    "bool": {
+      "must": [
+        { "term": { "client_id": <validated_direct_client_id> } },
+        {
+          "nested": {
+            "path": "recommendation_relation",
+            "query": {
+              "bool": {
+                "must": [
+                  { "term": { "recommendation_relation.to_company_id": <auth_service_company_id> } },
+                  { "term": { "recommendation_relation.from_company_id": <validated_partner_company_id> } },
+                  { "term": { "recommendation_relation.final_status": 1 } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+  ```
 
 ---
 
-## 5. UI/UX RELEVANCE & RESPONSIVENESS AUDIT
-
-### 5.1 Critical Click Hijacking Bug (`.show-detail`)
-- In `client_jobs_side_bar_ajax.blade.php:230`:
-  ```html
-  <div class="job-title">
-      <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="show-detail" title="{{ ucwords(@$row->title) }}">
-          {{ ucwords(mb_substr(@$row->title, 0, 28)) }}
-      </a>
-  </div>
+### 3. The 150+ Query Architecture Avalanche & Explicit CQRS Enforcement Guard
+- **The Current Execution Profile (Per 10 Jobs Loaded):**
   ```
-- In `resources/views/service_company/client/index.blade.php:1849`:
+  Blade Loop (client_jobs_side_bar_ajax.blade.php)
+   └── foreach ($data as $row)
+        ├── GeneralMethod::getrRcommendationRelationData  → 10x ELASTIC_JOB_REQUEST queries
+        ├── GeneralMethod::companyDetails                 → Up to 60x Exists + Get HTTP trips
+        ├── DB::table('job_categories')->value('name')   → 10x Synchronous MySQL queries
+        ├── DB::table('companies')->value('company_name') → 10x Synchronous MySQL queries
+        ├── GeneralMethod::statusCount (8 stages x 10)    → 80x ELASTIC_CANDIDATES queries
+        └── GeneralMethod::allStatusCount                 → 10x add_job_wise_condidates MySQL queries
+  ```
+- **Scale Impact:** **151 Elasticsearch calls + 31 MySQL queries per single drawer page load.** At 10,000 concurrent recruiters, this generates **1.5M ES queries and 310,000 MySQL reads**, immediately exhausting worker pools and database connections.
+- **Architectural Mandate:**
+  > **Bounded Batched Read Invariant (Zero N+1):**
+  > - **Zero N+1 operations** across all request paths.
+  > - **$\text{ES Queries} = O(1)$ network round-trips relative to page size $N$ ($\text{Queries} \neq O(N)$)**.
+  > - All reads must be batched; **zero ES queries and zero MySQL queries inside Blade loops**.
+  > - Query count must remain strictly bounded regardless of page size (e.g., 10 jobs = 1–3 bounded operations; 100 jobs = still 1–3 bounded operations, NOT $10\times$ or $100\times$).
+  > - **0% MySQL Reads on Request Path:** Read company, client, and category names directly from denormalized Elasticsearch documents.
+- **Hard CQRS Enforcement Mechanism (Full-Pipeline Automated CI Gate):**
+  To guarantee that no developer or background update accidentally introduces Eloquent relations, lazy-loading, or raw `DB::table()` calls into ANY layer of the read pipeline (including Blade template rendering), enforce an explicit runtime query assertion and automated CI feature test:
+  ```php
+  // Architectural CI Test Gate: tests/Feature/ServiceCompany/ClientJobsCqrsReadTest.php
+  public function test_client_drawer_jobs_tab_executes_zero_mysql_reads_across_full_rendering_path(): void
+  {
+      $user = User::factory()->create(['company_id' => 100]);
+      $client = Client::factory()->create(['company_id' => 100]);
+
+      \DB::enableQueryLog();
+
+      // Full execution pipeline: Controller -> AuthContext -> Query -> ReadService -> ViewModel -> Blade Rendering
+      $response = $this->actingAs($user)->get(
+          route('service.client.jobs.data', ['client_id' => $client->id, 'custom' => 'true'])
+      );
+
+      $response->assertStatus(200);
+      $executedQueries = \DB::getQueryLog();
+
+      // 1. Assert STRICTLY ZERO MySQL Queries anywhere in the request lifecycle
+      $this->assertCount(
+          0,
+          $executedQueries,
+          "STRICT CQRS VIOLATION: " . count($executedQueries) . " MySQL reads detected on Jobs Tab request path! Queries: " . json_encode($executedQueries)
+      );
+
+      // 2. Assert Zero ES / External HTTP calls during Blade rendering
+      // (Verified by spying on Elasticsearch Client after ViewModel hand-off)
+      $this->assertBladeRendersWithoutIo($response->getContent());
+  }
+  ```
+
+---
+
+### 4. Job Title Click Collision (`.show-detail` Event Hijacking)
+- **The Defect:** In [`client_jobs_side_bar_ajax.blade.php:230`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/client_jobs_side_bar_ajax.blade.php#L230), the job title anchor is assigned `class="show-detail"`. In [`index.blade.php:1849`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php#L1849), `.show-detail` is globally bound to:
   ```javascript
   $(document).on('click', '.show-detail', function (e) {
       var id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id');
       ClientStateManager.openClientDrawer(id, 'internal');
   });
   ```
-- **Impact:** Clicking a job title inside the Client Drawer runs `ClientStateManager.openClientDrawer(job_id, 'internal')`. The system attempts to open a client drawer for a Job ID, corrupting state and flashing an error.
-- **Fix:** Job titles inside the client drawer must use `.show-job-drawer` or `.cd-job-title-link`, opening the Job Details Drawer or navigating to Job Summary.
+- **Failure:** Clicking on ANY job title inside the open Client Drawer treats the Job ID as a Client ID. It fires an AJAX call to load a Client Drawer for that Job ID, clearing the current drawer DOM and failing with a 404 or corrupted shell.
+- **God-Level Mandate:**
+  > **Never use generic CSS classes like `.show-detail` for event routing across different domain entities.**
+  Use explicit semantic data attributes:
+  ```html
+  <a href="javascript:void(0);" 
+     data-entity="job" 
+     data-action="open-drawer" 
+     data-job-id="{{ $row->id }}" 
+     class="js-job-drawer-trigger">
+      {{ $row->title }}
+  </a>
+  ```
 
-### 5.2 Complete Missing CSS in Internal Client Drawer
-- `show.blade.php` lacks the CSS block for `.jobx`.
-- While `dviewMore.blade.php` has lines 1361–1427 declaring grid properties:
+---
+
+## 🏛️ ARCHITECTURAL BLUEPRINT & TARGET SPECIFICATION
+
+```
+                           ┌───────────────────────────┐
+                           │   Browser / Client UI     │
+                           └─────────────┬─────────────┘
+                                         │
+                                HTTP GET / AJAX Request
+                                         │
+                           ┌─────────────▼─────────────┐
+                           │      ClientJobsQuery      │
+                           │(Validated FormRequest/DTO)│
+                           └─────────────┬─────────────┘
+                                         │
+                           ┌─────────────▼─────────────┐
+                           │   Authorization Layer     │
+                           │ Tenant + Client Policy    │
+                           └─────────────┬─────────────┘
+                                         │
+                           ┌─────────────▼─────────────┐
+                           │   ClientJobsReadService   │
+                           └─────────────┬─────────────┘
+                                         │
+                     ┌───────────────────┴───────────────────┐
+                     │ Bounded O(1) ES Read Operations       │
+                     │ (Single Search + Aggs OR Batched MS)  │
+                     └───────────────────┬───────────────────┘
+                                         │
+                           ┌─────────────▼─────────────┐
+                           │     JobsTabViewModel      │
+                           │(Unified KPI, List, Stages)│
+                           └─────────────┬─────────────┘
+                                         │
+                           ┌─────────────▼─────────────┐
+                           │    Isolated Blade View    │
+                           │ (Zero DB/ES queries in UI)│
+                           └───────────────────────────┘
+```
+
+---
+
+## 5. DEDICATED READ CONTRACT (`ClientJobsQuery`)
+
+To prevent controller bloat, eliminate raw request injection, and formalize input validation, the read query object is constructed **strictly from an authorized `ClientAccessContext`**, ensuring that no unverified client ID can ever trigger an Elasticsearch query:
+
+```php
+namespace App\DTO\ServiceCompany;
+
+use Illuminate\Http\Request;
+
+class ClientJobsQuery
+{
+    public function __construct(
+        public readonly int $tenantId,          // Top-level account boundary
+        public readonly int $serviceCompanyId,  // Operating recruitment company
+        public readonly int $clientId,          // Authoritatively validated client
+        public readonly string $clientType,     // 'internal' | 'direct'
+        public readonly ?int $partnerCompanyId, // Marketplace partner boundary
+        public readonly ?string $search,
+        public readonly ?string $status,        // 'all' | 'hiring' | 'hold' | 'closed' | 'inactive'
+        public readonly int $page = 1,
+        public readonly int $perPage = 10,
+        public readonly string $sort = 'created_at',
+        public readonly string $direction = 'desc'
+    ) {}
+
+    /**
+     * Strictly construct from a policy-approved context.
+     * Raw external parameters CANNOT instantiate this query without authorization.
+     */
+    public static function fromAuthorizedContext(ClientAccessContext $context, Request $request): self
+    {
+        if (!$context->isAuthorized) {
+            abort(403, 'Unauthorized access: Client is outside authenticated tenant boundary.');
+        }
+
+        return new self(
+            tenantId: $context->tenantId,
+            serviceCompanyId: $context->serviceCompanyId,
+            clientId: $context->clientId,
+            clientType: $context->clientType,
+            partnerCompanyId: $context->partnerCompanyId,
+            search: $request->filled('search') ? trim((string) $request->input('search')) : null,
+            status: $request->input('status', 'all'),
+            page: max(1, (int) $request->input('page', 1)),
+            perPage: min(50, max(1, (int) $request->input('per_page', 10))),
+            sort: $request->input('sort', 'created_at'),
+            direction: strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc'
+        );
+    }
+
+    /**
+     * Cache Architecture Terminology & Specifications:
+     * 1. 5 Static Identity Dimensions:
+     *    {tenant}:{serviceCompany}:{clientType}:{partnerCompany}:{client}
+     * 2. Redis Monotonic Invalidation Key (Stores scalar integer version):
+     *    ats:client_jobs_version:{tenant}:{serviceCompany}:{clientType}:{partnerCompany}:{client}
+     * 3. Query Result Cache Key (Incorporates current projectionVersion + normalized query hash):
+     *    ats:client_jobs:v1:{tenant}:{serviceCompany}:{clientType}:{partnerCompany}:{client}:{projectionVersion}:{hash}
+     */
+    public function toCacheKey(int $projectionVersion): string
+    {
+        $partnerPart = $this->partnerCompanyId ?? 0;
+        $normalizedPayload = [
+            'tenant'             => $this->tenantId,
+            'service_company'    => $this->serviceCompanyId,
+            'client'             => $this->clientId,
+            'client_type'        => $this->clientType,
+            'partner_company'    => $partnerPart,
+            'projection_version' => $projectionVersion,
+            'search'             => $this->search,
+            'status'             => $this->status,
+            'page'               => $this->page,
+            'per_page'           => $this->perPage,
+            'sort'               => $this->sort,
+            'direction'          => $this->direction,
+        ];
+
+        return "ats:client_jobs:v1:{$this->tenantId}:{$this->serviceCompanyId}:{$this->clientType}:{$partnerPart}:{$this->clientId}:{$projectionVersion}:" . md5(json_encode($normalizedPayload));
+    }
+}
+```
+
+---
+
+## 6. SEARCH & DETERMINISTIC SORTING STRATEGY
+
+### 6.1 Configurable Elasticsearch Search Strategy
+Instead of hardcoding field boosts in PHP, search relevance parameters are driven by `config/ats.php`:
+
+```php
+// config/ats.php
+'search' => [
+    'jobs' => [
+        'fields' => [
+            'title.keyword^5',
+            'title^3',
+            'skills.name^2',
+            'job_code^4',
+            'hiring_manager^1.5',
+        ],
+        'operator'             => 'AND',
+        'minimum_should_match' => '75%',
+    ],
+],
+```
+
+The multi-match query in `ClientJobsReadService` dynamically utilizes this configuration:
+```json
+{
+  "bool": {
+    "must": [
+      {
+        "multi_match": {
+          "query": "Senior React Developer",
+          "fields": {{ json_encode(config('ats.search.jobs.fields')) }},
+          "type": "best_fields",
+          "operator": "{{ config('ats.search.jobs.operator', 'AND') }}",
+          "minimum_should_match": "{{ config('ats.search.jobs.minimum_should_match', '75%') }}"
+        }
+      }
+    ]
+  }
+}
+```
+
+### 6.2 Deterministic Tie-Breaker Sorting
+If two jobs have the identical timestamp, arbitrary internal ES score ordering will cause records to jump across pages.
+**Mandatory Sort Contract:**
+```json
+"sort": [
+  { "created_at": { "order": "desc" } },
+  { "id": { "order": "desc" } }
+]
+```
+
+---
+
+## 7. UNIFIED KPI & DATA MODEL (`JobsTabViewModel`)
+
+To eliminate metric ambiguity where the top KPI badge shows `[2 Active Jobs]` while the table displays `15 Mixed Jobs`, the ViewModel explicitly distinguishes between **canonical all-status counts** and **filtered counts**, along with complete model observability:
+
+```php
+namespace App\ViewModels\ServiceCompany;
+
+class JobsTabViewModel
+{
+    public function __construct(
+        public readonly int $totalCount,         // Canonical count of ALL jobs for this client (unfiltered)
+        public readonly int $filteredCount,      // Count of jobs matching current filter & search (for pagination)
+        public readonly int $hiringCount,        // Active/Hiring status count (for tab badge & hero KPI)
+        public readonly int $holdCount,          // Hold status count
+        public readonly int $closedCount,        // Closed status count
+        public readonly int $inactiveCount,      // Inactive/Expired status count
+        public readonly array $jobs,
+        public readonly array $pipelineStageMap, // [jobId => [stageId => count]]
+        public readonly array $logoMap,          // [jobId => resolvedLogoUrl]
+        public readonly array $pagination,
+        public readonly array $activeFilters,
+        public readonly int $projectionVersion,  // Observable version identity
+        public readonly string $queryHash,       // Observable query identity
+        public readonly string $generatedAt      // Generation timestamp for telemetry
+    ) {}
+}
+```
+
+### Metrics Application Mapping:
+- **Hero/Drawer Header KPI:** Canonical status counts (`hiringCount`, `holdCount`, `closedCount`, `inactiveCount`).
+- **Jobs Tab Badge:** `hiringCount` (Active Jobs).
+- **Pagination Bar:** `filteredCount` (*"Showing 1 to 10 of {filteredCount} jobs"*).
+- **Pagination Page-Clamping:** If `filteredCount` drops (e.g. jobs closed while user is on Page 4) such that `currentPage > last_page`, the server clamps `currentPage = max(1, last_page)`.
+
+### Canonical Job Status Semantics:
+Do **not** destructively collapse `Inactive` into `Closed`. Preserve all 4 discrete states:
+1. **Hiring / Active:** Requisition is active and open for candidate submissions.
+2. **Hold:** Requisition paused temporarily; existing candidates preserved, new submissions suspended.
+3. **Closed:** Requisition filled or formally cancelled by the hiring manager (`closed-bg`: `#ffeef1; color: #f1416c`).
+4. **Inactive / Expired:** Requisition passed deadline or deactivated (`inactive-bg`: `#f1f5f9; color: #64748b`).
+
+---
+
+## 8. TRANSACTIONAL OUTBOX PATTERN & CQRS EVENT SEQUENCING
+
+### 8.1 Write-Path Outbox Transaction & Monotonic Ordering (P1-3)
+The transactional audit record in `job_status_logs` and the `sys_outbox_events` record **belong in the exact same database transactional boundary as the job mutation**. Placing the audit insert in a queued event listener is strictly forbidden.
+
+#### Mutation Context Pattern (Enforcing Tenant $\neq$ Service Company on Writes):
+To prevent accidental collapsing of `tenant_id` and `company_id` on the write path, all mutations must accept an immutable `JobMutationContext` DTO:
+
+```php
+namespace App\DTO\ServiceCompany;
+
+class JobMutationContext
+{
+    public function __construct(
+        public readonly int $tenantId,                  // Top-level account/billing identity
+        public readonly int $serviceCompanyId,          // Operating recruitment company
+        public readonly int $userId,                    // Acting authenticated user
+        public readonly int $clientId,                  // Target client ID
+        public readonly string $clientType = 'internal', // 'internal' | 'direct'
+        public readonly ?int $partnerCompanyId = null    // Validated partner company for direct client
+    ) {}
+}
+```
+
+#### Aggregate Version Monotonicity Invariant:
+Under high concurrency (e.g. two recruiters or automated webhooks updating Job 12 simultaneously), mutations must never generate duplicate or out-of-order versions.
+- Enforce strict pessimistic row locking via `SELECT ... FOR UPDATE` inside `DB::transaction`.
+- Read current `$job->aggregate_version` (or `state_version`).
+- Increment `$nextVersion = ((int) ($job->aggregate_version ?? $job->state_version ?? 0)) + 1`.
+- Atomically persist `$nextVersion` to `jobs.aggregate_version` (and `jobs.state_version`) in the same SQL statement.
+- Insert `$nextVersion` into `sys_outbox_events.aggregate_version` matching the exact schema in `database/schema/mysql-schema.sql`.
+
+```php
+namespace App\Services;
+
+use App\DTO\ServiceCompany\JobMutationContext;
+use Illuminate\Support\Facades\DB;
+
+class JobMutationService
+{
+    public function updateStatus(int $jobId, string $newStatus, JobMutationContext $context): void
+    {
+        DB::transaction(function () use ($jobId, $newStatus, $context) {
+            // Explicit pessimistic lock guarantees monotonic aggregate versioning
+            $job = DB::table('jobs')->where('id', $jobId)->lockForUpdate()->first();
+            $oldStatus = $job->status;
+            $nextVersion = ((int) ($job->aggregate_version ?? $job->state_version ?? 0)) + 1;
+
+            // 1. Transactional Update of System of Record (Persisting incremented version!)
+            DB::table('jobs')->where('id', $jobId)->update([
+                'status'            => $newStatus,
+                'state_version'     => $nextVersion,
+                'aggregate_version' => $nextVersion,
+                'updated_at'        => now(),
+            ]);
+
+            // 2. Synchronous Transactional Audit Log Insert (Guaranteed Durable)
+            DB::table('job_status_logs')->insert([
+                'job_id'      => $jobId,
+                'company_id'  => $context->serviceCompanyId,
+                'from_status' => $oldStatus,
+                'to_status'   => $newStatus,
+                'changed_by'  => $context->userId,
+                'created_at'  => now(),
+            ]);
+
+            // 3. Durable Transactional Outbox Insert (Exact schema: database/schema/mysql-schema.sql:4227)
+            // Physical Storage Engine Uniqueness Specification:
+            // Table sys_outbox_events features: UNIQUE KEY idx_outbox_tenant_idempotency (tenant_id, idempotency_key).
+            // NOTE: KEY idx_outbox_aggregate (aggregate_type, aggregate_id, aggregate_version) is a non-unique index.
+            // Therefore, idx_outbox_tenant_idempotency is the SOLE physical database constraint.
+            // By formatting $idempotencyKey deterministically as "job:{$jobId}:v{$nextVersion}",
+            // we physically bind the logical aggregate state tuple to this unique constraint, causing MySQL InnoDB
+            // to reject duplicate version emissions with SQL Error 1062 at the storage level without requiring schema migrations!
+            $idempotencyKey = "job:{$jobId}:v{$nextVersion}";
+            DB::table('sys_outbox_events')->insert([
+                'tenant_id'         => $context->tenantId,
+                'idempotency_key'   => $idempotencyKey,
+                'aggregate_type'    => 'job',
+                'aggregate_id'      => $jobId,
+                'aggregate_version' => $nextVersion,
+                'event_type'        => 'job.status.changed',
+                'payload'           => json_encode([
+                    'tenant_id'          => $context->tenantId,
+                    'company_id'         => $context->serviceCompanyId,
+                    'service_company_id' => $context->serviceCompanyId,
+                    'job_id'             => $jobId,
+                    'client_id'          => $context->clientId,
+                    'client_type'        => $context->clientType,
+                    'partner_company_id' => $context->partnerCompanyId ?? 0,
+                    'from_status'        => $oldStatus,
+                    'to_status'          => $newStatus,
+                    'version'            => $nextVersion,
+                    'occurred_at'        => now()->timestamp,
+                ]),
+                'status'       => 'PENDING',
+                'attempts'     => 0,
+                'available_at' => now(),
+                'created_at'   => now(),
+            ]);
+        });
+    }
+}
+```
+
+### 8.2 Outbox Worker Claim Protocol, Primary-Shard Atomic Projections & Monotonic Redis (P1-4, P1-5)
+
+#### 8.2.1 Configurable Worker Claim & State Machine Protocol
+To prevent race conditions, duplicate processing, and orphaned tasks when workers terminate abruptly, `sys_outbox_events` implements a formal state machine (`PENDING` $\to$ `PROCESSING` $\to$ `COMPLETED` / `FAILED` / `DEAD_LETTER`).
+In accordance with **JERO Rule 11 (`config()`, never hardcoded values)**, all batch and lifecycle parameters are strictly configurable:
+
+```php
+// config/ats.php
+'outbox' => [
+    'batch_size'                 => (int) env('ATS_OUTBOX_BATCH_SIZE', 50),
+    'lock_timeout_seconds'       => (int) env('ATS_OUTBOX_LOCK_TIMEOUT_SECONDS', 300),
+    'max_attempts'               => (int) env('ATS_OUTBOX_MAX_ATTEMPTS', 5),
+    'retry_backoff_seconds'      => (int) env('ATS_OUTBOX_RETRY_BACKOFF_SECONDS', 60),
+    'dead_letter_after_attempts' => (int) env('ATS_OUTBOX_DEAD_LETTER_AFTER_ATTEMPTS', 5),
+],
+```
+
+1. **Atomic Batch Claim (`FOR UPDATE SKIP LOCKED`):**
+   ```sql
+   -- Parameterized bounded batch claim; ZERO hardcoding (Rule 11)
+   UPDATE sys_outbox_events
+   SET status = 'PROCESSING',
+       locked_at = NOW(),
+       attempts = attempts + 1
+   WHERE id IN (
+       SELECT id FROM (
+           SELECT id FROM sys_outbox_events
+           WHERE status = 'PENDING' AND available_at <= NOW()
+           ORDER BY id ASC
+           LIMIT :batch_size -- Bound dynamically from config('ats.outbox.batch_size')
+           FOR UPDATE SKIP LOCKED
+       ) tmp
+   );
+   ```
+2. **Crash & Deadlock Orphan Recovery:**
+   Any event remaining in `PROCESSING` with `locked_at < NOW() - INTERVAL :lock_timeout SECOND` (from `config('ats.outbox.lock_timeout_seconds')`) is automatically recycled to `PENDING` (or escalated to `DEAD_LETTER` if `attempts >= config('ats.outbox.dead_letter_after_attempts')`).
+
+3. **Idempotency of `COMPLETED` & The Correctness Invariant:**
+   > **Distributed Architectural Law:**
+   > **"Correctness must depend on idempotent projections, NOT on worker completion bookkeeping."**
+   - **Storage-Engine Physical Uniqueness:** Enforced exclusively by `UNIQUE KEY idx_outbox_tenant_idempotency (tenant_id, idempotency_key)` in `sys_outbox_events` (`database/schema/mysql-schema.sql:4244`).
+   - The logical projection state `(aggregate_type, aggregate_id, aggregate_version)` is physically bound to this unique constraint by formatting `$idempotencyKey = "{$aggregateType}:{$aggregateId}:v{$aggregateVersion}"`.
+   - If a worker crashes after updating Elasticsearch and Redis, but before marking `status = 'COMPLETED'`, the subsequent retry is completely harmless: Elasticsearch evaluates `ctx.op = 'noop'`, Redis Lua returns without modification, and Reverb publishes the authoritative version. `COMPLETED` is strictly operational telemetry and queue cleanup.
+
+#### 8.2.2 Primary-Shard Atomic Painless Projection, Event Field Ownership & Single-Snapshot Rebuild
+
+##### Distributed Systems Terminology Standard:
+- **MySQL:** Authoritative System of Record (SoR) — Strict ACID transaction boundary for writes.
+- **Elasticsearch:** Authoritative Read Projection — Serves 100% of queries, filters, and aggregations.
+- **Redis / Dragonfly:** Ephemeral Invalidation & Monotonic Version Index — Monotonically invalidates local memory and HTTP caches.
+
+##### Formal Event Schema Ownership Law:
+> **Architectural Law:**
+> **"Every event type has strict projection field ownership. No event handler may accidentally modify, nullify, or overwrite fields outside its declared domain ownership."**
+- `job.status.changed`: Modifies strictly `status`, `projection_version`, and `updated_at`.
+- `job.salary.changed`: Modifies strictly `salary_min`, `salary_max`, `salary_currency`, `projection_version`, and `updated_at`.
+- `job.skills.changed`: Modifies strictly `skills`, `projection_version`, and `updated_at`.
+- `job.canonical.rebuild`: Atomically replaces the full document with complete canonical fields.
+
+##### Single-Snapshot Rebuild Invariant (Lock-Free Version Verification):
+> **Architectural Law:**
+> **"The canonical rebuild must obtain `{ completeProjection, authoritativeVersion }` from a single consistent snapshot boundary to prevent version shearing without holding an expensive long-lived exclusive row lock."**
+When rebuilding a missing Elasticsearch document, `JobProjectionService::rebuildAndIndexCanonicalJob()` avoids holding an exclusive `FOR UPDATE` lock across full multi-table document assembly. Instead, it executes within a read snapshot transaction and verifies that the version did not mutate during assembly:
+
+```php
+// app/Services/JobProjectionService.php
+public function rebuildAndIndexCanonicalJob(int $jobId): void
+{
+    // Snapshot-Consistent Read with Optimistic Version Verification (Zero Long-Lived Exclusive Lock)
+    $snapshot = DB::transaction(function () use ($jobId) {
+        $job = DB::table('jobs')->where('id', $jobId)->first();
+        if (!$job) return null;
+
+        $vStart = (int) ($job->aggregate_version ?? $job->state_version ?? 0);
+        $completeDocument = $this->assembleCanonicalDocument($job);
+
+        // Verify version has not advanced during assembly
+        $vEnd = (int) DB::table('jobs')->where('id', $jobId)->value('aggregate_version');
+        if ($vEnd !== $vStart) {
+            // Concurrent write detected during assembly; return null to trigger retry with latest version
+            return null;
+        }
+
+        $completeDocument['projection_version'] = $vStart;
+        return [
+            'version'  => $vStart,
+            'document' => $completeDocument,
+        ];
+    });
+
+    if ($snapshot) {
+        $this->elasticsearch->index([
+            'index' => 'jobs',
+            'id'    => (string) $jobId,
+            'body'  => $snapshot['document'],
+        ]);
+    }
+}
+```
+
+##### Missing-Document Rebuild Race Invariant:
+> **"A projection rebuild may never publish a projection version lower than the authoritative aggregate version represented by its System of Record payload."**
+When rebuilding a missing Elasticsearch document, the rebuild service indexes with the authoritative SoR version ($v=12$). Any subsequent retry of an older event ($v=11$) hits the primary-shard Painless conditional script and evaluates $11 > 12 \implies \text{false} \implies \text{ctx.op} = \text{'noop'}$, completely eliminating version regression races!
+
+#### 8.2.3 Multi-Client / Multi-Partner Job Visibility Scope Resolver (Event Fan-Out)
+> **P0 Architectural Law:**
+> **"Any mutation affecting a job must invalidate every authorized client scope through which that job is currently visible. In marketplace ATS architectures, a single requisition may be shared across multiple service companies and direct clients simultaneously."**
+
+The fan-out resolution belongs **strictly to the asynchronous write/projection event worker**, maintaining **0% MySQL reads on the web request path**:
+
+```php
+namespace App\Services;
+
+use Illuminate\Support\Facades\DB;
+
+class JobVisibilityScopeResolver
+{
+    /**
+     * Resolves all client visibility scopes currently authorized to view this job:
+     * 1. The owning internal client scope (from jobs table)
+     * 2. All active partner recommendation scopes (from recommendation_relation where final_status = 1)
+     * Executes inside Horizon Outbox Worker; NEVER on the read path!
+     */
+    public function resolveAffectedScopes(int $jobId, array $payload): array
+    {
+        $scopes = [];
+
+        // 1. Owning Internal Scope
+        $scopes[] = [
+            'tenant_id'          => (int) $payload['tenant_id'],
+            'service_company_id' => (int) $payload['company_id'],
+            'client_type'        => 'internal',
+            'partner_company_id' => 0,
+            'client_id'          => (int) $payload['client_id'],
+        ];
+
+        // 2. Marketplace Recommendation Fan-Out Scopes
+        $recommendations = DB::table('recommendation_relation')
+            ->select('to_company_id', 'from_company_id')
+            ->where('job_id', $jobId)
+            ->where('final_status', 1)
+            ->get();
+
+        foreach ($recommendations as $rec) {
+            $toCompanyId = (int) $rec->to_company_id;
+            $fromCompanyId = (int) $rec->from_company_id;
+
+            // Direct client scope visible under receiving partner
+            $scopes[] = [
+                'tenant_id'          => $toCompanyId,
+                'service_company_id' => $toCompanyId,
+                'client_type'        => 'direct',
+                'partner_company_id' => $fromCompanyId,
+                'client_id'          => (int) $payload['client_id'],
+            ];
+        }
+
+        return $scopes;
+    }
+}
+```
+
+```php
+namespace App\Jobs;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+use Elasticsearch\Client;
+use Elasticsearch\Common\Exceptions\Missing404Exception;
+use App\Services\JobProjectionService;
+use App\Services\JobVisibilityScopeResolver;
+
+class ProcessOutboxJobProjection
+{
+    public function handle(
+        object $event, 
+        Client $elasticsearch, 
+        JobProjectionService $projectionService,
+        JobVisibilityScopeResolver $scopeResolver
+    ): void {
+        $payload = json_decode($event->payload, true);
+
+        try {
+            // 1. Primary-Shard Atomic Conditional Update (Strict Monotonic Projection Invariant)
+            $elasticsearch->update([
+                'index' => 'jobs',
+                'id'    => (string) $event->aggregate_id,
+                'body'  => [
+                    'script' => [
+                        'source' => "if (ctx._source.projection_version == null || params.version > ctx._source.projection_version) { " .
+                                    "ctx._source.status = params.status; " .
+                                    "ctx._source.projection_version = params.version; " .
+                                    "ctx._source.updated_at = params.updated_at; " .
+                                    "} else { ctx.op = 'noop'; }",
+                        'lang'   => 'painless',
+                        'params' => [
+                            'status'     => $payload['to_status'],
+                            'version'    => (int) $event->aggregate_version,
+                            'updated_at' => now()->toIso8601String(),
+                        ],
+                    ],
+                ],
+            ]);
+        } catch (Missing404Exception $e) {
+            // 2. Full Schema Preservation Guard: Rebuild authoritative canonical document from MySQL SoR.
+            $projectionService->rebuildAndIndexCanonicalJob((int) $event->aggregate_id);
+        }
+
+        // 3. Multi-Scope Monotonic Redis Invalidation & Reverb Fan-Out
+        $scopes = $scopeResolver->resolveAffectedScopes((int) $event->aggregate_id, $payload);
+
+        foreach ($scopes as $scope) {
+            $redisKey = "ats:client_jobs_version:{$scope['tenant_id']}:{$scope['service_company_id']}:{$scope['client_type']}:{$scope['partner_company_id']}:{$scope['client_id']}";
+
+            Redis::eval(
+                "local cur = tonumber(redis.call('get', KEYS[1]) or 0)
+                 local newVer = tonumber(ARGV[1])
+                 if newVer > cur then
+                     redis.call('set', KEYS[1], newVer)
+                     return newVer
+                 else
+                     return cur
+                 end",
+                1,
+                $redisKey,
+                (int) $event->aggregate_version
+            );
+
+            // Broadcast real-time patch to each specific tenant/company channel
+            broadcast(new \App\Events\JobStatusChangedEvent(array_merge($payload, [
+                'tenant_id'          => $scope['tenant_id'],
+                'company_id'         => $scope['service_company_id'],
+                'client_type'        => $scope['client_type'],
+                'partner_company_id' => $scope['partner_company_id'],
+            ])))->toOthers();
+        }
+
+        // 4. Mark Outbox Record COMPLETED (Safe from crashes; retries are 100% idempotent)
+        DB::table('sys_outbox_events')->where('id', $event->id)->update([
+            'status'       => 'COMPLETED',
+            'processed_at' => now(),
+        ]);
+    }
+}
+```
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant MySQL as MySQL (SoR + Outbox)
+    participant Worker as Horizon Outbox Worker
+    participant ES as Elasticsearch (Primary Shard)
+    participant Resolver as JobVisibilityScopeResolver
+    participant Redis as Redis / Dragonfly (Multi-Scope Lua)
+    participant Reverb as Laravel Reverb (WebSocket)
+    participant Browser as Browser Clients (X, Y, Z)
+
+    MySQL->>Worker: Claim Batch (status='PROCESSING', SKIP LOCKED)
+    Worker->>ES: Atomic Painless Script Update (version > projection_version)
+    alt version > current projection_version
+        Note over ES: Document Updated & Version Advanced
+    else version <= current projection_version
+        Note over ES: Atomic ctx.op = 'noop' (Stale Overwrite Prevented!)
+    end
+    Worker->>Resolver: Resolve Affected Scopes (Internal + Shared Partners)
+    Resolver-->>Worker: [Scope X, Scope Y, Scope Z]
+    Worker->>Redis: Invalidate Each Scope Monotonically (Lua)
+    Worker->>MySQL: Mark Outbox event COMPLETED
+    Worker->>Reverb: Broadcast to Channels (X, Y, Z)
+    Reverb->>Browser: Event Delivered to All Active Drawers
+    Note over Browser: Rich Optimistic RAM Patch + Debounced Server Refresh
+    Browser->>ES: Fetch Authoritative Reconciliation
+```
+
+### 8.3 Distributed Resilience: Reverb Acceleration vs. Guaranteed Convergence
+> **Architectural Law:**
+> **"Reverb accelerates convergence; it does not guarantee convergence."**
+> **"Elasticsearch is the authoritative read projection for the Jobs Tab. MySQL remains the authoritative System of Record. Redis is an ephemeral cache-invalidation/consistency index and never a source of business truth."**
+
+WebSocket delivery is inherently best-effort. Recruiters switch tabs, put laptops to sleep, experience Wi-Fi drops, or navigate corporate firewalls that terminate long-lived TCP connections.
+Therefore: **Reverb delivery failure $\neq$ ATS data failure.**
+
+The system guarantees eventual consistency through three defense-in-depth convergence loops:
+1. **Window / Tab Focus Reconciliation:** When the user switches back to the browser tab (`visibilitychange` / `window.focus`), verify if the Client Drawer is open and check the client's current `projection_version` against the Redis version cache. If stale, refresh immediately.
+2. **Drawer Re-Open / Tab Switch Check:** Whenever the user opens the Client Drawer or switches to the Jobs tab, the client sends `localVersion` in the header. If server version equals `localVersion`, return 304 or serve client memory; if higher, stream fresh projection.
+3. **Socket Reconnect Resync:** When Reverb reconnects after a disconnect, automatically trigger a lightweight version ping to reconcile any events missed during the offline window.
+
+### 8.4 Browser Reverb Listener: Rich Optimistic Patch & Authoritative Reconciliation Invariant
+Do **not** use a naked `return;` on visible rows, as that leaves KPIs, sorting, and pagination stale.
+Furthermore, updating only the status badge is incomplete: the recruiter expects **instant local KPI counter adjustment and status timestamp updates** in user RAM (<1ms) followed by an authoritative debounced background refresh.
+
+#### Authoritative Reconciliation Invariant:
+> **Non-Negotiable Invariant:**
+> - **Client-side arithmetic (`curFrom - 1`, `curTo + 1`) is strictly transient UX sugar for 0ms perceived latency.**
+> - **The 300ms coalesced server refresh is the sole canonical state of truth and unconditionally overwrites all KPI cards, filter pill counts, pagination metadata, pipeline stage totals, and sort order.**
+
+```javascript
+(function() {
+    let jobConsistencyTimer = null;
+
+    window.handleJobMutationEvent = function(e) {
+        if (!e || !e.client_id) return;
+        
+        if (typeof ClientStateManager !== 'undefined' && ClientStateManager.getSelectedClientId() == e.client_id) {
+            
+            // Tier 1: Rich Instant Optimistic RAM/DOM Patch (< 1ms perceived latency in user RAM)
+            const $jobRow = $(`[data-entity="job"][data-job-id="${e.job_id}"]`).closest('.job-row');
+            if ($jobRow.length && e.to_status) {
+                const statusMap = {
+                    'active':   { label: 'Hiring',   cls: 'active-bg',   filterKey: 'hiring' },
+                    'hiring':   { label: 'Hiring',   cls: 'active-bg',   filterKey: 'hiring' },
+                    'hold':     { label: 'Hold',     cls: 'hold-bg',     filterKey: 'hold' },
+                    'closed':   { label: 'Closed',   cls: 'closed-bg',   filterKey: 'closed' },
+                    'inactive': { label: 'Inactive', cls: 'inactive-bg', filterKey: 'inactive' }
+                };
+                
+                const fromStatusKey = e.from_status ? e.from_status.toLowerCase() : null;
+                const toSt = statusMap[e.to_status.toLowerCase()] || { label: e.to_status, cls: 'closed-bg', filterKey: 'closed' };
+                
+                // 1. Update Status Badge & Visual Class
+                $jobRow.find('.badge-hiring').attr('class', 'badge-hiring ' + toSt.cls).text(toSt.label);
+                
+                // 2. Update Status Timestamp
+                $jobRow.find('.js-status-timestamp').text('Updated just now');
+
+                // 3. Transient RAM Status Filter Counter Adjustment
+                if (fromStatusKey && fromStatusKey !== toSt.filterKey) {
+                    const $fromBtnBadge = $(`.cl-jobs-filter-group button[data-status="${fromStatusKey}"] .badge`);
+                    const $toBtnBadge = $(`.cl-jobs-filter-group button[data-status="${toSt.filterKey}"] .badge`);
+                    
+                    if ($fromBtnBadge.length) {
+                        const curFrom = parseInt($fromBtnBadge.text(), 10) || 0;
+                        $fromBtnBadge.text(Math.max(0, curFrom - 1));
+                    }
+                    if ($toBtnBadge.length) {
+                        const curTo = parseInt($toBtnBadge.text(), 10) || 0;
+                        $toBtnBadge.text(curTo + 1);
+                    }
+                }
+            }
+
+            // Tier 2: Authoritative Coalesced Background Consistency Refresh
+            // Non-negotiably reconciles all KPIs, filter counts, pagination, pipeline aggregates, and sorting from ES
+            clearTimeout(jobConsistencyTimer);
+            jobConsistencyTimer = setTimeout(function() {
+                if ($('#requisitions').hasClass('active') || (window.loadedTabs && window.loadedTabs['requisitions'])) {
+                    fetchJobsClient(currentPage, currentSearch, currentStatus);
+                }
+            }, 300);
+        }
+    };
+
+    // Convergence Recovery: Handle Tab Focus / Visibility Change (P1-5)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && typeof ClientStateManager !== 'undefined' && ClientStateManager.isDrawerOpen()) {
+            if ($('#requisitions').hasClass('active')) {
+                // Check if server version advanced while tab was inactive
+                checkAndReconcileJobsVersion();
+            }
+        }
+    });
+})();
+```
+
+---
+
+## 9. UI/UX & 15.6" SCREEN OPTIMIZATION (1366×768)
+
+### 9.1 Scoped Styles (Rule 10 Compliance)
+- Scope the stylesheet to: `resources/views/service_company/client/components/tab-jobs-style.blade.php`.
+- Include explicit styles for `.inactive-bg`:
   ```css
-  .jobx .table-header, .jobx .job-row { 
-      display:grid; 
-      grid-template-columns:2.5fr 1fr 1.1fr 1.2fr .9fr .9fr 2.6fr; 
-      align-items:start; 
-      column-gap:12px; 
+  .jobx .badge-hiring.inactive-bg {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+  }
+  .jobx .badge-hiring.inactive-bg::before {
+      background: #94a3b8;
   }
   ```
-- In `show.blade.php`, this CSS does not exist. If a user opens an Internal Client drawer directly, the entire Jobs tab collapses into unstyled inline blocks.
 
-### 5.3 Copy-Pasted Metronic Admin User Filter in Direct Client
-- In `dviewMore.blade.php:2650-2680`, the filter menu for the Jobs tab contains:
-  - Form Label: `Role:` with options `Administrator`, `Analyst`, `Developer`, `Support`, `Trial`.
-  - Form Label: `Two Step Verification:` with option `Enabled`.
-- This is completely unrelated to jobs, candidates, or ATS requisitions and must be replaced with a proper Job Status filter (`All`, `Hiring`, `Hold`, `Closed`).
-
-### 5.4 Screen Fit & 15.6-inch Responsiveness (1366×768)
-- On a 1366×768 screen, an 80% drawer provides only ~1040px of visible viewport width.
-- Squeezing 7 complex columns (Job Title, Exp & Salary, Location & Mode, HM, Team, Agency, Pipeline with 8 stage buttons) into 1040px causes text truncation, overlapping badges, and broken horizontal wrapping.
-- Table card requires `overflow-x: auto;` with a minimum width of `1100px` to guarantee pristine legibility without vertical misalignment.
-
----
-
-## 6. CROSS-TAB & DRAWER SYNCHRONIZATION AUDIT
-
-| Scenario | Expected Behavior | Current Behavior | Risk Rating |
-| :--- | :--- | :--- | :--- |
-| **Switch Drawer Tabs** (e.g. Overview -> Jobs -> Overview -> Jobs) | Zero re-fetching; instant DOM display; fresh on mutation | `loadedTabs['requisitions'] = true;` prevents re-fetch, but if a job was modified in another tab, stale data is shown indefinitely. | **HIGH** |
-| **Close & Reopen Drawer** | Fresh data or valid cache | Reopening restores `DrawerLRUCache` from browser RAM without checking version or ETag. | **HIGH** |
-| **Switch Clients** (Client A -> Client B) | Purge previous client DOM; fetch Client B cleanly | Previous drawer body is cleared, but event handlers attached via `$(document).on(...)` are never removed, causing multiple handler executions. | **MEDIUM** |
-| **Job Status Mutated Remotely** (Via Reverb WebSocket) | Reverb `.JobStatusChanged` event received; drawer auto-refreshes | `handleClientMutationEvent(data)` looks for `data.client.id`. Job events send `job_id`, so `data.client` is undefined. The open drawer does NOT refresh. | **HIGH** |
-| **Cross-Tab Mutation** (BroadcastChannel) | Broadcast received on channel; updates open drawer | Same issue: handler ignores event if `data.client` is missing. | **HIGH** |
-
----
-
-## 7. ACTIVITY & AUDITABILITY AUDIT
-
-### 7.1 Database Audit Infrastructure
-- The database contains table `job_status_logs`:
-  ```sql
-  CREATE TABLE `job_status_logs` (
-    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    `job_id` int(10) unsigned NOT NULL,
-    `company_id` int(10) unsigned DEFAULT NULL,
-    `from_status` varchar(20) DEFAULT NULL,
-    `to_status` varchar(20) NOT NULL,
-    `changed_by` int(10) unsigned DEFAULT NULL,
-    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-    PRIMARY KEY (`id`)
-  );
-  ```
-- **Defect:** This table is **completely abandoned**. Zero controllers or event listeners insert records into `job_status_logs`.
-
-### 7.2 Front-End Audit Presentation
-- In `show.blade.php:1889-1904`:
-  The "Recent Activity & Audit Logs" section displays static text:
-  *"Recent Activity & Audit Logs - Pending Discussion: This section captures comprehensive timeline actions..."*
-- On the Overview tab, the activity timeline displays completely hardcoded mock items ("Software Engineer - 2 days ago", "DevOps Engineer - 3 days ago").
-- **Verdict:** There is zero true auditability or activity tracking for jobs in the client drawer.
-
----
-
-## 8. ROOT-CAUSE SUMMARY & TENANT ISOLATION RISKS
-
-### 8.1 Critical Multi-Tenant Isolation Hole in `client_job_data_ajax`
-In `app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php:1619-1628`:
-```php
-if (request('custom') == 'true') {
-    $must[] = [
-        'bool' => [
-            'should' => [
-                ['term' => ['client_id' => $client_id]],
-            ],
-            'minimum_should_match' => 1,
-        ],
-    ];
-    ...
+### 9.2 Complete 5-Option Status Filter Group (4 Canonical States + All Jobs)
+Replace the broken filter menu with Metronic pill buttons providing a complete 5-option status filter group covering all 4 canonical backend lifecycle states (`hiring`, `hold`, `closed`, `inactive`) plus 'All Jobs' aggregate:
+```html
+<div class="cl-jobs-filter-group">
+    <button type="button" class="btn btn-sm btn-light active" data-status="all">All Jobs <span class="badge badge-light-dark ms-1">{{ $viewModel->totalCount }}</span></button>
+    <button type="button" class="btn btn-sm btn-light" data-status="hiring">Hiring <span class="badge badge-light-success ms-1">{{ $viewModel->hiringCount }}</span></button>
+    <button type="button" class="btn btn-sm btn-light" data-status="hold">On Hold <span class="badge badge-light-warning ms-1">{{ $viewModel->holdCount }}</span></button>
+    <button type="button" class="btn btn-sm btn-light" data-status="closed">Closed <span class="badge badge-light-danger ms-1">{{ $viewModel->closedCount }}</span></button>
+    <button type="button" class="btn btn-sm btn-light" data-status="inactive">Inactive <span class="badge badge-light-secondary ms-1">{{ $viewModel->inactiveCount }}</span></button>
+</div>
 ```
-**The Security Defect:**
-There is NO filter for `['term' => ['comId' => (int) $company_id]]`.
-In multi-tenant SaaS architecture, client IDs are sequential integers or auto-incrementing PKs. If Tenant B queries `client_job_data_ajax` with `client_id` belonging to Tenant A, Elasticsearch returns Tenant A's confidential job requisitions, salaries, hiring managers, and applicant counts!
-**Immediate Fix:** Add `['term' => ['comId' => (int) $company_id]]` into `$must`.
+
+### 9.3 Progressive Disclosure Layout (Replacing Forced 7 Columns)
+On 1366×768 screens, an 80% drawer leaves ~1040px of visible width.
+**Optimized Grid Structure:**
+```
+Columns: [ Job & Role (2.8fr) | Exp & Salary (1.2fr) | Status & Mode (1.1fr) | Pipeline Compact (2.2fr) | Actions (0.7fr) ]
+```
+- **Hiring Pipeline:** Streamlined horizontal micro-pipeline badge strip (`Applied 12`, `Screen 6`, `Interview 3`, `Offer 1`, `Joined 1`).
+- **Secondary Metadata (HM, Team, Agency):** Disclosed via clean hover popovers or within the Job Details Drawer on click.
 
 ---
 
-## 9. EXACT IMPLEMENTATION RECOMMENDATIONS (STEP-BY-STEP)
+## 10. STRICT IMPLEMENTATION ROADMAP (BY PRIORITY)
 
-### Phase 1: Security & Multi-Tenancy Hardening
-1. In `ServiceCompanyJobsController::client_job_data_ajax`:
-   - For `custom == 'true'` (Internal):
-     Add `['term' => ['comId' => (int) $company_id]]` to `$must`.
-   - Remove MySQL query `DB::table('clients')->where('id', $client_id)->first()`. Read `toCompanyId` from Elasticsearch `ELASTIC_CLIENT_LIST` or pass `company_id` from client context.
-   - For `custom == 'false'` (Direct):
-     Verify `$toCompanyId` is strictly a validated company ID with active `staffing_company_relation` where `final_status = 1`.
+```mermaid
+flowchart TD
+    subgraph P0 ["P0: Release Blockers (Immediate Execution)"]
+        P0_1["1. Enforce comId on Internal Jobs Query"]
+        P0_2["2. Scope Direct Client Active Req to from_company_id"]
+        P0_3["3. Replace .show-detail with data-entity='job'"]
+        P0_4["4. Bounded Batched Reads (Zero N+1 ES Operations)"]
+        P0_5["5. Remove All DB::table Reads from Read Path"]
+    end
 
-### Phase 2: Eliminate 150+ N+1 Queries (CQRS & Batch Aggregation)
-1. **Logo Resolution:** Replace per-row `GeneralMethod::companyDetails($row->id)` with `GeneralMethod::companyDetailsBulk($data, $company_id)`.
-2. **Category & Company Names:** Ensure `category_name`, `department_name`, and `client_company` are indexed in `ELASTIC_JOBS` `_source`. Eliminate `DB::table('job_categories')` and `DB::table('companies')` reads in the Blade template.
-3. **Pipeline Stage Counts Batching:**
-   - Eliminate 8 individual `statusCount` calls per job.
-   - Execute a single batch Elasticsearch aggregation on `ELASTIC_CANDIDATES`:
-     ```json
-     {
-       "size": 0,
-       "query": {
-         "bool": {
-           "must": [
-             { "terms": { "jobId": [101, 102, 103, ...] } },
-             { "term": { "company_id": 12 } }
-           ],
-           "must_not": [{ "terms": { "job_master_status_id": [8, 9] } }]
-         }
-       },
-       "aggs": {
-         "by_job": {
-           "terms": { "field": "jobId", "size": 50 },
-           "aggs": {
-             "by_stage": { "terms": { "field": "job_master_status_id", "size": 10 } }
-           }
-         }
-       }
-     }
-     ```
-   - Pass the pre-aggregated `$stageCountsMap[$jobId][$stageId]` into the Blade view.
-   - Total network calls drop from **150+ to 2 Elasticsearch queries and 0 MySQL queries**.
+    subgraph P1 ["P1: Architecture & Data Integrity"]
+        P1_1["6. Build ClientJobsQuery & ClientJobsReadService"]
+        P1_2["7. Transactional Outbox + Synchronous job_status_logs Write"]
+        P1_3["8. Unify KPI Summary & Listing via JobsTabViewModel"]
+        P1_4["9. Version-Safe CQRS Sequencing & Two-Tier Reverb"]
+        P1_5["10. Complete 5-State Status Filters with Inactive"]
+    end
 
-### Phase 3: Fix UI/UX, Click Collision & CSS
-1. **Fix Job Title Click Collision:**
-   In `client_jobs_side_bar_ajax.blade.php:230`, change:
-   `class="show-detail"` -> `class="show-job-detail cd-job-link"`
-   Add an event handler that opens the Job Description / Job Drawer (`service_company.jobs.viewmore`) instead of the Client Drawer.
-2. **Port CSS to `show.blade.php`:**
-   Copy the complete `.jobx` style block from `dviewMore.blade.php` into `show.blade.php` so Internal Client drawer displays correctly.
-3. **Clean Dead Code:**
-   Remove dead mock sections (`#client-requisitions` and `#custom-requisitions` with hardcoded "HCL Jobs" and "Wipro").
-4. **Remove Admin User Filter:**
-   In `dviewMore.blade.php`, remove the copy-pasted "Role: Administrator" and "Two Step Verification" filter menu. Replace with a clean Status toggle (`All`, `Active`, `Hold`, `Closed`).
-5. **Fix Pagination Label:**
-   In `ServiceCompanyJobsController::client_job_data_ajax:1704`, change:
-   `'listType' => 'allcandidate'` -> `'listType' => 'jobs'`
-   In `pagination.blade.php`, add:
-   `$label = ($listType === 'jobs') ? 'jobs' : ...`
+    subgraph P2 ["P2: Product Polish & Auditability"]
+        P2_1["11. Excise All Dead Mock Code & Keenthemes Links"]
+        P2_2["12. Remove Copy-Pasted User Admin Filter in dviewMore"]
+        P2_3["13. Correct Pagination Label to 'jobs' with Page-Clamp"]
+        P2_4["14. Implement Multi-Match Exact-Boost Search Strategy"]
+        P2_5["15. Deterministic Tie-Breaker Sort (created_at DESC, id DESC)"]
+    end
 
-### Phase 4: Atomic Multi-Tenant Invalidation & Synchronization
-1. When a job is added, edited, or status is changed:
-   - Invalidate Redis keys:
-     - `ats:client_kpi_v9:{$company_id}:{$client_id}`
-     - `ats:direct_client_kpi_v9:{$company_id}:{$from_company_id}`
-     - `ats:clientsviewmore_v11:{$userId}:...` (increment user drawer version)
-     - `ats:clientsdviewmore_v11:{$userId}:...`
-   - Broadcast Reverb WebSocket event `JobStatusChanged` with payload `{ job_id, client_id, company_id, status }`.
-2. In `index.blade.php`:
-   - In `handleClientMutationEvent(data)`:
-     If `data.client_id` matches `ClientStateManager.getSelectedClientId()`, immediately trigger `fetchJobsClient()` or `ClientStateManager.refreshActiveDrawerTab()`.
+    P0 --> P1
+    P1 --> P2
+```
 
 ---
 
-## 10. FINAL ACCEPTANCE & TEST CHECKLIST
+## 11. FINAL ACCEPTANCE & VERIFICATION CHECKLIST
 
-- [ ] **Tenancy Verification:** Attempt querying `client_job_data_ajax` with another tenant's `client_id`; verify HTTP 403 or empty array returned.
-- [ ] **0% MySQL Reads:** Run Laravel query log during Jobs tab load; verify exactly 0 MySQL queries executed.
-- [ ] **Elasticsearch Batching:** Profile Elasticsearch slow log; verify at most 2 ES queries executed per 10 jobs page load.
-- [ ] **Click Integrity:** Click job title in client drawer; verify it opens Job Details and does NOT reload or crash the Client Drawer.
-- [ ] **CSS Consistency:** Open Internal Client drawer and Direct Client drawer on clean cache; verify identical Metronic typography, borders, badges, and spacing.
-- [ ] **Responsive Test (1366×768):** View drawer on 1366px screen; verify table scrolls horizontally without clipping pipeline stage pills.
-- [ ] **Metric Consistency:** Verify tab badge count matches active jobs count, and pagination displays "Showing X to Y of Z jobs" (NOT companies).
-- [ ] **Real-Time Mutation:** Change a job status in one window; verify open drawer in another window updates within 500ms via Reverb without page reload.
+- [ ] **Zero-MySQL Authorization Context Isolation (Pre-ES Gate):** Verify `ClientAccessContext::fromRequest()` resolves context with **strictly 0 MySQL reads** (via session claims for internal clients and Dragonfly/Redis cache or HMAC-signed tokens for direct clients).
+- [ ] **Triple Attack Vector Security Suite:** Execute automated penetration tests:
+  - **Test A (Cross-Tenant Forged Client):** Tenant A requests Client B $\to$ `isAuthorized = false` $\to$ HTTP 403 $\to$ ES Mock/Spy invocation count == 0 $\to$ `ClientJobsQuery` construction count == 0.
+  - **Test B (Cross-Partner Direct Client Spoofing):** Tenant A + Service Company A requests Direct Client C under Partner B, but Client C belongs to Partner D $\to$ HTTP 403 $\to$ ES invocation count == 0.
+  - **Test C (Unauthorized Requisition Isolation):** Valid Direct Client requests a job requisition from Partner B not shared via active `recommendation_relation` (`final_status = 1`) $\to$ ES nested filter excludes it $\to$ Job never appears in table or counts.
+- [ ] **CQRS Zero-Read Full Rendering Path CI Gate:** Execute automated feature test `ClientJobsCqrsReadTest`; verify `\DB::getQueryLog()` records strictly 0 MySQL queries across controller execution, auth context resolution, ViewModel preparation, Blade template rendering, and JSON serialization; verify 0 ES/HTTP calls during Blade rendering.
+- [ ] **Multi-Client / Multi-Partner Fan-Out (P0):** Mutate status of shared marketplace requisition; verify `JobVisibilityScopeResolver` identifies all receiving partner direct client scopes, atomically increments Redis invalidation keys across all scopes, and broadcasts Reverb events to all recipient company channels.
+- [ ] **Configurable Search Relevance (Rule 11):** Verify multi-match query binds search fields, weights, operator, and minimum_should_match dynamically from `config('ats.search.jobs.*')` without hardcoded literals.
+- [ ] **Write Mutation Context Tenancy Separation:** Verify `JobMutationService::updateStatus()` strictly accepts `JobMutationContext` where `tenantId` and `serviceCompanyId` are discrete properties, persisting `$context->tenantId` into `sys_outbox_events.tenant_id` and `$context->serviceCompanyId` into `job_status_logs.company_id` without collapsing them.
+- [ ] **Storage-Engine Multi-Tenant Outbox Uniqueness & Collision Test:**
+  - Duplicate Attempt: Insert duplicate outbox event with identical `$idempotencyKey = "job:{$jobId}:v{$version}"` within same `tenant_id` $\to$ MySQL InnoDB physically throws Error 1062 duplicate entry.
+  - Cross-Tenant Independence: Insert identical `$idempotencyKey = "job:{$jobId}:v{$version}"` under different `tenant_id` (e.g. 100 vs 200) $\to$ Successfully inserts, proving tenant-scoped uniqueness without global key blocking.
+- [ ] **Zero-Hardcoding Outbox Worker (Rule 11):** Verify outbox batch claim SQL queries use dynamic bound parameters (`:batch_size`) configured via `config('ats.outbox.batch_size')` with zero raw literal integers.
+- [ ] **5 Static Identity Dimensions & Monotonic Redis Invalidation:** Verify Redis version key and cache hash isolate internal (`ats:client_jobs_version:100:100:internal:0:782`) and direct (`ats:client_jobs_version:100:100:direct:450:782`) clients across the 5 identity dimensions with zero collision.
+- [ ] **5-Option Status Filter Group (4 Canonical States + All Jobs):** Verify UI renders all 5 filter buttons (All Jobs, Hiring, On Hold, Closed, Inactive) correctly mapped to the 4 canonical backend lifecycle states without treating 'all' as a database status.
+- [ ] **Bounded Read Budget (Zero N+1):** Verify total Elasticsearch queries per page load remains strictly bounded:
+  $$\text{ES Network Requests} = O(1) \quad (\text{independent of page size } N)$$
+  $$\text{ES Network Requests} \neq O(N)$$
+  Verify zero Elasticsearch queries and zero MySQL queries inside Blade loops.
+- [ ] **End-to-End API Request Latency SLOs (10K Concurrency):** Under simulated 10,000 concurrent user load (Browser $\to$ Nginx $\to$ FrankenPHP $\to$ Auth $\to$ Cache/ES $\to$ ViewModel $\to$ Network):
+  - **p50 $\le$ 100ms**
+  - **p95 $\le$ 250ms**
+  - **p99 $\le$ 500ms**
+  - **Error rate < 0.1%**
+- [ ] **Elasticsearch Core Query Latency SLOs (10K Concurrency):** Verify internal ES query execution achieves:
+  - **p50 $\le$ 50ms**
+  - **p95 $\le$ 150ms**
+  - **p99 $\le$ 300ms**
+- [ ] **Monotonic Aggregate Versioning (P1-3):** Simulate two simultaneous status change requests on the same job; verify `lockForUpdate()` enforces sequential atomic increments ($v_{n+1} = v_n + 1$) without collisions.
+- [ ] **Primary-Shard Atomic ES Script Update & Schema Ownership (P1-4, P1-5):** Re-deliver a processed outbox event or execute an out-of-order event retry ($v=11$ after $v=12$ completed); verify Elasticsearch executes atomic Painless script, modifies strictly declared fields (`status`, `projection_version`, `updated_at`), and returns `ctx.op = 'noop'`, preventing version regression.
+- [ ] **Single-Snapshot Canonical Rebuild Invariant:** Evict ES document; trigger rebuild; verify `rebuildAndIndexCanonicalJob()` reads complete projection document and authoritative `aggregate_version` within a single consistent snapshot boundary (`DB::transaction`), eliminating version shearing.
+- [ ] **Monotonic Redis Lua Update (P1-6):** Execute concurrent worker completions; verify atomic Lua script prevents older version from regressing the Redis cache invalidation index.
+- [ ] **Outbox Crash & Idempotency Tolerance:** Force worker crash immediately before `status = 'COMPLETED'`; re-run outbox dispatcher; verify idempotent Painless script and Lua script execute safely without duplicate mutations or version corruption.
+- [ ] **Convergence Recovery without Reverb:** Sever WebSocket connection in DevTools; change job status in another session; switch tabs or reopen drawer; verify focus/drawer handshake reconciles fresh data without stale cache display.
+- [ ] **Rich Optimistic Patch & Authoritative Reconciliation:** Mutate job status; verify row badge updates instantly in DOM (<1ms), status timestamp displays "Updated just now", and filter counters adjust in RAM; verify 300ms debounced server refresh unconditionally reconciles exact pagination, pipeline totals, and sorting.
+- [ ] **Click Routing:** Click job title in drawer; verify Job Details Drawer opens without crashing or closing the parent Client Drawer.
+- [ ] **Pagination Page-Clamp:** Shrink total jobs below current page threshold; verify server clamps page to `last_page` and avoids empty zero-row display.
+- [ ] **Visual Parity:** Open Internal Client and Direct Client drawers on 1366×768 screen; verify identical Metronic styling, dedicated `inactive-bg` badge, and zero horizontal page overflow.

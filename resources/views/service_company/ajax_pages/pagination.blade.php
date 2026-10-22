@@ -61,7 +61,7 @@
     $total      = $pagination['total'];
     $totalPages = $pagination['last_page'];
     $curPage    = $pagination['current_page'];
-    $listType   = $pagination['listType'];
+    $listType   = $pagination['listType'] ?? 'records';
     $from       = ($curPage - 1) * $perPage + 1;
     $to         = min($curPage * $perPage, $total);
     $label      = (isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')

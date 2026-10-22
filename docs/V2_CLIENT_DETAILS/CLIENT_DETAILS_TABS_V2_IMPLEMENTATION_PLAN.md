@@ -133,10 +133,10 @@
 
 ---
 
-## PHASE 5 — Candidate Optimization
-> **Dedicated Master Specification**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for complete God-Level audit, security guardrails, and implementation blueprints.
+## PHASE 5 — Candidate Optimization (V2.4 Master Production Plan)
+> **Dedicated Master Specification**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for complete God-Level audit, 10-rule constitution, fail-closed security guardrails, Reverb contracts, and implementation blueprints.
 
-- **Objective**: Eliminate 100% of MySQL queries on the candidate read path, fix tenant isolation vulnerabilities, synchronize tab badge counts with table results, fix broken search, and transition to a Client-First JSON API with User RAM virtual DOM rendering (`ClientCandidateStore`).
+- **Objective**: Eliminate 100% of MySQL queries on the candidate read path (strictly 0% MySQL reads across entire HTTP stack), fix tenant isolation vulnerabilities via fail-closed Dragonfly authorization, synchronize tab badge counts with table results, fix broken search, and transition to a Client-First JSON API with User RAM virtual DOM rendering (`ClientCandidateStore`), HMAC-SHA256 cursor pagination (`size + 1` pattern), and Rule 8 filter-aware collection reconciliation.
 - **Current Problem**: 
   - `custom_client_candidates.blade.php` executes 6 raw SQL queries per row inside `@foreach` (60+ queries per page in Direct Client drawer).
   - `clientCandidateList` lacks `company_id` filter in Elasticsearch (Cross-tenant security vulnerability).
@@ -145,36 +145,48 @@
   - Stage modal `#stage_sub_stage` fails to open due to missing modal shell and click listeners.
 - **Exact Files/Modules**:
   - `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` (`clientCandidateList`, `directclientCandidateList`)
+  - `app/Services/Candidate/CandidateDrawerQueryService.php` (New unified read engine)
   - `resources/views/service_company/client/show.blade.php`
   - `resources/views/service_company/client/dviewMore.blade.php`
   - `resources/views/service_company/ajax_pages/custom_client_candidates.blade.php`
   - `app/Helper/GeneralMethod.php` (`InternalClientCandidatesCountList`, `DirectClientCandidatesCountList`)
 - **Current Flow**: Controller queries ES `ELASTIC_CANDIDATES` -> Passes array to Blade -> Blade executes raw `DB::table()` queries inside loop -> Compiles heavy HTML string (~120KB) -> Injected via jQuery `.html()`.
-- **Proposed V2 Flow**: 
-  1. Denormalize display values (`job_title`, `job_mode`, `city_name`, `country_name`, `stage_name`, `stage_css`, `skills_array`) into `ELASTIC_CANDIDATES` read projection documents.
-  2. Refactor `clientCandidateList` and `directclientCandidateList` into pure JSON endpoints returning `< 15 KB` gzip payloads with fail-closed Dragonfly tenancy verification (0% MySQL reads).
-  3. Reconcile Direct Client ES filters (`final_status`, status exclusions) so badge counts match table records 1-to-1.
-  4. Implement `ClientCandidateStore` in browser RAM to render candidate rows via lightweight Metronic template literals with local card skeleton loaders (eliminating `.page-loader` freeze).
-  5. Add search input with 300ms debounce, status filter dropdown, and requisition filter in tab toolbar.
+- **Proposed V2.4 Flow**: 
+  1. Denormalize display values (`job_title`, `job_mode`, `city_name`, `country_name`, `stage_name`, `stage_css`, `skills_array`, `skill_match_percentage`, `aggregate_version`, `projection_schema_version`) into `ELASTIC_CANDIDATES` read projection documents. Query engine strictly limits `_source.includes` to 28 listing fields.
+  2. Implement unified `CandidateDrawerQueryService` and `ClientCandidateVersionStore` enforcing fail-closed Dragonfly authorization (`ClientAccessGuard`) before ES queries with zero ES candidate document fallback. Single-operation atomic Lua bootstrap (`EXISTS -> SETNX 0 -> return 0`) and fail-closed version coordination (`HTTP 503` on Dragonfly outage, zero silent `?: 1` fallbacks).
+  3. Support atomic Lua version advancement with 7-day replay ledger TTL (`event_idempotency:{company}:{client}:{event_id}`) exceeding the 72h outbox redelivery horizon to prevent duplicate increments.
+  4. Support mathematical `size + 1` cursor pagination with self-describing HMAC-SHA256 signature bound to `company_id`, `client_id`, `client_type`, sort order, canonical query fingerprint, and 15-minute TTL lifecycle. Mode-delineate page (`page <= 5`) vs cursor pagination with strict `HTTP 422` guard on `page > 5` without cursor. When bounded count returns `total_relation: "gte"`, `last_page` is set to `null` and UI renders `"10,000+ Candidates"`.
+  5. Implement Preferred Count Architecture Hierarchy: Tier 1 precomputed count for Hero KPI (`ats:kpi:client_cand:{company}:{client}`) with zero ES read strain -> Tier 2 bounded `track_total_hits: 10000` for filtered queries -> Tier 3 exact counts pending 10K k6 verification.
+  6. Refactor `clientCandidateList` and `directclientCandidateList` into pure JSON endpoints returning `< 15 KB` gzip payloads (0% MySQL reads).
+  7. Reconcile Direct Client ES filters (`final_status`, status exclusions) so badge counts match table records 1-to-1.
+  8. Implement `ClientCandidateStore` in browser RAM to render candidate rows via lightweight Metronic template literals with local card skeleton loaders (eliminating `.page-loader` freeze), `queryFingerprint` tracking, event idempotency via bounded `processedEventIds`, and candidate OCC version filtering.
+  9. Enforce Rule 8 via fully declarative `mutationAffectsCurrentQuery(event)` using the generic Query Dependency Manifest (search, status, job, sort, visibility/archive exclusions): membership-altering mutations trigger collection refetch; row-only mutations safely patch in place.
+  10. Implement bounded 60ms coalescer in browser store producing at most one refresh request per active reconciliation window.
+  11. Implement differentiated rate limits: 20 req/10s interactive, 60 req/min background reconcile, 30 req/min reconnect sync.
+  12. Implement reconnect reconciliation endpoint `GET /service_company/clients/{clientId}/candidate-version` with strictly 0 MySQL reads and fail-closed Dragonfly authorization via `ClientCandidateVersionStore`.
+  13. Add search input with 300ms debounce, status filter dropdown, and requisition filter in tab toolbar.
 - **Expected Code Changes**: 
-  - Refactor `ServiceCompanyJobApplicationController` methods to return JSON data + pagination.
+  - Create `app/Services/Candidate/CandidateDrawerQueryService.php`.
+  - Create `app/Services/Candidate/ClientCandidateVersionStore.php`.
+  - Create `app/Http/Controllers/ServiceCompany/CandidateVersionApiController.php`.
+  - Refactor `ServiceCompanyJobApplicationController` methods to delegate to `CandidateDrawerQueryService` and return pure JSON.
   - Implement Metronic toolbar and `#cdCandidateTableWrap` in `show.blade.php` and `dviewMore.blade.php`.
-  - Add `ClientCandidateStore` object in drawer scripts.
+  - Add `ClientCandidateStore` object in drawer scripts with declarative Query Dependency Manifest and Reverb listener.
 - **DB Changes**: None (0% writes affected).
-- **Index Changes**: None.
-- **Redis Changes**: Cache pre-computed candidate KPI counts under `ats:kpi:internal_client_cand:{company_id}:{client_id}` with atomic invalidation on candidate mutation outbox events.
-- **ES Changes**: Include pre-computed display attributes in `_source` list (`job_title`, `city_name`, `country_name`, `stage_name`, `stage_css`, etc.).
-- **Queue Changes**: Subscribe outbox worker to candidate mutation events to publish invalidations via Reverb.
-- **Frontend Changes**: Replace server HTML rendering with client-side DOM rendering in User RAM. Add 300ms debounce to candidate search input. Replace global `.page-loader` with local card skeleton.
+- **Index Changes**: None (re-index with alias swap `ELASTIC_CANDIDATES_v2` for pre-computed display attributes).
+- **Redis/Dragonfly Changes**: Cache client candidate version under `client_candidate_version:{company_id}:{client_id}` with atomic `INCR` via Lua script.
+- **ES Changes**: Include pre-computed display attributes in `_source.includes` list (28 fields).
+- **Queue Changes**: Outbox dispatcher triggers Reverb event broadcasts (`ClientCandidateVersionUpdated` & `CandidateStatusChanged`).
+- **Frontend Changes**: Replace server HTML rendering with client-side DOM rendering in User RAM via `ClientCandidateStore`. Add 300ms debounce to candidate search input. Replace global `.page-loader` with local card skeleton.
 - **Performance Benefit**: 
-  - MySQL queries reduced from 60+ per request to **strictly 0**.
+  - MySQL queries reduced from 60+ per request to **strictly 0 across full HTTP stack**.
   - Payload size reduced from ~120KB HTML to **< 15KB JSON** (88% reduction).
   - p95 response time drops from ~650ms to **< 75ms**.
 - **Risk**: Low (Pure read-model projection and presentation optimization).
 - **Dependencies**: Phase 1.
-- **Testing**: Open candidate tab for internal and direct clients; verify zero MySQL queries in query log, search functionality works instantly, and counts match badge numbers.
+- **Testing**: Run 8 mandatory automated CI test gates verifying zero MySQL queries across full middleware stack (`CandidateDrawerReadTest`), fail-closed behavior on Dragonfly outage (`CandidateDrawerFailClosedVersionTest`), socket revocation invalidation (`CandidateDrawerRevocationSocketTest`), stale cursor 409 (`CandidateDrawerSnapshotConsistencyTest`), and 4-stage projection lag benchmarks.
 - **Rollback**: Revert controller return to Blade view compilation.
-- **Acceptance Criteria**: Candidate tab AJAX request executes **strictly 0 MySQL queries**, search operates with 300ms debounce, and badge count matches table total 100%.
+- **Acceptance Criteria**: Candidate tab AJAX request executes **strictly 0 MySQL queries across full HTTP stack**, search operates with 300ms debounce, and badge count matches table total 100%.
 
 ---
 
