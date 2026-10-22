@@ -4611,9 +4611,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return response()->json(['status' => 'success', 'valid' => true, 'field' => 'website']);
         }
 
-        if ($field === 'contact') {
-            $email = (string) ($request->input('email') ?: $request->input('value', ''));
-            $phone = (string) ($request->input('phone') ?: $request->input('number', ''));
+        if ($field === 'contact' || $field === 'phone') {
+            $email = (string) ($request->input('email') ?: ($field === 'contact' ? $request->input('value', '') : ''));
+            $phone = (string) ($request->input('phone') ?: ($field === 'phone' ? $request->input('value', '') : $request->input('number', '')));
             $callingCode = (string) $request->input('calling_code', '+91');
             $draftContacts = (array) $request->input('draft_contacts', []);
 
@@ -4622,7 +4622,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
             }
 
-            return response()->json(['status' => 'success', 'valid' => true, 'field' => 'contact']);
+            return response()->json(['status' => 'success', 'valid' => true, 'field' => $field]);
         }
 
         if ($field === 'all') {
