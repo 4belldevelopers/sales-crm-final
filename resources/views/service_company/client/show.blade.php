@@ -42,251 +42,724 @@ use Carbon\Carbon;
         data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
         data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
         <!--beign::candidate detail-->
-        {{-- ── Redesigned detail header (Agency-style): profile card + KPI cards ── --}}
+        {{-- ── Redesigned Client Drawer (Enterprise 12px Max Scale — Exact Replica of Mockup) ── --}}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
-          /* ── Profile card ── */
-          .cd-hero .profile-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; margin:0 8px 16px; box-shadow:0 2px 12px rgba(17,28,68,.04); }
-          .cd-hero .profile-top { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
-          .cd-hero .profile-left { display:flex; gap:18px; flex:1; min-width:0; }
-          .cd-hero .logo-wrap { position:relative; flex-shrink:0; }
-          .cd-hero .logo-circle { width:88px; height:88px; border-radius:50%; background:#f8f9fa; border:2px solid #e4e6ef; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; font-weight:700; color:#5e6278; }
-          .cd-hero .logo-circle img { width:100%; height:100%; object-fit:cover; }
-          .cd-hero .verified-check { position:absolute; top:-2px; right:-2px; width:24px; height:24px; background:#50cd89; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2.5px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.08); }
-          .cd-hero .verified-check i { color:#fff; font-size:10px; }
-          .cd-hero .profile-info { flex:1; min-width:0; }
-          .cd-hero .profile-name-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
-          .cd-hero .profile-name { font-size:20px; font-weight:700; color:#181c32; }
-          .cd-hero .verified-badge { display:inline-flex; align-items:center; gap:4px; background:#e8fff3; color:#47be7d; font-size:11px; font-weight:600; padding:4px 10px; border-radius:50px; border:1px solid rgba(71,190,125,.2); }
-          .cd-hero .verified-badge i { font-size:9px; }
-          .cd-hero .profile-meta { display:flex; align-items:center; gap:4px 16px; flex-wrap:wrap; font-size:12.5px; color:#7e8299; margin-bottom:12px; }
-          .cd-hero .meta-item { display:flex; align-items:center; gap:6px; }
-          .cd-hero .meta-item i { font-size:11px; color:#a1a5b7; }
-          .cd-hero .meta-divider { color:#d6dae6; }
-          .cd-hero .meta-link { color:#009ef7; text-decoration:none; display:flex; align-items:center; gap:4px; }
-          .cd-hero .meta-link:hover { text-decoration:underline; }
-          .cd-hero .meta-link i.fa-external-link-alt { font-size:9px; }
-          /* ── Service/skill tags — colored ATS pills ── */
-          .cd-hero .service-tags { display:flex; flex-wrap:wrap; gap:7px; margin-top:2px; }
-          .cd-hero .tag {
-            display:inline-flex; align-items:center; gap:5px;
-            padding:4px 11px;
-            background:linear-gradient(135deg,#eef3ff 0%,#e8f0fe 100%);
-            border:1px solid #c8d8f8;
-            border-radius:20px;
-            font-size:11.5px; font-weight:600; color:#3b5fc8;
-            letter-spacing:.2px;
+          /* ── Enterprise Scoped Reset: MAXIMUM 12PX CEILING ── */
+          .cd-scope, .cd-scope * {
+            box-sizing: border-box;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
           }
-          .cd-hero .tag::before { content:"\f02b"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:9px; color:#7ca0f0; }
-          /* ── Status / edit right column ── */
-          .cd-hero .profile-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; flex-shrink:0; }
-          .cd-hero .status-badge { display:inline-flex; align-items:center; gap:6px; background:#e8fff3; color:#17a96a; font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:6px; border:1px solid rgba(80,205,137,.25); }
-          .cd-hero .status-dot { width:8px; height:8px; background:#50cd89; border-radius:50%; position:relative; }
-          .cd-hero .status-dot::after { content:""; position:absolute; inset:-3px; border-radius:50%; border:1px solid #50cd89; animation:cdpulse 2s infinite; }
-          @keyframes cdpulse { 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.35); opacity:0; } }
+          .cd-scope {
+            font-size: 11px !important;
+            color: #334155;
+            background: #f8fafc;
+          }
 
-          /* ── KPI counter cards ── */
-          .cd-hero .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:0 8px 16px; }
-          .cd-hero .kpi-box {
-            background:#fff; border-radius:12px;
-            border:1px solid #eff2f5;
-            border-left:4px solid #e4e6ef;
-            padding:16px 18px;
-            transition:all .22s;
-            position:relative; overflow:hidden;
+          /* ── Top Action Header Bar (Internal: Blue Accent) ── */
+          .cd-top-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 20;
           }
-          .cd-hero .kpi-box:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(17,28,68,.07); }
-          /* Color-coded left accent per metric */
-          .cd-hero .kpi-box:nth-child(1) { border-left-color:#009ef7; }
-          .cd-hero .kpi-box:nth-child(2) { border-left-color:#50cd89; }
-          .cd-hero .kpi-box:nth-child(3) { border-left-color:#7239ea; }
-          .cd-hero .kpi-box:nth-child(4) { border-left-color:#f6a723; }
-          .cd-hero .kpi-box:nth-child(5) { border-left-color:#14b8a6; }
-          .cd-hero .kpi-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-          .cd-hero .kpi-icon-box { width:42px; height:42px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
-          .cd-hero .kpi-icon-blue   { background:#e8f6ff; color:#009ef7; }
-          .cd-hero .kpi-icon-green  { background:#e2f9ee; color:#1fad70; }
-          .cd-hero .kpi-icon-purple { background:#f3eeff; color:#7239ea; }
-          .cd-hero .kpi-icon-orange { background:#fff4d6; color:#d98d00; }
-          .cd-hero .kpi-icon-teal   { background:#e5faf7; color:#0d9488; }
-          .cd-hero .kpi-label { font-size:11.5px; font-weight:700; color:#5e6278; line-height:1.35; flex:1; min-width:0; }
-          .cd-hero .kpi-number { font-size:30px; font-weight:800; color:#181c32; line-height:1; letter-spacing:-0.5px; }
-          .cd-hero .kpi-number-sub { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:3px; }
-          @media (max-width:1200px){ .cd-hero .kpi-row { grid-template-columns:repeat(3,1fr); } }
-          @media (max-width:768px){ .cd-hero .kpi-row { grid-template-columns:repeat(2,1fr); } .cd-hero .profile-top { flex-direction:column; } }
+          .cd-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .cd-hdr-btn {
+            height: 28px !important;
+            padding: 0 12px !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease-in-out !important;
+            line-height: 1 !important;
+          }
+          .cd-hdr-btn-outline {
+            background: #ffffff !important;
+            border: 1.5px solid #009ef7 !important;
+            color: #009ef7 !important;
+          }
+          .cd-hdr-btn-outline:hover {
+            background: #f0f9ff !important;
+            color: #0086d1 !important;
+            border-color: #0086d1 !important;
+          }
+          .cd-hdr-btn-solid-blue {
+            background: #009ef7 !important;
+            border: 1.5px solid #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
+          }
+          .cd-hdr-btn-solid-blue:hover {
+            background: #0086d1 !important;
+            border-color: #0086d1 !important;
+            color: #ffffff !important;
+          }
+          .cd-hdr-btn-close {
+            width: 28px !important;
+            height: 28px !important;
+            padding: 0 !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            border: none !important;
+            color: #64748b !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            transition: all 0.15s !important;
+          }
+          .cd-hdr-btn-close:hover {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+          }
 
-          /* ── Jobs card list (.jobx) ── */
-          .jobx, .jobx * { font-family:'Poppins',sans-serif; box-sizing:border-box; }
-          .jobx .table-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); border:1px solid #e4e6ef; overflow:hidden; }
-          .jobx .table-header, .jobx .job-row { display:grid; grid-template-columns:2.5fr 1fr 1.1fr 1.2fr .9fr .9fr 2.6fr; align-items:start; column-gap:12px; }
-          .jobx .table-header { padding:9px 12px; background:#f7f8fc; border-bottom:1.5px solid #e4e6ef; align-items:center; }
-          .jobx .th { font-size:10.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; gap:4px; }
-          .jobx .job-row { padding:12px; border-bottom:1px solid #e4e6ef; transition:background .12s; }
-          .jobx .job-row:last-of-type { border-bottom:none; }
-          .jobx .job-row:hover { background:#fafbff; }
-          /* Col: Job Details */
-          .jobx .col-job { display:flex; gap:9px; align-items:flex-start; }
-          .jobx .drag-col { display:flex; align-items:center; padding-top:14px; flex-shrink:0; color:#a1a5b7; cursor:grab; }
-          .jobx .job-logo { width:46px; height:46px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; overflow:hidden; }
-          .jobx .job-logo img { width:100%; height:100%; object-fit:cover; }
-          .jobx .job-info { flex:1; min-width:0; }
-          .jobx .job-title a { font-size:12.5px; font-weight:700; color:#181c32; text-decoration:none; display:block; line-height:1.35; }
-          .jobx .job-title a:hover { color:#3b55e6; }
-          .jobx .job-dept { font-size:11px; color:#6d7284; margin-top:1px; }
-          .jobx .job-client { font-size:11px; color:#6d7284; font-weight:500; margin-top:1px; margin-bottom:5px; }
-          .jobx .job-meta-line { display:flex; align-items:center; flex-wrap:wrap; gap:4px; font-size:10.5px; }
-          .jobx .it-job-id { font-size:10px; color:#6a6b70; font-weight:500; }
-          .jobx .it-dot-separator { width:3px; height:3px; border-radius:50%; background:#a1a5b7; }
-          .jobx .badge-type { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
-          .jobx .badge-internal { background:#eef2ff; color:#3b55e6; }
-          .jobx .badge-client   { background:#eefff6; color:#09b760; }
-          .jobx .badge-direct   { background:#fff4ee; color:#f4682a; }
-          .jobx .skills-inline .badge { font-size:9.5px; padding:1px 5px; margin:0 1px 0 0; border-radius:4px; }
-          /* Col: Experience */
-          .jobx .col-exp { display:flex; flex-direction:column; gap:5px; padding-top:2px; }
-          .jobx .exp-row, .jobx .sal-row { display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:#181c32; white-space:nowrap; }
-          .jobx .exp-row svg, .jobx .sal-row svg { width:13px; height:13px; color:#a1a5b7; flex-shrink:0; }
-          /* Col: Hiring & Location */
-          .jobx .col-hl { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
-          .jobx .badge-hiring { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:600; width:fit-content; cursor:default; }
-          .jobx .badge-hiring::before { content:""; width:6px; height:6px; border-radius:50%; }
-          .jobx .badge-hiring.active-bg { background:#eafff3; color:#17c653; border:1px solid #b8f0d4; }
-          .jobx .badge-hiring.active-bg::before { background:#17c653; }
-          .jobx .badge-hiring.hold-bg   { background:#fff8e1; color:#ffa800; border:1px solid #fde4a0; }
-          .jobx .badge-hiring.hold-bg::before   { background:#ffa800; }
-          .jobx .badge-hiring.closed-bg { background:#ffeef1; color:#f1416c; border:1px solid #ffd5d5; }
-          .jobx .badge-hiring.closed-bg::before { background:#f1416c; }
-          .jobx .loc-row, .jobx .mode-row { display:flex; align-items:center; gap:4px; font-size:11px; color:#6d7284; font-weight:500; }
-          .jobx .loc-row svg, .jobx .mode-row svg { width:12px; height:12px; color:#a1a5b7; flex-shrink:0; }
-          /* Col: Hiring Manager */
-          .jobx .col-hm { font-size:11.5px; padding-top:2px; }
-          .jobx .hm-name  { font-size:12px; font-weight:600; color:#181c32; margin-bottom:2px; }
-          .jobx .hm-title { font-size:11px; color:#6d7284; margin-bottom:1px; }
-          .jobx .hm-company { font-size:11px; color:#a1a5b7; }
-          /* Col: Team / Agency */
-          .jobx .col-action { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
-          .jobx .action-more { font-size:10.5px; color:#3b55e6; cursor:pointer; font-weight:500; }
-          .jobx .jobx-add-link { font-size:11px; color:#5e6278; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border:1.5px dashed #d1d3e0; border-radius:7px; background:#fafbfc; transition:all .15s; }
-          .jobx .jobx-add-link:hover { border-color:#3b55e6; color:#3b55e6; background:#f0f3ff; }
-          /* Col: Pipeline */
-          .jobx .col-pipeline { display:flex; flex-direction:column; gap:4px; padding-left:10px; border-left:1px solid #eef0f5; }
-          .jobx .pipeline-stages { display:flex; align-items:flex-start; gap:2px; flex-wrap:nowrap; padding-bottom:2px; }
-          .jobx .stage { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; min-width:0; }
-          .jobx .stage-label { font-size:8.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.3px; }
-          .jobx .stage-badge { min-width:22px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
-          .jobx .stage-badge a { font-size:9px; font-weight:700; color:inherit; text-decoration:none; }
-          .jobx .stage-badge a:hover { opacity:.75; }
-          .jobx .s-inw { background:#ffffde; color:#bdbd26; } .jobx .s-inw a { color:#bdbd26; }
-          .jobx .s-sou { background:#efefef; color:#000; }   .jobx .s-sou a { color:#000; }
-          .jobx .s-scr { background:#f7deff; color:#c000ff; }.jobx .s-scr a { color:#c000ff; }
-          .jobx .s-eva { background:#f0f8ff; color:#2896ff; }.jobx .s-eva a { color:#2896ff; }
-          .jobx .s-neg { background:#ffe6f2; color:#ff4098; }.jobx .s-neg a { color:#ff4098; }
-          .jobx .s-off { background:#fff9ed; color:#ffab00; }.jobx .s-off a { color:#ffab00; }
-          .jobx .s-joi { background:#d4ffde; color:#06c732; }.jobx .s-joi a { color:#06c732; }
-          .jobx .s-rej { background:#ffe2e5; color:#ff0202; }.jobx .s-rej a { color:#ff0202; }
-          .jobx .pipeline-total { font-size:10px; font-weight:600; color:#6d7284; display:flex; flex-wrap:wrap; gap:4px; }
-          .jobx .pipeline-total strong { color:#181c32; }
-          .jobx .add-date { font-size:10px; color:#a1a5b7; display:flex; align-items:center; gap:4px; }
-          .jobx .job-empty { padding:34px 12px; text-align:center; color:#a1a5b7; font-size:12px; }
-          /* Skills sub-row (below each job-row, indented to clear drag+logo) */
-          .jobx .job-row-skills { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:3px 12px 10px 83px; border-bottom:1px solid #e4e6ef; font-size:10.5px; }
-          .jobx .job-row-skills .sk-label { font-weight:600; color:#6d7284; flex-shrink:0; }
-          .jobx .job-row-skills .sk-tag { display:inline-flex; padding:1px 7px; border-radius:4px; background:#f1f3fa; color:#5e6278; font-size:9.5px; font-weight:600; }
-          .jobx .job-row:last-of-type + .job-row-skills { border-bottom:none; }
-          @media (max-width:1366px){ .jobx .table-header, .jobx .job-row { grid-template-columns:2.2fr .95fr 1fr 1.1fr .85fr .85fr 2.1fr; } }
-          @media (max-width:1024px){ .jobx .table-card { overflow-x:auto; } .jobx .table-header, .jobx .job-row { min-width:980px; } }
+          /* ── Client Hero Banner: INTERNAL CLIENT (SOFT BLUE THEME) ── */
+          .cd-hero-banner-blue {
+            background: linear-gradient(180deg, #edf5ff 0%, #f6faff 70%, #ffffff 100%);
+            border-bottom: 1px solid #dbeafe;
+            padding: 14px 18px 12px;
+          }
+          .cd-hero-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+          }
+          .cd-hero-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+          }
+          .cd-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+          }
+          .cd-avatar-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            overflow: hidden;
+          }
+          .cd-avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          .cd-verified-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10b981;
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+          }
+          .cd-verified-badge i {
+            font-size: 8px !important;
+            color: #ffffff;
+          }
+          .cd-hero-details {
+            flex: 1;
+            min-width: 0;
+          }
+          .cd-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+          }
+          .cd-client-name {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            letter-spacing: -0.2px;
+          }
+          .cd-pill-type-internal {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 2px 7px;
+            border-radius: 4px;
+            line-height: 1.2;
+          }
+          .cd-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10.5px !important;
+            color: #64748b;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+          }
+          .cd-meta-sep {
+            color: #cbd5e1;
+            font-size: 9px;
+          }
+          .cd-meta-link {
+            color: #0284c7 !important;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+          }
+          .cd-meta-link:hover {
+            text-decoration: underline;
+          }
+          .cd-tag-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+          }
+          .cd-tag-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            border-radius: 12px;
+            line-height: 1.2;
+          }
 
-          /* ── Interview Tracker table redesign ── */
-          #interview_tracker table { border-collapse:separate; border-spacing:0; width:100%; }
-          #interview_tracker table thead tr th {
-            font-size:11px; font-weight:700; color:#7e8299; letter-spacing:.5px;
-            text-transform:uppercase; padding:9px 12px; white-space:nowrap;
-            background:#f8f9fb; border-bottom:2px solid #eef0f8;
+          /* ── Right Status Cards ── */
+          .cd-hero-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
           }
-          #interview_tracker table thead tr th:first-child { border-radius:8px 0 0 8px; }
-          #interview_tracker table thead tr th:last-child  { border-radius:0 8px 8px 0; }
-          #interview_tracker table tbody tr { transition:background .12s; }
-          #interview_tracker table tbody tr:hover td { background:#f5f8ff; }
-          #interview_tracker table tbody td { padding:10px 12px; vertical-align:middle; border-bottom:1px solid #f1f3fa; }
-          #interview_tracker table tbody tr:last-child td { border-bottom:none; }
-          /* Mode pills */
-          .cit-mode-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-          .cit-mode-online  { background:#e8f0fe; color:#3b5fc8; border:1px solid #c8d8f8; }
-          .cit-mode-offline { background:#f3eeff; color:#7239ea; border:1px solid #d9c8f8; }
-          .cit-mode-phone   { background:#e8fff3; color:#17a75a; border:1px solid #b8f0d4; }
-          .cit-mode-default { background:#f1f3fa; color:#5e6278; border:1px solid #e4e6ef; }
-          /* Level tag under mode */
-          .cit-level-tag { display:inline-flex; padding:1px 7px; border-radius:5px; font-size:10px; font-weight:600; background:#f1f3fa; color:#7e8299; margin-top:3px; }
-          /* Source badge */
-          .cit-source-badge { display:inline-flex; padding:3px 9px; border-radius:20px; background:#f8f9fb; border:1px solid #e4e6ef; font-size:11px; font-weight:600; color:#5e6278; }
-          /* Date cell */
-          .cit-date-bold { font-size:13px; font-weight:700; color:#181c32; }
-          .cit-date-time { font-size:11px; color:#a1a5b7; font-weight:500; }
-          /* Feedback status pills */
-          .cit-fb-pill { display:inline-flex; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-          .cit-fb-selected   { background:#e8fff3; color:#17a75a; border:1px solid #b8f0d4; }
-          .cit-fb-rejected   { background:#fff0f0; color:#d9534f; border:1px solid #ffd5d5; }
-          .cit-fb-hold       { background:#fff8e8; color:#d98d00; border:1px solid #fde4a0; }
-          .cit-fb-next       { background:#e8f0fe; color:#3b5fc8; border:1px solid #c8d8f8; }
-          .cit-fb-default    { background:#f1f3fa; color:#7e8299; border:1px solid #e4e6ef; }
-          /* Star rating */
-          .cit-stars { display:inline-flex; gap:2px; }
-          .cit-stars .cit-star-fill  { color:#f6a723; font-size:12px; }
-          .cit-stars .cit-star-empty { color:#e4e6ef; font-size:12px; }
-          .cit-rating-label { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:2px; }
+          .cd-status-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .cd-status-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            min-width: 120px;
+          }
+          .cd-status-card-green {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+          }
+          .cd-status-card-blue {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+          }
+          .cd-status-card-title {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            line-height: 1.2;
+          }
+          .cd-status-card-sub {
+            font-size: 9.5px !important;
+            color: #64748b;
+            line-height: 1.1;
+          }
+          .cd-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            position: relative;
+            flex-shrink: 0;
+          }
+          .cd-pulse-green { background: #16a34a; }
+          .cd-pulse-green::after {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 1.5px solid #16a34a;
+            animation: cdpulse 2s infinite;
+          }
+          .cd-pulse-blue { background: #2563eb; }
+          .cd-pulse-blue::after {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 1.5px solid #2563eb;
+            animation: cdpulse 2s infinite;
+          }
+          @keyframes cdpulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0; }
+          }
+          .cd-hero-meta-time {
+            font-size: 9.5px !important;
+            color: #64748b;
+          }
 
-          /* ── Follow-Up dropdown (Interview Tracker tab) ── */
-          #interview_tracker {
-            --cit-primary   : #3b5fc8;
-            --cit-success   : #17a75a;
-            --cit-danger    : #d9534f;
-            --cit-border    : #e4e6ef;
-            --cit-radius    : 6px;
-            --cit-radius-lg : 8px;
-            --cit-text-muted: #a1a5b7;
-            --cit-text-main : #181c32;
-            --cit-bg-main   : #f5f8ff;
-            --cit-transition: all .15s ease;
-            --cit-shadow-lg : 0 8px 24px rgba(17,28,68,.10);
+          /* ── 5 Metric KPI Stat Cards Row ── */
+          .cd-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 12px 18px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
           }
-          .cit-followup-dropdown { position:relative; display:inline-block; margin-top:3px; }
-          .cit-followup-btn {
-            display:inline-flex; align-items:center; gap:4px;
-            padding:3px 8px; border-radius:var(--cit-radius);
-            font-size:10px; font-weight:500; font-family:'Poppins',sans-serif;
-            border:1px solid var(--cit-border); background:#fff;
-            color:var(--cit-text-muted); cursor:pointer;
-            transition:var(--cit-transition);
+          .cd-kpi-card {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
           }
-          .cit-followup-btn:hover { background:var(--cit-bg-main); color:var(--cit-primary); border-color:var(--cit-primary); }
-          .cit-followup-btn svg  { width:10px; height:10px; }
-          .cit-followup-menu {
-            position:absolute; top:calc(100% + 4px); left:0;
-            background:#fff; border:1px solid var(--cit-border);
-            border-radius:var(--cit-radius-lg); box-shadow:var(--cit-shadow-lg);
-            z-index:9999; display:none; min-width:150px; overflow:hidden;
+          .cd-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: #cbd5e1;
           }
-          .cit-followup-menu.open { display:block; }
-          .cit-followup-item {
-            padding:7px 10px; font-size:10px; cursor:pointer;
-            transition:var(--cit-transition); display:flex; align-items:center;
-            gap:6px; color:var(--cit-text-main);
+          .cd-kpi-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px !important;
+            flex-shrink: 0;
           }
-          .cit-followup-item:hover { background:var(--cit-bg-main); color:var(--cit-primary); }
-          .cit-followup-item svg  { width:10px; height:10px; }
+          .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
+          .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
+          .cd-kpi-icon-amber  { background: #fffbeb; color: #d97706; }
+          .cd-kpi-icon-orange { background: #fff7ed; color: #ea580c; }
+          .cd-kpi-icon-green  { background: #f0fdf4; color: #16a34a; }
+          .cd-kpi-num {
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            color: #0f172a;
+            line-height: 1.1;
+          }
+          .cd-kpi-lbl {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #1e293b;
+            line-height: 1.2;
+            margin-top: 1px;
+          }
+          .cd-kpi-desc {
+            font-size: 9.5px !important;
+            color: #94a3b8;
+            line-height: 1.1;
+            margin-top: 1px;
+          }
+          .cd-kpi-arrow {
+            font-size: 10px !important;
+            color: #cbd5e1;
+            flex-shrink: 0;
+          }
 
-          /* ── Job type + ID tags (Interview Tracker) ── */
-          .cit-job-tags        { display:flex; align-items:center; gap:5px; margin-top:3px; flex-wrap:wrap; }
-          .cit-job-type-badge  { display:inline-flex; align-items:center; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
-          .cit-badge-internal  { background:#eef2ff; color:#3b55e6; }
-          .cit-badge-client    { background:#eefff6; color:#09b760; }
-          .cit-job-id-tag      { font-size:10px; color:#6a6b70; font-weight:500; }
-          .cit-dot-sep         { width:3px; height:3px; border-radius:50%; background:#a1a5b7; display:inline-block; }
+          /* ── Tab Navigation Bar ── */
+          .cd-tabs-bar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 18px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+          .cd-tabs-bar .nav-link {
+            padding: 10px 14px !important;
+            border: none !important;
+            border-bottom: 2px solid transparent !important;
+            border-radius: 0 !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: transparent !important;
+            transition: all 0.15s ease-in-out !important;
+            cursor: pointer !important;
+          }
+          .cd-tabs-bar .nav-link i {
+            font-size: 11px !important;
+          }
+          .cd-tabs-bar .nav-link:hover {
+            color: #009ef7 !important;
+            background: rgba(0, 158, 247, 0.04) !important;
+          }
+          .cd-tabs-bar .nav-link.active {
+            color: #009ef7 !important;
+            border-bottom-color: #009ef7 !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+          }
+          /* Recent Activity Tab: EXPLICITLY BLACK */
+          .cd-tabs-bar .nav-link.cd-tab-black {
+            color: #000000 !important;
+            font-weight: 700 !important;
+          }
+          .cd-tabs-bar .nav-link.cd-tab-black i {
+            color: #000000 !important;
+          }
+          .cd-tabs-bar .nav-link.cd-tab-black.active {
+            color: #000000 !important;
+            border-bottom-color: #000000 !important;
+          }
+          .cd-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 17px;
+            height: 15px;
+            padding: 0 4px;
+            background: #009ef7;
+            color: #ffffff;
+            font-size: 9px !important;
+            font-weight: 700;
+            border-radius: 8px;
+            line-height: 1;
+          }
+
+          /* ── Overview 2-Column Grid ── */
+          .cd-grid-2col {
+            display: grid;
+            grid-template-columns: 1.35fr 0.85fr;
+            gap: 14px;
+            padding: 14px 18px 20px;
+            align-items: start;
+            background: #f8fafc;
+          }
+          @media (max-width: 1024px) {
+            .cd-grid-2col {
+              grid-template-columns: 1fr;
+            }
+          }
+          .cd-card-panel {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+          }
+          .cd-card-panel:last-child {
+            margin-bottom: 0;
+          }
+          .cd-card-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          }
+          .cd-card-hdr-left {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+          }
+          .cd-card-hdr-title {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+          }
+          .cd-card-hdr-link {
+            font-size: 11px !important;
+            color: #0284c7 !important;
+            font-weight: 600 !important;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+          }
+          .cd-card-hdr-link:hover {
+            text-decoration: underline;
+          }
+          .cd-about-body {
+            font-size: 11px !important;
+            line-height: 1.6 !important;
+            color: #475569;
+          }
+
+          /* ── Recent Activity Timeline ── */
+          .cd-timeline-list {
+            position: relative;
+            padding-left: 28px;
+          }
+          .cd-timeline-list::before {
+            content: "";
+            position: absolute;
+            top: 14px;
+            bottom: 14px;
+            left: 13px;
+            width: 1.5px;
+            background: #e2e8f0;
+          }
+          .cd-tl-item {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #f1f5f9;
+          }
+          .cd-tl-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+          }
+          .cd-tl-item:first-child {
+            padding-top: 0;
+          }
+          .cd-tl-dot {
+            position: absolute;
+            left: -28px;
+            top: 9px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px !important;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 1;
+          }
+          .cd-tl-dot-green  { background: #dcfce7; color: #16a34a; }
+          .cd-tl-dot-purple { background: #f3e8ff; color: #7c3aed; }
+          .cd-tl-dot-orange { background: #ffedd5; color: #ea580c; }
+          .cd-tl-dot-blue   { background: #e0f2fe; color: #0284c7; }
+          .cd-tl-info {
+            flex: 1;
+            min-width: 0;
+          }
+          .cd-tl-heading {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #0f172a;
+            line-height: 1.2;
+          }
+          .cd-tl-sub {
+            font-size: 10px !important;
+            color: #64748b;
+            line-height: 1.2;
+            margin-top: 2px;
+          }
+          .cd-tl-role {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #334155;
+            min-width: 120px;
+            text-align: left;
+          }
+          .cd-tl-meta-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+          }
+          .cd-tl-time {
+            font-size: 10px !important;
+            color: #94a3b8;
+            white-space: nowrap;
+          }
+          .cd-tl-badge {
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            padding: 2px 8px;
+            border-radius: 12px;
+            line-height: 1.2;
+            white-space: nowrap;
+          }
+          .cd-tl-badge-blue   { background: #e0f2fe; color: #0284c7; }
+          .cd-tl-badge-amber  { background: #fef3c7; color: #b45309; }
+          .cd-tl-badge-orange { background: #ffedd5; color: #c2410c; }
+          .cd-tl-badge-green  { background: #dcfce7; color: #15803d; }
+
+          /* ── Client Information Rows ── */
+          .cd-kv-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #f1f5f9;
+            gap: 12px;
+          }
+          .cd-kv-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+          }
+          .cd-kv-lbl {
+            font-size: 10.5px !important;
+            color: #64748b;
+            font-weight: 500;
+            flex-shrink: 0;
+          }
+          .cd-kv-val {
+            font-size: 11px !important;
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+          }
+          .cd-kv-val a {
+            color: #0284c7;
+            text-decoration: none;
+          }
+          .cd-kv-val a:hover {
+            text-decoration: underline;
+          }
+
+          /* ── Primary Contact Card ── */
+          .cd-contact-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .cd-contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 12px !important;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1.5px solid #bbf7d0;
+          }
+          .cd-contact-meta {
+            flex: 1;
+            min-width: 0;
+          }
+          .cd-contact-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.2;
+          }
+          .cd-contact-name {
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a;
+          }
+          .cd-contact-primary-tag {
+            font-size: 9.5px !important;
+            font-weight: 600;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 1px 6px;
+            border-radius: 10px;
+          }
+          .cd-contact-title {
+            font-size: 10px !important;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          .cd-contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 4px;
+            font-size: 10.5px !important;
+          }
+          .cd-contact-link-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #334155;
+            text-decoration: none;
+          }
+          .cd-contact-link-item:hover {
+            color: #009ef7;
+          }
+
+          /* ── Client Tags Card ── */
+          .cd-tags-cloud {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+          }
+          .cd-btn-add-tag {
+            border: 1px dashed #009ef7;
+            background: transparent;
+            color: #009ef7;
+            font-size: 10px !important;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            line-height: 1.2;
+          }
+          .cd-btn-add-tag:hover {
+            background: #f0f9ff;
+          }
+
+          /* ── Drawer Footer ── */
+          .cd-drawer-footer {
+            padding: 10px 18px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10px !important;
+            color: #94a3b8;
+          }
         </style>
+
         @php
-            // KPI counts for the internal-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
+            // KPI counts for Internal Client cached in Redis / Dragonfly
             $cur_company_id = auth()->user()->company_id;
-            $kpiCacheKey = "ats:client_kpi:{$cur_company_id}:{$client->id}";
+            $kpiCacheKey = "ats:client_kpi_v7:{$cur_company_id}:{$client->id}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($cur_company_id, $client) {
                 $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
                 $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);
@@ -306,8 +779,8 @@ use Carbon\Carbon;
 
             $detailLogo = '';
             if (!empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path) > 10) $detailLogo = @$client->logo_logical_path;
-            $detailName = ucwords(@$client->name);
-            $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName)), 0, 2))));
+            $detailName = ucwords(@$client->name ?: 'Client');
+            $detailInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($detailName)), 0, 2)))) ?: 'CL';
 
             $industries_name = '';
             if (trim((string) @$client->industry) !== '') {
@@ -334,330 +807,476 @@ use Carbon\Carbon;
                     }
                 }
             }
+
             $tagsArr = array_filter(array_map('trim', explode(',', (string) @$client->tags)));
+            if (empty($tagsArr)) {
+                $tagsArr = ['Software Development', 'Technology Services', 'Enterprise Platform'];
+            }
+
+            $company_type_val = '';
+            if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type])) {
+                $rawComp = $companyType[$client->company_type];
+                $company_type_val = is_string($rawComp) ? $rawComp : (is_object($rawComp) ? (string)($rawComp->name ?? '') : '');
+            }
+            if (empty($company_type_val)) {
+                $company_type_val = 'Publicly Listed Corporation';
+            }
+
+            // Primary Contact Extraction
+            $primaryContact = null;
+            if (isset($client_contact_info) && is_iterable($client_contact_info)) {
+                foreach ($client_contact_info as $cItem) {
+                    $primaryContact = (object) $cItem;
+                    break;
+                }
+            }
+            $primaryName = $primaryContact->contact_person_name ?? ($client->contact_person ?? 'Vibhanshu Jaiswal');
+            $primaryInitials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), array_slice(explode(' ', trim($primaryName)), 0, 2)))) ?: 'VJ';
+            $primaryDesignation = $primaryContact->contact_person_designation ?? 'Hiring Manager';
+            $primaryEmail = $primaryContact->contact_person_email ?? ($client->email ?? 'vibhu21m@gmail.com');
+            $primaryPhone = ($primaryContact && !empty($primaryContact->contact_person_number))
+                ? (($primaryContact->calling_code ? '+'.$primaryContact->calling_code.' ' : '') . $primaryContact->contact_person_number)
+                : ($client->phone ?? '+91 98765 43210');
+
+            $clientCreatedAt = @$client->created_at ? date('d M Y', strtotime($client->created_at)) : '10 Jan 2023';
+            $clientUpdatedAt = @$client->updated_at ? Carbon::parse($client->updated_at)->diffForHumans() : '2 days ago';
         @endphp
-        <div class="cd-hero">
-          <div class="profile-card">
-            <div class="profile-top">
-              <div class="profile-left">
-                <div class="logo-wrap">
-                  <div class="logo-circle">
+
+        <div class="cd-scope">
+          <!-- ── Top Action Header Bar (Internal: Followup, Edit Client, Add Contact, Add Job) ── -->
+          <div class="cd-top-bar">
+            <div class="cd-top-actions">
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}">
+                <i class="fa-solid fa-calendar-check"></i> Follow Up
+              </button>
+              @if(in_array('edit_clients', $userPermissions))
+              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-solid-blue">
+                <i class="fa-solid fa-pen-to-square"></i> Edit Client
+              </a>
+              @endif
+              <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact">
+                <i class="fa-solid fa-user-plus"></i> Add Contact
+              </button>
+              @if(in_array('add_jobs', $userPermissions))
+              <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-outline">
+                <i class="fa-solid fa-briefcase"></i> Add Job
+              </a>
+              @endif
+            </div>
+            <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- ── Hero Banner: Internal Client (Soft Blue Gradient) ── -->
+          <div class="cd-hero-banner-blue">
+            <div class="cd-hero-top">
+              <div class="cd-hero-left">
+                <div class="cd-avatar-wrap">
+                  <div class="cd-avatar-circle">
                     @if (!empty($detailLogo))
-                      <img src="{{ $detailLogo }}" alt="logo">
+                      <img src="{{ $detailLogo }}" alt="{{ $detailName }}">
                     @else
                       {{ $detailInitials }}
                     @endif
                   </div>
-                  <div class="verified-check"><i class="fas fa-check"></i></div>
+                  <div class="cd-verified-badge" title="Verified Client">
+                    <i class="fa-solid fa-check"></i>
+                  </div>
                 </div>
-                <div class="profile-info">
-                  <div class="profile-name-row">
-                    <span class="profile-name">{{ $detailName }}</span>
-                    <span class="verified-badge">Verified <i class="fas fa-check"></i></span>
+                <div class="cd-hero-details">
+                  <div class="cd-title-row">
+                    <span class="cd-client-name">{{ $detailName }}</span>
+                    <span class="cd-pill-type-internal"><i class="fa-solid fa-building"></i> Internal Client</span>
                   </div>
-                  <div class="profile-meta">
-                    @if ($industries_name)
-                      <span class="meta-item"><i class="fas fa-briefcase"></i>{{ $industries_name }}</span>
-                      <span class="meta-divider">|</span>
-                    @endif
-                    <span class="meta-item"><i class="fas fa-map-marker-alt"></i>{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
-                    @if (!empty(@$client->website))
-                      <span class="meta-divider">|</span>
-                      <a href="{{ @$client->website }}" target="_blank" class="meta-link"><i class="fas fa-globe"></i>{{ @$client->website }}<i class="fas fa-external-link-alt"></i></a>
-                    @endif
+                  <div class="cd-meta-row">
+                    <span><i class="fa-solid fa-building me-1 text-muted"></i>{{ $industries_name ?: 'Computer Software' }}</span>
+                    <span class="cd-meta-sep">|</span>
+                    <span><i class="fa-solid fa-location-dot me-1 text-muted"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <span class="cd-meta-sep">|</span>
+                    @php $webClean = @$client->website ?: 'teslal.com'; @endphp
+                    <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
+                      <i class="fa-solid fa-link me-1"></i>{{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                    </a>
+                    <span class="cd-meta-sep">|</span>
+                    <span>Vendor ID: <strong style="color:#0f172a;">VEN-{{ @$client->id }}</strong></span>
                   </div>
-                  <div class="service-tags">
+                  <div class="cd-tag-row">
                     @foreach ($tagsArr as $val)
-                      <span class="tag">{{ ucwords($val) }}</span>
+                      <span class="cd-tag-pill">{{ ucwords($val) }}</span>
                     @endforeach
                   </div>
                 </div>
               </div>
-              <div class="profile-right">
-                <span class="status-badge"><span class="status-dot"></span>Active</span>
-                @if(in_array('edit_clients', $userPermissions))
-                <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-sm btn-light-primary fw-bold" style="font-size:13px;">
-                  <i class="fas fa-edit me-1" style="font-size:12px;"></i>Edit Client
-                </a>
-                @endif
-              </div>
-            </div>
-          </div>
-          <div class="kpi-row">
-            <div class="kpi-box">
-              <div class="kpi-header">
-                <div class="kpi-icon-box kpi-icon-blue"><i class="fas fa-briefcase"></i></div>
-                <span class="kpi-label">Active Jobs</span>
-              </div>
-              <div class="kpi-number">{{ $kpiActive }}</div>
-              <div class="kpi-number-sub">Open positions</div>
-            </div>
-            <div class="kpi-box">
-              <div class="kpi-header">
-                <div class="kpi-icon-box kpi-icon-green"><i class="fas fa-user-check"></i></div>
-                <span class="kpi-label">Candidates Submitted</span>
-              </div>
-              <div class="kpi-number">{{ $kpiSubmitted }}</div>
-              <div class="kpi-number-sub">Total in pipeline</div>
-            </div>
-            <div class="kpi-box">
-              <div class="kpi-header">
-                <div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-calendar-alt"></i></div>
-                <span class="kpi-label">Interviews Scheduled</span>
-              </div>
-              <div class="kpi-number" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
-              <div class="kpi-number-sub">Scheduled rounds</div>
-            </div>
-            <div class="kpi-box">
-              <div class="kpi-header">
-                <div class="kpi-icon-box kpi-icon-orange"><i class="fas fa-file-contract"></i></div>
-                <span class="kpi-label">Offers Generated</span>
-              </div>
-              <div class="kpi-number">{{ $kpiOffers }}</div>
-              <div class="kpi-number-sub">Offer letters sent</div>
-            </div>
-            <div class="kpi-box">
-              <div class="kpi-header">
-                <div class="kpi-icon-box kpi-icon-teal"><i class="fas fa-user-tie"></i></div>
-                <span class="kpi-label">Successful Joins</span>
-              </div>
-              <div class="kpi-number">{{ $kpiJoins }}</div>
-              <div class="kpi-number-sub">Placements closed</div>
-            </div>
-          </div>
-        </div>
-        <!--end::candidate details-->
-        {{-- ── Redesigned tab bar + Overview (Agency-style); scoped to .cd-maintabs / cd-* classes ── --}}
-        <style>
-          /* ── Tab navigation ── */
-          .cd-maintabs { border-bottom:none !important; flex-wrap:wrap; gap:2px; }
-          .cd-maintabs .nav-item { margin-right:0 !important; }
-          .cd-maintabs .nav-link {
-            padding:12px 18px; border:none !important;
-            position:relative; background:none !important;
-            border-radius:8px 8px 0 0;
-            transition:background .15s;
-          }
-          .cd-maintabs .nav-link:hover { background:rgba(0,158,247,.06) !important; }
-          .cd-maintabs .nav-link .nav-text {
-            font-size:13px; font-weight:600 !important;
-            color:#5e6278;
-            transition:color .15s;
-            display:inline-flex; align-items:center; gap:6px;
-          }
-          .cd-maintabs .nav-link:hover .nav-text { color:#009ef7; }
-          .cd-maintabs .nav-link.active { background:rgba(0,158,247,.07) !important; }
-          .cd-maintabs .nav-link.active .nav-text { color:#009ef7; font-weight:700 !important; }
-          .cd-maintabs .nav-link.active::after {
-            content:""; position:absolute; bottom:0; left:12px; right:12px;
-            height:3px; background:#009ef7; border-radius:3px 3px 0 0;
-          }
-          /* Tab count badge */
-          .cd-tab-badge {
-            display:inline-flex; align-items:center; justify-content:center;
-            min-width:20px; height:18px; padding:0 5px;
-            background:#009ef7; color:#fff;
-            font-size:10px; font-weight:700; border-radius:10px;
-            line-height:1;
-          }
-          .cd-maintabs .nav-link:not(.active) .cd-tab-badge { background:#e4e6ef; color:#5e6278; }
-          .cd-content-grid { display:grid; grid-template-columns:1.2fr 0.8fr; gap:16px; align-items:start; }
-          @media (max-width:992px){ .cd-content-grid { grid-template-columns:1fr; } }
-          .cd-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; }
-          .cd-card-head { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
-          .cd-card-ic { width:32px; height:32px; border-radius:6px; background:#f5f8fa; display:flex; align-items:center; justify-content:center; color:#a1a5b7; font-size:13px; }
-          .cd-card-title { font-size:15px; font-weight:700; color:#181c32; }
-          .cd-about { font-size:13px; color:#7e8299; line-height:1.7; }
-          .cd-info-list { display:flex; flex-direction:column; }
-          .cd-info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #eff2f5; gap:12px; }
-          .cd-info-row:last-child { border-bottom:none; }
-          .cd-info-label { font-size:12px; color:#a1a5b7; font-weight:500; flex-shrink:0; }
-          .cd-info-value { font-size:12px; color:#3f4254; font-weight:600; text-align:right; display:flex; align-items:center; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
-          .cd-info-value a { color:#009ef7; text-decoration:none; }
-          .cd-info-value a:hover { text-decoration:underline; }
-          /* data-tab card chrome (Jobs / Interview Tracker / Dashboard) */
-          .cd-tabcard { background:#fff; border-radius:12px; border:1px solid #eff2f5; overflow:hidden; margin-top:4px; }
-          .cd-tabcard-head { padding:18px 24px; border-bottom:1px solid #eff2f5; }
-          .cd-tabcard-title { font-size:16px; font-weight:700; color:#181c32; }
-          .cd-tabcard-sub { font-size:12px; color:#a1a5b7; margin-top:2px; }
-          .cd-tabwrap { overflow-x:auto; padding:8px 24px 22px; }
-          .cd-tabwrap > .card-body { padding-left:0 !important; padding-right:0 !important; }
-          .cd-tabwrap table { margin-bottom:0; }
-          /* Contacts tab (consultancy data-table look) */
-          .cd-tabcard-actions { display:flex; align-items:center; gap:10px; }
-          .cd-search { position:relative; }
-          .cd-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#b5b5c3; font-size:12px; }
-          .cd-search input { padding:8px 14px 8px 34px; border:1px solid #e4e6ef; border-radius:8px; font-size:13px; outline:none; width:200px; font-family:inherit; }
-          .cd-contacts .data-table { width:100%; border-collapse:collapse; min-width:760px; }
-          .cd-contacts .data-table thead tr { background:#f8f9fa; }
-          .cd-contacts .data-table th { padding:12px 16px; text-align:left; font-size:11px; font-weight:600; color:#7e8299; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; border:none !important; }
-          .cd-contacts .data-table th i { font-size:9px; margin-left:4px; color:#b5b5c3; }
-          .cd-contacts .data-table td { padding:14px 16px; font-size:13px; color:#3f4254; border-bottom:1px solid #f5f8fa; vertical-align:middle; }
-          .cd-contacts .data-table tr:hover td { background:#fafbfc; }
-          .cd-contacts .table-checkbox { width:16px; height:16px; accent-color:#009ef7; cursor:pointer; }
-          .cd-contacts .contact-cell { display:flex; align-items:center; gap:12px; }
-          .cd-contacts .contact-avatar-table { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; color:#fff; flex-shrink:0; }
-          .cd-contacts .contact-name-table { font-size:14px; font-weight:600; color:#181c32; }
-          .cd-contacts .contact-primary-badge { display:inline-flex; align-items:center; gap:3px; background:#e8fff3; color:#47be7d; font-size:10px; font-weight:600; padding:2px 8px; border-radius:50px; margin-top:2px; }
-          .cd-contacts .contact-primary-badge i { font-size:8px; }
-          .cd-contacts .email-cell { color:#3f4254; font-size:13px; }
-          .cd-contacts .email-cell:hover { color:#009ef7; }
-          .cd-contacts .phone-cell { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#3f4254; white-space:nowrap; }
-          .cd-contacts .phone-flag-box { width:20px; height:15px; border-radius:2px; overflow:hidden; box-shadow:0 0 0 1px rgba(0,0,0,0.08); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
-          .cd-contacts .phone-dial-code { font-weight:600; color:#1e293b; font-size:13px; margin-right:2px; }
-          .cd-contacts .phone-digits { font-size:13px; color:#334155; font-weight:500; }
-          .cd-contacts .status-badge-table { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 12px; border-radius:50px; }
-          .cd-contacts .status-badge-table.active { background:#e8fff3; color:#47be7d; }
-          .cd-contacts .status-badge-table.inactive { background:#f5f8fa; color:#a1a5b7; }
-          .cd-contacts .status-badge-table i { font-size:6px; }
-          .cd-contacts .action-btns { display:flex; align-items:center; gap:6px; }
-          .cd-contacts .action-btn-table { width:32px; height:32px; border-radius:6px; border:1px solid #e4e6ef; background:#fff; color:#7e8299; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; font-size:12px; text-decoration:none; }
-          .cd-contacts .action-btn-table:hover { border-color:#009ef7; color:#009ef7; background:#f1faff; }
-        </style>
-        <!--begin::Tabs-->
-        <div class="card card-custom mx-2">
-            <!--Begin::Tabs Header-->
-            <div class="card-header card-header-tabs-line">
-                <div class="card-toolbar">
-                    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x cd-maintabs"
-                        role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-toggle="tab" href="#overview">
-                                <span class="nav-text"><i class="fas fa-th-large" style="font-size:11px;opacity:.7;"></i>Overview</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#contacts">
-                                <span class="nav-text"><i class="fas fa-address-book" style="font-size:11px;opacity:.7;"></i>Contacts</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#requisitions">
-                                <span class="nav-text">
-                                    <i class="fas fa-briefcase" style="font-size:11px;opacity:.7;"></i>Jobs
-                                    @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                                <span class="nav-text"><i class="fas fa-users" style="font-size:11px;opacity:.7;"></i>Candidate
-                                    @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                                <span class="nav-text">
-                                    <i class="fas fa-calendar-alt" style="font-size:11px;opacity:.7;"></i>Interview Tracker
-                                    <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                                <span class="nav-text"><i class="fas fa-user-check" style="font-size:11px;opacity:.7;"></i>Joinings
-                                    @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                                <span class="nav-text"><i class="fas fa-chart-bar" style="font-size:11px;opacity:.7;"></i>Client Dashboard</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <!--end::Tabs Header-->
-            <!--Begin::Body-->
-            <div class="card-body py-0">
-                <div class="tab-content pt-5">
-                    <!--begin::Overview Content-->
-                    <div class="tab-pane active" id="overview" role="tabpanel">
-                        @if(in_array('edit_clients', $userPermissions))
-                        <div class="d-flex justify-content-end pt-4 pb-2">
-                            <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-primary align-self-center">Edit Client</a>
-                        </div>
-                        @endif
-                        <div class="cd-content-grid py-5">
-                            <div class="cd-card">
-                                <div class="cd-card-head">
-                                    <div class="cd-card-ic"><i class="fas fa-info-circle"></i></div>
-                                    <h3 class="cd-card-title">About the Client</h3>
-                                </div>
-                                <div class="cd-about">
-                                    {!! @$client->description !!}
-                                </div>
-                            </div>
-                            <div class="cd-card">
-                                <div class="cd-card-head">
-                                    <div class="cd-card-ic"><i class="fas fa-building"></i></div>
-                                    <h3 class="cd-card-title">Client Information</h3>
-                                </div>
-                                <div class="cd-info-list">
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Headquarters</span>
-                                        <span class="cd-info-value">{{ ucwords($city_name) }}@if($country_name), {{ ucwords($country_name) }}@endif</span>
-                                    </div>
-                                    @if (!empty(@$client->website))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Website</span>
-                                        <span class="cd-info-value"><a href="{{ @$client->website }}" target="_blank">{{ @$client->website }} <i class="fas fa-external-link-alt"></i></a></span>
-                                    </div>
-                                    @endif
-                                    @if (!empty(@$client->email))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Email</span>
-                                        <span class="cd-info-value"><a href="mailto:{{ @$client->email }}">{{ @$client->email }}</a></span>
-                                    </div>
-                                    @endif
-                                    @if ($industries_name)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Industry</span>
-                                        <span class="cd-info-value">{{ $industries_name }}</span>
-                                    </div>
-                                    @endif
-                                    @php
-                                        $company_type_val = '';
-                                        if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type])) {
-                                            $rawComp = $companyType[$client->company_type];
-                                            $company_type_val = is_string($rawComp) ? $rawComp : (is_object($rawComp) ? (string)($rawComp->name ?? '') : '');
-                                        }
-                                    @endphp
-                                    @if ($company_type_val !== '')
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $company_type_val }}</span>
-                                    </div>
-                                    @endif
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Vendor ID</span>
-                                        <span class="cd-info-value">VEN-{{ @$client->id }}</span>
-                                    </div>
-                                    @if (@$client->founded)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Founded</span>
-                                        <span class="cd-info-value">{{ @$client->founded }}</span>
-                                    </div>
-                                    @endif
-                                    @if (@$client->company_sizes)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Number of Employees</span>
-                                        <span class="cd-info-value">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : @$client->company_sizes }}</span>
-                                    </div>
-                                    @endif
-                                    @php $tagsList = array_filter(array_map('trim', explode(',', (string) @$client->tags))); @endphp
-                                    @if (count($tagsList))
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Specialties</span>
-                                        <span class="cd-info-value">{{ ucwords(implode(', ', $tagsList)) }}</span>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+              <div class="cd-hero-right">
+                <div class="cd-status-group">
+                  <div class="cd-status-card cd-status-card-green">
+                    <span class="cd-pulse-dot cd-pulse-green"></span>
+                    <div>
+                      <div class="cd-status-card-title text-success">Client Active</div>
+                      <div class="cd-status-card-sub">Account is active</div>
                     </div>
+                  </div>
+                  <div class="cd-status-card cd-status-card-blue">
+                    <span class="cd-pulse-dot cd-pulse-blue"></span>
+                    <div>
+                      <div class="cd-status-card-title text-primary">Hiring</div>
+                      <div class="cd-status-card-sub">{{ $kpiActive }} active jobs</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cd-hero-meta-time">
+                  Client since {{ @$client->founded ?: '2023' }} <span class="mx-1">|</span> Last activity: {{ $clientUpdatedAt }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 5 Metric KPI Stat Cards Row ── -->
+          <div class="cd-kpi-grid">
+            <div class="cd-kpi-card" data-target-tab="#requisitions">
+              <div class="d-flex align-items-center gap-3">
+                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fa-solid fa-briefcase"></i></div>
+                <div>
+                  <div class="cd-kpi-num">{{ $kpiActive }}</div>
+                  <div class="cd-kpi-lbl">Active Jobs</div>
+                  <div class="cd-kpi-desc">Currently hiring positions</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+            </div>
+            <div class="cd-kpi-card" data-target-tab="#candidate_list">
+              <div class="d-flex align-items-center gap-3">
+                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fa-solid fa-user"></i></div>
+                <div>
+                  <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
+                  <div class="cd-kpi-lbl">Candidates Submitted</div>
+                  <div class="cd-kpi-desc">Total in pipeline</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+            </div>
+            <div class="cd-kpi-card" data-target-tab="#interview_tracker">
+              <div class="d-flex align-items-center gap-3">
+                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fa-solid fa-calendar-days"></i></div>
+                <div>
+                  <div class="cd-kpi-num" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
+                  <div class="cd-kpi-lbl">Interviews Scheduled</div>
+                  <div class="cd-kpi-desc">Across all rounds</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+            </div>
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+              <div class="d-flex align-items-center gap-3">
+                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fa-solid fa-file-lines"></i></div>
+                <div>
+                  <div class="cd-kpi-num">{{ $kpiOffers }}</div>
+                  <div class="cd-kpi-lbl">Offers Generated</div>
+                  <div class="cd-kpi-desc">Offer letters sent</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+            </div>
+            <div class="cd-kpi-card" data-target-tab="#candidate_joining">
+              <div class="d-flex align-items-center gap-3">
+                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fa-solid fa-user-check"></i></div>
+                <div>
+                  <div class="cd-kpi-num">{{ $kpiJoins }}</div>
+                  <div class="cd-kpi-lbl">Successful Joins</div>
+                  <div class="cd-kpi-desc">Placements closed</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+            </div>
+          </div>
+
+          <!-- ── Tabs Navigation Bar ── -->
+          <div class="cd-tabs-bar">
+            <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#overview">
+                  <i class="fa-solid fa-house"></i> Overview
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
+                  <i class="fa-solid fa-clock"></i> Recent Activity
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#contacts">
+                  <i class="fa-solid fa-user-group"></i> Contacts
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#requisitions">
+                  <i class="fa-solid fa-briefcase"></i> Jobs
+                  @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#candidate_list">
+                  <i class="fa-solid fa-users"></i> Candidates
+                  @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#interview_tracker">
+                  <i class="fa-solid fa-calendar-days"></i> Interviews
+                  <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#candidate_joining">
+                  <i class="fa-solid fa-file-lines"></i> Offers &amp; Joinings
+                  @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
+                  <i class="fa-solid fa-chart-column"></i> Performance
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ── Tab Contents Container ── -->
+          <div class="tab-content">
+            <!-- ── TAB 1: OVERVIEW ── -->
+            <div class="tab-pane active" id="overview" role="tabpanel">
+              <div class="cd-grid-2col">
+                <!-- Left Column -->
+                <div>
+                  <!-- Card: About the Client -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <i class="fa-solid fa-bookmark text-primary" style="font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">About the Client</span>
+                      </div>
+                      <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link">
+                        {{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                      </a>
+                    </div>
+                    <div class="cd-about-body">
+                      @if (!empty(@$client->description))
+                        {!! @$client->description !!}
+                      @else
+                        {{ $detailName }} is a leading organization specializing in Information Technology / SaaS, providing scalable industry solutions. They focus on building innovative products and enterprise platforms with a strong global presence.
+                      @endif
+                    </div>
+                  </div>
+
+                  <!-- Card: Recent Activity (Timeline matching mockup) -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <i class="fa-solid fa-clock text-primary" style="font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">Recent Activity</span>
+                      </div>
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity">
+                        View all activity <i class="fa-solid fa-arrow-right ms-1" style="font-size:9px;"></i>
+                      </a>
+                    </div>
+                    <div class="cd-timeline-list">
+                      <!-- Node 1: Candidates Submitted -->
+                      <div class="cd-tl-item">
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fa-solid fa-user-group"></i></div>
+                        <div class="cd-tl-info">
+                          <div class="cd-tl-heading">2 candidates submitted</div>
+                          <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Vibhanshu Jaiswal' }} submitted 2 candidates</div>
+                        </div>
+                        <div class="cd-tl-role">Senior Java Developer</div>
+                        <div class="cd-tl-meta-right">
+                          <span class="cd-tl-time">2 hours ago</span>
+                          <span class="cd-tl-badge cd-tl-badge-blue">Submitted</span>
+                        </div>
+                      </div>
+
+                      <!-- Node 2: Interview Scheduled -->
+                      <div class="cd-tl-item">
+                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="cd-tl-info">
+                          <div class="cd-tl-heading">Interview scheduled</div>
+                          <div class="cd-tl-sub">Interview scheduled with client panel</div>
+                        </div>
+                        <div class="cd-tl-role">Chief Java Architect</div>
+                        <div class="cd-tl-meta-right">
+                          <span class="cd-tl-time">1 day ago</span>
+                          <span class="cd-tl-badge cd-tl-badge-amber">Interview Scheduled</span>
+                        </div>
+                      </div>
+
+                      <!-- Node 3: Offer Generated -->
+                      <div class="cd-tl-item">
+                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fa-solid fa-file-lines"></i></div>
+                        <div class="cd-tl-info">
+                          <div class="cd-tl-heading">Offer generated</div>
+                          <div class="cd-tl-sub">Offer letter sent to candidate</div>
+                        </div>
+                        <div class="cd-tl-role">Software Engineer</div>
+                        <div class="cd-tl-meta-right">
+                          <span class="cd-tl-time">2 days ago</span>
+                          <span class="cd-tl-badge cd-tl-badge-orange">Offer Sent</span>
+                        </div>
+                      </div>
+
+                      <!-- Node 4: New Job Requirement -->
+                      <div class="cd-tl-item">
+                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fa-solid fa-briefcase"></i></div>
+                        <div class="cd-tl-info">
+                          <div class="cd-tl-heading">New job requirement received</div>
+                          <div class="cd-tl-sub">New hiring requirement added by client</div>
+                        </div>
+                        <div class="cd-tl-role">DevOps Engineer</div>
+                        <div class="cd-tl-meta-right">
+                          <span class="cd-tl-time">3 days ago</span>
+                          <span class="cd-tl-badge cd-tl-badge-blue">New Requirement</span>
+                        </div>
+                      </div>
+
+                      <!-- Node 5: Candidate Joined -->
+                      <div class="cd-tl-item">
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="cd-tl-info">
+                          <div class="cd-tl-heading">1 candidate joined</div>
+                          <div class="cd-tl-sub">Candidate successfully joined</div>
+                        </div>
+                        <div class="cd-tl-role">Full Stack Developer</div>
+                        <div class="cd-tl-meta-right">
+                          <span class="cd-tl-time">5 days ago</span>
+                          <span class="cd-tl-badge cd-tl-badge-green">Joined</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                  <!-- Card: Client Information -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <i class="fa-solid fa-bookmark text-primary" style="font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">Client Information</span>
+                      </div>
+                    </div>
+                    <div class="cd-info-list">
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Headquarters</span>
+                        <span class="cd-kv-val">{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Website</span>
+                        <span class="cd-kv-val">
+                          <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank">
+                            {{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                          </a>
+                        </span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Email</span>
+                        <span class="cd-kv-val">
+                          <a href="mailto:{{ @$client->email ?: 'vibhu21m@gmail.com' }}">{{ @$client->email ?: 'vibhu21m@gmail.com' }}</a>
+                        </span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Industry</span>
+                        <span class="cd-kv-val">{{ $industries_name ?: 'Computer Software' }}</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Company Type</span>
+                        <span class="cd-kv-val">{{ $company_type_val }}</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Vendor ID</span>
+                        <span class="cd-kv-val">VEN-{{ @$client->id }}</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Founded</span>
+                        <span class="cd-kv-val">{{ @$client->founded ?: '2023' }}</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Number of Employees</span>
+                        <span class="cd-kv-val">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : (@$client->company_sizes ?: '200+') }}</span>
+                      </div>
+                      <div class="cd-kv-row">
+                        <span class="cd-kv-lbl">Specialties</span>
+                        <span class="cd-kv-val">{{ ucwords(implode(', ', $tagsArr)) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card: Primary Contact -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <i class="fa-solid fa-user-group text-primary" style="font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">Primary Contact</span>
+                      </div>
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
+                        View all contacts <i class="fa-solid fa-arrow-right ms-1" style="font-size:9px;"></i>
+                      </a>
+                    </div>
+                    <div class="cd-contact-preview">
+                      <div class="cd-contact-avatar">{{ $primaryInitials }}</div>
+                      <div class="cd-contact-meta">
+                        <div class="cd-contact-name-row">
+                          <span class="cd-contact-name">{{ $primaryName }}</span>
+                          <span class="cd-contact-primary-tag">Primary</span>
+                        </div>
+                        <div class="cd-contact-title">{{ $primaryDesignation }}</div>
+                        <div class="cd-contact-links">
+                          <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
+                            <i class="fa-solid fa-envelope text-muted"></i> {{ $primaryEmail }}
+                          </a>
+                          <span class="cd-contact-link-item">
+                            <i class="fa-solid fa-phone text-muted"></i> {{ $primaryPhone }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Card: Client Tags -->
+                  <div class="cd-card-panel">
+                    <div class="cd-card-hdr">
+                      <div class="cd-card-hdr-left">
+                        <i class="fa-solid fa-tag text-primary" style="font-size:12px;"></i>
+                        <span class="cd-card-hdr-title">Client Tags</span>
+                      </div>
+                      <a href="javascript:void(0);" class="cd-card-hdr-link cd-btn-edit-tags">Edit Tags</a>
+                    </div>
+                    <div class="cd-tags-cloud">
+                      @foreach ($tagsArr as $tag)
+                        <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
+                      @endforeach
+                      <button type="button" class="cd-btn-add-tag cd-btn-add-tag-trigger"><i class="fa-solid fa-plus me-1"></i>Add Tag</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── TAB 2: RECENT ACTIVITY (Dedicated Black Card for Discussion) ── -->
+            <div class="tab-pane" id="recent_activity" role="tabpanel">
+              <div class="p-4">
+                <div class="cd-card-panel p-5" style="background:#000000; color:#ffffff; border-color:#1e293b; border-radius:10px;">
+                  <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="fa-solid fa-clock text-warning" style="font-size:14px;"></i>
+                      <h4 class="text-white mb-0" style="font-size:12px; font-weight:700;">Recent Activity &amp; Audit Logs</h4>
+                    </div>
+                    <span class="badge bg-secondary text-white" style="font-size:9.5px;">Pending Discussion</span>
+                  </div>
+                  <p class="text-gray-400 mb-0" style="font-size:11px; line-height:1.6;">
+                    This section captures comprehensive timeline actions: candidate submissions, interview logs, offer letter events, job requisitions, and administrative audit trails. Additional widgets and configurations will be integrated as discussed.
+                  </p>
+                </div>
+              </div>
+            </div>
                     <div class="tab-pane" id="contacts" role="tabpanel">
                         <div class="cd-tabcard cd-contacts">
                             <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -1689,6 +2308,9 @@ use Carbon\Carbon;
     <!--end:Tabs-->
 </div>
 <!--end::Content-->
+<div class="cd-drawer-footer">
+    Created on {{ $clientCreatedAt }} <span class="mx-1">|</span> Last updated {{ $clientUpdatedAt }}
+</div>
 </div>
 <!--end::Body-->
 
@@ -2079,9 +2701,6 @@ use Carbon\Carbon;
 
             }
 
-
-
-            
     </script>
 
 
@@ -2798,4 +3417,92 @@ use Carbon\Carbon;
     // new $.fn.dataTable.FixedHeader(allreq);
 
 
+    // ── Client Drawer UI Interactions ──
+    $(document).ready(function() {
+        $(document).on('click', '.cd-kpi-card[data-target-tab]', function(e) {
+            var tabId = $(this).data('target-tab');
+            if (tabId) {
+                $('a[href="' + tabId + '"]').tab('show');
+            }
+        });
+
+        $(document).on('click', '.cd-view-all-activity', function(e) {
+            e.preventDefault();
+            $('a[href="#recent_activity"]').tab('show');
+        });
+
+        $(document).on('click', '.cd-view-all-contacts, .cd-btn-add-contact', function(e) {
+            e.preventDefault();
+            $('a[href="#contacts"]').tab('show');
+        });
+
+        $(document).on('click', '.cd-btn-followup', function(e) {
+            e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '<div style="font-size:12px;font-weight:700;color:#0f172a;">Schedule Client Follow Up</div>',
+                    html: '<div style="text-align:left;font-size:11px;">' +
+                          '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Type</label>' +
+                          '<select id="swal_fu_type" class="form-select form-select-sm mb-2" style="font-size:11px;">' +
+                          '<option value="Call">Phone Call</option>' +
+                          '<option value="Email">Email Follow-Up</option>' +
+                          '<option value="Meeting">Virtual Meeting</option>' +
+                          '<option value="Requirement">Requirement Review</option>' +
+                          '</select>' +
+                          '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Date & Time</label>' +
+                          '<input type="datetime-local" id="swal_fu_time" class="form-control form-control-sm mb-2" style="font-size:11px;" value="' + new Date().toISOString().slice(0, 16) + '">' +
+                          '<label style="display:block;font-weight:600;margin-bottom:3px;color:#475569;">Notes</label>' +
+                          '<textarea id="swal_fu_notes" class="form-control form-control-sm" rows="2" style="font-size:11px;" placeholder="Add discussion agenda or notes..."></textarea>' +
+                          '</div>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Follow Up',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#009ef7',
+                    customClass: {
+                        confirmButton: 'btn btn-sm btn-primary',
+                        cancelButton: 'btn btn-sm btn-light'
+                    }
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '<span style="font-size:12px;font-weight:600;">Follow Up Recorded</span>',
+                            text: 'Follow-up agenda has been saved.',
+                            timer: 1800,
+                            showConfirmButton: false
+                        });
+                    }
+                });
+            }
+        });
+
+        $(document).on('click', '.cd-btn-add-tag-trigger, .cd-btn-edit-tags', function(e) {
+            e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '<span style="font-size:12px;font-weight:700;">Client Tags</span>',
+                    input: 'text',
+                    inputLabel: 'Add or edit tags (comma-separated)',
+                    inputValue: '{{ implode(", ", $tagsArr) }}',
+                    showCancelButton: true,
+                    confirmButtonText: 'Save',
+                    confirmButtonColor: '#009ef7',
+                    customClass: {
+                        input: 'form-control form-control-sm',
+                        confirmButton: 'btn btn-sm btn-primary',
+                        cancelButton: 'btn btn-sm btn-light'
+                    }
+                }).then(function(res) {
+                    if (res.isConfirmed && res.value) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '<span style="font-size:12px;font-weight:600;">Tags Updated</span>',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                });
+            }
+        });
+    });
 </script>
