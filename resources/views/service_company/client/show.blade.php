@@ -128,15 +128,15 @@ use Carbon\Carbon;
           .cd-hdr-btn-white-edit {
             background: #ffffff !important;
             border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
+            color: #009ef7 !important;
             font-weight: 500 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
           }
           .cd-hdr-btn-solid-blue:hover,
           .cd-hdr-btn-white-edit:hover {
-            background: #f8fafc !important;
-            border-color: #009ef7 !important;
-            color: #009ef7 !important;
+            background: #f0f9ff !important;
+            border-color: #0086d1 !important;
+            color: #0086d1 !important;
           }
           .cd-hdr-btn-close {
             width: 30px !important;
@@ -1464,8 +1464,8 @@ use Carbon\Carbon;
                 <i class="fas fa-calendar-check fa-solid" style="color:#0284c7;"></i> Follow Up
               </button>
               @if(in_array('edit_clients', $userPermissions))
-              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit">
-                <i class="fas fa-pen-to-square fa-solid" style="color:#2563eb;"></i> Edit Client
+              <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" style="color:#009ef7 !important;">
+                <i class="fas fa-pen-to-square fa-solid" style="color:#009ef7;"></i> Edit Client
               </a>
               @endif
               <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact">
@@ -1531,13 +1531,6 @@ use Carbon\Carbon;
                       <span class="cd-pulse-dot cd-pulse-green"></span>
                       <div>
                         <div class="cd-status-card-title text-success">Client Active</div>
-                        <div class="cd-status-card-sub text-success">Account is active</div>
-                      </div>
-                    </div>
-                    <div class="cd-status-card cd-status-card-green">
-                      <span class="cd-pulse-dot cd-pulse-green"></span>
-                      <div>
-                        <div class="cd-status-card-title text-success">Hiring</div>
                         <div class="cd-status-card-sub text-success">{{ $kpiActive }} active {{ $kpiActive == 1 ? 'job' : 'jobs' }}</div>
                       </div>
                     </div>
@@ -1547,13 +1540,6 @@ use Carbon\Carbon;
                       <div>
                         <div class="cd-status-card-title" style="color:#64748b;">Client Inactive</div>
                         <div class="cd-status-card-sub" style="color:#94a3b8;">No active jobs</div>
-                      </div>
-                    </div>
-                    <div class="cd-status-card cd-status-card-grey">
-                      <span class="cd-pulse-dot cd-pulse-grey"></span>
-                      <div>
-                        <div class="cd-status-card-title" style="color:#64748b;">Not Hiring</div>
-                        <div class="cd-status-card-sub" style="color:#94a3b8;">0 active jobs</div>
                       </div>
                     </div>
                   @endif
@@ -1573,7 +1559,6 @@ use Carbon\Carbon;
                 <div>
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
-                  <div class="cd-kpi-desc">Currently hiring positions</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1583,8 +1568,7 @@ use Carbon\Carbon;
                 <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-users fa-solid" style="color:#7c3aed;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
-                  <div class="cd-kpi-lbl">Candidates Submitted</div>
-                  <div class="cd-kpi-desc">Total in pipeline</div>
+                  <div class="cd-kpi-lbl">Candidates</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1594,8 +1578,7 @@ use Carbon\Carbon;
                 <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-days fa-solid" style="color:#d97706;"></i></div>
                 <div>
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
-                  <div class="cd-kpi-lbl">Interviews Scheduled</div>
-                  <div class="cd-kpi-desc">Across all rounds</div>
+                  <div class="cd-kpi-lbl">Interviews</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1605,8 +1588,7 @@ use Carbon\Carbon;
                 <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-lines fa-solid" style="color:#ea580c;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiOffers }}</div>
-                  <div class="cd-kpi-lbl">Offers Generated</div>
-                  <div class="cd-kpi-desc">Offer letters sent</div>
+                  <div class="cd-kpi-lbl">Offers</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
@@ -1616,8 +1598,7 @@ use Carbon\Carbon;
                 <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid" style="color:#059669;"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiJoins }}</div>
-                  <div class="cd-kpi-lbl">Successful Joins</div>
-                  <div class="cd-kpi-desc">Placements closed</div>
+                  <div class="cd-kpi-lbl">Joined</div>
                 </div>
               </div>
               <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
