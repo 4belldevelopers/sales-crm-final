@@ -6,34 +6,179 @@ use App\Helper\GeneralMethod;
 <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
 
 <style>
-    .text-justify {
-        text-align: justify !important;
+    /* Scoped Super Admin Wallet Drawer (Consultancy Reference Parity) */
+    .sa-wallet-drawer {
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #181c32;
+        background: #f5f8fa;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
     }
 
-    .symbol1>img,
-    .symbol1 .symbol-label1 {
-        width: 32px !important;
-        height: 32px !important;
+    .sa-wallet-drawer#kt_activities_body,
+    .sa-wallet-drawer.card-body {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
     }
 
-    .table> :not(caption)>*>* {
-        padding: 0rem 0.4rem;
+    .sa-wallet-drawer #kt_activities_scroll {
+        padding: 12px 16px 80px 16px !important;
+        background: #f5f8fa !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
     }
 
-    .input-xs,
-    select.input-xs {
-        height: 20px;
-        line-height: 20px;
+    .sa-wallet-drawer .profile-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #eff2f5;
+        padding: 16px 20px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
-    .ele_border {
-        border: 1px solid #666666 !important;
-        width: 100px !important;
+    .sa-wallet-drawer .logo-circle {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 1.5px solid #e4e6ef;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
 
-    .ele_border_merge {
-        border: 1px solid #666666 !important;
-        width: 400px !important;
+    .sa-wallet-drawer .profile-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #181c32;
+        line-height: 1.25;
+        margin: 0;
+    }
+
+    .sa-wallet-drawer .profile-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px 14px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        color: #7e8299;
+        margin-top: 4px;
+    }
+
+    .sa-wallet-drawer .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .sa-wallet-drawer .meta-item i {
+        font-size: 11px;
+        color: #a1a5b7;
+    }
+
+    .sa-wallet-drawer .meta-divider {
+        color: #d1d5db;
+        font-size: 10px;
+    }
+
+    .sa-wallet-drawer .wallet-table-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #eff2f5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+
+    .sa-wallet-drawer table#currentPackage th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 11.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 10px 12px;
+        border-bottom: 1.5px solid #e2e8f0;
+    }
+
+    .sa-wallet-drawer table#currentPackage td {
+        padding: 8px 12px;
+        vertical-align: middle;
+        font-size: 12.5px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .sa-wallet-drawer .ele_border {
+        border: 1px solid #dce3ee !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        height: 36px !important;
+        min-width: 90px;
+        padding: 4px 8px;
+        font-size: 12px;
+        transition: border-color 0.15s ease;
+    }
+
+    .sa-wallet-drawer .ele_border:focus {
+        border-color: #2563eb !important;
+        background: #ffffff !important;
+        outline: none;
+    }
+
+    .sa-wallet-drawer .ele_border_merge {
+        border: 1px solid #dce3ee !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        height: 36px !important;
+        width: 100% !important;
+        max-width: 420px;
+        padding: 4px 10px;
+        font-size: 12px;
+        transition: border-color 0.15s ease;
+    }
+
+    .sa-wallet-drawer .ele_border_merge:focus {
+        border-color: #2563eb !important;
+        background: #ffffff !important;
+        outline: none;
+    }
+
+    .sa-wallet-drawer .input-xs,
+    .sa-wallet-drawer select.input-xs {
+        height: 36px !important;
+        border: 1px solid #dce3ee !important;
+        background: #f8fafc !important;
+        border-radius: 6px !important;
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .sa-wallet-drawer .input-xs:focus,
+    .sa-wallet-drawer select.input-xs:focus {
+        border-color: #2563eb !important;
+        background: #ffffff !important;
+        outline: none;
+    }
+
+    /* Pinned Sticky Footer */
+    .sa-wallet-drawer .sa-drawer-footer {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-top: 1px solid #edf2f7;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        z-index: 20;
+        box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05);
     }
 </style>
 <?php
@@ -127,109 +272,75 @@ $oldcvaccess_totalprice = @$packageDetail->oldcvaccess_totalprice > 0 ? number_f
 ?>
 
 
-<div class="card-body position-relative px-0 py-0" id="kt_activities_body">
-    <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
+<div class="card-body position-relative px-0 py-0 sa-wallet-drawer" id="kt_activities_body">
+    <div id="kt_activities_scroll" class="position-relative scroll-y pt-0" data-kt-scroll="true"
         data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
         data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
-        <div class="card mb-5 mb-xl-5 mx-2">
-            <div class="card-body pt-5 pb-0 px-5">
-                <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
-                    <div class="me-7 mb-4">
-                        <div class="symbol symbol-100px symbol-lg-140px symbol-fixed position-relative">
-                            <div class="symbol-label fs-3 <?php echo @$bgTextDecore; ?> text-danger border-radius-5">
-                                <span><?php echo strtoupper($strVal); ?></span> </div>
-                            <div
-                                class="position-absolute translate-middle bottom-0 start-100 mb-6 bg-success rounded-circle border border-4 border-white h-20px w-20px">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                            <div class="d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2"> <span
-                                        class="text-gray-900 fs-2 fw-bolder me-2"> <?php echo @$packageDetail->company_name; ?> </span> </div>
-                                <div class="d-flex flex-wrap fw-bold fs-6 pe-2">
-                                    <!--<a href="javascript:void(0);" class="d-flex align-items-center text-gray-400 text-hover-primary mb-2"> <span class="svg-icon svg-icon-4 me-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"></rect>
-                      <path d="M8,3 L8,3.5 C8,4.32842712 8.67157288,5 9.5,5 L14.5,5 C15.3284271,5 16,4.32842712 16,3.5 L16,3 L18,3 C19.1045695,3 20,3.8954305 20,5 L20,21 C20,22.1045695 19.1045695,23 18,23 L6,23 C4.8954305,23 4,22.1045695 4,21 L4,5 C4,3.8954305 4.8954305,3 6,3 L8,3 Z" fill="#000000" opacity="0.3"></path>
-                      <path d="M10.875,15.75 C10.6354167,15.75 10.3958333,15.6541667 10.2041667,15.4625 L8.2875,13.5458333 C7.90416667,13.1625 7.90416667,12.5875 8.2875,12.2041667 C8.67083333,11.8208333 9.29375,11.8208333 9.62916667,12.2041667 L10.875,13.45 L14.0375,10.2875 C14.4208333,9.90416667 14.9958333,9.90416667 15.3791667,10.2875 C15.7625,10.6708333 15.7625,11.2458333 15.3791667,11.6291667 L11.5458333,15.4625 C11.3541667,15.6541667 11.1145833,15.75 10.875,15.75 Z" fill="#000000"></path>
-                      <path d="M11,2 C11,1.44771525 11.4477153,1 12,1 C12.5522847,1 13,1.44771525 13,2 L14.5,2 C14.7761424,2 15,2.22385763 15,2.5 L15,3.5 C15,3.77614237 14.7761424,4 14.5,4 L9.5,4 C9.22385763,4 9,3.77614237 9,3.5 L9,2.5 C9,2.22385763 9.22385763,2 9.5,2 L11,2 Z" fill="#000000"></path>
-                    </g>
-                  </svg>
-                  </span>
-    <?php echo date('d M, Y', strtotime(@$packageDetail->create_at)); ?>
-    </a> -->
-                                </div>
-                            </div>
-                            <div class="d-flex mt-4">
-                                <?php
-                                if ($packageDetail->status == 'active') {
-                                    echo '<a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-success btn-active-primary fw-bolder me-3 fs-6">' . @$packageDetail->status . '</a>';
-                                } else {
-                                    echo '<a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-danger btn-active-primary fw-bolder me-3 fs-6">' . @$packageDetail->status . '</a>';
-                                }
-                                ?>
-                            </div>
-                        </div>
+        
+        <!--begin::Company Profile Card-->
+        <div class="profile-card">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <div class="logo-circle">
+                    <div class="d-flex align-items-center justify-content-center w-100 h-100 fw-bolder fs-4 <?php echo @$bgTextDecore; ?> rounded-2">
+                        <?php echo strtoupper($strVal); ?>
                     </div>
                 </div>
-
-
-                <div class="separator separator-solid my-7"></div>
-                <div class="d-flex align-items-center flex-wrap pb-7">
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Company Email</span>
-                            <span class="fw-bolder fs-3"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2"> <i
-                                        class="bi bi-envelope"></i> </span><?php echo @$packageDetail->company_email ? @$packageDetail->company_email : '&nbsp;'; ?></span> </div>
-                    </div>
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Company Phone</span>
-                            <span class="fw-bolder fs-3"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2"> <i
-                                        class="fa fa-phone" aria-hidden="true"></i> <span
-                                        class="glyphicon glyphicon-earphone"></span> </span> <?php echo @$packageDetail->company_phone ? @$packageDetail->company_phone : '&nbsp;'; ?></span>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                        <h2 class="profile-name"><?php echo @$packageDetail->company_name; ?></h2>
+                        <div>
+                            <?php if ($packageDetail->status == 'active') { ?>
+                                <span class="badge badge-light-success fw-bold py-1 px-3">Active</span>
+                            <?php } else { ?>
+                                <span class="badge badge-light-danger fw-bold py-1 px-3">Inactive</span>
+                            <?php } ?>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span
-                                class="svg-icon svg-icon-dark-800 svg-icon-3x me-2"> <i
-                                    class="bi bi-browser-chrome"></i> </span> <span class="fw-bolder fs-6">Company
-                                Website</span> <span class="fw-bolder fs-3"><?php echo @$packageDetail->website ? @$packageDetail->website : '&nbsp;'; ?></span> </div>
-                    </div>
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Account Type</span>
-                            <span class="fw-bolder fs-3"><?php echo @$company_type ? @$company_type : '&nbsp;'; ?></span> </div>
-                    </div>
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Company Size</span>
-                            <span class="fw-bolder fs-3"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2"> <i
-                                        class="bi bi-textarea-resize"></i> </span> <?php echo @$packageDetail->company_size ? @$packageDetail->company_size : '0'; ?> </span> </div>
-                    </div>
-                    <div class="d-flex align-items-center flex-lg-fill mr-5 my-1">
-                        <div class="d-flex flex-column text-dark-75"> <span class="fw-bolder fs-6">Founded</span> <span
-                                class="fw-bolder fs-3"> <span class="svg-icon svg-icon-dark-800 svg-icon-3x me-2"> <i
-                                        class="bi bi-trophy"></i> </span> <?php echo @$packageDetail->founded ? @$packageDetail->founded : '&nbsp;'; ?> </span> </div>
+                    <div class="profile-meta">
+                        <?php if (!empty(@$packageDetail->company_email)) { ?>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-envelope"></i>
+                                <span><?php echo @$packageDetail->company_email; ?></span>
+                            </div>
+                            <span class="meta-divider">•</span>
+                        <?php } ?>
+                        <?php if (!empty(@$packageDetail->company_phone)) { ?>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-phone"></i>
+                                <span><?php echo @$packageDetail->company_phone; ?></span>
+                            </div>
+                            <span class="meta-divider">•</span>
+                        <?php } ?>
+                        <?php if (!empty(@$company_type)) { ?>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span><?php echo @$company_type; ?></span>
+                            </div>
+                            <span class="meta-divider">•</span>
+                        <?php } ?>
+                        <div class="meta-item">
+                            <i class="fa-solid fa-users"></i>
+                            <span><?php echo @$packageDetail->company_size ? @$packageDetail->company_size : '0'; ?> Size</span>
+                        </div>
+                        <?php if (!empty(@$packageDetail->website)) { ?>
+                            <span class="meta-divider">•</span>
+                            <div class="meta-item">
+                                <i class="fa-solid fa-globe"></i>
+                                <a href="<?php echo (strpos(@$packageDetail->website, 'http') === 0) ? @$packageDetail->website : 'https://'.@$packageDetail->website; ?>" target="_blank" class="text-primary"><?php echo @$packageDetail->website; ?></a>
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
         </div>
+        <!--end::Company Profile Card-->
 
-        <div class="card card-custom mx-2">
-            <div class="card-header card-header-tabs-line">
-                <div class="card-toolbar">
-                    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x"
-                        role="tablist">
-                        <li class="nav-item me-3">
-                            <a class="nav-link active show" data-toggle="tab" href="#job_description">
-                                <span class="nav-text font-weight-bold">
-                                    Current Wallet Status
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+        <div class="card card-custom mx-0 border-0 bg-transparent shadow-none">
+            <div class="card-header border-0 px-0 min-h-40px mb-2">
+                <h4 class="fw-bolder m-0 text-gray-800 fs-5 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-wallet text-warning fs-6"></i>
+                    <span>Package & Wallet Features Allocation</span>
+                </h4>
             </div>
             <div class="card-body py-0">
                 <div class="tab-content pt-5">
@@ -723,27 +834,19 @@ $oldcvaccess_totalprice = @$packageDetail->oldcvaccess_totalprice > 0 ? number_f
 
                                                         </tr>
 
-                                                        <tr>
-
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>
-                                                                <button type="button" name="update"
-                                                                    id="update-form" value="update"
-                                                                    class="btn btn-primary">Update</button>
-                                                            </td>
-                                                            <td><a href="javascript:void(0);"
-                                                                    class="btn btn-secondary close"
-                                                                    data-dismiss="modal"
-                                                                    data-kt-drawer-dismiss="true">Cancel</a></td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-                                                            <td>&nbsp;</td>
-
-                                                        </tr>
-
                                                     </tbody>
                                                 </table>
+
+                                                <!-- Sticky Drawer Footer (Preserves #update-form and serialize) -->
+                                                <div class="sa-drawer-footer">
+                                                    <a href="javascript:void(0);" class="btn btn-light-secondary me-3 px-5 py-2 fw-semibold" data-kt-drawer-dismiss="true">
+                                                        Cancel
+                                                    </a>
+                                                    <button type="button" name="update" id="update-form" value="update" class="btn btn-primary px-6 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                                        <i class="fa-solid fa-floppy-disk fs-6"></i>
+                                                        <span>Update Wallet</span>
+                                                    </button>
+                                                </div>
 
                                             </form>
 

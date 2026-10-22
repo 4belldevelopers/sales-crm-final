@@ -4,15 +4,18 @@
 
 <head>
     <base href="javascript:void(0);">
+    @php
+        $resolvedSuperAdminTitle = \App\Helper\GeneralMethod::getSuperAdminPageTitle($pageTitle ?? null);
+    @endphp
     <title>
         @if (auth()->user()->is_superadmin === 1)
             @lang('app.superAdminPanel')
         @else
             @lang('Meecruit')
-        @endif | {{ __($pageTitle ?? 'Marketplace Operations') }}
+        @endif | {{ $resolvedSuperAdminTitle }}
     </title>
-    <meta name="description" content="{{ __($pageTitle ?? 'Marketplace Operations') }}" />
-    <meta name="keywords" content="{{ __($pageTitle ?? 'Marketplace Operations') }}" />
+    <meta name="description" content="{{ $resolvedSuperAdminTitle }}" />
+    <meta name="keywords" content="{{ $resolvedSuperAdminTitle }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
@@ -118,6 +121,19 @@
                 <!--begin::Header-->
                 @include('sections.super-admin.header-base')
                 <!--end::Header-->
+
+                {{-- Global Super Admin Offline Circuit-Breaker Warning Banner --}}
+                <div class="container-fluid px-4 pt-2" id="superadminOfflineBannerContainer" style="display: none;">
+                    <div id="superadminOfflineBanner" class="alert alert-warning d-flex align-items-center p-3 mb-0" style="border-left: 4px solid #ffc107; background-color: #fff8dd; border-color: #ffe69c; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <i class="bi bi-wifi-off fs-3 me-3 text-warning"></i>
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold fs-7 text-gray-900">Offline Mode Active</span>
+                            <span class="fs-8 text-gray-700">Network connection lost. Serving authoritative company records directly from Client RAM Cache.</span>
+                        </div>
+                        <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#superadminOfflineBannerContainer').slideUp(150);"></button>
+                    </div>
+                </div>
+
                 <!--begin::Content-->
                 @yield('content')
                 <!--end::Content-->
@@ -2788,6 +2804,64 @@
             });
 
         });
+
+        // =========================================================================
+        // GLOBAL SUPER ADMIN OFFLINE CIRCUIT-BREAKER CONTROLLER
+        // Automatically manages "Offline Mode Active" across all Super Admin pages
+        // =========================================================================
+        (function() {
+            function showSuperAdminOfflineBanner() {
+                var container = $('#superadminOfflineBannerContainer');
+                if (container.length && !container.is(':visible')) {
+                    container.slideDown(150);
+                }
+            }
+
+            function hideSuperAdminOfflineBanner() {
+                var container = $('#superadminOfflineBannerContainer');
+                if (container.length && container.is(':visible')) {
+                    container.slideUp(150);
+                }
+            }
+
+            // Check initial connectivity status
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                showSuperAdminOfflineBanner();
+            }
+
+            // Native browser network listeners
+            window.addEventListener('offline', function() {
+                showSuperAdminOfflineBanner();
+            });
+
+            window.addEventListener('online', function() {
+                hideSuperAdminOfflineBanner();
+            });
+
+            // Circuit-Breaker AJAX listeners: detect network connection drops (status 0)
+            if (typeof jQuery !== 'undefined') {
+                $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
+                    if ((typeof navigator !== 'undefined' && !navigator.onLine) || (jqXHR && jqXHR.status === 0)) {
+                        showSuperAdminOfflineBanner();
+                    }
+                });
+
+                $(document).ajaxSuccess(function() {
+                    if (typeof navigator !== 'undefined' && navigator.onLine) {
+                        hideSuperAdminOfflineBanner();
+                    }
+                });
+            }
+
+            // Expose globally for individual page controllers/cache managers
+            window.SuperAdminOfflineCircuitBreaker = {
+                show: showSuperAdminOfflineBanner,
+                hide: hideSuperAdminOfflineBanner,
+                isOffline: function() {
+                    return (typeof navigator !== 'undefined' && !navigator.onLine) || $('#superadminOfflineBannerContainer').is(':visible');
+                }
+            };
+        })();
     </script>
 </body>
 <!--end::Body-->

@@ -1,380 +1,845 @@
 @extends('layouts.superadmin_layout')
 
+@section('header_title')
+<div class="page-title sa-page-title-stack my-0">
+    <h1 class="d-flex align-items-center text-gray-900 fw-bold fs-3 my-0">Companies</h1>
+    <span class="sa-header-sub">Manage and monitor all registered companies in the system</span>
+</div>
+@endsection
+
 @push('head-script')
 
 <link rel="stylesheet" href="//cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.bootstrap.min.css">
 <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-@endpush
 
 <style>
-    body
-    {
-        overflow-x: hidden;
+/* =========================================================================
+   SUPER ADMIN COMPANIES PAGE — SCOPED ENTERPRISE STYLES
+   Isolated strictly to .sa-companies-page and .sa-page-title-stack
+   ========================================================================= */
+
+/* Top Navigation Header Title Stack & Subtitle */
+#kt_header_nav .page-title.sa-page-title-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+}
+
+#kt_header_nav .page-title.sa-page-title-stack .sa-header-sub {
+    font-size: 0.785rem !important;
+    color: #7E8299 !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    margin-top: 2px !important;
+}
+
+@media (max-width: 991.98px) {
+    #kt_header_nav .page-title.sa-page-title-stack .sa-header-sub {
+        font-size: 0.7rem !important;
     }
+}
 
-    <style>
-.border-radius-5 {border-radius: 5px!important; }
-.ml-2 {margin-left: 2em;}
-@media only screen and (min-width: 900px) and (max-width: 2560px)
-{
-  .table td, .table th, .table tr {width: max-content!important; }
-  .table > :not(caption) > * > * { padding: 0.75em 0rem!important; }
-  td:nth-child(n+2),
-  th:nth-child(n+2) { width: revert!important; }
+/* Top Space & Header Gap Management (Collapse redundant toolbar whitespace) */
+#kt_header_search {
+    display: none !important;
 }
-@media only screen and (min-width: 1024px) and (max-width: 1440px)
-{
-  #kt_activitiesClient { width: 1025px !important; }
+
+#kt_header {
+    border-bottom: 1px solid #eff2f5 !important;
 }
-@media only screen and (min-width: 1440px) and (max-width: 2560px)
-{
-  #kt_activitiesClient { width: 1200px !important; }
+
+@media (min-width: 992px) {
+    .sa-companies-page {
+        margin-top: -48px;
+    }
 }
-@media only screen and (min-width: 1024px) and (max-width: 1440px)
-{
-  #kt_activitiesDirectClient { width: 1025px; }
+
+@media (max-width: 991.98px) {
+    .sa-companies-page {
+        margin-top: -38px;
+    }
 }
-@media only screen and (min-width: 1440px) and (max-width: 2560px)
-{
-  #kt_activitiesDirectClient {width: 1200px;}
+
+.sa-companies-page #kt_content_container {
+    padding-top: 0.5rem !important;
+}
+
+.sa-companies-page {
+    --sa-primary: #0066FF;
+    --sa-primary-hover: #0052cc;
+    --sa-border: #EFF2F5;
+    --sa-card-bg: #FFFFFF;
+    --sa-text-dark: #181C32;
+    --sa-text-muted: #7E8299;
+}
+
+/* Page Header & Spacing */
+.sa-companies-page .sa-header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--sa-text-dark);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+}
+
+.sa-companies-page .sa-header-subtitle {
+    font-size: 0.825rem;
+    color: var(--sa-text-muted);
+}
+
+.sa-companies-page .btn-add-company {
+    background-color: var(--sa-primary);
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.825rem;
+    height: 38px;
+    border-radius: 8px;
+    padding: 0 16px;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+}
+
+.sa-companies-page .btn-add-company:hover {
+    background-color: var(--sa-primary-hover);
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+    color: #ffffff !important;
+}
+
+/* KPI Cards Section */
+.sa-companies-page .kpi-card {
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sa-companies-page .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.sa-companies-page .kpi-card-total {
+    background-color: #FEF7EC;
+    border-color: #FDE8C7;
+}
+
+.sa-companies-page .kpi-card-active {
+    background-color: #EDFAF3;
+    border-color: #D1F4E0;
+}
+
+.sa-companies-page .kpi-card-inactive {
+    background-color: #FDF2F4;
+    border-color: #FCE0E5;
+}
+
+.sa-companies-page .kpi-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sa-companies-page .kpi-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--sa-text-dark);
+    margin-bottom: 2px;
+}
+
+.sa-companies-page .kpi-subtitle {
+    font-size: 0.775rem;
+    color: var(--sa-text-muted);
+}
+
+.sa-companies-page .kpi-count {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.sa-companies-page .kpi-bar-indicator {
+    height: 4px;
+    border-radius: 2px;
+    width: 65px;
+    margin-top: 14px;
+}
+
+/* Filter Toolbar */
+.sa-companies-page .filter-toolbar-card {
+    background: #ffffff;
+    border: 1px solid var(--sa-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.sa-companies-page .search-input-box {
+    min-width: 280px;
+}
+
+.sa-companies-page .search-input-box input {
+    height: 44px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    border: 1px solid #E4E6EF;
+    background-color: #F9F9FB;
+}
+
+.sa-companies-page .search-input-box input:focus {
+    background-color: #ffffff;
+    border-color: var(--sa-primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.sa-companies-page .filter-select-wrapper {
+    min-width: 165px;
+}
+
+.sa-companies-page .filter-select-wrapper select {
+    height: 44px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid #E4E6EF;
+    background-color: #F9F9FB;
+    cursor: pointer;
+}
+
+.sa-companies-page .btn-clear-filter {
+    height: 44px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #E4E6EF;
+    background-color: #F9F9FB;
+    color: #5E6278;
+    padding: 0 16px;
+    transition: all 0.2s ease;
+}
+
+.sa-companies-page .btn-clear-filter:hover {
+    background-color: #F1F3F5;
+    color: var(--sa-text-dark);
+}
+
+/* Sub-Bar (Export & Columns) */
+.sa-companies-page .sub-bar-btn {
+    height: 38px;
+    border-radius: 8px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    border: 1px solid #E4E6EF;
+    background: #ffffff;
+    color: #4B5675;
+    padding: 0 14px;
+    transition: all 0.2s ease;
+}
+
+.sa-companies-page .sub-bar-btn:hover {
+    background: #F9F9FB;
+    border-color: #D8DADD;
+    color: var(--sa-text-dark);
+}
+
+/* Table Container & Rows */
+.sa-companies-page .table-wrapper-card {
+    background: #ffffff;
+    border: 1px solid var(--sa-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.sa-companies-page table.sa-companies-table {
+    margin-bottom: 0;
+}
+
+.sa-companies-page table.sa-companies-table th {
+    background: #FAFAFC;
+    color: #7E8299;
+    font-weight: 600;
+    font-size: 0.775rem;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+    padding: 14px 14px;
+    border-bottom: 1px solid #EFF2F5;
+    white-space: nowrap;
+}
+
+.sa-companies-page table.sa-companies-table td {
+    padding: 12px 14px;
+    vertical-align: middle;
+    font-size: 0.825rem;
+    border-bottom: 1px solid #F4F6F8;
+}
+
+.sa-companies-page table.sa-companies-table tr.sa-company-row:hover td {
+    background-color: #F9FBFE;
+}
+
+.sa-companies-page table.sa-companies-table tr.sa-row-live-updated td {
+    background-color: rgba(0, 102, 255, 0.08) !important;
+    transition: background-color 1.5s ease;
+}
+
+.sa-companies-page table.sa-companies-table tr:last-child td {
+    border-bottom: none;
+}
+
+.sa-companies-page .company-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.sa-companies-page .company-initial-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Loading Overlay */
+.sa-companies-page .table-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 12px;
+}
+
+/* Drawer width overrides — Company Drawer 80% Width & 15.6-inch Screen Optimization */
+#kt_activitiesClient, #kt_activitiesWallet, #kt_activitiesApplication {
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.12), -2px 0 8px rgba(0, 0, 0, 0.04) !important;
+    border-left: 1px solid #e2e8f0 !important;
+}
+
+/* Drawer scrollbars — Single smooth scroll container, remove extra/nested scrollers */
+#kt_activitiesClient_body,
+#kt_activitiesWallet_body,
+#kt_billing_address_body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: calc(100vh - 60px) !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+#kt_activitiesClient_body > .card-body,
+#kt_activitiesWallet_body > .card-body,
+#kt_activitiesClient_body #kt_activities_scroll,
+#kt_activitiesWallet_body #kt_activities_scroll {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Slim scrollbar matching Consultancy reference */
+#kt_activitiesClient_body::-webkit-scrollbar,
+#kt_activitiesWallet_body::-webkit-scrollbar,
+#kt_billing_address_body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#kt_activitiesClient_body::-webkit-scrollbar-track,
+#kt_activitiesWallet_body::-webkit-scrollbar-track,
+#kt_billing_address_body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#kt_activitiesClient_body::-webkit-scrollbar-thumb,
+#kt_activitiesWallet_body::-webkit-scrollbar-thumb,
+#kt_billing_address_body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+#kt_activitiesClient_body::-webkit-scrollbar-thumb:hover,
+#kt_activitiesWallet_body::-webkit-scrollbar-thumb:hover,
+#kt_billing_address_body::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Prevent background page scrolling when drawer is open */
+body.drawer-open,
+body:has(.drawer.drawer-on),
+body:has(#kt_activitiesClient.drawer-on),
+body:has(#kt_activitiesWallet.drawer-on),
+body:has(#kt_activitiesApplication.drawer-on) {
+    overflow: hidden !important;
+}
+
+#kt_activitiesClient, #kt_activitiesWallet, #kt_activitiesApplication, #kt_activitiesDirectClient {
+    width: 80% !important;
+    max-width: 80vw !important;
+}
+
+@media only screen and (max-width: 767.98px) {
+    #kt_activitiesClient, #kt_activitiesWallet, #kt_activitiesApplication, #kt_activitiesDirectClient {
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* Scoped Drawer Header & Action Standards (Matching Consultancy) */
+.sa-drawer-header {
+    height: 60px;
+    padding: 14px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.sa-drawer-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.4;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sa-drawer-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+.sa-drawer-close:hover,
+.sa-drawer-close:focus {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+    outline: none;
+}
+
+/* Clean Pagination Styling & Isolation for Super Admin Companies Page */
+.sa-companies-page #paginationcopanylist .pagination-info {
+    display: none !important;
+}
+
+.sa-companies-page #paginationcopanylist .pagination-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    list-style: none !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination .page-link {
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 10px !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #eff2f5 !important;
+    background-color: #ffffff !important;
+    color: #5e6278 !important;
+    transition: all 0.2s ease !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination .page-link:hover:not(.previous_disabled):not(.next_disabled):not(.active_disabled) {
+    background-color: #f1f1f4 !important;
+    color: #0095e8 !important;
+    border-color: #d8d8e0 !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination .page-link.active {
+    background-color: #0095e8 !important;
+    color: #ffffff !important;
+    border-color: #0095e8 !important;
+    cursor: default !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination .page-link.previous_disabled,
+.sa-companies-page #paginationcopanylist .custom-pagination .page-link.next_disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    background-color: #f9f9f9 !important;
+    border-color: #eff2f5 !important;
+    color: #a1a5b7 !important;
+}
+
+.sa-companies-page #paginationcopanylist .custom-pagination .dots {
+    background: transparent !important;
+    border: none !important;
+    cursor: default !important;
+    color: #a1a5b7 !important;
 }
 </style>
+@endpush
 
-</style>
 @php
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
     $currency = GeneralMethod::convertINRToUSD();
     $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
-
 @endphp
-@section('create-button')
-<a href="{{ route('superadmin.company.create') }}" class="btn btn-dark btn-sm m-l-15"><i class="fa fa-plus-circle"></i> @lang('app.createNew')</a>
-@endsection
 
 @section('content')
 
-<!--begin::toolbar-->
-<div class="toolbar" id="kt_toolbar">
-	<div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-		<div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-			<h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1">Companies
-                <span class="h-20px border-gray-200 border-start ms-3 mx-2 d-none"></span>
-			<small class="text-muted fs-7 fw-bold my-1 ms-1 d-none">#XRS-45670</small>
-		</h1></div>
-        <div class="d-flex align-items-center py-1">
-		        <a href="{{ route('superadmin.company.create') }}" class="btn btn-sm btn-light btn-active-primary">
-                <span class="svg-icon svg-icon-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <rect opacity="0.5" x="11.364" y="20.364" width="16" height="2" rx="1" transform="rotate(-90 11.364 20.364)" fill="currentColor"></rect>
-                        <rect x="4.36396" y="11.364" width="16" height="2" rx="1" fill="currentColor"></rect>
-                    </svg>
-                </span>    
-                Add Company</a>
-		</div>
-	</div>
-</div>
-<!--end::toolbar-->
+{{-- Super Admin Companies Page Shell (Exact Match to Subscription Page Reference) --}}
+<div class="sa-companies-page">
+<div class="post d-flex flex-column-fluid" id="kt_post">
+    <div id="kt_content_container" class="container-fluid px-4 pt-2 pb-4">
 
-<!--begin::content-->
-<div class="post d-flex flex-column-fluid mt-5" id="kt_post">
-    <div id="kt_content_container" class="container-fluid px-3">
-        <div class="row gy-5 g-xl-8">
-            <div class="col-xl-12">
-                <div class="card card-xl-stretch mb-xl-8">                            
-                    <div class="card-header border-0">
-                        <div class="me-2 mt-4">
-                            <a href="javascript:void(0);" class="text-dark text-hover-primary fw-bolder fs-3">Companies Reports</a>
-                            <div class="text-muted fs-7 fw-bold">Details and updates</div>
+    {{-- KPI Cards Row (Total, Active, Inactive) --}}
+    <div class="row g-4 mb-4">
+        {{-- Card 1: Total Companies --}}
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-card-total d-flex flex-column justify-content-between h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon-wrapper" style="background-color: rgba(217, 119, 6, 0.12);">
+                            <i class="bi bi-stack fs-3" style="color: #D97706;"></i>
                         </div>
-                        <!-- <h3 class="card-title fw-bolder text-dark">Notifications</h3> -->
-                        <div class="card-toolbar">
-                            <button type="button" class="btn btn-sm btn-icon btn-color-primary btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                                <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                            <rect x="5" y="5" width="5" height="5" rx="1" fill="currentColor"></rect>
-                                            <rect x="14" y="5" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-                                            <rect x="5" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-                                            <rect x="14" y="14" width="5" height="5" rx="1" fill="currentColor" opacity="0.3"></rect>
-                                        </g>
-                                    </svg>
-                                </span>
-                            </button>
-                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3" data-kt-menu="true">
-                                <div class="menu-item px-3">
-                                    <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Payments</div>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3">Create Invoice</a>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="#" class="menu-link flex-stack px-3">Create Payment 
-                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="" data-bs-original-title="Specify a target name for future usage and reference" aria-label="Specify a target name for future usage and reference" data-original-title=""></i></a>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3">Generate Bill</a>
-                                </div>
-                                <div class="menu-item px-3" data-kt-menu-trigger="hover" data-kt-menu-placement="right-end">
-                                    <a href="#" class="menu-link px-3">
-                                        <span class="menu-title">Subscription</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <div class="menu-sub menu-sub-dropdown w-175px py-4">
-                                        <div class="menu-item px-3">
-                                            <a href="#" class="menu-link px-3">Plans</a>
-                                        </div>
-                                        <div class="menu-item px-3">
-                                            <a href="#" class="menu-link px-3">Billing</a>
-                                        </div>
-                                        <div class="menu-item px-3">
-                                            <a href="#" class="menu-link px-3">Statements</a>
-                                        </div>
-                                        <div class="separator my-2"></div>
-                                        <div class="menu-item px-3">
-                                            <div class="menu-content px-3">
-                                                <label class="form-check form-switch form-check-custom form-check-solid">
-                                                    <input class="form-check-input w-30px h-20px" type="checkbox" value="1" checked="checked" name="notifications">
-                                                    <span class="form-check-label text-muted fs-6">Recuring</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="menu-item px-3 my-1">
-                                    <a href="#" class="menu-link px-3">Settings</a>
-                                </div>
-                            </div>
+                        <div>
+                            <div class="kpi-title">@lang('modules.dashboard.totalCompanies')</div>
+                            <div class="kpi-subtitle">Due in 2 Days</div>
                         </div>
                     </div>
-                    <div class="card-body pt-0 d-flex justify-content-between align-items-center pb-1">
-                        <div class="d-flex align-items-center bg-light-warning rounded p-5 mb-7 me-3 col-md-4">
-                            <span class="svg-icon svg-icon-warning me-5">
-                                <span class="svg-icon svg-icon-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path opacity="0.3" d="M21.25 18.525L13.05 21.825C12.35 22.125 11.65 22.125 10.95 21.825L2.75 18.525C1.75 18.125 1.75 16.725 2.75 16.325L4.04999 15.825L10.25 18.325C10.85 18.525 11.45 18.625 12.05 18.625C12.65 18.625 13.25 18.525 13.85 18.325L20.05 15.825L21.35 16.325C22.35 16.725 22.35 18.125 21.25 18.525ZM13.05 16.425L21.25 13.125C22.25 12.725 22.25 11.325 21.25 10.925L13.05 7.62502C12.35 7.32502 11.65 7.32502 10.95 7.62502L2.75 10.925C1.75 11.325 1.75 12.725 2.75 13.125L10.95 16.425C11.65 16.725 12.45 16.725 13.05 16.425Z" fill="currentColor"></path>
-                                        <path d="M11.05 11.025L2.84998 7.725C1.84998 7.325 1.84998 5.925 2.84998 5.525L11.05 2.225C11.75 1.925 12.45 1.925 13.15 2.225L21.35 5.525C22.35 5.925 22.35 7.325 21.35 7.725L13.05 11.025C12.45 11.325 11.65 11.325 11.05 11.025Z" fill="currentColor"></path>
-                                    </svg>
-                                </span>
-                            </span>
-                            <div class="flex-grow-1 me-2">
-                                <a href="#" class="fw-bolder text-gray-800 text-hover-primary fs-6">@lang('modules.dashboard.totalCompanies')</a>
-                                <span class="text-muted fw-bold d-block">Due in 2 Days</span>
-                            </div>
-                            <span class="fw-bolder text-warning fs-4 py-1">{{ number_format($totalCompanies) }}</span>
-                        </div>
-                        <div class="d-flex align-items-center bg-light-success rounded p-5 mb-7 me-3 col-md-4">
-                            <span class="svg-icon svg-icon-success me-5">
-                                <span class="svg-icon svg-icon-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path opacity="0.3" d="M21.25 18.525L13.05 21.825C12.35 22.125 11.65 22.125 10.95 21.825L2.75 18.525C1.75 18.125 1.75 16.725 2.75 16.325L4.04999 15.825L10.25 18.325C10.85 18.525 11.45 18.625 12.05 18.625C12.65 18.625 13.25 18.525 13.85 18.325L20.05 15.825L21.35 16.325C22.35 16.725 22.35 18.125 21.25 18.525ZM13.05 16.425L21.25 13.125C22.25 12.725 22.25 11.325 21.25 10.925L13.05 7.62502C12.35 7.32502 11.65 7.32502 10.95 7.62502L2.75 10.925C1.75 11.325 1.75 12.725 2.75 13.125L10.95 16.425C11.65 16.725 12.45 16.725 13.05 16.425Z" fill="currentColor"></path>
-                                        <path d="M11.05 11.025L2.84998 7.725C1.84998 7.325 1.84998 5.925 2.84998 5.525L11.05 2.225C11.75 1.925 12.45 1.925 13.15 2.225L21.35 5.525C22.35 5.925 22.35 7.325 21.35 7.725L13.05 11.025C12.45 11.325 11.65 11.325 11.05 11.025Z" fill="currentColor"></path>
-                                    </svg>
-                                </span>
-                            </span>
-                            <div class="flex-grow-1 me-2">
-                                <a href="#" class="fw-bolder text-gray-800 text-hover-primary fs-6">@lang('modules.dashboard.activeCompanies')</a>
-                                <span class="text-muted fw-bold d-block">Due in 2 Days</span>
-                            </div>
-                            <span class="fw-bolder text-success fs-4 py-1">{{ number_format($activeCompanies) }}</span>
-                        </div>
-                        <div class="d-flex align-items-center bg-light-danger rounded p-5 mb-7 me-3 col-md-4">
-                            <span class="svg-icon svg-icon-danger me-5">
-                                <span class="svg-icon svg-icon-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path opacity="0.3" d="M21.25 18.525L13.05 21.825C12.35 22.125 11.65 22.125 10.95 21.825L2.75 18.525C1.75 18.125 1.75 16.725 2.75 16.325L4.04999 15.825L10.25 18.325C10.85 18.525 11.45 18.625 12.05 18.625C12.65 18.625 13.25 18.525 13.85 18.325L20.05 15.825L21.35 16.325C22.35 16.725 22.35 18.125 21.25 18.525ZM13.05 16.425L21.25 13.125C22.25 12.725 22.25 11.325 21.25 10.925L13.05 7.62502C12.35 7.32502 11.65 7.32502 10.95 7.62502L2.75 10.925C1.75 11.325 1.75 12.725 2.75 13.125L10.95 16.425C11.65 16.725 12.45 16.725 13.05 16.425Z" fill="currentColor"></path>
-                                        <path d="M11.05 11.025L2.84998 7.725C1.84998 7.325 1.84998 5.925 2.84998 5.525L11.05 2.225C11.75 1.925 12.45 1.925 13.15 2.225L21.35 5.525C22.35 5.925 22.35 7.325 21.35 7.725L13.05 11.025C12.45 11.325 11.65 11.325 11.05 11.025Z" fill="currentColor"></path>
-                                    </svg>
-                                </span>
-                            </span>
-                            <div class="flex-grow-1 me-2">
-                                <a href="#" class="fw-bolder text-gray-800 text-hover-primary fs-6">@lang('modules.dashboard.inactiveCompanies')</a>
-                                <span class="text-muted fw-bold d-block">Due in 5 Days</span>
-                            </div>
-                            <span class="fw-bolder text-danger fs-4 py-1">{{ number_format($inactiveCompanies) }}</span>
-                        </div>
+                    <div class="kpi-count" id="kpiTotalCompaniesCount" style="color: #D97706;">
+                        {{ number_format($totalCompanies) }}
                     </div>
                 </div>
+                <div class="kpi-bar-indicator" style="background-color: #D97706;"></div>
             </div>
         </div>
-        <div class="row gy-5 g-xl-8">
-            <div class="col-xl-12 mt-4">
-                <div class="card card-xl-stretch mb-5 mb-xl-8">
-                    <div class="card-header border-0 pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bolder fs-3 mb-1">Our Companies</span>
-                            <span class="text-muted mt-1 fw-bold fs-7">Over {{ number_format($totalCompanies) }} company</span>
-                        </h3>
-                    </div>
-                    <div class="card-header border-0 pt-5">
-                        <div class="search-container input-group input-group-lg input-group-solid" style="width: 75%;height: 50px;">
-                            <div class="input-group-prepend">
-                                 <span class="input-group-text"> <i class="la la-search" style="font-size: 25px;"></i></span>
-                          </div>
-                            <input class="form-control form-control-solid ps-3" type="text" id="searchInput" placeholder="Search for company....">
+
+        {{-- Card 2: Active Companies --}}
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-card-active d-flex flex-column justify-content-between h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon-wrapper" style="background-color: rgba(5, 150, 105, 0.12);">
+                            <i class="bi bi-stack fs-3" style="color: #059669;"></i>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 25%;">
-                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="height: 50px; border: 1px solid #ffffff; margin-top: -6px;" onchange="filtersdataget()">
-                                <option value="" selected="">All Companies</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Suspended</option>
-                            </select>
+                        <div>
+                            <div class="kpi-title">@lang('modules.dashboard.activeCompanies')</div>
+                            <div class="kpi-subtitle">Due in 2 Days</div>
                         </div>
                     </div>
-                    <div class="card-body py-3">
-                        <div class="table-responsive">
-							
-							<div class="loadingMessage loadingMessagecompanyListajax" style="display: none; position: absolute;">Processing...</div>
-							<table id="myTable2" class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
-								<thead>
-									<tr>
-										<th> <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                <input class="form-check-input widget-9-check" type="checkbox" value="1">
-                                            </div>
-										</th>										
-										<th>Company Name</th>
-										<th>Location</th>
-										<th>Date</th>
-										<th>Jobs</th>
-                                        <th>Join</th>
-                                        <th>Bench</th>
-                                        <th>Operational Package</th>
-                                        <th>Sales Package </th>
-                                        <th>SP.</th>
-                                        {{-- <th>Status</th>
-                                        <th>Job Req.</th>
-                                        <th>Bench Req.</th> --}}
-									</tr>
-								</thead>
-                                <tbody class="text-gray-600 fw-bold" id="companyListajax">
-                                </tbody>
-							</table>
-                            <div id="paginationcopanylist"></div>
-					
-                        </div>
+                    <div class="kpi-count" id="kpiActiveCompaniesCount" style="color: #059669;">
+                        {{ number_format($activeCompanies) }}
                     </div>
                 </div>
+                <div class="kpi-bar-indicator" style="background-color: #059669;"></div>
+            </div>
+        </div>
+
+        {{-- Card 3: Inactive Companies --}}
+        <div class="col-12 col-md-4">
+            <div class="kpi-card kpi-card-inactive d-flex flex-column justify-content-between h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon-wrapper" style="background-color: rgba(225, 29, 72, 0.12);">
+                            <i class="bi bi-stack fs-3" style="color: #E11D48;"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-title">@lang('modules.dashboard.inactiveCompanies')</div>
+                            <div class="kpi-subtitle">Due in 5 Days</div>
+                        </div>
+                    </div>
+                    <div class="kpi-count" id="kpiInactiveCompaniesCount" style="color: #E11D48;">
+                        {{ number_format($inactiveCompanies) }}
+                    </div>
+                </div>
+                <div class="kpi-bar-indicator" style="background-color: #E11D48;"></div>
             </div>
         </div>
     </div>
+
+    {{-- Unified Search & Filter Toolbar --}}
+    <div class="filter-toolbar-card mb-4">
+        <div class="d-flex align-items-center flex-wrap gap-3">
+            {{-- Search Box --}}
+            <div class="search-input-box position-relative flex-grow-1">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted fs-6"></i>
+                <input type="text" id="searchInput" class="form-control ps-10" placeholder="Search for company name, location...">
+            </div>
+
+            {{-- Location Filter --}}
+            <div class="filter-select-wrapper position-relative">
+                <i class="bi bi-geo-alt position-absolute top-50 start-0 translate-middle-y ms-3 text-muted fs-6" style="z-index: 2;"></i>
+                <select id="locationFilter" class="form-select ps-9 pe-8">
+                    <option value="">All Locations</option>
+                    @if (!empty($locations) && is_array($locations))
+                        @foreach ($locations as $loc)
+                            <option value="{{ $loc }}">{{ $loc }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            {{-- Status Filter --}}
+            <div class="filter-select-wrapper position-relative">
+                <i class="bi bi-stack position-absolute top-50 start-0 translate-middle-y ms-3 text-muted fs-6" style="z-index: 2;"></i>
+                <select id="statusFilter" class="form-select ps-9 pe-8">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Suspended</option>
+                </select>
+            </div>
+
+            {{-- All Companies Filter --}}
+            <div class="filter-select-wrapper position-relative">
+                <i class="bi bi-building position-absolute top-50 start-0 translate-middle-y ms-3 text-muted fs-6" style="z-index: 2;"></i>
+                <select id="sortingfilter" class="form-select ps-9 pe-8">
+                    <option value="" selected>All Companies</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Suspended</option>
+                </select>
+            </div>
+
+            {{-- Clear Filters Button --}}
+            <button type="button" id="btnClearFilters" class="btn-clear-filter d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-counterclockwise fs-6"></i> Clear Filters
+            </button>
+        </div>
+    </div>
+
+    {{-- Sub-Bar: Export & Columns Control --}}
+    <div class="d-flex justify-content-end align-items-center gap-3 mb-3">
+        {{-- Export Dropdown --}}
+        <div class="dropdown">
+            <button class="sub-bar-btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="exportDropdownMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download fs-6 text-muted"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" aria-labelledby="exportDropdownMenu">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2 export-trigger" href="javascript:void(0);" data-format="csv">
+                        <i class="bi bi-file-earmark-spreadsheet text-success fs-6"></i> Export CSV
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2 export-trigger" href="javascript:void(0);" data-format="excel">
+                        <i class="bi bi-file-earmark-excel text-primary fs-6"></i> Export Excel
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {{-- Columns Visibility Dropdown --}}
+        <div class="dropdown">
+            <button class="sub-bar-btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="columnsDropdownMenu" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                <i class="bi bi-layout-three-columns fs-6 text-muted"></i> Columns
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-3 shadow-sm border-0" style="min-width: 210px;" aria-labelledby="columnsDropdownMenu">
+                <span class="fw-bold fs-7 text-gray-800 d-block mb-2">Display Columns</span>
+                <div class="d-flex flex-column gap-2 fs-7">
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-location">
+                        <span class="form-check-label text-gray-700">Location</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-date">
+                        <span class="form-check-label text-gray-700">Date</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-jobs">
+                        <span class="form-check-label text-gray-700">Jobs</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-join">
+                        <span class="form-check-label text-gray-700">Join</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-bench">
+                        <span class="form-check-label text-gray-700">Bench</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-oppack">
+                        <span class="form-check-label text-gray-700">Operational Package</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-salespack">
+                        <span class="form-check-label text-gray-700">Sales Package</span>
+                    </label>
+                    <label class="form-check form-check-custom form-check-sm">
+                        <input class="form-check-input column-toggle-check" type="checkbox" checked data-col="col-sp">
+                        <span class="form-check-label text-gray-700">SP.</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        {{-- Add Company Action --}}
+        <a href="{{ route('superadmin.company.create') }}" class="btn-add-company d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg fs-6"></i> Add Company
+        </a>
+    </div>
+
+    {{-- Persistent Multi-Page Selection Bar --}}
+    <div id="bulkActionBar" class="bulk-action-bar d-flex align-items-center justify-content-between p-2 px-4 mb-3 rounded-2" style="display: none; background: #EEF6FF; border: 1px solid #C9E2FF;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check2-circle text-primary fs-5"></i>
+            <span class="fw-bold fs-7 text-gray-800"><span id="selectedCountNumber" class="text-primary fw-bolder">0</span> companies selected across pages</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" id="btnClearSelection" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-semibold">
+                <i class="bi bi-x-circle me-1"></i> Clear Selection
+            </button>
+        </div>
+    </div>
+
+    {{-- Main Companies Data Table Card --}}
+    <div class="table-wrapper-card position-relative mb-4">
+        {{-- Loading Spinner Overlay --}}
+        <div id="tableLoadingOverlay" class="table-loading-overlay" style="display: none;">
+            <div class="d-flex flex-column align-items-center">
+                <div class="spinner-border text-primary" role="status" style="width: 2.2rem; height: 2.2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="text-muted fs-7 fw-semibold mt-2">Loading companies...</span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="myTable2" class="table sa-companies-table align-middle">
+                <thead>
+                    <tr>
+                        <th class="col-chkbox ps-4" style="width: 40px;">
+                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" id="checkAllRows" type="checkbox" value="1">
+                            </div>
+                        </th>
+                        <th class="col-company">Company Name</th>
+                        <th class="col-location">Location</th>
+                        <th class="col-date">Date</th>
+                        <th class="col-jobs">Jobs</th>
+                        <th class="col-join">Join</th>
+                        <th class="col-bench">Bench</th>
+                        <th class="col-oppack">Operational Package</th>
+                        <th class="col-salespack">Sales Package</th>
+                        <th class="col-sp">SP.</th>
+                        <th class="col-actions text-end pe-4" style="width: 70px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 fw-bold" id="companyListajax">
+                    {{-- Dynamically Injected via AJAX --}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Footer Pagination Bar --}}
+    <div class="d-flex flex-stack flex-wrap pt-4 pb-4 align-items-center justify-content-between border-top border-gray-200">
+        <div class="fs-7 fw-semibold text-gray-700" id="showingCount">
+            Showing 1 to 4 of 4 records.
+        </div>
+        <div id="paginationcopanylist" class="d-flex align-items-center"></div>
+    </div>
 </div>
+</div>
+{{-- End .sa-companies-page --}}
 
 
 
 <div id="kt_activitiesClient_toggle"></div>
-<div id="kt_activitiesClient" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close">
-  <div class="card shadow-none rounded-0 w-100">
-    <!--begin::Header-->
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-      <div class="d-flex align-items-center py-1">
-        <h3 class="card-title fw-bolder text-dark">Company Details</h3>
-        <!--begin::seprator-->
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-        <!--end::seprator-->
-      </div>
-      <!--end::Header-->
-      <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesClient_close">
-        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
-        <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-          </g>
-        </svg>
-        </span>
-        <!--end::Svg Icon-->
-        </button>
-      </div>
+<div id="kt_activitiesClient" class="bg-body sa-company-drawer-shell" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'md': '80%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="sa-drawer-header" id="kt_activities_header">
+      <h3 class="sa-drawer-title">
+        <i class="fa-solid fa-building text-primary fs-5"></i>
+        <span>Company Details</span>
+      </h3>
+      <button type="button" class="sa-drawer-close" id="kt_activitiesClient_close" aria-label="Close">
+        <i class="fa-solid fa-xmark fs-5"></i>
+      </button>
     </div>
-    <!--end::Header-->
-    <div class="card-body position-relative px-0 py-0" id="kt_activitiesClient_body"> &nbsp; </div>
-    <!--begin::Body-->
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="kt_activitiesClient_body"> &nbsp; </div>
   </div>
 </div>
 
 <div id="kt_activitiesWallet_toggle"></div>
-<div id="kt_activitiesWallet" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesWallet_toggle" data-kt-drawer-close="#kt_activitiesWallet_close">
-  <div class="card shadow-none rounded-0 w-100">
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-      <div class="d-flex align-items-center py-1">
-        <h3 class="card-title fw-bolder text-dark">Edit Company Wallet</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
-      <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesWallet_close"> <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-          </g>
-        </svg>
-        </span> </button>
-      </div>
+<div id="kt_activitiesWallet" class="bg-body sa-wallet-drawer-shell" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'md': '80%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesWallet_toggle" data-kt-drawer-close="#kt_activitiesWallet_close">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="sa-drawer-header" id="kt_activitiesWallet_header">
+      <h3 class="sa-drawer-title">
+        <i class="fa-solid fa-wallet text-warning fs-5"></i>
+        <span>Edit Company Wallet</span>
+      </h3>
+      <button type="button" class="sa-drawer-close" id="kt_activitiesWallet_close" aria-label="Close">
+        <i class="fa-solid fa-xmark fs-5"></i>
+      </button>
     </div>
-    <div class="card-body position-relative px-0 py-0" id="kt_activitiesWallet_body"></div>
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="kt_activitiesWallet_body"></div>
   </div>
 </div>
 
 <div id="kt_billing_address_toggle"></div>
 
-<div id="kt_activitiesApplication" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activitiesApplication"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end"
+<div id="kt_activitiesApplication" class="bg-body sa-billing-drawer-shell" data-kt-drawer="true" data-kt-drawer-name="activitiesApplication"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'md': '80%'}" data-kt-drawer-direction="end"
     data-kt-drawer-toggle="#kt_billing_address_toggle" data-kt-drawer-close="#kt_activitiesApplication_close">
-    <div class="card shadow-none rounded-0 w-100" id="application_show_right_bar">
-
-
-        <div class="card-header px-5 py-0" id="kt_activities_header">
-            <div class="d-flex align-items-center py-1">
-                <a href="javascript:void(0);" id=""
-                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3"> <span
-                        class="svg-icon svg-icon-primary svg-icon-1x">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                            width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                                <path
-                                    d="M12,11 C9.790861,11 8,9.209139 8,7 C8,4.790861 9.790861,3 12,3 C14.209139,3 16,4.790861 16,7 C16,9.209139 14.209139,11 12,11 Z"
-                                    fill="#000000" fill-rule="nonzero" opacity="0.3"></path>
-                                <path
-                                    d="M3.00065168,20.1992055 C3.38825852,15.4265159 7.26191235,13 11.9833413,13 C16.7712164,13 20.7048837,15.2931929 20.9979143,20.2 C21.0095879,20.3954741 20.9979143,21 20.2466999,21 C16.541124,21 11.0347247,21 3.72750223,21 C3.47671215,21 2.97953825,20.45918 3.00065168,20.1992055 Z"
-                                    fill="#000000" fill-rule="nonzero"></path>
-                            </g>
-                        </svg>
-                    </span> Billing Address
-                </a>
-
-            </div>
-
-            <div class="card-toolbar">
-                <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5"
-                    id="kt_activitiesApplication_close"> <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                            width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                fill="#000000">
-                                <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                                <rect fill="#000000" opacity="0.5"
-                                    transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                    x="0" y="7" width="16" height="2" rx="1" />
-                            </g>
-                        </svg>
-                    </span> </button>
-            </div>
+    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" id="application_show_right_bar">
+        <div class="sa-drawer-header" id="kt_activitiesApplication_header">
+            <h3 class="sa-drawer-title">
+                <i class="fa-solid fa-map-location-dot text-info fs-5"></i>
+                <span>Billing Address</span>
+            </h3>
+            <button type="button" class="sa-drawer-close" id="kt_activitiesApplication_close" aria-label="Close">
+                <i class="fa-solid fa-xmark fs-5"></i>
+            </button>
         </div>
-        <div class="card card-custom mx-2">
-            <div class="card-body py-0">
-                <div class="tab-content pt-5" id="kt_billing_address_body">
-
-
-
-                    
-                </div>
-            </div>
+        <div class="card-body position-relative px-4 py-4 flex-grow-1 overflow-auto" id="kt_billing_address_body">
         </div>
-
-
     </div>
 </div>
 
@@ -459,7 +924,7 @@
         //     serverSide: true,
         //     ajax: '{!! route('superadmin.company.data') !!}',
         //     language: {
-        //         "url": "<?php echo __("app.datatable") ?>"
+        //         "url": "<?php echo __('app.datatable') ?>"
         //     },
         //     "fnDrawCallback": function( oSettings ) {
         //         $("body").tooltip({
@@ -543,16 +1008,36 @@
                     url = url.replace(':id', id);
 
                     var token = "{{ csrf_token() }}";
+                    var idempotencyKey = 'comp_del_' + id + '_' + Date.now();
 
                     $.ajax({
                         type: 'POST',
                         url: url,
-                        data: {'_token': token, '_method': 'DELETE'},
+                        headers: { 'X-Idempotency-Key': idempotencyKey },
+                        data: {'_token': token, '_method': 'DELETE', 'idempotency_key': idempotencyKey},
                         success: function (response) {
                             if (response.status == "success") {
                                 $.unblockUI();
-                                    //                                    swal("Deleted!", response.message, "success");
-                                table._fnDraw();
+                                if (typeof SessionRAMCache !== 'undefined') {
+                                    SessionRAMCache.invalidate();
+                                }
+                                if (typeof broadcastLocalCompanyMutation === 'function') {
+                                    broadcastLocalCompanyMutation({
+                                        type: 'COMPANY_DELTA',
+                                        company_id: id,
+                                        action: 'deleted',
+                                        delta: { id: id }
+                                    });
+                                }
+                                if (typeof applyCompanyDeltaPatch === 'function') {
+                                    applyCompanyDeltaPatch({
+                                        company_id: id,
+                                        action: 'deleted',
+                                        delta: { id: id }
+                                    });
+                                } else if (typeof fetchCompanyAjax === 'function') {
+                                    fetchCompanyAjax(typeof currentPage !== 'undefined' ? currentPage : 1, { bypassCache: true });
+                                }
                             }
                         }
                     });
@@ -1481,63 +1966,579 @@
 </script>
 
 <script>
+    /**
+     * Phase 2 — SessionRAMCache & Client-First Asynchronous State Controller
+     * 
+     * Features:
+     * 1. SessionRAMCache: Memory-bounded (max 50 entries, FIFO eviction), 30s TTL.
+     * 2. Persistent Multi-Page Selection: selectedCompanyIds Set with dynamic UI bulk action bar.
+     * 3. Tab Visibility Re-validation: Background silent refresh on tab focus after 15s.
+     * 4. Circuit-Breaker Offline Resilience: Automatic offline warning & serving from cache.
+     * 5. Session Preference Persistence: Column visibility and limit preferences stored in sessionStorage.
+     * 6. Anti-Race Debouncing: 300ms debounce + AbortController.
+     * 7. Client-First CSV Export: Zero server strain.
+     */
+    let currentPage = 1;
+    let searchDebounceTimer = null;
+    let inFlightAbortController = null;
 
-        $(document).ready(function() {
-                    // $.noConflict();
+    const SessionRAMCache = {
+        cache: new Map(),
+        maxEntries: 50,
+        ttlMs: 30000, // 30 seconds
+        selectedCompanyIds: new Set(),
+        lastFetchTimestamp: Date.now(),
 
-                    fetchCompanyAjax();
-                    
-                    $(document).on('click', '#paginationcopanylist .page-link', function(e) {
-                        e.preventDefault();
+        get: function(key) {
+            if (!this.cache.has(key)) return null;
+            const entry = this.cache.get(key);
+            if (Date.now() - entry.timestamp > this.ttlMs) {
+                this.cache.delete(key);
+                return null;
+            }
+            return entry.data;
+        },
 
-                        const page = $(this).data('page');
-                        if (!page || $(this).hasClass('disabled')) return;
+        set: function(key, data) {
+            if (this.cache.size >= this.maxEntries) {
+                const oldestKey = this.cache.keys().next().value;
+                this.cache.delete(oldestKey);
+            }
+            this.cache.set(key, {
+                data: data,
+                timestamp: Date.now()
+            });
+            this.lastFetchTimestamp = Date.now();
+        },
 
-                        // Disable the clicked pagination link
-                        $(this).addClass('disabled');
+        invalidate: function() {
+            this.cache.clear();
+        },
 
-                        // Fetch data
-                        fetchCompanyAjax(page, $('#search').val()).then(() => {
-                            // Re-enable the links after successful data fetch
-                            $('#paginationcopanylist .page-link').removeClass('disabled');
-                        }).catch(() => {
-                            // Re-enable the links even if there's an error
-                            $('#paginationcopanylist .page-link').removeClass('disabled');
-                        });
-                    });
+        clear: function() {
+            this.invalidate();
+        },
 
+        toggleSelect: function(id, isChecked) {
+            id = String(id);
+            if (isChecked) {
+                this.selectedCompanyIds.add(id);
+            } else {
+                this.selectedCompanyIds.delete(id);
+            }
+            this.updateSelectionUI();
+        },
 
-        });
-
-        $('#searchInput').keyup(function() {
-            fetchCompanyAjax();
-	   });
-
-       function filtersdataget(){
-         fetchCompanyAjax();
-       }
-
-
- 
-        function fetchCompanyAjax(page = 1, search = '') {
-            var clientid = '1';
-            $('.loadingMessagecompanyListajax').css({ display: 'block' });
-            $.ajax({
-                url: `{!! route('superadmin.company.data_ajax') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                  parm : true,
-                  search : $('#searchInput').val(),
-                  sortingfilter : $('#sortingfilter').val()
-                },
-                success: function(response) {
-                    $('.loadingMessagecompanyListajax').css({ display: 'none' });
-                    $('#companyListajax').html(response.html);
-                    $('#paginationcopanylist').html(response.pagination);
+        selectAllVisible: function(isChecked) {
+            $('.company-row-checkbox').each(function() {
+                const id = String($(this).val());
+                $(this).prop('checked', isChecked);
+                if (isChecked) {
+                    SessionRAMCache.selectedCompanyIds.add(id);
+                } else {
+                    SessionRAMCache.selectedCompanyIds.delete(id);
                 }
             });
+            this.updateSelectionUI();
+        },
+
+        clearSelection: function() {
+            this.selectedCompanyIds.clear();
+            $('.company-row-checkbox').prop('checked', false);
+            $('#checkAllRows').prop('checked', false);
+            this.updateSelectionUI();
+        },
+
+        updateSelectionUI: function() {
+            const count = this.selectedCompanyIds.size;
+            $('#selectedCountNumber').text(count);
+            if (count > 0) {
+                $('#bulkActionBar').slideDown(150);
+            } else {
+                $('#bulkActionBar').slideUp(150);
+            }
+
+            const visibleCheckboxes = $('.company-row-checkbox');
+            if (visibleCheckboxes.length > 0) {
+                const allVisibleChecked = visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+                $('#checkAllRows').prop('checked', allVisibleChecked);
+            } else {
+                $('#checkAllRows').prop('checked', false);
+            }
+        },
+
+        syncCheckboxesWithState: function() {
+            $('.company-row-checkbox').each(function() {
+                const id = String($(this).val());
+                $(this).prop('checked', SessionRAMCache.selectedCompanyIds.has(id));
+            });
+            this.updateSelectionUI();
+        }
+    };
+
+    // Global alias for compatibility with existing hooks
+    const clientCache = SessionRAMCache;
+
+    function getFilterParams(page = 1) {
+        const search = ($('#searchInput').val() || '').trim();
+        const location = $('#locationFilter').val() || '';
+        const status = $('#statusFilter').val() || '';
+        const sortingfilter = $('#sortingfilter').val() || '';
+        const limit = 10;
+        const effectiveStatus = status || sortingfilter;
+
+        return {
+            page: page,
+            size: limit,
+            limit: limit,
+            search: search,
+            location: location,
+            status: effectiveStatus,
+            sortingfilter: sortingfilter,
+            parm: true
+        };
+    }
+
+    function getCacheKey(params) {
+        return `${params.page}_${params.size}_${params.search}_${params.location}_${params.status}`;
+    }
+
+    function renderTable(data, page, limit) {
+        $('#tableLoadingOverlay').hide();
+        $('.loadingMessagecompanyListajax').hide();
+        $('#companyListajax').html(data.html);
+
+        $('#paginationcopanylist').html(data.pagination);
+
+        const total = parseInt(data.total || 0, 10);
+        const from = total === 0 ? 0 : (page - 1) * limit + 1;
+        const to = Math.min(page * limit, total);
+        $('#showingCount').text(`Showing ${from} to ${to} of ${total} records.`);
+
+        // Re-apply column visibility preferences
+        applyColumnPreferences();
+
+        // Synchronize row selection checkboxes across pages
+        SessionRAMCache.syncCheckboxesWithState();
+    }
+
+    function applyColumnPreferences() {
+        $('.column-toggle-check').each(function() {
+            const colClass = $(this).data('col');
+            const isVisible = $(this).is(':checked');
+            $('.' + colClass).toggle(isVisible);
+        });
+    }
+
+    function saveColumnPreferences() {
+        try {
+            const prefs = {};
+            $('.column-toggle-check').each(function() {
+                prefs[$(this).data('col')] = $(this).is(':checked');
+            });
+            sessionStorage.setItem('sa_companies_col_prefs', JSON.stringify(prefs));
+        } catch (e) {}
+    }
+
+    function loadColumnPreferences() {
+        try {
+            const raw = sessionStorage.getItem('sa_companies_col_prefs');
+            if (raw) {
+                const prefs = JSON.parse(raw);
+                $('.column-toggle-check').each(function() {
+                    const col = $(this).data('col');
+                    if (prefs.hasOwnProperty(col)) {
+                        $(this).prop('checked', prefs[col]);
+                    }
+                });
+            }
+        } catch (e) {}
+        applyColumnPreferences();
+    }
+
+    function fetchCompanyAjax(page = 1, options = {}) {
+        currentPage = page;
+        const params = getFilterParams(page);
+        const cacheKey = getCacheKey(params);
+
+        // Fast RAM Cache lookup
+        if (!options.bypassCache && !options.silentBackgroundRevalidate) {
+            const cached = SessionRAMCache.get(cacheKey);
+            if (cached) {
+                renderTable(cached, page, params.size);
+                return;
+            }
         }
 
+        if (inFlightAbortController) {
+            inFlightAbortController.abort();
+        }
+        inFlightAbortController = new AbortController();
+
+        if (!options.silentBackgroundRevalidate) {
+            $('#tableLoadingOverlay').show();
+            $('.loadingMessagecompanyListajax').show();
+        }
+
+        $.ajax({
+            url: "{!! route('superadmin.company.data_ajax') !!}",
+            type: 'GET',
+            data: params,
+            signal: inFlightAbortController.signal,
+            success: function(response) {
+                SessionRAMCache.set(cacheKey, response);
+                renderTable(response, page, params.size);
+            },
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                $('#tableLoadingOverlay').hide();
+                $('.loadingMessagecompanyListajax').hide();
+
+                // Offline fallback to stale cache if available
+                const staleEntry = SessionRAMCache.cache.get(cacheKey);
+                if (staleEntry) {
+                    renderTable(staleEntry.data, page, params.size);
+                    if (window.SuperAdminOfflineCircuitBreaker) {
+                        window.SuperAdminOfflineCircuitBreaker.show();
+                    } else {
+                        $('#superadminOfflineBannerContainer').slideDown(150);
+                    }
+                } else {
+                    $('#companyListajax').html('<tr><td colspan="11" class="text-center py-8 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load company records. Please retry.</td></tr>');
+                }
+            }
+        });
+    }
+
+    function exportTableToCSV(filename) {
+        const rows = document.querySelectorAll('#myTable2 tr');
+        const csv = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = [];
+            const cols = rows[i].querySelectorAll('th, td');
+            // Skip checkbox (index 0) and actions (last index)
+            for (let j = 1; j < cols.length - 1; j++) {
+                let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/\s+/g, ' ').trim();
+                text = text.replace(/"/g, '""');
+                row.push('"' + text + '"');
+            }
+            if (row.length > 0) {
+                csv.push(row.join(','));
+            }
+        }
+
+        const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    $(document).ready(function() {
+        // Load saved session preferences
+        loadColumnPreferences();
+
+        // Initial Data Fetch
+        fetchCompanyAjax(1);
+
+        // 300ms Debounced Search Input
+        $('#searchInput').on('input', function() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function() {
+                fetchCompanyAjax(1);
+            }, 300);
+        });
+
+        // Filter Dropdowns
+        $('#locationFilter, #statusFilter, #sortingfilter').on('change', function() {
+            fetchCompanyAjax(1);
+        });
+
+        // Clear Filters
+        $('#btnClearFilters').on('click', function() {
+            $('#searchInput').val('');
+            $('#locationFilter').val('');
+            $('#statusFilter').val('');
+            $('#sortingfilter').val('');
+            fetchCompanyAjax(1);
+        });
+
+        // Pagination Clicks
+        $(document).on('click', '#paginationcopanylist .page-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('active_disabled') || $(this).hasClass('previous_disabled') || $(this).hasClass('next_disabled')) return;
+            fetchCompanyAjax(parseInt(page, 10));
+        });
+
+        // Column Visibility Toggle & Persistence
+        $(document).on('change', '.column-toggle-check', function() {
+            applyColumnPreferences();
+            saveColumnPreferences();
+        });
+
+        // Persistent Row Selection
+        $(document).on('change', '.company-row-checkbox', function() {
+            const id = $(this).val();
+            const isChecked = $(this).is(':checked');
+            SessionRAMCache.toggleSelect(id, isChecked);
+        });
+
+        $(document).on('change', '#checkAllRows', function() {
+            const isChecked = $(this).is(':checked');
+            SessionRAMCache.selectAllVisible(isChecked);
+        });
+
+        $(document).on('click', '#btnClearSelection', function() {
+            SessionRAMCache.clearSelection();
+        });
+
+        // Tab Visibility Synchronization (Stale-While-Revalidate after 15s)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                const elapsed = Date.now() - SessionRAMCache.lastFetchTimestamp;
+                if (elapsed > 15000) {
+                    fetchCompanyAjax(currentPage, { silentBackgroundRevalidate: true });
+                }
+            }
+        });
+
+        // Circuit-Breaker Network Listeners
+        window.addEventListener('online', function() {
+            if (window.SuperAdminOfflineCircuitBreaker) {
+                window.SuperAdminOfflineCircuitBreaker.hide();
+            } else {
+                $('#superadminOfflineBannerContainer').slideUp(150);
+            }
+            fetchCompanyAjax(currentPage, { bypassCache: true });
+        });
+
+        window.addEventListener('offline', function() {
+            if (window.SuperAdminOfflineCircuitBreaker) {
+                window.SuperAdminOfflineCircuitBreaker.show();
+            } else {
+                $('#superadminOfflineBannerContainer').slideDown(150);
+            }
+        });
+
+        // Client-Side CSV / Excel Export
+        $(document).on('click', '.export-trigger', function(e) {
+            e.preventDefault();
+            const format = $(this).data('format');
+            const today = new Date().toISOString().slice(0, 10);
+            exportTableToCSV(`companies_export_${today}.csv`);
+        });
+
+        // =========================================================================
+        // REAL-TIME SYNCHRONIZATION: Laravel Reverb WebSockets + BroadcastChannel
+        // =========================================================================
+
+        // 1. Cross-Tab Synchronization Bus via BroadcastChannel
+        let companySyncBus = null;
+        try {
+            if (typeof window.BroadcastChannel !== 'undefined') {
+                companySyncBus = new BroadcastChannel('jero_sa_company_sync_bus');
+                companySyncBus.onmessage = function(event) {
+                    if (event.data && event.data.type === 'COMPANY_DELTA') {
+                        handleCompanyDeltaSync(event.data);
+                    }
+                };
+            }
+        } catch (e) {
+            console.warn('[SA_COMPANY_SYNC] BroadcastChannel init notice:', e);
+        }
+
+        // 2. Storage Event Fallback for Cross-Tab Sync
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'jero_sa_company_mutation' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    if (data && data.type === 'COMPANY_DELTA' && (Date.now() - data.sent_at < 5000)) {
+                        handleCompanyDeltaSync(data);
+                    }
+                } catch (err) {}
+            }
+        });
+
+        function broadcastLocalCompanyMutation(payload) {
+            payload.sent_at = Date.now();
+            if (companySyncBus) {
+                try {
+                    companySyncBus.postMessage(payload);
+                } catch (e) {}
+            }
+            try {
+                localStorage.setItem('jero_sa_company_mutation', JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        // 3. Laravel Echo Private Channel via Reverb WebSockets
+        if (typeof window.Echo !== 'undefined') {
+            try {
+                window.Echo.private('superadmin.companies')
+                    .listen('.company.delta', function(e) {
+                        handleCompanyDeltaSync(e);
+                    });
+            } catch (e) {
+                console.warn('[SA_COMPANY_ECHO] Echo private channel subscription notice:', e);
+            }
+        }
+
+        // 4. Central Incoming Delta Handler
+        function handleCompanyDeltaSync(data) {
+            if (!data || !data.company_id) return;
+
+            // Invalidate local RAM cache to ensure fresh state on next page change or filter
+            SessionRAMCache.invalidate();
+
+            applyCompanyDeltaPatch(data);
+        }
+
+        // 5. Zero-Latency DOM Delta Patcher
+        function applyCompanyDeltaPatch(data) {
+            const companyId = parseInt(data.company_id, 10);
+            const action = data.action;
+            const $row = $(`tr.sa-company-row[data-company-id="${companyId}"]`);
+
+            if (action === 'verified' || action === 'unverified') {
+                const isVerified = action === 'verified';
+
+                if ($row.length > 0) {
+                    // Update verify icon badge
+                    const $badgeContainer = $row.find('.company-verify-badge-container');
+                    if ($badgeContainer.length > 0) {
+                        if (isVerified) {
+                            $badgeContainer.html('<i class="bi bi-patch-check-fill text-primary fs-6 verify-badge-icon" title="Verified Organization" data-bs-toggle="tooltip"></i>');
+                        } else {
+                            $badgeContainer.html('<i class="bi bi-hourglass-split text-warning fs-6 verify-badge-icon" title="Pending Verification" data-bs-toggle="tooltip"></i>');
+                        }
+                    }
+
+                    // Update dropdown toggle action
+                    const $toggleBtn = $row.find('.toggle-account-verify');
+                    if ($toggleBtn.length > 0) {
+                        if (isVerified) {
+                            $toggleBtn.html('<i class="bi bi-x-circle text-danger fs-6"></i> Mark Unverified');
+                        } else {
+                            $toggleBtn.html('<i class="bi bi-check-circle text-success fs-6"></i> Verify Company');
+                        }
+                    }
+
+                    // Live row update highlight
+                    $row.addClass('sa-row-live-updated');
+                    setTimeout(() => $row.removeClass('sa-row-live-updated'), 1500);
+
+                    // Re-initialize Bootstrap tooltips if available
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                        $row.find('[data-bs-toggle="tooltip"]').each(function() {
+                            new bootstrap.Tooltip(this);
+                        });
+                    }
+                }
+            } else if (action === 'deleted') {
+                if ($row.length > 0) {
+                    $row.css('transition', 'all 0.3s ease-out')
+                        .css('opacity', '0')
+                        .css('transform', 'translateX(20px)');
+                    setTimeout(() => {
+                        $row.remove();
+
+                        // Decrement KPI total companies count if visible
+                        const $totalCount = $('#kpiTotalCompaniesCount');
+                        if ($totalCount.length > 0) {
+                            const currentTotal = parseInt($totalCount.text().replace(/,/g, ''), 10) || 0;
+                            if (currentTotal > 0) {
+                                $totalCount.text(new Intl.NumberFormat().format(currentTotal - 1));
+                            }
+                        }
+
+                        // If no visible rows remain, re-fetch active page
+                        if ($('tr.sa-company-row').length === 0) {
+                            fetchCompanyAjax(currentPage, { bypassCache: true });
+                        }
+                    }, 300);
+                } else {
+                    const $totalCount = $('#kpiTotalCompaniesCount');
+                    if ($totalCount.length > 0) {
+                        const currentTotal = parseInt($totalCount.text().replace(/,/g, ''), 10) || 0;
+                        if (currentTotal > 0) {
+                            $totalCount.text(new Intl.NumberFormat().format(currentTotal - 1));
+                        }
+                    }
+                }
+            } else if (action === 'created' || action === 'package_updated' || action === 'updated') {
+                // Non-blocking silent background revalidation without screen flicker
+                fetchCompanyAjax(currentPage, { silentBackgroundRevalidate: true });
+            }
+        }
+
+        // Toggle Account Verification
+        $(document).on('click', '.toggle-account-verify', function(e) {
+            e.preventDefault();
+            const id = $(this).data('row-id');
+            const url = "{{ route('superadmin.company.toggleAccountVerify', ':id') }}".replace(':id', id);
+            const token = "{{ csrf_token() }}";
+            const idempotencyKey = 'comp_ver_' + id + '_' + Date.now();
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                headers: { 'X-Idempotency-Key': idempotencyKey },
+                data: { _token: token, idempotency_key: idempotencyKey },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        SessionRAMCache.invalidate();
+                        const newAction = parseInt(response.accountVerify, 10) === 1 ? 'verified' : 'unverified';
+                        const deltaPayload = {
+                            type: 'COMPANY_DELTA',
+                            company_id: id,
+                            action: newAction,
+                            delta: { accountVerify: response.accountVerify }
+                        };
+                        broadcastLocalCompanyMutation(deltaPayload);
+                        applyCompanyDeltaPatch(deltaPayload);
+                    }
+                },
+                error: function() {
+                    Swal.fire("Error", "Failed to update company verification status.", "error");
+                }
+            });
+        });
+
+        // Login As Company
+        $(document).on('click', '.btn-login-company', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const url = "{{ route('superadmin.company.loginAsCompany', ':id') }}".replace(':id', id);
+            const token = "{{ csrf_token() }}";
+
+            Swal.fire({
+                title: "Login as Company?",
+                text: "You will be logged in as an administrator of this company.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, login"
+            }).then((result) => {
+                if (result.isConfirmed || result.value) {
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: { _token: token },
+                        success: function(response) {
+                            window.location.href = "{{ route('admin.dashboard') }}";
+                        },
+                        error: function() {
+                            Swal.fire("Error", "Unable to log in as company admin.", "error");
+                        }
+                    });
+                }
+            });
+        });
+    });
 </script>
 
 @endpush

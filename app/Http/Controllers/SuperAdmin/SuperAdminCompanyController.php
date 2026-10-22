@@ -31,6 +31,7 @@ use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
 use App\Services\AgencyCommercialTermsService;
+use App\Services\CompanyMutationService;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
@@ -43,6 +44,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -59,8 +61,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     protected $elasticService;
 
-    public function __construct(GoogleSheetServiceCandidate $GoogleSheetServiceCandidate, GoogleSheetsServiceGet $GoogleSheetsServiceGet, MailService $mailService, ElasticService $elasticService)
-    {
+    protected $companyMutationService;
+
+    public function __construct(
+        GoogleSheetServiceCandidate $GoogleSheetServiceCandidate,
+        GoogleSheetsServiceGet $GoogleSheetsServiceGet,
+        MailService $mailService,
+        ElasticService $elasticService,
+        CompanyMutationService $companyMutationService
+    ) {
         parent::__construct();
         $this->pageTitle = 'menu.companies';
         $this->pageIcon = 'icon-film';
@@ -68,6 +77,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->GoogleSheetsServiceGet = $GoogleSheetsServiceGet;
         $this->mailService = $mailService;
         $this->elasticService = $elasticService;
+        $this->companyMutationService = $companyMutationService;
     }
 
     /**
@@ -121,45 +131,62 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function index()
     {
-        $must = [];
-        $params = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'body' => [
-                'size' => 10000, // or a custom number
-                'query' => [
-                    'function_score' => [
-                        'query' => [
-                            'bool' => [
-                                'must' => $must,
+        $this->totalCompanies = 0;
+        $this->activeCompanies = 0;
+        $this->inactiveCompanies = 0;
+        $this->locations = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+            $superAdminCompanyIds = GeneralMethod::superAdminCompanyIds();
+            $mustNot = [];
+            if (! empty($superAdminCompanyIds)) {
+                $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
+            }
+
+            $params = [
+                'index' => ELASTIC_COMPANIES_INDEX,
+                'body' => [
+                    'size' => 0,
+                    'track_total_hits' => true,
+                    'query' => [
+                        'bool' => [
+                            'must_not' => $mustNot,
+                        ],
+                    ],
+                    'aggs' => [
+                        'status_counts' => [
+                            'terms' => [
+                                'field' => 'status',
                             ],
                         ],
-                        'score_mode' => 'sum',
-                        'boost_mode' => 'sum',
+                        'unique_cities' => [
+                            'terms' => [
+                                'field' => 'locations_address.locations_address.city_name.keyword',
+                                'size' => 100,
+                            ],
+                        ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $total = 0;
-            $data = [];
-            $this->totalCompanies = 0;
-            $this->activeCompanies = 0;
-            $this->inactiveCompanies = 0;
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
-            $collection = collect($data);
-            $this->totalCompanies = $collection->count();
-            $this->activeCompanies = $collection->where('status', 'active')->count();
-            $this->inactiveCompanies = $collection->where('status', 'inactive')->count();
-
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $this->totalCompanies = (int) ($response['hits']['total']['value'] ?? 0);
+                $buckets = $response['aggregations']['status_counts']['buckets'] ?? [];
+                foreach ($buckets as $b) {
+                    if (($b['key'] ?? '') === 'active') {
+                        $this->activeCompanies = (int) $b['doc_count'];
+                    } elseif (($b['key'] ?? '') === 'inactive') {
+                        $this->inactiveCompanies = (int) $b['doc_count'];
+                    }
+                }
+                $cityBuckets = $response['aggregations']['unique_cities']['buckets'] ?? [];
+                $this->locations = array_values(array_filter(array_column($cityBuckets, 'key')));
+            } catch (\Throwable $e) {
+                \Log::warning('SuperAdminCompanyController@index ES aggregation error: '.$e->getMessage());
+            }
         }
 
-        // dd($this->data);
         return view('super-admin.company.index', $this->data);
     }
 
@@ -326,19 +353,43 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     }
 
+    /**
+     * Super Admin Subscription Management - Index View
+     * Reads KPI aggregation counts authoritative from Elasticsearch (CQRS Read Path).
+     */
     public function subscription()
     {
-
-        $this->totalCompanies = Company::withoutGlobalScope('company')->count();
-        $this->activeCompanies = Company::withoutGlobalScope('company')->where('status', 'active')->count();
-        $this->inactiveCompanies = Company::where('status', 'inactive')->count();
-
-        $must = [];
-
         $coinEventType = 'operational';
+        $this->counts = $this->getSubscriptionKpiCounts($coinEventType);
+
+        return view('super-admin.subscription.index', $this->data);
+    }
+
+    /**
+     * Authoritative KPI Aggregation from Elasticsearch
+     * Eliminates multi-table MySQL joins and achieves 100% CQRS read isolation.
+     */
+    private function getSubscriptionKpiCounts(string $coinEventType): object
+    {
+        if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+            return (object) [
+                'all_count' => 0,
+                'free_count' => 0,
+                'paid_count' => 0,
+                'expiry_in_30_days_count' => 0,
+                'less_coins_count' => 0,
+                'last_active_7_days_count' => 0,
+            ];
+        }
+
         $coinPath = 'company_coins';
         $coinAlias = 'company_coins';
-        $filters = [];
+
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $mustNot = [];
+        if (! empty($superAdminCompanyIds)) {
+            $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
+        }
 
         $params = [
             'index' => ELASTIC_COMPANIES_INDEX,
@@ -350,6 +401,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                             'bool' => [
                                 'must' => [],
                                 'filter' => [],
+                                'must_not' => $mustNot,
                             ],
                         ],
                         'score_mode' => 'sum',
@@ -451,21 +503,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ],
         ];
 
-        // Execute the query
-        if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $this->counts = (object) [
-                'all_count' => 0,
-                'free_count' => 0,
-                'paid_count' => 0,
-                'expiry_in_30_days_count' => 0,
-                'less_coins_count' => 0,
-                'last_active_7_days_count' => 0,
-            ];
-        } else {
+        try {
             $response = $this->elasticService->getClient()->search($params);
-            $aggs = $response['aggregations'];
+            $aggs = $response['aggregations'] ?? [];
 
-            $this->counts = (object) [
+            return (object) [
                 'all_count' => $aggs['all_count']['filtered']['doc_count'] ?? 0,
                 'free_count' => $aggs['free_count']['filtered']['doc_count'] ?? 0,
                 'paid_count' => $aggs['paid_count']['filtered']['doc_count'] ?? 0,
@@ -473,122 +515,76 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 'less_coins_count' => $aggs['less_coins_count']['filtered']['doc_count'] ?? 0,
                 'last_active_7_days_count' => $aggs['last_active_7_days_count']['doc_count'] ?? 0,
             ];
-        }
+        } catch (\Throwable $e) {
+            Log::error('getSubscriptionKpiCounts: Elasticsearch aggregation failed: '.$e->getMessage(), [
+                'coinEventType' => $coinEventType,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        return view('super-admin.subscription.index', $this->data);
+            return (object) [
+                'all_count' => 0,
+                'free_count' => 0,
+                'paid_count' => 0,
+                'expiry_in_30_days_count' => 0,
+                'less_coins_count' => 0,
+                'last_active_7_days_count' => 0,
+            ];
+        }
     }
 
+    /**
+     * AJAX endpoint for Tab Switching KPI counts
+     * Replaces 9-table MySQL join with Elasticsearch aggregations.
+     */
     public function countaccountviewmore($id)
     {
+        $coinEventType = ((int) $id === 1) ? 'operational' : 'sales';
+        $counts = $this->getSubscriptionKpiCounts($coinEventType);
 
-        // dd($id);
-
-        if ($id == 1) {
-            $accounttype = 'operational';
-            $this->counts = DB::table('companies')
-                ->leftJoin('company_coins as sales_coins', function ($join) {
-                    $join->on('sales_coins.company_id', '=', 'companies.id')
-                        ->where('sales_coins.event_type', '=', 'sales');
-                })
-                ->leftJoin('company_coins as oper_coins', function ($join) {
-                    $join->on('oper_coins.company_id', '=', 'companies.id')
-                        ->where('oper_coins.event_type', '=', 'operational');
-                })
-                ->leftJoin('coin_orders as sales_orders', 'sales_orders.id', '=', 'sales_coins.coin_order_id') // For sales_coins
-                ->leftJoin('coin_packages as sales_packages', 'sales_packages.id', '=', 'sales_orders.coin_package_id')
-                ->leftJoin('coin_package_types as sales_package_types', 'sales_package_types.id', '=', 'sales_packages.coin_package_type_id')
-
-            // Optional: Similar joins for oper_coins if necessary
-                ->leftJoin('coin_orders as oper_orders', 'oper_orders.id', '=', 'oper_coins.coin_order_id') // For oper_coins
-                ->leftJoin('coin_packages as oper_packages', 'oper_packages.id', '=', 'oper_orders.coin_package_id')
-                ->leftJoin('coin_package_types as oper_package_types', 'oper_package_types.id', '=', 'oper_packages.coin_package_type_id')
-                ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
-                ->selectRaw('
-                COUNT(CASE WHEN oper_packages.event_type = ? THEN companies.id ELSE NULL END) as all_count,
-                SUM(CASE WHEN oper_packages.custome_pck = 2 AND oper_packages.event_type = ? THEN 1 ELSE 0 END) as free_count,
-                SUM(CASE WHEN oper_packages.custome_pck != 2 AND oper_packages.event_type = ? THEN 1 ELSE 0 END) as paid_count,
-                SUM(CASE WHEN oper_packages.event_type = ? AND oper_coins.end_date >= CURDATE() AND oper_coins.end_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as expiry_in_30_days_count,
-                SUM(CASE WHEN oper_packages.event_type = ? AND oper_coins.coins <= 100 THEN 1 ELSE 0 END) as less_coins_count,
-                SUM(CASE WHEN oper_packages.event_type = ? AND companies.last_login < DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as last_active_7_days_count
-            ', [$accounttype, $accounttype, $accounttype, $accounttype, $accounttype, $accounttype]) // Binding parameters
-                ->first(); // Use `first()` to retrieve a single row with all the aggregated counts.
-        } else {
-            $accounttype = 'sales';
-            $this->counts = DB::table('companies')
-                ->leftJoin('company_coins as sales_coins', function ($join) {
-                    $join->on('sales_coins.company_id', '=', 'companies.id')
-                        ->where('sales_coins.event_type', '=', 'sales');
-                })
-                ->leftJoin('company_coins as oper_coins', function ($join) {
-                    $join->on('oper_coins.company_id', '=', 'companies.id')
-                        ->where('oper_coins.event_type', '=', 'operational');
-                })
-                ->leftJoin('coin_orders as sales_orders', 'sales_orders.id', '=', 'sales_coins.coin_order_id') // For sales_coins
-                ->leftJoin('coin_packages as sales_packages', 'sales_packages.id', '=', 'sales_orders.coin_package_id')
-                ->leftJoin('coin_package_types as sales_package_types', 'sales_package_types.id', '=', 'sales_packages.coin_package_type_id')
-
-            // Optional: Similar joins for oper_coins if necessary
-                ->leftJoin('coin_orders as oper_orders', 'oper_orders.id', '=', 'oper_coins.coin_order_id') // For oper_coins
-                ->leftJoin('coin_packages as oper_packages', 'oper_packages.id', '=', 'oper_orders.coin_package_id')
-                ->leftJoin('coin_package_types as oper_package_types', 'oper_package_types.id', '=', 'oper_packages.coin_package_type_id')
-                ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
-                ->selectRaw('
-                COUNT(CASE WHEN sales_coins.event_type = ? THEN companies.id ELSE NULL END) as all_count,
-                SUM(CASE WHEN sales_packages.custome_pck = 2 AND sales_coins.event_type = ? THEN 1 ELSE 0 END) as free_count,
-                SUM(CASE WHEN sales_packages.custome_pck != 2 AND sales_coins.event_type = ? THEN 1 ELSE 0 END) as paid_count,
-                SUM(CASE WHEN sales_coins.event_type = ? AND sales_coins.end_date >= CURDATE() AND sales_coins.end_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as expiry_in_30_days_count,
-                SUM(CASE WHEN sales_coins.event_type = ? AND sales_coins.coins <= 100 THEN 1 ELSE 0 END) as less_coins_count,
-                SUM(CASE WHEN sales_coins.event_type = ? AND companies.last_login < DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as last_active_7_days_count
-            ', [$accounttype, $accounttype, $accounttype, $accounttype, $accounttype, $accounttype]) // Binding parameters
-                ->first(); // Use `first()` to retrieve a single row with all the aggregated counts.
-        }
-
-        // dd( $this->counts);
-        return response()->json(['counts' => $this->counts]);
+        return response()->json(['counts' => $counts]);
     }
 
+    /**
+     * Authoritative Subscription Company List & Search via Elasticsearch
+     * Supports search (company & location), package filter, location filter,
+     * status filter, KPI card filter, pagination, and multi-column sorting.
+     */
     public function allSubscriptionDataAjax(Request $request)
     {
-
-        // dd($request->mstatus_id);
-        // $categories = Company::with('package')->withoutGlobalScope('company')->get();
-        // dd($categories->count());
-
-        $company_id = auth()->user()->company_id;
-        $department = GeneralMethod::department();
-        $accountCompanyType = GeneralMethod::accountCompanyType();
-        $sevenDaysAgo = Carbon::now()->subDays(7);
-
-        $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = min(max((int) $request->input('size', 10), 1), 100);
         $from = ($page - 1) * $size;
 
         $must = [];
-        $custom_search = '';
-        $coinEventType = $request->pck_id == 1 ? 'operational' : 'sales';
+        $filters = [];
+        $mustNot = [];
+
+        // Exclude Super Admin company accounts authoritatively by company_id
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        if (! empty($superAdminCompanyIds)) {
+            $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
+        }
+        $coinEventType = ((int) $request->input('pck_id', 1) === 1) ? 'operational' : 'sales';
         $coinPath = 'company_coins';
         $coinAlias = 'company_coins';
-        $filters = [];
 
-        // Create base nested query
-        $coinFilter = [
-            'nested' => [
-                'path' => $coinPath,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ["$coinAlias.event_type" => $coinEventType]],
-                        ],
-                    ],
-                ],
-            ],
+        $coinMust = [
+            ['term' => ["$coinAlias.event_type" => $coinEventType]],
         ];
+        $coinMustNot = [];
 
-        // Apply condition based on mstatus_id
-        switch ($request->mstatus_id) {
-            case 3: // end_date in next 30 days
-                $coinFilter['nested']['query']['bool']['must'][] = [
+        // Apply KPI filter condition based on mstatus_id
+        switch ($request->input('mstatus_id')) {
+            case 1: // Free package (package_type = 2)
+                $coinMust[] = ['term' => ["$coinAlias.package_type" => 2]];
+                break;
+
+            case 2: // Paid package (package_type != 2)
+                $coinMustNot[] = ['term' => ["$coinAlias.package_type" => 2]];
+                break;
+
+            case 3: // Expiry in next 30 days
+                $coinMust[] = [
                     'range' => [
                         "$coinAlias.end_date" => [
                             'gte' => 'now',
@@ -598,27 +594,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ];
                 break;
 
-            case 4: // coins <= 100
-                $coinFilter['nested']['query']['bool']['must'][] = [
+            case 4: // Coins <= 100
+                $coinMust[] = [
                     'range' => [
                         "$coinAlias.coins" => ['lte' => 100],
                     ],
                 ];
                 break;
 
-            case 1: // custome_pck = 2 (only if indexed)
-                $coinFilter['nested']['query']['bool']['must'][] = [
-                    'term' => ["$coinAlias.package_type" => 2],
-                ];
-                break;
-
-            case 2: // custome_pck != 2
-                $coinFilter['nested']['query']['bool']['must_not'][] = [
-                    'term' => ["$coinAlias.package_type" => 2],
-                ];
-                break;
-
-            case 5: // last_login older than 7 days
+            case 5: // Last login older than 7 days
                 $filters[] = [
                     'range' => [
                         'last_login' => ['lt' => 'now-7d/d'],
@@ -627,27 +611,87 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 break;
         }
 
-        // Always add company_coins event_type filter
-        $filters[] = $coinFilter;
+        // Package dropdown filter
+        $packageFilter = trim($request->input('package', ''));
+        if (! empty($packageFilter)) {
+            if (strtolower($packageFilter) === 'free') {
+                $coinMust[] = ['term' => ["$coinAlias.package_type" => 2]];
+            } elseif (strtolower($packageFilter) === 'custom') {
+                $coinMust[] = ['term' => ["$coinAlias.package_type" => 1]];
+            } else {
+                $coinMust[] = [
+                    'match' => ["$coinAlias.package_name" => $packageFilter],
+                ];
+            }
+        }
 
-        if (! empty($custom_search)) {
+        // Add nested company_coins filter
+        $coinBool = ['must' => $coinMust];
+        if (! empty($coinMustNot)) {
+            $coinBool['must_not'] = $coinMustNot;
+        }
+        $filters[] = [
+            'nested' => [
+                'path' => $coinPath,
+                'query' => [
+                    'bool' => $coinBool,
+                ],
+            ],
+        ];
+
+        // Status dropdown filter
+        $statusFilter = trim($request->input('status', ''));
+        if (! empty($statusFilter)) {
+            $filters[] = [
+                'term' => ['status' => strtolower($statusFilter)],
+            ];
+        }
+
+        // Location dropdown filter
+        $locationFilter = trim($request->input('location', ''));
+        if (! empty($locationFilter)) {
+            $filters[] = [
+                'bool' => [
+                    'should' => [
+                        ['match' => ['locations_address.locations_address.city_name' => $locationFilter]],
+                        ['match' => ['locations_address.locations_address.state_name' => $locationFilter]],
+                        ['wildcard' => ['locations_address.locations_address.city_name.keyword' => '*'.$locationFilter.'*']],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
+        // Search query (company name, city)
+        $searchQuery = trim($request->input('q', ''));
+        if (! empty($searchQuery)) {
             $must[] = [
                 'bool' => [
                     'should' => [
-                        // Fuzzy Match
                         [
                             'match' => [
                                 'company_name' => [
-                                    'query' => $custom_search,
+                                    'query' => $searchQuery,
                                     'fuzziness' => 'AUTO',
                                     'operator' => 'and',
                                 ],
                             ],
                         ],
-                        // Prefix Match
                         [
                             'match_phrase_prefix' => [
-                                'company_name' => $custom_search,
+                                'company_name' => $searchQuery,
+                            ],
+                        ],
+                        [
+                            'match' => [
+                                'locations_address.locations_address.city_name' => [
+                                    'query' => $searchQuery,
+                                ],
+                            ],
+                        ],
+                        [
+                            'wildcard' => [
+                                'locations_address.locations_address.city_name.keyword' => '*'.$searchQuery.'*',
                             ],
                         ],
                     ],
@@ -656,22 +700,59 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ];
         }
 
+        // Multi-column sorting
+        $sortCol = $request->input('sort', 'id');
+        $sortDir = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $sort = [];
+        if ($sortCol === 'op_coins') {
+            $sort[] = [
+                'company_coins.coins' => [
+                    'order' => $sortDir,
+                    'nested' => [
+                        'path' => 'company_coins',
+                        'filter' => [
+                            'term' => ['company_coins.event_type' => 'operational'],
+                        ],
+                    ],
+                ],
+            ];
+        } elseif ($sortCol === 'sales_coins') {
+            $sort[] = [
+                'company_coins.coins' => [
+                    'order' => $sortDir,
+                    'nested' => [
+                        'path' => 'company_coins',
+                        'filter' => [
+                            'term' => ['company_coins.event_type' => 'sales'],
+                        ],
+                    ],
+                ],
+            ];
+        } elseif ($sortCol === 'created_at') {
+            $sort[] = ['created_at' => ['order' => $sortDir]];
+        } elseif ($sortCol === 'last_login') {
+            $sort[] = ['last_login' => ['order' => $sortDir]];
+        } elseif ($sortCol === 'company_name') {
+            $sort[] = ['company_name.keyword' => ['order' => $sortDir]];
+        } else {
+            $sort[] = ['id' => ['order' => 'desc']];
+        }
+        $sort[] = ['id' => ['order' => 'desc']]; // Tie-breaker for stable pagination
+
         $params = [
             'index' => ELASTIC_COMPANIES_INDEX,
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [
-                    ['_score' => ['order' => 'desc']],
-                    ['leadCount' => ['order' => 'asc']],
-                    ['id' => ['order' => 'desc']],
-                ],
+                'sort' => $sort,
                 'query' => [
                     'function_score' => [
                         'query' => [
                             'bool' => [
                                 'must' => $must,
-                                'filter' => $filters, // ✅ inject dynamic filters here
+                                'filter' => $filters,
+                                'must_not' => $mustNot,
                             ],
                         ],
                         'score_mode' => 'sum',
@@ -685,17 +766,26 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $total = 0;
             $data = [];
         } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+            } catch (\Throwable $e) {
+                Log::error('allSubscriptionDataAjax: Elasticsearch search query failed: '.$e->getMessage(), [
+                    'request_params' => $request->all(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                $total = 0;
+                $data = [];
+            }
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
 
@@ -706,7 +796,6 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     public function subscriptiondata(Request $request)
@@ -721,7 +810,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $accountCompanyType = GeneralMethod::accountCompanyType();
         $sevenDaysAgo = Carbon::now()->subDays(7);
         // dd($sevenDaysAgo);
+        $superAdminCompanyIds = GeneralMethod::superAdminCompanyIds();
         $clientAllDataList = DB::table('companies')
+            ->whereNotIn('companies.id', $superAdminCompanyIds)
             ->select(
                 'companies.id',
                 'companies.company_name',
@@ -1176,10 +1267,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function destroy($id)
     {
+        $companyId = (int) $id;
+        if (! $companyId) {
+            return Reply::error('Invalid company ID');
+        }
 
-        $company = Company::withoutGlobalScope('company')->where('id', $id)->first();
-        Files::deleteFile($company->logo, 'company-logo');
-        $company->delete();
+        $idempotencyKey = request()->header('X-Idempotency-Key') ?: request()->input('idempotency_key');
+        $result = $this->companyMutationService->destroyCompany($companyId, $idempotencyKey);
+
+        if (($result['status'] ?? '') === 'fail') {
+            return Reply::error($result['message'] ?? 'Failed to delete company');
+        }
 
         return Reply::success(__('messages.recordDeleted'));
     }
@@ -1367,73 +1465,29 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function data_ajax(Request $request)
     {
-
-        // $categories = Company::with('package')->withoutGlobalScope('company')->get();
-        // dd($categories->count());
-
-        $company_id = auth()->user()->company_id;
-        $department = GeneralMethod::department();
         $accountCompanyType = GeneralMethod::accountCompanyType();
-        $status = request('sortingfilter');
-        $searchTerms = request('search');
-        $custom_search = $searchTerms; // json_decode($searchTerms, true);
+        $status = $request->input('status') ?: $request->input('sortingfilter');
+        $location = $request->input('location');
+        $searchTerms = trim((string) $request->input('search', ''));
+        $custom_search = $searchTerms;
 
-        $clientAllDataList = DB::table('companies')
-            ->select(
-                'companies.id',
-                'companies.company_name',
-                'companies.created_at',
-                'companies.industries',
-                'companies.logo',
-                'companies.company_type',
-                'companies.package_type',
-                // 'clients.id as client_id',
-                'companies.licence_expire_on',
-                // 'clients.tags',
-                // 'clients.created_at',
-                'td_industries.ind_name',
-                // DB::raw("CASE WHEN staffing_company_relation.id >0 THEN staffing_company_relation.id ELSE 0 END AS staffing_company_relation_id"),
-                // 'staffing_company_relation.from_company_id',
-                'companies.created_at as to_created_at',
-                'companies.created_at as from_created_at',
-                // 'clients.name',
-                // 'clients.logo_logical_path',
-                // 'clients.industry',
-                'packages.name as pck_name',
-                'packages.is_trial',
-                // 'clients.company_id as clients_company_id'
-            )
-            // ->leftJoin('staffing_company_relation', 'staffing_company_relation.from_company_id', '=', 'companies.id')
-            // ->join('clients', 'clients.company_id', '=', 'companies.id')
-            ->leftJoin('packages', 'packages.id', '=', 'companies.package_id')
-            ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries');
-
-        if (\request('search') != '') {
-            $clientAllDataList->where(function ($q) use ($custom_search) {
-                $q->where('companies.company_name', 'LIKE', "%{$custom_search}%");
-            });
-        }
-        // $clientAllDataList = $clientAllDataList->groupBy('companies.id');
-        $clientAllDataList = $clientAllDataList->orderBy('companies.id', 'DESC');
-
-        $perPage = 10;
-        $page = $request->get('page', 1);
-
-        $data = $clientAllDataList->paginate($perPage);
-        $total = $data->total();
-
-        $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = max((int) $request->input('size', $request->input('limit', 10)), 1);
         $from = ($page - 1) * $size;
 
         $must = [];
+        $mustNot = [];
+
+        // Exclude Super Admin company accounts authoritatively to match Subscription Management
+        $superAdminCompanyIds = GeneralMethod::superAdminCompanyIds();
+        if (! empty($superAdminCompanyIds)) {
+            $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
+        }
 
         if (! empty($custom_search)) {
             $must[] = [
                 'bool' => [
                     'should' => [
-                        // Fuzzy Match
                         [
                             'match' => [
                                 'company_name' => [
@@ -1443,10 +1497,19 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                                 ],
                             ],
                         ],
-                        // Prefix Match
                         [
                             'match_phrase_prefix' => [
                                 'company_name' => $custom_search,
+                            ],
+                        ],
+                        [
+                            'match_phrase_prefix' => [
+                                'locations_address.locations_address.city_name' => $custom_search,
+                            ],
+                        ],
+                        [
+                            'match_phrase_prefix' => [
+                                'locations_address.locations_address.country_name' => $custom_search,
                             ],
                         ],
                     ],
@@ -1455,11 +1518,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ];
         }
 
-        // ✅ Status Filter (ONLY if provided)
+        // Status Filter
         if ($status !== null && $status !== '') {
             $must[] = [
                 'term' => [
-                    'status' => $status,   // keyword value (string)
+                    'status' => $status,
+                ],
+            ];
+        }
+
+        // Location Filter
+        if (! empty($location)) {
+            $must[] = [
+                'term' => [
+                    'locations_address.locations_address.city_name.keyword' => $location,
                 ],
             ];
         }
@@ -1480,6 +1552,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                         'query' => [
                             'bool' => [
                                 'must' => $must,
+                                'must_not' => $mustNot,
                             ],
                         ],
                         'score_mode' => 'sum',
@@ -1493,81 +1566,81 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $total = 0;
             $data = [];
         } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+            } catch (\Throwable $e) {
+                \Log::error('SuperAdminCompanyController@data_ajax ES search error: '.$e->getMessage());
+                $total = 0;
+                $data = [];
+            }
+        }
+
+        // Pre-aggregate job counts in 1 batch query for visible companies (Zero N+1 ES calls)
+        $jobCountsMap = [];
+        $companyIds = array_filter(array_column($data, 'id'));
+        if (! empty($companyIds) && $this->elasticService->indexExists(ELASTIC_JOBS)) {
+            try {
+                $jobAggRes = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_JOBS,
+                    'body' => [
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['terms' => ['comId' => $companyIds]],
+                                    [
+                                        'nested' => [
+                                            'path' => 'recommendation_relation',
+                                            'query' => [
+                                                'terms' => ['recommendation_relation.to_company_id' => $companyIds],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        'aggs' => [
+                            'by_company' => [
+                                'terms' => ['field' => 'comId', 'size' => count($companyIds) + 10],
+                                'aggs' => [
+                                    'by_status' => [
+                                        'terms' => ['field' => 'status'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+
+                $buckets = $jobAggRes['aggregations']['by_company']['buckets'] ?? [];
+                foreach ($buckets as $b) {
+                    $cId = $b['key'];
+                    $jobCountsMap[$cId] = array_column($b['by_status']['buckets'] ?? [], 'doc_count', 'key');
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Error aggregating job counts in data_ajax: '.$e->getMessage());
+            }
         }
 
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => max((int) ceil($total / $size), 1),
             'listType' => 'allcandidate',
         ];
 
         $userPermissions = [];
 
         return response()->json([
-            'html' => view('super-admin.ajax_pages.company_list_ajax', compact('data', 'userPermissions', 'accountCompanyType'))->render(),
+            'html' => view('super-admin.ajax_pages.company_list_ajax', compact('data', 'userPermissions', 'accountCompanyType', 'jobCountsMap', 'page', 'size'))->render(),
             'total' => $total,
             'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
-        return DataTables::of($clientAllDataList)
-
-            ->editColumn('chkbox', function ($row) {})
-            ->editColumn('Name', function ($row) {})
-            ->editColumn('Location', function ($row) {})
-            ->editColumn('Joining', function ($row) {})
-            ->editColumn('Requisitions', function ($row) {})
-            ->editColumn('Connected', function ($row) {})
-            ->editColumn('Client', function ($row) use ($accountCompanyType) {
-
-                $client_type = '';
-                $company_name = '------------';
-
-                // if ($company_id != $row->id) {
-                //     $client_type = 'Direct Client';
-                // }
-
-                $company_type = @$row->company_type;
-                if ($company_type >= 1) {
-                    $company_name = $accountCompanyType[$company_type];
-                }
-
-                return '<div class="d-flex flex-column">
-							<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">'.$client_type.'</a>
-						<span class="text-muted fw-bold text-muted d-block fs-7">'.str_replace('Company', '', $company_name).'</span>
-					</div>';
-
-            })
-            ->editColumn('OperationalPack', function ($row) {})
-            ->editColumn('SalesPack', function ($row) {})
-            ->editColumn('SpartnerAll', function ($row) {})
-            ->editColumn('Bench', function ($row) {})
-            ->editColumn('JobReq', function ($row) {
-                return '<div class="d-flex flex-column">
-                <span class="fw-bolder text-success fs-6">FT:500/1000</span><span class="fw-bolder text-success fs-6">CT:500/1000</span>
-              </div>
-              <div class="d-flex flex-column">
-              <span class="fw-bolder text-danger fs-6">IFT:500/1000</span><span class="fw-bolder text-danger fs-6">ICT:500/1000</span>
-               </div>';
-            })
-            ->editColumn('BenchReq', function ($row) {
-                return '<div class="d-flex flex-column">
-                <span class="fw-bolder text-success fs-6">IND:500/1000</span>
-              </div>
-              <div class="d-flex flex-column">
-              <span class="fw-bolder text-danger fs-6">ITL:500/1000</span>
-            </div>
-          </div></div>';
-            })
-
-            ->rawColumns(['chkbox', 'Name', 'Location', 'Joining', 'Requisitions', 'Connected', 'Client', 'OperationalPack', 'SalesPack', 'SpartnerAll', 'Bench', 'JobReq', 'BenchReq'])
-            ->addIndexColumn()->make(true);
-
     }
 
     public function data()
@@ -2540,27 +2613,24 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
         // abort_if(! $this->user->cans('view_clients'), 403);
         // dd("dkfdj");
-        $this->countries = Country::all();
-        $this->categories = JobCategory::all();
+        $this->countries = \Cache::remember('sa_static_countries', 86400, function () {
+            return Country::all();
+        });
+        $this->categories = \Cache::remember('sa_static_job_categories', 86400, function () {
+            return JobCategory::all();
+        });
         $this->companyType = GeneralMethod::companyType();
         $this->department = GeneralMethod::department();
         $this->countryArr = GeneralMethod::getAllCountryList();
         $this->statelist = GeneralMethod::statelist(101);
 
-        $this->client = Company::withoutGlobalScopes()->find($id);
-        // dd(auth()->user()->getRoleNames());
-        // $this->client = DB::table('companies')->where('id','=',$id)->first();
+        $this->company = Company::withoutGlobalScope('company')->findOrFail($id);
+        $this->client = $this->company;
+        $this->account = (object) $this->company->toArray();
 
-        // dd($this->client,$id);
-        //    $dsts = ($this->client->clients()->where('self_company', 1)->get());
-        //    dd($dsts[0]->tags);
-
-        // dd($this->client,$id);
         $this->client_file = DB::table('client_file')->select('*')->where('client_id', $id)->get();
-        // $this->countries 		= Country::all();
 
         $this->client_location = DB::table('client_location')
-            // ->join('countries', 'countries.id', '=', 'client_location.country_id')
             ->join('clients', 'clients.id', '=', 'client_location.client_id')
             ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'client_location.country_id')
             ->where('clients.company_id', $id)
@@ -2568,9 +2638,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->first();
 
         $this->city_name = '';
-        if (@$this->client_location->country_id == 101) {
+        if (@$this->client_location->country_id == 101 && ! empty($this->client_location->city_id)) {
             $this->city_obj = DB::table('city_list')->select('city_list.city')->where('city_list.city_id', $this->client_location->city_id)->first();
-            $this->city_name = ucwords($this->city_obj->city);
+            $this->city_name = ucwords(@$this->city_obj->city);
         } else {
             $city = @$this->client_location->city;
             $this->city_name = ucwords($city);
@@ -2588,80 +2658,75 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         join('interview_mode', 'interview_mode.id', '=', 'meeting_schedules.interview_mode')->
         join('users', 'users.id', '=', 'meeting_schedules.created_by')->
         leftJoin('interview_mode_lavel', 'interview_mode_lavel.id', '=', 'meeting_schedules.interview_mode_level')->
+        where(function ($q) use ($company_id) {
+            $q->where('meeting_schedules.from_company_id', $company_id)
+                ->orWhere('meeting_schedules.to_company_id', $company_id);
+        })->
         select('meeting_schedules.*', 'interview_mode.name as mode_name', 'interview_mode_lavel.name as sub_mode_name', 'from_com.company_name as from_com_name', 'to_com.company_name as to_com_name', 'users.image', 'users.name')->
         get();
-        // dd( $this->MeetingSchedule);
 
         $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->take(1)->get();
-        $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.company_id', $id)->where('jobs.status', 'active')->count();
 
-        $this->company = Company::withoutGlobalScope('company')->findOrFail($id);
+        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+            try {
+                $jobCountRes = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOBS,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['comId' => $id]],
+                                    ['term' => ['status' => 'active']],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $this->active_requisition = (int) ($jobCountRes['count'] ?? 0);
+            } catch (\Throwable $e) {
+                $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.company_id', $id)->where('jobs.status', 'active')->count();
+            }
+        } else {
+            $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.company_id', $id)->where('jobs.status', 'active')->count();
+        }
+
         $this->companyPackage = CompanyPackage::activePackage($id);
-
-        $company_id = $id;
-        $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
-
         $this->users = DB::table('users')->where('company_id', '=', $id)->first();
 
-        $this->company_coins = DB::table('company_coins')
+        // Single batch fetch for operational & sales coins with eager-loaded events
+        $allCoins = DB::table('company_coins')
             ->join('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
             ->join('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
             ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
             ->where('company_coins.company_id', $company_id)
-            ->where('coin_orders.status', 1)
-            ->select('company_coins.*', 'coin_package_types.title', 'coin_packages.custome_pck')
-            ->get()
-            ->map(function ($coinOrder) {
-                $coinOrder->coin_order_events = DB::table('coin_order_events')
-                    ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
-                    ->where('coin_order_id', $coinOrder->id)
-                    ->select('coin_order_events.*', 'coin_events.title')
-                    ->get()
-                    ->toArray();
-
-                return (array) $coinOrder;
-            })
-            ->toArray();
-
-        $this->company_coins = DB::table('company_coins')
-            ->join('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
-            ->join('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
-            ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-            ->where('company_coins.company_id', $company_id)
-            ->where('company_coins.event_type', 'operational')
             ->where('coin_orders.status', 1)
             ->select('company_coins.*', 'coin_package_types.title', 'coin_packages.custome_pck', 'coin_orders.id as coin_order_id', 'coin_orders.coins as order_coins')
-            ->get()
-            ->map(function ($coinOrder) {
-                $coinOrder->coin_order_events = DB::table('coin_order_events')
-                    ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
-                    ->where('coin_order_id', $coinOrder->coin_order_id)
-                    ->select('coin_order_events.*', 'coin_events.title')
-                    ->get()
-                    ->toArray();
+            ->get();
 
-                return (array) $coinOrder;
-            })->toArray();
+        $coinOrderIds = $allCoins->pluck('coin_order_id')->filter()->unique()->toArray();
+        $eventsByOrder = [];
+        if (! empty($coinOrderIds)) {
+            $events = DB::table('coin_order_events')
+                ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
+                ->whereIn('coin_order_id', $coinOrderIds)
+                ->select('coin_order_events.*', 'coin_events.title')
+                ->get();
+            foreach ($events as $ev) {
+                $eventsByOrder[$ev->coin_order_id][] = (array) $ev;
+            }
+        }
 
-        $this->company_coins_sales = DB::table('company_coins')
-            ->join('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
-            ->join('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
-            ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-            ->where('company_coins.company_id', $company_id)
-            ->where('company_coins.event_type', 'sales')
-            ->where('coin_orders.status', 1)
-            ->select('company_coins.*', 'coin_package_types.title', 'coin_packages.custome_pck', 'coin_orders.id as coin_order_id', 'coin_orders.coins as order_coins')
-            ->get()
-            ->map(function ($coinOrder) {
-                $coinOrder->coin_order_events = DB::table('coin_order_events')
-                    ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
-                    ->where('coin_order_id', $coinOrder->coin_order_id)
-                    ->select('coin_order_events.*', 'coin_events.title')
-                    ->get()
-                    ->toArray();
+        $this->company_coins = $allCoins->where('event_type', 'operational')->map(function ($coinOrder) use ($eventsByOrder) {
+            $coinOrder->coin_order_events = $eventsByOrder[$coinOrder->coin_order_id] ?? [];
 
-                return (array) $coinOrder;
-            })->toArray();
+            return (array) $coinOrder;
+        })->values()->toArray();
+
+        $this->company_coins_sales = $allCoins->where('event_type', 'sales')->map(function ($coinOrder) use ($eventsByOrder) {
+            $coinOrder->coin_order_events = $eventsByOrder[$coinOrder->coin_order_id] ?? [];
+
+            return (array) $coinOrder;
+        })->values()->toArray();
 
         // dd($company_coins);
 
@@ -2707,8 +2772,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
         $company_type = '';
         $this->myPackageHistory = DB::table('package_invoice')->select('package_invoice.*', 'packages.name')->join('packages', 'packages.id', '=', 'package_invoice.package_id')->where('package_invoice.company_id', '=', $company_id)->orderBy('package_invoice.id', 'DESC')->get();
-        $companyRow = DB::table('companies')->select('*')->where('id', $company_id)->first();
-        $company_type = $companyRow->company_type;
+        $companyRow = $this->account;
+        $company_type = $companyRow->company_type ?? '';
 
         $this->top_up_coin_packages = DB::table('top_up_coin_packages')->where('status', '=', 1)->get();
 
@@ -2799,9 +2864,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             $this->locArr = ucwords(@$locInfo->address).' '.ucwords($city_name).' , '.ucwords(@$locInfo->state_name).' , '.ucwords(@$locInfo->country_name);
         }
 
-        $this->countries = DB::table('countries')
-            ->select('countries.*')
-            ->get();
+        // $this->countries is already cached & loaded above
 
         $billing_address_companies = DB::table('billing_address_companies')->where('company_id', '=', $company_id)->first();
 
@@ -4294,38 +4357,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     /**
      * 1-Click Verification Toggle for SuperAdmin to verify suspicious or pending organizations.
-     * Synchronizes immediately into Elasticsearch ELASTIC_COMPANIES_INDEX.
+     * Synchronizes atomically via CompanyMutationService (idempotency, outbox, ES, and Reverb).
      */
     public function toggleAccountVerify(Request $request, $id)
     {
-        $company = Company::findOrFail($id);
-        $company->accountVerify = $company->accountVerify == 1 ? 0 : 1;
-        $company->save();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = $this->companyMutationService->toggleAccountVerify((int) $id, $idempotencyKey);
 
-        try {
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_COMPANIES_INDEX,
-                'id' => $company->id,
-                'retry_on_conflict' => 5,
-                'body' => [
-                    'doc' => [
-                        'id' => $company->id,
-                        'accountVerify' => $company->accountVerify,
-                        'curr_date' => now()->toIso8601String(),
-                    ],
-                    'doc_as_upsert' => true,
-                    'detect_noop' => false,
-                ],
-            ]);
-        } catch (\Throwable $e) {
-            \Log::warning("Elasticsearch update failed for toggleAccountVerify company {$company->id}: ".$e->getMessage());
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'accountVerify' => $company->accountVerify,
-            'message' => $company->accountVerify == 1 ? 'Organization verified successfully.' : 'Organization verification marked as pending review.',
-        ]);
+        return response()->json($result);
     }
 
     public function meetingSchedule(Request $request, $id)
@@ -4625,36 +4664,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function updateCompanyPackage(UpdatePakage $request, $companyId)
     {
-        CompanyPackage::where('company_id', $companyId)
-            ->update(['status' => 'inactive', 'end_date' => Carbon::now()->format('Y-m-d')]);
-
-        $company = Company::withoutGlobalScope('company')->findOrFail($companyId);
-        $company->package_id = $request->package;
-
-        $companyPackages = new CompanyPackage;
-        $companyPackages->package_id = $request->package;
-        $companyPackages->company_id = $companyId;
-        $companyPackages->start_date = Carbon::now()->format('Y-m-d');
-        if ($request->package_type) {
-            $companyPackages->package_type = 'annual';
-            $companyPackages->end_date = Carbon::now()->addYear()->format('Y-m-d');
-
-            $company->package_type = 'annual';
-            $company->licence_expire_on = Carbon::now()->addYear()->format('Y-m-d');
-        } else {
-            $companyPackages->package_type = 'monthly';
-            $companyPackages->end_date = Carbon::now()->addMonth()->format('Y-m-d');
-
-            $company->package_type = 'monthly';
-            $company->licence_expire_on = Carbon::now()->addMonth()->format('Y-m-d');
-        }
-        $companyPackages->status = 'active';
-        $companyPackages->save();
-
-        $company->save();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = $this->companyMutationService->updateCompanyPackage((int) $companyId, $request->all(), $idempotencyKey);
 
         return Reply::success(__('messages.updatedSuccessfully'));
-
     }
 
     public function loginAsCompany($companyId)
@@ -11341,131 +11354,165 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function checkActive(Request $request)
     {
-
-        $row = DB::table('users')->where('company_id', '=', $request->id)->where('root_user', '=', 1)->first();
-        if ($row->status === 'active') {
-            $pack_status = 'inactive';
-        } else {
-            $pack_status = 'active';
+        $companyId = (int) $request->id;
+        if (! $companyId) {
+            return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        $result = DB::table('users')->where('company_id', '=', $request->id)->where('working_status', '=', 1)->update(['status' => $pack_status]);
+        return DB::transaction(function () use ($companyId) {
+            $row = DB::table('users')
+                ->where('company_id', '=', $companyId)
+                ->where('root_user', '=', 1)
+                ->lockForUpdate()
+                ->first();
 
-        // Phase 3.4: bump company epoch when blocking, so all active sessions are invalidated.
-        if ($pack_status === 'inactive') {
-            Cache::put('company:epoch:'.(int) $request->id, now()->timestamp, 7 * 24 * 3600);
-        }
+            if (! $row) {
+                return Reply::dataOnly(['status' => 'faild', 'message' => 'Root user not found']);
+            }
 
-        $updateTime = now()->toIso8601String();
-        $updateParams = [
-            'index' => ELASTIC_USERS_LIST,
-            'body' => [
-                'script' => [
-                    'source' => '
-                            ctx._source.status = params.status;
-                            ctx._source.working_status = params.working_status;
-                            ctx._source.updated_at = params.updated_at;
-                        ',
-                    'lang' => 'painless',
-                    'params' => [
-                        'status' => $pack_status,
-                        'updated_at' => $updateTime,
-                    ],
-                ],
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['company_id' => $row->company_id]],
-                            ['term' => ['working_status' => 1]],
+            $pack_status = ($row->status === 'active') ? 'inactive' : 'active';
+
+            // 1. Authoritative MySQL write
+            $result = DB::table('users')
+                ->where('company_id', '=', $companyId)
+                ->where('working_status', '=', 1)
+                ->update(['status' => $pack_status]);
+
+            DB::table('companies')
+                ->where('id', '=', $companyId)
+                ->update(['status' => $pack_status, 'updated_at' => now()]);
+
+            // 2. Cache Epoch Invalidation on blocking
+            if ($pack_status === 'inactive') {
+                Cache::put('company:epoch:'.$companyId, now()->timestamp, 7 * 24 * 3600);
+            }
+
+            $updateTime = now()->toIso8601String();
+
+            // 3. Elastic Users Sync
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
+                    $this->elasticService->getClient()->updateByQuery([
+                        'index' => ELASTIC_USERS_LIST,
+                        'body' => [
+                            'script' => [
+                                'source' => '
+                                    ctx._source.status = params.status;
+                                    ctx._source.working_status = params.working_status;
+                                    ctx._source.updated_at = params.updated_at;
+                                ',
+                                'lang' => 'painless',
+                                'params' => [
+                                    'status' => $pack_status,
+                                    'working_status' => 1,
+                                    'updated_at' => $updateTime,
+                                ],
+                            ],
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $companyId]],
+                                        ['term' => ['working_status' => 1]],
+                                    ],
+                                ],
+                            ],
                         ],
-                    ],
-                ],
-            ],
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error("checkActive: ELASTIC_USERS_LIST update failed for company {$companyId}: ".$e->getMessage());
+            }
 
-        ];
-        // Elastic Execute the bulk update
-        if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
-            $response = $this->elasticService->getClient()->updateByQuery($updateParams);
-        }
-
-        $updateParams = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'body' => [
-                'script' => [
-                    'source' => '
-                            ctx._source.status = params.status;
-                            ctx._source.updated_at = params.updated_at;
-                        ',
-                    'lang' => 'painless',
-                    'params' => [
-                        'status' => $pack_status,
-                        'updated_at' => $updateTime,
-                    ],
-                ],
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['id' => $row->company_id]],
+            // 4. Elastic Companies Index Sync (Single Document Atomic Update)
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_COMPANIES_INDEX,
+                        'id' => (string) $companyId,
+                        'body' => [
+                            'doc' => [
+                                'status' => $pack_status,
+                                'updated_at' => $updateTime,
+                            ],
                         ],
-                    ],
-                ],
-            ],
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error("checkActive: ELASTIC_COMPANIES_INDEX update failed for company {$companyId}: ".$e->getMessage());
+            }
 
-        ];
-        // Elastic Execute the bulk update
-        if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $response = $this->elasticService->getClient()->updateByQuery($updateParams);
-        }
+            if ($result) {
+                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
+            }
 
-        if ($result) {
-            return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
-
-        }
-
-        return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
-
+            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
+        });
     }
 
     public function checkStatusOperational(Request $request)
     {
-        $row = DB::table('company_coins')->where('company_id', '=', $request->id)->where('event_type', '=', 'operational')->first();
-        if ($row->free_pack_status === 'active') {
-            $pack_status = 'block';
-        } else {
-            $pack_status = 'active';
+        $companyId = (int) $request->id;
+        if (! $companyId) {
+            return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        $result = DB::table('company_coins')->where('company_id', '=', $request->id)->where('event_type', '=', 'operational')->update(['free_pack_status' => $pack_status]);
+        return DB::transaction(function () use ($companyId) {
+            $row = DB::table('company_coins')
+                ->where('company_id', '=', $companyId)
+                ->where('event_type', '=', 'operational')
+                ->lockForUpdate()
+                ->first();
 
-        if ($result) {
-            return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
+            if (! $row) {
+                return Reply::dataOnly(['status' => 'faild', 'message' => 'Operational coins record not found']);
+            }
 
-        }
+            $pack_status = ($row->free_pack_status === 'active') ? 'block' : 'active';
 
-        return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
+            $result = DB::table('company_coins')
+                ->where('company_id', '=', $companyId)
+                ->where('event_type', '=', 'operational')
+                ->update(['free_pack_status' => $pack_status, 'updated_at' => now()]);
 
+            if ($result) {
+                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
+            }
+
+            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
+        });
     }
 
     public function checkStatusSales(Request $request)
     {
-
-        $row = DB::table('company_coins')->where('company_id', '=', $request->id)->where('event_type', '=', 'sales')->first();
-        // dd($row->free_pack_status);
-        if ($row->free_pack_status === 'active') {
-            $pack_status = 'block';
-        } else {
-            $pack_status = 'active';
+        $companyId = (int) $request->id;
+        if (! $companyId) {
+            return Reply::dataOnly(['status' => 'faild', 'message' => 'Invalid company ID']);
         }
 
-        // dd($pack_status,$request->id);
-        $result = DB::table('company_coins')->where('company_id', '=', (int) $request->id)->where('event_type', '=', 'sales')->update(['free_pack_status' => $pack_status]);
+        return DB::transaction(function () use ($companyId) {
+            $row = DB::table('company_coins')
+                ->where('company_id', '=', $companyId)
+                ->where('event_type', '=', 'sales')
+                ->lockForUpdate()
+                ->first();
 
-        if ($result) {
-            return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
+            if (! $row) {
+                return Reply::dataOnly(['status' => 'faild', 'message' => 'Sales coins record not found']);
+            }
 
-        }
+            $pack_status = ($row->free_pack_status === 'active') ? 'block' : 'active';
 
-        return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
+            $result = DB::table('company_coins')
+                ->where('company_id', '=', $companyId)
+                ->where('event_type', '=', 'sales')
+                ->update(['free_pack_status' => $pack_status, 'updated_at' => now()]);
+
+            if ($result) {
+                return Reply::dataOnly(['status' => 'success', 'pack_status' => $pack_status]);
+            }
+
+            return Reply::dataOnly(['status' => 'faild', 'pack_status' => $pack_status]);
+        });
     }
 
     public function jobPublicMarket(Request $request)

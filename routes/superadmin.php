@@ -36,6 +36,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::prefix('super-admin')->name('superadmin.')->middleware(['super-admin'])->group(function () {
         Route::resource('profile', SuperAdminProfileController::class);
         Route::resource('dashboard', SuperAdminDashboardController::class);
+        Route::get('dashboard/api/chart/{chartKey}', [SuperAdminDashboardController::class, 'chartApi'])->name('dashboard.chartApi');
         // Custom Plan Requests Management
         Route::get('custom-plan-requests', [SuperAdminCustomPlanRequestController::class, 'index'])->name('custom-plan-requests.index');
         Route::get('custom-plan-requests/data', [SuperAdminCustomPlanRequestController::class, 'data'])->name('custom-plan-requests.data');

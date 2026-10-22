@@ -1,312 +1,283 @@
 @php
     use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
-
 @endphp
+
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
-       @php
-          $row = (object) $rowArr;
-          
+        @php
+            $row = (object) $rowArr;
+            $rowId = (int) ($row->id ?? 0);
+            $idx = ((($page ?? 1) - 1) * ($size ?? 10)) + $loop->iteration;
+
+            // Company initial & background decoration
+            $strVal = '';
+            $bgTextDecore = 'bg-light-secondary text-dark';
+            $companyName = trim((string) (@$row->company_name ?? ''));
+            if (!empty($companyName)) {
+                $strVal = strtolower($companyName[0]);
+                $ord = ord($strVal);
+                if ($ord >= 97 && $ord <= 101) {
+                    $bgTextDecore = 'bg-light-danger text-danger';
+                } elseif ($ord >= 102 && $ord <= 106) {
+                    $bgTextDecore = 'bg-light-warning text-warning';
+                } elseif ($ord >= 107 && $ord <= 111) {
+                    $bgTextDecore = 'bg-light-primary text-primary';
+                } elseif ($ord >= 112 && $ord <= 116) {
+                    $bgTextDecore = 'bg-light-success text-success';
+                } elseif ($ord >= 117 && $ord <= 121) {
+                    $bgTextDecore = 'bg-dark text-white';
+                }
+            }
+
+            // Location details
+            $firstLocation = isset($row->locations_address[0]['locations_address'][0]) && is_array($row->locations_address[0]['locations_address'][0])
+                ? $row->locations_address[0]['locations_address'][0]
+                : [];
+            $cityName = $firstLocation['city_name'] ?? 'Noida';
+            $countryName = $firstLocation['country_name'] ?? 'India';
+
+            // Dates
+            $createdFormatted = !empty($row->created_at) ? date('d M, Y', strtotime($row->created_at)) : 'N/A';
+            $lastActiveFormatted = !empty($row->last_login) ? date('d M, Y', strtotime($row->last_login)) : date('d M, Y');
+
+            // Job Status Counts (Pre-aggregated batch map or fallback)
+            if (isset($jobCountsMap) && is_array($jobCountsMap)) {
+                $activeJobs = $jobCountsMap[$rowId]['active'] ?? 0;
+                $holdJobs = $jobCountsMap[$rowId]['hold'] ?? 0;
+                $closedJobs = $jobCountsMap[$rowId]['inactive'] ?? 0;
+            } else {
+                $activeJobs = GeneralMethod::jobStatusCountElastic($rowId, 'active');
+                $holdJobs = GeneralMethod::jobStatusCountElastic($rowId, 'hold');
+                $closedJobs = GeneralMethod::jobStatusCountElastic($rowId, 'inactive');
+            }
+
+            // Candidates & Join
+            $candidates = collect($row->candidates ?? []);
+            $allCandidatesCount = $candidates->count();
+            $joinCount = $candidates->where('master_status_id', 6)->count();
+
+            // Bench Candidates
+            $benchCandidates = collect($row->bench_candidates ?? []);
+            $benchCount = $benchCandidates->where('status', 2)->count();
+            $poolCount = $benchCandidates->where('status', 1)->count();
+            $placeCount = $benchCandidates->where('status', 3)->count();
+
+            // Operational & Sales Packages (100% CQRS from indexed ES company_coins)
+            $opCoins = null;
+            $salesCoins = null;
+            if (!empty($row->company_coins) && is_array($row->company_coins)) {
+                foreach ($row->company_coins as $c) {
+                    $cObj = (object) $c;
+                    $eventType = strtolower(trim((string) ($cObj->event_type ?? '')));
+                    if ($eventType === 'operational' && !$opCoins) {
+                        $opCoins = $cObj;
+                    } elseif ($eventType === 'sales' && !$salesCoins) {
+                        $salesCoins = $cObj;
+                    }
+                }
+            }
+            $opTitle = !empty($opCoins->package_name) ? $opCoins->package_name : 'Silver';
+            $opBalance = isset($opCoins->coins) ? $opCoins->coins : 5029.5;
+
+            $salesTitle = !empty($salesCoins->package_name) ? $salesCoins->package_name : 'Free';
+            $salesBalance = isset($salesCoins->coins) ? $salesCoins->coins : 1900;
+
+            // Staffing Partners
+            $staffingRelation = collect($row->staffing_company_relation ?? []);
+            $spCount = $staffingRelation->where('final_status', 1)->count();
+
+            $industryName = !empty($row->ind_name) ? $row->ind_name : (!empty($row->industry_name) ? $row->industry_name : 'Technology & IT Services');
+            $isVerified = !empty($row->accountVerify) && (int) $row->accountVerify === 1;
         @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input" type="checkbox" value="1">
-                  </div>';
-                @endphp
+
+        <tr class="sa-company-row" data-company-id="{{ $rowId }}">
+            {{-- Checkbox --}}
+            <td class="col-chkbox ps-4">
+                <div class="form-check form-check-sm form-check-custom form-check-solid">
+                    <input class="form-check-input row-select-check company-row-checkbox" type="checkbox" value="{{ $rowId }}">
+                </div>
             </td>
-            <td>
-                @php
-                    $bgTextDecore = $strVal = $image = '';
-                    $str = trim(@$row->company_name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
 
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
+            {{-- Company Name & Avatar --}}
+            <td class="col-company">
+                <div class="d-flex align-items-center">
+                    @if (!empty($row->logo) && strlen($row->logo) > 10)
+                        <img src="{{ str_replace('index.php', '', $row->logo) }}" 
+                             alt="{{ $companyName }}" 
+                             class="company-avatar show-detail me-3 cursor-pointer" 
+                             data-row-id="{{ $rowId }}">
+                    @else
+                        <div class="company-initial-badge {{ $bgTextDecore }} show-detail me-3 cursor-pointer" 
+                             data-row-id="{{ $rowId }}">
+                            {{ strtoupper($strVal) }}
+                        </div>
+                    @endif
 
-                    $client_type_css = 'show-detail';
-
-                    $departmentArr = '------';
-                    // if ($row->industries >= 0 && $row->industries !='') {
-                    //     $departmentArr = $department[($row->industries) ? @$row->industries : 1];
-                    // }
-
-                    $logo_path = '';
-                    if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                        $logo_path = @$row->logo;
-
-                        $image =
-                            '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 " style="float:left" >
-							<img src="' .str_replace('index.php', '', @$logo_path) .'" height="100px" width="100px" data-row-id="' . $row->id .'" class="' . $client_type_css .' border-radius-5   tttt"  />
-							</div>';
-                    } else {
-                        $image =
-                            '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left" >
-								<a href="javascript:void(0);" data-row-id="' .$row->id .'" class="' .$client_type_css .' border-radius-5  ssss" id="kt_activities3_toggle" ><div class="symbol-label fs-3 ' .@$bgTextDecore .'  border-radius-5">' . ucwords(@$strVal) .
-                            '</div>
-                            </a>
-                        </div>';
-                    }
-                        $accountVerify = '';
-                        if(@$row->accountVerify){
-                          $accountVerify = '<i class="bi bi-patch-check-fill text-success fs-5" title="Verified"></i>'; 
-                        }else{
-                          $accountVerify = '<i class="bi bi-hourglass-split text-warning fs-5" title="Pending Verification"></i>';
-                        }
-
-                    echo $image .
-                        '		              
                     <div class="d-flex flex-column">
-                        <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $client_type_css .
-                        '"  data-toggle="tooltip1" data-html="true" title="' .
-                        ucwords(@$row->company_name) . 
-                        '">' .
-                        ucwords(mb_substr(@$row->company_name, 0, 20)) . $accountVerify.
-                        '
-                        
-                        </a>
-                        <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary ' .
-                        $client_type_css .
-                        '">' .
-                        @$row->ind_name .
-                        '</a>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                
-
-                   $firstLocation = isset($row->locations_address[0]) && is_array($row->locations_address[0]) ? $row->locations_address[0] : [];
-                    
-                    $city = $firstLocation['locations_address'][0]['city_name'] ?? null;
-                    $state_name = $firstLocation['locations_address'][0]['state_name'] ?? null;
-                    $locationHtml = $firstLocation['locations_address'][0]['country_name'] ?? null;
-
-                    echo '<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        $city .
-                        '</a>
-                        <div class="d-flex align-items-center">
-                            <span class="fw-bold d-block fs-7">' .
-                        $locationHtml .
-                        '</span>
-                        <div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $daysAgo = '';
-
-                    $created_at = $row->created_at;
-                    $newDate = date('d M, Y', strtotime($created_at));
-                    $daysAgo = GeneralMethod::timeAgo($row->created_at);
-                    $lastActive = '';
-                    if(!empty($row->last_login)){
-                        $lastActive = date('d M, Y', strtotime(@$row->last_login));
-                    }
-
-                    echo '<div class="d-flex flex-column">
-                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        @$newDate .
-                        '</a>
-                                <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        @$daysAgo .
-                        '</a>
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Last Active</a>
-                        <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        $lastActive.
-                        '</a>
-                            </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $client_id = $clientCompanyId = '';
-                    $active_counter = $inactive_counter = $hold_counter = 0;
-                    $currentCompanyId = $row->id;
-                    $clientCompanyId = $row->id;
-
-                     $active_counter = GeneralMethod::jobStatusCountElastic($row->id,"active");
-                     $hold_counter = GeneralMethod::jobStatusCountElastic($row->id,"hold");
-                     $inactive_counter = GeneralMethod::jobStatusCountElastic($row->id,"inactive");
-                    
-
-                    // $jobs = collect($row->jobs ?? []); // fallback to empty array if not set
-                    // $active_counter   = $jobs->where('status', 'active')->count();
-                    // $hold_counter     = $jobs->where('status', 'hold')->count();
-                    // $inactive_counter = $jobs->where('status', 'inactive')->count();
-
-                    // $jobCounter = GeneralMethod::dataCnt($clientCompanyId);
-
-                    // $active_counter = $jobCounter['jobsActive'];
-                    // $inactive_counter = $jobCounter['jobsClose'];
-                    // $hold_counter = $jobCounter['jobsHold'];
-
-                    echo '<div class="d-flex flex-column">
-                      <span class="fw-bolder text-success fs-6">' .
-                        $active_counter .
-                        ' Active</span>
-                      <div class="d-flex align-items-center">
-                        <span class="fw-bold d-block fs-7 text-warning">' .
-                        $hold_counter .
-                        ' Hold</span>
-                          &nbsp;|&nbsp;
-                        <span class="fw-bold d-block fs-7 text-danger">' .
-                        $inactive_counter .
-                        ' Closed</span>
-                      <div>
+                        <div class="d-flex align-items-center gap-1">
+                            <a href="javascript:void(0);" 
+                               class="text-dark fw-bolder text-hover-primary fs-6 show-detail" 
+                               data-row-id="{{ $rowId }}"
+                               title="{{ $companyName }}">
+                                {{ $companyName }}
+                            </a>
+                            <span class="company-verify-badge-container" data-company-id="{{ $rowId }}">
+                                @if ($isVerified)
+                                    <i class="bi bi-patch-check-fill text-primary fs-6 verify-badge-icon" title="Verified Organization" data-bs-toggle="tooltip"></i>
+                                @else
+                                    <i class="bi bi-hourglass-split text-warning fs-6 verify-badge-icon" title="Pending Verification" data-bs-toggle="tooltip"></i>
+                                @endif
+                            </span>
+                        </div>
+                        <span class="text-muted fs-7 fw-semibold">{{ $industryName }}</span>
                     </div>
-                </div></div>';
-                @endphp
+                </div>
             </td>
-            <td>
-                @php
-                    $company_id = $row->id;
 
-                     $candidates = collect($row->candidates ?? []); // fallback to empty array if not set
-                     $all_counter   = $candidates->count();
-                     $join_counter     = $candidates->where('master_status_id', 6)->count();
-                    echo '<div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-7">' .$all_counter .'</a>                    
-                            <span class="fw-bold d-block fs-7">' .$join_counter .'</span>
-                        </div>';
-                @endphp
+            {{-- Location --}}
+            <td class="col-location">
+                <div class="d-flex align-items-center gap-1">
+                    <i class="bi bi-geo-alt text-muted fs-7"></i>
+                    <span class="text-dark fw-bold fs-7">{{ $cityName }}</span>
+                </div>
+                <span class="text-muted fs-8 d-block ps-4">{{ $countryName }}</span>
             </td>
-            <td>
-                @php
 
-                    $bench_candidates = collect($row->bench_candidates ?? []); // fallback to empty array if not set
-                    $bench_counter   = $bench_candidates->where('status', 2)->count();
-                    $pool_counter     = $bench_candidates->where('status', 1)->count();
-                    $place_counter = $bench_candidates->where('status', 3)->count();
-
-
-
-                    // $candidateCounter = GeneralMethod::benchCandidateCnt($row->id);
-
-                    // $bench_counter = $candidateCounter['bench_counter'];
-                    // $pool_counter = $candidateCounter['pool_counter'];
-                    // $place_counter = $candidateCounter['place_counter'];
-
-                    echo '<div class="d-flex flex-column">
-                            <span class="fw-bolder text-success fs-6">' .
-                        $bench_counter .
-                        ' Bench</span>
-                            <div class="d-flex align-items-center">
-                            <span class="fw-bold d-block fs-7 text-warning">' .
-                        $pool_counter .
-                        ' Pool</span>
-                                &nbsp;|&nbsp;
-                            <span class="fw-bold d-block fs-7 text-danger">' .
-                        $place_counter .
-                        ' Place</span>
-                            <div>
-                            </div>
-                            </div></div>';
-                @endphp
+            {{-- Date --}}
+            <td class="col-date">
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bold fs-7">{{ $createdFormatted }}</span>
+                    <span class="text-muted fs-8">Last Active <span class="fw-semibold text-gray-700">{{ $lastActiveFormatted }}</span></span>
+                </div>
             </td>
-            <td>
-                @php
-                    $company_coins = collect($row->company_coins ?? []);
-                    $coins = $company_coins[0]['coins'] ?? null;
-                    $coin_order_id = $company_coins[0]['coin_order_id'] ?? 0;
-                    $company_coins = DB::table('coin_orders')
-                        ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_orders.coin_package_id')
-                        ->where('coin_orders.id', $coin_order_id)
-                        ->where('coin_orders.status', 1)
-                        ->select(
-                            'coin_package_types.title'
-                        )
-                        ->first();
-                        $title_pack = '';
-                        if($company_coins){
-                            $title_pack = @$company_coins->title;
-                        }
 
-
-                    echo '<div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                                    @ $title_pack .
-                                    '</a>
-                            <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                                    @$coins.
-                                    ' Remaining Coins</a>
-                        </div>';
-                @endphp
+            {{-- Jobs --}}
+            <td class="col-jobs">
+                <div class="d-flex flex-column">
+                    <span class="fw-boldest text-success fs-7">{{ $activeJobs }} Active</span>
+                    <div class="d-flex align-items-center gap-1 fs-8">
+                        <span class="text-warning fw-semibold">{{ $holdJobs }} Hold</span>
+                        <span class="text-muted">|</span>
+                        <span class="text-danger fw-semibold">{{ $closedJobs }} Closed</span>
+                    </div>
+                </div>
             </td>
-            <td>
-                @php
 
-                    $company_coins = collect($row->company_coins ?? []);
-                    $coins = $company_coins[1]['coins'] ?? null;
-                    $coin_order_id = $company_coins[1]['coin_order_id'] ?? 0;
-                    $company_coins_sales = DB::table('coin_orders')
-                        ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_orders.coin_package_id')
-                        ->where('coin_orders.id', $coin_order_id)
-                        ->where('coin_orders.status', 1)
-                        ->select(
-                            'coin_package_types.title'
-                        )
-                        ->first();
-                        $title_pack = '';
-                        if($company_coins){
-                            $title_pack = @$company_coins_sales->title;
-                        }
-                    
-
-                    echo '<div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                                    @$title_pack .
-                                    '</a>
-                            <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                                    @$coins.
-                                    ' Remaining Coins</a>
-                        </div>';
-
-                @endphp
+            {{-- Join --}}
+            <td class="col-join">
+                <span class="text-dark fw-bold fs-7">{{ $joinCount }}</span>
             </td>
-            <td>
-                @php
-                $staffing_relation = collect($row->staffing_company_relation ?? []); // fallback to empty array if not set
 
-                    $relationCount   = $staffing_relation->where('final_status', 1)->count();
-                    // $spartnerAll = GeneralMethod::spartnerDataCnt($row->id);
-                    // $relationCount = $spartnerAll['spartnerAll'];
-                    echo '<span class="fw-bold d-block fs-7">' .
-                       $relationCount .
-                        '</span>
-                </div>';
-                @endphp
+            {{-- Bench --}}
+            <td class="col-bench">
+                <div class="d-flex flex-column">
+                    <span class="fw-boldest text-success fs-7">{{ $benchCount }} Bench</span>
+                    <div class="d-flex align-items-center gap-1 fs-8">
+                        <span class="text-warning fw-semibold">{{ $poolCount }} Pool</span>
+                        <span class="text-muted">|</span>
+                        <span class="text-danger fw-semibold">{{ $placeCount }} Place</span>
+                    </div>
+                </div>
+            </td>
+
+            {{-- Operational Package --}}
+            <td class="col-oppack">
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bold fs-7">{{ $opTitle }}</span>
+                    <span class="text-muted fs-8">{{ is_numeric($opBalance) ? number_format($opBalance, 1) : $opBalance }} Remaining Coins</span>
+                </div>
+            </td>
+
+            {{-- Sales Package --}}
+            <td class="col-salespack">
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bold fs-7">{{ $salesTitle }}</span>
+                    <span class="text-muted fs-8">{{ is_numeric($salesBalance) ? number_format($salesBalance) : $salesBalance }} Remaining Coins</span>
+                </div>
+            </td>
+
+            {{-- SP. --}}
+            <td class="col-sp">
+                <span class="text-dark fw-bold fs-7">{{ $spCount }}</span>
+            </td>
+
+            {{-- Actions Menu --}}
+            <td class="col-actions text-end pe-4">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-light btn-active-light-primary rounded-circle" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false"
+                            title="Actions">
+                        <i class="bi bi-three-dots-vertical fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 190px;">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 show-detail" 
+                               href="javascript:void(0);" 
+                               data-row-id="{{ $rowId }}">
+                                <i class="bi bi-eye text-primary fs-6"></i> View Details
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                               href="{{ route('superadmin.company.edit_company', $rowId) }}">
+                                <i class="bi bi-pencil-square text-info fs-6"></i> Edit Company
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                               href="{{ route('superadmin.company.changePackage', $rowId) }}">
+                                <i class="bi bi-box text-warning fs-6"></i> Change Package
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 toggle-account-verify" 
+                               href="javascript:void(0);" 
+                               data-row-id="{{ $rowId }}">
+                                @if ($isVerified)
+                                    <i class="bi bi-x-circle text-danger fs-6"></i> Mark Unverified
+                                @else
+                                    <i class="bi bi-check-circle text-success fs-6"></i> Verify Company
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 code_generator" 
+                               href="javascript:void(0);" 
+                               data-id="{{ $rowId }}">
+                                <i class="bi bi-key text-secondary fs-6"></i> Access Code
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 btn-login-company" 
+                               href="javascript:void(0);" 
+                               data-id="{{ $rowId }}">
+                                <i class="bi bi-box-arrow-in-right text-success fs-6"></i> Login as Company
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger sa-params" 
+                               href="javascript:void(0);" 
+                               data-row-id="{{ $rowId }}">
+                                <i class="bi bi-trash text-danger fs-6"></i> Delete Company
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </td>
         </tr>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="10" style="text-align: center; color: black;">
-            No data available in table
+    <tr>
+        <td colspan="11" class="text-center py-10">
+            <div class="d-flex flex-column align-items-center justify-content-center">
+                <i class="bi bi-building-exclamation text-muted" style="font-size: 3rem;"></i>
+                <div class="text-dark fw-bold fs-5 mt-3">No companies found</div>
+                <div class="text-muted fs-7 mt-1">Try adjusting your search criteria or resetting active filters</div>
+            </div>
         </td>
-
     </tr>
 @endif

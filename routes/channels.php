@@ -32,3 +32,7 @@ Broadcast::channel('superadmin.custom-plans', function ($user) {
     return (bool) ($user && ! empty($user->is_superadmin));
 });
 
+// Super Admin private channel for Company real-time synchronization
+Broadcast::channel('superadmin.companies', function ($user) {
+    return (bool) ($user && ! empty($user->is_superadmin));
+});
