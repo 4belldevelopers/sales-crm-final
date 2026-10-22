@@ -21,6 +21,8 @@ class ClientPerformanceScopeResolver
 {
     protected ElasticService $elasticService;
 
+    protected static array $inMemoryScopeCache = [];
+
     public function __construct(ElasticService $elasticService)
     {
         $this->elasticService = $elasticService;
@@ -29,14 +31,20 @@ class ClientPerformanceScopeResolver
     /**
      * Resolve and authorize the analytics scope for a given client ID.
      *
-     * @param  int     $authCompanyId Authenticated user's company ID
-     * @param  int     $clientId      Requested client ID (or Direct Client company ID)
-     * @param  string  $clientTypeHint 'internal', 'direct', or 'auto'
-     * @return array   Standardized scope definition array
+     * @param  int  $authCompanyId  Authenticated user's company ID
+     * @param  int  $clientId  Requested client ID (or Direct Client company ID)
+     * @param  string  $clientTypeHint  'internal', 'direct', or 'auto'
+     * @return array Standardized scope definition array
+     *
      * @throws AuthorizationException If access is not authorized
      */
     public function resolveScope(int $authCompanyId, int $clientId, string $clientTypeHint = 'auto'): array
     {
+        $cacheKey = "{$authCompanyId}_{$clientId}_{$clientTypeHint}";
+        if (isset(self::$inMemoryScopeCache[$cacheKey])) {
+            return self::$inMemoryScopeCache[$cacheKey];
+        }
+
         $candidatesIndex = config(ClientPerformanceConstants::CONFIG_INDEX_CANDIDATES, 'local_candidates_elastic');
         $jobsIndex = config(ClientPerformanceConstants::CONFIG_INDEX_JOBS, 'local_jobs_elastic');
         $clientsIndex = config(ClientPerformanceConstants::CONFIG_INDEX_CLIENTS, 'local_client_list_elastic');
@@ -47,22 +55,22 @@ class ClientPerformanceScopeResolver
         if ($clientTypeHint === 'internal' || $clientTypeHint === 'auto') {
             $isInternal = $this->verifyInternalClient($authCompanyId, $clientId, $clientsIndex);
             if ($isInternal) {
-                return [
-                    'client_type'       => 'internal',
-                    'client_id'         => $clientId,
-                    'client_name'       => $isInternal['name'] ?? 'Client #'.$clientId,
-                    'auth_company_id'   => $authCompanyId,
-                    'theme'             => 'blue',
-                    'theme_color'       => '#009ef7',
-                    'indices'           => [
+                $scope = [
+                    'client_type' => 'internal',
+                    'client_id' => $clientId,
+                    'client_name' => $isInternal['name'] ?? 'Client #'.$clientId,
+                    'auth_company_id' => $authCompanyId,
+                    'theme' => 'blue',
+                    'theme_color' => '#009ef7',
+                    'indices' => [
                         'candidates' => $candidatesIndex,
-                        'jobs'       => $jobsIndex,
+                        'jobs' => $jobsIndex,
                         'interviews' => $interviewsIndex,
-                        'timeline'   => $timelineIndex,
-                        'clients'    => $clientsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
                     ],
                     // Candidate query must strictly match auth company and client_id
-                    'candidate_filter'  => [
+                    'candidate_filter' => [
                         'bool' => [
                             'must' => [
                                 ['term' => ['company_id' => $authCompanyId]],
@@ -83,7 +91,7 @@ class ClientPerformanceScopeResolver
                         ],
                     ],
                     // Job query must match auth company and client_id
-                    'job_filter'        => [
+                    'job_filter' => [
                         'bool' => [
                             'must' => [
                                 ['term' => ['company_id' => $authCompanyId]],
@@ -92,6 +100,9 @@ class ClientPerformanceScopeResolver
                         ],
                     ],
                 ];
+                self::$inMemoryScopeCache[$cacheKey] = $scope;
+
+                return $scope;
             }
         }
 
@@ -100,21 +111,21 @@ class ClientPerformanceScopeResolver
             $isDirect = $this->verifyDirectClient($authCompanyId, $clientId);
             if ($isDirect) {
                 return [
-                    'client_type'       => 'direct',
-                    'client_id'         => $clientId,
-                    'client_name'       => $isDirect['name'] ?? 'Direct Client #'.$clientId,
-                    'auth_company_id'   => $authCompanyId,
-                    'theme'             => 'emerald',
-                    'theme_color'       => '#10b981',
-                    'indices'           => [
+                    'client_type' => 'direct',
+                    'client_id' => $clientId,
+                    'client_name' => $isDirect['name'] ?? 'Direct Client #'.$clientId,
+                    'auth_company_id' => $authCompanyId,
+                    'theme' => 'emerald',
+                    'theme_color' => '#10b981',
+                    'indices' => [
                         'candidates' => $candidatesIndex,
-                        'jobs'       => $jobsIndex,
+                        'jobs' => $jobsIndex,
                         'interviews' => $interviewsIndex,
-                        'timeline'   => $timelineIndex,
-                        'clients'    => $clientsIndex,
+                        'timeline' => $timelineIndex,
+                        'clients' => $clientsIndex,
                     ],
                     // Candidate filter for direct client
-                    'candidate_filter'  => [
+                    'candidate_filter' => [
                         'bool' => [
                             'must' => [
                                 [
@@ -143,7 +154,7 @@ class ClientPerformanceScopeResolver
                         ],
                     ],
                     // Job filter for direct client (shared requisitions)
-                    'job_filter'        => [
+                    'job_filter' => [
                         'bool' => [
                             'must' => [
                                 ['term' => ['company_id' => $clientId]],
@@ -151,6 +162,9 @@ class ClientPerformanceScopeResolver
                         ],
                     ],
                 ];
+                self::$inMemoryScopeCache[$cacheKey] = $scope;
+
+                return $scope;
             }
         }
 
@@ -190,8 +204,9 @@ class ClientPerformanceScopeResolver
                     ],
                 ]);
 
-                if (!empty($searchRes['hits']['hits'])) {
+                if (! empty($searchRes['hits']['hits'])) {
                     $source = $searchRes['hits']['hits'][0]['_source'] ?? [];
+
                     return [
                         'name' => $source['name'] ?? $source['company_name'] ?? 'Client #'.$clientId,
                     ];
@@ -230,14 +245,14 @@ class ClientPerformanceScopeResolver
                 ->where('final_status', 1)
                 ->first();
 
-            if (!$r) {
+            if (! $r) {
                 $r = DB::table('staffing_company_relation')
                     ->where('from_company_id', $clientId)
                     ->where('to_company_id', $authCompanyId)
                     ->first();
             }
 
-            if (!$r) {
+            if (! $r) {
                 $r = DB::table('client_user_assign')
                     ->where('company_id', $authCompanyId)
                     ->where('client_id', $clientId)
@@ -251,6 +266,7 @@ class ClientPerformanceScopeResolver
             $compName = cache()->remember("company_name_{$clientId}", 86400, function () use ($clientId) {
                 return DB::table('companies')->where('id', $clientId)->value('company_name');
             });
+
             return ['name' => $compName ?? 'Direct Client #'.$clientId];
         }
 

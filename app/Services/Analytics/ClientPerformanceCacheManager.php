@@ -75,6 +75,11 @@ class ClientPerformanceCacheManager
         }
     }
 
+    public function invalidateClient(int $tenantId, int $clientId): void
+    {
+        $this->invalidate($tenantId, $clientId);
+    }
+
     /**
      * Get the current cache version for this client.
      */
@@ -82,9 +87,15 @@ class ClientPerformanceCacheManager
     {
         try {
             $versionKey = "client_perf_version_{$tenantId}_{$clientId}";
+
             return (int) cache()->get($versionKey, 1);
         } catch (\Throwable $e) {
             return 1;
         }
+    }
+
+    public function getClientVersion(int $tenantId, int $clientId): int
+    {
+        return $this->getVersion($tenantId, $clientId);
     }
 }

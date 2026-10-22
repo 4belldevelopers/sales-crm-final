@@ -39,6 +39,541 @@
     .iti__flag {
         margin-top: 2px !important;
       }
+
+    /* ── Performance Dashboard Scoped Styles (God-Level Enterprise Analytics — Max 14px Scale — Direct Client Emerald Theme) ── */
+    .cd-perf-wrap {
+      padding: 14px 18px 24px;
+      background: #f8fafc;
+    }
+    .cd-perf-header {
+      background: #ffffff;
+      border: 1px solid #eef2f6;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .cd-perf-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cd-perf-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: #ecfdf5;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px !important;
+      flex-shrink: 0;
+      border: 1px solid #a7f3d0;
+    }
+    .cd-perf-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      line-height: 1.2;
+    }
+    .cd-perf-subtitle {
+      font-size: 11.5px !important;
+      font-weight: 400 !important;
+      color: #64748b !important;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+    .cd-perf-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .cd-perf-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cd-perf-select-lbl {
+      font-size: 11.5px !important;
+      font-weight: 400 !important;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .cd-perf-select {
+      height: 30px !important;
+      padding: 0 24px 0 10px !important;
+      font-size: 11.5px !important;
+      font-weight: 500 !important;
+      color: #1e293b !important;
+      background-color: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 6px !important;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease-in-out;
+    }
+    .cd-perf-select:focus {
+      border-color: #10b981 !important;
+    }
+
+    /* KPI 5-Card Row */
+    .cd-perf-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .cd-perf-kpi-card {
+      background: #ffffff;
+      border: 1px solid #eef2f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+    }
+    .cd-perf-kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .cd-perf-kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cd-perf-kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px !important;
+      flex-shrink: 0;
+    }
+    .cd-perf-kpi-icon-green  { background: #ecfdf5; color: #10b981; border: 1.5px solid #d1fae5; }
+    .cd-perf-kpi-icon-blue   { background: #eff6ff; color: #2563eb; border: 1.5px solid #bfdbfe; }
+    .cd-perf-kpi-icon-amber  { background: #fffbeb; color: #d97706; border: 1.5px solid #fde68a; }
+    .cd-perf-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; border: 1.5px solid #ddd6fe; }
+    .cd-perf-kpi-icon-cyan   { background: #f0f9ff; color: #0284c7; border: 1.5px solid #bae6fd; }
+
+    .cd-perf-pill {
+      font-size: 10px !important;
+      font-weight: 500 !important;
+      padding: 2px 7px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      line-height: 1.2;
+    }
+    .cd-perf-pill-up   { background: #ecfdf5; color: #10b981; }
+    .cd-perf-pill-down { background: #fef2f2; color: #ef4444; }
+    .cd-perf-pill-good { background: #ecfdf5; color: #10b981; }
+
+    .cd-perf-kpi-num {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-top: 6px;
+    }
+    .cd-perf-kpi-lbl {
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      color: #1e293b;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+    .cd-perf-kpi-sub {
+      font-size: 11px !important;
+      font-weight: 400 !important;
+      color: #64748b;
+      margin-top: 3px;
+      line-height: 1.2;
+    }
+    .cd-perf-kpi-comp {
+      font-size: 10.5px !important;
+      font-weight: 400 !important;
+      color: #94a3b8;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+
+    /* Row 1, Row 2, Row 3 Layouts */
+    .cd-perf-row-1 {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr 1.4fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .cd-perf-row-2 {
+      display: grid;
+      grid-template-columns: 1.3fr 1.3fr 1.4fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .cd-perf-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* Card Panel Structure */
+    .cd-perf-card {
+      background: #ffffff;
+      border: 1px solid #eef2f6;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+    }
+    .cd-perf-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f8fafc;
+      gap: 8px;
+    }
+    .cd-perf-card-title {
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      color: #0f172a;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cd-perf-card-title i {
+      font-size: 12.5px !important;
+    }
+    .cd-perf-card-mini-select {
+      height: 26px !important;
+      padding: 0 18px 0 6px !important;
+      font-size: 10.5px !important;
+      font-weight: 500 !important;
+      color: #475569 !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 4px !important;
+      background: #ffffff;
+      cursor: pointer;
+      outline: none;
+    }
+    .cd-perf-legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-size: 10.5px !important;
+      font-weight: 400 !important;
+      color: #64748b;
+      flex-wrap: wrap;
+    }
+    .cd-perf-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cd-perf-legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .cd-perf-legend-sq {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* Funnel Components */
+    .cd-funnel-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      padding: 4px 0;
+    }
+    .cd-funnel-svg {
+      width: 92px;
+      height: 132px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));
+    }
+    .cd-funnel-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .cd-funnel-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px !important;
+      gap: 8px;
+    }
+    .cd-funnel-stage {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #475569;
+      font-weight: 400;
+    }
+    .cd-funnel-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cd-funnel-val {
+      font-weight: 600 !important;
+      color: #0f172a;
+      min-width: 18px;
+      font-size: 12px !important;
+    }
+    .cd-funnel-pct {
+      font-weight: 500 !important;
+      color: #64748b;
+      min-width: 32px;
+      text-align: right;
+      font-size: 11.5px !important;
+    }
+
+    /* Donut Job Type Components */
+    .cd-donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      padding: 4px 0;
+    }
+    .cd-donut-chart-box {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      flex-shrink: 0;
+    }
+    .cd-donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .cd-donut-center-num {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      color: #0f172a;
+      line-height: 1;
+    }
+    .cd-donut-center-lbl {
+      font-size: 10px !important;
+      font-weight: 400 !important;
+      color: #94a3b8;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .cd-donut-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .cd-donut-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px !important;
+      gap: 6px;
+    }
+    .cd-donut-item-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+      font-weight: 400;
+    }
+    .cd-donut-item-count {
+      font-weight: 600 !important;
+      color: #0f172a;
+      font-size: 12px !important;
+    }
+    .cd-donut-item-pct {
+      font-weight: 500 !important;
+      color: #64748b;
+      min-width: 28px;
+      text-align: right;
+      font-size: 11.5px !important;
+    }
+
+    /* Tables */
+    .cd-perf-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .cd-perf-table th {
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      color: #64748b;
+      padding: 7px 6px;
+      border-bottom: 1.5px solid #f1f5f9;
+      text-align: right;
+    }
+    .cd-perf-table th:first-child,
+    .cd-perf-table th:nth-child(2) {
+      text-align: left;
+    }
+    .cd-perf-table td {
+      font-size: 11.5px !important;
+      color: #334155;
+      padding: 7px 6px;
+      border-bottom: 1px dashed #f1f5f9;
+      text-align: right;
+      vertical-align: middle;
+    }
+    .cd-perf-table tr:last-child td {
+      border-bottom: none;
+    }
+    .cd-perf-table td:first-child,
+    .cd-perf-table td:nth-child(2) {
+      text-align: left;
+    }
+    .cd-perf-table td:first-child {
+      color: #94a3b8;
+      font-weight: 500;
+      width: 18px;
+    }
+    .cd-perf-table td:nth-child(2) {
+      font-weight: 500 !important;
+      color: #0f172a;
+    }
+    .cd-perf-progress-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .cd-perf-progress-bar {
+      width: 48px;
+      height: 5px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .cd-perf-progress-fill {
+      height: 100%;
+      background: #10b981;
+      border-radius: 4px;
+    }
+    .cd-recruiter-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8.5px !important;
+      font-weight: 600 !important;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Additional Intelligence & Insights */
+    .cd-perf-intelligence-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .cd-perf-intel-card {
+      background: #ffffff;
+      border: 1px solid #eef2f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .cd-perf-intel-lbl {
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      color: #64748b;
+    }
+    .cd-perf-intel-val {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      color: #0f172a;
+      margin-top: 3px;
+    }
+    .cd-perf-intel-sub {
+      font-size: 10.5px !important;
+      font-weight: 400 !important;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .cd-perf-insights-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .cd-perf-insights-hdr {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      color: #065f46;
+      margin-bottom: 8px;
+    }
+    .cd-perf-insights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+      font-size: 11.5px !important;
+      font-weight: 400 !important;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1280px) {
+      .cd-perf-row-1, .cd-perf-row-2 {
+        grid-template-columns: 1fr;
+      }
+      .cd-perf-row-3 {
+        grid-template-columns: 1fr;
+      }
+      .cd-perf-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .cd-perf-intelligence-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .cd-perf-insights-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 768px) {
+      .cd-perf-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
 </style>
 
 
@@ -1552,243 +2087,471 @@
 
                 <!--begin::candidateDashboard Content-->
                     <div class="tab-pane" id="candidateDashboard" role="tabpanel">
-                        <div class="cd-tabcard">
-                            <div class="cd-tabcard-head d-flex align-items-center justify-content-between pb-3 mb-4" style="border-bottom: 1px solid #edf2f7;">
-                                <div>
-                                    <div class="cd-tabcard-title fs-4 fw-bold text-gray-900 d-flex align-items-center gap-2">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#3B82F6"/>
-                                            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#10B981"/>
-                                            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#F59E0B"/>
-                                            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#6366F1"/>
-                                        </svg>
-                                        Client Dashboard
-                                    </div>
-                                    <div class="cd-tabcard-sub text-gray-500 fs-7 fw-medium mt-1">Real-time hiring & recruitment performance analytics for this client.</div>
-                                </div>
-                                <span class="badge badge-light-primary fw-semibold fs-8 px-3 py-2">Analytics Overview</span>
+                      <div class="cd-perf-wrap">
+
+                        <!-- ── 1. Performance Header Bar ── -->
+                        <div class="cd-perf-header">
+                          <div class="cd-perf-header-left">
+                            <div class="cd-perf-icon-box">
+                              <i class="fas fa-chart-column fa-solid" style="color: #10b981;"></i>
                             </div>
-
-                            <div class="cd-tabwrap">
-                                <div class="card mb-3 shadow-none border-0 rounded-3">
-                                    <div class="card-body p-0">
-
-                                        <!-- Row 1: Jobs & 7-Day Sourcing Cards -->
-                                        <div class="row g-4 mb-4">
-                                            <!-- Card 1: Jobs Breakdown -->
-                                            <div class="col-md-6 col-lg-6">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    @php
-                                                    $active_count = $counts->get('active', 0);
-                                                    $hold_count = $counts->get('hold', 0);
-                                                    $inactive_count = $counts->get('inactive', 0);
-                                                    $alljobs_count = $active_count + $hold_count + $inactive_count;
-                                                    @endphp
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
-                                                        <div class="card-title d-flex flex-column">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="dcAllJobsCount_{{ $dc_id }}">{{ $inactive_count+$active_count+$hold_count }}</span>
-                                                                <span class="badge badge-light-success fs-8 fw-bold">Jobs Overview</span>
-                                                            </div>
-                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">All Client Jobs</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body pt-1 pb-4 px-5 d-flex align-items-center justify-content-between">
-                                                        <div class="d-flex flex-center" style="min-width: 140px; min-height: 140px;">
-                                                            <div id="kt_card_widget_4_chart_{{ $dc_id }}" style="min-width: 140px; min-height: 140px" data-kt-size="140" data-kt-line="11">
-                                                                <canvas id="allJobGrapg_{{ $dc_id }}" height="70" width="70"></canvas>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex flex-column gap-2 w-100 ps-4">
-                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
-                                                                <div class="d-flex align-items-center">
-                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #22c55e"></span>
-                                                                    <span class="text-gray-700 fs-7 fw-semibold">Active Jobs</span>
-                                                                </div>
-                                                                <span class="fw-bold text-gray-900 fs-7" id="dcActiveJobsCount_{{ $dc_id }}">{{ $active_count }}</span>
-                                                            </div>
-                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
-                                                                <div class="d-flex align-items-center">
-                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #ffab00"></span>
-                                                                    <span class="text-gray-700 fs-7 fw-semibold">Hold Jobs</span>
-                                                                </div>
-                                                                <span class="fw-bold text-gray-900 fs-7" id="dcHoldJobsCount_{{ $dc_id }}">{{ $hold_count }}</span>
-                                                            </div>
-                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
-                                                                <div class="d-flex align-items-center">
-                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #ff0202"></span>
-                                                                    <span class="text-gray-700 fs-7 fw-semibold">Closed Jobs</span>
-                                                                </div>
-                                                                <span class="fw-bold text-gray-900 fs-7" id="dcClosedJobsCount_{{ $dc_id }}">{{ $inactive_count }}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Card 2: Added in last 7 days -->
-                                            <div class="col-md-6 col-lg-6">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
-                                                        <div class="card-title d-flex flex-column">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="dcAdded7DaysCount_{{ $dc_id }}">{{$candidateValuesTotal}}</span>
-                                                                <span class="badge badge-light-info fs-8 fw-bold">7-Day Activity</span>
-                                                            </div>
-                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Sourced (Last 7 Days)</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body pt-0 px-4 pb-3 d-flex align-items-end">
-                                                        <div id="kt_card_widget_6_chart_{{ $dc_id }}" class="w-100" style="height: 150px">
-                                                            <div id="kt_card_widget_4_chart_{{ $dc_id }}" style="min-width: 100%; min-height: 150px">
-                                                                <canvas id="candidates_left_chart_{{ $dc_id }}" height="150"></canvas>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Row 2: 6-Month Sourcing Trend Hero Card -->
-                                        <div class="row g-4 mb-4">
-                                            <div class="col-12">
-                                                <div class="card card-flush shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0 d-flex align-items-center justify-content-between">
-                                                        <div class="card-title d-flex flex-column">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="dcTotalCandidatesCount_{{ $dc_id }}">{{$total_candidates}}</span>
-                                                                <span class="badge badge-light-primary fs-8 fw-bold">6-Month Trend</span>
-                                                            </div>
-                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Sourced ({{ date('d M Y',strtotime($startOfMonth)) }} - {{ date('d M Y',strtotime($endOfMonth)) }})</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body pt-2 px-4 pb-3">
-                                                        <div id="kt_charts_widget_3" class="w-100" style="height: 320px; min-height: 320px;">
-                                                            <canvas id="myChart_{{ $dc_id }}" height="320" style="height: 320px; min-height: 320px;"></canvas>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Row 3: Offers & Joinings Trend Cards -->
-                                        <div class="row g-4 mb-4">
-                                            <div class="col-md-6 col-lg-6">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
-                                                        <div class="card-title d-flex flex-column">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="dcTotalOffersCount_{{ $dc_id }}">{{$candidateValuesTotaloffer}}</span>
-                                                                <span class="badge badge-light-warning fs-8 fw-bold">Offers</span>
-                                                            </div>
-                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Offers Generated ({{ date("M Y", strtotime($startOfMonthcomman)) }} - {{ date("M Y", strtotime($endOfMonthcomman)) }})</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body pt-0 px-4 pb-3">
-                                                        <div id="kt_card_widget_4_chart_{{ $dc_id }}" style="min-width: 100%; min-height: 150px">
-                                                            <canvas id="candidates_offer_chart_{{ $dc_id }}" height="150"></canvas>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6 col-lg-6">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
-                                                        <div class="card-title d-flex flex-column">
-                                                            <div class="d-flex align-items-center">
-                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="dcTotalJoinedCount_{{ $dc_id }}">{{$candidateValuesTotaljoin}}</span>
-                                                                <span class="badge badge-light-success fs-8 fw-bold">Joins</span>
-                                                            </div>
-                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Joined ({{ date("M Y", strtotime($startOfMonthcomman)) }} - {{ date("M Y", strtotime($endOfMonthcomman)) }})</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card-body pt-0 px-4 pb-3">
-                                                        <div id="kt_card_widget_4_chart_{{ $dc_id }}" style="min-width: 100%; min-height: 150px">
-                                                            <canvas id="candidates_join_chart_{{ $dc_id }}" height="150"></canvas>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Row 4: Interview Section -->
-                                        <div class="row g-4">
-                                            <!-- Upcoming Interviews -->
-                                            <div class="col-lg-5 col-xl-4">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
-                                                        <h3 class="card-title fw-bold text-gray-900 fs-6 d-flex align-items-center gap-2">
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                                            Upcoming Interviews
-                                                        </h3>
-                                                    </div>
-                                                    <div class="card-body pt-1 px-5 pb-4">
-                                                        @if (count($upcomingData) > 0)
-                                                            @foreach ($upcomingData as $rowArr)
-                                                                @php
-                                                                $row = (object) $rowArr;
-                                                                $schedule_date = Carbon::parse($row->schedule_date)->format('M d');
-                                                                $schedule_date_explode = explode(" ",$schedule_date);
-                                                                @endphp
-                                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 mb-2" style="background: #f8fafc; border: 1px solid #f1f5f9;">
-                                                                    <div class="d-flex align-items-center me-3">
-                                                                        <div class="rounded-3 text-center px-2 py-1 me-3" style="background: #eef2ff; border: 1px solid #e0e7ff; min-width: 44px;">
-                                                                            <span style="font-size: 10px; font-weight: 600; color: #6366f1; text-transform: uppercase; display: block;">{{$schedule_date_explode[0]}}</span>
-                                                                            <span style="color: #4f46e5; font-size: 14px; font-weight: 700; line-height: 1;">{{$schedule_date_explode[1]}}</span>
-                                                                        </div>
-                                                                        <div>
-                                                                            <div class="text-gray-900 fs-7 fw-bold mb-0 text-truncate" style="max-width: 140px;">{{ucwords(mb_substr(@$row->full_name, 0, 20))}}</div>
-                                                                            <span class="text-gray-500 fs-8 d-block text-truncate" style="max-width: 140px;">{{ucwords(mb_substr(@$row->current_designation, 0, 21))}}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="text-end">
-                                                                        <span class="badge badge-light-primary fs-8 fw-semibold px-2 py-1 mb-1 d-inline-block">{{$row->schedule_to_time. ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '')}}</span>
-                                                                        <span class="text-gray-500 fs-8 d-block">{{ucwords(mb_substr($row->mode_name, 0, 13))}}</span>
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                        @else
-                                                            <div class="text-center py-6 px-3 rounded-3" style="background: #f8fafc; border: 1px dashed #e2e8f0;">
-                                                                <svg class="mb-2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M8 7V3M16 7V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                                <div class="text-gray-500 fs-7 fw-medium">No upcoming interviews scheduled</div>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Candidates Interviews Chart -->
-                                            <div class="col-lg-7 col-xl-8">
-                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
-                                                    <div class="card-header pt-4 pb-2 px-5 border-0 d-flex align-items-center justify-content-between">
-                                                        <h3 class="card-title fw-bold text-gray-900 fs-6 d-flex align-items-center gap-2">
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-                                                            Candidates Interviews
-                                                        </h3>
-                                                        <select class="form-select form-select-sm form-select-solid w-140px fs-7 border-0" id="sortingfilter" onchange="filtersdatagetmonth(this.value)">
-                                                            <option value="1">Last 6 Months</option>
-                                                            <option value="0">Last 7 Days</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="card-body pt-1 px-4 pb-3">
-                                                        <div id="kt_card_widget_6_chart_{{ $dc_id }}" class="w-100" style="height: 200px">
-                                                            <div class="inetview_recent_chart_{{ $dc_id }} d-none" id="kt_card_widget_4_chart_{{ $dc_id }}" style="min-width: 100%; min-height: 200px">
-                                                                <canvas id="inetview_recent_chart_{{ $dc_id }}" height="200"></canvas>
-                                                            </div>
-                                                            <div class="inetview_recent_chart_month_{{ $dc_id }}" id="kt_card_widget_4_chart_month_{{ $dc_id }}" style="min-width: 100%; min-height: 200px">
-                                                                <canvas id="inetview_recent_chart_month_{{ $dc_id }}" height="200"></canvas>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
+                            <div>
+                              <div class="cd-perf-title">Performance Dashboard</div>
+                              <div class="cd-perf-subtitle">Real-time hiring &amp; recruitment performance analytics for this client</div>
                             </div>
+                          </div>
+                          <div class="cd-perf-header-right">
+                            <div class="cd-perf-select-wrap">
+                              <span class="cd-perf-select-lbl">Date Range:</span>
+                              <select class="cd-perf-select" id="perfDateRangeSelect" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-perf-select-wrap">
+                              <span class="cd-perf-select-lbl">Compare:</span>
+                              <select class="cd-perf-select" id="perfCompareWithSelect" onchange="cdPerfSyncCompare(this.value)">
+                                <option value="previous_period" selected>vs. Previous Period</option>
+                                <option value="same_period_last_year">vs. Same Period Last Year</option>
+                                <option value="none">No Comparison</option>
+                              </select>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-icon btn-light" id="btnPerfRefresh" onclick="cdPerfRefresh()" title="Refresh Analytics" style="height:30px; width:30px; border-radius:6px; border:1px solid #e2e8f0;">
+                              <i class="fas fa-rotate fa-solid" style="font-size:11px; color:#64748b;"></i>
+                            </button>
+                          </div>
                         </div>
+
+                        <!-- ── Dynamic Empty State Banner (Shown conditionally) ── -->
+                        <div id="perfEmptyStateBanner" style="display:none; margin-bottom:12px;">
+                          <div class="alert alert-dismissible bg-light-warning border border-warning border-dashed d-flex flex-column flex-sm-row p-3 rounded-2">
+                            <i class="fas fa-circle-info fa-solid fs-5 text-warning me-3 mb-2 mb-sm-0 align-self-center"></i>
+                            <div class="d-flex flex-column pe-0 pe-sm-10 justify-content-center" style="font-size:11.5px; color:#475569;">
+                              <strong id="perfEmptyStateTitle" style="font-weight:600;"></strong>
+                              <span id="perfEmptyStateMessage" style="margin-left:4px;"></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- ── 2. Single-Row KPI Section (5 Cards) ── -->
+                        <div class="cd-perf-kpi-grid">
+                          <!-- KPI 1: Total Candidates -->
+                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#candidate_list">
+                            <div class="cd-perf-kpi-top">
+                              <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green">
+                                <i class="fas fa-users fa-solid"></i>
+                              </div>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            </div>
+                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">—</div>
+                            <div class="cd-perf-kpi-lbl">Total Candidates</div>
+                            <div class="cd-perf-kpi-sub">Submitted to this client</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
+                          </div>
+
+                          <!-- KPI 2: Interviews Scheduled -->
+                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#interview_tracker">
+                            <div class="cd-perf-kpi-top">
+                              <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue">
+                                <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i>
+                              </div>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            </div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">—</div>
+                            <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
+                            <div class="cd-perf-kpi-sub">Across all rounds</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
+                          </div>
+
+                          <!-- KPI 3: Offers Generated -->
+                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#candidate_joining">
+                            <div class="cd-perf-kpi-top">
+                              <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
+                                <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
+                              </div>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            </div>
+                            <div class="cd-perf-kpi-num" id="perfKpiOffers">—</div>
+                            <div class="cd-perf-kpi-lbl">Offers Generated</div>
+                            <div class="cd-perf-kpi-sub">Offer letters sent</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
+                          </div>
+
+                          <!-- KPI 4: Successful Joins -->
+                          <div class="cd-perf-kpi-card cd-nav-tab" data-target="#candidate_joining">
+                            <div class="cd-perf-kpi-top">
+                              <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple">
+                                <i class="fas fa-user-check fa-solid"></i>
+                              </div>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
+                            </div>
+                            <div class="cd-perf-kpi-num" id="perfKpiJoins">—</div>
+                            <div class="cd-perf-kpi-lbl">Successful Joins</div>
+                            <div class="cd-perf-kpi-sub">Candidates placed</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
+                          </div>
+
+                          <!-- KPI 5: Avg. Time to Hire -->
+                          <div class="cd-perf-kpi-card">
+                            <div class="cd-perf-kpi-top">
+                              <div class="cd-perf-kpi-icon cd-perf-kpi-icon-cyan">
+                                <i class="fas fa-clock fa-solid"></i>
+                              </div>
+                              <span class="cd-perf-pill cd-perf-pill-good" id="perfKpiTimePill"><i class="fas fa-minus fa-solid" style="font-size:8px;"></i>—</span>
+                            </div>
+                            <div class="cd-perf-kpi-num" id="perfKpiTimeToHire">—</div>
+                            <div class="cd-perf-kpi-lbl">Avg. Time to Hire</div>
+                            <div class="cd-perf-kpi-sub">From submission to join</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiTimeComp">vs. previous period</div>
+                          </div>
+                        </div>
+
+                        <!-- ── 3. Analytics Grid Row 1 (Funnel, Candidates & Interviews, All Jobs Status) ── -->
+                        <div class="cd-perf-row-1">
+                          <!-- Card 1: Hiring Pipeline Funnel -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-filter fa-solid text-success"></i> Hiring Pipeline Funnel
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-funnel-wrap">
+                              <svg class="cd-funnel-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
+                                <!-- Tier 1: Candidates Submitted (Blue) -->
+                                <path d="M 4,4 L 96,4 L 84,32 L 16,32 Z" fill="#3b82f6" />
+                                <!-- Tier 2: Screened (Indigo) -->
+                                <path d="M 17,36 L 83,36 L 73,64 L 27,64 Z" fill="#6366f1" />
+                                <!-- Tier 3: Interviews (Purple) -->
+                                <path d="M 28,68 L 72,68 L 63,96 L 37,96 Z" fill="#8b5cf6" />
+                                <!-- Tier 4: Offers (Amber) -->
+                                <path d="M 38,100 L 62,100 L 55,116 L 45,116 Z" fill="#f59e0b" />
+                                <!-- Tier 5: Joined (Green) -->
+                                <path d="M 45,118 L 55,118 L 52,128 L 48,128 Z" fill="#10b981" />
+                              </svg>
+                              <div class="cd-funnel-list">
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountCand">0</span>
+                                    <span>Candidates</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctCand">100%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#6366f1;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountScreened">0</span>
+                                    <span>Screened</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctScreened">0%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountInt">0</span>
+                                    <span>Interviews</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctInt">0%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountOff">0</span>
+                                    <span>Offers</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctOff">0%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#10b981;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountJoin">0</span>
+                                    <span>Joined</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctJoin">0%</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Card 2: Candidates & Interviews (Month to Year) -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-chart-line fa-solid text-success"></i> Candidates &amp; Interviews (Month to Year)
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-perf-legend">
+                              <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#10b981;"></span> Candidates Submitted
+                              </span>
+                              <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#8b5cf6;"></span> Interviewed Candidates
+                              </span>
+                            </div>
+                            <div style="position:relative; height:150px; width:100%;">
+                              <canvas id="chartCandidatesInterviews"></canvas>
+                            </div>
+                          </div>
+
+                          <!-- Card 3: All Jobs Status (Hiring, Hold, Closed) -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-briefcase fa-solid text-success"></i> All Jobs Status (Hiring, Hold, Closed)
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-perf-legend">
+                              <span class="cd-perf-legend-sq" style="background:#10b981;"></span> Hiring (Active)
+                              <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> On Hold
+                              <span class="cd-perf-legend-sq" style="background:#ef4444;"></span> Closed
+                            </div>
+                            <div style="position:relative; height:150px; width:100%;">
+                              <canvas id="chartAllJobsStatus"></canvas>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- ── 4. Analytics Grid Row 2 (Offers & Joins, Job Type Performance, Time to Hire) ── -->
+                        <div class="cd-perf-row-2">
+                          <!-- Card 1: Offers & Joinings (Month to Year) -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-file-alt fa-solid text-warning"></i> Offers &amp; Joinings (Month to Year)
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-perf-legend">
+                              <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> Offers Generated
+                              </span>
+                              <span class="cd-perf-legend-item">
+                                <span class="cd-perf-legend-dot" style="background:#10b981;"></span> Successful Joins
+                              </span>
+                            </div>
+                            <div style="position:relative; height:150px; width:100%;">
+                              <canvas id="chartOffersJoinings"></canvas>
+                            </div>
+                          </div>
+
+                          <!-- Card 2: Job Type Performance -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-sliders-h fa-solid text-success"></i> Job Type Performance
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div class="cd-donut-wrap">
+                              <div class="cd-donut-chart-box">
+                                <canvas id="chartJobType" width="110" height="110"></canvas>
+                                <div class="cd-donut-center">
+                                  <div class="cd-donut-center-num" id="donutTotalJobs">0</div>
+                                  <div class="cd-donut-center-lbl">Active Jobs</div>
+                                </div>
+                              </div>
+                              <div class="cd-donut-list">
+                                <div class="cd-donut-item">
+                                  <div class="cd-donut-item-left">
+                                    <span class="cd-funnel-dot" style="background:#10b981;"></span>
+                                    <span>Full-Time</span>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3">
+                                    <span class="cd-donut-item-count" id="donutCountFulltime">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctFulltime">0%</span>
+                                  </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                  <div class="cd-donut-item-left">
+                                    <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
+                                    <span>Contract</span>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3">
+                                    <span class="cd-donut-item-count" id="donutCountContract">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctContract">0%</span>
+                                  </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                  <div class="cd-donut-item-left">
+                                    <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
+                                    <span>Freelance</span>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3">
+                                    <span class="cd-donut-item-count" id="donutCountFreelance">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctFreelance">0%</span>
+                                  </div>
+                                </div>
+                                <div class="cd-donut-item">
+                                  <div class="cd-donut-item-left">
+                                    <span class="cd-funnel-dot" style="background:#06b6d4;"></span>
+                                    <span>Part-Time</span>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3">
+                                    <span class="cd-donut-item-count" id="donutCountPartTime">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctPartTime">0%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Card 3: Time to Hire Trend (Days) -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-clock fa-solid text-success"></i> Time to Hire Trend (Days)
+                              </div>
+                              <select class="cd-perf-card-mini-select perf-sync-select" onchange="cdPerfSyncRange(this.value)">
+                                <option value="12M" selected>Last 12 Months</option>
+                                <option value="6M">Last 6 Months</option>
+                                <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
+                              </select>
+                            </div>
+                            <div style="position:relative; height:150px; width:100%;">
+                              <canvas id="chartTimeToHire"></canvas>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- ── 5. Analytics Grid Row 3 (Top Roles & Recruiter Performance) ── -->
+                        <div class="cd-perf-row-3">
+                          <!-- Card 1: Top Hiring Roles -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-briefcase fa-solid text-success"></i> Top Hiring Roles
+                              </div>
+                              <a href="javascript:void(0);" class="cd-card-hdr-link cd-nav-tab" data-target="#requisitions">View All Jobs <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                            </div>
+                            <div style="overflow-x:auto;">
+                              <table class="cd-perf-table">
+                                <thead>
+                                  <tr>
+                                    <th>#</th>
+                                    <th>Job Title</th>
+                                    <th>Candidates</th>
+                                    <th>Interviews</th>
+                                    <th>Offers</th>
+                                    <th>Joins</th>
+                                    <th>Conversion</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="perfTopRolesTbody">
+                                  <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                      <i class="fas fa-spinner fa-spin text-success me-2"></i>Loading live requisition metrics...
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          <!-- Card 2: Recruiter Performance -->
+                          <div class="cd-perf-card">
+                            <div class="cd-perf-card-hdr">
+                              <div class="cd-perf-card-title">
+                                <i class="fas fa-users fa-solid text-success"></i> Recruiter Performance
+                              </div>
+                              <a href="javascript:void(0);" class="cd-card-hdr-link cd-nav-tab" data-target="#candidate_list">View All Recruiters <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:8.5px;"></i></a>
+                            </div>
+                            <div style="overflow-x:auto;">
+                              <table class="cd-perf-table">
+                                <thead>
+                                  <tr>
+                                    <th>#</th>
+                                    <th>Recruiter</th>
+                                    <th>Candidates</th>
+                                    <th>Interviews</th>
+                                    <th>Offers</th>
+                                    <th>Joins</th>
+                                    <th>Success Rate</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="perfRecruitersTbody">
+                                  <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                      <i class="fas fa-spinner fa-spin text-success me-2"></i>Loading live recruiter performance...
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- ── 6. Additional Intelligence & Insights ── -->
+                        <div class="cd-perf-intelligence-grid">
+                          <div class="cd-perf-intel-card">
+                            <div class="cd-perf-intel-lbl"><i class="fas fa-bolt fa-solid text-warning me-1"></i> Hiring Velocity</div>
+                            <div class="cd-perf-intel-val" id="perfIntelVelocity">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelVelocitySub">Average cycle duration</div>
+                          </div>
+                          <div class="cd-perf-intel-card">
+                            <div class="cd-perf-intel-lbl"><i class="fas fa-filter fa-solid text-success me-1"></i> Interview Conversion</div>
+                            <div class="cd-perf-intel-val" id="perfIntelIntConv">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelIntConvSub">Stage conversion yield</div>
+                          </div>
+                          <div class="cd-perf-intel-card">
+                            <div class="cd-perf-intel-lbl"><i class="fas fa-file-signature fa-solid text-info me-1"></i> Offer Conversion</div>
+                            <div class="cd-perf-intel-val" id="perfIntelOfferConv">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelOfferConvSub">Interview to offer ratio</div>
+                          </div>
+                          <div class="cd-perf-intel-card">
+                            <div class="cd-perf-intel-lbl"><i class="fas fa-handshake fa-solid text-success me-1"></i> Cumulative Yield</div>
+                            <div class="cd-perf-intel-val" id="perfIntelJoinRatio">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelJoinRatioSub">Placements / Submissions</div>
+                          </div>
+                        </div>
+
+                        <div class="cd-perf-insights-card">
+                          <div class="cd-perf-insights-hdr">
+                            <i class="fas fa-lightbulb fa-solid text-warning"></i> Performance Intelligence &amp; Actionable Insights
+                          </div>
+                          <div class="cd-perf-insights-grid" id="perfInsightsGrid">
+                            <div><i class="fas fa-spinner fa-spin text-success me-1"></i> Loading intelligent recruitment heuristics...</div>
+                          </div>
+                        </div>
+
+                      </div>
                     </div>
                 <!--end begin::candidateDashboard Content-->
                 
@@ -2148,257 +2911,441 @@
 </div>
 
 <script>
-           var myChartId = "{{ $dc_id }}";
-    window.dcChartInstances = window.dcChartInstances || {};
+    // ── Global Reactive Client Performance Analytics Engine (Direct Client Scope) ──
+    window.perfChartInstances = window.perfChartInstances || {};
+    window.perfClientCache = window.perfClientCache || {};
+    window.perfCurrentRange = '12M';
+    window.perfCurrentCompare = 'previous_period';
+    window.perfIsLoading = false;
+    var perfClientId = "{{ $dc_id }}";
+    var perfBaseApiUrl = "{{ url('service_company/clients/api/v1/performance-analytics') }}/" + perfClientId;
 
-    var showDataLabels = {
-        id: 'showDataLabels',
-        afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            chart.data.datasets.forEach((dataset, i) => {
-                const meta = chart.getDatasetMeta(i);
-                meta.data.forEach((bar, index) => {
-                    const value = dataset.data[index];
-                    ctx.save();
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(value, bar.x, bar.y - 1.5);
-                    ctx.restore();
-                });
-            });
+    function ensureChartJsLoaded(callback) {
+        if (typeof Chart !== 'undefined') {
+            callback();
+            return;
         }
-    };
-
-    var showDataLabelsvertical = {
-        id: 'showDataLabelsvertical',
-        afterDatasetsDraw(chart) {
-            var { ctx } = chart;
-            chart.data.datasets.forEach((dataset, i) => {
-                var meta = chart.getDatasetMeta(i);
-                meta.data.forEach((bar, index) => {
-                    var value = dataset.data[index];
-                    ctx.save();
-                    ctx.fillStyle = 'black';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(value, bar.x + 1, bar.y);
-                    ctx.restore();
-                });
-            });
+        var script = document.getElementById('chartjs-cdn-script');
+        if (!script) {
+            script = document.createElement('script');
+            script.id = 'chartjs-cdn-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+            script.onload = callback;
+            document.head.appendChild(script);
+        } else {
+            var interval = setInterval(function() {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(interval);
+                    callback();
+                }
+            }, 50);
         }
-    };
+    }
 
-    function renderDirectClientDashboardCharts(d, clientId) {
-        if (!d) return;
+    function cdPerfSyncRange(val) {
+        if (!val) return;
+        window.perfCurrentRange = val;
+        $('#perfDateRangeSelect, .perf-sync-select').val(val);
+        cdPerfFetchData(val, window.perfCurrentCompare, false);
+    }
 
-        var activeCount = d.counts ? (d.counts.active || 0) : 0;
-        var holdCount = d.counts ? (d.counts.hold || 0) : 0;
-        var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
+    function cdPerfSyncCompare(val) {
+        if (!val) return;
+        window.perfCurrentCompare = val;
+        $('#perfCompareWithSelect').val(val);
+        cdPerfFetchData(window.perfCurrentRange, val, false);
+    }
 
-        function createOrUpdateChart(canvasId, config) {
-            var canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            if (window.dcChartInstances[canvasId]) {
-                window.dcChartInstances[canvasId].destroy();
+    function cdPerfRefresh() {
+        var $btn = $('#btnPerfRefresh i');
+        $btn.addClass('fa-spin');
+        var cacheKey = perfClientId + '_' + window.perfCurrentRange + '_' + window.perfCurrentCompare;
+        delete window.perfClientCache[cacheKey];
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, true, function() {
+            $btn.removeClass('fa-spin');
+        });
+    }
+
+    function cdPerfFetchData(range, compare, force, onComplete) {
+        range = range || window.perfCurrentRange || '12M';
+        compare = compare || window.perfCurrentCompare || 'previous_period';
+        var cacheKey = perfClientId + '_' + range + '_' + compare;
+
+        // 1. Client-Side User RAM Cache Hit (0% Server / 0% DB reads)
+        if (!force && window.perfClientCache[cacheKey]) {
+            cdPerfRender(window.perfClientCache[cacheKey]);
+            if (typeof onComplete === 'function') onComplete();
+            return;
+        }
+
+        if (window.perfIsLoading) return;
+        window.perfIsLoading = true;
+
+        $.ajax({
+            url: perfBaseApiUrl,
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'X-Request-ID': 'req_' + Math.random().toString(36).substring(2, 12),
+            },
+            data: {
+                range: range,
+                compare: compare,
+                client_type: 'direct',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
+            },
+            success: function(res) {
+                window.perfIsLoading = false;
+                window.perfClientCache[cacheKey] = res;
+                cdPerfRender(res);
+                if (typeof onComplete === 'function') onComplete();
+            },
+            error: function(err) {
+                window.perfIsLoading = false;
+                console.warn('Performance Analytics API error:', err);
+                if (typeof onComplete === 'function') onComplete();
             }
-            var ctx = canvas.getContext('2d');
-            window.dcChartInstances[canvasId] = new Chart(ctx, config);
+        });
+    }
+
+    function cdPerfRender(data) {
+        if (!data || !data.summary) return;
+
+        var s = data.summary;
+
+        // 1. Update 5 Hero KPI Cards
+        $('#perfKpiCandidates').text(s.candidates.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates.delta_label, s.candidates.delta_value, false);
+        $('#perfKpiCandComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiInterviews').text(s.interviews_scheduled.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiIntPill'), s.interviews_scheduled.delta_label, s.interviews_scheduled.delta_value, false);
+        $('#perfKpiIntComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiOffers').text(s.offers.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiOfferPill'), s.offers.delta_label, s.offers.delta_value, false);
+        $('#perfKpiOfferComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiJoins').text(s.joins.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiJoinPill'), s.joins.delta_label, s.joins.delta_value, false);
+        $('#perfKpiJoinComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        var tthFormatted = s.avg_time_to_hire_days.formatted || '—';
+        $('#perfKpiTimeToHire').text(tthFormatted);
+        cdPerfUpdatePill($('#perfKpiTimePill'), s.avg_time_to_hire_days.delta_label, s.avg_time_to_hire_days.delta_value, true);
+        $('#perfKpiTimeComp').text(s.avg_time_to_hire_days.placed_count ? (s.avg_time_to_hire_days.placed_count + ' placements') : 'vs. prior period');
+
+        // 2. Empty State Banner
+        var $banner = $('#perfEmptyStateBanner');
+        if (data.empty_state) {
+            $('#perfEmptyStateTitle').text(data.empty_state.title + ':');
+            $('#perfEmptyStateMessage').text(data.empty_state.message);
+            $banner.slideDown(150);
+        } else {
+            $banner.slideUp(150);
         }
 
-        createOrUpdateChart(`allJobGrapg_${clientId}`, {
+        // 3. Funnel Stages
+        if (data.funnel && data.funnel.stages) {
+            var st = data.funnel.stages;
+            if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
+            if (st[1]) { $('#funnelCountScreened').text(st[1].count); $('#funnelPctScreened').text(st[1].conversion_pct); }
+            if (st[2]) { $('#funnelCountInt').text(st[2].count); $('#funnelPctInt').text(st[2].conversion_pct); }
+            if (st[3]) { $('#funnelCountOff').text(st[3].count); $('#funnelPctOff').text(st[3].conversion_pct); }
+            if (st[4]) { $('#funnelCountJoin').text(st[4].count); $('#funnelPctJoin').text(st[4].conversion_pct); }
+        }
+
+        // 4. Intelligence Grid
+        var vVal = s.avg_time_to_hire_days.formatted !== '—' ? s.avg_time_to_hire_days.formatted : 'Active';
+        $('#perfIntelVelocity').text(vVal);
+
+        var intConv = s.candidates.value > 0 ? ((s.interviewed.value / s.candidates.value) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelIntConv').text(intConv);
+        $('#perfIntelIntConvSub').text(s.interviewed.value + ' of ' + s.candidates.value + ' candidates');
+
+        var offConv = s.interviewed.value > 0 ? ((s.offers.value / s.interviewed.value) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelOfferConv').text(offConv);
+        $('#perfIntelOfferConvSub').text(s.offers.value + ' of ' + s.interviewed.value + ' interviews');
+
+        var yieldVal = data.funnel && data.funnel.overall_yield_pct ? data.funnel.overall_yield_pct : '0.0%';
+        $('#perfIntelJoinRatio').text(yieldVal);
+        $('#perfIntelJoinRatioSub').text(s.joins.value + ' placed from ' + s.candidates.value + ' submitted');
+
+        // 5. Intelligence Actionable Insights
+        if (data.insights && data.insights.length > 0) {
+            var insHtml = '';
+            data.insights.forEach(function(item) {
+                var iconColor = item.type === 'positive' ? '#10b981' : (item.type === 'warning' ? '#d97706' : '#10b981');
+                insHtml += '<div style="margin-bottom:4px;"><i class="fas ' + item.icon + ' fa-solid me-1" style="color:' + iconColor + ';"></i> <strong>' + item.title + ':</strong> ' + item.text + '</div>';
+            });
+            $('#perfInsightsGrid').html(insHtml);
+        }
+
+        // 6. Top Hiring Roles Table
+        var rolesHtml = '';
+        if (data.roles && data.roles.items && data.roles.items.length > 0) {
+            data.roles.items.forEach(function(r, idx) {
+                var pctVal = parseFloat(r.conversion_pct) || 0;
+                rolesHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td>' + r.title + '</td>' +
+                    '<td>' + r.submissions + '</td>' +
+                    '<td>' + r.interviews + '</td>' +
+                    '<td>' + r.offers + '</td>' +
+                    '<td>' + r.joined + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + r.conversion_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            rolesHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No active requisitions recorded for this period.</td></tr>';
+        }
+        $('#perfTopRolesTbody').html(rolesHtml);
+
+        // 7. Recruiter Performance Table
+        var recHtml = '';
+        if (data.recruiters && data.recruiters.items && data.recruiters.items.length > 0) {
+            data.recruiters.items.forEach(function(rec, idx) {
+                var initials = rec.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var pctVal = parseFloat(rec.join_rate_pct) || 0;
+                recHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td><span class="cd-recruiter-avatar" style="background:#ecfdf5; color:#059669;">' + initials + '</span>' + rec.name + '</td>' +
+                    '<td>' + rec.submissions + '</td>' +
+                    '<td>' + rec.interviews + '</td>' +
+                    '<td>' + rec.offers + '</td>' +
+                    '<td>' + rec.joins + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + rec.join_rate_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            recHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No assigned recruiters recorded for this client.</td></tr>';
+        }
+        $('#perfRecruitersTbody').html(recHtml);
+
+        // 8. Render Reactive Chart.js Visualizations
+        ensureChartJsLoaded(function() {
+            cdPerfRenderCharts(data);
+        });
+    }
+
+    function cdPerfUpdatePill($pill, deltaLabel, deltaValue, isLowerBetter) {
+        if (!$pill.length) return;
+
+        if (deltaLabel === 'New') {
+            $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good')
+                 .addClass('cd-perf-pill-up')
+                 .css({ 'background': '#f1f5f9', 'color': '#475569' })
+                 .html('<i class="fas fa-sparkles fa-solid" style="font-size:8px;"></i> New');
+            return;
+        }
+
+        var isPositive = deltaValue !== null && deltaValue > 0;
+        var isNegative = deltaValue !== null && deltaValue < 0;
+
+        var isGood = isLowerBetter ? isNegative : isPositive;
+
+        $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good');
+        if (isGood) {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#ecfdf5', 'color': '#10b981' });
+        } else if (isNegative || isPositive) {
+            $pill.addClass('cd-perf-pill-down').css({ 'background': '#fef2f2', 'color': '#ef4444' });
+        } else {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#f8fafc', 'color': '#64748b' });
+        }
+
+        var icon = isPositive ? 'fa-arrow-up' : (isNegative ? 'fa-arrow-down' : 'fa-minus');
+        $pill.html('<i class="fas ' + icon + ' fa-solid" style="font-size:8px;"></i> ' + (deltaLabel || '0.0%'));
+    }
+
+    function cdPerfRenderCharts(data) {
+        function getOrCreateChart(canvasId, config) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            try {
+                if (typeof Chart.getChart === 'function') {
+                    var existing = Chart.getChart(canvas);
+                    if (existing) existing.destroy();
+                }
+                if (window.perfChartInstances[canvasId]) {
+                    window.perfChartInstances[canvasId].destroy();
+                }
+            } catch(e) {}
+            var ctx = canvas.getContext('2d');
+            var inst = new Chart(ctx, config);
+            window.perfChartInstances[canvasId] = inst;
+            return inst;
+        }
+
+        var v = data.velocity || { labels: [], candidates_submitted: [], interviewed_candidates: [] };
+        var j = data.jobs || { active: 0, hold: 0, closed: 0, total_count: 0 };
+        var o = data.offers || { labels: [], offers_generated: [], successful_joins: [] };
+        var jt = data.job_types || { labels: [], counts: [], percentages: [] };
+
+        // 1. Combo: Candidates & Interviews
+        getOrCreateChart('chartCandidatesInterviews', {
+            type: 'bar',
+            data: {
+                labels: v.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Candidates Submitted',
+                        data: v.candidates_submitted,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Interviewed Candidates',
+                        data: v.interviewed_candidates,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: '#8b5cf6',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#8b5cf6',
+                        tension: 0.35,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 2. Bar: All Jobs Status
+        getOrCreateChart('chartAllJobsStatus', {
+            type: 'bar',
+            data: {
+                labels: ['Active', 'On Hold', 'Closed'],
+                datasets: [{
+                    label: 'Jobs Count',
+                    data: [j.active, j.hold, j.closed],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderRadius: 4,
+                    barPercentage: 0.45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 3. Line/Bar: Offers & Joins
+        getOrCreateChart('chartOffersJoinings', {
+            type: 'bar',
+            data: {
+                labels: o.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Offers',
+                        data: o.offers_generated,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4,
+                        barPercentage: 0.45
+                    },
+                    {
+                        type: 'line',
+                        label: 'Joins',
+                        data: o.successful_joins,
+                        borderColor: '#10b981',
+                        backgroundColor: '#10b981',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 4. Doughnut: Job Type Performance
+        var donutData = jt.counts && jt.counts.length > 0 ? jt.counts : [j.active, j.hold, 0, 0];
+        getOrCreateChart('chartJobType', {
             type: 'doughnut',
             data: {
-                labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
+                labels: jt.labels || ['Full-Time', 'Contract', 'Freelance', 'Part-Time'],
                 datasets: [{
-                    label: 'Total',
-                    data: [activeCount, holdCount, inactiveCount],
-                    backgroundColor: ['#22c55e', '#ffab00', '#ff0202'],
-                    hoverOffset: 4
+                    data: donutData,
+                    backgroundColor: ['#10b981', '#8b5cf6', '#f59e0b', '#06b6d4', '#94a3b8'],
+                    borderWidth: 0,
+                    hoverOffset: 3
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                cutout: '70%'
+                cutout: '72%',
+                plugins: { legend: { display: false } }
             }
         });
 
-        createOrUpdateChart(`candidates_left_chart_${clientId}`, {
-            type: 'bar',
+        $('#donutTotalJobs').text(j.active || 0);
+        if (jt.counts && jt.counts[0] !== undefined) $('#donutCountFulltime').text(jt.counts[0]);
+        if (jt.percentages && jt.percentages[0]) $('#donutPctFulltime').text(jt.percentages[0]);
+        if (jt.counts && jt.counts[1] !== undefined) $('#donutCountContract').text(jt.counts[1]);
+        if (jt.percentages && jt.percentages[1]) $('#donutPctContract').text(jt.percentages[1]);
+        if (jt.counts && jt.counts[2] !== undefined) $('#donutCountFreelance').text(jt.counts[2]);
+        if (jt.percentages && jt.percentages[2]) $('#donutPctFreelance').text(jt.percentages[2]);
+        if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
+        if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
+
+        // 5. Line: Time to Hire Trend
+        getOrCreateChart('chartTimeToHire', {
+            type: 'line',
             data: {
-                labels: d.labels || [],
+                labels: v.labels,
                 datasets: [{
-                    label: 'Total Candidates',
-                    data: d.candidateValues || [],
-                    backgroundColor: Array((d.labels || []).length).fill('#2196f3'),
-                    borderRadius: 5,
-                    borderSkipped: false,
-                    barThickness: 30
+                    label: 'Days to Hire',
+                    data: v.labels.map(function() { return data.summary.avg_time_to_hire_days.value || 30; }),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 2.5,
+                    tension: 0.35
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            },
-            plugins: [showDataLabels]
-        });
-
-        createOrUpdateChart(`myChart_${clientId}`, {
-            type: 'bar',
-            data: {
-                labels: ['In Review', 'Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer', 'Joined', 'Rejected'],
-                datasets: [{
-                    label: 'Users',
-                    data: [
-                        d.inreview_count || 0,
-                        d.sourcing_count || 0,
-                        d.screening_count || 0,
-                        d.evaluation_count || 0,
-                        d.negotiation_count || 0,
-                        d.offer_count || 0,
-                        d.joined_count || 0,
-                        d.Rejected_count || 0
-                    ],
-                    backgroundColor: [
-                        '#bdbd26', '#000000', '#c000ff', '#2896ff',
-                        '#ff4098', '#ffab00', '#06c732', '#ff0202'
-                    ],
-                    borderRadius: 10,
-                    barThickness: 20,
-                    maxBarThickness: 22
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: ctx => ctx.parsed.x.toLocaleString() } }
-                },
                 scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                if (value <= 10) return value;
-                                else if (value % 100 === 0) return value.toLocaleString();
-                                else return '';
-                            }
-                        }
-                    },
-                    y: { ticks: { font: { weight: 'bold' } } }
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
                 }
-            },
-            plugins: [showDataLabelsvertical]
-        });
-
-        createOrUpdateChart(`candidates_offer_chart_${clientId}`, {
-            type: 'bar',
-            data: {
-                labels: d.labelsCommoffer || [],
-                datasets: [{
-                    label: 'Total Candidates',
-                    data: d.candidateValuesCommoffer || [],
-                    backgroundColor: Array((d.labelsCommoffer || []).length).fill('#ffab00'),
-                    borderRadius: 5,
-                    borderSkipped: false,
-                    barThickness: 30
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            },
-            plugins: [showDataLabels]
-        });
-
-        createOrUpdateChart(`candidates_join_chart_${clientId}`, {
-            type: 'bar',
-            data: {
-                labels: d.labelsCommjoin || [],
-                datasets: [{
-                    label: 'Total Candidates',
-                    data: d.candidateValuesCommjoin || [],
-                    backgroundColor: Array((d.labelsCommjoin || []).length).fill('#06c732'),
-                    borderRadius: 5,
-                    borderSkipped: false,
-                    barThickness: 30
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            },
-            plugins: [showDataLabels]
-        });
-
-        createOrUpdateChart(`inetview_recent_chart_month_${clientId}`, {
-            type: 'bar',
-            data: {
-                labels: d.interviewlabelsMonth || [],
-                datasets: [{
-                    label: 'Total Interviews',
-                    data: d.interviewValuesMonth || [],
-                    backgroundColor: Array((d.interviewlabelsMonth || []).length).fill('#2196f3'),
-                    borderRadius: 5,
-                    borderSkipped: false,
-                    barThickness: 30
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            },
-            plugins: [showDataLabels]
-        });
-
-        createOrUpdateChart(`inetview_recent_chart_${clientId}`, {
-            type: 'bar',
-            data: {
-                labels: d.interviewlabels || [],
-                datasets: [{
-                    label: 'Total Interviews',
-                    data: d.interviewValues || [],
-                    backgroundColor: Array((d.interviewlabels || []).length).fill('#2196f3'),
-                    borderRadius: 5,
-                    borderSkipped: false,
-                    barThickness: 30
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-            },
-            plugins: [showDataLabels]
+            }
         });
     }
 
-    function filtersdatagetmonth(valSelected){
-        if(valSelected == 1){
-            $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
-            $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
-        } else {
-            $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
-            $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
-        }
+    function initPerformanceDashboard() {
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, false);
     }
+</script>
 
-            
-    </script>
 
     
 <script>
@@ -2745,7 +3692,14 @@
                 directfetchCandidatesJoin();
                 loadedTabs[target] = true;
             } else if (target === 'candidateDashboard') {
-                fetchClientDashboardAnalytics();
+                initPerformanceDashboard();
+                setTimeout(function() {
+                    if (window.perfChartInstances) {
+                        Object.values(window.perfChartInstances).forEach(function(c) {
+                            try { if (c && typeof c.resize === 'function') c.resize(); } catch(err){}
+                        });
+                    }
+                }, 60);
                 loadedTabs[target] = true;
             }
         });
@@ -2896,47 +3850,17 @@
         });
     }
 
-    function fetchDirectClientDashboardAnalytics() {
-        var clientId = '{{ $dc_id }}';
-        return $.ajax({
-            url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
-            type: 'GET',
-            success: function(response) {
-                if (response && response.status === 'success' && response.data) {
-                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily for direct client', response.data);
-                    var d = response.data;
-                    var activeCount = d.counts ? (d.counts.active || 0) : 0;
-                    var holdCount = d.counts ? (d.counts.hold || 0) : 0;
-                    var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
-                    var totalJobs = activeCount + holdCount + inactiveCount;
-
-                    $(`#dcAllJobsCount_${clientId}`).text(totalJobs);
-                    $(`#dcActiveJobsCount_${clientId}`).text(activeCount);
-                    $(`#dcHoldJobsCount_${clientId}`).text(holdCount);
-                    $(`#dcClosedJobsCount_${clientId}`).text(inactiveCount);
-
-                    $(`#dcAdded7DaysCount_${clientId}`).text(d.candidateValuesTotal || 0);
-                    $(`#dcTotalCandidatesCount_${clientId}`).text(d.total_candidates || 0);
-                    $(`#dcTotalOffersCount_${clientId}`).text(d.candidateValuesTotaloffer || 0);
-                    $(`#dcTotalJoinedCount_${clientId}`).text(d.candidateValuesTotaljoin || 0);
-
-                    renderDirectClientDashboardCharts(d, clientId);
-                }
-            }
-        });
-    }
-
     $(document).ready(function() {
-        fetchDirectClientDashboardAnalytics();
+        if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
+            initPerformanceDashboard();
+        }
     });
 
-
-
     // Direct Client Drawer Interactive Handlers
-    $(document).on('click', '.cd-kpi-card', function() {
-        var targetTab = $(this).data('target-tab');
+    $(document).on('click', '.cd-kpi-card, .cd-nav-tab', function() {
+        var targetTab = $(this).data('target-tab') || $(this).data('target');
         if (targetTab) {
-            $('.cd-tabs-bar a[href="' + targetTab + '"]').tab('show');
+            $('.cd-tabs-bar a[href="' + targetTab + '"], a[href="' + targetTab + '"]').tab('show');
         }
     });
 
