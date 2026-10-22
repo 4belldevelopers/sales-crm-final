@@ -1396,26 +1396,95 @@ const DrawerLRUCache = {
 };
 
 function openClientDrawer(drawerId, toggleId) {
-    var drawerEl = document.getElementById(drawerId);
-    if (drawerEl) {
-        if (typeof KTDrawer !== 'undefined') {
-            var drawer = KTDrawer.getInstance(drawerEl);
-            if (!drawer && typeof KTDrawer === 'function') {
-                try {
-                    drawer = new KTDrawer(drawerEl);
-                } catch (e) {}
+    // 1. Hide opposite drawer if active to prevent multi-drawer overlay conflict
+    var otherDrawerId = (drawerId === 'kt_activitiesClient') ? 'kt_activitiesDirectClient' : 'kt_activitiesClient';
+    var otherDrawerEl = document.getElementById(otherDrawerId);
+    if (otherDrawerEl) {
+        if (typeof KTDrawer !== 'undefined' && typeof KTDrawer.getInstance === 'function') {
+            var otherInst = KTDrawer.getInstance(otherDrawerEl);
+            if (otherInst && typeof otherInst.hide === 'function') {
+                otherInst.hide();
             }
-            if (drawer && typeof drawer.show === 'function') {
-                drawer.show();
-                return;
+        }
+        otherDrawerEl.classList.remove('drawer-on');
+    }
+
+    var drawerEl = document.getElementById(drawerId);
+    if (!drawerEl) return;
+
+    // 2. Official Metronic KTDrawer instance show()
+    var opened = false;
+    if (typeof KTDrawer !== 'undefined') {
+        var drawer = (typeof KTDrawer.getInstance === 'function') ? KTDrawer.getInstance(drawerEl) : null;
+        if (!drawer && typeof KTDrawer === 'function') {
+            try {
+                drawer = new KTDrawer(drawerEl);
+            } catch (e) {}
+        }
+        if (!drawer && typeof KTDrawer.createInstances === 'function') {
+            try {
+                KTDrawer.createInstances();
+                drawer = KTDrawer.getInstance(drawerEl);
+            } catch (e) {}
+        }
+        if (drawer && typeof drawer.show === 'function') {
+            drawer.show();
+            opened = true;
+        }
+    }
+
+    // 3. Toggle button trigger fallback
+    if (!opened) {
+        var toggleEl = document.getElementById(toggleId);
+        if (toggleEl) {
+            if (typeof toggleEl.click === 'function') {
+                toggleEl.click();
+            } else {
+                $(toggleEl).trigger('click');
             }
         }
     }
-    if (typeof openMetronicDrawer === 'function') {
-        openMetronicDrawer(drawerId, '#' + toggleId);
-        return;
-    }
-    $('#' + toggleId).trigger('click');
+
+    // 4. Guaranteed DOM fallback: ensures drawer is visibly sliding in and on screen
+    setTimeout(function() {
+        if (drawerEl && !drawerEl.classList.contains('drawer-on')) {
+            drawerEl.classList.add('drawer', 'drawer-end', 'drawer-on');
+            drawerEl.style.transform = 'none';
+            drawerEl.style.zIndex = '999999';
+            if (!document.querySelector('.drawer-overlay')) {
+                var overlay = document.createElement('div');
+                overlay.className = 'drawer-overlay custom-cand-drawer-overlay';
+                overlay.style.zIndex = '999998';
+                overlay.onclick = function() {
+                    closeClientDrawers();
+                };
+                document.body.appendChild(overlay);
+            }
+        }
+    }, 40);
+}
+
+function closeClientDrawers() {
+    ['kt_activitiesClient', 'kt_activitiesDirectClient'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            if (typeof KTDrawer !== 'undefined' && typeof KTDrawer.getInstance === 'function') {
+                var inst = KTDrawer.getInstance(el);
+                if (inst && typeof inst.hide === 'function') {
+                    inst.hide();
+                }
+            }
+            el.classList.remove('drawer-on');
+            el.style.removeProperty('transform');
+            el.style.removeProperty('z-index');
+        }
+    });
+    document.querySelectorAll('.drawer-overlay, .custom-cand-drawer-overlay').forEach(function(ov) {
+        ov.remove();
+    });
+    document.body.removeAttribute('data-kt-drawer-activities');
+    document.body.removeAttribute('data-kt-drawer');
+    document.body.style.overflow = '';
 }
 
 $(document).on('click', '.show-detail', function (e) {
@@ -1443,14 +1512,22 @@ $(document).on('click', '.show-detail', function (e) {
         type: 'GET',
         url: url,
         beforeSend: function() {
-            $('#kt_activitiesClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+            $('#kt_activitiesClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Client Details...</span></div>');
         },
         success: function (response) {
             $('#kt_activitiesDirectClient_body').html('');
-            $('#kt_activitiesClient_body').html(response.view);
-            if (response.view) {
+            if (response && response.view) {
+                $('#kt_activitiesClient_body').html(response.view);
                 DrawerLRUCache.set(`internal_${id}`, response.view);
+            } else {
+                $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available.</div>');
             }
+        },
+        error: function (xhr) {
+            var msg = (xhr.status === 0 || !navigator.onLine)
+                ? 'You are offline. Please check your connection.'
+                : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
+            $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
         }
     });
 });
@@ -1478,34 +1555,32 @@ $(document).on('click', '.show-detail-direct', function (e) {
         type: 'GET',
         url: url,
         beforeSend: function() {
-            $('#kt_activitiesDirectClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+            $('#kt_activitiesDirectClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Direct Client Details...</span></div>');
         },
         success: function (response) {
             $('#kt_activitiesClient_body').html('');
-            $('#kt_activitiesDirectClient_body').html(response.view);
-            if (response.view) {
+            if (response && response.view) {
+                $('#kt_activitiesDirectClient_body').html(response.view);
                 DrawerLRUCache.set(`direct_${id}`, response.view);
+            } else {
+                $('#kt_activitiesDirectClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No direct client details available.</div>');
             }
+        },
+        error: function (xhr) {
+            var msg = (xhr.status === 0 || !navigator.onLine)
+                ? 'You are offline. Please check your connection.'
+                : 'Could not load direct client details (HTTP ' + xhr.status + '). Please try again.';
+            $('#kt_activitiesDirectClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
         }
     });
 });
 
-$(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer', function(e) {
-    e.preventDefault();
-    var drawerEl = document.getElementById('kt_activitiesClient');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer && typeof drawer.hide === 'function') {
-            drawer.hide();
-        }
+$(document).on('click', '#kt_activitiesClient_close, #kt_activitiesDirectClient_close, .cd-close-drawer, #kt_activitiesClient_close_btn, #kt_activitiesDirectClient_close_btn', function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
     }
-    var drawerDirectEl = document.getElementById('kt_activitiesDirectClient');
-    if (drawerDirectEl && typeof KTDrawer !== 'undefined') {
-        var drawerD = KTDrawer.getInstance(drawerDirectEl);
-        if (drawerD && typeof drawerD.hide === 'function') {
-            drawerD.hide();
-        }
-    }
+    closeClientDrawers();
 });
 
 // ── Canonical Client Listing State (Zero tenant_id, strictly session-scoped) ──
@@ -2145,13 +2220,21 @@ function triggerOpenClientDrawer(clientId) {
             type: 'GET',
             url: url,
             beforeSend: function() {
-                $('#kt_activitiesClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                $('#kt_activitiesClient_body').html('<div class="d-flex align-items-center justify-content-center p-10" style="min-height:300px;"><img src="'+baseurl+'" height="35px" width="35px" style="object-fit:contain;" alt="Loading..."><span class="ms-3 text-gray-600 font-poppins fs-7 fw-normal">Loading Client Details...</span></div>');
             },
             success: function(resp) {
                 if (resp && resp.view) {
                     $('#kt_activitiesDirectClient_body').html('');
                     $('#kt_activitiesClient_body').html(resp.view);
+                } else {
+                    $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7">No client details available.</div>');
                 }
+            },
+            error: function(xhr) {
+                var msg = (xhr.status === 0 || !navigator.onLine)
+                    ? 'You are offline. Please check your connection.'
+                    : 'Could not load client details (HTTP ' + xhr.status + '). Please try again.';
+                $('#kt_activitiesClient_body').html('<div class="p-8 text-center text-danger font-poppins fs-7" style="color:#ef4444;">' + msg + '</div>');
             }
         });
     }
