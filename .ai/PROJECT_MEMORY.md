@@ -20,6 +20,7 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+<<<<<<< HEAD
 - *2026-10-22* — **Super Admin Drawer Redesign — Company Details, Wallet & Billing (COMPLETED & VERIFIED)**:
   - **Objective**: Modernize drawers across Super Admin Company (`/super-admin/company`) and Subscription (`/super-admin/subscription/all`) pages using Service Company Consultancy (`service_company/consultancy` `dviewMore.blade.php`) as the primary design reference.
   - **Audit & Implementation Plan**: Formally documented in `docs/superadmin/SUPER_ADMIN_COMPANY_drawer-redesign-audit-implementation-plan.md`. Approved by user.
@@ -373,6 +374,72 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - `php -l` passed with 0 syntax errors across all modified files.
     - `pint` formatted with 0 style issues.
     - PHPUnit feature suite `SuperAdminSubscriptionLoadTest` passed 100% green (5 tests, 23 assertions).
+=======
+- *2026-10-22* — **Client Drawer UI/UX Redesign: Typography & Visual Hierarchy Optimization (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Correct typography and visual hierarchy throughout the entire Client Drawer for both Internal Client (`show.blade.php`) and Direct Client (`dviewMore.blade.php`).
+    - Eliminate excessive font-weight density; adopt clean enterprise Poppins hierarchy.
+    - Specific rules:
+      - Default UI & descriptions: 400 Regular
+      - Metadata, timestamps & labels: 400 Regular
+      - Navigation / tabs: 500 Medium (not bold)
+      - Buttons: 500 Medium
+      - Section headings: 600 Semi-Bold
+      - Client / company name: 600 Semi-Bold
+      - KPI values: 700 Bold (compact, $\le$12px), KPI labels: 500 Medium, KPI descriptions: 400 Regular
+      - Key-Value pairs (Client Information): Label: 400, Value: 500 (do NOT bold both)
+      - Selected tab: Blue highlight treatment (`#eff6ff`, border `#009ef7`) for Internal Client, Green highlight treatment (`#ecfdf5`, border `#10b981`) for Direct Client.
+    - Permanent AI Redesign Record rule:
+      > *"Typography must not be uniformly bold. Poppins 400–600 should be the primary range, with 700 reserved only for major KPI values or exceptional emphasis. The interface must use typography hierarchy rather than excessive font weight."*
+  - **Architectural Enhancements**:
+    - In `resources/views/service_company/client/show.blade.php` & `dviewMore.blade.php`:
+      - Replaced excessive 700/800 font weights with balanced Poppins 400 / 500 / 600 / 700 hierarchy.
+      - Updated `.cd-tabs-bar .nav-link.active` with proper background highlight and 500 weight.
+      - Removed inline `<strong>` tags on Vendor ID; replaced with `font-weight: 500`.
+      - Bumped internal KPI cache keys to `_v9`.
+    - In `app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php`:
+      - Bumped DragonflyDB cache keys from `_v8` to `_v9` for `clientsviewmore` and `clientsdviewmore`.
+    - In `docs/UI_UX_STANDARDS.md`:
+      - Codified the mandatory typography hierarchy rule into Section 2.
+  - **Verification**: `php -l` checks passed with 0 syntax errors, and `php artisan view:clear` executed successfully.
+
+- *2026-10-22* — **Service Company Clients Listing: Card-Based Header Design Specification (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Wrap the "Clients" title, subtitle ("Manage client relationships, hiring activity and recruitment performance."), Export button, and "+ Add Internal Client" button in a standalone card-based design matching the visual reference (`media_1792648940542_adc07df6.png`).
+  - **Architectural Enhancements**:
+    - In `demo/css/clientList.css` & `resources/views/service_company/client/index.blade.php`:
+      - Standardized `.cl-header.cl-header-card` with `background: #ffffff`, `border: 1px solid #e2e8f0`, `border-radius: 12px`, `padding: 14px 20px`, and soft elevation shadow (`0 1px 3px rgba(0,0,0,0.03)`).
+      - Left column: Amber squircle icon container (`width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; border: 1px solid #fde68a;`) with amber users outline SVG (`#d97706`).
+      - Title row: "Clients" heading (`font-size: 20px; font-weight: 700; color: #0f172a;`) with green verified shield badge (`stroke: #16a34a`).
+      - Subtext: "Manage client relationships, hiring activity and recruitment performance." (`font-size: 13px; color: #64748b;`).
+      - Actions right column:
+        - **Export button**: White card button with `border: 1px solid #e2e8f0`, tray download icon (`#0f172a`), and bold text `Export`.
+        - **+ Add Internal Client button**: Warm golden amber button (`background: #f59e0b; border: none; border-radius: 8px; padding: 8px 20px; font-weight: 700; color: #0f172a;`) with dark plus icon.
+      - Scoped guaranteed inline `<style>` block in `index.blade.php` and dynamic cache-buster (`?v={{ time() }}`) to prevent stale stylesheet caching.
+    - In `resources/views/sections/service_company/clientHero.blade.php`:
+      - Synchronized the shared hero component to the identical card-based header structure, ensuring complete visual parity across all client sub-routes.
+  - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
+
+- *2026-10-22* — **Service Company Clients Listing: Header "Date" & Content-Based Column Sizing with Full Pipeline Stage Visibility (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Change “Connected On” to “Date” in the header only (retaining “Connected on” caption in row date cells).
+    - Set each column width based on its content/text only (e.g., Last Activity, Jobs); avoid unnecessary extra width.
+    - Increase the Hiring Pipeline column width enough so all stage text displays clearly without truncation or awkward wrapping.
+  - **Architectural Enhancements**:
+    - In `demo/css/clientList.css`:
+      - Replaced generic fractional distribution on content columns with exact, content-based sizing: `32px minmax(180px, 1.2fr) minmax(115px, 125px) minmax(102px, 110px) minmax(108px, 116px) minmax(72px, 80px) minmax(310px, 2fr)`.
+      - **Last Activity**: Fixed/tightened to `minmax(108px, 116px)` based on header and "5 minutes ago" / "Active in system" content, eliminating unused space.
+      - **Jobs**: Fixed/tightened to `minmax(72px, 80px)` based on header and "• 0 Hiring/Hold/Closed" status items, eliminating unused space.
+      - **Date**: Tightened to `minmax(102px, 110px)` for compact fit of date icon, date, caption, and client type badge.
+      - **Location**: Tightened to `minmax(115px, 125px)`.
+      - **Hiring Pipeline**: Expanded to `minmax(310px, 2fr)` with `letter-spacing: -0.01em` on `.cl-pipe-label`, guaranteeing $\ge$62px per stage at minimum width and $\ge$80px–120px on standard desktop screens, ensuring all 5 stages ("Sourced", "Evaluated", "Interviews", "Offers", "Joined") display completely with zero truncation and zero awkward wrapping.
+    - In `resources/views/service_company/client/index.blade.php`:
+      - Updated `#clientTableHead` static header sub-card from "Connected On" to "Date" (`title="Sort by Date"` and `<span>Date</span>`).
+      - Updated `#clientTableHead` dynamic JavaScript rendering (`setClientTab`) to also label the sub-card as "Date" across all client tab switches.
+    - In `resources/views/service_company/client/custom_client.blade.php` & `direct_client.blade.php`:
+      - Synced column header sub-card label to "Date".
+  - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
+>>>>>>> df9c7db01acb4eb552eac3a7e2fd0bd018786ab7
 
 - *2026-10-21* — **Service Company Clients Listing: Restore "Connected On" on Date Column (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
@@ -404,6 +471,20 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - In `resources/views/service_company/ajax_pages/all-client-ajax.blade.php`, `custom-client-ajax.blade.php`, & `direct-client-ajax.blade.php`:
       - Reordered row cells to: `tbl-cell-check`, `tbl-cell-client`, `tbl-cell-loc`, `tbl-cell-type` (Date), `tbl-cell-activity` (Last Activity), `tbl-cell-jobs` (Jobs with Hiring/Hold/Closed lines and conditional status colors), `tbl-cell-pipeline` (Hiring Pipeline).
   - **Verification**: `php -l` passed with 0 errors across all 6 blade files.
+
+- *2026-10-22* — **Service Company Add Client Step 3: Additional Locations UI Fix & Button Alignment (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    - Fix Page 3 Additional Location UI (`service_company/clients/create`):
+      - Replace "Add First Location" with "Add Additional Location".
+      - When clicked, dynamically create a new location card above the "Add Additional Location" card/action.
+      - Keep layout clean, consistent, and enterprise-level.
+  - **Root Cause & Architectural Fixes**:
+    - Identified CSS specificity bug: `display: flex !important;` on `.client-addr-empty-state` and `.client-add-location-cta-wrap` was overriding inline `style="display: none"` and jQuery `.hide()`, causing both the empty state container and the bottom CTA button to remain simultaneously visible across 0 and 1+ location states.
+    - Replaced button text in `#client_additional_empty_state` from `Add First Location` to `Add Additional Location` (`btn-add-additional-location`).
+    - Fixed CSS rules in `tab-locations.blade.php`: removed `!important` from `display: flex;` and added deterministic `.d-none` / `[style*="display: none"]` rules with `display: none !important;`.
+    - Updated `createBranchWithData`, `removeAddressCard`, and `syncAdditionalAddressEmpty` in `create.blade.php` to deterministically toggle `.d-none`, `.css('display', ...)`, and `.show()`/`.hide()`, ensuring the empty state immediately disappears when a location is added and the location card appears directly above the "Add Additional Location" CTA button.
+    - Hardened `createBranchWithData` with collision-safe unique `addressId` generation.
+  - **Verification**: `php -l` passed with 0 errors across `tab-locations.blade.php` and `create.blade.php`. Verified 15.6" screen responsiveness.
 
 - *2026-10-21* — **Service Company Add Client Step 3: Additional Locations Section Enterprise SaaS Redesign (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:

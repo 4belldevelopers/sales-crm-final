@@ -73,11 +73,20 @@
           </button>
         </div>
 
-        <!-- Dedicated Contact Page Duplicate Alert -->
-        <div id="client_contacts_duplicate_alert" style="display:none; margin:12px 20px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#dc2626; font-size:12px; font-weight:600;">
-          <div class="d-flex align-items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="client_contacts_duplicate_alert_text">One or more contacts are already registered with another internal company.</span>
+        <!-- Dedicated Contact Page Duplicate Alert (Enterprise Metronic Standard) -->
+        <div id="client_contacts_duplicate_alert" style="display:none; margin:14px 20px 8px 20px; padding:12px 16px; background:#fff1f2; border:1px solid #fecdd3; border-left:4px solid #e11d48; border-radius:8px; box-shadow:0 1px 3px rgba(225,29,72,0.06);">
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:24px; height:24px; border-radius:50%; background:#ffe4e6; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12.5px; font-weight:700; color:#9f1239; margin-bottom:2px;">Duplicate Contact Notice</div>
+              <div id="client_contacts_duplicate_alert_text" style="font-size:12px; font-weight:500; color:#be123c; line-height:1.45;">One or more contacts are already registered with another internal company.</div>
+            </div>
           </div>
         </div>
 

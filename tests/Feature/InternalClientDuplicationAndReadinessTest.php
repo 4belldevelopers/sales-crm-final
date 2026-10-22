@@ -498,4 +498,132 @@ class InternalClientDuplicationAndReadinessTest extends TestCase
         $respBatch->assertOk();
         $respBatch->assertJson(['status' => 'duplicate', 'valid' => false, 'duplicate' => true, 'index' => 1]);
     }
+
+    /**
+     * Test Main Account website duplicate check:
+     * - Website matching the Main Account cannot be added to Internal Clients.
+     * - Returns a clear duplicate message indicating registration with Main Account.
+     */
+    public function test_main_account_website_blocks_internal_client_duplicate(): void
+    {
+        $this->withoutMiddleware();
+        \Illuminate\Support\Facades\Gate::define('add_clients', fn () => true);
+        \Illuminate\Support\Facades\Gate::define('edit_clients', fn () => true);
+
+        // Seed / Update Main Account company record for this tenant
+        DB::table('companies')->updateOrInsert(
+            ['id' => $this->tenantId],
+            [
+                'company_name' => 'Main Account Enterprises',
+                'company_email' => 'contact@main-account-ent.com',
+                'website' => 'https://www.main-account-ent.com',
+                'status' => 'active',
+                'updated_at' => now(),
+            ]
+        );
+
+        // 1. Direct Service probe
+        $dup = $this->dupService->checkDomainDuplicate($this->tenantId, 'https://main-account-ent.com/');
+        $this->assertNotNull($dup);
+        $this->assertTrue($dup['duplicate']);
+        $this->assertEquals('SCENARIO_MAIN_ACCOUNT_WEBSITE', $dup['scenario']);
+        $this->assertStringContainsString('already registered with your Main Account', $dup['message']);
+
+        // 2. Point-of-entry AJAX probe (Step 1 debounced/blur validation)
+        $resp = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'website',
+            'website' => 'https://main-account-ent.com/',
+        ]);
+        $resp->assertOk();
+        $resp->assertJson([
+            'status' => 'duplicate',
+            'valid' => false,
+            'duplicate' => true,
+        ]);
+        $this->assertStringContainsString('already registered with your Main Account', $resp->json('message'));
+    }
+
+    /**
+     * Test Main Account and Tenant Administrator contact/email duplicate check:
+     * - Contact email matching Main Account company email or Tenant Administrator user email cannot be added.
+     * - Returns clear duplicate message indicating registration with Main Account.
+     */
+    public function test_main_account_and_tenant_administrator_contact_blocks_internal_client_duplicate(): void
+    {
+        $this->withoutMiddleware();
+        \Illuminate\Support\Facades\Gate::define('add_clients', fn () => true);
+        \Illuminate\Support\Facades\Gate::define('edit_clients', fn () => true);
+
+        // Seed / Update Main Account company record
+        DB::table('companies')->updateOrInsert(
+            ['id' => $this->tenantId],
+            [
+                'company_name' => 'Main Account HQ',
+                'company_email' => 'hq.main@main-corp-system.com',
+                'company_phone' => '9988776655',
+                'status' => 'active',
+                'updated_at' => now(),
+            ]
+        );
+
+        // Seed Tenant Administrator user (root_user = 1)
+        DB::table('users')->updateOrInsert(
+            ['id' => 999111],
+            [
+                'company_id' => $this->tenantId,
+                'root_user' => 1,
+                'name' => 'Tenant Administrator Admin',
+                'email' => 'tenant.admin@main-corp-system.com',
+                'mobile' => '9988776656',
+                'password' => bcrypt('secret'),
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // 1. Direct Service probe for Company Main Email
+        $dupCompanyEmail = $this->dupService->checkContactDuplicate($this->tenantId, 'HQ.MAIN@main-corp-system.com');
+        $this->assertNotNull($dupCompanyEmail);
+        $this->assertTrue($dupCompanyEmail['duplicate']);
+        $this->assertEquals('SCENARIO_MAIN_ACCOUNT_CONTACT', $dupCompanyEmail['scenario']);
+        $this->assertStringContainsString('already registered with your Main Account', $dupCompanyEmail['message']);
+
+        // 2. Direct Service probe for Tenant Administrator user email
+        $dupAdminEmail = $this->dupService->checkContactDuplicate($this->tenantId, 'tenant.admin@main-corp-system.com');
+        $this->assertNotNull($dupAdminEmail);
+        $this->assertTrue($dupAdminEmail['duplicate']);
+        $this->assertEquals('SCENARIO_MAIN_ACCOUNT_CONTACT', $dupAdminEmail['scenario']);
+        $this->assertStringContainsString('already registered with your Main Account (Tenant Administrator)', $dupAdminEmail['message']);
+
+        // 3. Point-of-entry AJAX probe (Step 4 contact drawer email validation)
+        $respAjax = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'contact',
+            'email' => 'tenant.admin@main-corp-system.com',
+        ]);
+        $respAjax->assertOk();
+        $respAjax->assertJson([
+            'status' => 'duplicate',
+            'valid' => false,
+            'duplicate' => true,
+        ]);
+        $this->assertStringContainsString('already registered with your Main Account', $respAjax->json('message'));
+
+        // 4. Batch validation probe (Step 4 navigation guard)
+        $respBatch = $this->actingAs($this->testUser)->postJson(route('service_company.clients.validateInternalField'), [
+            'field' => 'all',
+            'cp_name' => ['Fresh Person', 'Tenant Admin Person'],
+            'cp_email' => ['completely.fresh@brandnew.com', 'tenant.admin@main-corp-system.com'],
+            'cp_number' => ['5550192837', '5550192838'],
+            'calling_code' => ['+91', '+91'],
+        ]);
+        $respBatch->assertOk();
+        $respBatch->assertJson([
+            'status' => 'duplicate',
+            'valid' => false,
+            'duplicate' => true,
+            'index' => 1,
+        ]);
+        $this->assertStringContainsString('already registered with your Main Account', $respBatch->json('message'));
+    }
 }

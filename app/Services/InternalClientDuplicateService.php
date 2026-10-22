@@ -35,9 +35,6 @@ class InternalClientDuplicateService
      * - Trim leading and trailing whitespace
      * - Collapse multiple consecutive internal spaces into a single space
      * - Convert to lowercase
-     *
-     * @param string|null $name
-     * @return string
      */
     public static function normalizeCompanyName(?string $name): string
     {
@@ -72,7 +69,6 @@ class InternalClientDuplicateService
      * EXAMPLE.COM                  -> example.com
      * https://www.Example.com/test -> example.com
      *
-     * @param string|null $url
      * @return string Canonical domain
      */
     public static function canonicalizeDomain(?string $url): string
@@ -88,8 +84,8 @@ class InternalClientDuplicateService
 
         // Add temporary protocol if missing so parse_url reliably extracts host
         $target = $raw;
-        if (!preg_match('#^https?://#i', $target)) {
-            $target = 'https://' . ltrim($target, '/');
+        if (! preg_match('#^https?://#i', $target)) {
+            $target = 'https://'.ltrim($target, '/');
         }
 
         $parsedHost = parse_url($target, PHP_URL_HOST);
@@ -117,9 +113,6 @@ class InternalClientDuplicateService
      * Rules:
      * - Trim whitespace
      * - Lowercase
-     *
-     * @param string|null $email
-     * @return string
      */
     public static function normalizeEmail(?string $email): string
     {
@@ -134,10 +127,6 @@ class InternalClientDuplicateService
      * Normalize phone number for comparison.
      *
      * Strips non-digit characters (whitespace, hyphens, parentheses, plus, dots).
-     *
-     * @param string|null $phone
-     * @param string|null $callingCode
-     * @return string
      */
     public static function normalizePhone(?string $phone, ?string $callingCode = null): string
     {
@@ -152,7 +141,7 @@ class InternalClientDuplicateService
         }
 
         // Strip leading country dial code if duplicated in the digits string
-        if (!empty($callingCode)) {
+        if (! empty($callingCode)) {
             $callingDigits = preg_replace('/\D/', '', $callingCode);
             if ($callingDigits !== '' && str_starts_with($digitsOnly, $callingDigits)) {
                 $digitsOnly = substr($digitsOnly, strlen($callingDigits));
@@ -168,9 +157,8 @@ class InternalClientDuplicateService
      *
      * Direct Client records (self_company = 1) are strictly excluded.
      *
-     * @param int $tenantId The current company_id (tenant)
-     * @param string $companyName
-     * @param int|null $ignoreClientId Client ID to ignore during Edit operations
+     * @param  int  $tenantId  The current company_id (tenant)
+     * @param  int|null  $ignoreClientId  Client ID to ignore during Edit operations
      * @return array|null Null if valid (no duplicate), or array with error details if duplicate
      */
     public function checkCompanyNameDuplicate(int $tenantId, string $companyName, ?int $ignoreClientId = null): ?array
@@ -187,7 +175,7 @@ class InternalClientDuplicateService
             ->where('self_company', 0)
             ->whereRaw('LOWER(TRIM(name)) = ?', [$normalizedName]);
 
-        if (!empty($ignoreClientId)) {
+        if (! empty($ignoreClientId)) {
             $query->where('id', '!=', (int) $ignoreClientId);
         }
 
@@ -211,9 +199,6 @@ class InternalClientDuplicateService
      *
      * Direct Client records (self_company = 1) are strictly excluded.
      *
-     * @param int $tenantId
-     * @param string $website
-     * @param int|null $ignoreClientId
      * @return array|null Null if valid, or array with error details if duplicate
      */
     public function checkDomainDuplicate(int $tenantId, string $website, ?int $ignoreClientId = null): ?array
@@ -223,17 +208,37 @@ class InternalClientDuplicateService
             return null;
         }
 
-        // Query strictly within Internal Client domain: self_company = 0 AND company_id = tenantId
+        // 1. Check against Main Account (Tenant Company) records
+        $mainCompany = DB::table('companies')
+            ->where('id', $tenantId)
+            ->select('id', 'company_name', 'website')
+            ->first();
+
+        if ($mainCompany && ! empty($mainCompany->website)) {
+            $mainCanonical = self::canonicalizeDomain($mainCompany->website);
+            if ($mainCanonical !== '' && $mainCanonical === $canonicalDomain) {
+                return [
+                    'field' => 'website',
+                    'scenario' => 'SCENARIO_MAIN_ACCOUNT_WEBSITE',
+                    'duplicate' => true,
+                    'existing_name' => $mainCompany->company_name ?? 'Main Account',
+                    'canonical_domain' => $canonicalDomain,
+                    'message' => 'This website/domain is already registered with your Main Account. It cannot be added as an Internal Client.',
+                ];
+            }
+        }
+
+        // 2. Query strictly within Internal Client domain: self_company = 0 AND company_id = tenantId
         $candidates = DB::table('clients')
             ->select('id', 'name', 'website')
             ->where('company_id', $tenantId)
             ->where('self_company', 0)
             ->where(function ($q) use ($canonicalDomain) {
-                $q->where('website', 'LIKE', '%' . $canonicalDomain . '%')
-                  ->orWhere('website', '=', $canonicalDomain);
+                $q->where('website', 'LIKE', '%'.$canonicalDomain.'%')
+                    ->orWhere('website', '=', $canonicalDomain);
             });
 
-        if (!empty($ignoreClientId)) {
+        if (! empty($ignoreClientId)) {
             $candidates->where('id', '!=', (int) $ignoreClientId);
         }
 
@@ -263,12 +268,7 @@ class InternalClientDuplicateService
      *
      * Direct Client contacts are strictly excluded.
      *
-     * @param int $tenantId
-     * @param string $email
-     * @param string|null $phone
-     * @param string|null $callingCode
-     * @param int|null $ignoreClientId
-     * @param array $draftContacts List of contacts already added in the current wizard session
+     * @param  array  $draftContacts  List of contacts already added in the current wizard session
      * @return array|null Null if valid, or array with error details if duplicate
      */
     public function checkContactDuplicate(
@@ -301,7 +301,101 @@ class InternalClientDuplicateService
             }
         }
 
-        // 2. Scenario C: Check duplication across other Internal Clients belonging to this tenant
+        // 2. Check duplication against Main Account records and Tenant Administrator
+        if ($normEmail !== '') {
+            // A) Check Main Account company_email in companies table
+            $mainCompany = DB::table('companies')
+                ->where('id', $tenantId)
+                ->select('company_email', 'company_name', 'company_phone', 'calling_code')
+                ->first();
+
+            if ($mainCompany && ! empty($mainCompany->company_email)) {
+                if (self::normalizeEmail($mainCompany->company_email) === $normEmail) {
+                    return [
+                        'field' => 'contact_email',
+                        'scenario' => 'SCENARIO_MAIN_ACCOUNT_CONTACT',
+                        'duplicate' => true,
+                        'message' => 'This contact email is already registered with your Main Account. It cannot be added to Internal Clients.',
+                    ];
+                }
+            }
+
+            // B) Check Tenant Administrator email(s) in users table (root_user = 1 or admin role)
+            $adminUser = DB::table('users')
+                ->where('company_id', $tenantId)
+                ->where(function ($q) {
+                    $q->where('root_user', 1)
+                        ->orWhereExists(function ($sub) {
+                            $sub->select(DB::raw(1))
+                                ->from('role_user')
+                                ->join('roles', 'roles.id', '=', 'role_user.role_id')
+                                ->whereColumn('role_user.user_id', 'users.id')
+                                ->where('roles.name', 'admin');
+                        });
+                })
+                ->whereRaw('LOWER(TRIM(email)) = ?', [$normEmail])
+                ->first();
+
+            if ($adminUser) {
+                return [
+                    'field' => 'contact_email',
+                    'scenario' => 'SCENARIO_MAIN_ACCOUNT_CONTACT',
+                    'duplicate' => true,
+                    'admin_user_id' => $adminUser->id,
+                    'admin_name' => $adminUser->name ?? '',
+                    'message' => 'This contact email is already registered with your Main Account (Tenant Administrator). It cannot be added to Internal Clients.',
+                ];
+            }
+        }
+
+        // Check phone against Main Account and Tenant Administrator (if normalized phone >= 7 digits)
+        if ($normPhone !== '' && strlen($normPhone) >= 7) {
+            $mainPhoneRow = DB::table('companies')
+                ->where('id', $tenantId)
+                ->select('company_phone', 'calling_code')
+                ->first();
+
+            if ($mainPhoneRow && ! empty($mainPhoneRow->company_phone)) {
+                $mainPhoneNorm = self::normalizePhone($mainPhoneRow->company_phone, $mainPhoneRow->calling_code ?? null);
+                if ($mainPhoneNorm !== '' && (str_contains($mainPhoneNorm, $normPhone) || str_contains($normPhone, $mainPhoneNorm))) {
+                    return [
+                        'field' => 'contact_phone',
+                        'scenario' => 'SCENARIO_MAIN_ACCOUNT_PHONE',
+                        'duplicate' => true,
+                        'message' => 'This contact phone number is already registered with your Main Account. It cannot be added to Internal Clients.',
+                    ];
+                }
+            }
+
+            $adminPhoneUser = DB::table('users')
+                ->where('company_id', $tenantId)
+                ->where(function ($q) {
+                    $q->where('root_user', 1)
+                        ->orWhereExists(function ($sub) {
+                            $sub->select(DB::raw(1))
+                                ->from('role_user')
+                                ->join('roles', 'roles.id', '=', 'role_user.role_id')
+                                ->whereColumn('role_user.user_id', 'users.id')
+                                ->where('roles.name', 'admin');
+                        });
+                })
+                ->whereNotNull('mobile')
+                ->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') LIKE ?", ['%'.$normPhone.'%'])
+                ->first();
+
+            if ($adminPhoneUser) {
+                return [
+                    'field' => 'contact_phone',
+                    'scenario' => 'SCENARIO_MAIN_ACCOUNT_PHONE',
+                    'duplicate' => true,
+                    'admin_user_id' => $adminPhoneUser->id,
+                    'admin_name' => $adminPhoneUser->name ?? '',
+                    'message' => 'This contact phone number is already registered with your Main Account (Tenant Administrator). It cannot be added to Internal Clients.',
+                ];
+            }
+        }
+
+        // 3. Scenario C: Check duplication across other Internal Clients belonging to this tenant
         if ($normEmail !== '') {
             $query = DB::table('client_contact_info')
                 ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
@@ -315,7 +409,7 @@ class InternalClientDuplicateService
                 ->where('clients.self_company', 0) // Strictly Internal Clients
                 ->whereRaw('LOWER(TRIM(client_contact_info.contact_person_email)) = ?', [$normEmail]);
 
-            if (!empty($ignoreClientId)) {
+            if (! empty($ignoreClientId)) {
                 $query->where('clients.id', '!=', (int) $ignoreClientId);
             }
 
@@ -346,9 +440,9 @@ class InternalClientDuplicateService
                 )
                 ->where('clients.company_id', $tenantId)
                 ->where('clients.self_company', 0) // Strictly Internal Clients
-                ->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(client_contact_info.contact_person_number, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') LIKE ?", ['%' . $normPhone . '%']);
+                ->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(client_contact_info.contact_person_number, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') LIKE ?", ['%'.$normPhone.'%']);
 
-            if (!empty($ignoreClientId)) {
+            if (! empty($ignoreClientId)) {
                 $phoneQuery->where('clients.id', '!=', (int) $ignoreClientId);
             }
 
@@ -378,16 +472,13 @@ class InternalClientDuplicateService
      * 2. Canonical Website/Domain uniqueness in Internal Client domain
      * 3. Contact Emails & Phones uniqueness in Internal Client domain
      *
-     * @param int $tenantId
-     * @param array $payload
-     * @param int|null $ignoreClientId
      * @return array|null Null if all checks pass, or array with the first detected duplicate error
      */
     public function validateSubmissionDuplicates(int $tenantId, array $payload, ?int $ignoreClientId = null): ?array
     {
         // 1. Company Name
         $companyName = $payload['name'] ?? '';
-        if (!empty($companyName)) {
+        if (! empty($companyName)) {
             $dup = $this->checkCompanyNameDuplicate($tenantId, $companyName, $ignoreClientId);
             if ($dup !== null) {
                 return $dup;
@@ -396,7 +487,7 @@ class InternalClientDuplicateService
 
         // 2. Website / Domain
         $website = $payload['website'] ?? '';
-        if (!empty($website)) {
+        if (! empty($website)) {
             $dup = $this->checkDomainDuplicate($tenantId, $website, $ignoreClientId);
             if ($dup !== null) {
                 return $dup;
@@ -438,6 +529,7 @@ class InternalClientDuplicateService
             $dup = $this->checkContactDuplicate($tenantId, $email, $phone, $calling, $ignoreClientId, []);
             if ($dup !== null) {
                 $dup['index'] = $i;
+
                 return $dup;
             }
         }

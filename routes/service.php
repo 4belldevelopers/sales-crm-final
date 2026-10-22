@@ -113,6 +113,8 @@ Route::group(['middleware' => 'auth'], function () {
 
                 // #############       	START CLIENT MANAGEMENT
                 Route::get('clients/industries-bundle', [ServiceCompanyClientController::class, 'industriesBundle'])->name('clients.industriesBundle');
+                Route::get('clients/location-facets', [ServiceCompanyClientController::class, 'locationFacets'])->name('clients.locationFacets');
+                Route::get('clients/active-projection', [ServiceCompanyClientController::class, 'activeClientProjection'])->name('clients.activeClientProjection');
                 Route::get('clients/dcontactList', [ServiceCompanyClientController::class, 'dcontactList'])->name('clients.dcontactList');
                 Route::get('clients/data', [ServiceCompanyClientController::class, 'data'])->name('clients.data');
                 Route::get('clients/all_clients_data', [ServiceCompanyClientController::class, 'all_clients_data'])->name('clients.all_clients_data');
