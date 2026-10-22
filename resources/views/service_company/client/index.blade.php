@@ -389,18 +389,26 @@
   }
 }
 .cd-activities-drawer {
-  width: 90% !important;
-  max-width: 1220px !important;
+  width: 80% !important;
+  max-width: 80vw !important;
+  min-width: 0 !important;
 }
 @media (max-width: 1400px) {
   .cd-activities-drawer {
-    width: 95% !important;
-    max-width: 1120px !important;
+    width: 80% !important;
+    max-width: 80vw !important;
   }
 }
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .cd-activities-drawer {
-    width: 100% !important;
+    width: 85% !important;
+    max-width: 85vw !important;
+  }
+}
+@media (max-width: 576px) {
+  .cd-activities-drawer {
+    width: 90% !important;
+    max-width: 90vw !important;
   }
 }
 </style>
@@ -885,7 +893,7 @@
 
 <!-- ── DRAWER FOR INTERNAL CLIENT ── -->
 <div id="kt_activitiesClient_toggle"></div>
-<div id="kt_activitiesClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close" data-kt-drawer-width="{default:'100%', 'md': '92%', 'lg': '88%', 'xl': '1180px'}">
+<div id="kt_activitiesClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClient_toggle" data-kt-drawer-close="#kt_activitiesClient_close" data-kt-drawer-width="{default:'90%', 'sm': '85%', 'md': '80%', 'lg': '80%', 'xl': '80%'}">
   <div class="card shadow-none rounded-0 w-100">
     <button type="button" id="kt_activitiesClient_close" class="d-none" aria-hidden="true"></button>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesClient_body"> &nbsp; </div>
@@ -894,7 +902,7 @@
 
 <!-- ── DRAWER FOR DIRECT CLIENT ── -->
 <div id="kt_activitiesDirectClient_toggle"></div>
-<div id="kt_activitiesDirectClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close" data-kt-drawer-width="{default:'100%', 'md': '92%', 'lg': '88%', 'xl': '1180px'}">
+<div id="kt_activitiesDirectClient" class="bg-body cd-activities-drawer" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesDirectClient_toggle" data-kt-drawer-close="#kt_activitiesDirectClient_close" data-kt-drawer-width="{default:'90%', 'sm': '85%', 'md': '80%', 'lg': '80%', 'xl': '80%'}">
   <div class="card shadow-none rounded-0 w-100">
     <button type="button" id="kt_activitiesDirectClient_close" class="d-none" aria-hidden="true"></button>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
