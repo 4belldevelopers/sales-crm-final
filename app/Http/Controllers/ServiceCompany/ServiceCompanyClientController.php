@@ -59,10 +59,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     {
 
         $company_id = auth()->user()->company_id;
+        $this->tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
         $this->clientDataCnt = $this->commonclient();
-        // Countries feed the Location filter dropdown on the Clients list (Cached 24h).
-        $this->countries = cache()->remember('global_countries_list', 86400, function () {
-            return DB::table('countries')->get();
+
+        // ── Location facets dynamically aggregated from Elasticsearch with event-driven Dragonfly caching (0% MySQL reads) ──
+        $this->locationFacets = $this->getClientLocationFacets($company_id, $this->tenantVersion);
+
+        // ── Global country list cached in Dragonfly (zero DB query on warm hit) ──
+        $this->countries = cache()->remember('global_countries_list_master', 86400, function () {
+            return DB::table('countries')->select('id', 'country_name', 'country_code', 'emoji')->orderBy('country_name')->get();
+        });
+
+        // ── Global industries list cached in Dragonfly ──
+        $this->industries = cache()->remember('global_td_industries_master', 86400, function () {
+            return DB::table('td_industries')->select('ind_id', 'ind_name')->orderBy('ind_name')->get();
         });
 
         $requestedTab = request('tab', 'all');
@@ -124,18 +134,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $searchTerms = request('cus_search');
         $custom_search = $searchTerms; // json_decode($searchTerms, true);
 
-        $searchQuery = $request->input('q');
+        $searchQuery = $request->input('q', $request->input('search', ''));
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
         if ($size <= 0) {
             $size = 10;
         }
         $from = ($page - 1) * $size;
-        $sort = [];
         $customSearch = trim($custom_search);
         $shouldSearch = [];
         $sort = [];
-        $valCheck = request('sortingfilter');
+        $valCheck = $request->input('sort', $request->input('sortingfilter', 'recent'));
+
+        // ── Canonical Filter Parameters ──
+        $countryParam = $request->input('country_id', $request->input('country'));
+        $cityParam = $request->input('city_id', $request->input('city'));
+        $unspecifiedLoc = $request->boolean('unspecified_location') || $countryParam === 'unspecified';
+        $industryParam = $request->input('industry_id', $request->input('industry'));
+        $activityParam = $request->input('activity');
+        $cursorParam = $request->input('cursor');
 
         $tabFilter = $request->input('tab', $request->input('type', 'all'));
         if ($tabFilter === 'requests') {
@@ -147,23 +164,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return $this->client_request_data($request);
         }
 
+        $hiringFilter = (int) $request->input('hiring', 0);
+        if ($tabFilter === 'hiring' || $activityParam === 'hiring') {
+            $hiringFilter = 1;
+        }
+
         $cachePayload = [
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
-            'country' => request('country'),
+            'country' => $countryParam,
+            'city' => $cityParam,
+            'unspecified_loc' => $unspecifiedLoc ? 1 : 0,
+            'industry' => $industryParam,
+            'activity' => $activityParam,
             'company' => $company_id,
             'cus_search' => $custom_search,
-            'user_id' => $this->user->id,
+            'user_id' => auth()->id() ?? ($this->user->id ?? 0),
             'valCheck' => $valCheck,
             'tab' => $tabFilter,
+            'hiring' => $hiringFilter,
+            'cursor' => $cursorParam,
         ];
-
-        $hiringFilter = (int) $request->input('hiring', 0);
-        if ($tabFilter === 'hiring') {
-            $hiringFilter = 1;
-        }
-        $cachePayload['hiring'] = $hiringFilter;
 
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
         $minVersion = (int) $request->input('min_version', 0);
@@ -252,15 +274,40 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->toArray();
 
             if (! empty($valCheck)) {
-                if ($valCheck == 1) {
-                    $sort[] = ['created_at' => ['order' => 'desc']];
-                } elseif ($valCheck == 2) {
-                    $sort[] = ['created_at' => ['order' => 'asc']];
+                if ($valCheck === 'name_asc') {
+                    $sort = [
+                        ['company_name.keyword' => ['order' => 'asc', 'unmapped_type' => 'keyword']],
+                        ['id' => ['order' => 'desc']],
+                    ];
+                } elseif ($valCheck === 'name_desc') {
+                    $sort = [
+                        ['company_name.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
+                        ['id' => ['order' => 'desc']],
+                    ];
+                } elseif ($valCheck === 'jobs_desc') {
+                    $sort = [
+                        ['job_metrics.active_jobs_count' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                        ['id' => ['order' => 'desc']],
+                    ];
+                } elseif ($valCheck == 2 || $valCheck === 'oldest') {
+                    $sort = [
+                        ['created_at' => ['order' => 'asc', 'unmapped_type' => 'date']],
+                        ['id' => ['order' => 'asc']],
+                    ];
+                } elseif ($valCheck == 1 || $valCheck === 'newest') {
+                    $sort = [
+                        ['created_at' => ['order' => 'desc', 'unmapped_type' => 'date']],
+                        ['id' => ['order' => 'desc']],
+                    ];
                 } else {
-                    $sort[] = ['id' => ['order' => 'desc']];
+                    $sort = [
+                        ['id' => ['order' => 'desc']],
+                    ];
                 }
             } else {
-                $sort[] = ['id' => ['order' => 'desc']];
+                $sort = [
+                    ['id' => ['order' => 'desc']],
+                ];
             }
 
             if ($tabFilter === 'internal' || $tabFilter === 'custom') {
@@ -347,6 +394,105 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $must[] = [
                     'bool' => [
                         'should' => $shouldSearch,
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
+
+            // ── Location Filter (Nested Elasticsearch bitset query) ──
+            if ($unspecifiedLoc) {
+                $must[] = [
+                    'bool' => [
+                        'must_not' => [
+                            [
+                                'nested' => [
+                                    'path' => 'client_location',
+                                    'query' => [
+                                        'exists' => ['field' => 'client_location.country_id'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+            } elseif (! empty($countryParam) && $countryParam !== 'all' && $countryParam !== 'Show All') {
+                $locQuery = [];
+                if (is_numeric($countryParam)) {
+                    $locQuery[] = ['term' => ['client_location.country_id' => (int) $countryParam]];
+                } else {
+                    $locQuery[] = ['term' => ['client_location.country_name' => strtolower(trim($countryParam))]];
+                }
+
+                if (! empty($cityParam) && $cityParam !== 'all') {
+                    if ($cityParam === 'unspecified') {
+                        $locQuery[] = [
+                            'bool' => [
+                                'must_not' => [
+                                    ['exists' => ['field' => 'client_location.city_id']],
+                                ],
+                            ],
+                        ];
+                    } elseif (is_numeric($cityParam)) {
+                        $locQuery[] = ['term' => ['client_location.city_id' => (int) $cityParam]];
+                    } else {
+                        $locQuery[] = ['term' => ['client_location.city_name' => strtolower(trim($cityParam))]];
+                    }
+                }
+
+                $must[] = [
+                    'nested' => [
+                        'path' => 'client_location',
+                        'query' => [
+                            'bool' => [
+                                'filter' => $locQuery,
+                            ],
+                        ],
+                    ],
+                ];
+            }
+
+            // ── Industry Filter ──
+            if (! empty($industryParam) && $industryParam !== 'all' && $industryParam !== 'Show All') {
+                if (is_numeric($industryParam)) {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['industry' => (int) $industryParam]],
+                                ['term' => ['industries' => (int) $industryParam]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } else {
+                    $must[] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['ind_name.keyword' => trim($industryParam)]],
+                                ['match_phrase' => ['ind_name' => trim($industryParam)]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
+            }
+
+            // ── Activity Filter ──
+            if ($activityParam === 'pipeline') {
+                $must[] = [
+                    'range' => [
+                        'job_metrics.pipeline_candidates_count' => ['gt' => 0],
+                    ],
+                ];
+            } elseif ($activityParam === 'dormant') {
+                $must[] = [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['job_metrics.active_jobs_count' => 0]],
+                        ],
+                        'should' => [
+                            ['term' => ['job_metrics.pipeline_candidates_count' => 0]],
+                            ['bool' => ['must_not' => [['exists' => ['field' => 'job_metrics.pipeline_candidates_count']]]]],
+                        ],
                         'minimum_should_match' => 1,
                     ],
                 ];
@@ -473,6 +619,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'query' => ['bool' => ['must' => $must]],
                     ],
                 ];
+                $decodedCursor = $this->decodeOpaqueCursor($cursorParam);
+                if ($decodedCursor && isset($decodedCursor['s'])) {
+                    $params['body']['search_after'] = $decodedCursor['s'];
+                    $params['body']['from'] = 0;
+                }
                 if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
                     $total = 0;
                     $data = [];
@@ -480,6 +631,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $response = $this->elasticService->getClient()->search($params);
                     $total = $response['hits']['total']['value'] ?? 0;
                     $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+                }
+
+                $nextCursor = null;
+                if (! empty($response['hits']['hits']) && count($response['hits']['hits']) >= $size) {
+                    $lastHit = end($response['hits']['hits']);
+                    if (isset($lastHit['sort'])) {
+                        $nextCursor = $this->encodeOpaqueCursor($lastHit['sort'], $company_id);
+                    }
                 }
             }
 
@@ -743,11 +902,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'etag' => $etag,
                 'page' => $page,
                 'per_page' => $size,
+                'next_cursor' => $nextCursor ?? null,
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
 
             return response()->json($responseData)->header('ETag', $etag);
+        } catch (\Throwable $e) {
+            \Log::error('all_clients_data_ajax ES failure: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            // Hard Invariant: Strictly prohibit emergency MySQL fallback under load
+            return response()->json([
+                'status' => 'degraded',
+                'retryable' => true,
+                'message' => 'Client search index is temporarily synchronizing. Please retry momentarily.',
+                'html' => '<div class="alert alert-warning text-center my-4 py-3"><i class="fas fa-exclamation-triangle me-2"></i> Client listing index is synchronizing. Please refresh or click retry.</div>',
+                'total' => 0,
+                'pagination' => '',
+                'rows' => [],
+                'data_version' => $tenantVersion,
+            ], 503)->header('Retry-After', '3');
         } finally {
             if ($singleFlightLock) {
                 try {
@@ -825,7 +999,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
-            'user_id' => $this->user->id,
+            'user_id' => auth()->id() ?? ($this->user->id ?? 0),
             'company' => $company_id,
         ];
 
@@ -1040,11 +1214,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'etag' => $etag,
                 'page' => $page,
                 'per_page' => $size,
+                'next_cursor' => $nextCursor ?? null,
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(5));
 
             return response()->json($responseData)->header('ETag', $etag);
+        } catch (\Throwable $e) {
+            \Log::error('all_clients_data_ajax ES failure: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            // Hard Invariant: Strictly prohibit emergency MySQL fallback under load
+            return response()->json([
+                'status' => 'degraded',
+                'retryable' => true,
+                'message' => 'Client search index is temporarily synchronizing. Please retry momentarily.',
+                'html' => '<div class="alert alert-warning text-center my-4 py-3"><i class="fas fa-exclamation-triangle me-2"></i> Client listing index is synchronizing. Please refresh or click retry.</div>',
+                'total' => 0,
+                'pagination' => '',
+                'rows' => [],
+                'data_version' => $tenantVersion,
+            ], 503)->header('Retry-After', '3');
         } finally {
             if ($singleFlightLock) {
                 try {
@@ -3091,6 +3280,236 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->header('Cache-Control', 'public, max-age=86400, must-revalidate');
     }
 
+    /**
+     * Dynamically aggregate client locations from Elasticsearch for the active tenant.
+     * Caches in Dragonfly with key ats:v2:client_locations:{company_id}:{version}.
+     *
+     * Intent: 0% MySQL reads; authoritative real-time client location facets with counts.
+     * Tenancy Note: Tenant-scoped to company_id and authorized direct client relations.
+     */
+    public function getClientLocationFacets(int $company_id, int $tenantVersion = 1): array
+    {
+        $cacheKey = "ats:v2:client_locations:{$company_id}:{$tenantVersion}";
+
+        return cache()->remember($cacheKey, 86400, function () use ($company_id) {
+            try {
+                if (! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+                    return ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []];
+                }
+
+                $companyIds = [];
+                try {
+                    $relationIds = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                        'body' => [
+                            'size' => 10000,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['to_company_id' => (int) $company_id]],
+                                        ['term' => ['final_status' => 1]],
+                                    ],
+                                    'must_not' => [
+                                        ['term' => ['from_company_id' => (int) $company_id]],
+                                    ],
+                                ],
+                            ],
+                            '_source' => ['from_company_id'],
+                        ],
+                    ]);
+
+                    $companyIds = collect($relationIds['hits']['hits'])
+                        ->pluck('_source.from_company_id')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                } catch (\Throwable $relEx) {
+                    $companyIds = [];
+                }
+
+                $visibilityFilter = [
+                    'bool' => [
+                        'should' => [
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => (int) $company_id]],
+                                        ['term' => ['self_company' => 0]],
+                                    ],
+                                ],
+                            ],
+                            [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['self_company' => 1]],
+                                        ['terms' => ['company_id' => ! empty($companyIds) ? $companyIds : [-1]]],
+                                    ],
+                                    'must_not' => [
+                                        ['term' => ['company_id' => (int) $company_id]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+
+                $params = [
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'size' => 0,
+                    'body' => [
+                        'query' => $visibilityFilter,
+                        'aggs' => [
+                            'locations' => [
+                                'nested' => ['path' => 'client_location'],
+                                'aggs' => [
+                                    'countries' => [
+                                        'terms' => [
+                                            'field' => 'client_location.country_name',
+                                            'size' => 100,
+                                            'order' => ['_count' => 'desc'],
+                                        ],
+                                        'aggs' => [
+                                            'country_ids' => [
+                                                'terms' => ['field' => 'client_location.country_id', 'size' => 1],
+                                            ],
+                                            'cities' => [
+                                                'terms' => [
+                                                    'field' => 'client_location.city_name',
+                                                    'size' => 50,
+                                                    'order' => ['_count' => 'desc'],
+                                                ],
+                                                'aggs' => [
+                                                    'city_ids' => [
+                                                        'terms' => ['field' => 'client_location.city_id', 'size' => 1],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+
+                $res = $this->elasticService->getClient()->search($params);
+                $totalClients = $res['hits']['total']['value'] ?? 0;
+
+                $countryBuckets = $res['aggregations']['locations']['countries']['buckets'] ?? [];
+                $hubs = [];
+                $locatedDocCount = 0;
+
+                foreach ($countryBuckets as $cBucket) {
+                    $cName = ucwords($cBucket['key']);
+                    $cCount = (int) $cBucket['doc_count'];
+                    $cId = $cBucket['country_ids']['buckets'][0]['key'] ?? null;
+                    $locatedDocCount += $cCount;
+
+                    $cities = [];
+                    $cityBuckets = $cBucket['cities']['buckets'] ?? [];
+                    $cityCountSum = 0;
+                    foreach ($cityBuckets as $ciBucket) {
+                        $ciName = ucwords($ciBucket['key']);
+                        $ciCount = (int) $ciBucket['doc_count'];
+                        $ciId = $ciBucket['city_ids']['buckets'][0]['key'] ?? null;
+                        $cityCountSum += $ciCount;
+                        $cities[] = [
+                            'city_id' => $ciId,
+                            'city_name' => $ciName,
+                            'count' => $ciCount,
+                        ];
+                    }
+
+                    $unspecifiedCityCount = max(0, $cCount - $cityCountSum);
+                    if ($unspecifiedCityCount > 0) {
+                        $cities[] = [
+                            'city_id' => 'unspecified',
+                            'city_name' => 'City Not Specified',
+                            'count' => $unspecifiedCityCount,
+                        ];
+                    }
+
+                    $hubs[] = [
+                        'country_id' => $cId,
+                        'country_name' => $cName,
+                        'count' => $cCount,
+                        'cities' => $cities,
+                    ];
+                }
+
+                $unspecifiedLocationCount = max(0, $totalClients - $locatedDocCount);
+
+                return [
+                    'total' => $totalClients,
+                    'located_count' => $locatedDocCount,
+                    'unspecified_count' => $unspecifiedLocationCount,
+                    'hubs' => $hubs,
+                ];
+            } catch (\Throwable $e) {
+                return ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []];
+            }
+        });
+    }
+
+    /**
+     * Location Facets AJAX Endpoint.
+     */
+    public function locationFacets(Request $request)
+    {
+        abort_if(! auth()->check(), 401);
+        $company_id = (int) auth()->user()->company_id;
+        $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+        $facets = $this->getClientLocationFacets($company_id, $tenantVersion);
+        $etag = 'W/"loc_facets_'.$company_id.'_'.$tenantVersion.'"';
+
+        if ($request->header('If-None-Match') === $etag) {
+            return response(null, 304)->header('ETag', $etag);
+        }
+
+        return response()->json($facets)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'public, max-age=300, must-revalidate');
+    }
+
+    /**
+     * Opaque HMAC-signed cursor generator for deep sequential pagination.
+     */
+    protected function encodeOpaqueCursor(array $sortValues, $companyId): string
+    {
+        $payload = json_encode(['v' => 1, 's' => $sortValues, 'c' => (int) $companyId, 't' => time()]);
+        $sig = hash_hmac('sha256', $payload, config('app.key') ?: 'jero_secret');
+
+        return rtrim(strtr(base64_encode($payload.'::'.$sig), '+/', '-_'), '=');
+    }
+
+    /**
+     * Decode and validate opaque cursor.
+     */
+    protected function decodeOpaqueCursor(?string $cursor): ?array
+    {
+        if (empty($cursor)) {
+            return null;
+        }
+        try {
+            $raw = base64_decode(strtr($cursor, '-_', '+/'));
+            $parts = explode('::', $raw, 2);
+            if (count($parts) !== 2) {
+                return null;
+            }
+            [$payload, $sig] = $parts;
+            $expectedSig = hash_hmac('sha256', $payload, config('app.key') ?: 'jero_secret');
+            if (! hash_equals($expectedSig, $sig)) {
+                return null;
+            }
+            $data = json_decode($payload, true);
+
+            return isset($data['s']) && is_array($data['s']) ? $data : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     public function create()
     {
         abort_if(Gate::denies('add_clients'), 403);
@@ -3270,6 +3689,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'data' => $validationError['data'] ?? [],
                 ], 422);
             }
+
             return $validationError;
         }
 
@@ -3784,7 +4204,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * Evaluates duplicates exclusively within the Internal Client domain (self_company = 0, company_id = tenant).
      * Direct Client records (self_company = 1) NEVER trigger duplicates or block Internal Client creation.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function validateInternalClientField(Request $request)
@@ -3802,6 +4221,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
             }
+
             return response()->json(['status' => 'success', 'valid' => true, 'field' => 'name']);
         }
 
@@ -3811,6 +4231,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
             }
+
             return response()->json(['status' => 'success', 'valid' => true, 'field' => 'website']);
         }
 
@@ -3824,6 +4245,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
             }
+
             return response()->json(['status' => 'success', 'valid' => true, 'field' => 'contact']);
         }
 
@@ -3832,6 +4254,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             if ($dup) {
                 return response()->json(['status' => 'duplicate', 'valid' => false] + $dup);
             }
+
             return response()->json(['status' => 'success', 'valid' => true]);
         }
 
@@ -3845,7 +4268,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * Checks Redis fast path first, then Elasticsearch read projection,
      * ensuring zero partial listing visibility.
      *
-     * @param int|string $id
+     * @param  int|string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function checkReady($id)
