@@ -132,6 +132,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('clients/viewmore/{id?}', [ServiceCompanyClientController::class, 'viewMore'])->name('clients.viewmore');
                 Route::get('clients/dviewmore/{id?}', [ServiceCompanyClientController::class, 'dviewMore'])->name('clients.dviewmore');
                 Route::get('clients/dashboard-analytics/{id?}', [ServiceCompanyClientController::class, 'dashboardAnalytics'])->name('clients.dashboard-analytics');
+                Route::get('clients/api/v1/performance-analytics/{id}', [ServiceCompanyClientController::class, 'performanceAnalyticsV1'])->name('clients.performance-analytics.v1');
                 Route::get('clients/addresslist/{cid?}', [ServiceCompanyClientController::class, 'addresslist'])->name('clients.addresslist');
                 Route::get('clients/citylist/{state_id?}', [ServiceCompanyClientController::class, 'citylist'])->name('clients.citylist');
                 Route::get('clients/custom_client/{id?}', [ServiceCompanyClientController::class, 'custom_client'])->name('clients.custom_client');

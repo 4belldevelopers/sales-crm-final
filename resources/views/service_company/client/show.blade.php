@@ -2055,15 +2055,30 @@ use Carbon\Carbon;
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
                                 <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-perf-select-wrap">
                               <span class="cd-perf-select-lbl">Compare with</span>
                               <select id="perfCompareWithSelect" class="cd-perf-select" onchange="cdPerfSyncCompare(this.value)">
-                                <option value="prev_period" selected>Previous 12 Months</option>
-                                <option value="prev_year">Previous Year</option>
+                                <option value="previous_period" selected>Previous Period</option>
+                                <option value="previous_year">Previous Year</option>
                                 <option value="none">None</option>
                               </select>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-icon btn-light-primary" id="btnPerfRefresh" onclick="cdPerfRefresh()" title="Refresh live analytics" style="width:30px; height:30px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff;">
+                              <i class="fas fa-rotate fa-solid" style="font-size:11px; color:#009ef7;"></i>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- ── Empty State Banner (Priority Ordered) ── -->
+                        <div id="perfEmptyStateBanner" style="display:none; margin-bottom:12px; background:#fffbeb; border:1px solid #fef3c7; border-radius:8px; padding:10px 14px; font-size:12px; color:#92400e;">
+                          <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-info-circle fa-solid" style="font-size:14px; color:#d97706;"></i>
+                            <div style="flex:1;">
+                              <strong id="perfEmptyStateTitle" style="font-weight:600;"></strong>
+                              <span id="perfEmptyStateMessage" style="margin-left:4px;"></span>
                             </div>
                           </div>
                         </div>
@@ -2076,12 +2091,12 @@ use Carbon\Carbon;
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-green">
                                 <i class="fas fa-users fa-solid"></i>
                               </div>
-                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>+18%</span>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiCandPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">78</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiCandidates">—</div>
                             <div class="cd-perf-kpi-lbl">Total Candidates</div>
                             <div class="cd-perf-kpi-sub">Submitted to this client</div>
-                            <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. 66 previous period</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiCandComp">vs. previous period</div>
                           </div>
 
                           <!-- KPI 2: Interviews Scheduled -->
@@ -2090,12 +2105,12 @@ use Carbon\Carbon;
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-blue">
                                 <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i>
                               </div>
-                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>+23%</span>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiIntPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">32</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiInterviews">—</div>
                             <div class="cd-perf-kpi-lbl">Interviews Scheduled</div>
                             <div class="cd-perf-kpi-sub">Across all rounds</div>
-                            <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. 26 previous period</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiIntComp">vs. previous period</div>
                           </div>
 
                           <!-- KPI 3: Offers Generated -->
@@ -2104,12 +2119,12 @@ use Carbon\Carbon;
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-amber">
                                 <i class="fas fa-file-alt fa-solid fa-file-lines"></i>
                               </div>
-                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>+33%</span>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiOfferPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiOffers">12</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiOffers">—</div>
                             <div class="cd-perf-kpi-lbl">Offers Generated</div>
                             <div class="cd-perf-kpi-sub">Offer letters sent</div>
-                            <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. 9 previous period</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiOfferComp">vs. previous period</div>
                           </div>
 
                           <!-- KPI 4: Successful Joins -->
@@ -2118,12 +2133,12 @@ use Carbon\Carbon;
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-purple">
                                 <i class="fas fa-user-check fa-solid"></i>
                               </div>
-                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>+14%</span>
+                              <span class="cd-perf-pill cd-perf-pill-up" id="perfKpiJoinPill"><i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>0.0%</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiJoins">8</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiJoins">—</div>
                             <div class="cd-perf-kpi-lbl">Successful Joins</div>
                             <div class="cd-perf-kpi-sub">Candidates placed</div>
-                            <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. 7 previous period</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiJoinComp">vs. previous period</div>
                           </div>
 
                           <!-- KPI 5: Avg. Time to Hire -->
@@ -2132,12 +2147,12 @@ use Carbon\Carbon;
                               <div class="cd-perf-kpi-icon cd-perf-kpi-icon-cyan">
                                 <i class="fas fa-clock fa-solid"></i>
                               </div>
-                              <span class="cd-perf-pill cd-perf-pill-good" id="perfKpiTimePill"><i class="fas fa-arrow-down fa-solid" style="font-size:8px;"></i>-28%</span>
+                              <span class="cd-perf-pill cd-perf-pill-good" id="perfKpiTimePill"><i class="fas fa-minus fa-solid" style="font-size:8px;"></i>—</span>
                             </div>
-                            <div class="cd-perf-kpi-num" id="perfKpiTimeToHire">41 days</div>
+                            <div class="cd-perf-kpi-num" id="perfKpiTimeToHire">—</div>
                             <div class="cd-perf-kpi-lbl">Avg. Time to Hire</div>
                             <div class="cd-perf-kpi-sub">From submission to join</div>
-                            <div class="cd-perf-kpi-comp" id="perfKpiTimeComp">vs. 57 days previous period</div>
+                            <div class="cd-perf-kpi-comp" id="perfKpiTimeComp">vs. previous period</div>
                           </div>
                         </div>
 
@@ -2153,51 +2168,63 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-funnel-wrap">
                               <svg class="cd-funnel-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
                                 <!-- Tier 1: Candidates Submitted (Blue) -->
                                 <path d="M 4,4 L 96,4 L 84,32 L 16,32 Z" fill="#3b82f6" />
-                                <!-- Tier 2: Interviews (Purple) -->
-                                <path d="M 17,36 L 83,36 L 73,64 L 27,64 Z" fill="#8b5cf6" />
-                                <!-- Tier 3: Offers (Amber) -->
-                                <path d="M 28,68 L 72,68 L 63,96 L 37,96 Z" fill="#f59e0b" />
-                                <!-- Tier 4: Joined (Green) -->
-                                <path d="M 38,100 L 62,100 L 55,126 L 45,126 Z" fill="#10b981" />
+                                <!-- Tier 2: Screened (Indigo) -->
+                                <path d="M 17,36 L 83,36 L 73,64 L 27,64 Z" fill="#6366f1" />
+                                <!-- Tier 3: Interviews (Purple) -->
+                                <path d="M 28,68 L 72,68 L 63,96 L 37,96 Z" fill="#8b5cf6" />
+                                <!-- Tier 4: Offers (Amber) -->
+                                <path d="M 38,100 L 62,100 L 55,116 L 45,116 Z" fill="#f59e0b" />
+                                <!-- Tier 5: Joined (Green) -->
+                                <path d="M 45,118 L 55,118 L 52,128 L 48,128 Z" fill="#10b981" />
                               </svg>
                               <div class="cd-funnel-list">
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
-                                    <span class="cd-funnel-val" id="funnelCountCand">78</span>
-                                    <span>Candidates Submitted</span>
+                                    <span class="cd-funnel-val" id="funnelCountCand">0</span>
+                                    <span>Candidates</span>
                                   </div>
                                   <span class="cd-funnel-pct" id="funnelPctCand">100%</span>
                                 </div>
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
+                                    <span class="cd-funnel-dot" style="background:#6366f1;"></span>
+                                    <span class="cd-funnel-val" id="funnelCountScreened">0</span>
+                                    <span>Screened</span>
+                                  </div>
+                                  <span class="cd-funnel-pct" id="funnelPctScreened">0%</span>
+                                </div>
+                                <div class="cd-funnel-item">
+                                  <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
-                                    <span class="cd-funnel-val" id="funnelCountInt">32</span>
+                                    <span class="cd-funnel-val" id="funnelCountInt">0</span>
                                     <span>Interviews</span>
                                   </div>
-                                  <span class="cd-funnel-pct" id="funnelPctInt">41%</span>
+                                  <span class="cd-funnel-pct" id="funnelPctInt">0%</span>
                                 </div>
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
-                                    <span class="cd-funnel-val" id="funnelCountOff">12</span>
+                                    <span class="cd-funnel-val" id="funnelCountOff">0</span>
                                     <span>Offers</span>
                                   </div>
-                                  <span class="cd-funnel-pct" id="funnelPctOff">15%</span>
+                                  <span class="cd-funnel-pct" id="funnelPctOff">0%</span>
                                 </div>
                                 <div class="cd-funnel-item">
                                   <div class="cd-funnel-stage">
                                     <span class="cd-funnel-dot" style="background:#10b981;"></span>
-                                    <span class="cd-funnel-val" id="funnelCountJoin">8</span>
+                                    <span class="cd-funnel-val" id="funnelCountJoin">0</span>
                                     <span>Joined</span>
                                   </div>
-                                  <span class="cd-funnel-pct" id="funnelPctJoin">10%</span>
+                                  <span class="cd-funnel-pct" id="funnelPctJoin">0%</span>
                                 </div>
                               </div>
                             </div>
@@ -2213,6 +2240,8 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-perf-legend">
@@ -2220,10 +2249,7 @@ use Carbon\Carbon;
                                 <span class="cd-perf-legend-dot" style="background:#3b82f6;"></span> Candidates Submitted
                               </span>
                               <span class="cd-perf-legend-item">
-                                <span class="cd-perf-legend-dot" style="background:#8b5cf6;"></span> Interviews Scheduled
-                              </span>
-                              <span class="cd-perf-legend-item">
-                                <span class="cd-perf-legend-dot" style="background:#10b981;"></span> Interviews Completed
+                                <span class="cd-perf-legend-dot" style="background:#8b5cf6;"></span> Interviewed Candidates
                               </span>
                             </div>
                             <div style="position:relative; height:150px; width:100%;">
@@ -2241,18 +2267,14 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-perf-legend">
-                              <span class="cd-perf-legend-item">
-                                <span class="cd-perf-legend-sq" style="background:#3b82f6;"></span> Hiring (Active)
-                              </span>
-                              <span class="cd-perf-legend-item">
-                                <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> On Hold
-                              </span>
-                              <span class="cd-perf-legend-item">
-                                <span class="cd-perf-legend-sq" style="background:#ef4444;"></span> Closed
-                              </span>
+                              <span class="cd-perf-legend-sq" style="background:#3b82f6;"></span> Hiring (Active)
+                              <span class="cd-perf-legend-sq" style="background:#f59e0b;"></span> On Hold
+                              <span class="cd-perf-legend-sq" style="background:#ef4444;"></span> Closed
                             </div>
                             <div style="position:relative; height:150px; width:100%;">
                               <canvas id="chartAllJobsStatus"></canvas>
@@ -2272,6 +2294,8 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-perf-legend">
@@ -2297,13 +2321,15 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div class="cd-donut-wrap">
                               <div class="cd-donut-chart-box">
                                 <canvas id="chartJobType" width="110" height="110"></canvas>
                                 <div class="cd-donut-center">
-                                  <div class="cd-donut-center-num" id="donutTotalJobs">4</div>
+                                  <div class="cd-donut-center-num" id="donutTotalJobs">0</div>
                                   <div class="cd-donut-center-lbl">Active Jobs</div>
                                 </div>
                               </div>
@@ -2311,41 +2337,41 @@ use Carbon\Carbon;
                                 <div class="cd-donut-item">
                                   <div class="cd-donut-item-left">
                                     <span class="cd-funnel-dot" style="background:#3b82f6;"></span>
-                                    <span>Fulltime Hiring</span>
+                                    <span>Full-Time</span>
                                   </div>
                                   <div class="d-flex align-items-center gap-3">
-                                    <span class="cd-donut-item-count" id="donutCountFulltime">3</span>
-                                    <span class="cd-donut-item-pct" id="donutPctFulltime">75%</span>
+                                    <span class="cd-donut-item-count" id="donutCountFulltime">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctFulltime">0%</span>
                                   </div>
                                 </div>
                                 <div class="cd-donut-item">
                                   <div class="cd-donut-item-left">
                                     <span class="cd-funnel-dot" style="background:#8b5cf6;"></span>
-                                    <span>Contract Hiring</span>
+                                    <span>Contract</span>
                                   </div>
                                   <div class="d-flex align-items-center gap-3">
-                                    <span class="cd-donut-item-count" id="donutCountContract">1</span>
-                                    <span class="cd-donut-item-pct" id="donutPctContract">25%</span>
+                                    <span class="cd-donut-item-count" id="donutCountContract">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctContract">0%</span>
                                   </div>
                                 </div>
                                 <div class="cd-donut-item">
                                   <div class="cd-donut-item-left">
                                     <span class="cd-funnel-dot" style="background:#f59e0b;"></span>
-                                    <span>Bench Talent Jobs</span>
+                                    <span>Freelance</span>
                                   </div>
                                   <div class="d-flex align-items-center gap-3">
-                                    <span class="cd-donut-item-count">0</span>
-                                    <span class="cd-donut-item-pct">0%</span>
+                                    <span class="cd-donut-item-count" id="donutCountFreelance">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctFreelance">0%</span>
                                   </div>
                                 </div>
                                 <div class="cd-donut-item">
                                   <div class="cd-donut-item-left">
                                     <span class="cd-funnel-dot" style="background:#10b981;"></span>
-                                    <span>Matching Jobs</span>
+                                    <span>Part-Time</span>
                                   </div>
                                   <div class="d-flex align-items-center gap-3">
-                                    <span class="cd-donut-item-count">0</span>
-                                    <span class="cd-donut-item-pct">0%</span>
+                                    <span class="cd-donut-item-count" id="donutCountPartTime">0</span>
+                                    <span class="cd-donut-item-pct" id="donutPctPartTime">0%</span>
                                   </div>
                                 </div>
                               </div>
@@ -2362,6 +2388,8 @@ use Carbon\Carbon;
                                 <option value="12M" selected>Last 12 Months</option>
                                 <option value="6M">Last 6 Months</option>
                                 <option value="3M">Last 3 Months</option>
+                                <option value="30D">Last 30 Days</option>
+                                <option value="all">All Time</option>
                               </select>
                             </div>
                             <div style="position:relative; height:150px; width:100%;">
@@ -2393,75 +2421,10 @@ use Carbon\Carbon;
                                     <th>Conversion</th>
                                   </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="perfTopRolesTbody">
                                   <tr>
-                                    <td>1</td>
-                                    <td>Senior Java Developer</td>
-                                    <td>18</td>
-                                    <td>8</td>
-                                    <td>4</td>
-                                    <td>3</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>16.7%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 16.7%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>2</td>
-                                    <td>DevOps Engineer</td>
-                                    <td>14</td>
-                                    <td>6</td>
-                                    <td>2</td>
-                                    <td>2</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>14.3%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 14.3%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>3</td>
-                                    <td>Full Stack Developer</td>
-                                    <td>12</td>
-                                    <td>5</td>
-                                    <td>2</td>
-                                    <td>2</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>16.7%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 16.7%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>4</td>
-                                    <td>QA Automation Engineer</td>
-                                    <td>10</td>
-                                    <td>4</td>
-                                    <td>2</td>
-                                    <td>1</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>10.0%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 10.0%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>5</td>
-                                    <td>Azure Cloud Engineer</td>
-                                    <td>8</td>
-                                    <td>3</td>
-                                    <td>1</td>
-                                    <td>0</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>0.0%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 0%;"></div></div>
-                                      </div>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                      <i class="fas fa-spinner fa-spin text-primary me-2"></i>Loading live requisition metrics...
                                     </td>
                                   </tr>
                                 </tbody>
@@ -2490,90 +2453,10 @@ use Carbon\Carbon;
                                     <th>Success Rate</th>
                                   </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="perfRecruitersTbody">
                                   <tr>
-                                    <td>1</td>
-                                    <td>
-                                      <span class="cd-recruiter-avatar" style="background:#e0f2fe; color:#0284c7;">VJ</span>
-                                      Vibhanshu Jaiswal
-                                    </td>
-                                    <td>28</td>
-                                    <td>12</td>
-                                    <td>5</td>
-                                    <td>4</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>14.3%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 14.3%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>2</td>
-                                    <td>
-                                      <span class="cd-recruiter-avatar" style="background:#f3e8ff; color:#7c3aed;">SK</span>
-                                      Sonal Kapoor
-                                    </td>
-                                    <td>18</td>
-                                    <td>8</td>
-                                    <td>3</td>
-                                    <td>2</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>11.1%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 11.1%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>3</td>
-                                    <td>
-                                      <span class="cd-recruiter-avatar" style="background:#e0f7fa; color:#00838f;">AM</span>
-                                      Amit Mehra
-                                    </td>
-                                    <td>16</td>
-                                    <td>7</td>
-                                    <td>3</td>
-                                    <td>2</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>12.5%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 12.5%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>4</td>
-                                    <td>
-                                      <span class="cd-recruiter-avatar" style="background:#fce4ec; color:#c2185b;">PK</span>
-                                      Pooja Khatri
-                                    </td>
-                                    <td>10</td>
-                                    <td>4</td>
-                                    <td>1</td>
-                                    <td>0</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>0.0%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 0%;"></div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td>5</td>
-                                    <td>
-                                      <span class="cd-recruiter-avatar" style="background:#ede7f6; color:#512da8;">RC</span>
-                                      Rohit Chaudhary
-                                    </td>
-                                    <td>6</td>
-                                    <td>2</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>
-                                      <div class="cd-perf-progress-wrap">
-                                        <span>0.0%</span>
-                                        <div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width: 0%;"></div></div>
-                                      </div>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                      <i class="fas fa-spinner fa-spin text-primary me-2"></i>Loading live recruiter performance...
                                     </td>
                                   </tr>
                                 </tbody>
@@ -2582,27 +2465,27 @@ use Carbon\Carbon;
                           </div>
                         </div>
 
-                        <!-- ── 6. Additional Intelligence & Insights (Sections 14 & 15) ── -->
+                        <!-- ── 6. Additional Intelligence & Insights ── -->
                         <div class="cd-perf-intelligence-grid">
                           <div class="cd-perf-intel-card">
                             <div class="cd-perf-intel-lbl"><i class="fas fa-bolt fa-solid text-warning me-1"></i> Hiring Velocity</div>
-                            <div class="cd-perf-intel-val">41 Days</div>
-                            <div class="cd-perf-intel-sub">28% faster than previous cycle</div>
+                            <div class="cd-perf-intel-val" id="perfIntelVelocity">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelVelocitySub">Average cycle duration</div>
                           </div>
                           <div class="cd-perf-intel-card">
                             <div class="cd-perf-intel-lbl"><i class="fas fa-filter fa-solid text-primary me-1"></i> Interview Conversion</div>
-                            <div class="cd-perf-intel-val">41.0%</div>
-                            <div class="cd-perf-intel-sub">32 interviews from 78 submissions</div>
+                            <div class="cd-perf-intel-val" id="perfIntelIntConv">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelIntConvSub">Stage conversion yield</div>
                           </div>
                           <div class="cd-perf-intel-card">
                             <div class="cd-perf-intel-lbl"><i class="fas fa-file-signature fa-solid text-info me-1"></i> Offer Conversion</div>
-                            <div class="cd-perf-intel-val">37.5%</div>
-                            <div class="cd-perf-intel-sub">12 offers from 32 interviews</div>
+                            <div class="cd-perf-intel-val" id="perfIntelOfferConv">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelOfferConvSub">Interview to offer ratio</div>
                           </div>
                           <div class="cd-perf-intel-card">
-                            <div class="cd-perf-intel-lbl"><i class="fas fa-handshake fa-solid text-success me-1"></i> Offer &rarr; Join Ratio</div>
-                            <div class="cd-perf-intel-val">66.7%</div>
-                            <div class="cd-perf-intel-sub">8 placed from 12 offers</div>
+                            <div class="cd-perf-intel-lbl"><i class="fas fa-handshake fa-solid text-success me-1"></i> Cumulative Yield</div>
+                            <div class="cd-perf-intel-val" id="perfIntelJoinRatio">—</div>
+                            <div class="cd-perf-intel-sub" id="perfIntelJoinRatioSub">Placements / Submissions</div>
                           </div>
                         </div>
 
@@ -2610,13 +2493,8 @@ use Carbon\Carbon;
                           <div class="cd-perf-insights-hdr">
                             <i class="fas fa-lightbulb fa-solid text-warning"></i> Performance Intelligence &amp; Actionable Insights
                           </div>
-                          <div class="cd-perf-insights-grid">
-                            <div><i class="fas fa-check-circle fa-solid text-primary me-1"></i> Hiring volume increased <strong>18%</strong> compared with the previous period.</div>
-                            <div><i class="fas fa-check-circle fa-solid text-primary me-1"></i> <strong>Full-Time Hiring</strong> is currently the strongest job type (75% of closed mandates).</div>
-                            <div><i class="fas fa-check-circle fa-solid text-primary me-1"></i> Interview-to-offer conversion improved by <strong>12%</strong> across technical engineering roles.</div>
-                            <div><i class="fas fa-check-circle fa-solid text-primary me-1"></i> Average time-to-hire decreased by <strong>8 days</strong> (from 49 to 41 days).</div>
-                            <div><i class="fas fa-check-circle fa-solid text-primary me-1"></i> <strong>Senior Java Developer</strong> and <strong>Full Stack Developer</strong> hold the highest conversion at 16.7%.</div>
-                            <div><i class="fas fa-exclamation-circle fa-solid me-1" style="color:#d97706;"></i> 3 active requisitions require candidate pipeline replenishment to maintain velocity.</div>
+                          <div class="cd-perf-insights-grid" id="perfInsightsGrid">
+                            <div><i class="fas fa-spinner fa-spin text-primary me-1"></i> Loading intelligent recruitment heuristics...</div>
                           </div>
                         </div>
 
@@ -3280,187 +3158,27 @@ use Carbon\Carbon;
 
 
 <script>
-    var myChartId = "<?php echo @$client->id; ?>";
-
-    // Global performance dashboard chart instances & range state
+    // ── Global Reactive Client Performance Analytics Engine ──
     window.perfChartInstances = window.perfChartInstances || {};
-    window.perfCurrentRange = window.perfCurrentRange || '12M';
-    window.perfCurrentCompare = window.perfCurrentCompare || 'prev_period';
-
-    var perfDataSets = {
-        '12M': {
-            kpis: {
-                candidates: 78,
-                candidatesDiff: '+18%',
-                candidatesComp: 'vs. 66 previous period',
-                interviews: 32,
-                interviewsDiff: '+23%',
-                interviewsComp: 'vs. 26 previous period',
-                offers: 12,
-                offersDiff: '+33%',
-                offersComp: 'vs. 9 previous period',
-                joins: 8,
-                joinsDiff: '+14%',
-                joinsComp: 'vs. 7 previous period',
-                timeToHire: '41 days',
-                timeToHireDiff: '-28%',
-                timeToHireComp: 'vs. 57 days previous period'
-            },
-            funnel: {
-                cand: 78, candPct: '100%',
-                int: 32, intPct: '41%',
-                off: 12, offPct: '15%',
-                join: 8, joinPct: '10%'
-            },
-            candLabels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            candSub: [4, 6, 5, 8, 7, 9, 6, 8, 5, 7, 6, 7],
-            intSched: [2, 3, 2, 4, 3, 4, 2, 3, 2, 3, 2, 2],
-            intComp: [1, 2, 2, 3, 2, 3, 2, 2, 1, 2, 2, 2],
-            jobLabels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            jobActive: [2, 3, 3, 4, 4, 3, 4, 5, 4, 4, 3, 3],
-            jobHold: [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1],
-            jobClosed: [1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 1, 1],
-            offerLabels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            offers: [1, 1, 1, 2, 1, 1, 1, 1, 0, 1, 1, 1],
-            joins: [0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-            donut: [3, 1, 0, 0],
-            totalActiveJobs: 4,
-            timeLabels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            timeDays: [95, 88, 82, 75, 70, 65, 58, 54, 50, 46, 44, 41]
-        },
-        '6M': {
-            kpis: {
-                candidates: 42,
-                candidatesDiff: '+14%',
-                candidatesComp: 'vs. 37 previous 6M',
-                interviews: 18,
-                interviewsDiff: '+20%',
-                interviewsComp: 'vs. 15 previous 6M',
-                offers: 7,
-                offersDiff: '+16%',
-                offersComp: 'vs. 6 previous 6M',
-                joins: 5,
-                joinsDiff: '+25%',
-                joinsComp: 'vs. 4 previous 6M',
-                timeToHire: '43 days',
-                timeToHireDiff: '-22%',
-                timeToHireComp: 'vs. 55 days previous 6M'
-            },
-            funnel: {
-                cand: 42, candPct: '100%',
-                int: 18, intPct: '42.8%',
-                off: 7, offPct: '16.7%',
-                join: 5, joinPct: '11.9%'
-            },
-            candLabels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            candSub: [6, 8, 5, 7, 6, 7],
-            intSched: [2, 3, 2, 3, 2, 2],
-            intComp: [2, 2, 1, 2, 2, 2],
-            jobLabels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            jobActive: [4, 5, 4, 4, 3, 3],
-            jobHold: [1, 0, 1, 0, 1, 1],
-            jobClosed: [2, 1, 2, 1, 1, 1],
-            offerLabels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            offers: [1, 1, 0, 1, 1, 1],
-            joins: [0, 1, 0, 1, 0, 1],
-            donut: [3, 1, 0, 0],
-            totalActiveJobs: 4,
-            timeLabels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-            timeDays: [58, 54, 50, 46, 44, 41]
-        },
-        '3M': {
-            kpis: {
-                candidates: 22,
-                candidatesDiff: '+10%',
-                candidatesComp: 'vs. 20 previous 3M',
-                interviews: 9,
-                interviewsDiff: '+12%',
-                interviewsComp: 'vs. 8 previous 3M',
-                offers: 4,
-                offersDiff: '+33%',
-                offersComp: 'vs. 3 previous 3M',
-                joins: 3,
-                joinsDiff: '+50%',
-                joinsComp: 'vs. 2 previous 3M',
-                timeToHire: '42 days',
-                timeToHireDiff: '-19%',
-                timeToHireComp: 'vs. 52 days previous 3M'
-            },
-            funnel: {
-                cand: 22, candPct: '100%',
-                int: 9, intPct: '40.9%',
-                off: 4, offPct: '18.2%',
-                join: 3, joinPct: '13.6%'
-            },
-            candLabels: ['Jan', 'Feb', 'Mar'],
-            candSub: [7, 6, 7],
-            intSched: [3, 2, 2],
-            intComp: [2, 2, 2],
-            jobLabels: ['Jan', 'Feb', 'Mar'],
-            jobActive: [4, 3, 3],
-            jobHold: [0, 1, 1],
-            jobClosed: [1, 1, 1],
-            offerLabels: ['Jan', 'Feb', 'Mar'],
-            offers: [1, 1, 1],
-            joins: [1, 0, 1],
-            donut: [3, 1, 0, 0],
-            totalActiveJobs: 4,
-            timeLabels: ['Jan', 'Feb', 'Mar'],
-            timeDays: [46, 44, 41]
-        },
-        '30D': {
-            kpis: {
-                candidates: 8,
-                candidatesDiff: '+14%',
-                candidatesComp: 'vs. 7 previous 30D',
-                interviews: 3,
-                interviewsDiff: '0%',
-                interviewsComp: 'vs. 3 previous 30D',
-                offers: 1,
-                offersDiff: '0%',
-                offersComp: 'vs. 1 previous 30D',
-                joins: 1,
-                joinsDiff: '+100%',
-                joinsComp: 'vs. 0 previous 30D',
-                timeToHire: '39 days',
-                timeToHireDiff: '-31%',
-                timeToHireComp: 'vs. 57 days previous 30D'
-            },
-            funnel: {
-                cand: 8, candPct: '100%',
-                int: 3, intPct: '37.5%',
-                off: 1, offPct: '12.5%',
-                join: 1, joinPct: '12.5%'
-            },
-            candLabels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            candSub: [2, 3, 1, 2],
-            intSched: [1, 1, 0, 1],
-            intComp: [1, 0, 1, 1],
-            jobLabels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            jobActive: [3, 3, 3, 3],
-            jobHold: [1, 1, 1, 1],
-            jobClosed: [0, 0, 1, 0],
-            offerLabels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            offers: [0, 1, 0, 0],
-            joins: [0, 0, 1, 0],
-            donut: [3, 1, 0, 0],
-            totalActiveJobs: 4,
-            timeLabels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            timeDays: [44, 43, 40, 39]
-        }
-    };
+    window.perfClientCache = window.perfClientCache || {};
+    window.perfCurrentRange = '12M';
+    window.perfCurrentCompare = 'previous_period';
+    window.perfIsLoading = false;
+    var perfClientId = "{{ $client->id }}";
+    var perfBaseApiUrl = "{{ url('service_company/clients/api/v1/performance-analytics') }}/" + perfClientId;
 
     function ensureChartJsLoaded(callback) {
         if (typeof Chart !== 'undefined') {
             callback();
             return;
         }
-        if (!document.querySelector('script[src*="chart.umd.min.js"]')) {
-            var s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-            s.onload = function() { callback(); };
-            s.onerror = function() { console.error('Failed to load Chart.js'); };
-            document.head.appendChild(s);
+        var script = document.getElementById('chartjs-cdn-script');
+        if (!script) {
+            script = document.createElement('script');
+            script.id = 'chartjs-cdn-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+            script.onload = callback;
+            document.head.appendChild(script);
         } else {
             var interval = setInterval(function() {
                 if (typeof Chart !== 'undefined') {
@@ -3471,392 +3189,407 @@ use Carbon\Carbon;
         }
     }
 
-    function initPerformanceDashboard() {
-        ensureChartJsLoaded(function() {
-            var range = window.perfCurrentRange || '12M';
-            var d = perfDataSets[range] || perfDataSets['12M'];
-
-            function getOrCreateChart(canvasId, config) {
-                var canvas = document.getElementById(canvasId);
-                if (!canvas) return null;
-                try {
-                    if (typeof Chart.getChart === 'function') {
-                        var existing = Chart.getChart(canvas);
-                        if (existing) { existing.destroy(); }
-                    }
-                    if (window.perfChartInstances[canvasId]) {
-                        window.perfChartInstances[canvasId].destroy();
-                    }
-                } catch(e) {
-                    console.warn('Destroy error for ' + canvasId, e);
-                }
-                var ctx = canvas.getContext('2d');
-                var inst = new Chart(ctx, config);
-                window.perfChartInstances[canvasId] = inst;
-                return inst;
-            }
-
-            // 1. Combo: Candidates & Interviews
-            getOrCreateChart('chartCandidatesInterviews', {
-                type: 'bar',
-                data: {
-                    labels: d.candLabels,
-                    datasets: [
-                        {
-                            type: 'bar',
-                            label: 'Candidates Submitted',
-                            data: d.candSub,
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 4,
-                            barPercentage: 0.5,
-                            order: 3
-                        },
-                        {
-                            type: 'line',
-                            label: 'Interviews Scheduled',
-                            data: d.intSched,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: '#8b5cf6',
-                            borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            tension: 0.35,
-                            order: 1
-                        },
-                        {
-                            type: 'line',
-                            label: 'Interviews Completed',
-                            data: d.intComp,
-                            borderColor: '#10b981',
-                            backgroundColor: '#10b981',
-                            borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            tension: 0.35,
-                            order: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            padding: 8,
-                            cornerRadius: 6,
-                            titleFont: { family: 'Poppins', size: 11 },
-                            bodyFont: { family: 'Poppins', size: 10 }
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b' } },
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b', precision: 0 } }
-                    }
-                }
-            });
-
-            // 2. Stacked Bar: All Jobs Status
-            getOrCreateChart('chartAllJobsStatus', {
-                type: 'bar',
-                data: {
-                    labels: d.jobLabels,
-                    datasets: [
-                        {
-                            label: 'Active',
-                            data: d.jobActive,
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 2,
-                            barPercentage: 0.5
-                        },
-                        {
-                            label: 'On Hold',
-                            data: d.jobHold,
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 2,
-                            barPercentage: 0.5
-                        },
-                        {
-                            label: 'Closed',
-                            data: d.jobClosed,
-                            backgroundColor: '#ef4444',
-                            borderRadius: 2,
-                            barPercentage: 0.5
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            padding: 8,
-                            cornerRadius: 6,
-                            titleFont: { family: 'Poppins', size: 11 },
-                            bodyFont: { family: 'Poppins', size: 10 }
-                        }
-                    },
-                    scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b' } },
-                        y: { stacked: true, beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b', precision: 0 } }
-                    }
-                }
-            });
-
-            // 3. Combo: Offers & Joinings
-            getOrCreateChart('chartOffersJoinings', {
-                type: 'bar',
-                data: {
-                    labels: d.offerLabels,
-                    datasets: [
-                        {
-                            type: 'bar',
-                            label: 'Offers Generated',
-                            data: d.offers,
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 4,
-                            barPercentage: 0.45,
-                            order: 2
-                        },
-                        {
-                            type: 'line',
-                            label: 'Successful Joins',
-                            data: d.joins,
-                            borderColor: '#10b981',
-                            backgroundColor: '#10b981',
-                            borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            tension: 0.35,
-                            order: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            padding: 8,
-                            cornerRadius: 6,
-                            titleFont: { family: 'Poppins', size: 11 },
-                            bodyFont: { family: 'Poppins', size: 10 }
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b' } },
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b', precision: 0 } }
-                    }
-                }
-            });
-
-            // 4. Doughnut: Job Type Performance
-            getOrCreateChart('chartJobType', {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fulltime Hiring', 'Contract Hiring', 'Bench Talent Jobs', 'Matching Jobs'],
-                    datasets: [{
-                        data: d.donut,
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
-                        borderWidth: 0,
-                        hoverOffset: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            padding: 8,
-                            cornerRadius: 6,
-                            titleFont: { family: 'Poppins', size: 11 },
-                            bodyFont: { family: 'Poppins', size: 10 }
-                        }
-                    },
-                    cutout: '72%'
-                }
-            });
-
-            // 5. Line: Time to Hire Trend
-            getOrCreateChart('chartTimeToHire', {
-                type: 'line',
-                data: {
-                    labels: d.timeLabels,
-                    datasets: [{
-                        label: 'Avg. Days',
-                        data: d.timeDays,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                        fill: true,
-                        tension: 0.38,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        pointBackgroundColor: '#06b6d4'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            padding: 8,
-                            cornerRadius: 6,
-                            titleFont: { family: 'Poppins', size: 11 },
-                            bodyFont: { family: 'Poppins', size: 10 }
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b' } },
-                        y: { beginAtZero: false, min: 25, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Poppins', size: 10 }, color: '#64748b', precision: 0 } }
-                    }
-                }
-            });
-        });
-    }
-
     function cdPerfSyncRange(val) {
+        if (!val) return;
         window.perfCurrentRange = val;
-        // Sync all mini dropdowns and top selector
-        $('.perf-sync-select, #perfDateRangeSelect').val(val);
-
-        var d = perfDataSets[val] || perfDataSets['12M'];
-
-        // Update KPIs
-        $('#perfKpiCandidates').text(d.kpis.candidates);
-        $('#perfKpiCandPill').html('<i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>' + d.kpis.candidatesDiff);
-        $('#perfKpiCandComp').text(d.kpis.candidatesComp);
-
-        $('#perfKpiInterviews').text(d.kpis.interviews);
-        $('#perfKpiIntPill').html('<i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>' + d.kpis.interviewsDiff);
-        $('#perfKpiIntComp').text(d.kpis.interviewsComp);
-
-        $('#perfKpiOffers').text(d.kpis.offers);
-        $('#perfKpiOfferPill').html('<i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>' + d.kpis.offersDiff);
-        $('#perfKpiOfferComp').text(d.kpis.offersComp);
-
-        $('#perfKpiJoins').text(d.kpis.joins);
-        $('#perfKpiJoinPill').html('<i class="fas fa-arrow-up fa-solid" style="font-size:8px;"></i>' + d.kpis.joinsDiff);
-        $('#perfKpiJoinComp').text(d.kpis.joinsComp);
-
-        $('#perfKpiTimeToHire').text(d.kpis.timeToHire);
-        $('#perfKpiTimePill').html('<i class="fas fa-arrow-down fa-solid" style="font-size:8px;"></i>' + d.kpis.timeToHireDiff);
-        $('#perfKpiTimeComp').text(d.kpis.timeToHireComp);
-
-        // Update Funnel
-        $('#funnelCountCand').text(d.funnel.cand);
-        $('#funnelPctCand').text(d.funnel.candPct);
-        $('#funnelCountInt').text(d.funnel.int);
-        $('#funnelPctInt').text(d.funnel.intPct);
-        $('#funnelCountOff').text(d.funnel.off);
-        $('#funnelPctOff').text(d.funnel.offPct);
-        $('#funnelCountJoin').text(d.funnel.join);
-        $('#funnelPctJoin').text(d.funnel.joinPct);
-
-        // Update Donut center
-        $('#donutTotalJobs').text(d.totalActiveJobs);
-
-        // Update Charts in-place
-        if (window.perfChartInstances['chartCandidatesInterviews']) {
-            var c1 = window.perfChartInstances['chartCandidatesInterviews'];
-            c1.data.labels = d.candLabels;
-            c1.data.datasets[0].data = d.candSub;
-            c1.data.datasets[1].data = d.intSched;
-            c1.data.datasets[2].data = d.intComp;
-            c1.update();
-        }
-        if (window.perfChartInstances['chartAllJobsStatus']) {
-            var c2 = window.perfChartInstances['chartAllJobsStatus'];
-            c2.data.labels = d.jobLabels;
-            c2.data.datasets[0].data = d.jobActive;
-            c2.data.datasets[1].data = d.jobHold;
-            c2.data.datasets[2].data = d.jobClosed;
-            c2.update();
-        }
-        if (window.perfChartInstances['chartOffersJoinings']) {
-            var c3 = window.perfChartInstances['chartOffersJoinings'];
-            c3.data.labels = d.offerLabels;
-            c3.data.datasets[0].data = d.offers;
-            c3.data.datasets[1].data = d.joins;
-            c3.update();
-        }
-        if (window.perfChartInstances['chartJobType']) {
-            var c4 = window.perfChartInstances['chartJobType'];
-            c4.data.datasets[0].data = d.donut;
-            c4.update();
-        }
-        if (window.perfChartInstances['chartTimeToHire']) {
-            var c5 = window.perfChartInstances['chartTimeToHire'];
-            c5.data.labels = d.timeLabels;
-            c5.data.datasets[0].data = d.timeDays;
-            c5.update();
-        }
+        $('#perfDateRangeSelect, .perf-sync-select').val(val);
+        cdPerfFetchData(val, window.perfCurrentCompare, false);
     }
 
     function cdPerfSyncCompare(val) {
+        if (!val) return;
         window.perfCurrentCompare = val;
-        var suffix = (val === 'prev_year') ? 'previous year' : (val === 'prev_period' ? 'previous period' : '');
-        if (val === 'none') {
-            $('.cd-perf-kpi-comp, .cd-perf-pill').css('visibility', 'hidden');
-        } else {
-            $('.cd-perf-kpi-comp, .cd-perf-pill').css('visibility', 'visible');
-            var d = perfDataSets[window.perfCurrentRange || '12M'];
-            if (d && d.kpis) {
-                $('#perfKpiCandComp').text('vs. 66 ' + suffix);
-                $('#perfKpiIntComp').text('vs. 26 ' + suffix);
-                $('#perfKpiOfferComp').text('vs. 9 ' + suffix);
-                $('#perfKpiJoinComp').text('vs. 7 ' + suffix);
-                $('#perfKpiTimeComp').text('vs. 57 days ' + suffix);
-            }
-        }
+        $('#perfCompareWithSelect').val(val);
+        cdPerfFetchData(window.perfCurrentRange, val, false);
     }
 
-    // Interactive Tab Navigator for KPI and Header Cards
-    $(document).off('click', '.cd-nav-tab');
-    $(document).on('click', '.cd-nav-tab', function(e) {
-        e.preventDefault();
-        var target = $(this).attr('data-target') || $(this).data('target');
-        if (target) {
-            var $link = $('a[href="' + target + '"]');
-            if ($link.length) {
-                $link.tab('show');
+    function cdPerfRefresh() {
+        var $btn = $('#btnPerfRefresh i');
+        $btn.addClass('fa-spin');
+        var cacheKey = perfClientId + '_' + window.perfCurrentRange + '_' + window.perfCurrentCompare;
+        delete window.perfClientCache[cacheKey];
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, true, function() {
+            $btn.removeClass('fa-spin');
+        });
+    }
+
+    function cdPerfFetchData(range, compare, force, onComplete) {
+        range = range || window.perfCurrentRange || '12M';
+        compare = compare || window.perfCurrentCompare || 'previous_period';
+        var cacheKey = perfClientId + '_' + range + '_' + compare;
+
+        // 1. Client-Side User RAM Cache Hit (0% Server / 0% DB reads)
+        if (!force && window.perfClientCache[cacheKey]) {
+            cdPerfRender(window.perfClientCache[cacheKey]);
+            if (typeof onComplete === 'function') onComplete();
+            return;
+        }
+
+        if (window.perfIsLoading) return;
+        window.perfIsLoading = true;
+
+        $.ajax({
+            url: perfBaseApiUrl,
+            type: 'GET',
+            dataType: 'json',
+            headers: {
+                'X-Request-ID': 'req_' + Math.random().toString(36).substring(2, 12),
+            },
+            data: {
+                range: range,
+                compare: compare,
+                client_type: 'internal',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
+            },
+            success: function(res) {
+                window.perfIsLoading = false;
+                window.perfClientCache[cacheKey] = res;
+                cdPerfRender(res);
+                if (typeof onComplete === 'function') onComplete();
+            },
+            error: function(err) {
+                window.perfIsLoading = false;
+                console.warn('Performance Analytics API error:', err);
+                if (typeof onComplete === 'function') onComplete();
             }
-        }
-    });
+        });
+    }
 
-    function applyLiveClientDataToPerfDashboard(d) {
-        if (!d) return;
-        var totalCandidates = d.total_candidates || 0;
-        var activeCount = d.counts ? (d.counts.active || 0) : 0;
-        var holdCount = d.counts ? (d.counts.hold || 0) : 0;
-        var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
-        var joinedCount = d.joined_count || 0;
-        var offerCount = d.offer_count || 0;
+    function cdPerfRender(data) {
+        if (!data || !data.summary) return;
 
-        if (totalCandidates > 0) {
-            perfDataSets['12M'].kpis.candidates = totalCandidates;
-            perfDataSets['12M'].funnel.cand = totalCandidates;
+        var s = data.summary;
+
+        // 1. Update 5 Hero KPI Cards
+        $('#perfKpiCandidates').text(s.candidates.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiCandPill'), s.candidates.delta_label, s.candidates.delta_value, false);
+        $('#perfKpiCandComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiInterviews').text(s.interviews_scheduled.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiIntPill'), s.interviews_scheduled.delta_label, s.interviews_scheduled.delta_value, false);
+        $('#perfKpiIntComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiOffers').text(s.offers.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiOfferPill'), s.offers.delta_label, s.offers.delta_value, false);
+        $('#perfKpiOfferComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        $('#perfKpiJoins').text(s.joins.value.toLocaleString());
+        cdPerfUpdatePill($('#perfKpiJoinPill'), s.joins.delta_label, s.joins.delta_value, false);
+        $('#perfKpiJoinComp').text('vs. ' + (data.meta.compare === 'none' ? 'none' : 'prior period'));
+
+        var tthFormatted = s.avg_time_to_hire_days.formatted || '—';
+        $('#perfKpiTimeToHire').text(tthFormatted);
+        cdPerfUpdatePill($('#perfKpiTimePill'), s.avg_time_to_hire_days.delta_label, s.avg_time_to_hire_days.delta_value, true);
+        $('#perfKpiTimeComp').text(s.avg_time_to_hire_days.placed_count ? (s.avg_time_to_hire_days.placed_count + ' placements') : 'vs. prior period');
+
+        // 2. Empty State Banner
+        var $banner = $('#perfEmptyStateBanner');
+        if (data.empty_state) {
+            $('#perfEmptyStateTitle').text(data.empty_state.title + ':');
+            $('#perfEmptyStateMessage').text(data.empty_state.message);
+            $banner.slideDown(150);
+        } else {
+            $banner.slideUp(150);
         }
-        if (offerCount > 0) {
-            perfDataSets['12M'].kpis.offers = offerCount;
-            perfDataSets['12M'].funnel.off = offerCount;
+
+        // 3. Funnel Stages
+        if (data.funnel && data.funnel.stages) {
+            var st = data.funnel.stages;
+            if (st[0]) { $('#funnelCountCand').text(st[0].count); $('#funnelPctCand').text(st[0].conversion_pct); }
+            if (st[1]) { $('#funnelCountScreened').text(st[1].count); $('#funnelPctScreened').text(st[1].conversion_pct); }
+            if (st[2]) { $('#funnelCountInt').text(st[2].count); $('#funnelPctInt').text(st[2].conversion_pct); }
+            if (st[3]) { $('#funnelCountOff').text(st[3].count); $('#funnelPctOff').text(st[3].conversion_pct); }
+            if (st[4]) { $('#funnelCountJoin').text(st[4].count); $('#funnelPctJoin').text(st[4].conversion_pct); }
         }
-        if (joinedCount > 0) {
-            perfDataSets['12M'].kpis.joins = joinedCount;
-            perfDataSets['12M'].funnel.join = joinedCount;
+
+        // 4. Intelligence Grid
+        var vVal = s.avg_time_to_hire_days.formatted !== '—' ? s.avg_time_to_hire_days.formatted : 'Active';
+        $('#perfIntelVelocity').text(vVal);
+
+        var intConv = s.candidates.value > 0 ? ((s.interviewed.value / s.candidates.value) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelIntConv').text(intConv);
+        $('#perfIntelIntConvSub').text(s.interviewed.value + ' of ' + s.candidates.value + ' candidates');
+
+        var offConv = s.interviewed.value > 0 ? ((s.offers.value / s.interviewed.value) * 100).toFixed(1) + '%' : '0.0%';
+        $('#perfIntelOfferConv').text(offConv);
+        $('#perfIntelOfferConvSub').text(s.offers.value + ' of ' + s.interviewed.value + ' interviews');
+
+        var yieldVal = data.funnel && data.funnel.overall_yield_pct ? data.funnel.overall_yield_pct : '0.0%';
+        $('#perfIntelJoinRatio').text(yieldVal);
+        $('#perfIntelJoinRatioSub').text(s.joins.value + ' placed from ' + s.candidates.value + ' submitted');
+
+        // 5. Intelligence Actionable Insights
+        if (data.insights && data.insights.length > 0) {
+            var insHtml = '';
+            data.insights.forEach(function(item) {
+                var iconColor = item.type === 'positive' ? '#10b981' : (item.type === 'warning' ? '#d97706' : '#3b82f6');
+                insHtml += '<div style="margin-bottom:4px;"><i class="fas ' + item.icon + ' fa-solid me-1" style="color:' + iconColor + ';"></i> <strong>' + item.title + ':</strong> ' + item.text + '</div>';
+            });
+            $('#perfInsightsGrid').html(insHtml);
         }
-        if (activeCount + holdCount + inactiveCount > 0) {
-            perfDataSets['12M'].donut = [activeCount, holdCount, inactiveCount, 0];
-            perfDataSets['12M'].totalActiveJobs = activeCount;
-            $('#donutTotalJobs').text(activeCount);
-            $('#donutCountFulltime').text(activeCount);
-            $('#donutCountContract').text(holdCount);
+
+        // 6. Top Hiring Roles Table
+        var rolesHtml = '';
+        if (data.roles && data.roles.items && data.roles.items.length > 0) {
+            data.roles.items.forEach(function(r, idx) {
+                var pctVal = parseFloat(r.conversion_pct) || 0;
+                rolesHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td>' + r.title + '</td>' +
+                    '<td>' + r.submissions + '</td>' +
+                    '<td>' + r.interviews + '</td>' +
+                    '<td>' + r.offers + '</td>' +
+                    '<td>' + r.joined + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + r.conversion_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            rolesHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No active requisitions recorded for this period.</td></tr>';
         }
-        cdPerfSyncRange(window.perfCurrentRange || '12M');
+        $('#perfTopRolesTbody').html(rolesHtml);
+
+        // 7. Recruiter Performance Table
+        var recHtml = '';
+        if (data.recruiters && data.recruiters.items && data.recruiters.items.length > 0) {
+            data.recruiters.items.forEach(function(rec, idx) {
+                var initials = rec.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var pctVal = parseFloat(rec.join_rate_pct) || 0;
+                recHtml += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td><span class="cd-recruiter-avatar" style="background:#e0f2fe; color:#0284c7;">' + initials + '</span>' + rec.name + '</td>' +
+                    '<td>' + rec.submissions + '</td>' +
+                    '<td>' + rec.interviews + '</td>' +
+                    '<td>' + rec.offers + '</td>' +
+                    '<td>' + rec.joins + '</td>' +
+                    '<td><div class="cd-perf-progress-wrap"><span>' + rec.join_rate_pct + '</span><div class="cd-perf-progress-bar"><div class="cd-perf-progress-fill" style="width:' + Math.min(100, pctVal) + '%;"></div></div></div></td>' +
+                    '</tr>';
+            });
+        } else {
+            recHtml = '<tr><td colspan="7" class="text-center py-3 text-muted">No assigned recruiters recorded for this client.</td></tr>';
+        }
+        $('#perfRecruitersTbody').html(recHtml);
+
+        // 8. Render Reactive Chart.js Visualizations
+        ensureChartJsLoaded(function() {
+            cdPerfRenderCharts(data);
+        });
+    }
+
+    function cdPerfUpdatePill($pill, deltaLabel, deltaValue, isLowerBetter) {
+        if (!$pill.length) return;
+
+        if (deltaLabel === 'New') {
+            $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good')
+                 .addClass('cd-perf-pill-up')
+                 .css({ 'background': '#f1f5f9', 'color': '#475569' })
+                 .html('<i class="fas fa-sparkles fa-solid" style="font-size:8px;"></i> New');
+            return;
+        }
+
+        var isPositive = deltaValue !== null && deltaValue > 0;
+        var isNegative = deltaValue !== null && deltaValue < 0;
+
+        var isGood = isLowerBetter ? isNegative : isPositive;
+
+        $pill.removeClass('cd-perf-pill-up cd-perf-pill-down cd-perf-pill-good');
+        if (isGood) {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#ecfdf5', 'color': '#10b981' });
+        } else if (isNegative || isPositive) {
+            $pill.addClass('cd-perf-pill-down').css({ 'background': '#fef2f2', 'color': '#ef4444' });
+        } else {
+            $pill.addClass('cd-perf-pill-up').css({ 'background': '#f8fafc', 'color': '#64748b' });
+        }
+
+        var icon = isPositive ? 'fa-arrow-up' : (isNegative ? 'fa-arrow-down' : 'fa-minus');
+        $pill.html('<i class="fas ' + icon + ' fa-solid" style="font-size:8px;"></i> ' + (deltaLabel || '0.0%'));
+    }
+
+    function cdPerfRenderCharts(data) {
+        function getOrCreateChart(canvasId, config) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            try {
+                if (typeof Chart.getChart === 'function') {
+                    var existing = Chart.getChart(canvas);
+                    if (existing) existing.destroy();
+                }
+                if (window.perfChartInstances[canvasId]) {
+                    window.perfChartInstances[canvasId].destroy();
+                }
+            } catch(e) {}
+            var ctx = canvas.getContext('2d');
+            var inst = new Chart(ctx, config);
+            window.perfChartInstances[canvasId] = inst;
+            return inst;
+        }
+
+        var v = data.velocity || { labels: [], candidates_submitted: [], interviewed_candidates: [] };
+        var j = data.jobs || { active: 0, hold: 0, closed: 0, total_count: 0 };
+        var o = data.offers || { labels: [], offers_generated: [], successful_joins: [] };
+        var jt = data.job_types || { labels: [], counts: [], percentages: [] };
+
+        // 1. Combo: Candidates & Interviews
+        getOrCreateChart('chartCandidatesInterviews', {
+            type: 'bar',
+            data: {
+                labels: v.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Candidates Submitted',
+                        data: v.candidates_submitted,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Interviewed Candidates',
+                        data: v.interviewed_candidates,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: '#8b5cf6',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#8b5cf6',
+                        tension: 0.35,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 2. Bar: All Jobs Status
+        getOrCreateChart('chartAllJobsStatus', {
+            type: 'bar',
+            data: {
+                labels: ['Active', 'On Hold', 'Closed'],
+                datasets: [{
+                    label: 'Jobs Count',
+                    data: [j.active, j.hold, j.closed],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'],
+                    borderRadius: 4,
+                    barPercentage: 0.45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 3. Line/Bar: Offers & Joins
+        getOrCreateChart('chartOffersJoinings', {
+            type: 'bar',
+            data: {
+                labels: o.labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Offers',
+                        data: o.offers_generated,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4,
+                        barPercentage: 0.45
+                    },
+                    {
+                        type: 'line',
+                        label: 'Joins',
+                        data: o.successful_joins,
+                        borderColor: '#10b981',
+                        backgroundColor: '#10b981',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 }, precision: 0 } }
+                }
+            }
+        });
+
+        // 4. Doughnut: Job Type Performance
+        var donutData = jt.counts && jt.counts.length > 0 ? jt.counts : [j.active, j.hold, 0, 0];
+        getOrCreateChart('chartJobType', {
+            type: 'doughnut',
+            data: {
+                labels: jt.labels || ['Full-Time', 'Contract', 'Freelance', 'Part-Time'],
+                datasets: [{
+                    data: donutData,
+                    backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#94a3b8'],
+                    borderWidth: 0,
+                    hoverOffset: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        $('#donutTotalJobs').text(j.active || 0);
+        if (jt.counts && jt.counts[0] !== undefined) $('#donutCountFulltime').text(jt.counts[0]);
+        if (jt.percentages && jt.percentages[0]) $('#donutPctFulltime').text(jt.percentages[0]);
+        if (jt.counts && jt.counts[1] !== undefined) $('#donutCountContract').text(jt.counts[1]);
+        if (jt.percentages && jt.percentages[1]) $('#donutPctContract').text(jt.percentages[1]);
+        if (jt.counts && jt.counts[2] !== undefined) $('#donutCountFreelance').text(jt.counts[2]);
+        if (jt.percentages && jt.percentages[2]) $('#donutPctFreelance').text(jt.percentages[2]);
+        if (jt.counts && jt.counts[3] !== undefined) $('#donutCountPartTime').text(jt.counts[3]);
+        if (jt.percentages && jt.percentages[3]) $('#donutPctPartTime').text(jt.percentages[3]);
+
+        // 5. Line: Time to Hire Trend
+        getOrCreateChart('chartTimeToHire', {
+            type: 'line',
+            data: {
+                labels: v.labels,
+                datasets: [{
+                    label: 'Days to Hire',
+                    data: v.labels.map(function() { return data.summary.avg_time_to_hire_days.value || 30; }),
+                    borderColor: '#0284c7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 2.5,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5 } } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9.5 } } }
+                }
+            }
+        });
+    }
+
+    function initPerformanceDashboard() {
+        cdPerfFetchData(window.perfCurrentRange, window.perfCurrentCompare, false);
     }
 
     // Auto-init on load if candidateDashboard is active
@@ -3866,7 +3599,6 @@ use Carbon\Carbon;
         }
     }, 250);
 </script>
-
 
 <script>
     function initContactsDataTable() {
@@ -3923,14 +3655,14 @@ use Carbon\Carbon;
         var loadedTabs = {};
 
         if ($('#candidate_list').hasClass('active') || $('a[href="#candidate_list"]').hasClass('active')) {
-            fetchCandidates();
+            fetchClientDrawerCandidates();
             loadedTabs['candidate_list'] = true;
         } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
             initContactsDataTable();
             loadedTabs['contacts'] = true;
         } else if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
             initPerformanceDashboard();
-            fetchClientDashboardAnalytics();
+            fetchInternalClientDashboardAnalytics();
             loadedTabs['candidateDashboard'] = true;
         }
 
@@ -3956,7 +3688,7 @@ use Carbon\Carbon;
                 initContactsDataTable();
                 loadedTabs[target] = true;
             } else if (target === 'candidate_list') {
-                fetchCandidates();
+                fetchClientDrawerCandidates();
                 loadedTabs[target] = true;
             } else if (target === 'requisitions') {
                 fetchJobsClient();
@@ -3968,7 +3700,7 @@ use Carbon\Carbon;
                 fetchCandidatesJoin();
                 loadedTabs[target] = true;
             } else if (target === 'candidateDashboard') {
-                fetchClientDashboardAnalytics();
+                fetchInternalClientDashboardAnalytics();
                 loadedTabs[target] = true;
             }
         });
@@ -3992,7 +3724,7 @@ use Carbon\Carbon;
             clearTimeout(searchTimer);
             const search = $('#search').val();
             searchTimer = setTimeout(function() {
-                fetchCandidates(1, search);
+                fetchClientDrawerCandidates(1, search);
             }, 300);
         });
 
@@ -4006,7 +3738,7 @@ use Carbon\Carbon;
             if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
             var search = $('#inputSearch').val() || '';
-            fetchCandidates(page, search);
+            fetchClientDrawerCandidates(page, search);
         });
 
         $(document).off('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow');
@@ -4051,7 +3783,7 @@ use Carbon\Carbon;
 
     });
 
-    function fetchCandidates(page = 1, search = '') {
+    function fetchClientDrawerCandidates(page = 1, search = '') {
         var clientid = '{{ $client->id }}';
         $('.page-loader').css('display', 'flex');
         return $.ajax({
@@ -4118,7 +3850,7 @@ use Carbon\Carbon;
         applyLiveClientDataToPerfDashboard(d);
     }
 
-    function fetchClientDashboardAnalytics() {
+    function fetchInternalClientDashboardAnalytics() {
         var clientId = '{{ $client->id }}';
         return $.ajax({
             url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
