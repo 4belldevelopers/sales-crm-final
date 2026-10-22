@@ -128,6 +128,264 @@
   color: #0f172a !important;
   stroke: #0f172a !important;
 }
+
+/* ── Modern Metronic Location Combobox (15.6-inch & Desktop Responsive) ── */
+.cl-loc-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.cl-loc-combobox-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  min-width: 155px;
+  max-width: 210px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.cl-loc-combobox-btn:hover, .cl-loc-combobox-btn.active {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.cl-loc-combobox-btn.has-filter {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+.cl-loc-combobox-btn.has-filter .cl-pill-val {
+  color: #b45309;
+}
+.cl-loc-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 310px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  z-index: 1050;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clLocFadeIn 0.15s ease-out;
+}
+@keyframes clLocFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cl-loc-dropdown-panel.show {
+  display: flex;
+}
+.cl-loc-search-box {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  position: relative;
+}
+.cl-loc-search-inp {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0 28px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cl-loc-search-inp:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+.cl-loc-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.cl-loc-search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: none;
+}
+.cl-loc-search-clear:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+.cl-loc-dropdown-body {
+  max-height: 290px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.cl-loc-dropdown-body::-webkit-scrollbar {
+  width: 5px;
+}
+.cl-loc-dropdown-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.cl-loc-section-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 14px 4px 14px;
+}
+.cl-loc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.cl-loc-item:hover {
+  background: #f1f5f9;
+}
+.cl-loc-item.selected {
+  background: #fffbeb;
+  color: #b45309;
+  font-weight: 600;
+}
+.cl-loc-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.cl-loc-item-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-loc-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 12px;
+  background: #e2e8f0;
+  color: #475569;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.cl-loc-item.selected .cl-loc-badge {
+  background: #fde68a;
+  color: #92400e;
+}
+.cl-loc-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: #94a3b8;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.cl-loc-expand-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+.cl-loc-expand-btn.expanded svg {
+  transform: rotate(90deg);
+}
+.cl-loc-city-list {
+  display: none;
+  background: #f8fafc;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 24px;
+  padding: 2px 0;
+}
+.cl-loc-city-list.show {
+  display: block;
+}
+.cl-loc-city-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 14px 5px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.cl-loc-city-item:hover {
+  background: #f1f5f9;
+}
+.cl-loc-city-item.selected {
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: 600;
+}
+.cl-loc-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 4px 0;
+}
+.cl-loc-empty {
+  padding: 18px 14px;
+  text-align: center;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+/* ── Sortable Table Headers ── */
+.cl-sortable-th {
+  cursor: pointer !important;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+.cl-sortable-th:hover {
+  background-color: #f8fafc !important;
+}
+.cl-sortable-th.active-sort {
+  color: #2563eb !important;
+}
+.cl-sortable-th.active-sort svg {
+  color: #2563eb !important;
+  stroke: #2563eb !important;
+}
+.cl-sortable-th.active-sort-asc .tbl-th-sort {
+  transform: rotate(180deg);
+}
+
+/* ── 15.6-inch Screen Optimization (1366x768 & 1920x1080) ── */
+@media (max-width: 1400px) {
+  .cl-filter-bar {
+    gap: 8px !important;
+  }
+  .cl-dropdown-pill, .cl-loc-combobox-btn {
+    min-width: 135px !important;
+    padding: 0 10px !important;
+  }
+}
 </style>
 @endpush
 @section('content')
@@ -356,61 +614,96 @@
                 <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
             </div>
 
-            {{-- Filter 1: Client Type --}}
-            <div class="cl-dropdown-pill">
-                <div class="cl-pill-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                        <path d="M9 22v-4h6v4"/>
-                        <path d="M8 6h.01"/>
-                        <path d="M16 6h.01"/>
-                        <path d="M8 10h.01"/>
-                        <path d="M16 10h.01"/>
-                    </svg>
+            {{-- Filter 1: Location Combobox --}}
+            <div class="cl-loc-dropdown-wrapper" id="clLocDropdownWrapper">
+                <div class="cl-loc-combobox-btn" id="clLocBtn" onclick="toggleLocationDropdown(event)">
+                    <div class="cl-pill-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="cl-pill-texts">
+                        <span class="cl-pill-lbl">Location</span>
+                        <span class="cl-pill-val" id="locationDisplay">All Locations</span>
+                    </div>
+                    <div class="cl-pill-chevron">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                 </div>
-                <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Client Type</span>
-                    <span class="cl-pill-val" id="clientTypeDisplay">All Types</span>
+
+                {{-- Dropdown popover panel --}}
+                <div class="cl-loc-dropdown-panel" id="clLocDropdownPanel">
+                    <div class="cl-loc-search-box">
+                        <svg class="cl-loc-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" class="cl-loc-search-inp" id="clLocSearchInp" placeholder="Search countries or cities..." autocomplete="off" oninput="handleLocationSearchInput(this.value)" />
+                        <span class="cl-loc-search-clear" id="clLocSearchClear" onclick="clearLocationSearch()">✕</span>
+                    </div>
+                    <div class="cl-loc-dropdown-body" id="clLocDropdownBody">
+                        {{-- Rendered dynamically from window.initialLocationFacets & window.allCountriesList --}}
+                    </div>
                 </div>
-                <div class="cl-pill-chevron">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <select class="cl-pill-select-native" id="clientTypeFilter" onchange="handleClientTypeChange(this)">
-                    <option value="all" selected>All Types</option>
-                    <option value="internal">Internal Clients</option>
-                    <option value="direct">Direct Clients</option>
-                    <option value="hiring">Active Hiring</option>
-                    <option value="request">Pending Requests</option>
-                </select>
+
+                {{-- Hidden inputs to preserve backward compatibility --}}
+                <input type="hidden" id="country" name="country" value="" />
+                <input type="hidden" id="country_name" name="country_name" value="" />
+                <input type="hidden" id="city_id" name="city_id" value="" />
+                <input type="hidden" id="city_name" name="city_name" value="" />
+                <input type="hidden" id="unspecified_location" name="unspecified_location" value="0" />
             </div>
 
-            {{-- Filter 2: Location --}}
-            <div class="cl-dropdown-pill">
+            {{-- Filter 2: Industry Filter --}}
+            <div class="cl-dropdown-pill" id="industryPill">
                 <div class="cl-pill-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                     </svg>
                 </div>
                 <div class="cl-pill-texts">
-                    <span class="cl-pill-lbl">Location</span>
-                    <span class="cl-pill-val" id="locationDisplay">All Locations</span>
+                    <span class="cl-pill-lbl">Industry</span>
+                    <span class="cl-pill-val" id="industryDisplay">All Industries</span>
                 </div>
                 <div class="cl-pill-chevron">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <select class="cl-pill-select-native" id="country" onchange="handleLocationChange(this)">
-                    <option value="" selected>All Locations</option>
-                    @if (!empty($countries))
-                        @foreach ($countries as $country)
-                            <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                <select class="cl-pill-select-native" id="industryFilter" onchange="handleIndustryChange(this)">
+                    <option value="" selected>All Industries</option>
+                    @if (!empty($industries))
+                        @foreach ($industries as $ind)
+                            <option value="{{ $ind->ind_id }}">{{ $ind->ind_name }}</option>
                         @endforeach
                     @endif
                 </select>
             </div>
 
-            {{-- Filter 3: Sort --}}
-            <div class="cl-dropdown-pill">
+            {{-- Filter 3: Activity Filter --}}
+            <div class="cl-dropdown-pill" id="activityPill">
+                <div class="cl-pill-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="cl-pill-texts">
+                    <span class="cl-pill-lbl">Activity</span>
+                    <span class="cl-pill-val" id="activityDisplay">All Activity</span>
+                </div>
+                <div class="cl-pill-chevron">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <select class="cl-pill-select-native" id="activityFilter" onchange="handleActivityChange(this)">
+                    <option value="" selected>All Activity</option>
+                    <option value="hiring">Hiring Now (Active Jobs)</option>
+                    <option value="pipeline">Pipeline Active</option>
+                    <option value="dormant">Dormant / Inactive</option>
+                </select>
+            </div>
+
+            {{-- Filter 4: Sort --}}
+            <div class="cl-dropdown-pill" id="sortPill">
                 <div class="cl-pill-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="7" y1="4" x2="7" y2="20"/>
@@ -427,9 +720,11 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
                 <select class="cl-pill-select-native" id="sortingfilter" onchange="handleSortChange(this)">
-                    <option value="Show All" selected>Recently Added</option>
-                    <option value="1">Newest to Oldest</option>
-                    <option value="2">Oldest to Newest</option>
+                    <option value="recent" selected>Recently Added</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name_asc">Client Name (A → Z)</option>
+                    <option value="name_desc">Client Name (Z → A)</option>
+                    <option value="jobs_desc">Most Active Jobs</option>
                 </select>
             </div>
         </div>
@@ -493,35 +788,33 @@
                         <div class="tbl-th-subcard tbl-th-check">
                             <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Company Name">
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="name" title="Click to sort by Company Name (A-Z / Z-A)" onclick="handleHeaderSort('name')">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                                 <span>Company Name</span>
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Location">
+                        <div class="tbl-th-subcard" title="Location">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
                                 <span>Location</span>
                             </div>
-                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Date">
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="date" title="Click to sort by Date Added (Newest / Oldest)" onclick="handleHeaderSort('date')">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                 <span>Date</span>
                             </div>
                             <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Last Activity">
+                        <div class="tbl-th-subcard" title="Last Activity">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 <span>Last Activity</span>
                             </div>
-                            <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
-                        <div class="tbl-th-subcard" title="Sort by Jobs">
+                        <div class="tbl-th-subcard cl-sortable-th" data-sort-field="jobs" title="Click to sort by Most Active Jobs" onclick="handleHeaderSort('jobs')">
                             <div class="tbl-th-label">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                                 <span>Jobs</span>
@@ -629,25 +922,389 @@ function filtersdataget() {
     fetchCandidates(1, true);
 }
 
-// ── Dropdown label sync handlers ──
-function handleClientTypeChange(sel) {
-    var text = sel.options[sel.selectedIndex].text;
-    $('#clientTypeDisplay').text(text);
-    var val = sel.value;
-    setClientTab(val);
+// ── Location Combobox Controls ──
+function toggleLocationDropdown(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const $panel = $('#clLocDropdownPanel');
+    const isVisible = $panel.hasClass('show');
+    if (isVisible) {
+        $panel.removeClass('show');
+        $('#clLocBtn').removeClass('active');
+    } else {
+        $panel.addClass('show');
+        $('#clLocBtn').addClass('active');
+        $('#clLocSearchInp').focus();
+        renderLocationDropdown($('#clLocSearchInp').val() || '');
+    }
 }
 
-function handleLocationChange(sel) {
-    var text = sel.options[sel.selectedIndex].text;
-    $('#locationDisplay').text(text);
+function handleLocationSearchInput(q) {
+    if (q && q.trim()) {
+        $('#clLocSearchClear').show();
+    } else {
+        $('#clLocSearchClear').hide();
+    }
+    renderLocationDropdown(q);
+}
+
+function clearLocationSearch() {
+    $('#clLocSearchInp').val('');
+    $('#clLocSearchClear').hide();
+    renderLocationDropdown('');
+    $('#clLocSearchInp').focus();
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function highlightText(text, query) {
+    if (!query || !text) return text || '';
+    const index = text.toLowerCase().indexOf(query.toLowerCase());
+    if (index === -1) return text;
+    const before = text.substring(0, index);
+    const match = text.substring(index, index + query.length);
+    const after = text.substring(index + query.length);
+    return `${before}<b style="color:#d97706; text-decoration:underline;">${match}</b>${after}`;
+}
+
+function renderLocationDropdown(filterQuery = '') {
+    const q = (filterQuery || '').toLowerCase().trim();
+    const $body = $('#clLocDropdownBody');
+    const facets = window.initialLocationFacets || { total: 0, located_count: 0, unspecified_count: 0, hubs: [] };
+    const hubs = facets.hubs || [];
+    const unspecifiedCount = facets.unspecified_count || 0;
+    const countries = window.allCountriesList || [];
+
+    let html = '';
+
+    // Option 1: All Locations (Reset)
+    const isAllSelected = !clientListState.country_id && !clientListState.unspecified_location;
+    if (!q || 'all locations'.includes(q) || 'clear'.includes(q)) {
+        html += `
+            <div class="cl-loc-item ${isAllSelected ? 'selected' : ''}" onclick="resetLocationFilter(true)">
+                <div class="cl-loc-item-left">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m2 12 20 0"/></svg>
+                    <span class="cl-loc-item-title">All Locations</span>
+                </div>
+                <span class="cl-loc-badge">${facets.total || 0}</span>
+            </div>
+        `;
+    }
+
+    let hubsRendered = 0;
+    let hubHtml = '';
+
+    // Active Hubs Section
+    hubs.forEach(function(hub) {
+        const countryMatch = hub.country_name.toLowerCase().includes(q);
+        const matchingCities = (hub.cities || []).filter(c => c.city_name.toLowerCase().includes(q));
+
+        if (!q || countryMatch || matchingCities.length > 0) {
+            hubsRendered++;
+            const isCountrySelected = (clientListState.country_id == hub.country_id && !clientListState.city_id && !clientListState.unspecified_location);
+            const hasCities = (hub.cities && hub.cities.length > 0);
+            const isExpanded = (q.length > 0) || (clientListState.country_id == hub.country_id);
+
+            hubHtml += `
+                <div class="cl-loc-item-container" data-country-id="${hub.country_id}">
+                    <div class="cl-loc-item ${isCountrySelected ? 'selected' : ''}" onclick="selectLocationCountry(${hub.country_id}, '${escapeAttr(hub.country_name)}', true)">
+                        <div class="cl-loc-item-left">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span class="cl-loc-item-title">${highlightText(hub.country_name, q)}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="cl-loc-badge">${hub.count}</span>
+                            ${hasCities ? `
+                                <span class="cl-loc-expand-btn ${isExpanded ? 'expanded' : ''}" onclick="toggleCityExpand(event, ${hub.country_id})">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+            `;
+
+            // Cities list
+            if (hasCities) {
+                hubHtml += `<div class="cl-loc-city-list ${isExpanded ? 'show' : ''}" id="clLocCities_${hub.country_id}">`;
+                hub.cities.forEach(function(city) {
+                    if (!q || countryMatch || city.city_name.toLowerCase().includes(q)) {
+                        const isCitySelected = (clientListState.country_id == hub.country_id && (clientListState.city_id == city.city_id || clientListState.city_name == city.city_name));
+                        hubHtml += `
+                            <div class="cl-loc-city-item ${isCitySelected ? 'selected' : ''}" onclick="selectLocationCity(${hub.country_id}, '${escapeAttr(hub.country_name)}', '${city.city_id}', '${escapeAttr(city.city_name)}', true)">
+                                <span>${highlightText(city.city_name, q)}</span>
+                                <span class="cl-loc-badge" style="font-size:9.5px; padding:0 5px;">${city.count}</span>
+                            </div>
+                        `;
+                    }
+                });
+                hubHtml += `</div>`;
+            }
+
+            hubHtml += `</div>`;
+        }
+    });
+
+    if (hubHtml) {
+        html += `<div class="cl-loc-section-hdr">Your Client Hubs</div>${hubHtml}`;
+    }
+
+    // Unspecified Location option
+    if (unspecifiedCount > 0 && (!q || 'location not specified'.includes(q) || 'unspecified'.includes(q) || 'unknown'.includes(q))) {
+        const isUnspecifiedSelected = clientListState.unspecified_location === true;
+        html += `
+            <div class="cl-loc-item ${isUnspecifiedSelected ? 'selected' : ''}" onclick="selectLocationUnspecified(true)">
+                <div class="cl-loc-item-left">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    <span class="cl-loc-item-title" style="color:#64748b;">Location Not Specified</span>
+                </div>
+                <span class="cl-loc-badge" style="background:#f1f5f9; color:#64748b;">${unspecifiedCount}</span>
+            </div>
+        `;
+    }
+
+    // All 250 Countries Section
+    let globalHtml = '';
+    let globalCount = 0;
+    const maxGlobalToShow = q ? 50 : 15;
+
+    countries.forEach(function(c) {
+        const inHubs = hubs.some(h => h.country_id == c.id || h.country_name.toLowerCase() === c.country_name.toLowerCase());
+        if (inHubs && !q) return;
+
+        if (!q || c.country_name.toLowerCase().includes(q)) {
+            if (globalCount < maxGlobalToShow) {
+                globalCount++;
+                const isSelected = (clientListState.country_id == c.id && !clientListState.city_id && !clientListState.unspecified_location);
+                globalHtml += `
+                    <div class="cl-loc-item ${isSelected ? 'selected' : ''}" onclick="selectLocationCountry(${c.id}, '${escapeAttr(c.country_name)}', true)">
+                        <div class="cl-loc-item-left">
+                            <span style="font-size:13px; line-height:1;">${c.emoji || '🌐'}</span>
+                            <span class="cl-loc-item-title">${highlightText(c.country_name, q)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+
+    if (globalHtml) {
+        html += `
+            <div class="cl-loc-divider"></div>
+            <div class="cl-loc-section-hdr">${q ? 'Global Countries Match' : 'All Countries'}</div>
+            ${globalHtml}
+        `;
+        if (!q && countries.length > maxGlobalToShow) {
+            html += `<div style="padding:4px 14px 8px 14px; font-size:10.5px; color:#94a3b8; font-style:italic;">Type above to search all 250 countries...</div>`;
+        }
+    }
+
+    if (!html) {
+        html = `<div class="cl-loc-empty">No locations matching "${escapeAttr(q)}"</div>`;
+    }
+
+    $body.html(html);
+}
+
+function toggleCityExpand(e, countryId) {
+    e.stopPropagation();
+    e.preventDefault();
+    const $cities = $(`#clLocCities_${countryId}`);
+    const $btn = $(e.currentTarget);
+    $cities.toggleClass('show');
+    $btn.toggleClass('expanded');
+}
+
+function resetLocationFilter(triggerFetch = true) {
+    clientListState.country_id = null;
+    clientListState.country_name = '';
+    clientListState.city_id = null;
+    clientListState.city_name = '';
+    clientListState.unspecified_location = false;
+
+    $('#country').val('');
+    $('#country_name').val('');
+    $('#city_id').val('');
+    $('#city_name').val('');
+    $('#unspecified_location').val('0');
+
+    $('#locationDisplay').text('All Locations');
+    $('#clLocBtn').removeClass('has-filter active');
+    $('#clLocDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function selectLocationCountry(countryId, countryName, triggerFetch = true) {
+    clientListState.country_id = countryId;
+    clientListState.country_name = countryName;
+    clientListState.city_id = null;
+    clientListState.city_name = '';
+    clientListState.unspecified_location = false;
+
+    $('#country').val(countryId);
+    $('#country_name').val(countryName);
+    $('#city_id').val('');
+    $('#city_name').val('');
+    $('#unspecified_location').val('0');
+
+    $('#locationDisplay').text(countryName);
+    $('#clLocBtn').addClass('has-filter').removeClass('active');
+    $('#clLocDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function selectLocationCity(countryId, countryName, cityId, cityName, triggerFetch = true) {
+    clientListState.country_id = countryId;
+    clientListState.country_name = countryName;
+    clientListState.city_id = (cityId === 'unspecified') ? null : cityId;
+    clientListState.city_name = cityName;
+    clientListState.unspecified_location = false;
+
+    $('#country').val(countryId);
+    $('#country_name').val(countryName);
+    $('#city_id').val(clientListState.city_id || '');
+    $('#city_name').val(cityName);
+    $('#unspecified_location').val('0');
+
+    const displayLabel = `${countryName}: ${cityName}`;
+    $('#locationDisplay').text(displayLabel);
+    $('#clLocBtn').addClass('has-filter').removeClass('active');
+    $('#clLocDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function selectLocationUnspecified(triggerFetch = true) {
+    clientListState.country_id = null;
+    clientListState.country_name = '';
+    clientListState.city_id = null;
+    clientListState.city_name = '';
+    clientListState.unspecified_location = true;
+
+    $('#country').val('unspecified');
+    $('#country_name').val('');
+    $('#city_id').val('');
+    $('#city_name').val('');
+    $('#unspecified_location').val('1');
+
+    $('#locationDisplay').text('Location Not Specified');
+    $('#clLocBtn').addClass('has-filter').removeClass('active');
+    $('#clLocDropdownPanel').removeClass('show');
+
+    if (triggerFetch) {
+        filtersdataget();
+    }
+}
+
+function selectLocationByCountryAndCity(countryVal, cityVal, triggerFetch = true) {
+    if (!countryVal || countryVal === 'all') {
+        resetLocationFilter(triggerFetch);
+        return;
+    }
+    if (countryVal === 'unspecified') {
+        selectLocationUnspecified(triggerFetch);
+        return;
+    }
+
+    const countries = window.allCountriesList || [];
+    let matchedCountry = countries.find(c => c.id == countryVal || c.country_name.toLowerCase() === countryVal.toLowerCase());
+    let countryName = matchedCountry ? matchedCountry.country_name : countryVal;
+    let countryId = matchedCountry ? matchedCountry.id : countryVal;
+
+    if (cityVal) {
+        selectLocationCity(countryId, countryName, cityVal, cityVal, triggerFetch);
+    } else {
+        selectLocationCountry(countryId, countryName, triggerFetch);
+    }
+}
+
+// ── Dropdown filter sync handlers ──
+function handleIndustryChange(sel) {
+    const text = sel.options[sel.selectedIndex].text;
+    const val = sel.value;
+    $('#industryDisplay').text(text);
+    clientListState.industry_id = val;
+    filtersdataget();
+}
+
+function handleActivityChange(sel) {
+    const text = sel.options[sel.selectedIndex].text;
+    const val = sel.value;
+    $('#activityDisplay').text(text);
+    clientListState.activity = val;
     filtersdataget();
 }
 
 function handleSortChange(sel) {
-    var text = sel.options[sel.selectedIndex].text;
+    const text = sel.options[sel.selectedIndex].text;
+    const val = sel.value;
     $('#sortDisplay').text(text);
+    clientListState.sort = val;
+    updateHeaderSortIndicators(val);
     filtersdataget();
 }
+
+function handleHeaderSort(field) {
+    let currentSort = $('#sortingfilter').val() || 'recent';
+    let nextSort = 'recent';
+
+    if (field === 'name') {
+        nextSort = (currentSort === 'name_asc') ? 'name_desc' : 'name_asc';
+    } else if (field === 'date') {
+        nextSort = (currentSort === 'recent') ? 'oldest' : 'recent';
+    } else if (field === 'jobs') {
+        nextSort = (currentSort === 'jobs_desc') ? 'recent' : 'jobs_desc';
+    }
+
+    $('#sortingfilter').val(nextSort);
+    const sortText = $(`#sortingfilter option[value="${nextSort}"]`).text() || nextSort;
+    $('#sortDisplay').text(sortText);
+    clientListState.sort = nextSort;
+    updateHeaderSortIndicators(nextSort);
+    filtersdataget();
+}
+
+function updateHeaderSortIndicators(activeSort) {
+    $('.cl-sortable-th').removeClass('active-sort active-sort-asc active-sort-desc');
+    if (activeSort === 'name_asc') {
+        $('.cl-sortable-th[data-sort-field="name"]').addClass('active-sort active-sort-asc');
+    } else if (activeSort === 'name_desc') {
+        $('.cl-sortable-th[data-sort-field="name"]').addClass('active-sort active-sort-desc');
+    } else if (activeSort === 'recent') {
+        $('.cl-sortable-th[data-sort-field="date"]').addClass('active-sort active-sort-desc');
+    } else if (activeSort === 'oldest') {
+        $('.cl-sortable-th[data-sort-field="date"]').addClass('active-sort active-sort-asc');
+    } else if (activeSort === 'jobs_desc') {
+        $('.cl-sortable-th[data-sort-field="jobs"]').addClass('active-sort active-sort-desc');
+    }
+}
+
+// Close location dropdown on outside click or escape
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('#clLocDropdownWrapper').length) {
+        $('#clLocDropdownPanel').removeClass('show');
+        $('#clLocBtn').removeClass('active');
+    }
+});
+
+$(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('#clLocDropdownPanel').hasClass('show')) {
+        $('#clLocDropdownPanel').removeClass('show');
+        $('#clLocBtn').removeClass('active');
+    }
+});
 
 // ── Select all checkbox ──
 function toggleSelectAllClients(master) {
@@ -843,6 +1500,28 @@ $(document).on('click', '#kt_activitiesDirectClient_close', function(e) {
     }
 });
 
+// ── Canonical Client Listing State (Zero tenant_id, strictly session-scoped) ──
+window.clientListState = {
+    tab: {!! json_encode($initialTab ?? 'all') !!},
+    search: '',
+    country_id: null,
+    country_name: '',
+    city_id: null,
+    city_name: '',
+    unspecified_location: false,
+    industry_id: '',
+    activity: '',
+    sort: 'recent',
+    page: 1,
+    per_page: 10,
+    cursor: null
+};
+if (window.clientListState.tab === 'requests') window.clientListState.tab = 'request';
+if (window.clientListState.tab === 'custom') window.clientListState.tab = 'internal';
+
+window.initialLocationFacets = {!! json_encode($locationFacets ?? ['total' => 0, 'located_count' => 0, 'unspecified_count' => 0, 'hubs' => []]) !!};
+window.allCountriesList = {!! json_encode($countries ?? []) !!};
+
 // ── Bounded Browser RAM Store (ClientStore) with SWR & Request Token Guard ──
 const ClientStore = {
     cache: new Map(),
@@ -852,8 +1531,8 @@ const ClientStore = {
     latestMutationVersion: 0,
     maxStaleAgeMs: 5000, // 5 seconds bounded staleness for SWR
 
-    getKey: function(tab, page, search, sort, country, hiring, perPage) {
-        return `${tab}:${page}:${search || ''}:${sort || ''}:${country || ''}:${hiring || 0}:${perPage || 10}`;
+    getKey: function(tab, page, search, sort, countryId, cityId, unspecified, industryId, activity, perPage) {
+        return `${tab}:${page}:${search || ''}:${sort || 'recent'}:${countryId || ''}:${cityId || ''}:${unspecified ? 1 : 0}:${industryId || ''}:${activity || ''}:${perPage || 10}`;
     },
 
     get: function(key) {
@@ -895,7 +1574,7 @@ const ClientStore = {
     var initTab = {!! json_encode($initialTab ?? 'all') !!};
     if (initTab === 'requests') initTab = 'request';
     if (initTab === 'custom') initTab = 'internal';
-    var initKey = ClientStore.getKey(initTab, 1, '', 'Show All', '', (initTab === 'hiring' ? 1 : 0), 10);
+    var initKey = ClientStore.getKey(initTab, 1, '', 'recent', '', '', 0, '', '', 10);
     ClientStore.set(initKey, {
         html: {!! json_encode($initialHtml) !!},
         total: {{ (int)($initialTotal ?? 0) }},
@@ -929,15 +1608,35 @@ function syncUrlState(replace = false) {
             url.searchParams.delete('search');
         }
 
-        const countryVal = $('#country').val() || '';
-        if (countryVal) {
-            url.searchParams.set('country', countryVal);
+        if (clientListState.unspecified_location) {
+            url.searchParams.set('country', 'unspecified');
+            url.searchParams.delete('city');
+        } else if (clientListState.country_id) {
+            url.searchParams.set('country', clientListState.country_id);
+            if (clientListState.city_id) {
+                url.searchParams.set('city', clientListState.city_id);
+            } else {
+                url.searchParams.delete('city');
+            }
         } else {
             url.searchParams.delete('country');
+            url.searchParams.delete('city');
         }
 
-        const sortVal = $('#sortingfilter').val() || '';
-        if (sortVal && sortVal !== 'Show All') {
+        if (clientListState.industry_id) {
+            url.searchParams.set('industry', clientListState.industry_id);
+        } else {
+            url.searchParams.delete('industry');
+        }
+
+        if (clientListState.activity) {
+            url.searchParams.set('activity', clientListState.activity);
+        } else {
+            url.searchParams.delete('activity');
+        }
+
+        const sortVal = $('#sortingfilter').val() || 'recent';
+        if (sortVal && sortVal !== 'recent' && sortVal !== 'Show All') {
             url.searchParams.set('sort', sortVal);
         } else {
             url.searchParams.delete('sort');
@@ -971,27 +1670,55 @@ function hydrateStateFromUrl(shouldFetch = true) {
 
         const search = params.get('search') || params.get('q') || '';
         const country = params.get('country') || '';
-        const sort = params.get('sort') || params.get('sortingfilter') || 'Show All';
+        const city = params.get('city') || '';
+        const industry = params.get('industry') || '';
+        const activity = params.get('activity') || '';
+        const sort = params.get('sort') || params.get('sortingfilter') || 'recent';
         const page = parseInt(params.get('page'), 10) || 1;
         const openClient = parseInt(params.get('open_client'), 10) || initialOpenClientId || 0;
 
         $('#kt_tagify_2').val(search);
-        $('#country').val(country);
-        $('#sortingfilter').val(sort);
+        clientListState.search = search;
 
-        if (country) {
-            const countryText = $('#country option:selected').text();
-            $('#locationDisplay').text(countryText);
+        // Hydrate location
+        if (country === 'unspecified') {
+            selectLocationUnspecified(false);
+        } else if (country) {
+            selectLocationByCountryAndCity(country, city, false);
         } else {
-            $('#locationDisplay').text('All Locations');
+            resetLocationFilter(false);
         }
 
-        if (sort && sort !== 'Show All') {
-            const sortText = $('#sortingfilter option:selected').text();
-            $('#sortDisplay').text(sortText);
+        // Hydrate industry
+        $('#industryFilter').val(industry);
+        clientListState.industry_id = industry;
+        if (industry) {
+            const indText = $(`#industryFilter option[value="${industry}"]`).text() || $('#industryFilter option:selected').text();
+            if (indText) $('#industryDisplay').text(indText);
+        } else {
+            $('#industryDisplay').text('All Industries');
+        }
+
+        // Hydrate activity
+        $('#activityFilter').val(activity);
+        clientListState.activity = activity;
+        if (activity) {
+            const actText = $(`#activityFilter option[value="${activity}"]`).text() || $('#activityFilter option:selected').text();
+            if (actText) $('#activityDisplay').text(actText);
+        } else {
+            $('#activityDisplay').text('All Activity');
+        }
+
+        // Hydrate sort
+        $('#sortingfilter').val(sort);
+        clientListState.sort = sort;
+        if (sort && sort !== 'recent' && sort !== 'Show All') {
+            const sortText = $(`#sortingfilter option[value="${sort}"]`).text() || $('#sortingfilter option:selected').text();
+            if (sortText) $('#sortDisplay').text(sortText);
         } else {
             $('#sortDisplay').text('Recently Added');
         }
+        updateHeaderSortIndicators(sort);
 
         setClientTab(tab, null, false);
         if (shouldFetch) {
@@ -1041,6 +1768,7 @@ function setClientTab(tabName, el, updateUrl = true) {
     if (tabName === 'custom') tabName = 'internal';
 
     activeClientTab = tabName;
+    clientListState.tab = tabName;
     hiringFilter = (tabName === 'hiring') ? 1 : 0;
     page_no = 1;
 
@@ -1049,19 +1777,6 @@ function setClientTab(tabName, el, updateUrl = true) {
 
     $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
     $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
-
-    // Update Client Type dropdown label
-    var tabLabels = {
-        'all': 'All Types',
-        'internal': 'Internal Clients',
-        'direct': 'Direct Clients',
-        'hiring': 'Active Hiring',
-        'request': 'Pending Requests'
-    };
-    if (tabLabels[tabName]) {
-        $('#clientTypeDisplay').text(tabLabels[tabName]);
-        $('#clientTypeFilter').val(tabName);
-    }
 
     if (tabName === 'request') {
         $('.tbl').addClass('tbl-req');
@@ -1097,35 +1812,33 @@ function setClientTab(tabName, el, updateUrl = true) {
             <div class="tbl-th-subcard tbl-th-check">
                 <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
             </div>
-            <div class="tbl-th-subcard" title="Sort by Company Name">
+            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="name" title="Click to sort by Company Name (A-Z / Z-A)" onclick="handleHeaderSort('name')">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                     <span>Company Name</span>
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard" title="Sort by Location">
+            <div class="tbl-th-subcard" title="Location">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
                     <span>Location</span>
                 </div>
-                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard" title="Sort by Date">
+            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="date" title="Click to sort by Date Added (Newest / Oldest)" onclick="handleHeaderSort('date')">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span>Date</span>
                 </div>
                 <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard" title="Sort by Last Activity">
+            <div class="tbl-th-subcard" title="Last Activity">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     <span>Last Activity</span>
                 </div>
-                <svg class="tbl-th-sort" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="tbl-th-subcard" title="Sort by Jobs">
+            <div class="tbl-th-subcard cl-sortable-th" data-sort-field="jobs" title="Click to sort by Most Active Jobs" onclick="handleHeaderSort('jobs')">
                 <div class="tbl-th-label">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                     <span>Jobs</span>
@@ -1137,9 +1850,10 @@ function setClientTab(tabName, el, updateUrl = true) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                     <span>Hiring Pipeline</span>
                 </div>
-                <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg class="tbl-th-info" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-toggle="tooltip" title="Funnel: Sourced → Evaluated → Interviews → Offers → Joined"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
         `);
+        updateHeaderSortIndicators(clientListState.sort);
     }
 
     fetchCandidates(1, updateUrl);
@@ -1184,10 +1898,16 @@ function applyClientResponse(response, targetPage) {
     });
 }
 
-function fetchCandidates(page, updateUrl = true) {
+function fetchCandidates(page, updateUrl = true, cursor = null) {
     var targetPage = page || page_no || 1;
     page_no = targetPage;
     localStorage.setItem('currentPageClients', targetPage);
+
+    if (cursor) {
+        clientListState.cursor = cursor;
+    } else if (targetPage <= 1) {
+        clientListState.cursor = null;
+    }
 
     if (updateUrl) {
         syncUrlState();
@@ -1195,10 +1915,14 @@ function fetchCandidates(page, updateUrl = true) {
 
     var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
     var searchVal = $('#kt_tagify_2').val() || '';
-    var sortVal = $('#sortingfilter').val() || '';
-    var countryVal = $('#country').val() || '';
+    var sortVal = $('#sortingfilter').val() || 'recent';
+    var countryVal = clientListState.country_id || $('#country').val() || '';
+    var cityVal = clientListState.city_id || $('#city_id').val() || '';
+    var unspecifiedVal = clientListState.unspecified_location ? 1 : 0;
+    var industryVal = clientListState.industry_id || $('#industryFilter').val() || '';
+    var activityVal = clientListState.activity || $('#activityFilter').val() || '';
 
-    var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, hiringFilter, perPage);
+    var cacheKey = ClientStore.getKey(activeClientTab, targetPage, searchVal, sortVal, countryVal, cityVal, unspecifiedVal, industryVal, activityVal, perPage);
     var cachedEntry = ClientStore.get(cacheKey);
 
     // Stale-While-Revalidate (SWR): Immediate perceived instant render if cache entry exists
@@ -1238,8 +1962,18 @@ function fetchCandidates(page, updateUrl = true) {
             custom_status: $('#status').val(),
             search: searchVal,
             sortingfilter: sortVal,
+            sort: sortVal,
             cus_search: searchVal,
             country: countryVal,
+            country_id: countryVal,
+            country_name: clientListState.country_name,
+            city_id: cityVal,
+            city_name: clientListState.city_name,
+            unspecified_location: unspecifiedVal,
+            industry_id: industryVal,
+            industry: industryVal,
+            activity: activityVal,
+            cursor: clientListState.cursor,
             hiring: hiringFilter,
             tab: activeClientTab,
             size: perPage,
@@ -1263,6 +1997,10 @@ function fetchCandidates(page, updateUrl = true) {
             if (requestId !== ClientStore.latestRequestId) return;
             if (!response || typeof response !== 'object') return;
 
+            if (response.cursor) {
+                clientListState.cursor = response.cursor;
+            }
+
             ClientStore.set(cacheKey, response);
             applyClientResponse(response, targetPage);
         },
@@ -1280,8 +2018,9 @@ $(document).ready(function() {
     $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
         e.preventDefault();
         const page = $(this).data('page');
+        const cursor = $(this).data('cursor') || null;
         if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-        fetchCandidates(page, true);
+        fetchCandidates(page, true, cursor);
     });
 
     $(document).on('change', '#pagination .pagi-perpage', function() {
