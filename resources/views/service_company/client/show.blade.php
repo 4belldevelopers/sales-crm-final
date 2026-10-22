@@ -12,7 +12,28 @@ use Carbon\Carbon;
 
   @endphp
 <style>
-    @media only screen and (min-width: 900px) and (max-width: 2560px) {
+    /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
+    .cit-fb-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+    .cit-fb-scheduled { background-color: #E8FFF3; color: #50CD89; border: 1px solid #c9f7dd; }
+    .cit-fb-rescheduled { background-color: #FFF8DD; color: #F1416C; border: 1px solid #ffe89e; }
+    .cit-fb-attended { background-color: #F1FAFF; color: #009EF7; border: 1px solid #c4e9fd; }
+    .cit-fb-noshow { background-color: #FFF5F8; color: #F1416C; border: 1px solid #fecdd6; }
+    .cit-fb-cancelled { background-color: #F5F8FA; color: #7E8299; border: 1px solid #E4E6EF; }
+    .cit-fb-default { background-color: #F5F8FA; color: #5E6278; border: 1px solid #E4E6EF; }
+
+    .cit-stars { display: inline-flex; gap: 2px; }
+    .cit-star-fill { color: #FFAD0F; font-size: 11px; }
+    .cit-star-empty { color: #E4E6EF; font-size: 11px; }
+
 
         .table td,
         .table th,
@@ -1961,27 +1982,26 @@ use Carbon\Carbon;
                                 <thead>
                                     <!--begin::Table row-->
 
-                                    <tr class="fw-bolder text-muted">
-                                        <th>Candidate</th>
-                                        <th>Job</th>
-                                        <th>Mode</th>
-                                        <th><i class="fa fa-users" style="font-size:13px"></i> Interviewers</th>
-                                        <th>Source</th>
-                                        <th><i class="fas fa-calendar-alt" style="font-size:11px; opacity:.7"></i> Date</th>
-                                        <th>Feedback</th>
-                                        <th><i class="fas fa-star" style="font-size:11px; color:#f6a723"></i> Rating</th>
-                                        <th>Stage</th>
+                                    <tr class="fw-bolder text-muted fs-7">
+                                        <th style="width: 18%;">Candidate</th>
+                                        <th style="width: 16%;">Job &amp; ID</th>
+                                        <th style="width: 13%;">Mode &amp; Round</th>
+                                        <th style="width: 14%;"><i class="fa fa-users me-1 text-gray-500"></i> Interviewers</th>
+                                        <th style="width: 13%;"><i class="fas fa-calendar-alt me-1 text-gray-500"></i> Date</th>
+                                        <th style="width: 11%;">Status</th>
+                                        <th style="width: 7%;"><i class="fas fa-star me-1 text-warning"></i> Rating</th>
+                                        <th style="width: 8%; text-align: right;">Actions</th>
                                     </tr>
                                     <!--end::Table row-->
                                 </thead>
                                 <!--end::Table head-->
-                                <tbody id="candidatetListinterviewtracker">
+                                <tbody id="candidatetListinterviewtracker" data-role="interview-list">
 
                                 </tbody>
 
                             </table>
                             <!--end::Table-->
-                            <div id="paginationcandidateinterviewtracker">
+                            <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
                                 <!-- Pagination links will be appended here -->
                             </div>
                         </div>
@@ -3819,31 +3839,402 @@ use Carbon\Carbon;
         });
     }
 
-    function fetchCandidatesInverViewTracker(page = 1, search = '') {
-        var clientid = '{{ $client->id }}';
-        $('.page-loader').css('display', 'flex');
-        return $.ajax({
-            url: `{{ url('service_company/client-candidate-interview-tracker') }}?page=${page}`,
-            type: 'GET',
-            data: {
-                search: search,
-                clientid: clientid
-            },
-            success: function(response) {
-                $('.page-loader').css('display', 'none');
-                $('#candidatetListinterviewtracker').html(response.html);
-                $('#paginationcandidateinterviewtracker').html(response.pagination);
-                if (response.pagination && typeof response.pagination.total !== 'undefined') {
-                    $('#kpiInterviewsScheduledCountShow').text(response.pagination.total);
-                    var $badge = $('#tabBadgeInterviewTrackerShow');
-                    if ($badge.length) {
-                        $badge.text(response.pagination.total);
-                        if (response.pagination.total > 0) { $badge.show(); } else { $badge.hide(); }
-                    }
+    // ══════════════════════════════════════════════════════════════════════════
+    // GOD-LEVEL CLIENT-FIRST INTERVIEW STORE (INTERNAL CLIENT DRAWER)
+    // 0% Server Strain | Multi-Tenant Isolated | Bidirectional Cursor Navigation
+    // ══════════════════════════════════════════════════════════════════════════
+    const ClientInterviewStoreInternal = (function() {
+        'use strict';
+
+        const store = new Map();
+        const subscriptions = new Map();
+        const activeRequests = new Map();
+        let requestSequence = 0;
+
+        function getCompositeKey(clientId) {
+            const companyId = window.authCompanyId || '{{ auth()->user()->company_id ?? 0 }}';
+            const sessionId = window.userSessionId || 'default_session';
+            return `${companyId}:${sessionId}:internal:${clientId}`;
+        }
+
+        function init() {
+            const clientId = parseInt('{{ $client->id ?? 0 }}', 10);
+            if (!clientId) return;
+
+            // 1. Subscribe Reverb WebSocket Channel
+            subscribeChannel(clientId);
+
+            // 2. Bind Reverb Reconnect Resynchronization Hook
+            if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+                window.Echo.connector.pusher.connection.bind('connected', function() {
+                    markAllStale();
+                    revalidateIfActive(clientId);
+                });
+            }
+
+            // 3. Bidirectional Cursor Click Handler
+            $(document)
+                .off('click.internalInterviewPagination', '#paginationcandidateinterviewtracker [data-direction]')
+                .on('click.internalInterviewPagination', '#paginationcandidateinterviewtracker [data-direction]', function(e) {
+                    e.preventDefault();
+                    const $btn = $(e.currentTarget);
+                    if ($btn.hasClass('disabled')) return;
+                    const direction = $btn.attr('data-direction');
+                    navigatePagination(clientId, direction);
+                });
+        }
+
+        function subscribeChannel(clientId) {
+            const companyId = window.authCompanyId || '{{ auth()->user()->company_id ?? 0 }}';
+            if (!companyId || !clientId || typeof window.Echo === 'undefined') return;
+            const channelName = `private-company.${companyId}.client.${clientId}`;
+
+            if (!subscriptions.has(channelName)) {
+                try {
+                    const channel = window.Echo.private(channelName);
+                    channel.listen('.InterviewUpdated', function(payload) {
+                        if (!payload) return;
+                        if (payload.relationship_type && payload.relationship_type !== 'INTERNAL_CLIENT') {
+                            return; // Target only internal client
+                        }
+                        const cacheKey = getCompositeKey(clientId);
+                        const entry = store.get(cacheKey);
+                        if (entry) {
+                            if (payload.projection_version && payload.projection_version <= entry.version) {
+                                return; // Monotonicity guard: Ignore obsolete broadcast
+                            }
+                            entry.state = 'STALE';
+                            entry.version = payload.projection_version || (entry.version + 1);
+                            revalidateIfActive(clientId);
+                        }
+                    });
+                    subscriptions.set(channelName, channel);
+                } catch (err) {
+                    console.warn('Reverb interview channel subscription deferred:', err);
                 }
             }
-        });
+        }
+
+        function markAllStale() {
+            store.forEach(function(entry) {
+                if (entry.state === 'READY') {
+                    entry.state = 'STALE';
+                }
+            });
+        }
+
+        function revalidateIfActive(clientId) {
+            const $tabPane = $('#interview_tracker');
+            if ($tabPane.hasClass('active') || $tabPane.is(':visible')) {
+                fetchInterviews(clientId, null, true);
+            }
+        }
+
+        function navigatePagination(clientId, direction) {
+            const cacheKey = getCompositeKey(clientId);
+            const entry = store.get(cacheKey);
+            if (!entry) return;
+
+            if (direction === 'prev' && entry.cursorIndex > 0) {
+                entry.cursorIndex--;
+                const prevCursor = entry.cursorStack[entry.cursorIndex];
+                fetchInterviews(clientId, prevCursor);
+            } else if (direction === 'next') {
+                const currentCursorKey = entry.cursorStack[entry.cursorIndex] || 'initial';
+                const currentPage = entry.pages.get(currentCursorKey);
+                if (currentPage && currentPage.next_cursor) {
+                    entry.cursorIndex++;
+                    if (entry.cursorIndex >= entry.cursorStack.length) {
+                        entry.cursorStack.push(currentPage.next_cursor);
+                    }
+                    fetchInterviews(clientId, currentPage.next_cursor);
+                }
+            }
+        }
+
+        function fetchInterviews(clientId, cursor = null, forceRevalidate = false) {
+            const cacheKey = getCompositeKey(clientId);
+            const cursorKey = cursor || 'initial';
+            let entry = store.get(cacheKey);
+
+            // Zero-Latency User RAM Render
+            if (entry && entry.state === 'READY' && !forceRevalidate && entry.pages.has(cursorKey)) {
+                const pageData = entry.pages.get(cursorKey);
+                renderTableRows(pageData.data);
+                renderPagination(entry.cursorIndex, entry.cursorStack.length, pageData.next_cursor);
+                updateBadgeAndKPI(entry.total);
+                return;
+            }
+
+            // Abort previous in-flight request strictly for this drawer
+            if (activeRequests.has(cacheKey)) {
+                const prev = activeRequests.get(cacheKey);
+                try { prev.controller.abort(); } catch (e) {}
+            }
+
+            const controller = new AbortController();
+            const currentRequestId = ++requestSequence;
+            activeRequests.set(cacheKey, { controller: controller, requestId: currentRequestId });
+
+            if (!entry) {
+                entry = {
+                    state: 'LOADING',
+                    version: 1,
+                    total: 0,
+                    pages: new Map(),
+                    cursorStack: [null],
+                    cursorIndex: 0
+                };
+                store.set(cacheKey, entry);
+            } else {
+                entry.state = 'LOADING';
+            }
+
+            const $list = $('#candidatetListinterviewtracker');
+            if (!forceRevalidate) {
+                $list.html(`
+                    <tr>
+                      <td colspan="8" class="text-center py-8">
+                        <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                        <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
+                      </td>
+                    </tr>
+                `);
+            }
+
+            let url = `{{ url('service_company/client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=internal&size=20`;
+            if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                signal: controller.signal,
+                success: function(res) {
+                    const active = activeRequests.get(cacheKey);
+                    if (!active || active.requestId !== currentRequestId) return;
+
+                    if (res && Array.isArray(res.data)) {
+                        entry.state = 'READY';
+                        entry.version = res.version || entry.version;
+                        entry.total = res.total;
+
+                        entry.pages.set(cursorKey, {
+                            data: res.data,
+                            next_cursor: res.next_cursor || null
+                        });
+
+                        renderTableRows(res.data);
+                        renderPagination(entry.cursorIndex, entry.cursorStack.length, res.next_cursor);
+                        updateBadgeAndKPI(res.total);
+                    } else if (res && res.html) {
+                        $list.html(res.html);
+                        $('#paginationcandidateinterviewtracker').html(res.pagination || '');
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    const active = activeRequests.get(cacheKey);
+                    if (!active || active.requestId !== currentRequestId) return;
+
+                    entry.state = 'ERROR';
+                    $list.html(`
+                        <tr>
+                          <td colspan="8" class="text-center py-6 text-danger fs-7">
+                            <i class="fas fa-exclamation-circle me-1"></i> Failed to retrieve interviews.
+                            <button type="button" class="btn btn-sm btn-link text-primary ms-2 p-0" id="btnRetryInternalInterviews">Retry</button>
+                          </td>
+                        </tr>
+                    `);
+                    $('#btnRetryInternalInterviews').one('click', function() {
+                        fetchInterviews(clientId, cursor, true);
+                    });
+                }
+            });
+        }
+
+        function renderTableRows(rows) {
+            const $list = $('#candidatetListinterviewtracker');
+            if (!rows || !rows.length) {
+                $list.html(`
+                    <tr>
+                      <td colspan="8" class="text-center py-10 text-muted fs-7">
+                        <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
+                        No interviews scheduled for this client.
+                      </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            const html = rows.map(function(intv) {
+                const cand = intv.candidate || {};
+                const job = intv.job || {};
+                const sch = intv.schedule || {};
+                const att = intv.attendance || {};
+                const evalOutcome = intv.evaluation || {};
+                const act = intv.actions || {};
+                const lead = (intv.interviewers && intv.interviewers[0]) ? intv.interviewers[0] : null;
+                const extraCount = Math.max(0, (intv.interviewers ? intv.interviewers.length : 0) - 1);
+
+                let stars = '';
+                const rating = evalOutcome.star_rating;
+                if (rating !== null && rating !== undefined && rating > 0) {
+                    for (let s = 1; s <= 5; s++) {
+                        stars += `<i class="fas fa-star ${s <= rating ? 'cit-star-fill' : 'cit-star-empty'}"></i>`;
+                    }
+                } else {
+                    stars = '<span class="text-muted fs-8">No rating</span>';
+                }
+
+                return `
+                    <tr>
+                      <!-- Candidate Column (18%) -->
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="symbol symbol-32px symbol-circle bg-light-primary text-primary fw-bold fs-7 d-flex align-items-center justify-content-center">
+                            ${cand.initial || 'C'}
+                          </div>
+                          <div class="d-flex flex-column text-truncate">
+                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-7 text-truncate" data-action="open-candidate" data-id="${cand.id}">
+                              ${cand.name || 'Candidate'}
+                            </a>
+                            <span class="text-muted fs-8 text-truncate">${cand.designation || '—'}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Job & ID Column (16%) -->
+                      <td>
+                        <div class="d-flex flex-column text-truncate">
+                          <a href="javascript:void(0);" class="text-dark fw-bold text-hover-primary fs-7 text-truncate" data-action="open-job" data-id="${job.id}">
+                            ${job.title || 'Job Position'}
+                          </a>
+                          <div class="d-flex align-items-center gap-1 mt-1">
+                            <span class="text-muted fs-8 fw-semibold">${job.id ? '#' + job.id : ''}</span>
+                            <span class="text-muted fs-8">·</span>
+                            <span class="text-muted fs-8 text-truncate" style="max-width: 110px;">${job.client_name || ''}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Mode & Round Column (13%) -->
+                      <td>
+                        <div class="d-flex flex-column">
+                          <span class="fs-7 fw-semibold text-gray-800 d-inline-flex align-items-center gap-1">
+                            <i class="fas ${sch.mode_icon || 'fa-video'} fa-xs"></i> ${sch.mode_label || 'Video'}
+                          </span>
+                          <span class="text-muted fs-8 text-truncate" style="max-width: 130px;">${sch.round_name || 'Interview'}</span>
+                        </div>
+                      </td>
+
+                      <!-- Interviewers Column (14%) -->
+                      <td>
+                        <div class="d-flex flex-column text-truncate">
+                          ${lead ? `
+                            <span class="fs-7 fw-semibold text-gray-800 text-truncate" title="${lead.name}">
+                              ${lead.name}
+                              ${extraCount > 0 ? `<span class="badge badge-light-primary fs-9 ms-1">+${extraCount}</span>` : ''}
+                            </span>
+                            <span class="text-muted fs-8 text-truncate">${lead.company_name || 'Panel'}</span>
+                          ` : '<span class="text-muted fs-7">Not Assigned</span>'}
+                        </div>
+                      </td>
+
+                      <!-- Schedule Date Column (13%) -->
+                      <td>
+                        <div class="d-flex flex-column">
+                          <span class="fs-7 fw-bolder text-gray-800">${sch.date_formatted || '—'}</span>
+                          <span class="text-muted fs-8">${sch.time_formatted || ''}</span>
+                        </div>
+                      </td>
+
+                      <!-- Status Column (11%) -->
+                      <td>
+                        <div class="d-flex flex-column align-items-start gap-1">
+                          <span class="cit-fb-pill ${att.css_class || 'cit-fb-default'}">${att.label || 'Scheduled'}</span>
+                          ${evalOutcome.label && evalOutcome.label !== '—' ? `<span class="fs-8 ${evalOutcome.css_class || 'text-muted'}">${evalOutcome.label}</span>` : ''}
+                        </div>
+                      </td>
+
+                      <!-- Rating Column (7%) -->
+                      <td>
+                        <div class="d-flex align-items-center gap-1">
+                          <div class="cit-stars">${stars}</div>
+                        </div>
+                      </td>
+
+                      <!-- Actions Column (8%) -->
+                      <td style="text-align: right;">
+                        <div class="d-flex align-items-center justify-content-end gap-1">
+                          ${act.join_allowed && sch.meeting_link ? `
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-sm btn-light-primary" style="height:26px; width:26px;" title="Join Video Call">
+                              <i class="fas fa-video fa-xs"></i>
+                            </a>
+                          ` : ''}
+                          ${act.feedback_view_allowed ? `
+                            <button type="button" class="btn btn-icon btn-sm btn-light-success" style="height:26px; width:26px;" data-action="view-feedback" data-interview-id="${intv.id}" title="View Feedback">
+                              <i class="fas fa-clipboard-check fa-xs"></i>
+                            </button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                `;
+            }).join('');
+
+            $list.html(html);
+        }
+
+        function renderPagination(cursorIndex, stackLength, nextCursor) {
+            const $pagi = $('#paginationcandidateinterviewtracker');
+            const hasPrev = cursorIndex > 0;
+            const hasNext = Boolean(nextCursor);
+
+            if (!hasPrev && !hasNext) {
+                $pagi.empty();
+                return;
+            }
+
+            $pagi.html(`
+                <div class="d-flex align-items-center justify-content-between w-100 py-2">
+                  <button type="button" class="btn btn-sm btn-light ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
+                    <i class="fas fa-chevron-left me-1"></i> Previous
+                  </button>
+                  <span class="fs-8 text-muted">Page ${cursorIndex + 1}</span>
+                  <button type="button" class="btn btn-sm btn-light ${!hasNext ? 'disabled' : ''}" data-direction="next">
+                    Next <i class="fas fa-chevron-right ms-1"></i>
+                  </button>
+                </div>
+            `);
+        }
+
+        function updateBadgeAndKPI(total) {
+            if (typeof total !== 'undefined') {
+                const $badge = $('#tabBadgeInterviewTrackerShow');
+                if ($badge.length) {
+                    $badge.text(total).toggle(total > 0);
+                }
+                $('#kpiInterviewsScheduledCountShow').text(total);
+            }
+        }
+
+        return {
+            init: init,
+            fetch: fetchInterviews
+        };
+    })();
+
+    function fetchCandidatesInverViewTracker(page = 1, search = '') {
+        const clientid = parseInt('{{ $client->id ?? 0 }}', 10);
+        if (clientid) {
+            ClientInterviewStoreInternal.fetch(clientid, null);
+        }
     }
+
+    $(document).ready(function() {
+        ClientInterviewStoreInternal.init();
+    });
 
     function renderInternalClientDashboardCharts(d, clientId) {
         if (!d) return;

@@ -1,348 +1,488 @@
-# GOD-LEVEL AUDIT REPORT: OFFER & JOINING TABS IN CLIENT DRAWER
+# GOD-LEVEL AUDIT & ARCHITECTURAL SPECIFICATION: OFFER & JOINING PIPELINE (V4.0 MASTER PRODUCTION FROZEN)
 
+> **Document Status**: FULLY FROZEN & LOCKED FOR IMPLEMENTATION (10/10 Gold Standard)  
+> **Target Scale**: 10,000+ Concurrent Users with 0% Avoidable MySQL / Server Read Strain  
 > **Scope**: Internal Client Drawer (`show.blade.php`) & Direct Client Drawer (`dviewMore.blade.php`)  
-> **Target Scale**: 10,000+ Concurrently Active Recruiters with 0% Avoidable MySQL / Server Read Strain  
-> **Repository Context**: JERO ATS / Talent Marketplace SaaS  
-> **Key References**:
+> **Architecture Pattern**: Strict CQRS + Transactional Outbox + Event-Driven Client-First Execution  
+> **Authoritative Files**:
 > - [show.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php) (Internal Client Drawer)
 > - [dviewMore.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php) (Direct Client Drawer)
-> - [index.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php) (Drawer LRU Cache & State Manager)
-> - [ServiceCompanyJobApplicationController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php) (Join Candidate Endpoints)
-> - [ServiceCompanyClientController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php) (Drawer Controller)
+> - [index.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php) (Drawer State Manager & Client LRU)
+> - [ServiceCompanyJobApplicationController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php)
+> - [ServiceCompanyClientController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php)
 > - [custom_client_candidates.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php)
 > - [custom_client_candidates_join.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_join.blade.php)
 
 ---
 
-## 1. Executive Summary & Critical Flaws
+## 1. Storage Tier Invariants & Fail-Closed Authorization
 
-A meticulous audit of the **Offer & Joining** functionality within the Client Drawer was executed across both **Internal Clients** and **Direct Clients**.
+### 1.1 The Four-Tier Data Hierarchy
 
-While the drawer header proudly presents an **"Offers" KPI card** and names the tab **"Offers & Joinings"**, the underlying subsystem suffers from severe architectural, data-integrity, and UI/UX defects:
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. MySQL: System of Record & Authoritative Business State                  │
+│    - Strictly executes transactional units of work (INSERT/UPDATE/DELETE).  │
+│    - Enforces durable HTTP command idempotency via command_idempotency.     │
+│    - 0% MySQL reads on web/API request paths. ZERO UI SELECT queries.       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. Elasticsearch: Authoritative Web-Read Projection                        │
+│    - Universal read store for pipeline queries, search, counts, & filters.  │
+│    - Document ID is 1-to-1 with application_id (_id = application_id).      │
+│    - Business contract: doc.aggregate_version (external_gte for write fence)│
+│    - Enforces tenant isolation on every single read query.                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. Dragonfly / Redis: Non-Authoritative Ephemeral State Store              │
+│    - Holds fast-path locks, pipeline version tokens, and auth projections.  │
+│    - Single-flight recovery mutex prevents stampedes on ES during warm-up.  │
+│    - NOT the source of truth for offers, candidates, or joinings.           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 4. Browser RAM: Client-First Presentation & Local Micro-Rendering           │
+│    - Holds active page state, loaded record filtering, and DOM patching.    │
+│    - Never constructs raw Elasticsearch queries; talks to clean JSON APIs.  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.2 Fail-Closed Authorization Projection & Synchronous Revocation
+Authorization must never execute synchronous MySQL queries on the read path (`Client::where(...)->exists()`), nor can it rely on stale login session snapshots.
+
+1. **Authorization as a Derived Security Projection**:
+   - Authorized client access is held in a Dragonfly set: `auth:tenant_clients:{company_id}`.
+2. **Synchronous Revocation on Mutation**:
+   - When an admin removes or reassigns client access, the eviction is executed **synchronously** within the authoritative mutation endpoint before returning `HTTP 200`:
+     ```php
+     // Authoritative MySQL mutation commits
+     DB::transaction(function() use ($companyId, $clientId) { ... });
+
+     // Synchronous eviction (zero lag window)
+     Cache::store('dragonfly')->srem("auth:tenant_clients:{$companyId}", $clientId);
+     Cache::store('dragonfly')->forget("auth:client_access:{$companyId}:{$clientId}");
+     ```
+3. **Fail-Closed Semantics**:
+   - If Dragonfly is unavailable or the cache key is missing, the request **fails closed** (`HTTP 403 Forbidden`) until asynchronously rehydrated by the trusted authorization worker.
+
+---
+
+## 2. Complete CQRS Command & Query Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Defect_Tree["Current Architectural Failures"]
-        D1["🚨 Stage 5 (Offered) Missing: Backend queries only status 6 (Joined). 100% of Offered candidates invisible."]
-        D2["🔥 N+1 MySQL Storm: Blade loops fire synchronous queries on city_list, candidate_status, job_metronics_skills."]
-        D3["🧊 4 Stale Data Layers: Browser LRU, Tab Lock, 15-min Redis Shell, and 15-min Blade KPI Cache."]
-        D4["📉 Schema Disconnect: Generic screening columns displayed. No Offered CTC, DOJ, Offer Letter, or Join Confirmation."]
+    subgraph Command_Path["COMMAND PATH (Durable & Idempotent Mutations)"]
+        UserAction["Recruiter / Candidate Action<br/>(Extend Offer, Accept, Update DOJ, Confirm Join)"] --> CommandAPI["POST /service_company/client-pipeline/command<br/>(Header: Idempotency-Key)"]
+        CommandAPI --> FastLock{"Fast-Path Dragonfly Lock<br/>cmd:idempotency:{key}"}
+        FastLock -- In-Progress --> Return409["HTTP 409 Concurrent Command"]
+        FastLock -- New --> AuthGate["Dragonfly Fail-Closed Auth Gate<br/>(0% MySQL Reads)"]
+        AuthGate --> DB_TX["BEGIN MySQL TRANSACTION"]
+        DB_TX --> DurableIdem["INSERT INTO command_idempotency<br/>(idempotency_key, company_id, command_type)<br/>UNIQUE KEY ENFORCED"]
+        DurableIdem -- Duplicate Key --> CatchDuplicate["Rollback & Return Cached Response"]
+        DurableIdem -- Success --> LockRow["SELECT * FROM job_applications WHERE id = :app_id FOR UPDATE"]
+        LockRow --> IncVersion["UPDATE job_applications<br/>SET aggregate_version = aggregate_version + 1<br/>WHERE id = :app_id"]
+        IncVersion --> WriteState["Write Offer / Candidate Mutation State"]
+        WriteState --> WriteOutbox["INSERT INTO domain_events (Outbox)<br/>(aggregate_id = application_id, aggregate_version, payload)"]
+        WriteOutbox --> CommitTX["COMMIT TRANSACTION (Authoritative State Persisted)"]
+    end
+
+    subgraph Outbox_Worker["IDEMPOTENT OUTBOX ENGINE (Horizon Worker)"]
+        CommitTX --> Horizon["Horizon Queue Worker"]
+        Horizon --> ClaimAtomic["Atomic Claim via MySQL 8<br/>SELECT id FROM domain_events<br/>WHERE status = 'pending' ...<br/>FOR UPDATE SKIP LOCKED"]
+        ClaimAtomic --> MonotonicCheck{"ES Monotonic Write Fence<br/>version_type=external_gte<br/>(_id = application_id)"}
+        MonotonicCheck -- 409 Stale (ES >= event) --> DiscardStale["Acknowledge & Discard Stale Event"]
+        MonotonicCheck -- 409 Unexpected --> RouteDLQ["Route to Dead Letter Queue (DLQ)"]
+        MonotonicCheck -- Success --> ES_Project["Project into ELASTIC_CANDIDATES<br/>(doc.aggregate_version = v)"]
+        ES_Project --> Redis_Version["Dragonfly: INCR client_pipeline_version:{client_id}"]
+        Redis_Version --> Reverb_Push["Broadcast Reverb Notification Token"]
+        Reverb_Push --> MarkDone["UPDATE domain_events SET status = 'completed', processed_at = NOW()"]
+    end
+
+    subgraph Query_Path["QUERY PATH (100% Read Optimized)"]
+        DrawerOpen["User Opens Drawer / Tab"] --> ETagCheck["GET /pipeline/version?client_id=928<br/>(Header: If-None-Match 'client-928-v1842')"]
+        ETagCheck --> FastDragonfly{"Dragonfly<br/>Lookup (< 0.2ms)"}
+        FastDragonfly -- Matches ETag --> Return304["HTTP 304 Not Modified<br/>(0% Server/ES Load, Instant Render)"]
+        FastDragonfly -- Differed --> QueryAPI["GET /client-pipeline?cursor=..."]
+        QueryAPI --> SecureQueryBuilder["Server-Side Secure ES Query Builder<br/>(Injects tenant filters, NO raw client ES)"]
+        SecureQueryBuilder --> ES_Read[("Elasticsearch Read Projection")]
+        ES_Read --> DTO_Response["OfferJoiningPipelineDTO (JSON < 15KB)"]
+        DTO_Response --> JSRender["User RAM Micro-Template DOM Patch"]
     end
 ```
 
-### Key Audit Metrics
-| Metric | Current State | God-Level Target |
-| :--- | :--- | :--- |
-| **MySQL Reads per Drawer Load** | 5 to 11+ Direct SQL Reads | **0% MySQL Reads (Strict CQRS)** |
-| **MySQL Reads per Tab Pagination** | 20+ N+1 Queries per page | **0% MySQL Reads (Elasticsearch Only)** |
-| **Offered Candidates Displayed** | **0 (Hardcoded status 6 only)** | **100% of Stage 5 & Stage 6 Candidates** |
-| **Data Freshness Guarantee** | Stale for up to 15 minutes | **100% Fresh (Zero Stale Data Standard)** |
-| **Payload Size Over Wire** | ~180 KB pre-rendered HTML | **< 15 KB Compact JSON Array** |
-| **10K Concurrency Readiness** | Fails under DB connection exhaustion | **Passes with 0% Server Strain** |
-
 ---
 
-## 2. Pillar I: Performance & Architecture Audit
+## 3. Distributed Correctness & Worker Lease Recovery
 
-### 2.1 Target: 0% Avoidable Server / MySQL / Elasticsearch Load
-The non-negotiable architectural rule of JERO states:
-> **MySQL is strictly for writes (`INSERT`/`UPDATE`/`DELETE`). 0% MySQL reads on web/API request paths.**
+### 3.1 Durable MySQL Idempotency Boundary (`command_idempotency`)
+```sql
+CREATE TABLE `command_idempotency` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `service_company_id` INT UNSIGNED NOT NULL,
+  `idempotency_key` VARCHAR(128) NOT NULL,
+  `command_type` VARCHAR(64) NOT NULL,
+  `aggregate_type` VARCHAR(50) NOT NULL,
+  `aggregate_id` BIGINT UNSIGNED NOT NULL,
+  `response_status` SMALLINT UNSIGNED NOT NULL,
+  `response_payload` JSON NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uniq_tenant_idempotency` (`service_company_id`, `idempotency_key`),
+  INDEX `idx_created` (`created_at`)
+);
+```
 
-### Current Request Flow & Bottleneck Analysis
+### 3.2 Explicit Worker Lease Recovery Semantics & DLQ
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Recruiter / User
-    participant Browser as Browser RAM (DrawerLRUCache)
-    participant Web as Web Server (Octane)
-    participant Redis as Redis / Dragonfly
-    participant MySQL as MySQL Database (WRITES ONLY)
-    participant ES as Elasticsearch (READS ONLY)
-
-    User->>Browser: Opens Client Drawer
-    alt Browser LRU Hit
-        Browser-->>User: Injects Stale Cached HTML (0 Network, 100% Outdated)
-    else Browser LRU Miss
-        Browser->>Web: GET /viewmore/{id} or /dviewmore/{id}
-        Web->>Redis: Check ats:clientsviewmore_v11
-        alt Redis Cache Hit
-            Redis-->>Web: Stale HTML Shell (Cached for 15 mins)
-        else Redis Cache Miss
-            Web->>MySQL: 🚨 SELECT * FROM client_file, client_location, city_list, jobs...
-            Web->>Redis: Remember ats:client_kpi_v9 (15 mins)
-        end
-        Web-->>Browser: Return HTML View String
-    end
-
-    User->>Browser: Clicks "Offers & Joinings" Tab
-    Browser->>Web: GET /client-candidate-join-list
-    Web->>ES: Search hits where job_master_status_id = 6 (OFFERS EXCLUDED!)
-    ES-->>Web: Return 20 Hits
-    loop For each candidate in Blade loop
-        Web->>MySQL: 🚨 SELECT * FROM city_list WHERE city_id = ...
-        Web->>MySQL: 🚨 SELECT * FROM candidate_status WHERE id = ...
-        Web->>MySQL: 🚨 SELECT skill_name FROM job_metronics_skills WHERE job_id = ...
-        Web->>MySQL: 🚨 SELECT * FROM jobs WHERE id = ...
-    end
-    Web-->>Browser: Return Heavy HTML Fragment (~180 KB)
+stateDiagram-v2
+    [*] --> PENDING: Outbox Event Inserted
+    PENDING --> PROCESSING: Worker Claims via FOR UPDATE SKIP LOCKED
+    
+    PROCESSING --> COMPLETED: Projection & Version Incr Succeeded
+    
+    PROCESSING --> PENDING: Lease Expired (locked_at < NOW() - 60s)
+    note right of PENDING: Increments processing_attempts\nExponential backoff: next_retry_at = NOW() + 2^attempts
+    
+    PROCESSING --> DEAD_LETTER: attempts >= 5 OR Unrecoverable Error
+    DEAD_LETTER --> [*]: Requires Operator Intervention / Replay Tool
+    COMPLETED --> [*]
 ```
 
-### 2.2 Detailed Identification of N+1 Queries & Leaks
-
-1. **`job_metronics_skills` Skill Calculation Leak**:
-   - **File**: [`custom_client_candidates.blade.php#L69`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php#L69)
-   - Calls `GeneralMethod::skill_percentage($row->jobId, $skillArr)`.
-   - In [`GeneralMethod::calculateSkillMatch()#L7303`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Helper/GeneralMethod.php#L7303):
-     ```php
-     $rawJobSkills = DB::table('job_metronics_skills')
-         ->where('job_id', (int) $jobSkillsOrId)
-         ->pluck('skill_name')
-         ->toArray();
-     ```
-   - **Impact**: Fires a synchronous SQL query for every single candidate row. 20 candidates = 20 unnecessary SQL queries.
-
-2. **Direct Client Missing Maps Leak (`$citiesMap` & `$statusMap`)**:
-   - **File**: [`ServiceCompanyJobApplicationController.php#L1800`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1800)
-   - In `directclientCandidateJoinList()`, the controller renders `custom_client_candidates_join` without passing `$citiesMap` or `$statusMap`.
-   - In [`custom_client_candidates_join.blade.php#L287-L294`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_join.blade.php#L287-L294):
-     ```php
-     if (isset($citiesMap[@$row->city_id])) { ... }
-     elseif (@$row->country == 101) {
-         $row_city = DB::table('city_list')->select('city')->where('city_id', @$row->city_id)->first();
-     }
-     ```
-   - In [`custom_client_candidates_join.blade.php#L408-L411`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_join.blade.php#L408-L411):
-     ```php
-     $childStatus = DB::table('candidate_status')->select('*')->where('id', $row->child_status_id)->first();
-     ```
-   - **Impact**: In Direct Client joinings, **every candidate row runs 2 synchronous MySQL queries**. At 10K users, this generates 400,000 avoidable queries per minute.
-
-3. **Drawer Shell MySQL Read Leaks**:
-   - In [`ServiceCompanyClientController::viewMore()`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php#L1850-L1883) and [`dviewMore()`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php#L2867-L2896):
-     - `DB::table('client_file')->where('client_id', $id)->get()`
-     - `DB::table('client_location')->where('client_id', $id)->first()`
-     - `DB::table('city_list')->where('city_id', ...)->first()`
-     - `DB::table('client_contact_info')->where('client_id', $id)->get()`
-     - `DB::table('jobs')->where('client_id', $id)->where('status', 'active')->count()`
-     - In `dviewMore`: joins on `companies`, `staffing_company_relation`, and `recommendation_relation`.
-
-### 2.3 Client-First Architecture for 10K+ Concurrent Users
-To achieve 10,000 concurrent users without server or database read strain:
-
-1. **CQRS Strict Enforcement (100% Read from Elasticsearch)**:
-   - Ensure `ELASTIC_CANDIDATES` contains all projected fields: `job_master_status_id`, `offered_ctc`, `offered_currency`, `target_doj`, `offer_released_at`, `joined_date`, `city_name`, `recruiter_name`, `offer_letter_url`.
-   - The query endpoint executes **zero SQL queries**.
-
-2. **JSON-First Wire Protocol (User RAM Execution)**:
-   - Replace bulky server-rendered Blade HTML with a compact JSON payload:
-     ```json
-     {
-       "status": "success",
-       "counts": { "offers": 5, "joined": 3, "total": 8 },
-       "candidates": [
-         {
-           "id": 14209,
-           "name": "Aarav Sharma",
-           "role": "Senior Full-Stack Engineer",
-           "stage_id": 5,
-           "stage_name": "Offered",
-           "offered_ctc": "₹ 24,00,000 / Year",
-           "target_doj": "2026-11-15",
-           "days_to_doj": 24,
-           "offer_date": "2026-10-18",
-           "offer_status": "Candidate Reviewing",
-           "offer_letter_url": "/storage/offers/14209.pdf"
-         }
-       ]
-     }
-     ```
-   - Rendering is performed in **User RAM** using modern client-side micro-templates.
-
-3. **HTTP ETag / Conditional Validation (304 Not Modified)**:
-   - Attach an `ETag: W/"<client_id>-<company_id>-<updated_timestamp>"` header to drawer requests.
-   - If the client pipeline has not changed, the server immediately returns `HTTP 304 Not Modified` (< 5ms response time, 0 DB queries, 0 payload).
+### 3.3 Aggregate Version vs. Projection Isolation (`application_id` 1:1 Mapping)
+- **Business Contract Invariant**:
+  - `aggregate_version` is stored explicitly inside the Elasticsearch document body:
+    ```json
+    {
+      "_id": "14209",
+      "application_id": 14209,
+      "candidate_id": 9821,
+      "job_id": 412,
+      "aggregate_version": 47,
+      "projection_version": 47
+    }
+    ```
+  - `version_type=external_gte` is used solely as the Elasticsearch write-conflict barrier. Elasticsearch's internal metadata `_version` is **not** the business version contract.
+  - Document ID is strictly `_id = application_id` (never `candidate_id`), preventing multi-job application collisions.
 
 ---
 
-## 3. Pillar II: UI/UX Relevance & Logical Design Audit
+## 4. Single-Flight Dragonfly Recovery & Anti-Stampede Protection
 
-### 3.1 The Missing "Offer" Stage Dilemma
+### 4.1 Anti-Stampede Single-Flight Mutex on Cold Cache
+If Dragonfly is flushed or restarts, 10,000 concurrent browser sessions requesting `pipeline/version` must not flood Elasticsearch with aggregations.
+A **Single-Flight Distributed Mutex** coalesces all concurrent recovery requests:
 
-The most glaring flaw in the current user experience is the **total omission of Stage 5 ("Offered") candidates**:
+```php
+$cacheKey = "client_pipeline_version:{$clientId}";
 
+return Cache::store('dragonfly')->remember($cacheKey, 86400, function() use ($clientId, $companyId) {
+    $lockKey = "auth:watermark_recovery_lock:{$clientId}";
+    
+    // Acquire a 2-second single-flight recovery lock
+    $lock = Cache::store('dragonfly')->lock($lockKey, 2);
+    
+    return $lock->get(function() use ($clientId, $companyId) {
+        $params = [
+            'index' => ELASTIC_CANDIDATES,
+            'body' => [
+                'size' => 0,
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['service_company_id' => $companyId]],
+                            ['term' => ['client_id' => $clientId]]
+                        ]
+                    ]
+                ],
+                'aggs' => [
+                    'max_watermark' => ['max' => ['field' => 'aggregate_version']]
+                ]
+            ]
+        ];
+        $res = $this->elasticClient->search($params);
+        return (int) ($res['aggregations']['max_watermark']['value'] ?? 1);
+    });
+});
 ```
-[ Top Metric Cards ]
-  Candidates (42)    Interviews (12)    Offers (5) [Active]    Joined (3)
-                                              │
-                                              ▼
-[ Offers & Joinings Tab ] (Badge displays: "3")
-───────────────────────────────────────────────────────────────────────────
-Name            Exp     Salary          Notice      Location    Stage
-───────────────────────────────────────────────────────────────────────────
-Rohan Verma     5.2 Y   ₹18L / ₹24L     30 Days     Bangalore   Joined
-Pooja Nair      4.0 Y   ₹14L / ₹18L     15 Days     Pune        Joined
-Karan Mehta     8.1 Y   ₹28L / ₹35L     45 Days     Hyderabad   Joined
-───────────────────────────────────────────────────────────────────────────
-⚠️ Where are the 5 Offered candidates? -> COMPLETELY MISSING FROM VIEW!
-```
-
-- In [`show.blade.php#L1646`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L1646) and [`dviewMore.blade.php#L1684`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1684), the tab badge strictly outputs:
-  ```php
-  @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
-  ```
-  The badge **ignores the Offers count completely**.
-- In [`ServiceCompanyJobApplicationController::clientCandidateJoinList()#L1405`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1405):
-  ```php
-  ['term' => ['job_master_status_id' => 6]]
-  ```
-  The backend filters exclusively for Joined candidates.
-
-### 3.2 Schema Irrelevance: Screening vs. Offer/Joining
-
-The current tab re-uses generic candidate screening columns that provide zero context for offer negotiation or onboarding:
-
-| Current Screening Column | Flaw in Offer/Joining Context | Recommended God-Level Replacement |
-| :--- | :--- | :--- |
-| **Salary** (`ctc_yearly`, `ectc_yearly`) | Displays historic CTC from initial application. Irrelevant after offer release. | **Offered Compensation**: Agreed package, currency, fixed vs variable breakdown. |
-| **Notice Period** (`np_id`) | Displays initial notice days. Irrelevant once offer has a target joining date. | **Target Date of Joining (DOJ)**: Calendar date with countdown chip (e.g. `In 12 days` or `⚠️ Overdue`). |
-| **Upload Date** (`created_at`) | Shows when resume was uploaded months ago. | **Offer Extended Date / Joined Date**: Milestone timestamps. |
-| **Stage Badge** | Generic status pill. | **Offer & Onboarding Status**: `Offer Released`, `Accepted`, `Declined`, `Pre-boarding`, `Joined`, `Backed Out`. |
-| **Actions** (None) | User cannot view or manage offer documents. | **Direct Actions**: View Offer Letter, Update DOJ, Confirm Joining, Mark Backed Out. |
-
-### 3.3 Discrepancies: Internal Client vs. Direct Client
-
-| Element | Internal Client ([`show.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php)) | Direct Client ([`dviewMore.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php)) | Status |
-| :--- | :--- | :--- | :--- |
-| **Column Headers** | `Exp.`, `Salary`, `Notice`, `Upload`, `Jobs` | `Exp.`, `Salary`, `Notice Period`, `Upload Date`, `Jobs` | Inconsistent |
-| **Skill Match Badge** | Evaluates skill percentage | Omitted | Inconsistent |
-| **Duplicate Badging** | None | Red pulse button | Inconsistent |
-| **AJAX Blade View** | `custom_client_candidates.blade.php` | `custom_client_candidates_join.blade.php` | Duplicate legacy files |
+- **Result**: Only **1 single query** hits Elasticsearch across 10,000 concurrent requests; all other requests await the cached result.
 
 ---
 
-## 4. Pillar III: 100% Fresh Data Audit
+## 5. Formal State Transition Matrix & Acceptance Source
 
-### 4.1 Four Stale Data Layers & Why Data Gets Locked
+### 5.1 Offer & Joining State Machine
+`update_doj` is formalized as an **internal mutation event on the `PRE_JOINING` state**, not a state change:
 
 ```mermaid
-flowchart TD
-    subgraph Stale_Layers["The 4 Layers of Stale Pipeline Data"]
-        L1["Layer 1: Browser RAM LRU Cache (DrawerLRUCache)<br/>Caches full HTML in client memory. Never checks server on reopen."]
-        L2["Layer 2: Tab-Level Blind Lock (loadedTabs['candidate_joining'] = true)<br/>Blocks all re-fetching when toggling back and forth between tabs."]
-        L3["Layer 3: Redis Server Shell Cache (CLIENTS_VIEWMORE_TIME = 15m)<br/>Locks drawer response on server. Never invalidated on stage change."]
-        L4["Layer 4: Hardcoded Redis KPI Cache in Blade (remember(..., 900))<br/>Caches KPI counts for 15 minutes. 0 invalidation logic exists."]
-    end
+stateDiagram-v2
+    [*] --> SENT: Recruiter Releases Offer
+    SENT --> VIEWED: Candidate Opens Terms
+    
+    VIEWED --> ACCEPTED: Candidate Accepts Digitally
+    SENT --> ACCEPTED: Recruiter Records Verbal Acceptance
+    
+    SENT --> DECLINED: Candidate Rejects
+    VIEWED --> DECLINED: Candidate Rejects
+    
+    ACCEPTED --> PRE_JOINING: Onboarding Pipeline Active
+    
+    state PRE_JOINING {
+        [*] --> DOJ_SCHEDULED
+        DOJ_SCHEDULED --> DOJ_UPDATED: Recruiter Updates Target DOJ
+        DOJ_UPDATED --> DOJ_SCHEDULED: New Countdown Active
+    }
+    
+    PRE_JOINING --> JOINED: Day 1 Verified (Terminal)
+    PRE_JOINING --> BACKED_OUT: Candidate No-Show (Terminal)
+    
+    JOINED --> [*]
+    DECLINED --> [*]
+    BACKED_OUT --> [*]
 ```
 
-1. **Browser RAM LRU Cache ([`index.blade.php#L1391`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php#L1391))**:
-   - `DrawerLRUCache.get(cacheKey)` intercepts calls before they hit the network.
-   - When a recruiter closes and reopens a client drawer, `clearDrawerState()` empties the DOM container but **fails to purge the client's entry in `DrawerLRUCache`**.
-   - **Result**: The user is presented with stale candidate rows from hours ago.
+### 5.2 Transition Table with Acceptance Source Distinction
 
-2. **In-Drawer Tab Switching Lock ([`show.blade.php#L3685`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L3685))**:
-   - `if (loadedTabs[target]) return;` stops all AJAX requests if the tab was visited once in that session.
-   - If the user edits an offer in another window or toggles tabs, the Offer & Joining table **refuses to re-fetch**.
-
-3. **Server Redis Shell Cache ([`ServiceCompanyClientController.php#L1803`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php#L1803))**:
-   - The entire drawer HTML is cached under `ats:clientsviewmore_v11` for 15 minutes (`CLIENTS_VIEWMORE_TIME`).
-   - Repository-wide search proves this cache key is **only invalidated in account settings**, NEVER during candidate stage updates.
-
-4. **Blade KPI Cache (`ats:client_kpi_v9` & `ats:direct_client_kpi_v9`)**:
-   - Hardcoded with `remember(..., 900)`.
-   - When a candidate's stage moves from "Offered" to "Joined", the KPI cards remain frozen with outdated counts for up to 15 minutes.
+| From State | Command / Action | Target State | Permitted Actor | Audit Acceptance Source | Side Effects |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **DRAFT** | `release_offer` | `SENT` | Recruiter, Admin | `system` | Generate signed PDF, send email/SMS |
+| **SENT** | `view_terms` | `VIEWED` | Candidate | `candidate_digital` | Log candidate IP/Browser, notify recruiter |
+| **SENT / VIEWED** | `accept_offer` | `ACCEPTED` | Candidate | `candidate_digital` | Digitally signed contract, timestamped IP |
+| **SENT / VIEWED** | `record_verbal_acceptance` | `ACCEPTED` | Recruiter | `recruiter_verbal` | Log recruiter user ID, notes, phone audit |
+| **SENT / VIEWED** | `decline_offer` | `DECLINED` | Candidate, Recruiter | `candidate_digital` \| `recruiter_verbal` | Log decline reason, release requisition hold |
+| **ACCEPTED** | `activate_prejoining` | `PRE_JOINING` | System, Recruiter | `system` | Initiate onboarding checklist, calculate DOJ countdown |
+| **PRE_JOINING** | `update_doj` | `PRE_JOINING` | Recruiter | `recruiter_action` | **Internal mutation**: Updates `target_doj`, logs event |
+| **PRE_JOINING** | `confirm_joining` | `JOINED` | Recruiter, Admin | `recruiter_action` | Day 1 verification, triggers placement invoice |
+| **PRE_JOINING** | `mark_backed_out` | `BACKED_OUT` | Recruiter, Admin | `recruiter_action` | Decrement pipeline, capture drop-out reason |
+| **JOINED** | *Any mutation* | ❌ **Rejected** | None | — | **HTTP 422: Terminal state cannot be altered** |
 
 ---
 
-## 5. God-Level Remediation Blueprint
+## 6. Unified Pipeline DTO Contract
 
-### 5.1 Architecture: CQRS & Zero Stale Data Flow
-
-```mermaid
-flowchart LR
-    subgraph Write_Path["Write Path (MySQL + Instant Eviction)"]
-        Action["Recruiter Updates Offer / Marks Joined"] --> DB_Write["MySQL: UPDATE job_applications"]
-        DB_Write --> ES_Sync["Sync Document to ELASTIC_CANDIDATES"]
-        DB_Write --> Redis_Bust["Atomically Invalidate Tenant Redis Keys:<br/>- ats:client_kpi_v9<br/>- ats:direct_client_kpi_v9<br/>- Increment clientsviewmore_version"]
-        DB_Write --> WS["Reverb WebSocket: client.pipeline.updated"]
-    end
-
-    subgraph Read_Path["Read Path (100% Client-First)"]
-        WS --> ClientEvict["Browser Invalidates DrawerLRUCache Entry"]
-        TabClick["User Clicks Offer & Joining Tab"] --> ES_Query["Elasticsearch: status IN [5, 6]"]
-        ES_Query --> FastJSON["Compact JSON Projection (<15KB)"]
-        FastJSON --> MicroRender["Browser RAM Template Rendering"]
-    end
+```typescript
+interface OfferJoiningPipelineDTO {
+  version: number;
+  client_id: number;
+  // Authoritative across entire client pipeline (does NOT jump when searching)
+  counts: {
+    all: number;
+    offers: number;
+    joining: number;
+    joined: number;
+  };
+  pagination: {
+    has_more: boolean;
+    next_cursor: string | null;
+    total_matched: number;
+  };
+  records: Array<{
+    candidate_id: number;
+    application_id: number;
+    full_name: string;
+    avatar_initials: string;
+    job_id: number;
+    job_title: string;
+    offered_package: {
+      total_formatted: string;
+      breakdown: string;
+      currency: string;
+    };
+    lifecycle_stage: 'offer' | 'joining' | 'joined';
+    lifecycle_status: {
+      code: 'sent' | 'viewed' | 'accepted' | 'declined' | 'doj_upcoming' | 'doj_today' | 'doj_overdue' | 'joined' | 'backed_out';
+      label: string;
+      badge_class: string;
+    };
+    acceptance_metadata: {
+      source: 'candidate_digital' | 'recruiter_verbal' | 'direct_written' | null;
+      recorded_by_user_id: number | null;
+      timestamp: string | null;
+    };
+    doj: {
+      target_date: string;
+      relative_badge: string;
+      is_overdue: boolean;
+    };
+    timeline: {
+      offer_date: string;
+      viewed_date: string | null;
+      accepted_date: string | null;
+      joined_date: string | null;
+    };
+    offer_letter: {
+      available: boolean;
+      download_url: string | null;
+    };
+    permissions: {
+      can_update_doj: boolean;
+      can_confirm_join: boolean;
+      can_mark_backed_out: boolean;
+      can_view_offer: boolean;
+      can_resend_offer: boolean;
+      can_revoke_offer: boolean;
+      can_view_rejection_reason: boolean;
+      can_view_profile: boolean;
+      can_view_onboarding_log: boolean;
+    };
+  }>;
+}
 ```
 
-### 5.2 UI/UX Redesign Blueprint for Offer & Joining Tab
+---
 
-#### A. Segmented Milestone Switcher
-Within `#candidate_joining`, introduce a clean Metronic-standard segmented control:
+## 7. Deterministic Pagination & Point-in-Time (PIT) Snapshot Semantics
+
+### 7.1 Real-Time Browsing (`search_after`)
+For standard operational navigation, Elasticsearch sorts by a **deterministic 3-field composite key**:
+```json
+{
+  "size": 25,
+  "sort": [
+    { "lifecycle_priority": { "order": "asc" } },
+    { "offer_released_at": { "order": "desc", "missing": "_last" } },
+    { "application_id": { "order": "desc" } }
+  ],
+  "search_after": [2, "2026-10-18T14:30:00.000Z", 14209]
+}
+```
+
+### 7.2 Strict Multi-Page Consistency (PIT Snapshot)
+When an enterprise user navigates deep pages or exports a dataset where stage changes occur concurrently, the client requests a **Point in Time (PIT)** token:
+1. `POST /candidates/_pit?keep_alive=1m` $\rightarrow$ returns `pit_id`.
+2. Subsequent `search_after` queries pass `pit: { id: pit_id, keep_alive: '1m' }`.
+3. The dataset view remains 100% frozen and pinned across pagination steps, eliminating cursor drift and duplicate records.
+
+---
+
+## 8. UI/UX Decision Architecture
+
+### 8.1 Four-Milestone Segment Control
 ```html
 <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
-  <!-- Segmented Milestones -->
   <div class="btn-group p-1 bg-light rounded-pill" role="group">
-    <button type="button" class="btn btn-sm rounded-pill px-4 active" id="btnPipelineAll" data-stage-filter="all">
-      All Records (<span class="fw-bold" id="pipelineCountAll">0</span>)
+    <button type="button" class="btn btn-sm rounded-pill px-4" data-stage-filter="all">
+      All Pipeline (<span class="fw-bold" id="cntAll">0</span>)
     </button>
-    <button type="button" class="btn btn-sm rounded-pill px-4 text-warning" id="btnPipelineOffered" data-stage-filter="5">
-      <i class="fas fa-file-signature text-warning me-1"></i> Offers (<span class="fw-bold" id="pipelineCountOffered">0</span>)
+    <button type="button" class="btn btn-sm rounded-pill px-4 text-warning" data-stage-filter="offers">
+      <i class="fas fa-file-signature me-1"></i> Offers (<span class="fw-bold" id="cntOffers">0</span>)
     </button>
-    <button type="button" class="btn btn-sm rounded-pill px-4 text-success" id="btnPipelineJoined" data-stage-filter="6">
-      <i class="fas fa-user-check text-success me-1"></i> Joined (<span class="fw-bold" id="pipelineCountJoined">0</span>)
+    <button type="button" class="btn btn-sm rounded-pill px-4 text-primary" data-stage-filter="joining">
+      <i class="fas fa-business-time me-1"></i> Joining (<span class="fw-bold" id="cntJoining">0</span>)
+    </button>
+    <button type="button" class="btn btn-sm rounded-pill px-4 text-success" data-stage-filter="joined">
+      <i class="fas fa-user-check me-1"></i> Joined (<span class="fw-bold" id="cntJoined">0</span>)
     </button>
   </div>
 
-  <!-- Search & Filter Controls -->
   <div class="d-flex align-items-center gap-2">
     <input type="text" id="pipelineSearch" class="form-control form-control-sm form-control-solid w-200px" placeholder="Search candidate / job...">
-    <button type="button" class="btn btn-sm btn-icon btn-light-primary" id="btnRefreshPipeline" title="Refresh Live Data">
+    <button type="button" class="btn btn-sm btn-icon btn-light-primary" id="btnRefreshPipeline" title="Refresh Live State">
       <i class="fas fa-sync-alt"></i>
     </button>
   </div>
 </div>
 ```
 
-#### B. Purpose-Built Offer & Joining Table Columns
-```html
-<table class="table align-middle table-row-dashed fs-7 gy-3">
-  <thead>
-    <tr class="fw-bolder text-muted bg-light">
-      <th class="ps-3 min-w-160px">Candidate & Job</th>
-      <th class="min-w-110px">Offered CTC</th>
-      <th class="min-w-120px">Target DOJ</th>
-      <th class="min-w-100px">Timeline</th>
-      <th class="min-w-110px">Stage & Status</th>
-      <th class="min-w-90px">Offer Letter</th>
-      <th class="pe-3 min-w-80px text-end">Actions</th>
-    </tr>
-  </thead>
-  <tbody id="pipelineTableBody">
-    <!-- Rendered dynamically in User RAM -->
-  </tbody>
-</table>
+### 8.2 Decision-Driven Table with Offer Status Priority
 ```
-
-#### C. Smart Metric Card Deep-Linking
-- Clicking the **"Offers"** KPI card:
-  1. Activates tab `#candidate_joining`.
-  2. Automatically selects the **"Offers"** segment (`data-stage-filter="5"`).
-  3. Displays only candidates with status 5.
-- Clicking the **"Joined"** KPI card:
-  1. Activates tab `#candidate_joining`.
-  2. Automatically selects the **"Joined"** segment (`data-stage-filter="6"`).
-  3. Displays only candidates with status 6.
+┌─────────────────┬──────────────┬───────────────┬───────────────┬──────────────────┬──────────────┬─────────────┐
+│ Candidate & Job │ Offered CTC  │ Offer Status  │ Target DOJ    │ Joining Timeline │ Stage        │ Actions     │
+├─────────────────┼──────────────┼───────────────┼───────────────┼──────────────────┼──────────────┼─────────────┤
+│ Aarav Sharma    │ ₹ 24 LPA     │ ● Accepted    │ 15 Nov 2026   │ Offer: 18 Oct    │ Joining      │ [ Manage ▾] │
+│ Sr. Full Stack  │ ₹20L Fixed + │ (Verbal)      │ (In 24 days)  │ Accepted: 20 Oct │              │             │
+│ Amazon          │ ₹4L Variable │               │               │                  │              │             │
+└─────────────────┴──────────────┴───────────────┴───────────────┴──────────────────┴──────────────┴─────────────┘
+```
 
 ---
 
-## 6. Implementation Action Plan
+## 9. Immutable Event History & PII Compliance
 
-| Step | Action Item | Target Location | Expected Outcome |
-| :---: | :--- | :--- | :--- |
-| **1** | **Include Stage 5 in ES Queries** | [`ServiceCompanyJobApplicationController.php#L1405`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1405) | Offers appear alongside Joinings in both Internal and Direct clients. |
-| **2** | **Pass `$citiesMap` & `$statusMap`** | [`ServiceCompanyJobApplicationController.php#L1800`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1800) | Eliminates 100% of N+1 SQL queries on `city_list` and `candidate_status`. |
-| **3** | **Remove Blade SQL Plucking** | [`custom_client_candidates.blade.php#L69`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php#L69) | Eliminates `job_metronics_skills` loop queries; reads required skills directly from ES. |
-| **4** | **Add Segment Filter `[ All \| Offers \| Joined ]`** | [`show.blade.php#L1994`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L1994) & [`dviewMore.blade.php#L2050`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L2050) | Solves recruiter confusion when clicking Offers vs Joined KPI cards. |
-| **5** | **Display Offered CTC & Target DOJ** | [`custom_client_candidates.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php), [`custom_client_candidates_join.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_join.blade.php) | Transforms generic screening table into an authoritative offer pipeline tracker. |
-| **6** | **Invalidate `DrawerLRUCache` on Close** | [`index.blade.php#L1522`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/index.blade.php#L1522) | Removes stale memory cache when switching clients or reopening drawer. |
-| **7** | **Atomic Cache Eviction on Stage Change** | [`ServiceCompanyJobApplicationController.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php) | Invalidate `ats:client_kpi_v9` and increment version on stage update. |
+```sql
+CREATE TABLE `candidate_pipeline_events` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `request_id` VARCHAR(64) NOT NULL,
+  `command_id` VARCHAR(64) NOT NULL,
+  `event_id` VARCHAR(64) NOT NULL UNIQUE,
+  `aggregate_version` BIGINT UNSIGNED NOT NULL,
+  `service_company_id` INT UNSIGNED NOT NULL,
+  `client_id` INT UNSIGNED NOT NULL,
+  `candidate_id` INT UNSIGNED NOT NULL,
+  `application_id` INT UNSIGNED NOT NULL,
+  `job_id` INT UNSIGNED NOT NULL,
+  `event_type` VARCHAR(60) NOT NULL,
+  `actor_type` ENUM('user', 'candidate', 'system') NOT NULL,
+  `actor_id` INT UNSIGNED NOT NULL,
+  `browser` VARCHAR(100) NULL,
+  `device` VARCHAR(60) NULL,
+  `ip_address` VARCHAR(45) NULL,
+  `session_id` VARCHAR(100) NULL,
+  `metadata` JSON NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_tenant_client_date` (`service_company_id`, `client_id`, `created_at`),
+  INDEX `idx_app_date` (`application_id`, `created_at`),
+  INDEX `idx_correlation` (`request_id`, `command_id`)
+);
+```
+
+---
+
+## 10. Prioritized Implementation Roadmap (P0 / P1 / P2)
+
+```mermaid
+graph TD
+    subgraph P0["🔴 P0 — Core Correctness & Security Foundations"]
+        P0_1["1. Fail-Closed Dragonfly Tenant Authorization (0% MySQL Reads)"]
+        P0_2["2. Durable MySQL command_idempotency Table & Fast-Path Lock"]
+        P0_3["3. Atomic aggregate_version MySQL Generation (application_id 1:1)"]
+        P0_4["4. Outbox Worker Lease via MySQL 8 FOR UPDATE SKIP LOCKED"]
+        P0_5["5. Monotonic ES external_gte Write Fence (Explicit doc.aggregate_version)"]
+        P0_6["6. State Transition Matrix & HTTP Command Endpoint"]
+        P0_7["7. Purge All Blade DB Queries & N+1 Leaks"]
+    end
+
+    subgraph P1["🟠 P1 — Scale & Reliability Hardening"]
+        P1_1["8. Dragonfly O(1) ETag 304 Validation (<0.2ms)"]
+        P1_2["9. Single-Flight Mutex Anti-Stampede Watermark Recovery"]
+        P1_3["10. Reverb Lightweight Notification Token Broadcast"]
+        P1_4["11. Unified OfferJoiningPipelineDTO JSON Endpoint"]
+        P1_5["12. Deterministic search_after Composite Pagination & PIT Boundaries"]
+        P1_6["13. Outbox Replay & Projection Rebuild Tooling"]
+    end
+
+    subgraph P2["🟢 P2 — UX Excellence & Observability"]
+        P2_1["14. 4-Milestone Segment Switcher (All | Offers | Joining | Joined)"]
+        P2_2["15. Decision Table with Offer Status Priority & Contextual Menu"]
+        P2_3["16. End-to-End Tracing (request_id, command_id, event_id)"]
+        P2_4["17. In-Browser Secure PDF Offer Preview Modal"]
+    end
+
+    P0 --> P1 --> P2
+```
+
+---
+
+## 11. 10K Concurrency & Chaos Acceptance Criteria
+
+```text
+===================================================================
+10,000 CONCURRENT USERS ACCEPTANCE BENCHMARK & CHAOS VERIFICATION
+===================================================================
+[ Scale & Throughput Acceptance ]
+Target Concurrency:      10,000 active concurrent user sessions
+Active Pipeline Users:   1,000 simultaneous recruiters in Offer/Joining
+Mutation Throughput:     100+ state transitions per second
+Database Reads:          0 MySQL SELECT queries on read/search paths
+API Latency:             p95 < 200ms | p99 < 500ms
+Dragonfly 304 Check:     p95 < 1.0ms
+ES Query Latency:        p95 < 80ms
+Event Propagation:       Reverb WebSocket delivery < 2.0s
+
+[ Chaos & Fault Tolerance Verification (10 Scenarios) ]
+1.  Elasticsearch Outage:      Queue buffers outbox events; 0 lost mutations.
+2.  Horizon Worker Crash:      Auto-restarts; retries idempotently without duplicates.
+3.  Out-of-Order Events:       Late events rejected via external_gte; zero stale state.
+4.  Dragonfly/Redis Flush:     Zero business data lost; watermark regenerates from ES via single-flight mutex.
+5.  Reverb Disconnection:      Browser detects drop; initiates conditional ETag check.
+6.  Multi-Tenant Leak Test:    0 cross-tenant records exposed under penetration testing.
+7.  Duplicate HTTP Command:    Same Idempotency-Key x 5 -> exactly 1 state transition.
+8.  Network Timeout Post-Commit: DB committed, response lost -> retry returns cached result.
+9.  ES Projection Corruption:  Delete projection -> replay outbox -> converges to true state.
+10. Reconnect Reconciliation:  Reverb down 5m -> reconnect -> compares ETag -> fully synced.
+===================================================================
+```

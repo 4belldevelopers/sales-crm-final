@@ -143,16 +143,21 @@ Opening **one single client drawer** triggers **6 HTTP requests**, **11 Elastics
 - **Finding**: `_source` filtering is missing in the ES search parameters. Full ES job documents are retrieved, including heavy `job_description` and `job_requirement` text fields, inflating ES response payload size by 10x.
 
 ### 5.4 Tab 4 — Candidate Audit
-- **Files**: [ServiceCompanyJobApplicationController.php:L683-L744](file:///c:/xampp/htdocs/git/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L683-L744), [custom_client_candidates.blade.php](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php)
-- **Backend Flow**: AJAX GET `service_company/client-candidate-list`.
-- **Finding (SEVERE P0 N+1)**: `custom_client_candidates.blade.php` executes **6 raw SQL queries per candidate row** inside `@foreach ($data as $rowArr)`:
-  - `DB::table('jobs')->select(...)->where('id', '=', $row->jobId)->first()` (Line 24)
-  - `GeneralMethod::skill_percentage($row->jobId, $skillArr)` (Line 61)
-  - `DB::table('city_list')->select('*')->where('city_id', @$row->city_id)->first()` (Line 336)
-  - `DB::table('job_assign')->select('users.name')->join('users', ...)->first()` (Line 367)
-  - `GeneralMethod::companyDetailsByClient($row->jobId)` (Line 443)
-  - `DB::table('candidate_status')->select('*')->where('id', $row->child_status_id)->first()` (Line 476)
-- **Query Count Impact**: 10 candidates per page = **60+ MySQL queries per AJAX request**.
+> **Dedicated Master Specification**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for the exhaustive God-Level audit and production blueprint.
+- **Files**: [ServiceCompanyJobApplicationController.php:L1277-L1387](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1277-L1387) (`clientCandidateList`), [ServiceCompanyJobApplicationController.php:L1611-L1704](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L1611-L1704) (`directclientCandidateList`), [custom_client_candidates.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates.blade.php), [show.blade.php:L1915-L1951](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/show.blade.php#L1915-L1951), [dviewMore.blade.php:L1970-L2005](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/client/dviewMore.blade.php#L1970-L2005)
+- **Backend Flow**: AJAX GET `service_company/client-candidate-list` (Internal) and `service_company/direct-client-candidate-list` (Direct).
+- **Finding (SEVERE P0 N+1 & MySQL Read Violation)**: `custom_client_candidates.blade.php` executes **6 raw SQL queries per candidate row** inside `@foreach ($data as $rowArr)`:
+  - `DB::table('jobs')->select(...)->where('id', '=', $row->jobId)->first()` (Line 27)
+  - `GeneralMethod::skill_percentage($row->jobId, $skillArr)` -> queries `job_metronics_skills` uncached (Line 69)
+  - `DB::table('city_list')->select('city')->where('city_id', @$row->city_id)->first()` (Line 338)
+  - `DB::table('job_assign')->select('users.name')->join('users', ...)->first()` (Line 383)
+  - `GeneralMethod::companyDetailsByClient($row->jobId)` -> 4-table join on cache miss (Line 438)
+  - `DB::table('candidate_status')->select('name')->where('id', $row->child_status_id)->first()` (Line 474)
+- **Query Count Impact**: In Direct Client drawer, lookup maps are completely omitted by the controller, forcing **60+ synchronous MySQL queries per 10 candidate rows**.
+- **Finding (P0 Tenant Isolation Vulnerability)**: `clientCandidateList` accepts `clientid` from query parameter without validating tenant ownership and fails to include `company_id` filter in Elasticsearch `$boolQuery`.
+- **Finding (P0 Count Desynchronization)**: In Direct Client drawer, header KPI badge filters by `final_status = 1` and excludes status 9 (cached 15 min), while the table controller does NOT filter by `final_status` and excludes status 8 and 9 (`must_not: [8, 9]`). Candidate badge numbers consistently contradict table totals.
+- **Finding (P0 Dead Code Search & Broken UI)**: Search input is completely absent from the DOM in both drawers. Controller searches on `$request->input('q')` while JS sends `search`, and `$searchQuery` is never appended to `$boolQuery`.
+- **Finding (P1 Stage Modal Failure)**: Stage badge links to `#stage_sub_stage` with syntax error `href="javascript.void(0);"`, but the modal shell and click listeners are completely absent from the client drawer view.
 
 ### 5.5 Tab 5 — Interview Tracker Audit
 - **Files**: [ServiceCompanyJobApplicationController.php:L807-L870](file:///c:/xampp/htdocs/git/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L807-L870), [custom_client_candidates_interview_tracker.blade.php](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/service_company/ajax_pages/custom_client_candidates_interview_tracker.blade.php)

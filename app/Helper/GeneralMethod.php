@@ -15666,11 +15666,14 @@ END:VCALENDAR";
      * Tenancy: scoped by client_id (already company-bound). Interview count is a
      * best-effort term match on client_id in the interview tracker; degrades to 0.
      */
-    public static function InternalClientCandidatesCountList($client_id)
+    public static function InternalClientCandidatesCountList($client_id, $company_id = null)
     {
-        $cacheKey = "ats:kpi:internal_client_cand:{$client_id}";
+        $company_id = (int) ($company_id ?: (auth()->user()?->company_id ?? 0));
+        $cacheKey = $company_id > 0
+            ? "ats:kpi:internal_client_cand:{$company_id}:{$client_id}"
+            : "ats:kpi:internal_client_cand:{$client_id}";
 
-        return cache()->remember($cacheKey, 900, function () use ($client_id) {
+        return cache()->remember($cacheKey, 180, function () use ($client_id, $company_id) {
             $elasticService = app(ElasticService::class);
             $allCandidates = 0;
             $joined = 0;
@@ -15680,6 +15683,22 @@ END:VCALENDAR";
             $allInterview = 0;
 
             if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $candidateMust = [
+                    ['term' => ['client_id' => $client_id]],
+                ];
+                if ($company_id > 0) {
+                    $candidateMust[] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['company_id' => $company_id]],
+                                ['term' => ['job_company_id' => $company_id]],
+                                ['term' => ['ClientComID' => $company_id]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
+
                 $params = [
                     'index' => ELASTIC_CANDIDATES,
                     'request_cache' => true,
@@ -15687,9 +15706,7 @@ END:VCALENDAR";
                         'size' => 0,
                         'query' => [
                             'bool' => [
-                                'must' => [
-                                    ['term' => ['client_id' => $client_id]],
-                                ],
+                                'must' => $candidateMust,
                                 'must_not' => [
                                     ['terms' => ['job_master_status_id' => [9]]],
                                 ],
@@ -15713,18 +15730,22 @@ END:VCALENDAR";
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                $interviewQuery = ($company_id > 0)
+                    ? \App\Services\Interview\InterviewTenantScope::forClient($company_id, (int) $client_id, 'internal')
+                    : [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['client_id' => $client_id]],
+                            ],
+                        ],
+                    ];
+
                 $paramsInterview = [
                     'index' => ELASTIC_INERTVIEW_TRACKER,
                     'request_cache' => true,
                     'body' => [
                         'size' => 0,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['client_id' => $client_id]],
-                                ],
-                            ],
-                        ],
+                        'query' => $interviewQuery,
                         'aggs' => [
                             'all_interview' => ['value_count' => ['field' => 'id']],
                         ],
@@ -15867,47 +15888,7 @@ END:VCALENDAR";
                     'request_cache' => true,
                     'body' => [
                         'size' => 0,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['ClientComID' => (int) $to_company_id]],
-                                                ['term' => ['thirdparty_company_id' => (int) $to_company_id]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['term' => ['job_company_id' => (int) $to_company_id]],
-                                                            ['term' => ['candidate_type' => 'other']],
-                                                        ],
-                                                    ],
-                                                ],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [
-                                                            ['term' => ['company_id' => (int) $to_company_id]],
-                                                            ['term' => ['candidate_type' => 'other']],
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                            'minimum_should_match' => 1,
-                                        ],
-                                    ],
-                                    [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['client_id' => (int) $from_company_id]],
-                                                ['term' => ['from_company_id' => (int) $from_company_id]],
-                                                ['term' => ['company_id' => (int) $from_company_id]],
-                                            ],
-                                            'minimum_should_match' => 1,
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        'query' => \App\Services\Interview\InterviewTenantScope::forClient((int) $to_company_id, (int) $from_company_id, 'direct'),
                         'aggs' => [
                             'all_interview' => ['value_count' => ['field' => 'id']],
                         ],

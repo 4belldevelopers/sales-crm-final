@@ -134,27 +134,47 @@
 ---
 
 ## PHASE 5 — Candidate Optimization
+> **Dedicated Master Specification**: See [CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/docs/V2_CLIENT_DETAILS/CANDIDATES_TAB_CLIENT_DRAWER_AUDIT.md) for complete God-Level audit, security guardrails, and implementation blueprints.
 
-- **Objective**: Eliminate N+1 SQL queries in candidate list rendering and convert pagination to keyset/cursor mode.
-- **Current Problem**: `custom_client_candidates.blade.php` executes 6 SQL queries per row inside `@foreach`, generating 60+ DB queries per page view.
+- **Objective**: Eliminate 100% of MySQL queries on the candidate read path, fix tenant isolation vulnerabilities, synchronize tab badge counts with table results, fix broken search, and transition to a Client-First JSON API with User RAM virtual DOM rendering (`ClientCandidateStore`).
+- **Current Problem**: 
+  - `custom_client_candidates.blade.php` executes 6 raw SQL queries per row inside `@foreach` (60+ queries per page in Direct Client drawer).
+  - `clientCandidateList` lacks `company_id` filter in Elasticsearch (Cross-tenant security vulnerability).
+  - Search is completely dead code (input missing from DOM, controller ignores parameter in `$boolQuery`).
+  - Direct Client badge filters on `final_status = 1` and excludes status 9, while the list controller excludes status 8 and 9 and ignores `final_status`, creating permanent count desynchronization.
+  - Stage modal `#stage_sub_stage` fails to open due to missing modal shell and click listeners.
 - **Exact Files/Modules**:
   - `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` (`clientCandidateList`, `directclientCandidateList`)
+  - `resources/views/service_company/client/show.blade.php`
+  - `resources/views/service_company/client/dviewMore.blade.php`
   - `resources/views/service_company/ajax_pages/custom_client_candidates.blade.php`
-- **Current Flow**: Controller queries ES `ELASTIC_CANDIDATES` -> Passes array to Blade -> Blade executes raw `DB::table()` queries inside loop.
-- **Proposed V2 Flow**: Denormalize display values (job mode, currency symbol, city name, spok person name, child status name) into `ELASTIC_CANDIDATES` ES index during sync/indexing OR pre-batch all lookup maps in controller before passing to Blade.
-- **Expected Code Changes**: In `clientCandidateList()`, collect all `jobId`, `city_id`, `child_status_id` from ES hits -> Query lookup tables once using `whereIn()` -> Pass lookup maps to Blade. Zero SQL queries inside Blade loop!
-- **DB Changes**: None.
+  - `app/Helper/GeneralMethod.php` (`InternalClientCandidatesCountList`, `DirectClientCandidatesCountList`)
+- **Current Flow**: Controller queries ES `ELASTIC_CANDIDATES` -> Passes array to Blade -> Blade executes raw `DB::table()` queries inside loop -> Compiles heavy HTML string (~120KB) -> Injected via jQuery `.html()`.
+- **Proposed V2 Flow**: 
+  1. Denormalize display values (`job_title`, `job_mode`, `city_name`, `country_name`, `stage_name`, `stage_css`, `skills_array`) into `ELASTIC_CANDIDATES` read projection documents.
+  2. Refactor `clientCandidateList` and `directclientCandidateList` into pure JSON endpoints returning `< 15 KB` gzip payloads with fail-closed Dragonfly tenancy verification (0% MySQL reads).
+  3. Reconcile Direct Client ES filters (`final_status`, status exclusions) so badge counts match table records 1-to-1.
+  4. Implement `ClientCandidateStore` in browser RAM to render candidate rows via lightweight Metronic template literals with local card skeleton loaders (eliminating `.page-loader` freeze).
+  5. Add search input with 300ms debounce, status filter dropdown, and requisition filter in tab toolbar.
+- **Expected Code Changes**: 
+  - Refactor `ServiceCompanyJobApplicationController` methods to return JSON data + pagination.
+  - Implement Metronic toolbar and `#cdCandidateTableWrap` in `show.blade.php` and `dviewMore.blade.php`.
+  - Add `ClientCandidateStore` object in drawer scripts.
+- **DB Changes**: None (0% writes affected).
 - **Index Changes**: None.
-- **Redis Changes**: Cache candidate status map in Redis `ats:ref:candidate_statuses` (24 hr TTL).
-- **ES Changes**: Include pre-computed display attributes in `_source`.
-- **Queue Changes**: None.
-- **Frontend Changes**: Trigger `fetchCandidates()` only when "Candidate" tab is selected. Add 300ms debounce to candidate search input.
-- **Performance Benefit**: Reduces candidate tab SQL queries from 60+ to **0** (with ES denormalization) or **3 batched queries** (with controller lookup maps).
-- **Risk**: Medium (Requires careful verification of display fields).
+- **Redis Changes**: Cache pre-computed candidate KPI counts under `ats:kpi:internal_client_cand:{company_id}:{client_id}` with atomic invalidation on candidate mutation outbox events.
+- **ES Changes**: Include pre-computed display attributes in `_source` list (`job_title`, `city_name`, `country_name`, `stage_name`, `stage_css`, etc.).
+- **Queue Changes**: Subscribe outbox worker to candidate mutation events to publish invalidations via Reverb.
+- **Frontend Changes**: Replace server HTML rendering with client-side DOM rendering in User RAM. Add 300ms debounce to candidate search input. Replace global `.page-loader` with local card skeleton.
+- **Performance Benefit**: 
+  - MySQL queries reduced from 60+ per request to **strictly 0**.
+  - Payload size reduced from ~120KB HTML to **< 15KB JSON** (88% reduction).
+  - p95 response time drops from ~650ms to **< 75ms**.
+- **Risk**: Low (Pure read-model projection and presentation optimization).
 - **Dependencies**: Phase 1.
-- **Testing**: Verify candidate name, experience, salary, notice period, location, source, upload date, job, and stage render identically.
-- **Rollback**: Revert controller lookup map logic.
-- **Acceptance Criteria**: Candidate tab AJAX request executes **0 N+1 queries** in Blade.
+- **Testing**: Open candidate tab for internal and direct clients; verify zero MySQL queries in query log, search functionality works instantly, and counts match badge numbers.
+- **Rollback**: Revert controller return to Blade view compilation.
+- **Acceptance Criteria**: Candidate tab AJAX request executes **strictly 0 MySQL queries**, search operates with 300ms debounce, and badge count matches table total 100%.
 
 ---
 
