@@ -46,14 +46,40 @@ use Carbon\Carbon;
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
           /* ── Enterprise Scoped Reset: MAXIMUM 12PX CEILING ── */
-          .cd-scope, .cd-scope * {
+          .cd-scope {
             box-sizing: border-box;
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-          }
-          .cd-scope {
             font-size: 11px !important;
             color: #334155;
             background: #f8fafc;
+          }
+          .cd-scope *, .cd-scope *::before, .cd-scope *::after {
+            box-sizing: border-box;
+          }
+          /* ── Explicit FontAwesome Restoration: Ensure icon glyphs render cleanly ── */
+          .cd-scope i,
+          .cd-scope [class*="fa-"],
+          .cd-scope [class^="fa-"],
+          .cd-scope .fa,
+          .cd-scope .fas,
+          .cd-scope .far,
+          .cd-scope .fab,
+          .cd-scope .fa-solid,
+          .cd-scope .fa-regular {
+            font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+            font-style: normal !important;
+            font-variant: normal !important;
+            text-rendering: auto !important;
+            line-height: 1 !important;
+            display: inline-block;
+          }
+          .cd-scope .fa-solid,
+          .cd-scope .fas {
+            font-weight: 900 !important;
+          }
+          .cd-scope .fa-regular,
+          .cd-scope .far {
+            font-weight: 400 !important;
           }
 
           /* ── Top Action Header Bar (Internal: Blue Accent) ── */
@@ -847,24 +873,24 @@ use Carbon\Carbon;
           <div class="cd-top-bar">
             <div class="cd-top-actions">
               <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-followup" data-client-id="{{ $client->id }}">
-                <i class="fa-solid fa-calendar-check"></i> Follow Up
+                <i class="fas fa-calendar-check fa-solid"></i> Follow Up
               </button>
               @if(in_array('edit_clients', $userPermissions))
               <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-solid-blue">
-                <i class="fa-solid fa-pen-to-square"></i> Edit Client
+                <i class="fas fa-edit fa-solid fa-pen-to-square"></i> Edit Client
               </a>
               @endif
               <button type="button" class="cd-hdr-btn cd-hdr-btn-outline cd-btn-add-contact">
-                <i class="fa-solid fa-user-plus"></i> Add Contact
+                <i class="fas fa-user-plus fa-solid"></i> Add Contact
               </button>
               @if(in_array('add_jobs', $userPermissions))
               <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="cd-hdr-btn cd-hdr-btn-outline">
-                <i class="fa-solid fa-briefcase"></i> Add Job
+                <i class="fas fa-briefcase fa-solid"></i> Add Job
               </a>
               @endif
             </div>
             <button type="button" class="cd-hdr-btn-close cd-close-drawer" id="kt_activitiesClient_close_btn" title="Close Drawer">
-              <i class="fa-solid fa-xmark"></i>
+              <i class="fas fa-times fa-solid fa-xmark"></i>
             </button>
           </div>
 
@@ -881,22 +907,22 @@ use Carbon\Carbon;
                     @endif
                   </div>
                   <div class="cd-verified-badge" title="Verified Client">
-                    <i class="fa-solid fa-check"></i>
+                    <i class="fas fa-check fa-solid"></i>
                   </div>
                 </div>
                 <div class="cd-hero-details">
                   <div class="cd-title-row">
                     <span class="cd-client-name">{{ $detailName }}</span>
-                    <span class="cd-pill-type-internal"><i class="fa-solid fa-building"></i> Internal Client</span>
+                    <span class="cd-pill-type-internal"><i class="fas fa-building fa-solid"></i> Internal Client</span>
                   </div>
                   <div class="cd-meta-row">
-                    <span><i class="fa-solid fa-building me-1 text-muted"></i>{{ $industries_name ?: 'Computer Software' }}</span>
+                    <span><i class="fas fa-building fa-solid me-1 text-muted"></i>{{ $industries_name ?: 'Computer Software' }}</span>
                     <span class="cd-meta-sep">|</span>
-                    <span><i class="fa-solid fa-location-dot me-1 text-muted"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
+                    <span><i class="fas fa-map-marker-alt fa-solid fa-location-dot me-1 text-muted"></i>{{ ucwords($city_name ?: 'Mumbai') }}@if($country_name), {{ ucwords($country_name) }}@else, India @endif</span>
                     <span class="cd-meta-sep">|</span>
                     @php $webClean = @$client->website ?: 'teslal.com'; @endphp
                     <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-meta-link">
-                      <i class="fa-solid fa-link me-1"></i>{{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                      <i class="fas fa-link fa-solid me-1"></i>{{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
                     </a>
                     <span class="cd-meta-sep">|</span>
                     <span>Vendor ID: <strong style="color:#0f172a;">VEN-{{ @$client->id }}</strong></span>
@@ -936,58 +962,58 @@ use Carbon\Carbon;
           <div class="cd-kpi-grid">
             <div class="cd-kpi-card" data-target-tab="#requisitions">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-blue"><i class="fas fa-briefcase fa-solid"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiActive }}</div>
                   <div class="cd-kpi-lbl">Active Jobs</div>
                   <div class="cd-kpi-desc">Currently hiring positions</div>
                 </div>
               </div>
-              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_list">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fa-solid fa-user"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-purple"><i class="fas fa-user fa-solid"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiSubmitted }}</div>
                   <div class="cd-kpi-lbl">Candidates Submitted</div>
                   <div class="cd-kpi-desc">Total in pipeline</div>
                 </div>
               </div>
-              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
             <div class="cd-kpi-card" data-target-tab="#interview_tracker">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-amber"><i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i></div>
                 <div>
                   <div class="cd-kpi-num" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
                   <div class="cd-kpi-lbl">Interviews Scheduled</div>
                   <div class="cd-kpi-desc">Across all rounds</div>
                 </div>
               </div>
-              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_joining">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fa-solid fa-file-lines"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-orange"><i class="fas fa-file-alt fa-solid fa-file-lines"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiOffers }}</div>
                   <div class="cd-kpi-lbl">Offers Generated</div>
                   <div class="cd-kpi-desc">Offer letters sent</div>
                 </div>
               </div>
-              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
             <div class="cd-kpi-card" data-target-tab="#candidate_joining">
               <div class="d-flex align-items-center gap-3">
-                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fa-solid fa-user-check"></i></div>
+                <div class="cd-kpi-icon cd-kpi-icon-green"><i class="fas fa-user-check fa-solid"></i></div>
                 <div>
                   <div class="cd-kpi-num">{{ $kpiJoins }}</div>
                   <div class="cd-kpi-lbl">Successful Joins</div>
                   <div class="cd-kpi-desc">Placements closed</div>
                 </div>
               </div>
-              <i class="fa-solid fa-chevron-right cd-kpi-arrow"></i>
+              <i class="fas fa-chevron-right fa-solid cd-kpi-arrow"></i>
             </div>
           </div>
 
@@ -996,46 +1022,46 @@ use Carbon\Carbon;
             <ul class="nav nav-tabs border-0 flex-nowrap" role="tablist">
               <li class="nav-item">
                 <a class="nav-link active" data-toggle="tab" href="#overview">
-                  <i class="fa-solid fa-house"></i> Overview
+                  <i class="fas fa-home fa-solid fa-house"></i> Overview
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link cd-tab-black" data-toggle="tab" href="#recent_activity">
-                  <i class="fa-solid fa-clock"></i> Recent Activity
+                  <i class="fas fa-clock fa-solid"></i> Recent Activity
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#contacts">
-                  <i class="fa-solid fa-user-group"></i> Contacts
+                  <i class="fas fa-users fas fa-user fa-solid-group"></i> Contacts
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#requisitions">
-                  <i class="fa-solid fa-briefcase"></i> Jobs
+                  <i class="fas fa-briefcase fa-solid"></i> Jobs
                   @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                  <i class="fa-solid fa-users"></i> Candidates
+                  <i class="fas fa-users fa-solid"></i> Candidates
                   @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                  <i class="fa-solid fa-calendar-days"></i> Interviews
+                  <i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i> Interviews
                   <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                  <i class="fa-solid fa-file-lines"></i> Offers &amp; Joinings
+                  <i class="fas fa-file-alt fa-solid fa-file-lines"></i> Offers &amp; Joinings
                   @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
-                  <i class="fa-solid fa-chart-column"></i> Performance
+                  <i class="fas fa-chart-bar fa-solid fa-chart-column"></i> Performance
                 </a>
               </li>
             </ul>
@@ -1052,11 +1078,11 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fa-solid fa-bookmark text-primary" style="font-size:12px;"></i>
+                        <i class="fas fa-bookmark fa-solid text-primary" style="font-size:12px;"></i>
                         <span class="cd-card-hdr-title">About the Client</span>
                       </div>
                       <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link">
-                        {{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                        {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
                       </a>
                     </div>
                     <div class="cd-about-body">
@@ -1072,17 +1098,17 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fa-solid fa-clock text-primary" style="font-size:12px;"></i>
+                        <i class="fas fa-clock fa-solid text-primary" style="font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Recent Activity</span>
                       </div>
                       <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity">
-                        View all activity <i class="fa-solid fa-arrow-right ms-1" style="font-size:9px;"></i>
+                        View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
                     <div class="cd-timeline-list">
                       <!-- Node 1: Candidates Submitted -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fa-solid fa-user-group"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-users fas fa-user fa-solid-group"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">2 candidates submitted</div>
                           <div class="cd-tl-sub">{{ auth()->user()->name ?? 'Vibhanshu Jaiswal' }} submitted 2 candidates</div>
@@ -1096,7 +1122,7 @@ use Carbon\Carbon;
 
                       <!-- Node 2: Interview Scheduled -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-purple"><i class="fas fa-calendar-alt fa-solid fa-calendar-days"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">Interview scheduled</div>
                           <div class="cd-tl-sub">Interview scheduled with client panel</div>
@@ -1110,7 +1136,7 @@ use Carbon\Carbon;
 
                       <!-- Node 3: Offer Generated -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fa-solid fa-file-lines"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-orange"><i class="fas fa-file-alt fa-solid fa-file-lines"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">Offer generated</div>
                           <div class="cd-tl-sub">Offer letter sent to candidate</div>
@@ -1124,7 +1150,7 @@ use Carbon\Carbon;
 
                       <!-- Node 4: New Job Requirement -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fa-solid fa-briefcase"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-blue"><i class="fas fa-briefcase fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">New job requirement received</div>
                           <div class="cd-tl-sub">New hiring requirement added by client</div>
@@ -1138,7 +1164,7 @@ use Carbon\Carbon;
 
                       <!-- Node 5: Candidate Joined -->
                       <div class="cd-tl-item">
-                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="cd-tl-dot cd-tl-dot-green"><i class="fas fa-user-check fa-solid"></i></div>
                         <div class="cd-tl-info">
                           <div class="cd-tl-heading">1 candidate joined</div>
                           <div class="cd-tl-sub">Candidate successfully joined</div>
@@ -1159,7 +1185,7 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fa-solid fa-bookmark text-primary" style="font-size:12px;"></i>
+                        <i class="fas fa-bookmark fa-solid text-primary" style="font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Client Information</span>
                       </div>
                     </div>
@@ -1172,7 +1198,7 @@ use Carbon\Carbon;
                         <span class="cd-kv-lbl">Website</span>
                         <span class="cd-kv-val">
                           <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank">
-                            {{ $webClean }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
+                            {{ $webClean }} <i class="fas fa-external-link-alt fa-solid fa-arrow-up-right-from-square" style="font-size:8.5px;"></i>
                           </a>
                         </span>
                       </div>
@@ -1213,11 +1239,11 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fa-solid fa-user-group text-primary" style="font-size:12px;"></i>
+                        <i class="fas fa-users fas fa-user fa-solid-group text-primary" style="font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Primary Contact</span>
                       </div>
                       <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-contacts">
-                        View all contacts <i class="fa-solid fa-arrow-right ms-1" style="font-size:9px;"></i>
+                        View all contacts <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
                       </a>
                     </div>
                     <div class="cd-contact-preview">
@@ -1230,10 +1256,10 @@ use Carbon\Carbon;
                         <div class="cd-contact-title">{{ $primaryDesignation }}</div>
                         <div class="cd-contact-links">
                           <a href="mailto:{{ $primaryEmail }}" class="cd-contact-link-item">
-                            <i class="fa-solid fa-envelope text-muted"></i> {{ $primaryEmail }}
+                            <i class="fas fa-envelope fa-solid text-muted"></i> {{ $primaryEmail }}
                           </a>
                           <span class="cd-contact-link-item">
-                            <i class="fa-solid fa-phone text-muted"></i> {{ $primaryPhone }}
+                            <i class="fas fa-phone fa-solid text-muted"></i> {{ $primaryPhone }}
                           </span>
                         </div>
                       </div>
@@ -1244,7 +1270,7 @@ use Carbon\Carbon;
                   <div class="cd-card-panel">
                     <div class="cd-card-hdr">
                       <div class="cd-card-hdr-left">
-                        <i class="fa-solid fa-tag text-primary" style="font-size:12px;"></i>
+                        <i class="fas fa-tag fa-solid text-primary" style="font-size:12px;"></i>
                         <span class="cd-card-hdr-title">Client Tags</span>
                       </div>
                       <a href="javascript:void(0);" class="cd-card-hdr-link cd-btn-edit-tags">Edit Tags</a>
@@ -1253,7 +1279,7 @@ use Carbon\Carbon;
                       @foreach ($tagsArr as $tag)
                         <span class="cd-tag-pill">{{ ucwords($tag) }}</span>
                       @endforeach
-                      <button type="button" class="cd-btn-add-tag cd-btn-add-tag-trigger"><i class="fa-solid fa-plus me-1"></i>Add Tag</button>
+                      <button type="button" class="cd-btn-add-tag cd-btn-add-tag-trigger"><i class="fas fa-plus fa-solid me-1"></i>Add Tag</button>
                     </div>
                   </div>
                 </div>
@@ -1266,7 +1292,7 @@ use Carbon\Carbon;
                 <div class="cd-card-panel p-5" style="background:#000000; color:#ffffff; border-color:#1e293b; border-radius:10px;">
                   <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary pb-3">
                     <div class="d-flex align-items-center gap-2">
-                      <i class="fa-solid fa-clock text-warning" style="font-size:14px;"></i>
+                      <i class="fas fa-clock fa-solid text-warning" style="font-size:14px;"></i>
                       <h4 class="text-white mb-0" style="font-size:12px; font-weight:700;">Recent Activity &amp; Audit Logs</h4>
                     </div>
                     <span class="badge bg-secondary text-white" style="font-size:9.5px;">Pending Discussion</span>
