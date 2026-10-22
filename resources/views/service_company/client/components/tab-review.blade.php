@@ -51,7 +51,7 @@
           </div>
           <button type="button" class="btn btn-sm client-review-edit-btn" onclick="window.goToWizardStep ? window.goToWizardStep(1) : false;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <span>Edit Company</span>
+            <span>Edit</span>
           </button>
         </div>
       </div>
@@ -311,24 +311,7 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="client-sidebar-actions mt-3 d-flex flex-column gap-2">
-        @if (isset($page_event) && $page_event == 'EDIT')
-          <button type="button" class="btn client-sidebar-primary-btn updatefrm" id="sidebar_update_client_btn">
-            <span>Update Client</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </button>
-        @else
-          <button type="button" class="btn client-sidebar-primary-btn submitfrm" id="sidebar_create_client_btn">
-            <span>Submit Details</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </button>
-        @endif
-        <button type="button" class="btn client-sidebar-back-btn" onclick="window.goToWizardStep ? window.goToWizardStep(5) : false;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-          <span>Back to Social Links</span>
-        </button>
-      </div>
+
 
     </aside>
 

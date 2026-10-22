@@ -193,6 +193,81 @@ END:VCALENDAR";
         return $employerPath.'/'.$parent_directory.'/'.$child;
     }
 
+    /**
+     * Compress and optimize an uploaded company logo.
+     * Enforces aspect-ratio preserving downscale to max 500x500px, preserves transparency
+     * for PNG and WebP, and applies optimal compression (level 8 for PNG, 85% quality for JPEG/WebP).
+     * Non-raster formats like SVG are safely copied without alteration.
+     *
+     * @param string $sourcePath
+     * @param string $destinationPath
+     * @param string $ext
+     * @param int $maxWidth
+     * @param int $maxHeight
+     * @return bool
+     */
+    public static function compressAndSaveLogo($sourcePath, $destinationPath, $ext, $maxWidth = 500, $maxHeight = 500)
+    {
+        $ext = strtolower($ext);
+
+        // SVGs are XML vector formats; preserve verbatim
+        if ($ext === 'svg') {
+            return @copy($sourcePath, $destinationPath);
+        }
+
+        try {
+            $imgData = @file_get_contents($sourcePath);
+            if (! $imgData) {
+                return @copy($sourcePath, $destinationPath);
+            }
+
+            $srcImg = @imagecreatefromstring($imgData);
+            if (! $srcImg) {
+                return @copy($sourcePath, $destinationPath);
+            }
+
+            $width = imagesx($srcImg);
+            $height = imagesy($srcImg);
+
+            $newWidth = $width;
+            $newHeight = $height;
+
+            if ($width > $maxWidth || $height > $maxHeight) {
+                $ratio = min($maxWidth / $width, $maxHeight / $height);
+                $newWidth = max(1, (int) round($width * $ratio));
+                $newHeight = max(1, (int) round($height * $ratio));
+            }
+
+            $dstImg = imagecreatetruecolor($newWidth, $newHeight);
+
+            // Preserve alpha channel for PNG & WebP
+            if (in_array($ext, ['png', 'webp'])) {
+                imagealphablending($dstImg, false);
+                imagesavealpha($dstImg, true);
+                $transparent = imagecolorallocatealpha($dstImg, 255, 255, 255, 127);
+                imagefilledrectangle($dstImg, 0, 0, $newWidth, $newHeight, $transparent);
+            }
+
+            imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            if ($ext === 'png') {
+                imagepng($dstImg, $destinationPath, 8);
+            } elseif ($ext === 'webp') {
+                imagewebp($dstImg, $destinationPath, 85);
+            } else {
+                imagejpeg($dstImg, $destinationPath, 85);
+            }
+
+            imagedestroy($srcImg);
+            imagedestroy($dstImg);
+
+            return true;
+        } catch (\Throwable $e) {
+            \Log::warning('Logo compression fallback to copy: '.$e->getMessage());
+            return @copy($sourcePath, $destinationPath);
+        }
+    }
+
     public static function ymdTodmy($originalDate)
     {
 
@@ -10038,6 +10113,28 @@ END:VCALENDAR";
 
             $candidate_relation = [];
 
+            $clientLogo = null;
+            $clientCompanyName = strtolower($row->company_name);
+            if ((int) ($row->self_company ?? 0) === 0) {
+                // Internal client: resolve own company name and logo (never parent agency company name or logo)
+                if (! empty($row->name)) {
+                    $clientCompanyName = strtolower($row->name);
+                }
+                if (! empty($row->logo_logical_path) && strlen($row->logo_logical_path) > 10) {
+                    $clientLogo = $row->logo_logical_path;
+                } elseif (! empty($row->website)) {
+                    $domainGet = self::getDomain($row->website);
+                    if ($domainGet) {
+                        $clientLogo = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
+                        $row->logo_logical_path = $clientLogo;
+                        DB::table('clients')->where('id', $row->client_id)->update(['logo_logical_path' => $clientLogo]);
+                    }
+                }
+            } else {
+                // Direct Company / Agency self record
+                $clientLogo = $row->logo;
+            }
+
             $response = $elasticService->getClient()->update([
                 'index' => ELASTIC_CLIENT_LIST,
                 'id' => $row->client_id,
@@ -10046,10 +10143,10 @@ END:VCALENDAR";
                     'doc' => [
                         'id' => $row->client_id,
                         'company_id' => $row->id,
-                        'company_name' => strtolower($row->company_name),
+                        'company_name' => $clientCompanyName,
                         'industries' => $row->industries,
                         'website' => $row->website,
-                        'logo' => $row->logo,
+                        'logo' => $clientLogo,
                         'company_type' => $row->company_type,
                         'industries_type' => $row->industries_type,
                         'client_id' => $row->client_id,
