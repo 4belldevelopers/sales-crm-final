@@ -144,7 +144,7 @@ class ClientJobsReadService
             'comId', 'location_id', 'category_id', 'client_name', 'client_company',
             'company_name', 'self_company', 'work_type', 'employment_type', 'client_city_jobs',
             'client_contact_info_jobs', 'job_assign', 'recommendation_relation', 'matching_agency_count',
-            'department_name', 'category_name', 'state_version', 'projection_version',
+            'department_name', 'category_name', 'job_metronics_skills', 'logo', 'logo_logical_path', 'state_version', 'projection_version',
         ];
 
         $from = ($query->page - 1) * $query->perPage;
