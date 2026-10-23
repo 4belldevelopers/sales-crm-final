@@ -336,6 +336,33 @@ class JobService
                 }
             }
 
+            // Resilience: If client_city_jobs is still empty after tagify processing, auto-populate from client location/address
+            $hasCity = DB::table('client_city_jobs')->where('job_id', $job->id)->exists();
+            if (! $hasCity && ! empty($requestData['address_id'])) {
+                $addrId = (int) $requestData['address_id'];
+                $locRecord = DB::table('client_location')->where('id', $addrId)->first();
+                if (! $locRecord) {
+                    $locRecord = DB::table('client_location')->where('city_id', $addrId)->first();
+                }
+                if ($locRecord && ! empty($locRecord->city_id)) {
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $locRecord->city_id,
+                        'country_id' => $locRecord->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
+                } elseif ($addrId > 0 && DB::table('city_list')->where('city_id', $addrId)->exists()) {
+                    $cityRow = DB::table('city_list')->where('city_id', $addrId)->first();
+                    $stateRow = DB::table('state_list')->where('id', $cityRow->state_id ?? 0)->first();
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $addrId,
+                        'country_id' => $stateRow->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
+                }
+            }
+
             // 6. Job Countries Processing
             if (! empty($requestData['kt_select2_4']) && is_array($requestData['kt_select2_4'])) {
                 $batchCountryInsert = [];
@@ -1004,6 +1031,33 @@ class JobService
                             DB::table('client_city_jobs')->insert($batchCityInsert);
                         }
                     }
+                }
+            }
+
+            // Resilience: If client_city_jobs is still empty after tagify processing, auto-populate from client location/address
+            $hasCity = DB::table('client_city_jobs')->where('job_id', $job->id)->exists();
+            if (! $hasCity && ! empty($requestData['address_id'])) {
+                $addrId = (int) $requestData['address_id'];
+                $locRecord = DB::table('client_location')->where('id', $addrId)->first();
+                if (! $locRecord) {
+                    $locRecord = DB::table('client_location')->where('city_id', $addrId)->first();
+                }
+                if ($locRecord && ! empty($locRecord->city_id)) {
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $locRecord->city_id,
+                        'country_id' => $locRecord->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
+                } elseif ($addrId > 0 && DB::table('city_list')->where('city_id', $addrId)->exists()) {
+                    $cityRow = DB::table('city_list')->where('city_id', $addrId)->first();
+                    $stateRow = DB::table('state_list')->where('id', $cityRow->state_id ?? 0)->first();
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $addrId,
+                        'country_id' => $stateRow->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
                 }
             }
 
