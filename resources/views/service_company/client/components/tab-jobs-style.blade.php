@@ -1,341 +1,600 @@
 <style>
 /* ==========================================================================
-   Client Drawer Jobs Tab — Scoped Enterprise Metronic Styles (Rule 10)
-   Optimized for 15.6" Screens (1366x768 and 1920x1080)
+   Client Drawer Jobs Tab — Master Enterprise 7-Column Layout (Screenshot 2 Match)
+   Strictly Optimized for 15.6" Screens (1366x768 & 1920x1080) — 0% Horizontal Scroll
    ========================================================================== */
 
-.cl-jobs-container {
-    width: 100%;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+/* Universal Box Sizing & Font Stack */
+.jobx, .jobx *,
+.table-card, .table-card *,
+.job-row, .job-row * {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    box-sizing: border-box !important;
 }
 
-/* 5-Option Status Filter Group */
+.jobx {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* 5-Option Status Filter Group (All Jobs, Hiring, On Hold, Closed, Inactive) */
 .cl-jobs-filter-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+    flex-wrap: wrap !important;
 }
 
 .cl-jobs-filter-group .btn {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 6px;
-    transition: all 0.15s ease-in-out;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    padding: 5px 12px !important;
+    border-radius: 6px !important;
+    background: #f5f8fa !important;
+    color: #5e6278 !important;
+    border: 1px solid #e4e6ef !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+}
+
+.cl-jobs-filter-group .btn:hover {
+    background: #eef3f7 !important;
+    color: #181c32 !important;
 }
 
 .cl-jobs-filter-group .btn.active {
-    background-color: #009ef7 !important;
+    background: #009ef7 !important;
     color: #ffffff !important;
     border-color: #009ef7 !important;
 }
 
 .cl-jobs-filter-group .btn.active .badge {
-    background-color: rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
     color: #ffffff !important;
 }
 
-/* Job Row Grid Structure (Progressive Disclosure) */
-.cl-job-row {
-    display: grid;
-    grid-template-columns: 2.8fr 1.3fr 1.1fr 2.1fr 0.7fr;
-    gap: 12px;
-    align-items: center;
-    background: #ffffff;
-    border: 1px solid #eff2f5;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 8px;
-    transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+/* Master Table Card */
+.table-card,
+.jobx .table-card {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid #e4e6ef !important;
+    overflow: hidden !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-.cl-job-row:hover {
-    border-color: #b5e4f9;
-    box-shadow: 0 4px 12px rgba(0, 158, 247, 0.06);
+/* 7-Column Grid Layout for Table Header and Job Rows */
+.table-header,
+.jobx .table-header,
+.job-row,
+.jobx .job-row {
+    display: grid !important;
+    grid-template-columns: minmax(170px, 2.2fr) minmax(100px, 1.15fr) minmax(100px, 1.15fr) minmax(105px, 1.2fr) minmax(75px, 0.85fr) minmax(75px, 0.85fr) minmax(165px, 1.8fr) !important;
+    align-items: start !important;
+    column-gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-/* Col 1: Job Info & Branding */
-.cl-job-col-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
+/* Table Header */
+.table-header,
+.jobx .table-header {
+    padding: 9px 12px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    align-items: center !important;
 }
 
-.cl-job-logo-box {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 16px;
-    color: #ffffff;
-    overflow: hidden;
-    background: #f1f5f9;
+.th,
+.jobx .th {
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.cl-job-logo-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.th i,
+.jobx .th i {
+    font-size: 11px !important;
 }
 
-.cl-job-meta-title {
-    min-width: 0;
+/* Job Row */
+.job-row,
+.jobx .job-row {
+    padding: 10px 12px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    transition: background 0.12s ease !important;
+    background: #ffffff !important;
 }
 
-.cl-job-title-link {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #181c32;
-    text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    cursor: pointer;
+.job-row:hover,
+.jobx .job-row:hover {
+    background: #f8fafc !important;
 }
 
-.cl-job-title-link:hover {
-    color: #009ef7;
+/* Col 1: Job Details */
+.col-job,
+.jobx .col-job {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+    min-width: 0 !important;
 }
 
-.cl-job-dept-text {
-    font-size: 11.5px;
-    color: #7e8299;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.job-logo,
+.jobx .job-logo {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    background: #5850ec !important;
+    overflow: hidden !important;
 }
 
-.cl-job-client-tag {
-    font-size: 11px;
-    color: #a1a5b7;
-    margin-top: 1px;
+.job-logo img,
+.jobx .job-logo img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
 
-/* Col 2: Experience & Compensation */
-.cl-job-col-exp {
-    font-size: 12px;
-    color: #475569;
-    line-height: 1.4;
+.job-info,
+.jobx .job-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
 }
 
-.cl-job-exp-row, .cl-job-sal-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
+.job-title,
+.jobx .job-title {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #181c32 !important;
+    line-height: 1.3 !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
 }
 
-.cl-job-exp-row svg, .cl-job-sal-row svg {
-    width: 13px;
-    height: 13px;
-    color: #94a3b8;
+.job-dept,
+.jobx .job-dept {
+    font-size: 11px !important;
+    color: #64748b !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
 }
 
-.cl-job-type-pill {
-    display: inline-block;
-    font-size: 10.5px;
-    font-weight: 500;
-    padding: 1px 7px;
-    border-radius: 4px;
-    background: #f1f5f9;
-    color: #475569;
-    margin-top: 2px;
+.job-client,
+.jobx .job-client {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
 }
 
-/* Col 3: Status Pill & Updated Timestamp */
-.cl-job-col-status {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 3px;
+/* Col 2: Experience & Salary */
+.col-exp,
+.jobx .col-exp {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    min-width: 0 !important;
+    padding-top: 1px !important;
+    overflow: hidden !important;
 }
 
-.badge-hiring {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: capitalize;
-    letter-spacing: 0.2px;
+.exp-row,
+.jobx .exp-row,
+.sal-row,
+.jobx .sal-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #181c32 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
 }
 
-.badge-hiring.active-bg {
-    background: #e8fff3;
-    color: #50cd89;
-    border: 1px solid #b7f5d4;
+.exp-row i,
+.jobx .exp-row i,
+.sal-row i,
+.jobx .sal-row i {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
 }
 
-.badge-hiring.hold-bg {
-    background: #fff8dd;
-    color: #ffc700;
-    border: 1px solid #ffe79e;
+.emp-row,
+.jobx .emp-row {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
 }
 
-.badge-hiring.closed-bg {
-    background: #ffeef1;
-    color: #f1416c;
-    border: 1px solid #f8c1cb;
+.emp-row i,
+.jobx .emp-row i {
+    font-size: 10.5px !important;
 }
 
-.badge-hiring.inactive-bg {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #cbd5e1;
+/* Col 3: Hiring & Location */
+.col-hl,
+.jobx .col-hl {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    min-width: 0 !important;
+    padding-top: 1px !important;
+    overflow: hidden !important;
 }
 
-.js-status-timestamp {
-    font-size: 10.5px;
-    color: #94a3b8;
+.badge-hiring,
+.jobx .badge-hiring {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    width: fit-content !important;
+    cursor: default !important;
+    line-height: 1.2 !important;
 }
 
-/* Col 4: Pipeline Compact Strip */
-.cl-job-col-pipeline {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+.status-dot,
+.jobx .status-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
 }
 
-.cl-pipeline-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-width: 38px;
-    padding: 3px 4px;
-    border-radius: 5px;
-    text-decoration: none;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    transition: background 0.1s ease;
+.badge-hiring.active-bg { color: #16a34a !important; }
+.badge-hiring.active-bg .status-dot { background-color: #16a34a !important; }
+
+.badge-hiring.hold-bg { color: #d97706 !important; }
+.badge-hiring.hold-bg .status-dot { background-color: #d97706 !important; }
+
+.badge-hiring.closed-bg { color: #dc2626 !important; }
+.badge-hiring.closed-bg .status-dot { background-color: #dc2626 !important; }
+
+.badge-hiring.inactive-bg { color: #64748b !important; }
+.badge-hiring.inactive-bg .status-dot { background-color: #64748b !important; }
+
+.loc-row,
+.jobx .loc-row,
+.mode-row,
+.jobx .mode-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
 }
 
-.cl-pipeline-pill:hover {
-    background: #e2e8f0;
+.loc-row i,
+.jobx .loc-row i,
+.mode-row i,
+.jobx .mode-row i {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
 }
 
-.cl-pipeline-label {
-    font-size: 9px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
+.loc-badge,
+.jobx .loc-badge {
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    padding: 0 4px !important;
+    border-radius: 8px !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
 }
 
-.cl-pipeline-count {
-    font-size: 11px;
-    font-weight: 700;
-    color: #0f172a;
+/* Col 4: Hiring Manager */
+.col-hm,
+.jobx .col-hm {
+    min-width: 0 !important;
+    padding-top: 1px !important;
+    overflow: hidden !important;
 }
 
-/* Col 5: Actions */
-.cl-job-col-actions {
-    display: flex;
-    justify-content: flex-end;
+.hm-name,
+.jobx .hm-name {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #181c32 !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
 }
 
-/* Metronic Empty State */
-.cl-jobs-empty-state {
-    text-align: center;
-    padding: 48px 16px;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-    margin: 20px 0;
+.hm-title,
+.jobx .hm-title {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-bottom: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
 }
 
-.cl-jobs-empty-state svg {
-    width: 48px;
-    height: 48px;
-    color: #94a3b8;
-    margin-bottom: 12px;
+.hm-client-tag,
+.jobx .hm-client-tag {
+    font-size: 10.5px !important;
+    color: #2563eb !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
 }
 
-.cl-jobs-empty-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 4px;
+/* Col 5 & 6: Team & Agency (Read-Only) */
+.col-action,
+.jobx .col-action {
+    min-width: 0 !important;
+    padding-top: 1px !important;
+    overflow: hidden !important;
 }
 
-.cl-jobs-empty-desc {
-    font-size: 12px;
-    color: #64748b;
+.team-meta,
+.jobx .team-meta,
+.agency-meta,
+.jobx .agency-meta {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
 }
 
-/* 1366x768 Screen Adjustment */
-@media (max-width: 1400px) {
-    .cl-job-row {
-        grid-template-columns: 2.5fr 1.3fr 1.1fr 2.3fr 0.6fr;
-        gap: 8px;
-        padding: 10px 12px;
+.match-meta,
+.jobx .match-meta {
+    font-size: 10.5px !important;
+    color: #181c32 !important;
+    font-weight: 600 !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+/* Col 7: Pipeline Stages (Read-Only) */
+.col-pipeline,
+.jobx .col-pipeline {
+    padding-top: 1px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.pipeline-stages,
+.jobx .pipeline-stages {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 2px !important;
+    margin-bottom: 4px !important;
+    width: 100% !important;
+}
+
+.stage,
+.jobx .stage {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.stage-label,
+.jobx .stage-label {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1 !important;
+}
+
+.stage-badge,
+.jobx .stage-badge {
+    width: 100% !important;
+    max-width: 20px !important;
+    height: 16px !important;
+    border-radius: 3px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+.s-inw, .jobx .s-inw { background: #fef9c3 !important; color: #854d0e !important; }
+.s-sou, .jobx .s-sou { background: #f1f5f9 !important; color: #334155 !important; }
+.s-scr, .jobx .s-scr { background: #fae8ff !important; color: #86198f !important; }
+.s-eva, .jobx .s-eva { background: #e0f2fe !important; color: #0369a1 !important; }
+.s-neg, .jobx .s-neg { background: #fce7f3 !important; color: #9d174d !important; }
+.s-off, .jobx .s-off { background: #ffedd5 !important; color: #9a3412 !important; }
+.s-joi, .jobx .s-joi { background: #dcfce7 !important; color: #166534 !important; }
+.s-rej, .jobx .s-rej { background: #fee2e2 !important; color: #991b1b !important; }
+
+.pipeline-total,
+.jobx .pipeline-total {
+    font-size: 9.5px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.pipeline-total strong,
+.jobx .pipeline-total strong {
+    color: #181c32 !important;
+    font-weight: 700 !important;
+}
+
+/* Bottom Skills & Date Bar */
+.job-row-skills,
+.jobx .job-row-skills {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    padding: 3px 12px 9px 56px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 10.5px !important;
+    width: 100% !important;
+    background: #ffffff !important;
+}
+
+.job-row:last-of-type + .job-row-skills,
+.job-row-skills:last-child,
+.jobx .job-row:last-of-type + .job-row-skills,
+.jobx .job-row-skills:last-child {
+    border-bottom: none !important;
+}
+
+.job-row-skills .job-date,
+.jobx .job-row-skills .job-date {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-right: 4px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+
+.job-row-skills .job-date i,
+.jobx .job-row-skills .job-date i {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+}
+
+.job-row-skills .sk-tag,
+.jobx .job-row-skills .sk-tag {
+    display: inline-flex !important;
+    padding: 1px 7px !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    border: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+}
+
+.job-empty,
+.jobx .job-empty {
+    padding: 36px 14px !important;
+    text-align: center !important;
+    color: #94a3b8 !important;
+    font-size: 12.5px !important;
+}
+
+/* ==========================================================================
+   Responsive Scaling for 15.6" Screens (1366x768 & 1920x1080) & Smaller
+   Ensures 0% Horizontal Scrollbar across all browser drawer viewports
+   ========================================================================== */
+@media (max-width: 1440px) {
+    .table-header,
+    .jobx .table-header,
+    .job-row,
+    .jobx .job-row {
+        grid-template-columns: minmax(150px, 2.1fr) minmax(90px, 1.1fr) minmax(90px, 1.1fr) minmax(95px, 1.15fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(155px, 1.75fr) !important;
+        column-gap: 6px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
-    .cl-job-title-link {
-        font-size: 12.5px;
+    .job-row-skills,
+    .jobx .job-row-skills {
+        padding-left: 50px !important;
+        padding-right: 8px !important;
     }
-    .cl-pipeline-pill {
-        min-width: 32px;
-        padding: 2px 3px;
+    .job-title,
+    .jobx .job-title {
+        font-size: 12px !important;
+    }
+    .stage-badge,
+    .jobx .stage-badge {
+        max-width: 18px !important;
+        height: 15px !important;
+        font-size: 8.5px !important;
     }
 }
 
-/* Colored Status Dot */
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-    margin-right: 4px;
-}
-.badge-hiring.active-bg .status-dot { background-color: #50cd89; }
-.badge-hiring.hold-bg .status-dot   { background-color: #ffc700; }
-.badge-hiring.closed-bg .status-dot { background-color: #f1416c; }
-.badge-hiring.inactive-bg .status-dot { background-color: #64748b; }
-
-/* Filter Group styling */
-.cl-jobs-filter-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-}
-
-.cl-jobs-filter-group .btn {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: #f5f8fa;
-    color: #5e6278;
-    border: 1px solid #e4e6ef;
-    transition: all 0.15s ease;
-}
-
-.cl-jobs-filter-group .btn:hover {
-    background: #eef3f7;
-    color: #181c32;
-}
-
-.cl-jobs-filter-group .btn.active {
-    background: #181c32;
-    color: #ffffff;
-    border-color: #181c32;
-}
-
-.cl-jobs-filter-group .btn.active .badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+@media (max-width: 1100px) {
+    .table-header,
+    .jobx .table-header,
+    .job-row,
+    .jobx .job-row {
+        grid-template-columns: minmax(135px, 1.9fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(85px, 1fr) minmax(65px, 0.75fr) minmax(65px, 0.75fr) minmax(145px, 1.6fr) !important;
+        column-gap: 4px !important;
+    }
+    .job-row-skills,
+    .jobx .job-row-skills {
+        padding-left: 42px !important;
+    }
 }
 </style>
