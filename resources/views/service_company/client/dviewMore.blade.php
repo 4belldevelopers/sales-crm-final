@@ -35,61 +35,300 @@
     .cit-star-fill { color: #FFAD0F; font-size: 11px; }
     .cit-star-empty { color: #E4E6EF; font-size: 11px; }
 
-    /* ===== Scoped Interview Tracker 7-Column View-Only Styling ===== */
-    .it-table-container { background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .it-table-scroll { overflow-x: auto; width: 100%; }
-    .it-data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
-    .it-data-table th { background: #f8fafc; padding: 10px 14px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-    .it-data-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 11.5px; vertical-align: top; transition: background 0.15s; background: #ffffff; }
-    .it-data-table tbody tr:hover td { background: #f8fafc; }
-    .it-data-table tbody tr:last-child td { border-bottom: none; }
+    /* ===== Scoped Interview Tracker: Card + Sub-Card Proportional Layout ===== */
+    .it-card-container {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
 
-    /* Candidate Cell */
-    .it-candidate-cell { display: flex; gap: 8px; align-items: flex-start; }
-    .it-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11.5px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
-    .it-avatar-green { background: #10b981; }
-    .it-avatar-red { background: #ef4444; }
-    .it-avatar-blue { background: #3b82f6; }
-    .it-avatar-purple { background: #8b5cf6; }
-    .it-avatar-orange { background: #f97316; }
-    .it-avatar-gray { background: #6b7280; }
-    .it-candidate-info { min-width: 0; display: flex; flex-direction: column; }
-    .it-candidate-name { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
-    .it-candidate-role { font-size: 10.5px; color: #64748b; margin-bottom: 3px; }
-    .it-candidate-meta { display: flex; flex-direction: column; gap: 2px; }
-    .it-meta-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; width: fit-content; }
-    .it-meta-tag.confirmed { color: #10b981; background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .it-meta-tag.warning { color: #f59e0b; background: #fffbeb; border: 1px solid #fde68a; }
-    .it-meta-tag.danger { color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; }
-    .it-meta-tag.info { color: #3b82f6; background: #eff6ff; border: 1px solid #bfdbfe; }
+    /* Proportional Header Strip */
+    .it-card-header,
+    .it-primary-card {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 0.8fr) !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
 
-    /* Job Cell */
-    .it-job-title { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
-    .it-job-company { font-size: 10.5px; color: #64748b; margin-bottom: 4px; }
-    .it-job-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-    .it-job-type { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 9.5px; font-weight: 600; }
-    .it-job-type-internal { background: #eef2ff; color: #4f46e5; }
-    .it-job-type-direct   { background: #f0fdf4; color: #16a34a; }
-    .it-job-id { font-size: 10.5px; color: #2563eb; font-weight: 500; }
-    .it-dot-separator { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+    .it-card-header {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 9px 14px !important;
+        margin-bottom: 8px !important;
+    }
 
-    /* Date Cell */
-    .it-date-cell { display: flex; flex-direction: column; gap: 3px; }
-    .it-date-row { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #1e293b; font-weight: 500; }
-    .it-date-row svg { color: #94a3b8; flex-shrink: 0; width: 12px; height: 12px; }
-    .it-date-row.it-mode { color: #64748b; font-size: 10.5px; font-weight: 400; }
+    .it-col-th {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
 
-    /* Person Cell */
-    .it-person-cell { display: flex; flex-direction: column; gap: 2px; }
-    .it-person-name { font-weight: 600; font-size: 12px; color: #1e293b; }
-    .it-person-company { font-size: 10.5px; color: #64748b; }
-    .it-person-extra { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-    .it-extra-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 4px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #64748b; }
-    .it-extra-text { font-size: 10.5px; color: #64748b; }
+    /* Primary Job Card for Each Interview */
+    .it-primary-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
 
-    /* Stage Cell */
-    .it-stage-cell { display: flex; flex-direction: column; gap: 3px; }
-    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 500; width: fit-content; }
+    .it-primary-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Logical Sub-Cards Inside the Primary Card */
+    .it-subcard {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 1. Candidate Sub-Card */
+    .it-subcard-cand {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .it-cand-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+    }
+    .it-avatar-green { background: #10b981 !important; }
+    .it-avatar-red { background: #ef4444 !important; }
+    .it-avatar-blue { background: #3b82f6 !important; }
+    .it-avatar-purple { background: #8b5cf6 !important; }
+    .it-avatar-orange { background: #f97316 !important; }
+    .it-avatar-gray { background: #6b7280 !important; }
+
+    .it-cand-info {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+    }
+    .it-cand-name {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-role {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 3px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-meta-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+    }
+    .it-meta-tag.confirmed { color: #10b981 !important; background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+    .it-meta-tag.warning { color: #f59e0b !important; background: #fffbeb !important; border: 1px solid #fde68a !important; }
+    .it-meta-tag.danger { color: #ef4444 !important; background: #fef2f2 !important; border: 1px solid #fecaca !important; }
+    .it-meta-tag.info { color: #3b82f6 !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; }
+    .it-meta-date {
+        font-size: 10px !important;
+        color: #94a3b8 !important;
+    }
+
+    /* 2. Job Requisition Sub-Card */
+    .it-subcard-job {
+        gap: 2px !important;
+    }
+    .it-job-title {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-job-company {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-job-tags {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 2px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-job-type {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+    }
+    .it-job-type-internal { background: #eef2ff !important; color: #4f46e5 !important; border: 1px solid #e0e7ff !important; }
+    .it-job-type-direct { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
+    .it-job-id {
+        font-size: 10.5px !important;
+        color: #2563eb !important;
+        font-weight: 600 !important;
+    }
+    .it-dot-sep {
+        width: 3px !important;
+        height: 3px !important;
+        border-radius: 50% !important;
+        background: #cbd5e1 !important;
+    }
+
+    /* 3. Date & Time Sub-Card */
+    .it-subcard-datetime {
+        gap: 3px !important;
+    }
+    .it-dt-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 11.5px !important;
+        color: #1e293b !important;
+        line-height: 1.3 !important;
+    }
+    .it-dt-row svg {
+        color: #94a3b8 !important;
+        flex-shrink: 0 !important;
+    }
+    .it-dt-date {
+        font-weight: 600 !important;
+        color: #0f172a !important;
+    }
+    .it-dt-time {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #475569 !important;
+    }
+    .it-dt-mode {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+    }
+    .it-dt-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        color: #2563eb !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        margin-top: 2px !important;
+        cursor: pointer !important;
+    }
+    .it-dt-link:hover {
+        color: #1d4ed8 !important;
+        text-decoration: underline !important;
+    }
+    .it-dt-link svg {
+        color: #2563eb !important;
+    }
+
+    /* 4. Interviewers Sub-Card */
+    .it-subcard-interviewers {
+        gap: 2px !important;
+    }
+    .it-lead-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-lead-comp {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        color: #009ef7 !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-extra-wrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 2px !important;
+    }
+    .it-extra-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 17px !important;
+        height: 15px !important;
+        padding: 0 4px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+    }
+    .it-extra-lbl {
+        font-size: 10px !important;
+        color: #64748b !important;
+    }
+
+    /* 5. Source Sub-Card */
+    .it-subcard-source {
+        gap: 2px !important;
+    }
+    .it-src-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-src-comp {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+
+    /* 6. Stage Sub-Card */
+    .it-subcard-stage {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; width: fit-content; }
     .it-badge-blue   { background: #dbeafe; color: #1e40af; }
     .it-badge-purple { background: #f3e8ff; color: #6b21a8; }
     .it-badge-orange { background: #ffedd5; color: #9a3412; }
@@ -98,9 +337,62 @@
     .it-badge-yellow { background: #fef9c3; color: #854d0e; }
     .it-badge-gray   { background: #e2e8f0; color: #374151; }
     .it-badge-pink   { background: #fce7f3; color: #9d174d; }
+    .it-stage-sub {
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        color: #94a3b8 !important;
+        line-height: 1.2 !important;
+    }
 
-    /* Feedback Cell */
-    .it-feedback-cell { display: flex; flex-direction: column; gap: 3px; }
+    /* 7. Feedback Sub-Card */
+    .it-subcard-feedback {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-fb-status {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .it-rec-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 7px !important;
+        border-radius: 50px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        margin-top: 1px !important;
+    }
+
+    /* Empty, Loading, and Error State Cards */
+    .it-empty-card,
+    .it-loading-card,
+    .it-error-card {
+        background: #ffffff !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 36px 20px !important;
+        text-align: center !important;
+        color: #64748b !important;
+        font-size: 12.5px !important;
+        margin: 8px 0 !important;
+    }
+    .it-error-card {
+        border-color: #fca5a5 !important;
+        color: #dc2626 !important;
+    }
+
+    @media (max-width: 1280px) {
+        .it-card-header,
+        .it-primary-card {
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.2fr) minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 0.75fr) !important;
+            column-gap: 8px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
     @media only screen and (min-width: 900px) and (max-width: 2560px) {
 
         .table td,
@@ -2598,30 +2890,24 @@
                         <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Interview Tracker</div><div class="cd-tabcard-sub">Interviews scheduled with this client's candidates.</div></div><div class="cd-tabwrap">
 
                       <div class="card-body px-0 py-7">
-                          <!--begin::Table-->
-                          <div class="it-table-container">
-                              <div class="it-table-scroll">
-                                  <table class="it-data-table align-middle">
-                                      <!--begin::Table head-->
-                                      <thead>
-                                          <tr>
-                                              <th style="width: 20%; min-width: 170px;">Candidate</th>
-                                              <th style="width: 18%; min-width: 150px;">Job Requisitions</th>
-                                              <th style="width: 18%; min-width: 150px;">Interview Date &amp; Time</th>
-                                              <th style="width: 13%; min-width: 120px;">Interviewers</th>
-                                              <th style="width: 12%; min-width: 110px;">Source</th>
-                                              <th style="width: 9%; min-width: 90px;">Stage</th>
-                                              <th style="width: 10%; min-width: 100px;">Feedback</th>
-                                          </tr>
-                                      </thead>
-                                      <!--end::Table head-->
-                                      <tbody id="candidatetListinterviewtracker" data-role="interview-list">
+                          <!--begin::Card + Sub-Card Interview Container-->
+                          <div class="it-card-container">
+                              <!-- Proportional Header Strip -->
+                              <div class="it-card-header">
+                                  <div class="it-col-th it-th-cand">Candidate</div>
+                                  <div class="it-col-th it-th-job">Job Requisitions</div>
+                                  <div class="it-col-th it-th-datetime">Interview Date &amp; Time</div>
+                                  <div class="it-col-th it-th-interviewers">Interviewers</div>
+                                  <div class="it-col-th it-th-source">Source</div>
+                                  <div class="it-col-th it-th-stage">Stage</div>
+                                  <div class="it-col-th it-th-feedback">Feedback</div>
+                              </div>
 
-                                      </tbody>
-                                  </table>
+                              <!-- Primary Cards List -->
+                              <div id="candidatetListinterviewtracker" class="it-cards-list" data-role="interview-list">
                               </div>
                           </div>
-                          <!--end::Table-->
+                          <!--end::Card + Sub-Card Interview Container-->
                           <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
                               <!-- Pagination links will be appended here -->
                           </div>
@@ -5375,12 +5661,10 @@
             const $list = $('#candidatetListinterviewtracker');
             if (!forceRevalidate) {
                 $list.html(`
-                    <tr>
-                      <td colspan="7" class="text-center py-8">
+                    <div class="it-loading-card">
                         <span class="spinner-border spinner-border-sm text-primary me-2"></span>
                         <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
-                      </td>
-                    </tr>
+                    </div>
                 `);
             }
 
@@ -5421,12 +5705,10 @@
 
                     entry.state = 'ERROR';
                     $list.html(`
-                        <tr>
-                          <td colspan="7" class="text-center py-6 text-danger fs-7">
+                        <div class="it-error-card">
                             <i class="fas fa-exclamation-circle me-1"></i> Failed to retrieve interviews.
                             <button type="button" class="btn btn-sm btn-link text-primary ms-2 p-0" id="btnRetryDirectInterviews">Retry</button>
-                          </td>
-                        </tr>
+                        </div>
                     `);
                     $('#btnRetryDirectInterviews').one('click', function() {
                         fetchInterviews(clientId, cursor, true);
@@ -5439,12 +5721,10 @@
             const $list = $('#candidatetListinterviewtracker');
             if (!rows || !rows.length) {
                 $list.html(`
-                    <tr>
-                      <td colspan="7" class="text-center py-10 text-muted fs-7">
+                    <div class="it-empty-card">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
                         No interviews scheduled for this client.
-                      </td>
-                    </tr>
+                    </div>
                 `);
                 return;
             }
@@ -5463,11 +5743,11 @@
                 let followupHtml = '';
                 if (fu.label) {
                     followupHtml = `
-                        <div class="it-candidate-meta">
+                        <div class="it-cand-meta">
                             <span class="it-meta-tag ${fu.style_class || 'info'}">
                                 ${fu.label}
                             </span>
-                            ${fu.formatted_at ? `<span class="it-meta-tag info" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">${fu.formatted_at}</span>` : ''}
+                            ${fu.formatted_at ? `<span class="it-meta-date">${fu.formatted_at}</span>` : ''}
                         </div>
                     `;
                 }
@@ -5477,16 +5757,16 @@
                 if (sch.meeting_link) {
                     if (sch.link_type === 'address') {
                         linkHtml = `
-                            <span class="it-date-row" style="color:var(--it-primary);font-weight:500;margin-top:2px;" title="${sch.meeting_link}">
+                            <span class="it-dt-link" title="${sch.meeting_link}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                ${sch.link_label || 'View Address'}
+                                <span>${sch.link_label || 'View Address'}</span>
                             </span>
                         `;
                     } else if (sch.link_type === 'link') {
                         linkHtml = `
-                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-date-row" style="color:var(--it-primary);font-weight:500;text-decoration:none;margin-top:2px;">
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-dt-link">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                ${sch.link_label || 'Interview Link'}
+                                <span>${sch.link_label || 'Interview Link'}</span>
                             </a>
                         `;
                     }
@@ -5519,126 +5799,110 @@
                 // Recommendation pill
                 let recHtml = '';
                 if (fb.recommendation) {
-                    recHtml = `<span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:${fb.recommendation.bg};color:${fb.recommendation.color};margin-top:2px;">${fb.recommendation.label}</span>`;
+                    recHtml = `<span class="it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
                 }
 
                 return `
-                    <tr data-interview-id="${intv.id}">
-                      <!-- 1. Candidate (20%) -->
-                      <td style="width: 20%; min-width: 170px;">
-                        <div class="it-candidate-cell">
-                          <div class="it-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
-                            ${cand.initial || 'C'}
-                          </div>
-                          <div class="it-candidate-info">
-                            <div class="it-candidate-name">
-                              <span class="text-dark fw-bolder fs-6" title="${cand.name || 'Candidate'}">
-                                ${cand.name ? (cand.name.length > 22 ? cand.name.substring(0, 22) + '...' : cand.name) : 'Candidate'}
-                              </span>
-                            </div>
-                            <div class="it-candidate-role">
-                              <span class="fw-bold text-muted d-block fs-7" title="${cand.designation || '—'}">
-                                ${cand.designation ? (cand.designation.length > 24 ? cand.designation.substring(0, 24) + '...' : cand.designation) : '—'}
-                              </span>
-                            </div>
-                            ${followupHtml}
-                          </div>
+                    <div class="it-primary-card" data-interview-id="${intv.id}">
+                      <!-- 1. Candidate Sub-Card (2.2fr) -->
+                      <div class="it-subcard it-subcard-cand">
+                        <div class="it-cand-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
+                          ${cand.initial || 'C'}
                         </div>
-                      </td>
+                        <div class="it-cand-info">
+                          <div class="it-cand-name" title="${cand.name || 'Candidate'}">
+                            ${cand.name || 'Candidate'}
+                          </div>
+                          <div class="it-cand-role" title="${cand.designation || '—'}">
+                            ${cand.designation || '—'}
+                          </div>
+                          ${followupHtml}
+                        </div>
+                      </div>
 
-                      <!-- 2. Job Requisitions (18%) -->
-                      <td style="width: 18%; min-width: 150px;">
+                      <!-- 2. Job Requisition Sub-Card (2.3fr) -->
+                      <div class="it-subcard it-subcard-job">
                         <div class="it-job-title" title="${job.title || 'Job Position'}">
-                          ${job.title ? (job.title.length > 20 ? job.title.substring(0, 20) + '...' : job.title) : 'Job Position'}
+                          ${job.title || 'Job Position'}
                         </div>
                         <div class="it-job-company" title="${job.display_company_name || job.client_name || ''}">
-                          ${(job.display_company_name || job.client_name || '').substring(0, 20)}
+                          ${job.display_company_name || job.client_name || 'Client Account'}
                         </div>
                         <div class="it-job-tags">
                           <span class="it-job-type ${job.job_type_class || 'it-job-type-direct'}">${job.job_type_label || 'Direct Client'}</span>
                           ${job.job_id_display ? `
-                            <span class="it-dot-separator"></span>
+                            <span class="it-dot-sep"></span>
                             <span class="it-job-id">${job.job_id_display}</span>
                           ` : ''}
                         </div>
-                      </td>
+                      </div>
 
-                      <!-- 3. Interview Date & Time (18%) -->
-                      <td style="width: 18%; min-width: 150px;">
-                        <div class="it-date-cell">
-                          <div class="it-date-row">
+                      <!-- 3. Interview Schedule Sub-Card (1.75fr) -->
+                      <div class="it-subcard it-subcard-datetime">
+                        <div class="it-dt-row it-dt-date">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          <span>${sch.date_formatted || '—'}</span>
+                        </div>
+                        ${sch.time_formatted ? `
+                          <div class="it-dt-row it-dt-time">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                             </svg>
-                            <span>${sch.date_formatted || '—'}</span>
+                            <span>${sch.time_formatted}</span>
                           </div>
-                          ${sch.time_formatted ? `
-                            <div class="it-date-row">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                              </svg>
-                              <span>${sch.time_formatted}</span>
-                            </div>
-                          ` : ''}
-                          <div class="it-date-row it-mode">
-                            ${modeSvg}
-                            <span>${sch.mode_label || 'Video Call'}</span>
-                          </div>
-                          ${linkHtml}
+                        ` : ''}
+                        <div class="it-dt-row it-dt-mode">
+                          ${modeSvg}
+                          <span>${sch.mode_label || 'Video Call'}</span>
                         </div>
-                      </td>
+                        ${linkHtml}
+                      </div>
 
-                      <!-- 4. Interviewers (13%) -->
-                      <td style="width: 13%; min-width: 120px;">
-                        <div class="it-person-cell">
-                          <div class="it-person-name">${intvs.lead_name || 'N/A'}</div>
-                          <div class="it-person-company" style="color:#009ef7;font-weight:500;">${intvs.lead_company || 'Panel'}</div>
-                          ${intvs.extra_count > 0 ? `
-                            <div class="it-person-extra">
-                              <span class="it-extra-badge">${intvs.extra_label}</span>
-                              <span class="it-extra-text">${intvs.extra_count + 1} Interviewers</span>
-                            </div>
-                          ` : ''}
-                        </div>
-                      </td>
-
-                      <!-- 5. Source (12%) -->
-                      <td style="width: 12%; min-width: 110px;">
-                        <div class="it-person-cell">
-                          <div class="it-person-name" title="${src.name || '—'}">
-                            ${src.name ? (src.name.length > 16 ? src.name.substring(0, 16) + '...' : src.name) : '—'}
+                      <!-- 4. Interviewers Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-interviewers">
+                        <div class="it-lead-name">${intvs.lead_name || 'N/A'}</div>
+                        <div class="it-lead-comp">${intvs.lead_company || 'Panel'}</div>
+                        ${intvs.extra_count > 0 ? `
+                          <div class="it-extra-wrap">
+                            <span class="it-extra-pill">${intvs.extra_label}</span>
+                            <span class="it-extra-lbl">${intvs.extra_count + 1} Interviewers</span>
                           </div>
-                          <div class="it-person-company" title="${src.company_name || ''}">
-                            ${src.company_name ? (src.company_name.length > 16 ? src.company_name.substring(0, 16) + '...' : src.company_name) : ''}
-                          </div>
-                        </div>
-                      </td>
+                        ` : ''}
+                      </div>
 
-                      <!-- 6. Stage (9%) -->
-                      <td style="width: 9%; min-width: 90px;">
-                        <div class="it-stage-cell">
-                          <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
-                            ${stg.master_status_name || 'Interview'}
+                      <!-- 5. Source Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-source">
+                        <div class="it-src-name" title="${src.name || '—'}">
+                          ${src.name || '—'}
+                        </div>
+                        <div class="it-src-comp" title="${src.company_name || ''}">
+                          ${src.company_name || ''}
+                        </div>
+                      </div>
+
+                      <!-- 6. Stage Sub-Card (0.75fr) -->
+                      <div class="it-subcard it-subcard-stage">
+                        <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
+                          ${stg.master_status_name || 'Interview'}
+                        </span>
+                        ${stg.child_status_name ? `
+                          <span class="it-stage-sub">
+                            ${stg.child_status_name}
                           </span>
-                          ${stg.child_status_name ? `
-                            <span class="text-muted fw-bold d-block fs-7" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">
-                              ${stg.child_status_name}
-                            </span>
-                          ` : ''}
-                        </div>
-                      </td>
+                        ` : ''}
+                      </div>
 
-                      <!-- 7. Feedback (10% - Pure View Only) -->
-                      <td style="width: 10%; min-width: 100px;">
-                        <div class="it-feedback-cell">
-                          <span style="font-size:11px;font-weight:600;color:${fb.status_color || '#f59e0b'};display:inline-flex;align-items:center;gap:4px;">
-                            ${fbIconSvg}
-                            ${fb.status_text || 'Pending'}
-                          </span>
-                          ${recHtml}
-                        </div>
-                      </td>
-                    </tr>
+                      <!-- 7. Feedback Sub-Card (0.8fr) -->
+                      <div class="it-subcard it-subcard-feedback">
+                        <span class="it-fb-status" style="color:${fb.status_color || '#f59e0b'};">
+                          ${fbIconSvg}
+                          <span>${fb.status_text || 'Pending'}</span>
+                        </span>
+                        ${recHtml}
+                      </div>
+                    </div>
                 `;
             }).join('');
 
