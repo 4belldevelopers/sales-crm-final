@@ -35,6 +35,73 @@ use Carbon\Carbon;
     .cit-star-fill { color: #FFAD0F; font-size: 11px; }
     .cit-star-empty { color: #E4E6EF; font-size: 11px; }
 
+    /* ===== Scoped Interview Tracker 7-Column View-Only Styling ===== */
+    .it-table-container { background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .it-table-scroll { overflow-x: auto; width: 100%; }
+    .it-data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
+    .it-data-table th { background: #f8fafc; padding: 10px 14px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    .it-data-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 11.5px; vertical-align: top; transition: background 0.15s; background: #ffffff; }
+    .it-data-table tbody tr:hover td { background: #f8fafc; }
+    .it-data-table tbody tr:last-child td { border-bottom: none; }
+
+    /* Candidate Cell */
+    .it-candidate-cell { display: flex; gap: 8px; align-items: flex-start; }
+    .it-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11.5px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
+    .it-avatar-green { background: #10b981; }
+    .it-avatar-red { background: #ef4444; }
+    .it-avatar-blue { background: #3b82f6; }
+    .it-avatar-purple { background: #8b5cf6; }
+    .it-avatar-orange { background: #f97316; }
+    .it-avatar-gray { background: #6b7280; }
+    .it-candidate-info { min-width: 0; display: flex; flex-direction: column; }
+    .it-candidate-name { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
+    .it-candidate-role { font-size: 10.5px; color: #64748b; margin-bottom: 3px; }
+    .it-candidate-meta { display: flex; flex-direction: column; gap: 2px; }
+    .it-meta-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; width: fit-content; }
+    .it-meta-tag.confirmed { color: #10b981; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .it-meta-tag.warning { color: #f59e0b; background: #fffbeb; border: 1px solid #fde68a; }
+    .it-meta-tag.danger { color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; }
+    .it-meta-tag.info { color: #3b82f6; background: #eff6ff; border: 1px solid #bfdbfe; }
+
+    /* Job Cell */
+    .it-job-title { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
+    .it-job-company { font-size: 10.5px; color: #64748b; margin-bottom: 4px; }
+    .it-job-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .it-job-type { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 9.5px; font-weight: 600; }
+    .it-job-type-internal { background: #eef2ff; color: #4f46e5; }
+    .it-job-type-direct   { background: #f0fdf4; color: #16a34a; }
+    .it-job-id { font-size: 10.5px; color: #2563eb; font-weight: 500; }
+    .it-dot-separator { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+
+    /* Date Cell */
+    .it-date-cell { display: flex; flex-direction: column; gap: 3px; }
+    .it-date-row { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #1e293b; font-weight: 500; }
+    .it-date-row svg { color: #94a3b8; flex-shrink: 0; width: 12px; height: 12px; }
+    .it-date-row.it-mode { color: #64748b; font-size: 10.5px; font-weight: 400; }
+
+    /* Person Cell */
+    .it-person-cell { display: flex; flex-direction: column; gap: 2px; }
+    .it-person-name { font-weight: 600; font-size: 12px; color: #1e293b; }
+    .it-person-company { font-size: 10.5px; color: #64748b; }
+    .it-person-extra { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .it-extra-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 4px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #64748b; }
+    .it-extra-text { font-size: 10.5px; color: #64748b; }
+
+    /* Stage Cell */
+    .it-stage-cell { display: flex; flex-direction: column; gap: 3px; }
+    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 500; width: fit-content; }
+    .it-badge-blue   { background: #dbeafe; color: #1e40af; }
+    .it-badge-purple { background: #f3e8ff; color: #6b21a8; }
+    .it-badge-orange { background: #ffedd5; color: #9a3412; }
+    .it-badge-red    { background: #fee2e2; color: #991b1b; }
+    .it-badge-green  { background: #d1fae5; color: #065f46; }
+    .it-badge-yellow { background: #fef9c3; color: #854d0e; }
+    .it-badge-gray   { background: #e2e8f0; color: #374151; }
+    .it-badge-pink   { background: #fce7f3; color: #9d174d; }
+
+    /* Feedback Cell */
+    .it-feedback-cell { display: flex; flex-direction: column; gap: 3px; }
+
 
         .table td,
         .table th,
@@ -1379,10 +1446,11 @@ use Carbon\Carbon;
           .cd-cand-tab-container {
             background: #ffffff;
             border-radius: 12px;
-            padding: 18px 20px 24px;
-            margin: 12px 14px 20px;
+            padding: 12px 14px 18px;
+            margin: 8px 10px 16px;
             border: 1px solid #edf2f7;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
           }
 
           /* 1. Searchbar & Filter Toolbar Card */
@@ -1391,7 +1459,7 @@ use Carbon\Carbon;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 10px 14px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1526,13 +1594,16 @@ use Carbon\Carbon;
             color: #2563eb;
           }
 
-          /* 2. Candidate Table & Floating Card Rows */
+          /* 2. Candidate Table & Floating Card Rows (Zero Horizontal Scroll on 15.6" screens) */
           .cd-cand-table-wrap {
             background: #ffffff;
             border-radius: 10px;
+            overflow-x: hidden !important;
+            width: 100% !important;
           }
           .cd-cand-table {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: separate !important;
             border-spacing: 0 8px !important;
             margin: 0 !important;
@@ -1540,48 +1611,59 @@ use Carbon\Carbon;
           .cd-cand-table thead tr th {
             background: #f8fafc !important;
             color: #64748b !important;
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            letter-spacing: 0.3px;
-            padding: 10px 14px !important;
+            letter-spacing: 0.2px;
+            padding: 8px 10px !important;
             border: 1px solid #e2e8f0 !important;
             border-left: none !important;
             border-right: none !important;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           .cd-cand-table thead tr th:first-child {
             border-left: 1px solid #e2e8f0 !important;
             border-top-left-radius: 8px !important;
             border-bottom-left-radius: 8px !important;
+            padding-left: 12px !important;
           }
           .cd-cand-table thead tr th:last-child {
             border-right: 1px solid #e2e8f0 !important;
             border-top-right-radius: 8px !important;
             border-bottom-right-radius: 8px !important;
+            padding-right: 12px !important;
           }
 
-          /* Candidate Row Card */
+          /* Candidate Row Card: relative height 84px with 28px bottom padding for 3rd row */
           .cd-cand-row-card {
+            position: relative !important;
             background: #ffffff !important;
+            height: 84px !important;
             transition: all 0.15s ease-in-out !important;
           }
           .cd-cand-row-card td {
             background: #ffffff !important;
             border-top: 1px solid #eef2f6 !important;
             border-bottom: 1px solid #eef2f6 !important;
-            padding: 12px 14px !important;
-            vertical-align: middle !important;
+            padding: 9px 8px 28px 8px !important;
+            vertical-align: top !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
           .cd-cand-row-card td:first-child {
             border-left: 1px solid #eef2f6 !important;
             border-top-left-radius: 10px !important;
             border-bottom-left-radius: 10px !important;
+            padding-left: 12px !important;
           }
           .cd-cand-row-card td:last-child {
             border-right: 1px solid #eef2f6 !important;
             border-top-right-radius: 10px !important;
             border-bottom-right-radius: 10px !important;
+            padding-right: 12px !important;
           }
           .cd-cand-row-card:hover {
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
@@ -1591,65 +1673,136 @@ use Carbon\Carbon;
             border-color: #cbd5e1 !important;
           }
 
-          /* Micro Sub-Cards inside Candidate Cells */
-          .cd-cell-subcard {
+          /* 3rd Row: Matching Percentage & Skills horizontal overflow bar */
+          .cd-cand-skills-row {
+            position: absolute;
+            bottom: 6px;
+            left: 12px;
+            right: 12px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            z-index: 2;
+            pointer-events: auto;
           }
-          .cd-cand-avatar-subcard {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: #ffe4e6;
-            color: #e11d48;
+          .cd-cand-skills-row::-webkit-scrollbar {
+            display: none;
+          }
+
+          /* CV Tracker Match % & Skills Pill Styles */
+          .cd-match-badge-cv {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
             font-weight: 700;
-            font-size: 15px;
-            border: 1px solid #fecdd3;
+            line-height: 1.3;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+          .cd-match-green {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-match-amber {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+          }
+          .cd-match-red {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecdd3 !important;
+          }
+
+          .cd-skill-pill-cv {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.3;
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+
+          /* Avatar Box matching Image 2 */
+          .cd-cand-avatar-subcard {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fef9c3;
+            color: #854d0e;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid #fef08a;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
           }
           .cd-cand-name {
-            font-size: 13.5px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
-            color: #dc2626 !important;
-            line-height: 1.3 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
             text-decoration: none !important;
-            letter-spacing: -0.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
           }
           .cd-cand-name:hover {
             color: #009ef7 !important;
           }
           .cd-cand-desig {
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #dc2626 !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
             line-height: 1.2 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
           }
-          .cd-cand-match-pill {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            border-radius: 4px;
-            padding: 2px 7px;
-            font-size: 10px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
+
+          /* Micro Sub-Cards inside Candidate Cells */
+          .cd-cell-subcard {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
           }
           .cd-val-primary {
             color: #0f172a !important;
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             font-weight: 700 !important;
-            line-height: 1.2 !important;
+            line-height: 1.25 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
           }
           .cd-val-secondary {
             color: #64748b !important;
             font-size: 11px !important;
             font-weight: 500 !important;
             line-height: 1.2 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
           }
           .cd-val-sub {
             color: #94a3b8 !important;
@@ -2375,28 +2528,28 @@ use Carbon\Carbon;
 
                             <div class="cd-cand-table-wrap" id="cdCandidateTableWrap">
                                 <!--begin::Table-->
-                                <div class="table-responsive">
+                                <div class="table-responsive" style="overflow-x: hidden;">
                                     <table class="table cd-cand-table align-middle fs-7">
                                         <!--begin::Table head-->
                                         <thead>
                                             <tr>
-                                                <th class="w-30px pe-0">
-                                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                        <input class="form-check-input" type="checkbox" id="cdCandCheckAll" value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="min-w-220px">Candidate Name</th>
-                                                <th class="min-w-60px">Exp.</th>
-                                                <th class="min-w-130px">Salary</th>
-                                                <th class="min-w-120px">Notice</th>
-                                                <th class="min-w-120px">Location</th>
-                                                <th class="min-w-110px">Ownership</th>
-                                                <th class="min-w-130px">Jobs</th>
-                                                <th class="min-w-90px">Status</th>
-                                                <th class="min-w-90px">Stage</th>
+                                                <th style="width: 23%;">Candidate Name</th>
+                                                <th style="width: 7%;">Exp.</th>
+                                                <th style="width: 14%;">Salary</th>
+                                                <th style="width: 11%;">Notice</th>
+                                                <th style="width: 12%;">Location</th>
+                                                <th style="width: 11%;">Ownership</th>
+                                                <th style="width: 12%;">Jobs</th>
+                                                <th style="width: 5%;">Status</th>
+                                                <th style="width: 5%;">Stage</th>
                                             </tr>
                                         </thead>
                                         <!--end::Table head-->
+                                        <tbody id="candidatetList">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!--end::Table-->
                                         <tbody id="candidatetList">
                                         </tbody>
                                     </table>
@@ -2416,29 +2569,28 @@ use Carbon\Carbon;
 
                         <div class="card-body px-0 py-7">
                             <!--begin::Table-->
-                            <table class="table align-middle table-row-dashed fs-6 gy-5">
-                                <!--begin::Table head-->
-                                <thead>
-                                    <!--begin::Table row-->
+                            <div class="it-table-container">
+                                <div class="it-table-scroll">
+                                    <table class="it-data-table align-middle">
+                                        <!--begin::Table head-->
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 20%; min-width: 170px;">Candidate</th>
+                                                <th style="width: 18%; min-width: 150px;">Job Requisitions</th>
+                                                <th style="width: 18%; min-width: 150px;">Interview Date &amp; Time</th>
+                                                <th style="width: 13%; min-width: 120px;">Interviewers</th>
+                                                <th style="width: 12%; min-width: 110px;">Source</th>
+                                                <th style="width: 9%; min-width: 90px;">Stage</th>
+                                                <th style="width: 10%; min-width: 100px;">Feedback</th>
+                                            </tr>
+                                        </thead>
+                                        <!--end::Table head-->
+                                        <tbody id="candidatetListinterviewtracker" data-role="interview-list">
 
-                                    <tr class="fw-bolder text-muted fs-7">
-                                        <th style="width: 18%;">Candidate</th>
-                                        <th style="width: 16%;">Job &amp; ID</th>
-                                        <th style="width: 13%;">Mode &amp; Round</th>
-                                        <th style="width: 14%;"><i class="fa fa-users me-1 text-gray-500"></i> Interviewers</th>
-                                        <th style="width: 13%;"><i class="fas fa-calendar-alt me-1 text-gray-500"></i> Date</th>
-                                        <th style="width: 11%;">Status</th>
-                                        <th style="width: 7%;"><i class="fas fa-star me-1 text-warning"></i> Rating</th>
-                                        <th style="width: 8%; text-align: right;">Actions</th>
-                                    </tr>
-                                    <!--end::Table row-->
-                                </thead>
-                                <!--end::Table head-->
-                                <tbody id="candidatetListinterviewtracker" data-role="interview-list">
-
-                                </tbody>
-
-                            </table>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                             <!--end::Table-->
                             <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
                                 <!-- Pagination links will be appended here -->
@@ -5203,7 +5355,7 @@ use Carbon\Carbon;
             if (!forceRevalidate) {
                 $list.html(`
                     <tr>
-                      <td colspan="8" class="text-center py-8">
+                      <td colspan="7" class="text-center py-8">
                         <span class="spinner-border spinner-border-sm text-primary me-2"></span>
                         <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
                       </td>
@@ -5249,7 +5401,7 @@ use Carbon\Carbon;
                     entry.state = 'ERROR';
                     $list.html(`
                         <tr>
-                          <td colspan="8" class="text-center py-6 text-danger fs-7">
+                          <td colspan="7" class="text-center py-6 text-danger fs-7">
                             <i class="fas fa-exclamation-circle me-1"></i> Failed to retrieve interviews.
                             <button type="button" class="btn btn-sm btn-link text-primary ms-2 p-0" id="btnRetryInternalInterviews">Retry</button>
                           </td>
@@ -5267,7 +5419,7 @@ use Carbon\Carbon;
             if (!rows || !rows.length) {
                 $list.html(`
                     <tr>
-                      <td colspan="8" class="text-center py-10 text-muted fs-7">
+                      <td colspan="7" class="text-center py-10 text-muted fs-7">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
                         No interviews scheduled for this client.
                       </td>
@@ -5278,114 +5430,191 @@ use Carbon\Carbon;
 
             const html = rows.map(function(intv) {
                 const cand = intv.candidate || {};
+                const fu = intv.followup || {};
                 const job = intv.job || {};
                 const sch = intv.schedule || {};
-                const att = intv.attendance || {};
-                const evalOutcome = intv.evaluation || {};
-                const act = intv.actions || {};
-                const lead = (intv.interviewers && intv.interviewers[0]) ? intv.interviewers[0] : null;
-                const extraCount = Math.max(0, (intv.interviewers ? intv.interviewers.length : 0) - 1);
+                const intvs = intv.interviewers_summary || {};
+                const src = intv.source_info || {};
+                const stg = intv.stage || {};
+                const fb = intv.feedback_view || {};
 
-                let stars = '';
-                const rating = evalOutcome.star_rating;
-                if (rating !== null && rating !== undefined && rating > 0) {
-                    for (let s = 1; s <= 5; s++) {
-                        stars += `<i class="fas fa-star ${s <= rating ? 'cit-star-fill' : 'cit-star-empty'}"></i>`;
+                // Followup pill
+                let followupHtml = '';
+                if (fu.label) {
+                    followupHtml = `
+                        <div class="it-candidate-meta">
+                            <span class="it-meta-tag ${fu.style_class || 'info'}">
+                                ${fu.label}
+                            </span>
+                            ${fu.formatted_at ? `<span class="it-meta-tag info" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">${fu.formatted_at}</span>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Meeting link / Address
+                let linkHtml = '';
+                if (sch.meeting_link) {
+                    if (sch.link_type === 'address') {
+                        linkHtml = `
+                            <span class="it-date-row" style="color:var(--it-primary);font-weight:500;margin-top:2px;" title="${sch.meeting_link}">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                ${sch.link_label || 'View Address'}
+                            </span>
+                        `;
+                    } else if (sch.link_type === 'link') {
+                        linkHtml = `
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-date-row" style="color:var(--it-primary);font-weight:500;text-decoration:none;margin-top:2px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                ${sch.link_label || 'Interview Link'}
+                            </a>
+                        `;
                     }
+                }
+
+                // Mode icon SVG
+                let modeSvg = '';
+                if (sch.mode_icon_type === 'phone') {
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+                } else if (sch.mode_icon_type === 'map-marker') {
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
                 } else {
-                    stars = '<span class="text-muted fs-8">No rating</span>';
+                    modeSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                }
+
+                // Feedback icon SVG
+                let fbIconSvg = '';
+                if (fb.status_icon === 'check') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                } else if (fb.status_icon === 'times') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+                } else if (fb.status_icon === 'exclamation-triangle') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+                } else if (fb.status_icon === 'exclamation-circle') {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+                } else {
+                    fbIconSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+                }
+
+                // Recommendation pill
+                let recHtml = '';
+                if (fb.recommendation) {
+                    recHtml = `<span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:${fb.recommendation.bg};color:${fb.recommendation.color};margin-top:2px;">${fb.recommendation.label}</span>`;
                 }
 
                 return `
-                    <tr>
-                      <!-- Candidate Column (18%) -->
-                      <td>
-                        <div class="d-flex align-items-center gap-2">
-                          <div class="symbol symbol-32px symbol-circle bg-light-primary text-primary fw-bold fs-7 d-flex align-items-center justify-content-center">
+                    <tr data-interview-id="${intv.id}">
+                      <!-- 1. Candidate (20%) -->
+                      <td style="width: 20%; min-width: 170px;">
+                        <div class="it-candidate-cell">
+                          <div class="it-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
                             ${cand.initial || 'C'}
                           </div>
-                          <div class="d-flex flex-column text-truncate">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-7 text-truncate" data-action="open-candidate" data-id="${cand.id}">
-                              ${cand.name || 'Candidate'}
-                            </a>
-                            <span class="text-muted fs-8 text-truncate">${cand.designation || '—'}</span>
+                          <div class="it-candidate-info">
+                            <div class="it-candidate-name">
+                              <span class="text-dark fw-bolder fs-6" title="${cand.name || 'Candidate'}">
+                                ${cand.name ? (cand.name.length > 22 ? cand.name.substring(0, 22) + '...' : cand.name) : 'Candidate'}
+                              </span>
+                            </div>
+                            <div class="it-candidate-role">
+                              <span class="fw-bold text-muted d-block fs-7" title="${cand.designation || '—'}">
+                                ${cand.designation ? (cand.designation.length > 24 ? cand.designation.substring(0, 24) + '...' : cand.designation) : '—'}
+                              </span>
+                            </div>
+                            ${followupHtml}
                           </div>
                         </div>
                       </td>
 
-                      <!-- Job & ID Column (16%) -->
-                      <td>
-                        <div class="d-flex flex-column text-truncate">
-                          <a href="javascript:void(0);" class="text-dark fw-bold text-hover-primary fs-7 text-truncate" data-action="open-job" data-id="${job.id}">
-                            ${job.title || 'Job Position'}
-                          </a>
-                          <div class="d-flex align-items-center gap-1 mt-1">
-                            <span class="text-muted fs-8 fw-semibold">${job.id ? '#' + job.id : ''}</span>
-                            <span class="text-muted fs-8">·</span>
-                            <span class="text-muted fs-8 text-truncate" style="max-width: 110px;">${job.client_name || ''}</span>
+                      <!-- 2. Job Requisitions (18%) -->
+                      <td style="width: 18%; min-width: 150px;">
+                        <div class="it-job-title" title="${job.title || 'Job Position'}">
+                          ${job.title ? (job.title.length > 20 ? job.title.substring(0, 20) + '...' : job.title) : 'Job Position'}
+                        </div>
+                        <div class="it-job-company" title="${job.display_company_name || job.client_name || ''}">
+                          ${(job.display_company_name || job.client_name || '').substring(0, 20)}
+                        </div>
+                        <div class="it-job-tags">
+                          <span class="it-job-type ${job.job_type_class || 'it-job-type-internal'}">${job.job_type_label || 'Internal'}</span>
+                          ${job.job_id_display ? `
+                            <span class="it-dot-separator"></span>
+                            <span class="it-job-id">${job.job_id_display}</span>
+                          ` : ''}
+                        </div>
+                      </td>
+
+                      <!-- 3. Interview Date & Time (18%) -->
+                      <td style="width: 18%; min-width: 150px;">
+                        <div class="it-date-cell">
+                          <div class="it-date-row">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>${sch.date_formatted || '—'}</span>
+                          </div>
+                          ${sch.time_formatted ? `
+                            <div class="it-date-row">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              <span>${sch.time_formatted}</span>
+                            </div>
+                          ` : ''}
+                          <div class="it-date-row it-mode">
+                            ${modeSvg}
+                            <span>${sch.mode_label || 'Video Call'}</span>
+                          </div>
+                          ${linkHtml}
+                        </div>
+                      </td>
+
+                      <!-- 4. Interviewers (13%) -->
+                      <td style="width: 13%; min-width: 120px;">
+                        <div class="it-person-cell">
+                          <div class="it-person-name">${intvs.lead_name || 'N/A'}</div>
+                          <div class="it-person-company" style="color:#009ef7;font-weight:500;">${intvs.lead_company || 'Panel'}</div>
+                          ${intvs.extra_count > 0 ? `
+                            <div class="it-person-extra">
+                              <span class="it-extra-badge">${intvs.extra_label}</span>
+                              <span class="it-extra-text">${intvs.extra_count + 1} Interviewers</span>
+                            </div>
+                          ` : ''}
+                        </div>
+                      </td>
+
+                      <!-- 5. Source (12%) -->
+                      <td style="width: 12%; min-width: 110px;">
+                        <div class="it-person-cell">
+                          <div class="it-person-name" title="${src.name || '—'}">
+                            ${src.name ? (src.name.length > 16 ? src.name.substring(0, 16) + '...' : src.name) : '—'}
+                          </div>
+                          <div class="it-person-company" title="${src.company_name || ''}">
+                            ${src.company_name ? (src.company_name.length > 16 ? src.company_name.substring(0, 16) + '...' : src.company_name) : ''}
                           </div>
                         </div>
                       </td>
 
-                      <!-- Mode & Round Column (13%) -->
-                      <td>
-                        <div class="d-flex flex-column">
-                          <span class="fs-7 fw-semibold text-gray-800 d-inline-flex align-items-center gap-1">
-                            <i class="fas ${sch.mode_icon || 'fa-video'} fa-xs"></i> ${sch.mode_label || 'Video'}
+                      <!-- 6. Stage (9%) -->
+                      <td style="width: 9%; min-width: 90px;">
+                        <div class="it-stage-cell">
+                          <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
+                            ${stg.master_status_name || 'Interview'}
                           </span>
-                          <span class="text-muted fs-8 text-truncate" style="max-width: 130px;">${sch.round_name || 'Interview'}</span>
-                        </div>
-                      </td>
-
-                      <!-- Interviewers Column (14%) -->
-                      <td>
-                        <div class="d-flex flex-column text-truncate">
-                          ${lead ? `
-                            <span class="fs-7 fw-semibold text-gray-800 text-truncate" title="${lead.name}">
-                              ${lead.name}
-                              ${extraCount > 0 ? `<span class="badge badge-light-primary fs-9 ms-1">+${extraCount}</span>` : ''}
+                          ${stg.child_status_name ? `
+                            <span class="text-muted fw-bold d-block fs-7" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">
+                              ${stg.child_status_name}
                             </span>
-                            <span class="text-muted fs-8 text-truncate">${lead.company_name || 'Panel'}</span>
-                          ` : '<span class="text-muted fs-7">Not Assigned</span>'}
-                        </div>
-                      </td>
-
-                      <!-- Schedule Date Column (13%) -->
-                      <td>
-                        <div class="d-flex flex-column">
-                          <span class="fs-7 fw-bolder text-gray-800">${sch.date_formatted || '—'}</span>
-                          <span class="text-muted fs-8">${sch.time_formatted || ''}</span>
-                        </div>
-                      </td>
-
-                      <!-- Status Column (11%) -->
-                      <td>
-                        <div class="d-flex flex-column align-items-start gap-1">
-                          <span class="cit-fb-pill ${att.css_class || 'cit-fb-default'}">${att.label || 'Scheduled'}</span>
-                          ${evalOutcome.label && evalOutcome.label !== '—' ? `<span class="fs-8 ${evalOutcome.css_class || 'text-muted'}">${evalOutcome.label}</span>` : ''}
-                        </div>
-                      </td>
-
-                      <!-- Rating Column (7%) -->
-                      <td>
-                        <div class="d-flex align-items-center gap-1">
-                          <div class="cit-stars">${stars}</div>
-                        </div>
-                      </td>
-
-                      <!-- Actions Column (8%) -->
-                      <td style="text-align: right;">
-                        <div class="d-flex align-items-center justify-content-end gap-1">
-                          ${act.join_allowed && sch.meeting_link ? `
-                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-sm btn-light-primary" style="height:26px; width:26px;" title="Join Video Call">
-                              <i class="fas fa-video fa-xs"></i>
-                            </a>
                           ` : ''}
-                          ${act.feedback_view_allowed ? `
-                            <button type="button" class="btn btn-icon btn-sm btn-light-success" style="height:26px; width:26px;" data-action="view-feedback" data-interview-id="${intv.id}" title="View Feedback">
-                              <i class="fas fa-clipboard-check fa-xs"></i>
-                            </button>
-                          ` : ''}
+                        </div>
+                      </td>
+
+                      <!-- 7. Feedback (10% - Pure View Only) -->
+                      <td style="width: 10%; min-width: 100px;">
+                        <div class="it-feedback-cell">
+                          <span style="font-size:11px;font-weight:600;color:${fb.status_color || '#f59e0b'};display:inline-flex;align-items:center;gap:4px;">
+                            ${fbIconSvg}
+                            ${fb.status_text || 'Pending'}
+                          </span>
+                          ${recHtml}
                         </div>
                       </td>
                     </tr>
