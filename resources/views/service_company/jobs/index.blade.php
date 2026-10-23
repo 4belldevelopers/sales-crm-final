@@ -1610,21 +1610,25 @@ $(document).on('click', '.client-hm-listing', function ()
                     ? '<div class="sal-row"><span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span></div>'
                     : '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>';
 
+                var locations = Array.isArray(job.work_locations) ? job.work_locations : [];
                 var allCitiesList = (Array.isArray(job.cities) && job.cities.length > 0)
                     ? job.cities.filter(Boolean)
-                    : (job.city ? [job.city] : []);
-                var primaryCityName = allCitiesList.length > 0 ? formatJobPositionName(allCitiesList[0]) : (displayCity || '');
+                    : (locations.length > 0 ? locations.map(function(l) { return l.city_name; }).filter(Boolean) : (job.primary_city || job.city ? [job.primary_city || job.city] : []));
+                var primaryCityName = job.primary_city ? formatJobPositionName(job.primary_city) : (allCitiesList.length > 0 ? formatJobPositionName(allCitiesList[0]) : (job.city ? formatJobPositionName(job.city) : ''));
                 var extraCitiesCount = allCitiesList.length > 1 ? (allCitiesList.length - 1) : 0;
-                var allCitiesText = allCitiesList.map(function(c) { return formatJobPositionName(c); }).join(', ');
-                var allCitiesTooltip = allCitiesText ? 'Work Locations: ' + allCitiesText.replace(/"/g, '&quot;') : '';
+
+                var distinctCountries = locations.map(function(l) { return (l.country_name || '').trim(); }).filter(Boolean);
+                var hasMultipleCountries = (new Set(distinctCountries.map(function(c) { return c.toLowerCase(); }))).size > 1;
 
                 var locContentHtml = '';
                 if (primaryCityName) {
-                    locContentHtml = '<span class="city-name-text">' + primaryCityName.substring(0, 10) + '</span>';
+                    locContentHtml = '<span class="city-name-text" title="' + primaryCityName + '">' + primaryCityName.substring(0, 10) + '</span>';
                     if (extraCitiesCount > 0) {
                         var popoverItems = allCitiesList.map(function(c) {
                             var cleanC = formatJobPositionName(c);
-                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + cleanC + '</div>';
+                            var matchLoc = locations.find(function(l) { return (l.city_name || '').toLowerCase() === String(c).toLowerCase(); });
+                            var countrySuffix = (hasMultipleCountries && matchLoc && matchLoc.country_name) ? ' <span style="opacity: 0.65; font-size: 9.5px;">(' + formatJobPositionName(matchLoc.country_name) + ')</span>' : '';
+                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + cleanC + countrySuffix + '</div>';
                         }).join('');
 
                         locContentHtml += '<div class="loc-more-badge-wrap">' +
@@ -1636,7 +1640,7 @@ $(document).on('click', '.client-hm-listing', function ()
                         '</div>';
                     }
                 } else {
-                    locContentHtml = '<span class="city-name-text">--------</span>';
+                    locContentHtml = '<span class="city-name-text text-muted" style="color: #a1a5b7;" title="Location not specified">Not specified</span>';
                 }
 
                 var locRowHtml = '<div class="loc-row">' +

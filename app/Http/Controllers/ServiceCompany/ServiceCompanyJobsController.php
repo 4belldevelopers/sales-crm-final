@@ -3190,11 +3190,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $allCities = [];
                 $workLocations = [];
+                $seenCityKeys = [];
+
                 if (! empty($client_city_jobs) && is_array($client_city_jobs)) {
                     foreach ($client_city_jobs as $ccj) {
                         $ccjArr = (array) $ccj;
                         $cName = trim((string) ($ccjArr['city_name'] ?? ''));
-                        if ($cName !== '') {
+                        $cKey = mb_strtolower($cName);
+                        if ($cName !== '' && ! isset($seenCityKeys[$cKey])) {
+                            $seenCityKeys[$cKey] = true;
                             $allCities[] = $cName;
                             $workLocations[] = [
                                 'city_id' => (int) ($ccjArr['city_id'] ?? 0),
@@ -3211,7 +3215,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     foreach ($row->client_location as $locItem) {
                         $locObj = (object) $locItem;
                         $cName = trim((string) ($locObj->city ?? ''));
-                        if ($cName !== '') {
+                        $cKey = mb_strtolower($cName);
+                        if ($cName !== '' && ! isset($seenCityKeys[$cKey])) {
+                            $seenCityKeys[$cKey] = true;
                             $allCities[] = $cName;
                             $workLocations[] = [
                                 'city_id' => (int) ($locObj->city_id ?? 0),
@@ -3221,12 +3227,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ];
                         }
                     }
-                    if (empty($cityName) && ! empty($allCities[0])) {
-                        $cityName = $allCities[0];
-                    }
                 }
 
-                $allCities = array_values(array_unique(array_filter($allCities)));
+                // Sane Payload Guardrail: Cap at 50 work locations per job to protect client RAM & DOM
+                $MAX_WORK_LOCATIONS = 50;
+                if (count($workLocations) > $MAX_WORK_LOCATIONS) {
+                    \Illuminate\Support\Facades\Log::warning("Job {$row->id} exceeded maximum work location limit of {$MAX_WORK_LOCATIONS}: " . count($workLocations));
+                    $workLocations = array_slice($workLocations, 0, $MAX_WORK_LOCATIONS);
+                    $allCities = array_slice($allCities, 0, $MAX_WORK_LOCATIONS);
+                }
+
                 if (empty($cityName) && ! empty($allCities[0])) {
                     $cityName = $allCities[0];
                 } elseif (! empty($cityName) && empty($allCities)) {
@@ -3372,6 +3382,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'salary_visibility' => $isSalaryConfidential ? 'confidential' : $normSalaryVis,
                     'is_salary_confidential' => $isSalaryConfidential,
                     'work_type' => $work_type,
+                    'primary_city' => $cityName,
                     'city' => $cityName,
                     'cities' => $allCities,
                     'work_locations' => $workLocations,
@@ -7675,10 +7686,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 }
             }
         }
-        $this->jobCitySel = array_values(array_unique(array_filter($this->jobCitySel)));
-        if (count($this->jobCitySel) > 0) {
-            $this->jobLocationCount = count($this->jobCitySel);
+        $seenKeys = [];
+        $dedupedCities = [];
+        foreach ($this->jobCitySel as $cName) {
+            $k = mb_strtolower(trim($cName));
+            if ($k !== '' && ! isset($seenKeys[$k])) {
+                $seenKeys[$k] = true;
+                $dedupedCities[] = trim($cName);
+            }
         }
+        if (count($dedupedCities) > 50) {
+            $dedupedCities = array_slice($dedupedCities, 0, 50);
+        }
+        $this->jobCitySel = $dedupedCities;
+        $this->jobLocationCount = count($this->jobCitySel);
 
         $work_type = $this->job->work_type ?? 'no';
         if ($work_type == 'yes') {

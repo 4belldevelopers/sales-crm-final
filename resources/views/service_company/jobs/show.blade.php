@@ -1748,7 +1748,11 @@ $end_date   =	date('d-M-Y', $date);
                                                 <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ trim($displayCities[0]) }}
                                             </span>
                                         @else
-                                            {{ @$jobCitySelected ?: 'N/A' }}
+                                            @if(!empty($jobCitySelected) && strtolower(trim($jobCitySelected)) !== 'n/a')
+                                                {{ $jobCitySelected }}
+                                            @else
+                                                <span class="text-muted" style="color: #a1a5b7;">Location not specified</span>
+                                            @endif
                                         @endif
                                     </span></div>
                                     <div class="info-row"><span class="info-label">Work Mode</span><span class="info-value">{{@$work_type}}</span></div>
