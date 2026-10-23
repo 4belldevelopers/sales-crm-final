@@ -35,61 +35,300 @@ use Carbon\Carbon;
     .cit-star-fill { color: #FFAD0F; font-size: 11px; }
     .cit-star-empty { color: #E4E6EF; font-size: 11px; }
 
-    /* ===== Scoped Interview Tracker 7-Column View-Only Styling ===== */
-    .it-table-container { background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .it-table-scroll { overflow-x: auto; width: 100%; }
-    .it-data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
-    .it-data-table th { background: #f8fafc; padding: 10px 14px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-    .it-data-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 11.5px; vertical-align: top; transition: background 0.15s; background: #ffffff; }
-    .it-data-table tbody tr:hover td { background: #f8fafc; }
-    .it-data-table tbody tr:last-child td { border-bottom: none; }
+    /* ===== Scoped Interview Tracker: Card + Sub-Card Proportional Layout ===== */
+    .it-card-container {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
 
-    /* Candidate Cell */
-    .it-candidate-cell { display: flex; gap: 8px; align-items: flex-start; }
-    .it-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11.5px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
-    .it-avatar-green { background: #10b981; }
-    .it-avatar-red { background: #ef4444; }
-    .it-avatar-blue { background: #3b82f6; }
-    .it-avatar-purple { background: #8b5cf6; }
-    .it-avatar-orange { background: #f97316; }
-    .it-avatar-gray { background: #6b7280; }
-    .it-candidate-info { min-width: 0; display: flex; flex-direction: column; }
-    .it-candidate-name { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
-    .it-candidate-role { font-size: 10.5px; color: #64748b; margin-bottom: 3px; }
-    .it-candidate-meta { display: flex; flex-direction: column; gap: 2px; }
-    .it-meta-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; width: fit-content; }
-    .it-meta-tag.confirmed { color: #10b981; background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .it-meta-tag.warning { color: #f59e0b; background: #fffbeb; border: 1px solid #fde68a; }
-    .it-meta-tag.danger { color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; }
-    .it-meta-tag.info { color: #3b82f6; background: #eff6ff; border: 1px solid #bfdbfe; }
+    /* Proportional Header Strip */
+    .it-card-header,
+    .it-primary-card {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 0.8fr) !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
 
-    /* Job Cell */
-    .it-job-title { font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 1px; }
-    .it-job-company { font-size: 10.5px; color: #64748b; margin-bottom: 4px; }
-    .it-job-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-    .it-job-type { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 9.5px; font-weight: 600; }
-    .it-job-type-internal { background: #eef2ff; color: #4f46e5; }
-    .it-job-type-direct   { background: #f0fdf4; color: #16a34a; }
-    .it-job-id { font-size: 10.5px; color: #2563eb; font-weight: 500; }
-    .it-dot-separator { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+    .it-card-header {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 9px 14px !important;
+        margin-bottom: 8px !important;
+    }
 
-    /* Date Cell */
-    .it-date-cell { display: flex; flex-direction: column; gap: 3px; }
-    .it-date-row { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #1e293b; font-weight: 500; }
-    .it-date-row svg { color: #94a3b8; flex-shrink: 0; width: 12px; height: 12px; }
-    .it-date-row.it-mode { color: #64748b; font-size: 10.5px; font-weight: 400; }
+    .it-col-th {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
 
-    /* Person Cell */
-    .it-person-cell { display: flex; flex-direction: column; gap: 2px; }
-    .it-person-name { font-weight: 600; font-size: 12px; color: #1e293b; }
-    .it-person-company { font-size: 10.5px; color: #64748b; }
-    .it-person-extra { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-    .it-extra-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 4px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #64748b; }
-    .it-extra-text { font-size: 10.5px; color: #64748b; }
+    /* Primary Job Card for Each Interview */
+    .it-primary-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
 
-    /* Stage Cell */
-    .it-stage-cell { display: flex; flex-direction: column; gap: 3px; }
-    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 500; width: fit-content; }
+    .it-primary-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Logical Sub-Cards Inside the Primary Card */
+    .it-subcard {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 1. Candidate Sub-Card */
+    .it-subcard-cand {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .it-cand-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+    }
+    .it-avatar-green { background: #10b981 !important; }
+    .it-avatar-red { background: #ef4444 !important; }
+    .it-avatar-blue { background: #3b82f6 !important; }
+    .it-avatar-purple { background: #8b5cf6 !important; }
+    .it-avatar-orange { background: #f97316 !important; }
+    .it-avatar-gray { background: #6b7280 !important; }
+
+    .it-cand-info {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+    }
+    .it-cand-name {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-role {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-cand-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 3px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-meta-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+    }
+    .it-meta-tag.confirmed { color: #10b981 !important; background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+    .it-meta-tag.warning { color: #f59e0b !important; background: #fffbeb !important; border: 1px solid #fde68a !important; }
+    .it-meta-tag.danger { color: #ef4444 !important; background: #fef2f2 !important; border: 1px solid #fecaca !important; }
+    .it-meta-tag.info { color: #3b82f6 !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; }
+    .it-meta-date {
+        font-size: 10px !important;
+        color: #94a3b8 !important;
+    }
+
+    /* 2. Job Requisition Sub-Card */
+    .it-subcard-job {
+        gap: 2px !important;
+    }
+    .it-job-title {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-job-company {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-job-tags {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        margin-top: 2px !important;
+        flex-wrap: wrap !important;
+    }
+    .it-job-type {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 6px !important;
+        border-radius: 4px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+    }
+    .it-job-type-internal { background: #eef2ff !important; color: #4f46e5 !important; border: 1px solid #e0e7ff !important; }
+    .it-job-type-direct { background: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #dcfce7 !important; }
+    .it-job-id {
+        font-size: 10.5px !important;
+        color: #2563eb !important;
+        font-weight: 600 !important;
+    }
+    .it-dot-sep {
+        width: 3px !important;
+        height: 3px !important;
+        border-radius: 50% !important;
+        background: #cbd5e1 !important;
+    }
+
+    /* 3. Date & Time Sub-Card */
+    .it-subcard-datetime {
+        gap: 3px !important;
+    }
+    .it-dt-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 11.5px !important;
+        color: #1e293b !important;
+        line-height: 1.3 !important;
+    }
+    .it-dt-row svg {
+        color: #94a3b8 !important;
+        flex-shrink: 0 !important;
+    }
+    .it-dt-date {
+        font-weight: 600 !important;
+        color: #0f172a !important;
+    }
+    .it-dt-time {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #475569 !important;
+    }
+    .it-dt-mode {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+    }
+    .it-dt-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        color: #2563eb !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        margin-top: 2px !important;
+        cursor: pointer !important;
+    }
+    .it-dt-link:hover {
+        color: #1d4ed8 !important;
+        text-decoration: underline !important;
+    }
+    .it-dt-link svg {
+        color: #2563eb !important;
+    }
+
+    /* 4. Interviewers Sub-Card */
+    .it-subcard-interviewers {
+        gap: 2px !important;
+    }
+    .it-lead-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-lead-comp {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        color: #009ef7 !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+    .it-extra-wrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 2px !important;
+    }
+    .it-extra-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 17px !important;
+        height: 15px !important;
+        padding: 0 4px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+    }
+    .it-extra-lbl {
+        font-size: 10px !important;
+        color: #64748b !important;
+    }
+
+    /* 5. Source Sub-Card */
+    .it-subcard-source {
+        gap: 2px !important;
+    }
+    .it-src-name {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .it-src-comp {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+
+    /* 6. Stage Sub-Card */
+    .it-subcard-stage {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; width: fit-content; }
     .it-badge-blue   { background: #dbeafe; color: #1e40af; }
     .it-badge-purple { background: #f3e8ff; color: #6b21a8; }
     .it-badge-orange { background: #ffedd5; color: #9a3412; }
@@ -98,9 +337,69 @@ use Carbon\Carbon;
     .it-badge-yellow { background: #fef9c3; color: #854d0e; }
     .it-badge-gray   { background: #e2e8f0; color: #374151; }
     .it-badge-pink   { background: #fce7f3; color: #9d174d; }
+    .it-stage-sub {
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        color: #94a3b8 !important;
+        line-height: 1.2 !important;
+    }
 
-    /* Feedback Cell */
-    .it-feedback-cell { display: flex; flex-direction: column; gap: 3px; }
+    /* 7. Feedback Sub-Card */
+    .it-subcard-feedback {
+        gap: 3px !important;
+        align-items: flex-start !important;
+    }
+    .it-fb-status {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .it-rec-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 1.5px 7px !important;
+        border-radius: 50px !important;
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        margin-top: 1px !important;
+    }
+
+    /* Empty, Loading, and Error State Cards */
+    .it-empty-card,
+    .it-loading-card,
+    .it-error-card {
+        background: #ffffff !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 36px 20px !important;
+        text-align: center !important;
+        color: #64748b !important;
+        font-size: 12.5px !important;
+        margin: 8px 0 !important;
+    }
+    .it-error-card {
+        border-color: #fca5a5 !important;
+        color: #dc2626 !important;
+    }
+
+    @media (max-width: 1280px) {
+        .it-card-header,
+        .it-primary-card {
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 2.2fr) minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 0.75fr) !important;
+            column-gap: 8px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
+    @media (max-width: 992px) {
+        .it-card-header,
+        .it-primary-card {
+            grid-template-columns: minmax(0, 1.9fr) minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.65fr) minmax(0, 0.7fr) !important;
+            column-gap: 6px !important;
+        }
+    }
 
 
         .table td,
@@ -1614,13 +1913,12 @@ use Carbon\Carbon;
             font-size: 11px !important;
             font-weight: 600 !important;
             letter-spacing: 0.2px;
-            padding: 8px 10px !important;
+            padding: 8px 6px !important;
             border: 1px solid #e2e8f0 !important;
             border-left: none !important;
             border-right: none !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: nowrap !important;
+            overflow: visible !important;
           }
           .cd-cand-table thead tr th:first-child {
             border-left: 1px solid #e2e8f0 !important;
@@ -1646,7 +1944,7 @@ use Carbon\Carbon;
             background: #ffffff !important;
             border-top: 1px solid #eef2f6 !important;
             border-bottom: 1px solid #eef2f6 !important;
-            padding: 9px 8px 28px 8px !important;
+            padding: 9px 6px 28px 6px !important;
             vertical-align: top !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
             overflow: hidden;
@@ -1729,7 +2027,7 @@ use Carbon\Carbon;
             padding: 2px 8px;
             border-radius: 6px;
             font-size: 10.5px;
-            font-weight: 600;
+            font-weight: 500;
             line-height: 1.3;
             background: #dcfce7;
             color: #15803d;
@@ -1738,24 +2036,9 @@ use Carbon\Carbon;
             flex-shrink: 0;
           }
 
-          /* Avatar Box matching Image 2 */
-          .cd-cand-avatar-subcard {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            background: #fef9c3;
-            color: #854d0e;
-            font-weight: 700;
-            font-size: 14px;
-            border: 1px solid #fef08a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-          }
           .cd-cand-name {
             font-size: 13px !important;
-            font-weight: 700 !important;
+            font-weight: 600 !important;
             color: #0f172a !important;
             line-height: 1.25 !important;
             text-decoration: none !important;
@@ -1769,7 +2052,7 @@ use Carbon\Carbon;
           }
           .cd-cand-desig {
             font-size: 11px !important;
-            font-weight: 500 !important;
+            font-weight: 400 !important;
             color: #64748b !important;
             line-height: 1.2 !important;
             white-space: nowrap;
@@ -1786,8 +2069,8 @@ use Carbon\Carbon;
           }
           .cd-val-primary {
             color: #0f172a !important;
-            font-size: 12.5px !important;
-            font-weight: 700 !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
             line-height: 1.25 !important;
             white-space: nowrap;
             overflow: hidden;
@@ -1797,7 +2080,7 @@ use Carbon\Carbon;
           .cd-val-secondary {
             color: #64748b !important;
             font-size: 11px !important;
-            font-weight: 500 !important;
+            font-weight: 400 !important;
             line-height: 1.2 !important;
             white-space: nowrap;
             overflow: hidden;
@@ -1810,34 +2093,29 @@ use Carbon\Carbon;
             font-weight: 400 !important;
           }
 
-          /* Notice Sub-Card Chips */
-          .cd-notice-chip {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 700;
-            line-height: 1.3;
-          }
-          .cd-notice-snp {
-            background: #f5f3ff;
-            color: #7c3aed;
-            border: 1px solid #ddd6fe;
+          /* Notice: Clean Text-Only (NO Pill, NO Background, NO Border) */
+          .cd-notice-clean {
+            display: inline-block !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.3 !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
           }
           .cd-notice-immediate {
-            background: #f0fdf4;
-            color: #16a34a;
-            border: 1px solid #bbf7d0;
+            color: #16a34a !important;
+          }
+          .cd-notice-snp {
+            color: #7c3aed !important;
           }
           .cd-notice-days {
-            background: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fde68a;
+            color: #d97706 !important;
           }
           .cd-notice-default {
-            background: #f8fafc;
-            color: #1e293b;
-            border: 1px solid #e2e8f0;
+            color: #475569 !important;
+          }
           }
 
           /* Status & Stage Sub-Card Chips */
@@ -2533,13 +2811,13 @@ use Carbon\Carbon;
                                         <!--begin::Table head-->
                                         <thead>
                                             <tr>
-                                                <th style="width: 20%;">Candidate Name</th>
-                                                <th style="width: 6%;">Exp.</th>
-                                                <th style="width: 13%;">Salary</th>
-                                                <th style="width: 11%;">Notice</th>
-                                                <th style="width: 11%;">Location</th>
-                                                <th style="width: 11%;">Ownership</th>
-                                                <th style="width: 14%;">Jobs</th>
+                                                <th style="width: 16%;">Candidate Name</th>
+                                                <th style="width: 8%;">Experience</th>
+                                                <th style="width: 11%;">Salary</th>
+                                                <th style="width: 9%;">Notice</th>
+                                                <th style="width: 9%;">Location</th>
+                                                <th style="width: 16%;">Ownership</th>
+                                                <th style="width: 17%;">Jobs</th>
                                                 <th style="width: 7%;">Status</th>
                                                 <th style="width: 7%;">Stage</th>
                                             </tr>
@@ -2563,30 +2841,24 @@ use Carbon\Carbon;
                         <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Interview Tracker</div><div class="cd-tabcard-sub">Interviews scheduled with this client's candidates.</div></div><div class="cd-tabwrap">
 
                         <div class="card-body px-0 py-7">
-                            <!--begin::Table-->
-                            <div class="it-table-container">
-                                <div class="it-table-scroll">
-                                    <table class="it-data-table align-middle">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 20%; min-width: 170px;">Candidate</th>
-                                                <th style="width: 18%; min-width: 150px;">Job Requisitions</th>
-                                                <th style="width: 18%; min-width: 150px;">Interview Date &amp; Time</th>
-                                                <th style="width: 13%; min-width: 120px;">Interviewers</th>
-                                                <th style="width: 12%; min-width: 110px;">Source</th>
-                                                <th style="width: 9%; min-width: 90px;">Stage</th>
-                                                <th style="width: 10%; min-width: 100px;">Feedback</th>
-                                            </tr>
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <tbody id="candidatetListinterviewtracker" data-role="interview-list">
+                            <!--begin::Card + Sub-Card Interview Container-->
+                            <div class="it-card-container">
+                                <!-- Proportional Header Strip -->
+                                <div class="it-card-header">
+                                    <div class="it-col-th it-th-cand">Candidate</div>
+                                    <div class="it-col-th it-th-job">Job Requisitions</div>
+                                    <div class="it-col-th it-th-datetime">Interview Date &amp; Time</div>
+                                    <div class="it-col-th it-th-interviewers">Interviewers</div>
+                                    <div class="it-col-th it-th-source">Source</div>
+                                    <div class="it-col-th it-th-stage">Stage</div>
+                                    <div class="it-col-th it-th-feedback">Feedback</div>
+                                </div>
 
-                                        </tbody>
-                                    </table>
+                                <!-- Primary Cards List -->
+                                <div id="candidatetListinterviewtracker" class="it-cards-list" data-role="interview-list">
                                 </div>
                             </div>
-                            <!--end::Table-->
+                            <!--end::Card + Sub-Card Interview Container-->
                             <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
                                 <!-- Pagination links will be appended here -->
                             </div>
@@ -4684,9 +4956,27 @@ use Carbon\Carbon;
         buildRowHtml: function(row) {
             var cid = row.id || row.wiseId || row.candidate_id || 0;
             var jobId = row.jobId || row.job_id || 0;
-            var fullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
-            var firstChar = (fullName.charAt(0) || 'C').toUpperCase();
-            var designation = row.current_designation || '----';
+
+            // Sentence case helper: strictly capitalize only the first letter of string
+            var formatSentenceCase = function(str) {
+                if (!str || typeof str !== 'string') return '';
+                var s = str.trim();
+                if (!s) return '';
+                return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+            };
+
+            // Word limiter helper: allows up to maxWords
+            var limitWords = function(str, maxWords) {
+                if (!str || typeof str !== 'string') return '';
+                var words = str.trim().split(/\s+/);
+                if (words.length <= maxWords) return str.trim();
+                return words.slice(0, maxWords).join(' ') + '...';
+            };
+
+            var rawFullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
+            var rawDesignation = (row.current_designation || '----').trim();
+            var displayName = formatSentenceCase(limitWords(rawFullName, 15));
+            var displayDesig = formatSentenceCase(limitWords(rawDesignation, 15));
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
 
             // Skills & Match Badge (CV Tracker 3rd row layout spanning full row with hidden scrollbar)
@@ -4700,7 +4990,7 @@ use Carbon\Carbon;
             var skillsPillsHtml = '';
             if (skillsList.length > 0) {
                 skillsList.forEach(function(s) {
-                    var cleanSkill = $('<div>').text(s).html();
+                    var cleanSkill = $('<div>').text(formatSentenceCase(s)).html();
                     skillsPillsHtml += `<span class="cd-skill-pill-cv cd-skill-pill-matched">${cleanSkill}</span>`;
                 });
             }
@@ -4719,34 +5009,40 @@ use Carbon\Carbon;
                 </div>
             `;
 
-            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation)
+            // 1. Candidate Name (Clean text-only, NO avatar image/box, up to 15 words, sentence case)
             var nameColHtml = `
-                <div class="d-flex align-items-center gap-3">
-                    <div class="cd-cand-avatar-subcard">
-                        <span>${firstChar}</span>
-                    </div>
-                    <div class="cd-cell-subcard min-w-0">
-                        <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${fullName}">
-                            ${fullName}
-                        </a>
-                        <span class="cd-cand-desig text-truncate" style="max-width: 170px;" title="${designation}">
-                            ${designation}
-                        </span>
-                    </div>
+                <div class="cd-cell-subcard min-w-0">
+                    <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${$('<div>').text(rawFullName).html()}">
+                        ${displayName}
+                    </a>
+                    <span class="cd-cand-desig text-truncate" title="${$('<div>').text(rawDesignation).html()}">
+                        ${displayDesig}
+                    </span>
                 </div>
             `;
 
-            // 2. Experience Sub-Card (Total exp bold black, rel exp gray)
-            var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + '. Y') : '----';
-            var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + '. Y') : '';
+            // 2. Experience (Sufficient width, informative formatting without duplicate dots)
+            var cleanExpNum = function(val) {
+                if (val === undefined || val === null || val === '') return null;
+                var s = String(val).trim().replace(/\.+$/, '');
+                var n = parseFloat(s);
+                if (isNaN(n)) return s;
+                return (n % 1 === 0) ? n.toString() : n.toFixed(1);
+            };
+
+            var totalExpNum = cleanExpNum(row.total_exp);
+            var relExpNum = cleanExpNum(row.rel_exp);
+            var totalExpStr = totalExpNum !== null ? (totalExpNum + ' Yrs Total') : '----';
+            var relExpStr = (relExpNum !== null && relExpNum !== '0') ? (relExpNum + ' Yrs Rel') : '';
+
             var expColHtml = `
                 <div class="cd-cell-subcard">
-                    <span class="cd-val-primary">${totalExp}</span>
-                    ${relExp ? `<span class="cd-val-secondary">${relExp}</span>` : ''}
+                    <span class="cd-val-primary text-truncate" title="${totalExpStr}">${totalExpStr}</span>
+                    ${relExpStr ? `<span class="cd-val-secondary text-truncate mt-1" title="${relExpStr}">${relExpStr}</span>` : ''}
                 </div>
             `;
 
-            // 3. Salary Sub-Card (Formatted currency: Current & Expected)
+            // 3. Salary (Compact format: 250,000 -> 250K / Annual, zeros reduced to K)
             var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
             if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
             if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
@@ -4754,92 +5050,106 @@ use Carbon\Carbon;
             if (currencySymbol === 'GBP' || currencySymbol === '3') currencySymbol = '£';
             if (currencySymbol === 'AED' || currencySymbol === '5') currencySymbol = 'AED ';
 
-            var formatMoney = function(val) {
-                if (!val && val !== 0) return null;
-                var num = Number(val);
+            var formatCompactSalary = function(val) {
+                if (val === null || val === undefined || val === '') return null;
+                var num = Number(String(val).replace(/,/g, '').trim());
                 if (isNaN(num) || num <= 0) return null;
+                if (num >= 1000) {
+                    var kVal = num / 1000;
+                    var formatted = (kVal % 1 === 0) ? kVal.toString() : kVal.toFixed(1).replace(/\.0$/, '');
+                    return formatted + 'K';
+                }
                 return num.toLocaleString();
             };
 
-            var ectcVal = formatMoney(row.ectc_yearly || row.ectc || row.salary);
-            var ctcVal = formatMoney(row.ctc_yearly || row.ctc);
+            var ectcVal = formatCompactSalary(row.ectc_yearly || row.ectc || row.salary);
+            var ctcVal = formatCompactSalary(row.ctc_yearly || row.ctc);
 
             var salaryColHtml = `
                 <div class="cd-cell-subcard">
-                    ${ectcVal ? `<span class="cd-val-primary">${currencySymbol}${ectcVal}<span class="cd-val-sub">/Annual</span></span>` : '<span class="cd-val-primary">----</span>'}
-                    ${ctcVal ? `<span class="cd-val-secondary">${currencySymbol}${ctcVal}<span class="cd-val-sub">/Annual</span></span>` : ''}
+                    ${ectcVal ? `<span class="cd-val-primary text-truncate">${currencySymbol}${ectcVal} <span class="cd-val-sub">/ Annual</span></span>` : '<span class="cd-val-primary">----</span>'}
+                    ${ctcVal ? `<span class="cd-val-secondary text-truncate mt-1">${currencySymbol}${ctcVal} <span class="cd-val-sub">/ Annual</span></span>` : ''}
                 </div>
             `;
 
-            // 4. Notice Sub-Card (SNP LWD in purple, Immediate in green, Days in amber)
+            // 4. Notice (NO pill/badge background, clean colored text only)
             var noticeText = 'Immediate';
-            var noticeClass = 'cd-notice-immediate';
+            var noticeColorClass = 'cd-notice-immediate';
             var rawNotice = String(row.np_id || row.notice || '').trim();
 
             if (row.serving_notice_period_mode == 1 || (rawNotice && rawNotice.includes('-'))) {
                 var cleanDate = rawNotice.replace('SNP LWD', '').trim();
                 noticeText = 'SNP LWD ' + cleanDate;
-                noticeClass = 'cd-notice-snp';
+                noticeColorClass = 'cd-notice-snp';
             } else if (rawNotice === 'Immediate' || rawNotice === '0' || rawNotice === '') {
                 noticeText = 'Immediate';
-                noticeClass = 'cd-notice-immediate';
+                noticeColorClass = 'cd-notice-immediate';
             } else if (!isNaN(Number(rawNotice))) {
                 noticeText = rawNotice + ' Days';
-                noticeClass = 'cd-notice-days';
+                noticeColorClass = 'cd-notice-days';
             } else {
                 noticeText = rawNotice;
-                noticeClass = 'cd-notice-default';
+                noticeColorClass = 'cd-notice-default';
             }
 
             var currCompany = row.current_company || '----';
+            var currCompanyClean = formatSentenceCase(limitWords(currCompany, 10));
             var noticeColHtml = `
                 <div class="cd-cell-subcard align-items-start">
-                    <span class="cd-notice-chip ${noticeClass}">${noticeText}</span>
-                    <span class="cd-val-secondary text-truncate mt-1" style="max-width: 120px;" title="${currCompany}">${currCompany}</span>
+                    <span class="cd-notice-clean ${noticeColorClass}">${noticeText}</span>
+                    <span class="cd-val-secondary text-truncate mt-1" title="${$('<div>').text(currCompany).html()}">${currCompanyClean}</span>
                 </div>
             `;
 
-            // 5. Location Sub-Card (City, Country bold black; Qualification gray)
+            // 5. Location (City, Country & Degree/Qualification)
             var city = row.city_name || row.city || '----';
             var country = row.country_name || '';
             var locLine1 = city;
             if (country && country !== '----') {
                 locLine1 += ', ' + (country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase());
             }
+            var locLine1Clean = formatSentenceCase(locLine1);
             var qualification = row.qualification_name || '----';
+            var qualificationClean = limitWords(qualification, 8);
             var locColHtml = `
                 <div class="cd-cell-subcard">
-                    <span class="cd-val-primary text-truncate" style="max-width: 130px;" title="${locLine1}">${locLine1}</span>
-                    <span class="cd-val-secondary text-uppercase text-truncate mt-1" style="max-width: 130px;" title="${qualification}">${qualification}</span>
+                    <span class="cd-val-primary text-truncate" title="${$('<div>').text(locLine1Clean).html()}">${locLine1Clean}</span>
+                    <span class="cd-val-secondary text-truncate mt-1" title="${$('<div>').text(qualification).html()}">${qualificationClean}</span>
                 </div>
             `;
 
-            // 6. Ownership Sub-Card (Recruiter bold black; Company/Agency gray)
+            // 6. Ownership (At least 12 words, sentence case)
             var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Vibhanshu';
             var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || '4bell tech';
+            var recruiterFormatted = formatSentenceCase(limitWords(recruiter, 12));
+            var submitterFormatted = formatSentenceCase(limitWords(submitterCompany, 12));
+
             var ownershipColHtml = `
                 <div class="cd-cell-subcard">
-                    <span class="cd-val-primary text-truncate" style="max-width: 120px;" title="${recruiter}">${recruiter}</span>
-                    <span class="cd-val-secondary text-truncate mt-1" style="max-width: 120px;" title="${submitterCompany}">${submitterCompany}</span>
+                    <span class="cd-val-primary text-truncate" title="${$('<div>').text(recruiter).html()}">${recruiterFormatted}</span>
+                    <span class="cd-val-secondary text-truncate mt-1" title="${$('<div>').text(submitterCompany).html()}">${submitterFormatted}</span>
                 </div>
             `;
 
-            // 7. Jobs Sub-Card (Linked to this company only!)
+            // 7. Jobs (Up to 15 words, sentence case, linked to company job)
             var jobTitle = row.title || row.job_title || ('Job #' + jobId);
             var companyName = row.cur_company_name || row.client_name || '4Bell Technology';
             var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
+            var jobTitleFormatted = formatSentenceCase(limitWords(jobTitle, 15));
+            var companyNameFormatted = formatSentenceCase(limitWords(companyName, 12));
+
             var jobsColHtml = `
                 <div class="cd-cell-subcard">
-                    <a href="${jobUrl}" target="_blank" class="cd-val-primary text-hover-primary text-truncate d-block" style="max-width: 140px; text-decoration:none;" title="${jobTitle}">
-                        ${jobTitle}
+                    <a href="${jobUrl}" target="_blank" class="cd-val-primary text-hover-primary text-truncate d-block" style="text-decoration:none;" title="${$('<div>').text(jobTitle).html()}">
+                        ${jobTitleFormatted}
                     </a>
-                    <span class="cd-val-secondary text-truncate d-block mt-1" style="max-width: 140px;" title="${companyName}">
-                        ${companyName}
+                    <span class="cd-val-secondary text-truncate d-block mt-1" title="${$('<div>').text(companyName).html()}">
+                        ${companyNameFormatted}
                     </span>
                 </div>
             `;
 
-            // 8. Status Sub-Card (Job Status chip: Hiring, Hold, Closed)
+            // 8. Status (Job Status chip)
             var rawJobStatus = String(row.job_status || 'active').toLowerCase();
             var statusPillText = 'Hiring';
             var statusChipClass = 'cd-status-hiring';
@@ -4853,14 +5163,15 @@ use Carbon\Carbon;
                 statusPillText = 'Closed';
                 statusChipClass = 'cd-status-closed';
             }
+            var statusSub = jobId ? (jobId + ' - Internal') : 'Internal';
             var statusColHtml = `
                 <div class="cd-cell-subcard align-items-start">
                     <span class="cd-status-chip ${statusChipClass}">${statusPillText}</span>
-                    <span class="cd-val-secondary mt-1">${jobId ? jobId + ' - Internal' : 'Internal'}</span>
+                    <span class="cd-val-secondary mt-1 text-truncate" title="${statusSub}">${statusSub}</span>
                 </div>
             `;
 
-            // 9. Stage Sub-Card (Stage chip modal button)
+            // 9. Stage (Stage chip modal button)
             var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
             var stageChipStyle = 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
             if (stageName.toLowerCase().includes('offer')) {
@@ -4876,10 +5187,10 @@ use Carbon\Carbon;
             var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
             var stageColHtml = `
                 <div class="cd-cell-subcard align-items-start">
-                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}">
+                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}" title="${stageName}">
                         ${stageName}
                     </a>
-                    <span class="cd-val-secondary mt-1">${subStageText}</span>
+                    <span class="cd-val-secondary mt-1 text-truncate" title="${subStageText}">${subStageText}</span>
                 </div>
             `;
 

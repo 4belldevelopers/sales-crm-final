@@ -273,7 +273,41 @@ class ClientJobsReadService
             'listType'     => 'client_jobs',
         ];
 
-        // 8. Construct View Model
+        // 8. Assemble Fully Dynamic Status Tabs
+        $dynamicTabs = [
+            [
+                'key'       => 'all',
+                'label'     => 'All Jobs',
+                'count'     => $totalCount,
+                'badge_cls' => 'count-primary',
+            ],
+            [
+                'key'       => 'hiring',
+                'label'     => 'Hiring',
+                'count'     => $hiringCount,
+                'badge_cls' => 'count-success',
+            ],
+            [
+                'key'       => 'hold',
+                'label'     => 'On Hold',
+                'count'     => $holdCount,
+                'badge_cls' => 'count-warning',
+            ],
+            [
+                'key'       => 'closed',
+                'label'     => 'Closed',
+                'count'     => $closedCount,
+                'badge_cls' => 'count-danger',
+            ],
+            [
+                'key'       => 'inactive',
+                'label'     => 'Inactive',
+                'count'     => $inactiveCount,
+                'badge_cls' => 'count-neutral',
+            ],
+        ];
+
+        // 9. Construct View Model
         $viewModel = new JobsTabViewModel(
             totalCount: $totalCount,
             filteredCount: $filteredCount,
@@ -289,6 +323,7 @@ class ClientJobsReadService
                 'status' => $query->status,
                 'search' => $query->search,
             ],
+            tabs: $dynamicTabs,
             projectionVersion: $currentVersion,
             queryHash: md5($cacheKey),
             generatedAt: now()->toIso8601String()

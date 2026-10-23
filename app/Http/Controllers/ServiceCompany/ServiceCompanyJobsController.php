@@ -1680,6 +1680,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'closed'   => $viewModel->closedCount,
                 'inactive' => $viewModel->inactiveCount,
             ],
+            'tabs'       => $viewModel->tabs,
             'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => array_merge(['listType' => 'client_jobs'], $viewModel->pagination)])->render(),
         ]);
     }
