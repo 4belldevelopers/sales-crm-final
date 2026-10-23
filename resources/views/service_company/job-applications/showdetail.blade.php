@@ -1229,13 +1229,9 @@
    		$currencySymbole 	=	GeneralMethod::currencySymbole(); 
       // dd($currencySymbole);
    		$current_ctc_cur	=	$current_ectc_cur	=	"";
-       if($application->condidate_type=='other'){
-        $current_ctc_cur	=	$currencySymbole[@$jobCurrency];
-        $current_ectc_cur	=	$currencySymbole[@$jobCurrency];
-       }else{
-        $current_ctc_cur	=	$currencySymbole[@$jobCurrency];
-        $current_ectc_cur	=	$currencySymbole[@$jobCurrency];
-       }
+       $safeDetailJobCurrency = @$jobCurrency ?? 0;
+       $resolvedDetailCur = $currencySymbole[$safeDetailJobCurrency] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeDetailJobCurrency)] ?? '');
+       $current_ctc_cur = $current_ectc_cur = $resolvedDetailCur;
    		
   //  }			
   //  rjobid from_company_id	

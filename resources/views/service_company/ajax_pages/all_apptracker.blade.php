@@ -34,7 +34,7 @@
     $jobData = isset($rowMaps['jobs'][$row->jobId]) ? (object) $rowMaps['jobs'][$row->jobId] : null;
     $jobMode = $jobData->max_sal_mode ?? @$row->current_ctc_mode;
     $jobCurrency = $jobData->max_salary_currency ?? @$row->current_ctc_cur;
-    $symbols = $symbolsValue[$jobCurrency] ?? "INR";
+    $symbols = $symbolsValue[$jobCurrency] ?? \App\Services\CurrencyService::resolveCurrencyCode($jobCurrency);
     $rowJobId = $row->job_id ?: ($row->jobId ?? 0);
     $preSkillRows = $rowMaps['skills'][$rowJobId] ?? [];
     $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
@@ -305,22 +305,21 @@
                 @php
             
 
-                    $current_ctc_cur = '';
-                    $current_ctc_cur = $currencySymbole[@$jobCurrency];
+                    $safeJobCurrency = $jobCurrency ?? 0;
+                    $current_ctc_cur = $currencySymbole[$safeJobCurrency] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeJobCurrency)] ?? '');
 
-                    $current_ectc_cur = '';
-                    $current_ectc_cur = $currencySymbole[@$jobCurrency];
-                    $cur = $jobCurrency;
+                    $current_ectc_cur = $current_ctc_cur;
+                    $cur = $safeJobCurrency;
                     if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_cur = $currencySymbole[@$jobCurrency];
-                        $cur = $jobCurrency;
+                        $current_ectc_cur = $current_ctc_cur;
+                        $cur = $safeJobCurrency;
                     }
-                    $current_ectc_mode = '';
-                    $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
-                    $mod = $jobMode;
+                    $safeJobMode = $jobMode ?? 0;
+                    $current_ectc_mode = isset($salaryMode[$safeJobMode]) ? mb_substr($salaryMode[$safeJobMode], 0, 1) : '';
+                    $mod = $safeJobMode;
                     if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
-                        $mod = $jobMode;
+                        $current_ectc_mode = isset($salaryMode[$safeJobMode]) ? mb_substr($salaryMode[$safeJobMode], 0, 1) : '';
+                        $mod = $safeJobMode;
                     }
 
                     $ctc = '';
@@ -332,12 +331,12 @@
                     }
 
                     $currencymain = GeneralMethod::currency(); // Currency code
-                    $currency = $currencymain[$cur];
+                    $currency = $currencymain[$cur] ?? \App\Services\CurrencyService::resolveCurrencyCode($cur);
                     if (!empty($row->ectc_yearly)) {
                         $convertedAmounEctc = GeneralMethod::conversionRates($currency, $row->ectc_yearly, 0);
                         $convertedAmounCtc = GeneralMethod::conversionRates($currency, $row->ctc_yearly, 0);
-                        $ctc = $convertedAmounCtc[$mod];
-                        $ectc = $convertedAmounEctc[$mod];
+                        $ctc = $convertedAmounCtc[$mod] ?? 0;
+                        $ectc = $convertedAmounEctc[$mod] ?? 0;
 
                         $ctc = GeneralMethod::thousandsCurrencyFormat($ctc);
                         $ectc = GeneralMethod::thousandsCurrencyFormat($ectc);
@@ -353,8 +352,8 @@
                     $payAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
                     $billAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
 
-                    $current_ctc_mode = @$salaryMode[@$jobMode];
-                    $current_ectc_mode = @$salaryMode[@$jobMode];
+                    $current_ctc_mode = $salaryMode[$safeJobMode] ?? '';
+                    $current_ectc_mode = $salaryMode[$safeJobMode] ?? '';
 
                     $dnone = '';
                     $dnonetype = 'd-none';
@@ -364,7 +363,7 @@
                     }
                     $outsourcing_type = $row->outsourcing_type == 1 ? 'Fulltime' : 'Contract';
 
-                    if (in_array('salary_view', $userPermissions)) {
+                    if (in_array('salary_view', (array) ($userPermissions ?? []))) {
                         echo '<div class="d-flex flex-column">
 						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
