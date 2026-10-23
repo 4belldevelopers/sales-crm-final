@@ -288,4 +288,54 @@
         padding: 2px 3px;
     }
 }
+
+/* Colored Status Dot */
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+.badge-hiring.active-bg .status-dot { background-color: #50cd89; }
+.badge-hiring.hold-bg .status-dot   { background-color: #ffc700; }
+.badge-hiring.closed-bg .status-dot { background-color: #f1416c; }
+.badge-hiring.inactive-bg .status-dot { background-color: #64748b; }
+
+/* Filter Group styling */
+.cl-jobs-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.cl-jobs-filter-group .btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #f5f8fa;
+    color: #5e6278;
+    border: 1px solid #e4e6ef;
+    transition: all 0.15s ease;
+}
+
+.cl-jobs-filter-group .btn:hover {
+    background: #eef3f7;
+    color: #181c32;
+}
+
+.cl-jobs-filter-group .btn.active {
+    background: #181c32;
+    color: #ffffff;
+    border-color: #181c32;
+}
+
+.cl-jobs-filter-group .btn.active .badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
 </style>
