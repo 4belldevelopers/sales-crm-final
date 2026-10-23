@@ -57,13 +57,28 @@
 
                 $logoUrl = !empty($job->logo_logical_path) ? $job->logo_logical_path : (!empty($job->logo) ? $job->logo : '');
 
-                // Department & Company name resolved from ES (0% MySQL Reads)
+                // Department & Client name resolved dynamically (Strictly 0% MySQL Reads)
                 $deptName = $job->department_name ?? ($job->category_name ?? 'Information Technology');
-                $compName = strtoupper($job->client_company ?? ($job->company_name ?? ($job->client_name ?? 'Client Account')));
+                $resolvedClient = trim((string) (
+                    $job->client_name 
+                    ?? $job->clients_name 
+                    ?? ($viewModel->clientName ?? '')
+                    ?? $job->client_company 
+                    ?? ''
+                ));
+                if (empty($resolvedClient) && !empty($viewModel->clientName)) {
+                    $resolvedClient = $viewModel->clientName;
+                }
+                $clientDisplayName = !empty($resolvedClient) ? strtoupper($resolvedClient) : 'CLIENT';
 
                 // 3. Sub-Card 2: Experience & Compensation
-                $minExp = $job->min_exp ?? 0;
-                $maxExp = $job->max_exp ?? 0;
+                $minExp = (int) ($job->min_exp ?? 0);
+                $maxExp = (int) ($job->max_exp ?? 0);
+                if ($minExp > 0 || $maxExp > 0) {
+                    $expText = ($minExp === $maxExp) ? "{$minExp} Yrs" : "{$minExp} - {$maxExp} Yrs";
+                } else {
+                    $expText = '0 - 1 Yrs';
+                }
 
                 $currCode = CurrencyService::resolveCurrencyCode($job->min_salary_currency ?? 132);
                 $currSym = CurrencyService::getCurrencySymbol($currCode);
@@ -87,19 +102,19 @@
                     $maxSalFmt = '0';
                 }
 
-                $empType = ((int) ($job->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-time';
+                $empType = ((int) ($job->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-Time';
 
-                // Location & Work Mode
+                // Location & Work Mode (Standardized "Work From Office")
                 $cities = $job->client_city_jobs ?? [];
                 $cityCount = count($cities);
-                $cityName = 'Office';
+                $cityName = 'Work From Office';
                 if ($cityCount > 0) {
                     $cityName = ucwords(strtolower($cities[0]['city_name'] ?? ''));
                 }
                 $cityExtra = $cityCount > 1 ? ($cityCount - 1) : 0;
 
                 $workTypeRaw = strtolower((string) ($job->work_type ?? ''));
-                $workMode = 'Office';
+                $workMode = 'Work From Office';
                 if ($workTypeRaw === 'remote' || $workTypeRaw === 'wfh') {
                     $workMode = 'Remote';
                 } elseif ($workTypeRaw === 'hybrid') {
@@ -190,7 +205,7 @@
                         <div class="cd-details-body">
                             <div class="cd-logo-box" style="background-color: {{ $logoColor }};">
                                 @if(!empty($logoUrl))
-                                    <img src="{{ $logoUrl }}" alt="{{ $compName }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <img src="{{ $logoUrl }}" alt="{{ $clientDisplayName }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <span style="display:none;">{{ $logoInitial }}</span>
                                 @else
                                     <span>{{ $logoInitial }}</span>
@@ -208,23 +223,26 @@
                                     <span class="cd-bullet">&bull;</span>
                                     <span class="cd-job-dept" title="{{ $deptName }}">{{ $deptName }}</span>
                                 </div>
-                                <div class="cd-job-company" title="{{ $compName }}">{{ $compName }}</div>
+                                <div class="cd-job-client-row">
+                                    <span class="cd-job-client-name" title="{{ $clientDisplayName }}">{{ $clientDisplayName }}</span>
+                                    <span class="cd-bullet">&bull;</span>
+                                    <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>{{ $empType }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Sub-Card 2: Experience, Compensation & Location -->
+                    <!-- Sub-Card 2: Compensation & Experience -->
                     <div class="cd-job-subcard cd-subcard-comp-loc">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label">Compensation &amp; Location</span>
+                            <span class="cd-subcard-label">Compensation &amp; Exp</span>
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-val-salary">
                                 <strong>{{ $currSym }}{{ $minSalFmt }} - {{ $maxSalFmt }}</strong>
-                                <span class="cd-val-exp text-muted">({{ $minExp }} - {{ $maxExp }} Yrs)</span>
                             </div>
-                            <div class="cd-val-type">
-                                <i class="fas fa-briefcase text-primary me-1"></i>{{ $empType }}
+                            <div class="cd-val-exp">
+                                <i class="far fa-clock text-muted me-1"></i><span>{{ $expText }}</span>
                             </div>
                             <div class="cd-val-loc" title="{{ $cityName }} &bull; {{ $workMode }}">
                                 <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $cityName }}@if($cityExtra > 0)<span class="cd-loc-badge">+{{ $cityExtra }}</span>@endif

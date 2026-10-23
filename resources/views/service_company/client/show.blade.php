@@ -6972,6 +6972,7 @@ use Carbon\Carbon;
     window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
+        var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
@@ -6979,6 +6980,7 @@ use Carbon\Carbon;
                 search: search || $('#inputJobSearch').val() || '',
                 status: activeStatus,
                 client_id: $('#hid_client_id').val(),
+                client_name: clientName,
                 custom: true
             },
             success: function(response) {

@@ -20,6 +20,26 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
+- *2026-10-23* — **Client Drawer Jobs Tab Card/Sub-Card Information Placement Refinement (100% COMPLETED & VERIFIED)**:
+  - **User Request & Requirements**:
+    1. **Move Full-Time**: Remove "Full-Time" from the Compensation card and move it to the Job Details card, placed in the same row immediately next to the client name.
+    2. **Use Client Name**: In the Job Details card, replace Company Name with the actual, dynamically populated Client Name (never static/hardcoded company name).
+    3. **Experience Position**: In the Compensation & Location card (labeled `COMPENSATION & EXP`), place Experience in the second row with a clock icon (`🕒 X - Y Yrs`), keeping Row 1 for bold salary (`₹5,000 - 2.50 L`).
+    4. **Work Mode Text**: Standardize work mode text to "Work From Office" everywhere in this section (never just "Office").
+    5. **Final UI Requirements**: Compact, visually aligned, 15.6" screen responsive, free from unnecessary whitespace, strictly CQRS compliant (0% MySQL reads).
+  - **Architectural Implementation**:
+    - `JobsTabViewModel`: Added `public readonly ?string $clientName = null` to expose dynamically resolved client name to views.
+    - `ClientJobsQuery`: Accepted optional `clientName` parameter passed from drawer contexts.
+    - `ClientJobsReadService`: Resolved authoritative client name with strictly 0% MySQL reads (Dragonfly/Redis cache `ats:client_display_name` with fallback to `ELASTIC_CLIENT_LIST` / `ELASTIC_COMPANIES_INDEX`), injecting it into `$viewModel` and any job document missing `client_name`.
+    - `JobProjectionService`: Updated canonical document assembler to resolve `$client->name` for `client_name` and `client_company`.
+    - `client_jobs_side_bar_ajax.blade.php`:
+      - Sub-Card 1 (Job Details): Replaced company name with dynamic `$clientDisplayName` and inline `$empType` badge (`CLIENT NAME • 💼 Full-Time`).
+      - Sub-Card 2 (Compensation & Exp): Updated header label to `COMPENSATION & EXP`, Row 1 to salary only, Row 2 to dedicated experience (`<i class="far fa-clock"></i> {{ $expText }}`), and Row 3 to location and `"Work From Office"`.
+    - `tab-jobs-style.blade.php`: Styled `.cd-job-client-row`, `.cd-job-client-name`, `.cd-job-emp-type`, and updated `.cd-val-exp` with icon spacing.
+    - `show.blade.php` & `dviewMore.blade.php`: Updated AJAX caller to pass `client_name` dynamically from the open client drawer.
+    - Synchronized documentation in `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` and `docs/UI_UX_STANDARDS.md`.
+  - **Verification**: `ClientJobsCqrsReadTest` (1 passed, 11 assertions, 0 MySQL reads), `ClientAccessContextSecurityTest` (3 passed, 5 assertions), `./vendor/bin/pint --test` 100% clean.
+
 - *2026-10-23* — **Modern Enterprise Card + Sub-Card Design System Standard (100% CODIFIED & MANDATED ACROSS SYSTEM)**:
   - **User Request & Requirements**:
     - Formally document and establish the **Modern Card + Sub-Card Design System** (specifically the 3-tier architecture established for the Client Drawer Jobs tab with white-background toolbar card, dynamic right-corner search bar, and white-background sub-tabs card) as the mandatory UI/UX format for all AI coding models and UI/UX design systems across JERO.

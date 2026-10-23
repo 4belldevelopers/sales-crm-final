@@ -603,8 +603,8 @@ All future and refactored entity listings, drawer tabs (such as the Client Drawe
 3. **Tier 3: Primary Entity Card Stream (`.cd-*-card`)**
    - **Primary Card:** High-density card with hover elevation, subtle border (`#e2e8f0`), and 10px radius.
    - **Modular Upper Sub-Cards Grid:** 5 distinct, semantic sub-cards using responsive CSS grid (`grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, 1.45fr)` on desktop):
-     1. *Details Sub-Card:* Entity logo/avatar (company logo), primary title, ID badge, and live status badge.
-     2. *Secondary Attributes / Compensation & Location:* Structured metadata pairs (salary, experience, location tags).
+     1. *Details Sub-Card:* Entity logo/avatar, primary title, ID badge, dynamic client name row with employment type (`CLIENT NAME • 💼 Full-Time`), and live status badge.
+     2. *Compensation & Exp Sub-Card (`COMPENSATION & EXP`):* Row 1 for bold salary, Row 2 for experience with clock icon (`🕒 X - Y Yrs`), Row 3 for location with extra cities badge and standardized `"Work From Office"` indicator.
      3. *Team Sub-Card:* Real assigned team leads, recruiters, and member counts. **Never display placeholder matching badges (e.g., "15 Matching" is banned).**
      4. *Agency Sub-Card:* Real hired agencies count (e.g. `3 Agencies` or `—` if none hired).
      5. *Pipeline / Metrics Sub-Card:* Authoritative progress counters across stages (e.g. Sourced, Evaluated, Interview, Offer, Joined).

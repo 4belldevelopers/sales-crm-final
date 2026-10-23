@@ -432,9 +432,47 @@
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 2: Experience, Compensation & Location */
+.cd-job-client-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 2px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+}
+
+.cd-job-client-name {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 155px !important;
+}
+
+.cd-job-emp-type {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-job-emp-type i {
+    font-size: 9px !important;
+}
+
+/* Sub-Card 2: Compensation & Experience */
 .cd-val-salary {
     font-size: 11.5px !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -444,7 +482,22 @@
 
 .cd-val-exp {
     font-size: 10.5px !important;
-    margin-left: 2px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    margin-top: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.cd-val-exp i {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
 }
 
 .cd-val-type {
