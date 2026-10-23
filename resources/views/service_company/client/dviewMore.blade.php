@@ -1652,13 +1652,16 @@
             color: #2563eb;
           }
 
-          /* 2. Candidate Table & Floating Card Rows */
+          /* 2. Candidate Table & Floating Card Rows (Zero Horizontal Scroll on 15.6" screens) */
           .cd-cand-table-wrap {
             background: #ffffff;
             border-radius: 10px;
+            overflow-x: hidden !important;
+            width: 100% !important;
           }
           .cd-cand-table {
-            width: 100%;
+            width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: separate !important;
             border-spacing: 0 8px !important;
             margin: 0 !important;
@@ -1666,48 +1669,59 @@
           .cd-cand-table thead tr th {
             background: #f8fafc !important;
             color: #64748b !important;
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            letter-spacing: 0.3px;
-            padding: 10px 14px !important;
+            letter-spacing: 0.2px;
+            padding: 8px 10px !important;
             border: 1px solid #e2e8f0 !important;
             border-left: none !important;
             border-right: none !important;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
           .cd-cand-table thead tr th:first-child {
             border-left: 1px solid #e2e8f0 !important;
             border-top-left-radius: 8px !important;
             border-bottom-left-radius: 8px !important;
+            padding-left: 12px !important;
           }
           .cd-cand-table thead tr th:last-child {
             border-right: 1px solid #e2e8f0 !important;
             border-top-right-radius: 8px !important;
             border-bottom-right-radius: 8px !important;
+            padding-right: 12px !important;
           }
 
-          /* Candidate Row Card */
+          /* Candidate Row Card: relative height 84px with 28px bottom padding for 3rd row */
           .cd-cand-row-card {
+            position: relative !important;
             background: #ffffff !important;
+            height: 84px !important;
             transition: all 0.15s ease-in-out !important;
           }
           .cd-cand-row-card td {
             background: #ffffff !important;
             border-top: 1px solid #eef2f6 !important;
             border-bottom: 1px solid #eef2f6 !important;
-            padding: 12px 14px !important;
-            vertical-align: middle !important;
+            padding: 9px 8px 28px 8px !important;
+            vertical-align: top !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
           .cd-cand-row-card td:first-child {
             border-left: 1px solid #eef2f6 !important;
             border-top-left-radius: 10px !important;
             border-bottom-left-radius: 10px !important;
+            padding-left: 12px !important;
           }
           .cd-cand-row-card td:last-child {
             border-right: 1px solid #eef2f6 !important;
             border-top-right-radius: 10px !important;
             border-bottom-right-radius: 10px !important;
+            padding-right: 12px !important;
           }
           .cd-cand-row-card:hover {
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
@@ -1717,20 +1731,81 @@
             border-color: #cbd5e1 !important;
           }
 
-          /* Micro Sub-Cards inside Candidate Cells */
-          .cd-cell-subcard {
+          /* 3rd Row: Matching Percentage & Skills horizontal overflow bar */
+          .cd-cand-skills-row {
+            position: absolute;
+            bottom: 6px;
+            left: 12px;
+            right: 12px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            z-index: 2;
+            pointer-events: auto;
           }
-          .cd-cand-avatar-subcard {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: #ffe4e6;
-            color: #e11d48;
+          .cd-cand-skills-row::-webkit-scrollbar {
+            display: none;
+          }
+
+          /* CV Tracker Match % & Skills Pill Styles */
+          .cd-match-badge-cv {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
             font-weight: 700;
-            font-size: 15px;
-            border: 1px solid #fecdd3;
+            line-height: 1.3;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+          .cd-match-green {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+          }
+          .cd-match-amber {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+          }
+          .cd-match-red {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecdd3 !important;
+          }
+
+          .cd-skill-pill-cv {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.3;
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+
+          /* Avatar Box matching Image 2 */
+          .cd-cand-avatar-subcard {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fef9c3;
+            color: #854d0e;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid #fef08a;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2497,25 +2572,20 @@
 
                             <div class="cd-cand-table-wrap" id="cdCandidateTableWrapDirect">
                                 <!--begin::Table-->
-                                <div class="table-responsive">
+                                <div class="table-responsive" style="overflow-x: hidden;">
                                     <table class="table cd-cand-table align-middle fs-7">
                                         <!--begin::Table head-->
                                         <thead>
                                             <tr>
-                                                <th class="w-30px pe-0">
-                                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                        <input class="form-check-input" type="checkbox" id="cdCandCheckAll" value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="min-w-220px">Candidate Name</th>
-                                                <th class="min-w-60px">Exp.</th>
-                                                <th class="min-w-130px">Salary</th>
-                                                <th class="min-w-120px">Notice</th>
-                                                <th class="min-w-120px">Location</th>
-                                                <th class="min-w-110px">Ownership</th>
-                                                <th class="min-w-130px">Jobs</th>
-                                                <th class="min-w-90px">Status</th>
-                                                <th class="min-w-90px">Stage</th>
+                                                <th style="width: 20%;">Candidate Name</th>
+                                                <th style="width: 6%;">Exp.</th>
+                                                <th style="width: 13%;">Salary</th>
+                                                <th style="width: 11%;">Notice</th>
+                                                <th style="width: 11%;">Location</th>
+                                                <th style="width: 11%;">Ownership</th>
+                                                <th style="width: 14%;">Jobs</th>
+                                                <th style="width: 7%;">Status</th>
+                                                <th style="width: 7%;">Stage</th>
                                             </tr>
                                         </thead>
                                         <!--end::Table head-->
@@ -4556,7 +4626,7 @@
                             ? 'Candidate search service temporarily unavailable. Please retry.'
                             : (xhr.responseJSON?.message || 'Failed to load candidates.');
 
-                    $('#candidatetList').html(`<tr><td colspan="10" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
                     $('#paginationcandidate').empty();
                 }
             });
@@ -4600,7 +4670,37 @@
             var designation = row.current_designation || '----';
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
 
-            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation + Match Pill)
+            // Skills & Match Badge (CV Tracker 3rd row layout spanning full row with hidden scrollbar)
+            var skillsList = [];
+            if (Array.isArray(row.skills)) {
+                skillsList = row.skills;
+            } else if (typeof row.skills === 'string' && row.skills.trim()) {
+                skillsList = row.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            }
+
+            var skillsPillsHtml = '';
+            if (skillsList.length > 0) {
+                skillsList.forEach(function(s) {
+                    var cleanSkill = $('<div>').text(s).html();
+                    skillsPillsHtml += `<span class="cd-skill-pill-cv cd-skill-pill-matched">${cleanSkill}</span>`;
+                });
+            }
+
+            var matchBadgeClass = 'cd-match-red';
+            if (matchPct >= 85) {
+                matchBadgeClass = 'cd-match-green';
+            } else if (matchPct >= 50) {
+                matchBadgeClass = 'cd-match-amber';
+            }
+
+            var skillsRowHtml = `
+                <div class="cd-cand-skills-row">
+                    <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
+                    ${skillsPillsHtml}
+                </div>
+            `;
+
+            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation)
             var nameColHtml = `
                 <div class="d-flex align-items-center gap-3">
                     <div class="cd-cand-avatar-subcard">
@@ -4610,12 +4710,9 @@
                         <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${fullName}">
                             ${fullName}
                         </a>
-                        <span class="cd-cand-desig text-truncate" style="max-width: 200px;" title="${designation}">
+                        <span class="cd-cand-desig text-truncate" style="max-width: 170px;" title="${designation}">
                             ${designation}
                         </span>
-                        <div class="mt-1">
-                            <span class="cd-cand-match-pill"><i class="fas fa-check-circle" style="font-size:8.5px;"></i> Match ${matchPct}%</span>
-                        </div>
                     </div>
                 </div>
             `;
@@ -4769,12 +4866,10 @@
 
             return `
                 <tr class="cd-cand-row-card" data-candidate-id="${cid}">
-                    <td class="w-30px pe-0">
-                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                            <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="${cid}" data-candidate-id="${cid}" data-jobId="${jobId}" data-wiseId="${cid}" />
-                        </div>
+                    <td>
+                        ${nameColHtml}
+                        ${skillsRowHtml}
                     </td>
-                    <td>${nameColHtml}</td>
                     <td>${expColHtml}</td>
                     <td>${salaryColHtml}</td>
                     <td>${noticeColHtml}</td>
@@ -4853,9 +4948,12 @@
                 self.fetch(1);
             });
 
-            $(document).off('change', '#cdCandCheckAll');
-            $(document).on('change', '#cdCandCheckAll', function() {
-                $('.chk_list_item').prop('checked', $(this).is(':checked'));
+            $(document).off('wheel', '.cd-cand-skills-row');
+            $(document).on('wheel', '.cd-cand-skills-row', function(e) {
+                if (e.originalEvent && e.originalEvent.deltaY !== 0) {
+                    this.scrollLeft += e.originalEvent.deltaY;
+                    e.preventDefault();
+                }
             });
 
             $(document).off('click', '#cdCandNextBtnDirect');

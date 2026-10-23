@@ -1,13 +1,16 @@
 <style>
 /* ==========================================================================
    Client Drawer Jobs Tab — Master Enterprise 7-Column Layout (Screenshot 2 Match)
-   Strictly Optimized for 15.6" Screens (1366x768 & 1920x1080) — 0% Horizontal Scroll
+   Strictly Optimized for 15.6" Screens (1366x768 & 1920x1080) and Smaller Screens
+   GUARANTEED: Zero Horizontal Scrollbar (0% Overflow) across All Screen Sizes
    ========================================================================== */
 
 /* Universal Box Sizing & Font Stack */
 .jobx, .jobx *,
 .table-card, .table-card *,
-.job-row, .job-row * {
+.table-header, .table-header *,
+.job-row, .job-row *,
+.job-row-skills, .job-row-skills * {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
     box-sizing: border-box !important;
 }
@@ -25,6 +28,7 @@
     gap: 8px !important;
     margin-bottom: 14px !important;
     flex-wrap: wrap !important;
+    width: 100% !important;
 }
 
 .cl-jobs-filter-group .btn {
@@ -40,6 +44,7 @@
     align-items: center !important;
     cursor: pointer !important;
     line-height: 1.4 !important;
+    white-space: nowrap !important;
 }
 
 .cl-jobs-filter-group .btn:hover {
@@ -71,17 +76,19 @@
     max-width: 100% !important;
 }
 
-/* 7-Column Grid Layout for Table Header and Job Rows */
+/* 7-Column Grid Layout — Pure Responsive Fraction Units with minmax(0, ...)
+   Guarantees all 7 columns shrink gracefully on 15.6" (1366x768) without horizontal scroll */
 .table-header,
 .jobx .table-header,
 .job-row,
 .jobx .job-row {
     display: grid !important;
-    grid-template-columns: minmax(170px, 2.2fr) minmax(100px, 1.15fr) minmax(100px, 1.15fr) minmax(105px, 1.2fr) minmax(75px, 0.85fr) minmax(75px, 0.85fr) minmax(165px, 1.8fr) !important;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.2fr) minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.8fr) !important;
     align-items: start !important;
     column-gap: 8px !important;
     width: 100% !important;
     max-width: 100% !important;
+    overflow: hidden !important;
 }
 
 /* Table Header */
@@ -106,6 +113,7 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    min-width: 0 !important;
 }
 
 .th i,
@@ -134,6 +142,7 @@
     gap: 8px !important;
     align-items: flex-start !important;
     min-width: 0 !important;
+    overflow: hidden !important;
 }
 
 .job-logo,
@@ -278,6 +287,7 @@
     width: fit-content !important;
     cursor: default !important;
     line-height: 1.2 !important;
+    white-space: nowrap !important;
 }
 
 .status-dot,
@@ -425,7 +435,7 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 2px !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
     width: 100% !important;
 }
 
@@ -441,7 +451,7 @@
 
 .stage-label,
 .jobx .stage-label {
-    font-size: 8px !important;
+    font-size: 7.5px !important;
     font-weight: 700 !important;
     color: #64748b !important;
     text-transform: uppercase !important;
@@ -452,13 +462,13 @@
 .stage-badge,
 .jobx .stage-badge {
     width: 100% !important;
-    max-width: 20px !important;
-    height: 16px !important;
+    max-width: 18px !important;
+    height: 15px !important;
     border-radius: 3px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 9px !important;
+    font-size: 8.5px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
 }
@@ -498,12 +508,13 @@
     display: flex !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 5px !important;
+    gap: 4px !important;
     padding: 3px 12px 9px 56px !important;
     border-bottom: 1px solid #f1f5f9 !important;
     font-size: 10.5px !important;
     width: 100% !important;
     background: #ffffff !important;
+    overflow: hidden !important;
 }
 
 .job-row:last-of-type + .job-row-skills,
@@ -534,7 +545,7 @@
 .job-row-skills .sk-tag,
 .jobx .job-row-skills .sk-tag {
     display: inline-flex !important;
-    padding: 1px 7px !important;
+    padding: 1px 6px !important;
     border-radius: 4px !important;
     background: #f8fafc !important;
     color: #475569 !important;
@@ -555,21 +566,20 @@
 
 /* ==========================================================================
    Responsive Scaling for 15.6" Screens (1366x768 & 1920x1080) & Smaller
-   Ensures 0% Horizontal Scrollbar across all browser drawer viewports
    ========================================================================== */
 @media (max-width: 1440px) {
     .table-header,
     .jobx .table-header,
     .job-row,
     .jobx .job-row {
-        grid-template-columns: minmax(150px, 2.1fr) minmax(90px, 1.1fr) minmax(90px, 1.1fr) minmax(95px, 1.15fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(155px, 1.75fr) !important;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.15fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.75fr) !important;
         column-gap: 6px !important;
         padding-left: 8px !important;
         padding-right: 8px !important;
     }
     .job-row-skills,
     .jobx .job-row-skills {
-        padding-left: 50px !important;
+        padding-left: 48px !important;
         padding-right: 8px !important;
     }
     .job-title,
@@ -578,9 +588,9 @@
     }
     .stage-badge,
     .jobx .stage-badge {
-        max-width: 18px !important;
-        height: 15px !important;
-        font-size: 8.5px !important;
+        max-width: 16px !important;
+        height: 14px !important;
+        font-size: 8px !important;
     }
 }
 
@@ -589,7 +599,7 @@
     .jobx .table-header,
     .job-row,
     .jobx .job-row {
-        grid-template-columns: minmax(135px, 1.9fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(85px, 1fr) minmax(65px, 0.75fr) minmax(65px, 0.75fr) minmax(145px, 1.6fr) !important;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.75fr) minmax(0, 0.75fr) minmax(0, 1.6fr) !important;
         column-gap: 4px !important;
     }
     .job-row-skills,

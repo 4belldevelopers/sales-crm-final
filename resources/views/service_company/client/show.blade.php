@@ -2533,23 +2533,18 @@ use Carbon\Carbon;
                                         <!--begin::Table head-->
                                         <thead>
                                             <tr>
-                                                <th style="width: 23%;">Candidate Name</th>
-                                                <th style="width: 7%;">Exp.</th>
-                                                <th style="width: 14%;">Salary</th>
+                                                <th style="width: 20%;">Candidate Name</th>
+                                                <th style="width: 6%;">Exp.</th>
+                                                <th style="width: 13%;">Salary</th>
                                                 <th style="width: 11%;">Notice</th>
-                                                <th style="width: 12%;">Location</th>
+                                                <th style="width: 11%;">Location</th>
                                                 <th style="width: 11%;">Ownership</th>
-                                                <th style="width: 12%;">Jobs</th>
-                                                <th style="width: 5%;">Status</th>
-                                                <th style="width: 5%;">Stage</th>
+                                                <th style="width: 14%;">Jobs</th>
+                                                <th style="width: 7%;">Status</th>
+                                                <th style="width: 7%;">Stage</th>
                                             </tr>
                                         </thead>
                                         <!--end::Table head-->
-                                        <tbody id="candidatetList">
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!--end::Table-->
                                         <tbody id="candidatetList">
                                         </tbody>
                                     </table>
@@ -4650,7 +4645,7 @@ use Carbon\Carbon;
                             ? 'Candidate search service temporarily unavailable. Please retry.'
                             : (xhr.responseJSON?.message || 'Failed to load candidates.');
 
-                    $('#candidatetList').html(`<tr><td colspan="10" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
                     $('#paginationcandidate').empty();
                 }
             });
@@ -4694,7 +4689,37 @@ use Carbon\Carbon;
             var designation = row.current_designation || '----';
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
 
-            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation + Match Pill)
+            // Skills & Match Badge (CV Tracker 3rd row layout spanning full row with hidden scrollbar)
+            var skillsList = [];
+            if (Array.isArray(row.skills)) {
+                skillsList = row.skills;
+            } else if (typeof row.skills === 'string' && row.skills.trim()) {
+                skillsList = row.skills.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            }
+
+            var skillsPillsHtml = '';
+            if (skillsList.length > 0) {
+                skillsList.forEach(function(s) {
+                    var cleanSkill = $('<div>').text(s).html();
+                    skillsPillsHtml += `<span class="cd-skill-pill-cv cd-skill-pill-matched">${cleanSkill}</span>`;
+                });
+            }
+
+            var matchBadgeClass = 'cd-match-red';
+            if (matchPct >= 85) {
+                matchBadgeClass = 'cd-match-green';
+            } else if (matchPct >= 50) {
+                matchBadgeClass = 'cd-match-amber';
+            }
+
+            var skillsRowHtml = `
+                <div class="cd-cand-skills-row">
+                    <span class="cd-match-badge-cv ${matchBadgeClass}">Match ${matchPct}%</span>
+                    ${skillsPillsHtml}
+                </div>
+            `;
+
+            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation)
             var nameColHtml = `
                 <div class="d-flex align-items-center gap-3">
                     <div class="cd-cand-avatar-subcard">
@@ -4704,12 +4729,9 @@ use Carbon\Carbon;
                         <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${fullName}">
                             ${fullName}
                         </a>
-                        <span class="cd-cand-desig text-truncate" style="max-width: 200px;" title="${designation}">
+                        <span class="cd-cand-desig text-truncate" style="max-width: 170px;" title="${designation}">
                             ${designation}
                         </span>
-                        <div class="mt-1">
-                            <span class="cd-cand-match-pill"><i class="fas fa-check-circle" style="font-size:8.5px;"></i> Match ${matchPct}%</span>
-                        </div>
                     </div>
                 </div>
             `;
@@ -4863,12 +4885,10 @@ use Carbon\Carbon;
 
             return `
                 <tr class="cd-cand-row-card" data-candidate-id="${cid}">
-                    <td class="w-30px pe-0">
-                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                            <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="${cid}" data-candidate-id="${cid}" data-jobId="${jobId}" data-wiseId="${cid}" />
-                        </div>
+                    <td>
+                        ${nameColHtml}
+                        ${skillsRowHtml}
                     </td>
-                    <td>${nameColHtml}</td>
                     <td>${expColHtml}</td>
                     <td>${salaryColHtml}</td>
                     <td>${noticeColHtml}</td>
@@ -4947,9 +4967,12 @@ use Carbon\Carbon;
                 self.fetch(1);
             });
 
-            $(document).off('change', '#cdCandCheckAll');
-            $(document).on('change', '#cdCandCheckAll', function() {
-                $('.chk_list_item').prop('checked', $(this).is(':checked'));
+            $(document).off('wheel', '.cd-cand-skills-row');
+            $(document).on('wheel', '.cd-cand-skills-row', function(e) {
+                if (e.originalEvent && e.originalEvent.deltaY !== 0) {
+                    this.scrollLeft += e.originalEvent.deltaY;
+                    e.preventDefault();
+                }
             });
 
             $(document).off('click', '#cdCandNextBtn');
