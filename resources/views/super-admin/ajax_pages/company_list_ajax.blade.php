@@ -222,7 +222,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
-                               href="{{ route('superadmin.company.edit_company', $rowId) }}">
+                               href="{{ route('superadmin.company.edit_company', \Crypt::encryptString($rowId)) }}">
                                 <i class="bi bi-pencil-square text-info fs-6"></i> Edit Company
                             </a>
                         </li>

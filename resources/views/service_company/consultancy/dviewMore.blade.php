@@ -1084,7 +1084,7 @@
       .data-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 1000px;
+        min-width: 820px;
       }
       .data-table thead tr {
         background: #f8f9fa;
@@ -1120,7 +1120,7 @@
       .data-table th:first-child,
       .data-table td:first-child {
         padding-left: 24px;
-        width: 40px;
+        min-width: 220px;
       }
       .data-table th:last-child,
       .data-table td:last-child {
@@ -1128,35 +1128,23 @@
       }
       .data-table th:nth-child(2),
       .data-table td:nth-child(2) {
-        min-width: 180px;
+        min-width: 120px;
       }
       .data-table th:nth-child(3),
       .data-table td:nth-child(3) {
-        min-width: 160px;
+        min-width: 200px;
       }
       .data-table th:nth-child(4),
       .data-table td:nth-child(4) {
-        min-width: 100px;
+        min-width: 120px;
       }
       .data-table th:nth-child(5),
       .data-table td:nth-child(5) {
-        min-width: 180px;
+        min-width: 100px;
       }
       .data-table th:nth-child(6),
       .data-table td:nth-child(6) {
-        min-width: 140px;
-      }
-      .data-table th:nth-child(7),
-      .data-table td:nth-child(7) {
-        min-width: 120px;
-      }
-      .data-table th:nth-child(8),
-      .data-table td:nth-child(8) {
-        min-width: 100px;
-      }
-      .data-table th:nth-child(9),
-      .data-table td:nth-child(9) {
-        min-width: 100px;
+        min-width: 110px;
         text-align: right;
       }
       .table-checkbox {
@@ -1205,12 +1193,25 @@
         background: #f472b6;
       }
       .contact-info-table {
-        line-height: 1.4;
+        line-height: 1.35;
       }
       .contact-name-table {
-        font-size: 14px;
+        font-size: 13.5px;
         font-weight: 600;
         color: #181c32;
+      }
+      .contact-sub-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+        flex-wrap: wrap;
+      }
+      .contact-role-table {
+        font-size: 12px;
+        color: #7e8299;
+        font-weight: 500;
+        line-height: 1.2;
       }
       .contact-primary-badge {
         display: inline-flex;
@@ -1220,9 +1221,8 @@
         color: #47be7d;
         font-size: 10px;
         font-weight: 600;
-        padding: 2px 8px;
+        padding: 1.5px 7px;
         border-radius: 50px;
-        margin-top: 2px;
       }
       .contact-primary-badge i {
         font-size: 8px;
@@ -1238,45 +1238,53 @@
         padding: 4px 10px;
         border-radius: 6px;
       }
+      .contact-email-phone {
+        line-height: 1.35;
+      }
       .email-cell {
         color: #3f4254;
         font-size: 13px;
+        font-weight: 500;
       }
       .email-cell:hover {
         color: #009ef7;
         cursor: pointer;
+        text-decoration: underline;
       }
       .phone-cell {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        font-size: 13px;
-        color: #3f4254;
-        line-height: 1.5;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #7e8299;
+        margin-top: 3px;
       }
       .phone-flag {
-        width: 20px;
-        height: 14px;
+        width: 18px;
+        height: 12px;
         border-radius: 2px;
         overflow: hidden;
         flex-shrink: 0;
-        margin-top: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
       }
       .phone-flag svg {
         width: 100%;
         height: 100%;
+        display: block;
       }
       .phone-number {
-        display: flex;
-        flex-direction: column;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
       .phone-prefix {
         font-size: 12px;
         color: #7e8299;
+        font-weight: 500;
       }
       .phone-digits {
-        font-size: 13px;
-        color: #3f4254;
+        font-size: 12px;
+        color: #5e6278;
         font-weight: 500;
       }
       .status-badge-table {
@@ -2166,12 +2174,9 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th><input type="checkbox" class="table-checkbox" /></th>
                       <th>Contact <i class="fas fa-sort"></i></th>
-                      <th>Designation <i class="fas fa-sort"></i></th>
                       <th>Department <i class="fas fa-sort"></i></th>
                       <th>Email <i class="fas fa-sort"></i></th>
-                      <th>Phone <i class="fas fa-sort"></i></th>
                       <th>Last Contacted <i class="fas fa-sort"></i></th>
                       <th>Status <i class="fas fa-sort"></i></th>
                       <th>Actions</th>
@@ -2179,45 +2184,48 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td><input type="checkbox" class="table-checkbox" /></td>
                       <td>
                         <div class="contact-cell">
                           <div class="contact-avatar-table mg">MG</div>
                           <div class="contact-info-table">
                             <div class="contact-name-table">Mahima Gupta</div>
-                            <div class="contact-primary-badge">
-                              <i class="fas fa-check"></i>Primary
+                            <div class="contact-sub-row">
+                              <span class="contact-role-table">Director - Talent Acquisition</span>
+                              <span class="contact-primary-badge">
+                                <i class="fas fa-check"></i>Primary
+                              </span>
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td>Director - Talent Acquisition</td>
                       <td><span class="dept-badge">HR</span></td>
-                      <td class="email-cell">mahima@hirebee.co.in</td>
                       <td>
-                        <div class="phone-cell">
-                          <div class="phone-flag">
-                            <svg viewBox="0 0 36 24">
-                              <rect width="36" height="8" fill="#FF9932" />
-                              <rect y="8" width="36" height="8" fill="#fff" />
-                              <rect
-                                y="16"
-                                width="36"
-                                height="8"
-                                fill="#138808"
-                              />
-                              <circle
-                                cx="18"
-                                cy="12"
-                                r="3"
-                                fill="#000080"
-                                opacity="0.3"
-                              />
-                            </svg>
-                          </div>
-                          <div class="phone-number">
-                            <span class="phone-prefix">+91</span>
-                            <span class="phone-digits">9818546268</span>
+                        <div class="contact-email-phone">
+                          <div class="email-cell" onclick="openPopup('email', 'mahima@hirebee.co.in', 'Mahima Gupta')">mahima@hirebee.co.in</div>
+                          <div class="phone-cell" onclick="openPopup('phone', '+91 9818546268', 'Mahima Gupta')" style="cursor: pointer;" title="Call +91 9818546268">
+                            <div class="phone-flag">
+                              <svg viewBox="0 0 36 24">
+                                <rect width="36" height="8" fill="#FF9932" />
+                                <rect y="8" width="36" height="8" fill="#fff" />
+                                <rect
+                                  y="16"
+                                  width="36"
+                                  height="8"
+                                  fill="#138808"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="12"
+                                  r="3"
+                                  fill="#000080"
+                                  opacity="0.3"
+                                />
+                              </svg>
+                            </div>
+                            <div class="phone-number">
+                              <span class="phone-prefix">+91</span>
+                              <span class="phone-digits">9818546268</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -2274,42 +2282,45 @@
                       </td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" class="table-checkbox" /></td>
                       <td>
                         <div class="contact-cell">
                           <div class="contact-avatar-table rk">RK</div>
                           <div class="contact-info-table">
                             <div class="contact-name-table">Rohit Kumar</div>
+                            <div class="contact-sub-row">
+                              <span class="contact-role-table">Senior Manager - Recruitment</span>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td>Senior Manager - Recruitment</td>
                       <td><span class="dept-badge">Recruitment</span></td>
-                      <td class="email-cell">rohit.kumar@hirebee.co.in</td>
                       <td>
-                        <div class="phone-cell">
-                          <div class="phone-flag">
-                            <svg viewBox="0 0 36 24">
-                              <rect width="36" height="8" fill="#FF9932" />
-                              <rect y="8" width="36" height="8" fill="#fff" />
-                              <rect
-                                y="16"
-                                width="36"
-                                height="8"
-                                fill="#138808"
-                              />
-                              <circle
-                                cx="18"
-                                cy="12"
-                                r="3"
-                                fill="#000080"
-                                opacity="0.3"
-                              />
-                            </svg>
-                          </div>
-                          <div class="phone-number">
-                            <span class="phone-prefix">+91</span>
-                            <span class="phone-digits">9876543210</span>
+                        <div class="contact-email-phone">
+                          <div class="email-cell" onclick="openPopup('email', 'rohit.kumar@hirebee.co.in', 'Rohit Kumar')">rohit.kumar@hirebee.co.in</div>
+                          <div class="phone-cell" onclick="openPopup('phone', '+91 9876543210', 'Rohit Kumar')" style="cursor: pointer;" title="Call +91 9876543210">
+                            <div class="phone-flag">
+                              <svg viewBox="0 0 36 24">
+                                <rect width="36" height="8" fill="#FF9932" />
+                                <rect y="8" width="36" height="8" fill="#fff" />
+                                <rect
+                                  y="16"
+                                  width="36"
+                                  height="8"
+                                  fill="#138808"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="12"
+                                  r="3"
+                                  fill="#000080"
+                                  opacity="0.3"
+                                />
+                              </svg>
+                            </div>
+                            <div class="phone-number">
+                              <span class="phone-prefix">+91</span>
+                              <span class="phone-digits">9876543210</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -2366,42 +2377,45 @@
                       </td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" class="table-checkbox" /></td>
                       <td>
                         <div class="contact-cell">
                           <div class="contact-avatar-table ps">PS</div>
                           <div class="contact-info-table">
                             <div class="contact-name-table">Priya Sharma</div>
+                            <div class="contact-sub-row">
+                              <span class="contact-role-table">Recruitment Manager</span>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td>Recruitment Manager</td>
                       <td><span class="dept-badge">Recruitment</span></td>
-                      <td class="email-cell">priya.sharma@hirebee.co.in</td>
                       <td>
-                        <div class="phone-cell">
-                          <div class="phone-flag">
-                            <svg viewBox="0 0 36 24">
-                              <rect width="36" height="8" fill="#FF9932" />
-                              <rect y="8" width="36" height="8" fill="#fff" />
-                              <rect
-                                y="16"
-                                width="36"
-                                height="8"
-                                fill="#138808"
-                              />
-                              <circle
-                                cx="18"
-                                cy="12"
-                                r="3"
-                                fill="#000080"
-                                opacity="0.3"
-                              />
-                            </svg>
-                          </div>
-                          <div class="phone-number">
-                            <span class="phone-prefix">+91</span>
-                            <span class="phone-digits">9712345678</span>
+                        <div class="contact-email-phone">
+                          <div class="email-cell" onclick="openPopup('email', 'priya.sharma@hirebee.co.in', 'Priya Sharma')">priya.sharma@hirebee.co.in</div>
+                          <div class="phone-cell" onclick="openPopup('phone', '+91 9712345678', 'Priya Sharma')" style="cursor: pointer;" title="Call +91 9712345678">
+                            <div class="phone-flag">
+                              <svg viewBox="0 0 36 24">
+                                <rect width="36" height="8" fill="#FF9932" />
+                                <rect y="8" width="36" height="8" fill="#fff" />
+                                <rect
+                                  y="16"
+                                  width="36"
+                                  height="8"
+                                  fill="#138808"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="12"
+                                  r="3"
+                                  fill="#000080"
+                                  opacity="0.3"
+                                />
+                              </svg>
+                            </div>
+                            <div class="phone-number">
+                              <span class="phone-prefix">+91</span>
+                              <span class="phone-digits">9712345678</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -2458,42 +2472,45 @@
                       </td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" class="table-checkbox" /></td>
                       <td>
                         <div class="contact-cell">
                           <div class="contact-avatar-table as">AS</div>
                           <div class="contact-info-table">
                             <div class="contact-name-table">Amit Singh</div>
+                            <div class="contact-sub-row">
+                              <span class="contact-role-table">Senior Recruiter</span>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td>Senior Recruiter</td>
                       <td><span class="dept-badge">Recruitment</span></td>
-                      <td class="email-cell">amit.singh@hirebee.co.in</td>
                       <td>
-                        <div class="phone-cell">
-                          <div class="phone-flag">
-                            <svg viewBox="0 0 36 24">
-                              <rect width="36" height="8" fill="#FF9932" />
-                              <rect y="8" width="36" height="8" fill="#fff" />
-                              <rect
-                                y="16"
-                                width="36"
-                                height="8"
-                                fill="#138808"
-                              />
-                              <circle
-                                cx="18"
-                                cy="12"
-                                r="3"
-                                fill="#000080"
-                                opacity="0.3"
-                              />
-                            </svg>
-                          </div>
-                          <div class="phone-number">
-                            <span class="phone-prefix">+91</span>
-                            <span class="phone-digits">9898989898</span>
+                        <div class="contact-email-phone">
+                          <div class="email-cell" onclick="openPopup('email', 'amit.singh@hirebee.co.in', 'Amit Singh')">amit.singh@hirebee.co.in</div>
+                          <div class="phone-cell" onclick="openPopup('phone', '+91 9898989898', 'Amit Singh')" style="cursor: pointer;" title="Call +91 9898989898">
+                            <div class="phone-flag">
+                              <svg viewBox="0 0 36 24">
+                                <rect width="36" height="8" fill="#FF9932" />
+                                <rect y="8" width="36" height="8" fill="#fff" />
+                                <rect
+                                  y="16"
+                                  width="36"
+                                  height="8"
+                                  fill="#138808"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="12"
+                                  r="3"
+                                  fill="#000080"
+                                  opacity="0.3"
+                                />
+                              </svg>
+                            </div>
+                            <div class="phone-number">
+                              <span class="phone-prefix">+91</span>
+                              <span class="phone-digits">9898989898</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -2546,42 +2563,45 @@
                       </td>
                     </tr>
                     <tr>
-                      <td><input type="checkbox" class="table-checkbox" /></td>
                       <td>
                         <div class="contact-cell">
                           <div class="contact-avatar-table nk">NK</div>
                           <div class="contact-info-table">
                             <div class="contact-name-table">Neha Kapoor</div>
+                            <div class="contact-sub-row">
+                              <span class="contact-role-table">Recruiter</span>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td>Recruiter</td>
                       <td><span class="dept-badge">Recruitment</span></td>
-                      <td class="email-cell">neha.kapoor@hirebee.co.in</td>
                       <td>
-                        <div class="phone-cell">
-                          <div class="phone-flag">
-                            <svg viewBox="0 0 36 24">
-                              <rect width="36" height="8" fill="#FF9932" />
-                              <rect y="8" width="36" height="8" fill="#fff" />
-                              <rect
-                                y="16"
-                                width="36"
-                                height="8"
-                                fill="#138808"
-                              />
-                              <circle
-                                cx="18"
-                                cy="12"
-                                r="3"
-                                fill="#000080"
-                                opacity="0.3"
-                              />
-                            </svg>
-                          </div>
-                          <div class="phone-number">
-                            <span class="phone-prefix">+91</span>
-                            <span class="phone-digits">9999999999</span>
+                        <div class="contact-email-phone">
+                          <div class="email-cell" onclick="openPopup('email', 'neha.kapoor@hirebee.co.in', 'Neha Kapoor')">neha.kapoor@hirebee.co.in</div>
+                          <div class="phone-cell" onclick="openPopup('phone', '+91 9999999999', 'Neha Kapoor')" style="cursor: pointer;" title="Call +91 9999999999">
+                            <div class="phone-flag">
+                              <svg viewBox="0 0 36 24">
+                                <rect width="36" height="8" fill="#FF9932" />
+                                <rect y="8" width="36" height="8" fill="#fff" />
+                                <rect
+                                  y="16"
+                                  width="36"
+                                  height="8"
+                                  fill="#138808"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="12"
+                                  r="3"
+                                  fill="#000080"
+                                  opacity="0.3"
+                                />
+                              </svg>
+                            </div>
+                            <div class="phone-number">
+                              <span class="phone-prefix">+91</span>
+                              <span class="phone-digits">9999999999</span>
+                            </div>
                           </div>
                         </div>
                       </td>

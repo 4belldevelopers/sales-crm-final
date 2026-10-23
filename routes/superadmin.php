@@ -220,6 +220,9 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('jobs/joblists', [SuperAdminCompanyController::class, 'all_jobs_data'])->name('company.all_jobs_data');
 
         Route::get('jobs-joblist-ajax', [SuperAdminCompanyController::class, 'all_jobs_data_ajax'])->name('company.all_jobs_data_ajax');
+        Route::get('jobs/editJobStatus/{id?}', [SuperAdminCompanyController::class, 'editJobStatus'])->name('company.jobs.editJobStatus');
+        Route::post('jobs/newUpdateJobstatus', [SuperAdminCompanyController::class, 'newUpdateJobstatus'])->name('company.jobs.newUpdateJobstatus');
+        Route::get('jobs/job-viewmore/{id?}', [SuperAdminCompanyController::class, 'jobViewMore'])->name('company.jobs.job_viewmore');
 
         Route::get('candidate-lists', [SuperAdminCompanyController::class, 'canndidateList'])->name('company.canndidateList');
 

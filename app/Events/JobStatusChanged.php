@@ -36,6 +36,7 @@ class JobStatusChanged implements ShouldBroadcast
         return [
             new PrivateChannel("company.{$this->companyId}"),
             new Channel("career.{$this->companyId}"),
+            new Channel('superadmin-jobs'),
         ];
     }
 
