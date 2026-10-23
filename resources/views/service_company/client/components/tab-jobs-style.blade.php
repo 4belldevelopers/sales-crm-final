@@ -6,6 +6,9 @@
    ========================================================================== */
 
 /* Universal Box Sizing & Font Stack */
+.cd-jobs-wrapper, .cd-jobs-wrapper *,
+.cd-jobs-header-card, .cd-jobs-header-card *,
+.cd-jobs-tabs-card, .cd-jobs-tabs-card *,
 .jobx, .jobx *,
 .table-card, .table-card *,
 .table-header, .table-header *,
@@ -15,52 +18,259 @@
     box-sizing: border-box !important;
 }
 
-.jobx {
+.cd-jobs-wrapper {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
 }
 
-/* 5-Option Status Filter Group (All Jobs, Hiring, On Hold, Closed, Inactive) */
-.cl-jobs-filter-group {
+/* ==========================================================================
+   1. Top Header Card (Card-Based Design with Search Bar at Right Corner)
+   ========================================================================== */
+.cd-jobs-header-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.cd-jobs-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.cd-jobs-header-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-jobs-header-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.2px !important;
+}
+
+.cd-jobs-header-sub {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    line-height: 1.2 !important;
+}
+
+.cd-jobs-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+/* Search Sub-Card inside Top Header Card */
+.cd-jobs-search-subcard {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
+    width: 280px !important;
+    max-width: 100% !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.cd-jobs-search-subcard:focus-within {
+    background: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.cd-jobs-search-subcard i.fa-search {
+    color: #94a3b8 !important;
+    font-size: 12.5px !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-jobs-search-subcard input {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    padding: 0 !important;
+    line-height: 36px !important;
+    font-family: inherit !important;
+}
+
+.cd-jobs-search-subcard input::placeholder {
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+}
+
+.cd-jobs-search-clear {
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.cd-jobs-search-clear:hover {
+    color: #475569 !important;
+}
+
+.cd-jobs-add-btn {
+    height: 36px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+}
+
+/* ==========================================================================
+   2. Sub-Tabs in Card-Based Design with White Background
+   ========================================================================== */
+.cd-jobs-tabs-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.cd-jobs-tabs-group {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    margin-bottom: 14px !important;
     flex-wrap: wrap !important;
+    margin: 0 !important;
+    padding: 0 !important;
     width: 100% !important;
 }
 
+/* Individual Card-Based Sub-Tab Button */
+.cd-jobs-tab-btn,
 .cl-jobs-filter-group .btn {
     font-size: 11.5px !important;
     font-weight: 600 !important;
-    padding: 5px 12px !important;
-    border-radius: 6px !important;
-    background: #f5f8fa !important;
-    color: #5e6278 !important;
-    border: 1px solid #e4e6ef !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
     transition: all 0.15s ease !important;
     display: inline-flex !important;
     align-items: center !important;
+    gap: 7px !important;
     cursor: pointer !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
     white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
 }
 
+.cd-jobs-tab-btn:hover,
 .cl-jobs-filter-group .btn:hover {
-    background: #eef3f7 !important;
-    color: #181c32 !important;
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
 }
 
+/* Active Card-Based Tab: Highlighted */
+.cd-jobs-tab-btn.active,
 .cl-jobs-filter-group .btn.active {
     background: #009ef7 !important;
     color: #ffffff !important;
     border-color: #009ef7 !important;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
 }
 
+/* Dynamic Count Badges Inside Sub-Tabs */
+.cd-jobs-tab-badge,
+.cl-jobs-filter-group .btn .badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 20px !important;
+    height: 18px !important;
+    padding: 0 6px !important;
+    border-radius: 10px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+}
+
+.cd-jobs-tab-btn.active .cd-jobs-tab-badge,
 .cl-jobs-filter-group .btn.active .badge {
-    background: rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.28) !important;
     color: #ffffff !important;
+}
+
+/* Status-specific subtle badge colors when NOT active */
+.cd-jobs-tab-btn:not(.active) .cd-jobs-tab-badge.badge-hiring,
+.cl-jobs-filter-group .btn:not(.active) .badge.badge-light-success {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+}
+.cd-jobs-tab-btn:not(.active) .cd-jobs-tab-badge.badge-hold,
+.cl-jobs-filter-group .btn:not(.active) .badge.badge-light-warning {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+}
+.cd-jobs-tab-btn:not(.active) .cd-jobs-tab-badge.badge-closed,
+.cl-jobs-filter-group .btn:not(.active) .badge.badge-light-danger {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+}
+.cd-jobs-tab-btn:not(.active) .cd-jobs-tab-badge.badge-inactive,
+.cl-jobs-filter-group .btn:not(.active) .badge.badge-light-secondary {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+}
+
+.jobx {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
 }
 
 /* Master Table Card */

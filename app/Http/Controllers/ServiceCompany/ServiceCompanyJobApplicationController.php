@@ -1509,7 +1509,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
         $client_id = (int) $request->clientid;
-        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+        $size = max(10, min((int) $request->input('size', 10), 100)); // Minimum 10 rows default
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
@@ -1530,6 +1530,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Authoritative Tenancy Scoping (Pure Normalized Envelope + Migration Guard)
         $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'internal');
+
+        $search = trim((string) $request->input('search', $request->input('q', '')));
+        if ($search !== '') {
+            $query = [
+                'bool' => [
+                    'must' => [
+                        $query,
+                        [
+                            'multi_match' => [
+                                'query' => $search,
+                                'fields' => [
+                                    'full_name^3',
+                                    'job_title^2',
+                                    'current_designation',
+                                    'interviewer_name',
+                                    'client_name',
+                                    'company_name',
+                                    'round_name',
+                                    'master_status_name',
+                                    'child_status_name',
+                                    'source',
+                                ],
+                                'type' => 'phrase_prefix',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         $sourceFields = [
             'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
@@ -1918,7 +1947,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $startTime = microtime(true);
         $client_id = (int) $request->clientid;
         $company_id = (int) auth()->user()->company_id;
-        $size = max(1, min((int) $request->input('size', 20), 100)); // Default 20 for client-first store
+        $size = max(10, min((int) $request->input('size', 10), 100)); // Minimum 10 rows default
 
         $cursorParam = $request->input('cursor');
         $searchAfter = null;
@@ -1939,6 +1968,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Authoritative Tenancy Scoping for Direct Client
         $query = \App\Services\Interview\InterviewTenantScope::forClient($company_id, $client_id, 'direct');
+
+        $search = trim((string) $request->input('search', $request->input('q', '')));
+        if ($search !== '') {
+            $query = [
+                'bool' => [
+                    'must' => [
+                        $query,
+                        [
+                            'multi_match' => [
+                                'query' => $search,
+                                'fields' => [
+                                    'full_name^3',
+                                    'job_title^2',
+                                    'current_designation',
+                                    'interviewer_name',
+                                    'client_name',
+                                    'company_name',
+                                    'round_name',
+                                    'master_status_name',
+                                    'child_status_name',
+                                    'source',
+                                ],
+                                'type' => 'phrase_prefix',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
 
         $sourceFields = [
             'id', 'full_name', 'current_designation', 'candidate_id', 'condidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',

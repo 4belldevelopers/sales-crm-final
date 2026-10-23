@@ -36,6 +36,117 @@ use Carbon\Carbon;
     .cit-star-empty { color: #E4E6EF; font-size: 11px; }
 
     /* ===== Scoped Interview Tracker: Card + Sub-Card Proportional Layout ===== */
+    .it-main-card {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* 1. Top Card Header Toolbar (Heading in Card + Search Bar) */
+    .it-toolbar-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 18px !important;
+        margin-bottom: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        flex-wrap: wrap !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .it-toolbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+    }
+    .it-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px !important;
+        margin: 0 !important;
+    }
+    .it-badge-count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1.5px 8px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 999px !important;
+    }
+    .it-subtitle {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        margin-top: 2px !important;
+    }
+    .it-toolbar-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .it-search-subcard {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0 12px !important;
+        height: 36px !important;
+        min-width: 260px !important;
+        max-width: 380px !important;
+        width: 100% !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .it-search-subcard:focus-within {
+        background: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    }
+    .it-search-subcard i {
+        color: #94a3b8 !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+    }
+    .it-search-subcard input {
+        border: none !important;
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-size: 12px !important;
+        font-family: inherit !important;
+        color: #0f172a !important;
+        width: 100% !important;
+        padding: 0 !important;
+        line-height: 36px !important;
+    }
+    .it-search-subcard input::placeholder {
+        color: #94a3b8 !important;
+        font-size: 11.5px !important;
+    }
+    .it-search-clear {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        cursor: pointer !important;
+        padding: 2px 4px !important;
+        font-size: 11px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .it-search-clear:hover {
+        color: #ef4444 !important;
+    }
+
     .it-card-container {
         width: 100% !important;
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -382,6 +493,88 @@ use Carbon\Carbon;
     .it-error-card {
         border-color: #fca5a5 !important;
         color: #dc2626 !important;
+    }
+
+    /* 4. Enterprise Pagination Card / Footer (Minimum 10 rows) */
+    .it-pagination-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        margin-top: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        flex-wrap: wrap !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    }
+    .it-pagi-info {
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+    }
+    .it-pagi-info strong {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    .it-pagi-controls {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .it-pagi-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        height: 32px !important;
+        padding: 0 12px !important;
+        border-radius: 6px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .it-pagi-btn:hover:not(.disabled) {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    .it-pagi-btn.disabled {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        background: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #94a3b8 !important;
+    }
+    .it-pagi-page-indicator {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 10px !important;
+        height: 32px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+    }
+    .it-pagi-size-select {
+        height: 32px !important;
+        padding: 0 8px 0 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        background: #ffffff !important;
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        color: #334155 !important;
+        outline: none !important;
+        cursor: pointer !important;
     }
 
     @media (max-width: 1280px) {
@@ -2838,12 +3031,31 @@ use Carbon\Carbon;
 
                     <!--begin::interview_tracker Candidate List-->
                     <div class="tab-pane" id="interview_tracker" role="tabpanel">
-                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Interview Tracker</div><div class="cd-tabcard-sub">Interviews scheduled with this client's candidates.</div></div><div class="cd-tabwrap">
+                        <div class="it-main-card">
+                            <!-- 1. Top Card Header Toolbar (Heading in Card + Search Bar) -->
+                            <div class="it-toolbar-card">
+                                <div class="it-toolbar-left">
+                                    <div class="it-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h4 class="it-title">Interview Tracker</h4>
+                                            <span class="it-badge-count" id="itTotalCountBadgeInternal">0</span>
+                                        </div>
+                                        <div class="it-subtitle">Interviews scheduled with this client's candidates.</div>
+                                    </div>
+                                </div>
+                                <div class="it-toolbar-right">
+                                    <div class="it-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="itSearchInputInternal" placeholder="Search candidate, job, interviewer, stage..." autocomplete="off">
+                                        <button type="button" class="it-search-clear" id="itSearchClearInternal" style="display: none;" title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="card-body px-0 py-7">
-                            <!--begin::Card + Sub-Card Interview Container-->
+                            <!-- 2. Proportional Column Header Strip & Cards Container -->
                             <div class="it-card-container">
-                                <!-- Proportional Header Strip -->
                                 <div class="it-card-header">
                                     <div class="it-col-th it-th-cand">Candidate</div>
                                     <div class="it-col-th it-th-job">Job Requisitions</div>
@@ -2858,13 +3070,11 @@ use Carbon\Carbon;
                                 <div id="candidatetListinterviewtracker" class="it-cards-list" data-role="interview-list">
                                 </div>
                             </div>
-                            <!--end::Card + Sub-Card Interview Container-->
-                            <div id="paginationcandidateinterviewtracker" data-role="interview-pagination">
-                                <!-- Pagination links will be appended here -->
+
+                            <!-- 3. Enterprise Pagination Card (Minimum 10 rows) -->
+                            <div id="paginationcandidateinterviewtracker" class="it-pagination-card" data-role="interview-pagination">
                             </div>
                         </div>
-                        <!--end::Contacts Content-->
-                        </div></div>
                     </div>
                     <!--end::interview_tracker Candidate List-->
 
@@ -3411,7 +3621,33 @@ use Carbon\Carbon;
 
                     <!--begin::Requisitions Content-->
                     <div class="tab-pane" id="requisitions" role="tabpanel">
-                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Jobs</div><div class="cd-tabcard-sub">Roles open with this client.</div></div><div class="cd-tabwrap">
+                        <!-- 1. Top Header Card with Dynamic Search Bar at Right Corner -->
+                        <div class="cd-jobs-header-card">
+                            <div class="cd-jobs-header-left">
+                                <div class="cd-jobs-header-icon">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div>
+                                    <div class="cd-jobs-header-title">Jobs</div>
+                                    <div class="cd-jobs-header-sub">Roles open with this client.</div>
+                                </div>
+                            </div>
+                            <div class="cd-jobs-header-right">
+                                <div class="cd-jobs-search-subcard">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, ID..." autocomplete="off">
+                                    <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                @if (in_array('add_jobs', $userPermissions))
+                                    <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn">
+                                        <i class="fas fa-plus me-1"></i> Add Jobs
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="cd-tabwrap">
                         <!--begin::Sub tabs-->
                         {{-- <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0">
                         <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab" href="#all-requisitions">All Req.</a> 
@@ -3500,33 +3736,40 @@ use Carbon\Carbon;
                                 <div class="card-body px-0 py-4">
                                     @if (in_array('view_jobs', $userPermissions))
                                         <div class="jobx">
-                                            <!-- 5-Option Status Filter Group (4 Canonical States + All Jobs) -->
-                                            <div class="cl-jobs-filter-group mb-3">
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn active" 
-                                                        data-status="all">
-                                                    All Jobs <span class="badge badge-light-dark ms-1" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
-                                                </button>
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
-                                                        data-status="hiring">
-                                                    Hiring <span class="badge badge-light-success ms-1" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
-                                                </button>
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
-                                                        data-status="hold">
-                                                    On Hold <span class="badge badge-light-warning ms-1" id="filterCountHold">0</span>
-                                                </button>
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
-                                                        data-status="closed">
-                                                    Closed <span class="badge badge-light-danger ms-1" id="filterCountClosed">0</span>
-                                                </button>
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
-                                                        data-status="inactive">
-                                                    Inactive <span class="badge badge-light-secondary ms-1" id="filterCountInactive">0</span>
-                                                </button>
+                                            <!-- 2. Sub-Tabs in Card-Based Design with White Background -->
+                                            <div class="cd-jobs-tabs-card">
+                                                <div class="cd-jobs-tabs-group">
+                                                    <button type="button"
+                                                            class="cd-jobs-tab-btn js-job-filter-btn active"
+                                                            data-status="all">
+                                                        <span>All Jobs</span>
+                                                        <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="cd-jobs-tab-btn js-job-filter-btn"
+                                                            data-status="hiring">
+                                                        <span>Hiring</span>
+                                                        <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="cd-jobs-tab-btn js-job-filter-btn"
+                                                            data-status="hold">
+                                                        <span>On Hold</span>
+                                                        <span class="cd-jobs-tab-badge badge-hold" id="filterCountHold">0</span>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="cd-jobs-tab-btn js-job-filter-btn"
+                                                            data-status="closed">
+                                                        <span>Closed</span>
+                                                        <span class="cd-jobs-tab-badge badge-closed" id="filterCountClosed">0</span>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="cd-jobs-tab-btn js-job-filter-btn"
+                                                            data-status="inactive">
+                                                        <span>Inactive</span>
+                                                        <span class="cd-jobs-tab-badge badge-inactive" id="filterCountInactive">0</span>
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div class="table-card">
@@ -4679,11 +4922,23 @@ use Carbon\Carbon;
         });
 
         var jobSearchTimer = null;
-        $('#inputJobSearch').on('keyup', function() {
+        $(document).on('keyup', '#inputJobSearch', function() {
             clearTimeout(jobSearchTimer);
+            var searchVal = $(this).val();
+            if (searchVal.length > 0) {
+                $('#btnJobSearchClear').show();
+            } else {
+                $('#btnJobSearchClear').hide();
+            }
             jobSearchTimer = setTimeout(function() {
-                fetchJobsClient();
+                fetchJobsClient(1, searchVal, window.currentJobStatusInternal || 'all');
             }, 300);
+        });
+
+        $(document).on('click', '#btnJobSearchClear', function() {
+            $('#inputJobSearch').val('');
+            $(this).hide();
+            fetchJobsClient(1, '', window.currentJobStatusInternal || 'all');
         });
 
         var searchTimer = null;
@@ -5546,6 +5801,9 @@ use Carbon\Carbon;
         const activeRequests = new Map();
         let requestSequence = 0;
 
+        let currentSearch = '';
+        let pageSize = 10; // Minimum 10 rows default
+
         function getCompositeKey(clientId) {
             const companyId = window.authCompanyId || '{{ auth()->user()->company_id ?? 0 }}';
             const sessionId = window.userSessionId || 'default_session';
@@ -5577,6 +5835,52 @@ use Carbon\Carbon;
                     const direction = $btn.attr('data-direction');
                     navigatePagination(clientId, direction);
                 });
+
+            // 4. Page Size Selector Change
+            $(document)
+                .off('change.internalInterviewPageSize', '#itPageSizeSelectInternal')
+                .on('change.internalInterviewPageSize', '#itPageSizeSelectInternal', function() {
+                    pageSize = Math.max(10, parseInt($(this).val(), 10) || 10);
+                    const cacheKey = getCompositeKey(clientId);
+                    const entry = store.get(cacheKey);
+                    if (entry) {
+                        entry.cursorStack = [null];
+                        entry.cursorIndex = 0;
+                    }
+                    fetchInterviews(clientId, null, true, currentSearch);
+                });
+
+            // 5. Search Bar Input Listener with Debounce
+            let searchDebounceTimer = null;
+            $('#itSearchInputInternal').off('input').on('input', function() {
+                const val = $(this).val().trim();
+                $('#itSearchClearInternal').toggle(val.length > 0);
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    currentSearch = val;
+                    const cacheKey = getCompositeKey(clientId);
+                    const entry = store.get(cacheKey);
+                    if (entry) {
+                        entry.cursorStack = [null];
+                        entry.cursorIndex = 0;
+                    }
+                    fetchInterviews(clientId, null, true, currentSearch);
+                }, 250);
+            });
+
+            // 6. Search Bar Clear Button
+            $('#itSearchClearInternal').off('click').on('click', function() {
+                $('#itSearchInputInternal').val('');
+                $(this).hide();
+                currentSearch = '';
+                const cacheKey = getCompositeKey(clientId);
+                const entry = store.get(cacheKey);
+                if (entry) {
+                    entry.cursorStack = [null];
+                    entry.cursorIndex = 0;
+                }
+                fetchInterviews(clientId, null, true, '');
+            });
         }
 
         function subscribeChannel(clientId) {
@@ -5633,30 +5937,33 @@ use Carbon\Carbon;
             if (direction === 'prev' && entry.cursorIndex > 0) {
                 entry.cursorIndex--;
                 const prevCursor = entry.cursorStack[entry.cursorIndex];
-                fetchInterviews(clientId, prevCursor);
+                fetchInterviews(clientId, prevCursor, false, currentSearch);
             } else if (direction === 'next') {
-                const currentCursorKey = entry.cursorStack[entry.cursorIndex] || 'initial';
+                const currentCursorKey = (entry.cursorStack[entry.cursorIndex] || 'initial') + '_' + (currentSearch || '') + '_' + pageSize;
                 const currentPage = entry.pages.get(currentCursorKey);
                 if (currentPage && currentPage.next_cursor) {
                     entry.cursorIndex++;
                     if (entry.cursorIndex >= entry.cursorStack.length) {
                         entry.cursorStack.push(currentPage.next_cursor);
                     }
-                    fetchInterviews(clientId, currentPage.next_cursor);
+                    fetchInterviews(clientId, currentPage.next_cursor, false, currentSearch);
                 }
             }
         }
 
-        function fetchInterviews(clientId, cursor = null, forceRevalidate = false) {
+        function fetchInterviews(clientId, cursor = null, forceRevalidate = false, search = null) {
+            if (search !== null) {
+                currentSearch = search;
+            }
             const cacheKey = getCompositeKey(clientId);
-            const cursorKey = cursor || 'initial';
+            const cursorKey = (cursor || 'initial') + '_' + (currentSearch || '') + '_' + pageSize;
             let entry = store.get(cacheKey);
 
             // Zero-Latency User RAM Render
             if (entry && entry.state === 'READY' && !forceRevalidate && entry.pages.has(cursorKey)) {
                 const pageData = entry.pages.get(cursorKey);
                 renderTableRows(pageData.data);
-                renderPagination(entry.cursorIndex, entry.cursorStack.length, pageData.next_cursor);
+                renderPagination(entry.cursorIndex, entry.cursorStack.length, pageData.next_cursor, entry.total, pageData.data.length);
                 updateBadgeAndKPI(entry.total);
                 return;
             }
@@ -5695,8 +6002,9 @@ use Carbon\Carbon;
                 `);
             }
 
-            let url = `{{ url('service_company/client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=internal&size=20`;
+            let url = `{{ url('service_company/client-candidate-interview-tracker') }}?clientid=${clientId}&clienttype=internal&size=${pageSize}`;
             if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+            if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
 
             $.ajax({
                 url: url,
@@ -5718,7 +6026,7 @@ use Carbon\Carbon;
                         });
 
                         renderTableRows(res.data);
-                        renderPagination(entry.cursorIndex, entry.cursorStack.length, res.next_cursor);
+                        renderPagination(entry.cursorIndex, entry.cursorStack.length, res.next_cursor, res.total, res.data.length);
                         updateBadgeAndKPI(res.total);
                     } else if (res && res.html) {
                         $list.html(res.html);
@@ -5738,7 +6046,7 @@ use Carbon\Carbon;
                         </div>
                     `);
                     $('#btnRetryInternalInterviews').one('click', function() {
-                        fetchInterviews(clientId, cursor, true);
+                        fetchInterviews(clientId, cursor, true, currentSearch);
                     });
                 }
             });
@@ -5936,25 +6244,36 @@ use Carbon\Carbon;
             $list.html(html);
         }
 
-        function renderPagination(cursorIndex, stackLength, nextCursor) {
+        function renderPagination(cursorIndex, stackLength, nextCursor, total, currentCount) {
             const $pagi = $('#paginationcandidateinterviewtracker');
+            const totalItems = typeof total === 'number' ? total : 0;
+            const count = typeof currentCount === 'number' ? currentCount : 0;
             const hasPrev = cursorIndex > 0;
             const hasNext = Boolean(nextCursor);
 
-            if (!hasPrev && !hasNext) {
-                $pagi.empty();
-                return;
-            }
+            const fromItem = totalItems === 0 ? 0 : (cursorIndex * pageSize + 1);
+            const toItem = totalItems === 0 ? 0 : Math.min(totalItems, cursorIndex * pageSize + count);
 
             $pagi.html(`
-                <div class="d-flex align-items-center justify-content-between w-100 py-2">
-                  <button type="button" class="btn btn-sm btn-light ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
-                    <i class="fas fa-chevron-left me-1"></i> Previous
-                  </button>
-                  <span class="fs-8 text-muted">Page ${cursorIndex + 1}</span>
-                  <button type="button" class="btn btn-sm btn-light ${!hasNext ? 'disabled' : ''}" data-direction="next">
-                    Next <i class="fas fa-chevron-right ms-1"></i>
-                  </button>
+                <div class="it-pagi-info">
+                    Showing <strong>${fromItem} - ${toItem}</strong> of <strong>${totalItems}</strong> interviews
+                </div>
+                <div class="it-pagi-controls">
+                    <div class="d-flex align-items-center gap-2 me-2">
+                        <span class="text-muted" style="font-size:11px;">Rows:</span>
+                        <select class="it-pagi-size-select" id="itPageSizeSelectInternal">
+                            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+                            <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 / page</option>
+                            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
+                        </select>
+                    </div>
+                    <button type="button" class="it-pagi-btn ${!hasPrev ? 'disabled' : ''}" data-direction="prev">
+                        <i class="fas fa-chevron-left" style="font-size:10px;"></i> Previous
+                    </button>
+                    <span class="it-pagi-page-indicator">Page ${cursorIndex + 1}</span>
+                    <button type="button" class="it-pagi-btn ${!hasNext ? 'disabled' : ''}" data-direction="next">
+                        Next <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+                    </button>
                 </div>
             `);
         }
@@ -5966,6 +6285,7 @@ use Carbon\Carbon;
                     $badge.text(total).toggle(total > 0);
                 }
                 $('#kpiInterviewsScheduledCountShow').text(total);
+                $('#itTotalCountBadgeInternal').text(total);
             }
         }
 
@@ -5978,7 +6298,7 @@ use Carbon\Carbon;
     function fetchCandidatesInverViewTracker(page = 1, search = '') {
         const clientid = parseInt('{{ $client->id ?? 0 }}', 10);
         if (clientid) {
-            ClientInterviewStoreInternal.fetch(clientid, null);
+            ClientInterviewStoreInternal.fetch(clientid, null, false, search);
         }
     }
 
