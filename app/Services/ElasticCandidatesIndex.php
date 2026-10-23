@@ -96,6 +96,7 @@ class ElasticCandidatesIndex
                     'jobs.title',
                     'jobs.employment_type',
                     'jobs.company_id as client_comapny_id',
+                    'jobs.client_id as client_id',
                     'job_locations.location',
                     'clients.name as client_name',
                     'clients.self_company as client_self_company',
@@ -229,14 +230,14 @@ class ElasticCandidatesIndex
 
                     // Denormalized lookups for Phase 1 V2 Zero-N+1 rendering: Captain / Spokesperson / Agency Root
                     $spokperson_name = null;
-                    if (!empty($application->jobId)) {
+                    if (! empty($application->jobId)) {
                         $captain = DB::table('job_assign')
                             ->select('users.name')
                             ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
                             ->where('job_assign.job_id', $application->jobId)
                             ->where('job_assign.spok_user_id', '>', 0)
                             ->first();
-                        if ($captain && !empty($captain->name)) {
+                        if ($captain && ! empty($captain->name)) {
                             $spokperson_name = $captain->name;
                         }
                     }
@@ -246,7 +247,7 @@ class ElasticCandidatesIndex
 
                     // Agency Root / Parent User lookup for third-party shared candidates (e.g. Varsha Sharma)
                     $agency_root_name = null;
-                    $agencyCompId = !empty($application->thirdparty_company_id) ? $application->thirdparty_company_id : (!empty($application->other_company) ? $application->other_company : 0);
+                    $agencyCompId = ! empty($application->thirdparty_company_id) ? $application->thirdparty_company_id : (! empty($application->other_company) ? $application->other_company : 0);
                     if ($agencyCompId > 0 && $agencyCompId != $application->company_id) {
                         $agency_root_name = DB::table('users')
                             ->where('company_id', $agencyCompId)
@@ -256,19 +257,19 @@ class ElasticCandidatesIndex
                     }
 
                     $submitted_by_name = null;
-                    if (!empty($agency_root_name)) {
+                    if (! empty($agency_root_name)) {
                         $submitted_by_name = $agency_root_name;
-                    } elseif (!empty($application->submitted_by)) {
+                    } elseif (! empty($application->submitted_by)) {
                         $submitted_by_name = DB::table('users')->where('id', $application->submitted_by)->value('name');
                     }
-                    if (!$submitted_by_name) {
+                    if (! $submitted_by_name) {
                         $submitted_by_name = $application->submitted_by_name ?: $application->posted_by;
                     }
 
-                    $posted_by_final = !empty($agency_root_name) ? $agency_root_name : $application->posted_by;
+                    $posted_by_final = ! empty($agency_root_name) ? $agency_root_name : $application->posted_by;
 
                     $offer_released_at = null;
-                    if (!empty($application->id)) {
+                    if (! empty($application->id)) {
                         $offerAppId = DB::table('offer_job_applications')->where('application_id', $application->id)->value('id');
                         if ($offerAppId) {
                             $rawRelease = DB::table('offer_create_main_tds')
@@ -281,7 +282,7 @@ class ElasticCandidatesIndex
                             }
                         }
                     }
-                    if (!$offer_released_at && !empty($application->id) && !empty($application->jobId)) {
+                    if (! $offer_released_at && ! empty($application->id) && ! empty($application->jobId)) {
                         $offerTlRaw = DB::table('updatetimeline')
                             ->where('application_id', $application->id)
                             ->where('job_id', $application->jobId)
@@ -292,7 +293,7 @@ class ElasticCandidatesIndex
                             $offer_released_at = Carbon::parse($offerTlRaw)->toIso8601String();
                         }
                     }
-                    if (!$offer_released_at && !empty($application->id)) {
+                    if (! $offer_released_at && ! empty($application->id)) {
                         $offerAppUpdatedAt = DB::table('offer_job_applications')
                             ->where('application_id', $application->id)
                             ->value('updated_at');
@@ -300,15 +301,15 @@ class ElasticCandidatesIndex
                             $offer_released_at = Carbon::parse($offerAppUpdatedAt)->toIso8601String();
                         }
                     }
-                    if (!$offer_released_at && !empty($application->of_offer_release) && $application->of_offer_release !== '0000-00-00 00:00:00') {
+                    if (! $offer_released_at && ! empty($application->of_offer_release) && $application->of_offer_release !== '0000-00-00 00:00:00') {
                         $offer_released_at = Carbon::parse($application->of_offer_release)->toIso8601String();
-                    } elseif (!$offer_released_at && !empty($application->of_offer_approved) && $application->of_offer_approved !== '0000-00-00 00:00:00') {
+                    } elseif (! $offer_released_at && ! empty($application->of_offer_approved) && $application->of_offer_approved !== '0000-00-00 00:00:00') {
                         $offer_released_at = Carbon::parse($application->of_offer_approved)->toIso8601String();
                     }
 
                     $sourcing_date = null;
                     $evaluation_date = null;
-                    if (!empty($application->id) && !empty($application->jobId)) {
+                    if (! empty($application->id) && ! empty($application->jobId)) {
                         $tlRows = DB::table('updatetimeline')
                             ->where('application_id', $application->id)
                             ->where('job_id', $application->jobId)
@@ -316,12 +317,12 @@ class ElasticCandidatesIndex
                             ->get(['master_process_name', 'create_at']);
 
                         $sourcingRaw = optional($tlRows->firstWhere('master_process_name', 'Sourcing'))->create_at;
-                        if (!$sourcingRaw) {
+                        if (! $sourcingRaw) {
                             $sourcingRaw = optional($tlRows->last())->create_at ?: $application->created_at;
                         }
 
-                        $evalRaw = optional($tlRows->first(fn($r) => in_array($r->master_process_name, ['Evaluation', 'InReview', 'Screening', 'Interview Scheduled', 'Interview', 'Feedback', 'Assessment', 'Shortlisted'])))->create_at;
-                        if (!$evalRaw && !empty($application->id)) {
+                        $evalRaw = optional($tlRows->first(fn ($r) => in_array($r->master_process_name, ['Evaluation', 'InReview', 'Screening', 'Interview Scheduled', 'Interview', 'Feedback', 'Assessment', 'Shortlisted'])))->create_at;
+                        if (! $evalRaw && ! empty($application->id)) {
                             $evalSchedule = DB::table('interview_schedules')
                                 ->where('job_application_id', $application->id)
                                 ->first(['schedule_date', 'created_at']);
@@ -337,7 +338,7 @@ class ElasticCandidatesIndex
                             $evaluation_date = Carbon::parse($evalRaw)->toIso8601String();
                         }
                     } else {
-                        if (!empty($application->created_at)) {
+                        if (! empty($application->created_at)) {
                             $sourcing_date = Carbon::parse($application->created_at)->toIso8601String();
                         }
                     }
@@ -365,7 +366,8 @@ class ElasticCandidatesIndex
                             $npDate = $v;
                             try {
                                 $noticePeriodEpoch = Carbon::parse($v)->timestamp;
-                            } catch (\Exception $e) {}
+                            } catch (\Exception $e) {
+                            }
                         }
                     }
 
@@ -413,6 +415,7 @@ class ElasticCandidatesIndex
                         'title' => $application->title,
                         'employment_type' => $application->employment_type,
                         'client_comapny_id' => $application->client_comapny_id,
+                        'client_id' => (int) ($application->client_id ?? 0),
                         'location' => $application->location,
                         'client_name' => $application->client_name,
                         'client_self_company' => (int) ($application->client_self_company ?? 0),

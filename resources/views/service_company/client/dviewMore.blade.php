@@ -2041,16 +2041,21 @@
                                 <table class="table align-middle table-row-dashed fs-7 gy-4">
                                     <!--begin::Table head-->
                                     <thead>
-                                        <tr class="fw-bolder text-muted text-uppercase fs-8 gs-0">
-                                            <th class="min-w-200px">Name</th>
-                                            <th class="min-w-70px">Exp.</th>
-                                            <th class="min-w-100px">Salary</th>
-                                            <th class="min-w-90px">Notice</th>
-                                            <th class="min-w-110px">Location</th>
-                                            <th class="min-w-110px">Source</th>
-                                            <th class="min-w-80px">Added</th>
-                                            <th class="min-w-120px">Job</th>
-                                            <th class="min-w-90px text-end">Stage</th>
+                                        <tr class="fw-bolder text-muted fs-7 gs-0 border-bottom border-gray-200">
+                                            <th class="w-25px pe-2">
+                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="checkbox" id="cdCandCheckAll" value="1" />
+                                                </div>
+                                            </th>
+                                            <th class="min-w-220px">Candidate Name</th>
+                                            <th class="min-w-60px">Exp.</th>
+                                            <th class="min-w-130px">Salary</th>
+                                            <th class="min-w-120px">Notice</th>
+                                            <th class="min-w-120px">Location</th>
+                                            <th class="min-w-110px">Ownership</th>
+                                            <th class="min-w-130px">Jobs</th>
+                                            <th class="min-w-90px">Status</th>
+                                            <th class="min-w-90px">Stage</th>
                                         </tr>
                                     </thead>
                                     <!--end::Table head-->
@@ -4049,7 +4054,7 @@
                             ? 'Candidate search service temporarily unavailable. Please retry.'
                             : (xhr.responseJSON?.message || 'Failed to load candidates.');
 
-                    $('#candidatetList').html(`<tr><td colspan="9" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
+                    $('#candidatetList').html(`<tr><td colspan="10" class="text-center py-6 text-danger fw-bold">${msg}</td></tr>`);
                     $('#paginationcandidate').empty();
                 }
             });
@@ -4086,94 +4091,200 @@
         },
 
         buildRowHtml: function(row) {
-            var cid = row.id || row.wiseId || 0;
+            var cid = row.id || row.wiseId || row.candidate_id || 0;
+            var jobId = row.jobId || row.job_id || 0;
             var fullName = (row.full_name || ((row.first_name || '') + ' ' + (row.last_name || ''))).trim() || 'Candidate';
             var firstChar = (fullName.charAt(0) || 'C').toUpperCase();
             var designation = row.current_designation || '----';
+            var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
 
-            var code = firstChar.charCodeAt(0) % 5;
-            var badgeClasses = ['bg-light-primary text-primary', 'bg-light-success text-success', 'bg-light-warning text-warning', 'bg-light-danger text-danger', 'bg-light-info text-info'];
-            var avatarClass = badgeClasses[code];
+            // 1. Candidate Name Column (Pink/Red text + initial box + match badge)
+            var nameColHtml = `
+                <div class="d-flex align-items-center">
+                    <div class="symbol symbol-35px me-3">
+                        <span class="symbol-label bg-light-danger text-danger fs-4 fw-bolder rounded">${firstChar}</span>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <a href="javascript:void(0);" class="text-danger fw-bolder text-hover-primary fs-6 show-application-detail" data-row-id="${cid}" title="${fullName}">
+                            ${fullName}
+                        </a>
+                        <span class="text-danger fw-bold fs-7 text-truncate" style="max-width: 200px;" title="${designation}">
+                            ${designation}
+                        </span>
+                        <div class="mt-1">
+                            <span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">Match ${matchPct}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
 
-            var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + ' Y') : '----';
-            var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + ' Y rel.') : '';
+            // 2. Experience Column (Total exp bold black, rel exp gray)
+            var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + '. Y') : '----';
+            var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + '. Y') : '';
+            var expColHtml = `
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">${totalExp}</span>
+                    ${relExp ? `<span class="text-muted fw-bold fs-7">${relExp}</span>` : ''}
+                </div>
+            `;
 
-            var salCur = row.salary_currency || row.job_currency || '₹';
-            var ectc = (row.salary || row.ectc_yearly) ? (salCur + ' ' + (row.salary || row.ectc_yearly)) : '----';
-            var ctc = row.ctc_yearly ? (salCur + ' ' + row.ctc_yearly) : '';
+            // 3. Salary Column (Formatted currency: Current & Expected)
+            var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
+            if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
+            if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
+            if (currencySymbol === 'EUR' || currencySymbol === '1') currencySymbol = '€';
+            if (currencySymbol === 'GBP' || currencySymbol === '3') currencySymbol = '£';
+            if (currencySymbol === 'AED' || currencySymbol === '5') currencySymbol = 'AED ';
 
-            var notice = row.notice ? (row.notice + ' Days') : 'Immediate';
-            var currentCo = row.current_company || '----';
+            var formatMoney = function(val) {
+                if (!val && val !== 0) return null;
+                var num = Number(val);
+                if (isNaN(num) || num <= 0) return null;
+                return num.toLocaleString();
+            };
 
-            var location = row.city_name || '----';
-            if (row.country_name && row.country_name !== '----') {
-                location += ', ' + row.country_name.substring(0, 2).toUpperCase();
+            var ectcVal = formatMoney(row.ectc_yearly || row.ectc || row.salary);
+            var ctcVal = formatMoney(row.ctc_yearly || row.ctc);
+
+            var salaryColHtml = `
+                <div class="d-flex flex-column">
+                    ${ectcVal ? `<span class="text-dark fw-bolder fs-6">${currencySymbol}${ectcVal}<span class="fs-8 fw-normal text-muted">/Annual</span></span>` : '<span class="text-dark fw-bolder fs-6">----</span>'}
+                    ${ctcVal ? `<span class="text-muted fw-bold fs-7">${currencySymbol}${ctcVal}<span class="fs-8 fw-normal text-muted">/Annual</span></span>` : ''}
+                </div>
+            `;
+
+            // 4. Notice Column (SNP LWD in purple #9333ea, Immediate in green #16a34a, Days in orange #d97706)
+            var noticeText = 'Immediate';
+            var noticeColor = '#16a34a';
+            var rawNotice = String(row.np_id || row.notice || '').trim();
+
+            if (row.serving_notice_period_mode == 1 || (rawNotice && rawNotice.includes('-'))) {
+                var cleanDate = rawNotice.replace('SNP LWD', '').trim();
+                noticeText = 'SNP LWD ' + cleanDate;
+                noticeColor = '#9333ea';
+            } else if (rawNotice === 'Immediate' || rawNotice === '0' || rawNotice === '') {
+                noticeText = 'Immediate';
+                noticeColor = '#16a34a';
+            } else if (!isNaN(Number(rawNotice))) {
+                noticeText = rawNotice + ' Days';
+                noticeColor = '#d97706';
+            } else {
+                noticeText = rawNotice;
+                noticeColor = '#1e293b';
             }
 
-            var source = row.source || 'Direct';
-            var postedBy = row.posted_by_name || row.submitted_by_company_name || 'Recruiter';
-            var addedDate = row.created_at ? row.created_at.substring(0, 10) : '----';
+            var currCompany = row.current_company || '----';
+            var noticeColHtml = `
+                <div class="d-flex flex-column">
+                    <span class="fw-bolder fs-6" style="color: ${noticeColor};">${noticeText}</span>
+                    <span class="text-muted fw-bold fs-7 text-truncate" style="max-width: 120px;" title="${currCompany}">${currCompany}</span>
+                </div>
+            `;
 
-            var jobTitle = row.job_title || ('Job #' + (row.jobId || '----'));
-            var stageName = row.child_status_name || row.master_status_name || 'Sourced';
-            var stageCss = row.master_status_css || 'badge-light-primary';
+            // 5. Location Column (City, Country bold black; Qualification gray)
+            var city = row.city_name || row.city || '----';
+            var country = row.country_name || '';
+            var locLine1 = city;
+            if (country && country !== '----') {
+                locLine1 += ', ' + (country.length > 2 ? country.substring(0, 2).toUpperCase() : country.toUpperCase());
+            }
+            var qualification = row.qualification_name || '----';
+            var locColHtml = `
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width: 130px;" title="${locLine1}">${locLine1}</span>
+                    <span class="text-muted fw-bold fs-7 text-uppercase text-truncate" style="max-width: 130px;" title="${qualification}">${qualification}</span>
+                </div>
+            `;
 
-            return `
-                <tr data-candidate-id="${cid}">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="symbol symbol-circle symbol-35px me-3">
-                                <span class="symbol-label fw-bolder ${avatarClass}">${firstChar}</span>
-                            </div>
-                            <div class="d-flex flex-column">
-                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail" data-row-id="${cid}">
-                                    ${fullName}
-                                </a>
-                                <span class="text-muted fw-bold fs-8">${designation}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${totalExp}</span>
-                            <span class="text-muted fs-8">${relExp}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${ectc}</span>
-                            ${ctc ? `<span class="text-muted fs-8">${ctc}</span>` : ''}
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${notice}</span>
-                            <span class="text-muted fs-8 text-truncate" style="max-width: 100px;">${currentCo}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="text-dark fw-bold fs-7">${location}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7">${source}</span>
-                            <span class="text-muted fs-8">${postedBy}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="text-muted fw-bold fs-7">${addedDate}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column">
-                            <span class="text-dark fw-bold fs-7 text-truncate" style="max-width: 130px;" title="${jobTitle}">${jobTitle}</span>
-                            <span class="text-muted fs-8">#${row.jobId || ''}</span>
-                        </div>
-                    </td>
-                    <td class="text-end">
-                        <a href="javascript:void(0);" class="badge ${stageCss} fs-8 fw-bolder stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage">
+            // 6. Ownership Column (Recruiter bold black; Company/Agency gray)
+            var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Vibhanshu';
+            var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || '4bell tech';
+            var ownershipColHtml = `
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width: 120px;" title="${recruiter}">${recruiter}</span>
+                    <span class="text-muted fw-bold fs-7 text-truncate" style="max-width: 120px;" title="${submitterCompany}">${submitterCompany}</span>
+                </div>
+            `;
+
+            // 7. Jobs Column (Linked to this company only!)
+            var jobTitle = row.title || row.job_title || ('Job #' + jobId);
+            var companyName = row.cur_company_name || row.client_name || '4Bell Technology';
+            var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
+            var jobsColHtml = `
+                <div class="d-flex flex-column">
+                    <a href="${jobUrl}" target="_blank" class="text-dark fw-bolder text-hover-primary fs-6 text-truncate d-block" style="max-width: 130px;" title="${jobTitle}">
+                        ${jobTitle}
+                    </a>
+                    <span class="text-muted fw-bold fs-7 text-truncate d-block" style="max-width: 130px;" title="${companyName}">
+                        ${companyName}
+                    </span>
+                </div>
+            `;
+
+            // 8. Status Column (Job Status badge: e.g. Hiring in badge-light-success, ID - Internal)
+            var rawJobStatus = String(row.job_status || 'active').toLowerCase();
+            var statusPillText = 'Hiring';
+            var statusBadgeClass = 'badge-light-success text-success';
+            if (rawJobStatus === 'active' || rawJobStatus === 'hiring') {
+                statusPillText = 'Hiring';
+                statusBadgeClass = 'badge-light-success text-success';
+            } else if (rawJobStatus === 'hold') {
+                statusPillText = 'Hold';
+                statusBadgeClass = 'badge-light-warning text-warning';
+            } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
+                statusPillText = 'Closed';
+                statusBadgeClass = 'badge-light-danger text-danger';
+            }
+            var statusColHtml = `
+                <div class="d-flex flex-column">
+                    <div>
+                        <span class="badge ${statusBadgeClass} fs-7 fw-bolder px-2 py-1" style="background:#dcfce7;color:#16a34a;">${statusPillText}</span>
+                    </div>
+                    <span class="text-muted fw-bold fs-7 mt-1">${jobId ? jobId + ' - Direct' : 'Direct'}</span>
+                </div>
+            `;
+
+            // 9. Stage Column (Stage Pill: InReview in yellow pill, Private/childStatus gray)
+            var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
+            var stagePillStyle = 'background:#fef9c3;color:#854d0e;';
+            if (stageName.toLowerCase().includes('offer')) {
+                stagePillStyle = 'background:#cffafe;color:#0e7490;';
+            } else if (stageName.toLowerCase().includes('join')) {
+                stagePillStyle = 'background:#dcfce7;color:#16a34a;';
+            } else if (stageName.toLowerCase().includes('reject')) {
+                stagePillStyle = 'background:#fee2e2;color:#dc2626;';
+            } else if (stageName.toLowerCase().includes('source')) {
+                stagePillStyle = 'background:#e0e7ff;color:#4338ca;';
+            }
+
+            var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
+            var stageColHtml = `
+                <div class="d-flex flex-column">
+                    <div>
+                        <a href="javascript:void(0);" class="badge fs-7 fw-bolder px-3 py-1 stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stagePillStyle}border-radius:4px;display:inline-block;">
                             ${stageName}
                         </a>
+                    </div>
+                    <span class="text-muted fw-bold fs-7 mt-1">${subStageText}</span>
+                </div>
+            `;
+
+            return `
+                <tr data-candidate-id="${cid}" style="height: 72px;">
+                    <td class="w-25px">
+                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                            <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="${cid}" data-candidate-id="${cid}" data-jobId="${jobId}" data-wiseId="${cid}" />
+                        </div>
                     </td>
+                    <td>${nameColHtml}</td>
+                    <td>${expColHtml}</td>
+                    <td>${salaryColHtml}</td>
+                    <td>${noticeColHtml}</td>
+                    <td>${locColHtml}</td>
+                    <td>${ownershipColHtml}</td>
+                    <td>${jobsColHtml}</td>
+                    <td>${statusColHtml}</td>
+                    <td>${stageColHtml}</td>
                 </tr>
             `;
         },
@@ -4242,6 +4353,11 @@
                 self.filters.page = 1;
                 self.filters.cursor = null;
                 self.fetch(1);
+            });
+
+            $(document).off('change', '#cdCandCheckAll');
+            $(document).on('change', '#cdCandCheckAll', function() {
+                $('.chk_list_item').prop('checked', $(this).is(':checked'));
             });
 
             $(document).off('click', '#cdCandNextBtnDirect');

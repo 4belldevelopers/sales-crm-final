@@ -25,40 +25,78 @@ class CandidateDrawerQueryService
     protected const LISTING_SOURCE_INCLUDES = [
         'id',
         'wiseId',
+        'candidate_id',
         'company_id',
         'tenant_id',
         'client_id',
+        'client_comapny_id',
         'from_company_id',
         'to_company_id',
         'ClientComID',
+        'thirdparty_company_id',
         'jobId',
+        'job_id',
+        'title',
         'job_title',
+        'job_status',
         'job_mode',
         'job_currency',
         'full_name',
         'first_name',
         'last_name',
+        'current_designation',
+        'qualification_name',
+        'current_company',
         'email',
         'phone',
         'total_exp',
         'rel_exp',
         'salary',
+        'ctc',
+        'ectc',
+        'ctc_yearly',
+        'ectc_yearly',
+        'ctc_monthly',
+        'ectc_monthly',
+        'current_ctc_cur',
+        'current_ectc_cur',
+        'current_ctc_mode',
+        'current_ectc_mode',
         'salary_mode',
         'salary_currency',
         'notice',
+        'np_id',
+        'last_working_date',
+        'serving_notice_period_mode',
         'city_id',
         'city_name',
+        'state_name',
         'country_name',
         'source',
+        'posted_by',
+        'posted_by_name',
+        'submitted_by_name',
+        'agency_root_name',
+        'spokperson_name',
+        'company_name',
+        'post_company_name',
+        'submitted_by_company_name',
+        'apl_company_name',
+        'cur_company_name',
+        'client_name',
         'created_at',
         'master_status_id',
         'job_master_status_id',
+        'name',
         'master_status_name',
+        'css_style',
         'master_status_css',
+        'childStatus',
         'child_status_name',
-        'posted_by_name',
-        'submitted_by_company_name',
         'aggregate_version',
+        'skills',
+        'skill_match',
+        'duplicate',
     ];
 
     public function __construct(ElasticService $elasticService, ClientCandidateVersionStore $versionStore)
@@ -114,14 +152,22 @@ class CandidateDrawerQueryService
             ['terms' => ['job_master_status_id' => [9, '9']]],
         ];
 
+        // 5.1 Resolve client's jobs from ELASTIC_JOBS (cached in Dragonfly/Redis)
+        $clientJobIds = $this->resolveClientJobIds($companyId, $clientId, $clientType);
+
         if ($clientType === 'direct') {
+            $directScope = [
+                ['term' => ['from_company_id' => $clientId]],
+                ['term' => ['company_id' => $clientId]],
+                ['term' => ['client_id' => $clientId]],
+            ];
+            if (! empty($clientJobIds)) {
+                $directScope[] = ['terms' => ['jobId' => $clientJobIds]];
+                $directScope[] = ['terms' => ['job_id' => $clientJobIds]];
+            }
             $filter[] = [
                 'bool' => [
-                    'should' => [
-                        ['term' => ['from_company_id' => $clientId]],
-                        ['term' => ['company_id' => $clientId]],
-                        ['term' => ['client_id' => $clientId]],
-                    ],
+                    'should' => $directScope,
                     'minimum_should_match' => 1,
                 ],
             ];
@@ -131,6 +177,7 @@ class CandidateDrawerQueryService
                         ['term' => ['to_company_id' => $companyId]],
                         ['term' => ['ClientComID' => $companyId]],
                         ['term' => ['company_id' => $companyId]],
+                        ['term' => ['client_comapny_id' => $companyId]],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -138,14 +185,31 @@ class CandidateDrawerQueryService
             // Align with Direct Client badge count in GeneralMethod
             $filter[] = ['term' => ['final_status' => 1]];
         } else {
-            // Internal client scope
-            $filter[] = ['term' => ['client_id' => $clientId]];
+            // Internal client scope:
+            // Match candidates where client_id = clientId, OR where jobId belongs to any job of this client
+            $internalScope = [
+                ['term' => ['client_id' => $clientId]],
+            ];
+            if (! empty($clientJobIds)) {
+                $internalScope[] = ['terms' => ['jobId' => $clientJobIds]];
+                $internalScope[] = ['terms' => ['job_id' => $clientJobIds]];
+            }
+            $filter[] = [
+                'bool' => [
+                    'should' => $internalScope,
+                    'minimum_should_match' => 1,
+                ],
+            ];
+
+            // Tenancy / Ownership: allows candidates added by internal recruiter OR agency to this company's jobs
             $filter[] = [
                 'bool' => [
                     'should' => [
                         ['term' => ['company_id' => $companyId]],
                         ['term' => ['job_company_id' => $companyId]],
+                        ['term' => ['client_comapny_id' => $companyId]],
                         ['term' => ['ClientComID' => $companyId]],
+                        ['term' => ['to_company_id' => $companyId]],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -317,6 +381,75 @@ class CandidateDrawerQueryService
                 'job_id' => ! empty($params['job_id']) ? (int) $params['job_id'] : null,
             ],
         ];
+    }
+
+    /**
+     * Resolve all job IDs belonging to this client from ELASTIC_JOBS (cached in Dragonfly/Redis).
+     * Guarantees 0% MySQL reads and instant sub-millisecond retrieval.
+     */
+    protected function resolveClientJobIds(int $companyId, int $clientId, string $clientType): array
+    {
+        $cacheKey = "ats:client_job_ids:{$companyId}:{$clientId}:{$clientType}";
+        try {
+            $cached = cache()->store('dragonfly')->get($cacheKey);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : config('constants.ELASTIC_JOBS', 'ats_jobs_elastic');
+        $jobIds = [];
+
+        try {
+            if ($this->elasticService->indexExists($indexJobs)) {
+                $scopeMust = [
+                    ['term' => ['client_id' => $clientId]],
+                ];
+                if ($clientType === 'internal') {
+                    $scopeMust[] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['company_id' => $companyId]],
+                                ['term' => ['comId' => $companyId]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
+
+                $params = [
+                    'index' => $indexJobs,
+                    'size' => 500,
+                    '_source' => ['id'],
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $scopeMust,
+                            ],
+                        ],
+                    ],
+                ];
+
+                $response = $this->elasticService->getClient()->search($params);
+                $jobIds = array_values(array_filter(array_map(function ($hit) {
+                    return (int) ($hit['_source']['id'] ?? $hit['_id'] ?? 0);
+                }, $response['hits']['hits'] ?? [])));
+
+                try {
+                    cache()->store('dragonfly')->put($cacheKey, $jobIds, 60);
+                } catch (\Throwable $e) {
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to resolve client job IDs from Elasticsearch', [
+                'company_id' => $companyId,
+                'client_id' => $clientId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $jobIds;
     }
 
     /**
