@@ -113,7 +113,7 @@
             }
             $clientTag = 'Internal Client &bull; ' . $jobId;
 
-            // 6. Col 5: Team (Strictly Read-Only)
+            // 6. Col 5: Team (Strictly Read-Only — No matching badges)
             $team = $job->job_assign ?? [];
             $teamCount = count($team);
             $teamName = 'Team';
@@ -122,19 +122,36 @@
             }
             $teamMeta = $teamCount . ' ' . ($teamCount === 1 ? 'Member' : 'Members');
 
-            // 7. Col 6: Agency (Strictly Read-Only)
-            $agencies = $job->recommendation_relation ?? [];
+            // 7. Col 6: Agency (Strictly Read-Only — Based on actual hired relationships, No matching badges)
+            $agencies = is_array($job->recommendation_relation ?? null) ? $job->recommendation_relation : [];
+            $hiredAgencies = collect($agencies)->filter(function($rel) {
+                if (is_array($rel)) {
+                    return (isset($rel['final_status']) && (int)$rel['final_status'] === 1)
+                        || (isset($rel['from_status']) && (int)$rel['from_status'] === 1)
+                        || (!isset($rel['final_status']) && !isset($rel['from_status']));
+                } elseif (is_object($rel)) {
+                    return (isset($rel->final_status) && (int)$rel->final_status === 1)
+                        || (isset($rel->from_status) && (int)$rel->from_status === 1)
+                        || (!isset($rel->final_status) && !isset($rel->from_status));
+                }
+                return false;
+            });
+            $hiredAgencyCount = $hiredAgencies->pluck('to_company_id')->filter()->unique()->count();
+            if ($hiredAgencyCount === 0 && count($agencies) > 0) {
+                $hiredAgencyCount = count($agencies);
+            }
+
             $agencyName = 'Direct Partner';
-            $agencyMeta = 'Direct';
             if (!empty($agencies) && isset($agencies[0])) {
                 $agencyName = ucwords(strtolower($agencies[0]['partner_company_name'] ?? 'Partner Agency'));
-                $agencyMeta = 'Agency';
             }
-            $matchingCount = $cityCount > 0 ? $cityCount : 15;
+            $agencyText = $hiredAgencyCount > 0
+                ? ($hiredAgencyCount . ' ' . ($hiredAgencyCount === 1 ? 'Agency' : 'Agencies'))
+                : '—';
 
             // 8. Col 7: Pipeline Stages (Strictly Read-Only)
-            $jobStageCounts = isset($viewModel) && isset($viewModel->pipelineStageMap[$jobId]) 
-                ? $viewModel->pipelineStageMap[$jobId] 
+            $jobStageCounts = isset($viewModel) && isset($viewModel->pipelineStageMap[$jobId])
+                ? $viewModel->pipelineStageMap[$jobId]
                 : [];
 
             $totalApps = 0;
@@ -216,18 +233,24 @@
                 <div class="hm-client-tag">{!! $clientTag !!}</div>
             </div>
 
-            <!-- Col 5: Team (Read-Only) -->
+            <!-- Col 5: Team (Strictly Read-Only — No matching badges) -->
             <div class="col-action">
-                <div class="hm-name" title="{{ $teamName }}">{{ $teamName }}</div>
-                <div class="team-meta">{{ $teamMeta }}</div>
-                <div class="match-meta">{{ $matchingCount }} Matching</div>
+                @if ($teamCount > 0)
+                    <div class="hm-name" title="{{ $teamName }}">{{ $teamName }}</div>
+                    <div class="team-meta">{{ $teamMeta }}</div>
+                @else
+                    <div class="team-meta">—</div>
+                @endif
             </div>
 
-            <!-- Col 6: Agency (Read-Only) -->
+            <!-- Col 6: Agency (Strictly Read-Only — Actual hired relationships, No matching badges) -->
             <div class="col-action">
-                <div class="hm-name" title="{{ $agencyName }}">{{ $agencyName }}</div>
-                <div class="agency-meta">{{ $agencyMeta }}</div>
-                <div class="match-meta">{{ $matchingCount }} Matching</div>
+                @if ($hiredAgencyCount > 0)
+                    <div class="hm-name" title="{{ $agencyName }}">{{ $agencyName }}</div>
+                    <div class="agency-meta">{{ $agencyText }}</div>
+                @else
+                    <div class="agency-meta">—</div>
+                @endif
             </div>
 
             <!-- Col 7: Pipeline Stages (Read-Only) -->
