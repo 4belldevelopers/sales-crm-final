@@ -111,7 +111,7 @@
                 $hmName = ucwords(strtolower($contacts[0]['contact_person_name'] ?? 'Hiring Manager'));
                 $hmTitle = ucwords(strtolower($contacts[0]['contact_person_designation'] ?? 'Role'));
             }
-            $clientTag = 'Internal Client • ' . $jobId;
+            $clientTag = 'Internal Client &bull; ' . $jobId;
 
             // 6. Col 5: Team (Strictly Read-Only)
             $team = $job->job_assign ?? [];
@@ -213,7 +213,7 @@
             <div class="col-hm">
                 <div class="hm-name" title="{{ $hmName }}">{{ $hmName }}</div>
                 <div class="hm-title" title="{{ $hmTitle }}">{{ $hmTitle }}</div>
-                <div class="hm-client-tag">{{ $clientTag }}</div>
+                <div class="hm-client-tag">{!! $clientTag !!}</div>
             </div>
 
             <!-- Col 5: Team (Read-Only) -->

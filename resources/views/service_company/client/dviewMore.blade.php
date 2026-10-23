@@ -5677,10 +5677,6 @@
     $(document).ready(function() {
         ClientInterviewStoreDirect.init();
     });
-                }
-            }
-        });
-    }
 
     window.fetchJobsClientdirect = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
