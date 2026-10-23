@@ -20,7 +20,24 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `SuperAdminSubscriptionLoadTest`, `SuperAdminDashboardLoadTest` (100% green).
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
-<<<<<<< HEAD
+- *2026-10-23* — **Modern Enterprise Card + Sub-Card Design System Standard (100% CODIFIED & MANDATED ACROSS SYSTEM)**:
+  - **User Request & Requirements**:
+    - Formally document and establish the **Modern Card + Sub-Card Design System** (specifically the 3-tier architecture established for the Client Drawer Jobs tab with white-background toolbar card, dynamic right-corner search bar, and white-background sub-tabs card) as the mandatory UI/UX format for all AI coding models and UI/UX design systems across JERO.
+    - Any future module, drawer tab, or entity listing must and only use this format.
+  - **Architectural Implementation**:
+    - **Created Authoritative Standard**: [`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`](../docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md) detailing:
+      - **Tier 1 (Top Header Toolbar Card)**: Standalone pure white card (`background: #ffffff`, `border: 1px solid #e2e8f0`, `border-radius: 10px`, `box-shadow: 0 1px 3px rgba(15,23,42,0.04)`), left squircle icon box (`38×38px`, `#eff6ff`) with bold title (15px) & subtitle (11.5px), and right dynamic search sub-card (`.cd-*-search-subcard`) with debounced keyup (300ms) + interactive clear button (`✕`) + primary action button (`btn-primary`).
+      - **Tier 2 (Sub-Tabs Card)**: Standalone pure white container card (`#ffffff`, border `#e2e8f0`, radius 10px) with card buttons (`.cd-*-tab-btn`), dynamic semantic count pills, and single active primary blue highlight (`background: #009ef7 !important; color: #ffffff !important`). All inactive tabs remain neutral white.
+      - **Tier 3 (Primary Card Stream)**: High-density cards (`border: 1px solid #e2e8f0`, radius 10px) with 5 modular upper sub-cards (Details with company logo, Compensation & Location, Team without placeholder matching badges, Agency with hired count without placeholder matching badges, Pipeline with authoritative stage counters) and light bottom activity strip (`#f8fafc`).
+      - **15.6" Screen Fit**: Responsive CSS grid utilizing `minmax(0, ...fr)` with `overflow-x: hidden` guaranteeing 0% horizontal scroll on `1366×768` and `1920×1080` displays.
+      - Copy-paste ready HTML/Blade templates and JavaScript controller patterns.
+    - **Integrated into System Guidelines**:
+      - `docs/UI_UX_STANDARDS.md`: Added Section 13 codifying the Card + Sub-Card standard as mandatory for all future entity lists and drawers.
+      - `AGENTS.md`: Added Rule 20 to Non-negotiable Rules.
+      - `CLAUDE.md`: Added Directive 14 and Rule 16 mandating this format across all AI agents and engineers.
+      - `docs/AI_RULES.md`: Added Rule 19 under architectural fit and coding standards.
+  - **Verification**: `php -l`, Pint, and automated test suite (`ClientJobsCqrsReadTest`, `ClientAccessContextSecurityTest`) 100% green. 0 MySQL reads.
+
 - *2026-10-22* — **Super Admin Drawer Redesign — Company Details, Wallet & Billing (COMPLETED & VERIFIED)**:
   - **Objective**: Modernize drawers across Super Admin Company (`/super-admin/company`) and Subscription (`/super-admin/subscription/all`) pages using Service Company Consultancy (`service_company/consultancy` `dviewMore.blade.php`) as the primary design reference.
   - **Audit & Implementation Plan**: Formally documented in `docs/superadmin/SUPER_ADMIN_COMPANY_drawer-redesign-audit-implementation-plan.md`. Approved by user.
@@ -374,7 +391,7 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - `php -l` passed with 0 syntax errors across all modified files.
     - `pint` formatted with 0 style issues.
     - PHPUnit feature suite `SuperAdminSubscriptionLoadTest` passed 100% green (5 tests, 23 assertions).
-=======
+
 - *2026-10-22* — **Client Drawer UI/UX Redesign: Typography & Visual Hierarchy Optimization (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
     - Correct typography and visual hierarchy throughout the entire Client Drawer for both Internal Client (`show.blade.php`) and Direct Client (`dviewMore.blade.php`).
@@ -439,7 +456,6 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
     - In `resources/views/service_company/client/custom_client.blade.php` & `direct_client.blade.php`:
       - Synced column header sub-card label to "Date".
   - **Verification**: `php -l` and Pint test passed with 0 errors across all modified blade files and stylesheets.
->>>>>>> df9c7db01acb4eb552eac3a7e2fd0bd018786ab7
 
 - *2026-10-21* — **Service Company Clients Listing: Restore "Connected On" on Date Column (100% COMPLETED & VERIFIED)**:
   - **User Request & Requirements**:
