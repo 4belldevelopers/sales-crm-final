@@ -9995,11 +9995,19 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (data.status == 'success') {
                         resetPublishBtn($btn);
                         if (isEditPage) {
+                            try {
+                                localStorage.setItem('job_drawer_bust', Date.now());
+                                if (window.opener && window.opener.jobDrawerCache) {
+                                    window.opener.jobDrawerCache = {};
+                                }
+                            } catch (e) {}
                             showToast('Job updated successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         } else if (data.check_ready_url && data.job_id) {
+                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, __indexUrl);
                         } else {
+                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             showToast('Job saved successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         }

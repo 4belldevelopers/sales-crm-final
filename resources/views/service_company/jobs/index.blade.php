@@ -165,7 +165,9 @@
 }
 .loc-more-badge:hover,
 .loc-more-badge-wrap:hover .loc-more-badge,
-.loc-row:hover .loc-more-badge {
+.loc-row:hover .loc-more-badge,
+.loc-more-badge-wrap.is-clicked-active .loc-more-badge,
+.loc-row.is-clicked-active .loc-more-badge {
   background: #009ef7;
   color: #ffffff;
   border-color: #009ef7;
@@ -179,20 +181,23 @@
   background: #1e1e2d;
   color: #ffffff;
   border-radius: 6px;
-  padding: 7px 10px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
-  z-index: 9999;
+  padding: 8px 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  z-index: 99999;
   min-width: 140px;
-  max-width: 240px;
+  max-width: 250px;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
 }
 .loc-more-badge-wrap:hover .loc-popover-card,
-.loc-row:hover .loc-popover-card {
+.loc-row:hover .loc-popover-card,
+.loc-more-badge-wrap.is-clicked-active .loc-popover-card,
+.loc-row.is-clicked-active .loc-popover-card {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 .loc-popover-card::after {
   content: "";
@@ -204,35 +209,20 @@
   border-style: solid;
   border-color: #1e1e2d transparent transparent transparent;
 }
-.loc-popover-header {
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #009ef7;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding-bottom: 4px;
-  margin-bottom: 5px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.loc-popover-count {
-  background: rgba(0, 158, 247, 0.25);
-  color: #009ef7;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-}
 .loc-popover-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  max-height: 140px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  max-height: 180px;
   overflow-y: auto;
+  padding: 2px 0;
+}
+.loc-popover-body::-webkit-scrollbar {
+  width: 4px;
+}
+.loc-popover-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 .loc-popover-item {
   font-size: 11px;
@@ -240,24 +230,18 @@
   color: #f1f1f2;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.loc-popover-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 .loc-popover-item i {
-  font-size: 8.5px;
+  font-size: 9px;
   color: #009ef7;
   flex-shrink: 0;
-}
-.loc-popover-primary {
-  margin-top: 5px;
-  padding-top: 4px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.18);
-  font-size: 9px;
-  color: #a1a5b7;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
 }
 .loc-popover-primary i {
   color: #50cd89;
@@ -940,8 +924,41 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         filtersdata();
     });
 
-    $(document).on('click', function() {
+    $(document).on('click', function(e) {
         $('.jh-custom-select').removeClass('is-open').find('.jh-select-trigger').attr('aria-expanded', 'false');
+        if (!$(e.target).closest('.loc-row, .loc-popover-card').length) {
+            $('.loc-more-badge-wrap').removeClass('is-clicked-active');
+        }
+    });
+
+    // Work location popover click toggle (support click in addition to mouse hover)
+    $(document).on('click', '.loc-row', function(e) {
+        var $badgeWrap = $(this).find('.loc-more-badge-wrap');
+        if ($badgeWrap.length) {
+            e.stopPropagation();
+            var wasActive = $badgeWrap.hasClass('is-clicked-active');
+            $('.loc-more-badge-wrap').removeClass('is-clicked-active');
+            if (!wasActive) {
+                $badgeWrap.addClass('is-clicked-active');
+            }
+        }
+    });
+
+    // Cross-tab / window cache invalidation for Job Drawer
+    window.purgeJobDrawerCache = function(jobId) {
+        window.jobDrawerCache = window.jobDrawerCache || {};
+        if (jobId) {
+            delete window.jobDrawerCache['job_' + jobId + '_regular'];
+            delete window.jobDrawerCache['job_' + jobId + '_client'];
+        } else {
+            window.jobDrawerCache = {};
+        }
+    };
+
+    $(window).on('focus storage', function(e) {
+        if (e.type === 'storage' && e.originalEvent && e.originalEvent.key === 'job_drawer_bust') {
+            window.jobDrawerCache = {};
+        }
     });
 
     $(document).on('change', '.jh-select-native', function() {
@@ -1691,24 +1708,17 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     locContentHtml = '<span class="city-name-text" title="' + cityTitle + '">' + primaryCityName.substring(0, 10) + '</span>';
                     if (extraCitiesCount > 0) {
-                        var remainingTooltip = 'Remaining Locations (+' + extraCitiesCount + '): ' + remainingCitiesText;
-                        var popoverItems = remainingCities.map(function(c) {
+                        var remainingTooltip = 'Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText;
+                        var popoverItems = allCitiesList.map(function(c) {
                             var matchLoc = locations.find(function(l) { return (l.city_name || '').toLowerCase() === c.toLowerCase(); });
                             var countrySuffix = (hasMultipleCountries && matchLoc && matchLoc.country_name) ? ' <span style="opacity: 0.65; font-size: 9.5px;">(' + formatJobPositionName(matchLoc.country_name) + ')</span>' : '';
-                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + c + countrySuffix + '</div>';
+                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> <span>' + c + countrySuffix + '</span></div>';
                         }).join('');
 
                         locContentHtml += '<div class="loc-more-badge-wrap" title="' + remainingTooltip + '">' +
                             '<span class="loc-more-badge" title="' + remainingTooltip + '">+' + extraCitiesCount + '</span>' +
                             '<div class="loc-popover-card">' +
-                                '<div class="loc-popover-header">' +
-                                    '<span>Remaining Locations</span>' +
-                                    '<span class="loc-popover-count">+' + extraCitiesCount + '</span>' +
-                                '</div>' +
                                 '<div class="loc-popover-body">' + popoverItems + '</div>' +
-                                '<div class="loc-popover-primary">' +
-                                    '<i class="fas fa-check-circle"></i> Primary: <strong>' + primaryCityName + '</strong>' +
-                                '</div>' +
                             '</div>' +
                         '</div>';
                     }
@@ -1836,6 +1846,7 @@ $(document).on('click', '.client-hm-listing', function ()
         }
 
                 function applyJobsResponse(response, page) {
+            window.jobDrawerCache = {};
             window.currentJobsAjax = null;
             $('#jobSearchBtn').prop('disabled', false).removeClass('disabled');
             $('.loadingMessage').css({ display: 'none' });

@@ -16785,6 +16785,7 @@ END:VCALENDAR";
             }
 
             if ($jobId) {
+                Cache::increment("jobDetails_version_job_{$jobId}");
                 Cache::forget("job_details_public_bundle:{$jobId}:{$company_id}");
                 Cache::forget("job_apply_spec:{$jobId}:{$company_id}");
                 Cache::forget("job_company_details_logo:{$jobId}:{$company_id}");
