@@ -1,441 +1,245 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\CurrencyService;
+    use Carbon\Carbon;
 
     $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
     @php
-    $row = (object) $rowArr;
-    $row->thirdparty_company_id = $row->ClientComID;
+        $row = (object) $rowArr;
+        $row->thirdparty_company_id = $row->ClientComID ?? 0;
+
+        // 1. Candidate Avatar & Styling
+        $fullName = trim((string) (@$row->full_name ?? ''));
+        $firstChar = !empty($fullName) ? strtolower($fullName[0]) : '';
+        $charOrd = !empty($firstChar) ? ord($firstChar) : 0;
+
+        if ($charOrd >= 97 && $charOrd <= 101) { // a-e
+            $avatarClass = 'oj-avatar-red';
+        } elseif ($charOrd >= 102 && $charOrd <= 106) { // f-j
+            $avatarClass = 'oj-avatar-orange';
+        } elseif ($charOrd >= 107 && $charOrd <= 111) { // k-o
+            $avatarClass = 'oj-avatar-blue';
+        } elseif ($charOrd >= 112 && $charOrd <= 116) { // p-t
+            $avatarClass = 'oj-avatar-green';
+        } elseif ($charOrd >= 117 && $charOrd <= 122) { // u-z
+            $avatarClass = 'oj-avatar-purple';
+        } else {
+            $avatarClass = 'oj-avatar-gray';
+        }
+
+        $profileSidebarCss = ($row->thirdparty_company_id > 0) ? 'client-show-application-detail' : 'show-application-detail';
+        $duplicate = $row->duplicate ?? 0;
+        $initial = !empty($fullName) ? strtoupper($fullName[0]) : 'C';
+        $designation = trim((string) (@$row->current_designation ?? ''));
+
+        // 2. Job Info
+        $jobTitle = trim((string) (@$row->title ?? ''));
+        $clientName = trim((string) (@$row->client_name ?? ''));
+
+        // 3. Job Status, ID & Client
+        $jobStatus = !empty($row->job_status) ? ucwords(trim($row->job_status)) : 'Hiring';
+        $isInternal = (@$row->client_comapny_id == ($company_id ?? auth()->user()->company_id) || empty($row->ClientComID) || $row->ClientComID == 0);
+        $relationshipLabel = $isInternal ? 'Internal' : 'Direct';
+        $jobId = @$row->jobId ?: '—';
+
+        // 4. Ownership
+        $recruiterName = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: 'Recruiter'))));
+        $organizationName = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: '—'))));
+
+        // 5. Compensation
+        $compAmt = !empty($row->of_offer_amount) ? $row->of_offer_amount : (!empty($row->proposed_ctc) ? $row->proposed_ctc : (!empty($row->ctc) ? $row->ctc : null));
+        $currCode = !empty($row->of_offer_currency) ? CurrencyService::resolveCurrencyCode($row->of_offer_currency) : (!empty($row->current_ctc_cur) ? CurrencyService::resolveCurrencyCode($row->current_ctc_cur) : 'INR');
+        $modeKey = isset($row->of_salary_mode) ? $row->of_salary_mode : (isset($row->current_ctc_mode) ? $row->current_ctc_mode : 0);
+        $modeAbbr = isset($salaryMode[$modeKey]) ? mb_substr($salaryMode[$modeKey], 0, 1) : 'A';
+        $formattedComp = (!empty($compAmt) && is_numeric($compAmt)) ? number_format((float) $compAmt) : '—';
+        $employmentType = !empty($row->employmentType) ? ucwords($row->employmentType) : 'Full-time';
+
+        // 6. Offer Status & Stage Detection
+        $masterStatusId = (int) (@$row->job_master_status_id ?? 0);
+        $isJoined = ($masterStatusId === 6 || in_array($masterStatusId, [6, '6'], true));
+
+        // 7. Joining Target Date & Countdown
+        $targetJoiningDate = !empty($row->of_joined_date) ? $row->of_joined_date : (!empty($row->joining_date) ? $row->joining_date : null);
+        $formattedJoinDate = '—';
+        $joinSubText = '9:00 AM (GMT+05:30)';
+        $countdownHtml = '';
+
+        if (!empty($targetJoiningDate)) {
+            try {
+                $joinCarbon = Carbon::parse($targetJoiningDate);
+                $formattedJoinDate = $joinCarbon->format('d M Y');
+                
+                if (strlen($targetJoiningDate) > 10 && strpos($targetJoiningDate, ':') !== false) {
+                    $joinSubText = $joinCarbon->format('g:i A (T)');
+                } else {
+                    $joinSubText = '9:00 AM (GMT+05:30)';
+                }
+
+                $today = Carbon::today();
+                $diffDays = $today->diffInDays($joinCarbon->copy()->startOfDay(), false);
+
+                if ($isJoined) {
+                    $countdownHtml = '<span class="oj-countdown-pill oj-countdown-joined"><i class="fas fa-check-circle me-1"></i>Joined</span>';
+                } else {
+                    if ($diffDays > 1) {
+                        $countdownHtml = '<span class="oj-countdown-pill oj-countdown-soon">in ' . $diffDays . ' days</span>';
+                    } elseif ($diffDays == 1) {
+                        $countdownHtml = '<span class="oj-countdown-pill oj-countdown-tomorrow">Tomorrow</span>';
+                    } elseif ($diffDays == 0) {
+                        $countdownHtml = '<span class="oj-countdown-pill oj-countdown-today">Joining Today</span>';
+                    } else {
+                        $countdownHtml = '<span class="oj-countdown-pill oj-countdown-overdue">Overdue (' . abs($diffDays) . 'd)</span>';
+                    }
+                }
+            } catch (\Exception $e) {
+                $formattedJoinDate = $targetJoiningDate;
+                $countdownHtml = '<span class="oj-countdown-pill oj-countdown-neutral">Date Set</span>';
+            }
+        } else {
+            $formattedJoinDate = 'Date Pending';
+            $joinSubText = !empty($row->np_id) ? ('Notice: ' . $row->np_id . ' Days') : 'Notice: Immediate';
+            $countdownHtml = $isJoined 
+                ? '<span class="oj-countdown-pill oj-countdown-joined"><i class="fas fa-check-circle me-1"></i>Joined</span>'
+                : '<span class="oj-countdown-pill oj-countdown-neutral">Awaiting DOJ</span>';
+        }
+
+        // 8. Stage Name
+        if (isset($statusMap[@$row->child_status_id])) {
+            $stageChildName = $statusMap[@$row->child_status_id];
+        } elseif (!empty($row->child_status_name)) {
+            $stageChildName = $row->child_status_name;
+        } else {
+            $stageChildName = $isJoined ? 'Joined' : 'Offer Extended';
+        }
+
+        $stageDefaultCss = ($row->thirdparty_company_id > 0) ? 'client_stage_sub_stage' : 'stage_sub_stage';
     @endphp
-        <tr>
-            <td>
-                @php
 
-                    $bgTextDecore = $strVal = '';
-                    if (!empty(@$row->full_name)) {
-                        $str = trim(@$row->full_name);
-                        $str = $strVal = strtolower($str[0]);
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) {
-                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                        } elseif ($str >= 102 && $str <= 106) {
-                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                        } elseif ($str >= 107 && $str <= 111) {
-                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                        } elseif ($str >= 112 && $str <= 116) {
-                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                        } elseif ($str >= 117 && $str <= 121) {
-                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                        } else {
-                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                        }
-                        $profile_sidebar_css = 'show-application-detail';
-                        if ($row->thirdparty_company_id > 0) {
-                            $profile_sidebar_css = 'client-show-application-detail';
-                        }
-                        $duplicate = $row->duplicate ?? 0;
-                        $flag = 0;
-                        if ($duplicate == 1) {
-                            $flag = $duplicate;
-                        }
-
-                        echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                style="float:left">
-                                <a href="javascript:void(0);" data-row-id="' .
-                            @$row->wiseId .
-                            '"
-                                    class="' .
-                            $profile_sidebar_css .
-                            ' ' . ($flag == 1 ? 'btn btn-icon btn-light-danger pulse pulse-danger': '') . '">
-                                    <div class="' . ($flag == 1 ? 'btn btn-icon btn-light-danger mr-5' : 'symbol-label ' . @$bgTextDecore . ' border-radius-5') . '">' .
-                            strtoupper(@$strVal) .
-                            '</div>
-                                    <span class="pulse-ring"></span>
-                                </a>
-                            </div>
-                            <div class="d-flex flex-column">
-                                <a href="javascript:void(0);" data-row-id="' .
-                            @$row->wiseId .
-                            '"
-                                    class="' . ($flag == 1 ? 'text-danger' : 'text-dark') . ' fw-bolder text-hover-primary fs-6 ' .
-                            $profile_sidebar_css .
-                            '"
-                                    data-toggle="tooltip" title="' .
-                            ucwords(@$row->full_name) .
-                            '">' .
-                            ucwords(mb_substr(@$row->full_name, 0, 30)) .
-                            '</a>
-                                <a href="javascript:void(0);" data-row-id="' .
-                            @$row->wiseId .
-                            '"
-                                    class="' . ($flag == 1 ? 'text-danger' : 'text-muted') . ' fw-bold d-block fs-7 text-hover-primary ' .
-                            $profile_sidebar_css .
-                            '"
-                                    data-toggle="tooltip" title="' .
-                            ucwords(@$row->current_designation) .
-                            '">' .
-                            ucwords(mb_substr(@$row->current_designation, 0, 30)) .
-                            '</a>
-                            </div>';
-                    } else {
-                        echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                style="float:left">&nbsp;</div>';
-                    }
-
-                @endphp
-            </td>
-            <td>
-                @php
-                    $total_exp = $row->total_exp;
-                    if($total_exp == '0.'){
-                    $total_exp = str_replace('.','',$total_exp);
-                    }
-                    $rel_exp = $row->rel_exp;
-                    if($total_exp == '0.'){
-                    $rel_exp = str_replace('.','',$rel_exp);
-                    }
-                    if($total_exp==0 && $rel_exp==0){
-                        $rel_exp = ''; 
-                    }
-
-                        $experience = trim((string) @$row->total_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($experience, '.') !== false) {
-                            $parts = explode('.', $experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $formattedExperience = $parts[0];
-                                } else {
-                                    $formattedExperience = $experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $formattedExperience = $experience;
-                            }
-                        } else {
-                            $formattedExperience = $experience;
-                        }
-
-                        $rel_experience = trim((string) @$row->rel_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($rel_experience, '.') !== false) {
-                            $parts = explode('.', $rel_experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $rel_formattedExperience = $parts[0];
-                                } else {
-                                    $rel_formattedExperience = $rel_experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $rel_formattedExperience = $rel_experience;
-                            }
-                        } else {
-                            $rel_formattedExperience = $rel_experience;
-                        }
-
-                        echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .$formattedExperience . ' Y' . 
-                        '</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . $rel_formattedExperience . ' Y'. 
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $current_ctc_cur = '';
-                    $current_ctc_cur = $currencySymbole[@$row->current_ctc_cur];
-
-                    $current_ectc_cur = '';
-                    $current_ectc_cur = $currencySymbole[@$row->current_ectc_cur];
-
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_cur = $currencySymbole[@$row->bill_rate_currency];
-                    }
-
-                    $ctc = '';
-                    $ctc = GeneralMethod::thousandsCurrencyFormat($row->ctc);
-                    $ectc = '';
-                    $ectc = GeneralMethod::thousandsCurrencyFormat($row->ectc);
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $ectc = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
-                    }
-
-                    $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$row->current_ctc_mode], 0, 1);
-                    $current_ctc_mode = mb_substr($salaryMode[0], 0, 1);
-
-                    $current_ectc_mode = '';
-                    $current_ectc_mode = mb_substr($salaryMode[@$row->current_ectc_mode], 0, 1);
-                    $current_ectc_mode = mb_substr($salaryMode[0], 0, 1);
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_mode = mb_substr($salaryMode[@$row->bill_rate_mode], 0, 1);
-                    }
-                    $dnone = '';
-                    if ($row->condidate_type == 'bench_condidate') {
-                        $dnone = 'd-none';
-                    }
-
-                    echo '<div class="d-flex flex-column">
-                <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        $current_ectc_cur .
-                        @$ectc .
-                        '/' .
-                        $current_ectc_mode .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7 ' .
-                        $dnone .
-                        '">' .
-                        @$current_ctc_cur .
-                        @$ctc .
-                        '/' .
-                        $current_ctc_mode .
-                        '</span>
-                  </div>';
-
-                @endphp
-
-            </td>
-            <td>
-                @php
-
-                    $np = $row->np_id;
-                    if (empty(@$np)) {
-                        $np = 'N/A';
-                    }
-                    if (@$row->serving_notice_period_mode == 0) {
-                        if (!empty(@$row->np_id)) {
-                            $np = $row->np_id . '  Days';
-                        }
-                    } elseif (@$row->serving_notice_period_mode == 1) {
-                        $np = $row->np_id;
-                        if ($np != 'Immediate') {
-                            $np = GeneralMethod::ymdTodmyNotTime(@$row->np_id); //date("d-M-Y",strtotime(@$row->np_id));
-                            $today = date('Y-m-d'); 
-                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                              $np = "Immediate";
-                            }
-                        }
-                    } else {
-                        $np = $row->np_id;
-                    }
-                    // $row->current_company = (@$row->current_company) ? @$row->apl_company_name : @$row->apl_company_name;
-                    echo '<div class="d-flex flex-column">
-						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        @$np .
-                        '</a>
-						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
-                        '</span>
-					  </div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $country = '';
-                    $row_country_name = '';
-
-                    if (empty($row->country)) {
-                        $row_country_name = '----';
-                    } else {
-                        if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            } else {
-                                $row_country_name = @$row->country;
-                            }
-                        }
-                    }
-
-                    $state = '';
-                    $row_state_name = '';
-                    if (empty($row->state)) {
-                        $row_state_name = '';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state_name = @$row->state_name;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
-                                }
-                            } else {
-                                $row_state_name = @$row->state;
-                            }
-                        }
-                    }
-
-                    $city = '';
-                    $row_city_name = '';
-
-                    if (isset($citiesMap[@$row->city_id])) {
-                        $row_city_name = $citiesMap[@$row->city_id];
-                    } elseif (!empty(@$row->city_name)) {
-                        $row_city_name = @$row->city_name;
-                    } else {
-                        $row_city_name = @$row->city;
-                    }
-                    if (empty($row_city_name) && !empty($row->city_name)) {
-                        $row_city_name = $row->city_name;
-                    }
-
-                    $countryCode = '';
-                    if (!empty($row_country_name) && $row_country_name != '----') {
-                        $countryCode = strtoupper(mb_substr($row_country_name, 0, 2));
-                    }
-
-                    $locationTitle = trim(ucwords($row_city_name) . ($countryCode ? ', ' . $countryCode : ''), ', ');
-                    if (empty($locationTitle)) {
-                        $locationTitle = '----';
-                    }
-
-                    $locationSub = !empty($row->qualification_name) ? strtoupper($row->qualification_name) : (!empty($row_state_name) ? ucwords($row_state_name) : '');
-
-                    echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
-                        '">' .
-                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
-                        '</a>
-                        <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        htmlspecialchars($locationSub, ENT_QUOTES, 'UTF-8') .
-                        '">' .
-                        htmlspecialchars(mb_substr($locationSub, 0, 15), ENT_QUOTES, 'UTF-8') .
-                        '</span>
-                    </div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-                    $rowpostedby = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: ''))));
-
-                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: ''))));
-
-                    echo ' <div class="d-flex flex-column">
-                   				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        htmlspecialchars((string) $rowpostedby, ENT_QUOTES, 'UTF-8') .
-                        '">' .
-                        htmlspecialchars(ucfirst(mb_substr((string) $rowpostedby, 0, 20)), ENT_QUOTES, 'UTF-8') .
-                        '</a>
-                   			</div>
- 							<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        htmlspecialchars((string) $post_company_name, ENT_QUOTES, 'UTF-8') .
-                        '">' .
-                        htmlspecialchars(ucwords(mb_substr((string) $post_company_name, 0, 25)), ENT_QUOTES, 'UTF-8') .
-                        '</span>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $UploadDate = $className = '';
-                    $UploadDate = @$row->created_at;
-                    $UploadDate = date('d M, Y', strtotime($UploadDate));
-                    $recommendation_text = __('messages.clinet_tag');
-                    if (@$row->client_comapny_id == auth()->user()->company_id) {
-                        $recommendation_text = __('messages.internal_tag');
-                    }
-                    echo '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        @$UploadDate .
-                        '</a>
-                <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="">' .
-                            $row->jobId .
-                            '-' .
-                            $recommendation_text .
-                            '</span> 
-                </div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $jobtitle = $client_name = '';
-                    $jobtitle = ucwords(mb_substr(@$row->title, 0, 10));
-                    $client_name = ucwords(mb_substr(@$row->client_name, 0, 10));
-
-                    echo '<div class="d-flex flex-column"> 
-						<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($jobtitle) .
-                        '">' .
-                        ucwords(mb_substr($jobtitle, 0, 6)) .
-                        '</a> 
-						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($client_name) .
-                        '">' .
-                        ucwords(mb_substr($client_name, 0, 6)) .
-                        '</span>  
-					</div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $stage_default_css = 'stage_sub_stage';
-                    if ($row->thirdparty_company_id > 0) {
-                        $stage_default_css = 'client_stage_sub_stage';
-                    }
-                    $name = '';
-                    if ($row->master_status_id == 8) {
-                        $name = '';
-                    }
-
-                    if (isset($statusMap[@$row->child_status_id])) {
-                        $name = $statusMap[@$row->child_status_id];
-                    } elseif (!empty($row->child_status_name)) {
-                        $name = $row->child_status_name;
-                    } else {
-                        $name = '';
-                    }
-                    echo '<div class="d-flex flex-column">
-                    <a href="javascript.void(0);" data-row-id="' .
-                        @$row->wiseId .
-                        '" class="d-flex flex-column ' .
-                        $stage_default_css .
-                        '" data-toggle="modal" data-target="#' .
-                        $stage_default_css .
-                        '">
-                        <span class="badge fw-bolder fs-6 ' .
-                        @$row->css_style .
-                        ' px-2 py-1">' .
-                        ucwords(mb_substr($row->name, 0, 10)) .
-                        '</span>
-                        <span class="text-muted fw-bold d-block fs-7">' .
-                        @$name .
-                        '</span>
+        <!-- Primary Card for Candidate Offer & Joining -->
+        <div class="oj-primary-card" data-candidate-id="{{ @$row->wiseId }}">
+            <!-- 1. Candidate Sub-Card -->
+            <div class="oj-subcard oj-subcard-cand">
+                <div class="oj-cand-avatar {{ $avatarClass }}">
+                    {{ $initial }}
+                </div>
+                <div class="oj-cand-info">
+                    <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}"
+                       class="oj-cand-name {{ $profileSidebarCss }} {{ $duplicate == 1 ? 'text-danger' : '' }}"
+                       title="{{ ucwords($fullName) }}">
+                        {{ ucwords(mb_substr($fullName, 0, 28)) }}
                     </a>
-                </div>';
+                    <span class="oj-cand-role" title="{{ ucwords($designation) }}">
+                        {{ !empty($designation) ? ucwords(mb_substr($designation, 0, 28)) : '—' }}
+                    </span>
+                </div>
+            </div>
 
-                @endphp
-            </td>
+            <!-- 2. Job Sub-Card -->
+            <div class="oj-subcard oj-subcard-job">
+                <div class="oj-job-title" title="{{ ucwords($jobTitle) }}">
+                    {{ !empty($jobTitle) ? ucwords(mb_substr($jobTitle, 0, 26)) : '—' }}
+                </div>
+                <div class="oj-job-company" title="{{ ucwords($clientName) }}">
+                    {{ !empty($clientName) ? ucwords(mb_substr($clientName, 0, 24)) : 'Client Account' }}
+                </div>
+            </div>
 
-        </tr>
+            <!-- 3. Job Status, ID & Client Sub-Card -->
+            <div class="oj-subcard oj-subcard-meta">
+                <span class="oj-meta-status-badge">
+                    <i class="fas fa-circle oj-meta-status-dot"></i> {{ $jobStatus }}
+                </span>
+                <span class="oj-meta-sub">
+                    {{ $relationshipLabel }} &bull; {{ $jobId }}
+                </span>
+            </div>
+
+            <!-- 4. Ownership Sub-Card -->
+            <div class="oj-subcard oj-subcard-owner">
+                <div class="oj-owner-name" title="{{ ucwords((string) $recruiterName) }}">
+                    {{ ucwords(mb_substr((string) $recruiterName, 0, 22)) }}
+                </div>
+                <div class="oj-owner-comp" title="{{ ucwords((string) $organizationName) }}">
+                    {{ ucwords(mb_substr((string) $organizationName, 0, 24)) }}
+                </div>
+            </div>
+
+            <!-- 5. Compensation Sub-Card -->
+            <div class="oj-subcard oj-subcard-comp">
+                <div class="oj-comp-amount">
+                    @if ($formattedComp !== '—')
+                        {{ $currCode }} {{ $formattedComp }}/{{ $modeAbbr }}
+                    @else
+                        —
+                    @endif
+                </div>
+                <div class="oj-comp-details">
+                    <span class="oj-comp-type">{{ $employmentType }}</span>
+                    <span class="oj-comp-sep">&bull;</span>
+                    <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}" class="oj-comp-change {{ $profileSidebarCss }}">
+                        Change
+                    </a>
+                </div>
+            </div>
+
+            <!-- 6. Offer Status Sub-Card -->
+            <div class="oj-subcard oj-subcard-offer-status">
+                @if ($isJoined)
+                    <div class="oj-status-pill oj-pill-joined">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Joined</span>
+                    </div>
+                    <span class="oj-status-subtext">Confirmed</span>
+                @else
+                    <div class="oj-status-pill oj-pill-offered">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Offer Released</span>
+                    </div>
+                    <span class="oj-status-subtext">Offer Sent</span>
+                @endif
+            </div>
+
+            <!-- 7. Joining Sub-Card -->
+            <div class="oj-subcard oj-subcard-joining">
+                <div class="oj-join-date">
+                    {{ $formattedJoinDate }}
+                </div>
+                <div class="oj-join-time">
+                    {{ $joinSubText }}
+                </div>
+                <div class="oj-join-countdown">
+                    {!! $countdownHtml !!}
+                </div>
+            </div>
+
+            <!-- 8. Stage Sub-Card -->
+            <div class="oj-subcard oj-subcard-stage">
+                <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}"
+                   class="oj-stage-badge-link {{ $stageDefaultCss }}"
+                   data-toggle="modal" data-target="#{{ $stageDefaultCss }}">
+                    @if ($isJoined)
+                        <span class="oj-stage-outline-badge oj-stage-badge-green">
+                            Joined
+                        </span>
+                    @else
+                        <span class="oj-stage-outline-badge oj-stage-badge-orange">
+                            Offered
+                        </span>
+                    @endif
+                    <span class="oj-stage-subtext" title="{{ $stageChildName }}">
+                        {{ mb_substr($stageChildName, 0, 16) }}
+                    </span>
+                </a>
+            </div>
+        </div>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="10" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="oj-empty-card">
+        <i class="fas fa-file-signature oj-empty-icon"></i>
+        <div class="oj-empty-title">No candidate offers or joinings found</div>
+        <div class="oj-empty-desc">No candidates have been moved to Offered or Joined stages for this client yet.</div>
+    </div>
 @endif
