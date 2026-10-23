@@ -1492,7 +1492,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap', 'jobSkillsMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => [
                 'all' => $allCount,
