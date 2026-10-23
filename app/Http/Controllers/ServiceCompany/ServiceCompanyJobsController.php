@@ -7669,28 +7669,28 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd(auth()->user()->id,$company_id,$this->job->id);
 
         $client_city_jobs = $this->job->client_city_jobs ?? [];
-        $this->jobCitySel = [];
+        $extractedCities = [];
         if (! empty($client_city_jobs) && is_iterable($client_city_jobs)) {
             foreach ($client_city_jobs as $ccj) {
                 $cName = trim((string) (data_get($ccj, 'city_name') ?: data_get($ccj, 'city') ?: ''));
                 if ($cName !== '') {
-                    $this->jobCitySel[] = $cName;
+                    $extractedCities[] = $cName;
                 }
             }
         }
 
         // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location in ES document (0% MySQL reads)
-        if (empty($this->jobCitySel) && ! empty($this->job->client_location) && is_iterable($this->job->client_location)) {
+        if (empty($extractedCities) && ! empty($this->job->client_location) && is_iterable($this->job->client_location)) {
             foreach ($this->job->client_location as $locItem) {
                 $cName = trim((string) (data_get($locItem, 'city_name') ?: data_get($locItem, 'city') ?: ''));
                 if ($cName !== '') {
-                    $this->jobCitySel[] = $cName;
+                    $extractedCities[] = $cName;
                 }
             }
         }
 
         // Resilient DB fallback if ES document had not indexed locations yet (e.g. freshly created or updated job)
-        if (empty($this->jobCitySel)) {
+        if (empty($extractedCities)) {
             $dbCityRows = DB::table('client_city_jobs')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
                 ->where('client_city_jobs.job_id', $this->job->id ?? $id)
@@ -7699,14 +7699,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             foreach ($dbCityRows as $dbc) {
                 $cleanDbc = trim((string) $dbc);
                 if ($cleanDbc !== '') {
-                    $this->jobCitySel[] = $cleanDbc;
+                    $extractedCities[] = $cleanDbc;
                 }
             }
         }
 
         $seenKeys = [];
         $dedupedCities = [];
-        foreach ($this->jobCitySel as $cName) {
+        foreach ($extractedCities as $cName) {
             $displayName = $cName;
             if (strpos($displayName, '/') !== false) {
                 $slashParts = explode('/', $displayName);
