@@ -26,9 +26,10 @@ class JobsTabViewModel
         public readonly array $logoMap,          // [jobId => resolvedLogoPathOrInitial]
         public readonly array $pagination,        // Pagination metadata
         public readonly array $activeFilters,    // Active filter state
-        public readonly int $projectionVersion,  // Observable version identity
-        public readonly string $queryHash,       // Observable query identity
-        public readonly string $generatedAt      // Generation timestamp for telemetry
+        public readonly int $projectionVersion = 1,  // Observable version identity
+        public readonly string $queryHash = '',       // Observable query identity
+        public readonly string $generatedAt = '',      // Generation timestamp for telemetry
+        public readonly array $tabs = []         // Fully dynamic status tabs
     ) {}
 
     public function hasJobs(): bool
