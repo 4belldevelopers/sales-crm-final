@@ -3630,7 +3630,7 @@ END:VCALENDAR";
         $companyType = self::companyType();
         if ($strAdded) {
 
-            if (@$jobs->company_id != auth()->user()->company_id) {
+            if (@$jobs->company_id != (auth()->user()->company_id ?? 0)) {
                 $companyOrclientName = $strAdded->company_name;
                 $company_website = $strAdded->website;
                 $founded = $strAdded->founded;
@@ -9720,11 +9720,11 @@ END:VCALENDAR";
             self::addUpdateCompanyJob($row->company_id, $row->id);
 
             // Rule 6: Invalidate client jobs KPI cache and tenant client projection version
-            if (!empty($row->company_id)) {
-                self::cacheClean('tenant_' . $row->company_id . '_client_version');
+            if (! empty($row->company_id)) {
+                self::cacheClean('tenant_'.$row->company_id.'_client_version');
             }
-            if (!empty($row->client_id) && !empty($row->company_id)) {
-                cache()->forget('ats:kpi:internal_client_jobs:' . $row->company_id . ':' . $row->client_id);
+            if (! empty($row->client_id) && ! empty($row->company_id)) {
+                cache()->forget('ats:kpi:internal_client_jobs:'.$row->company_id.':'.$row->client_id);
             }
 
         }
@@ -17187,6 +17187,9 @@ END:VCALENDAR";
         }
         if (request()->is('super-admin/update-application*')) {
             return 'Update Application';
+        }
+        if (request()->is('super-admin/company/edit*')) {
+            return 'Edit Company';
         }
         if (request()->is('super-admin/company*')) {
             return 'Companies';

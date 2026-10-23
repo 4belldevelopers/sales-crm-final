@@ -284,15 +284,20 @@
         margin-top: 2px;
     }
 
-    /* Tabs Bar Modernization matching Consultancy reference */
+    /* Tabs Bar Modernization matching Reference Design */
     .sa-company-drawer .sa-tabs-bar {
         background: #ffffff;
         border-radius: 12px;
         border: 1px solid #eff2f5;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
+        padding: 0 4px;
         overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
+        -webkit-overflow-scrolling: touch;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
     .sa-company-drawer .sa-tabs-bar::-webkit-scrollbar {
@@ -302,51 +307,63 @@
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs {
-        border-bottom: none;
-        padding: 0 8px;
+        border-bottom: none !important;
+        padding: 0;
         flex-wrap: nowrap;
         display: flex;
+        align-items: center;
         gap: 0;
         margin: 0;
+        min-height: 48px;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-item {
         margin: 0;
+        flex-shrink: 0;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link {
         position: relative;
-        padding: 14px 13px;
+        padding: 13px 18px;
         font-size: 13px;
         font-weight: 500;
-        color: #a1a5b7;
+        color: #7e8299;
         cursor: pointer;
         white-space: nowrap;
-        border: none;
-        background: transparent;
-        font-family: "Poppins", sans-serif;
-        transition: color 0.2s;
+        border: none !important;
+        background: transparent !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        transition: color 0.15s ease, background-color 0.15s ease;
         display: inline-flex;
         align-items: center;
+        gap: 6px;
+        line-height: 1.2;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link:hover {
         color: #009ef7;
-        background: transparent;
+        background: transparent !important;
+        text-decoration: none;
+    }
+
+    .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 2px rgba(0, 158, 247, 0.25);
+        border-radius: 6px;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link.active {
-        color: #009ef7;
+        color: #009ef7 !important;
         font-weight: 600;
-        background: transparent;
+        background: transparent !important;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link.active::after {
         content: "";
         position: absolute;
         bottom: 0;
-        left: 13px;
-        right: 13px;
+        left: 16px;
+        right: 16px;
         height: 2.5px;
         background: #009ef7;
         border-radius: 2px 2px 0 0;
@@ -358,18 +375,31 @@
         justify-content: center;
         min-width: 18px;
         height: 18px;
-        padding: 0 5px;
-        background: #f5f8fa;
-        color: #7e8299;
-        font-size: 10px;
-        font-weight: 700;
+        padding: 0 6px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 10.5px;
+        font-weight: 600;
         border-radius: 50px;
-        margin-left: 6px;
+        line-height: 1;
+        transition: background-color 0.15s ease, color 0.15s ease;
     }
 
     .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link.active .tab-count {
         background: #f1faff;
         color: #009ef7;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link {
+            padding: 12px 14px;
+            font-size: 12.5px;
+        }
+
+        .sa-company-drawer .nav-tabs.sa-nav-tabs .nav-link.active::after {
+            left: 12px;
+            right: 12px;
+        }
     }
 
     /* Content Grid & Cards (Overview Tab matching Consultancy reference) */
@@ -699,14 +729,862 @@
         background: #f1faff;
     }
 
+    /* ── Contacts Tab Presentation (Reference Parity) ── */
+    .sa-company-drawer .contacts-table-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #eff2f5;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        margin-bottom: 20px;
+    }
+
+    .sa-company-drawer .contacts-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        border-bottom: 1px solid #eff2f5;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .sa-company-drawer .contacts-table-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #181c32;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .sa-company-drawer .contacts-table-title span {
+        color: #a1a5b7;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .sa-company-drawer .contacts-table-subtitle {
+        font-size: 12.5px;
+        color: #a1a5b7;
+        margin-top: 3px;
+    }
+
+    .sa-company-drawer .contacts-table-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sa-company-drawer .contacts-table-actions .search-box {
+        position: relative;
+    }
+
+    .sa-company-drawer .contacts-table-actions .search-box input {
+        padding: 8px 14px 8px 36px;
+        border: 1px solid #e4e6ef;
+        border-radius: 8px;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        color: #181c32;
+        outline: none;
+        width: 220px;
+        height: 38px;
+        background: #ffffff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sa-company-drawer .contacts-table-actions .search-box input:focus {
+        border-color: #009ef7;
+        box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.1);
+    }
+
+    .sa-company-drawer .contacts-table-actions .search-box i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a1a5b7;
+        font-size: 13px;
+        pointer-events: none;
+    }
+
+    .sa-company-drawer .contacts-table-actions .btn-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 16px;
+        height: 38px;
+        border: 1px solid #e4e6ef;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #5e6278;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+    .sa-company-drawer .contacts-table-actions .btn-outline:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #181c32;
+    }
+
+    .sa-company-drawer .contacts-table-actions .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 18px;
+        height: 38px;
+        border: none;
+        border-radius: 8px;
+        background: #009ef7;
+        color: #ffffff !important;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: background 0.15s ease;
+        text-decoration: none;
+    }
+
+    .sa-company-drawer .contacts-table-actions .btn-primary:hover {
+        background: #0086d4;
+        color: #ffffff !important;
+    }
+
+    .sa-company-drawer .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sa-company-drawer .table-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .sa-company-drawer .table-wrapper::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+
+    .sa-company-drawer .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .sa-company-drawer .data-table thead tr {
+        background: #f8f9fa;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .sa-company-drawer .data-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: #7e8299;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .sa-company-drawer .data-table th i {
+        font-size: 9px;
+        margin-left: 4px;
+        color: #b5b5c3;
+    }
+
+    .sa-company-drawer .data-table td {
+        padding: 14px 16px;
+        font-size: 13px;
+        color: #3f4254;
+        border-bottom: 1px solid #f5f8fa;
+        vertical-align: middle;
+    }
+
+    .sa-company-drawer .data-table tr:hover td {
+        background: #fafbfc;
+    }
+
+    .sa-company-drawer .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sa-company-drawer .data-table th:first-child,
+    .sa-company-drawer .data-table td:first-child {
+        padding-left: 20px;
+    }
+
+    .sa-company-drawer .data-table th:last-child,
+    .sa-company-drawer .data-table td:last-child {
+        padding-right: 20px;
+    }
+
+    .sa-company-drawer .table-checkbox {
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 4px;
+        cursor: pointer;
+        accent-color: #009ef7;
+    }
+
+    .sa-company-drawer .contact-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sa-company-drawer .contact-avatar-table {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 13.5px;
+        color: #ffffff;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .sa-company-drawer .contact-info-table {
+        line-height: 1.35;
+    }
+
+    .sa-company-drawer .contact-name-table {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #181c32;
+        cursor: pointer;
+    }
+
+    .sa-company-drawer .contact-name-table:hover {
+        color: #009ef7;
+    }
+
+    .sa-company-drawer .contact-role-table {
+        font-size: 12px;
+        color: #7e8299;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .sa-company-drawer .contact-primary-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: #e8fff3;
+        color: #47be7d;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 50px;
+    }
+
+    .sa-company-drawer .contact-primary-badge i {
+        font-size: 8px;
+    }
+
+    .sa-company-drawer .dept-badge {
+        display: inline-flex;
+        align-items: center;
+        background: #f5f8fa;
+        color: #5e6278;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    .sa-company-drawer .contact-email-phone {
+        line-height: 1.35;
+    }
+
+    .sa-company-drawer .email-cell {
+        color: #3f4254;
+        font-size: 13px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .sa-company-drawer .email-cell:hover {
+        color: #009ef7;
+        text-decoration: underline;
+    }
+
+    .sa-company-drawer .phone-cell {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #7e8299;
+        margin-top: 3px;
+    }
+
+    .sa-company-drawer .phone-flag {
+        width: 18px;
+        height: 12px;
+        border-radius: 2px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .sa-company-drawer .phone-flag svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .sa-company-drawer .phone-number {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .sa-company-drawer .phone-prefix {
+        font-size: 12px;
+        color: #7e8299;
+        font-weight: 500;
+    }
+
+    .sa-company-drawer .phone-digits {
+        font-size: 12px;
+        color: #5e6278;
+        font-weight: 500;
+    }
+
+    .sa-company-drawer .status-badge-table {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 50px;
+    }
+
+    .sa-company-drawer .status-badge-table.active {
+        background: #e8fff3;
+        color: #47be7d;
+    }
+
+    .sa-company-drawer .status-badge-table.inactive {
+        background: #f5f8fa;
+        color: #a1a5b7;
+    }
+
+    .sa-company-drawer .status-badge-table i {
+        font-size: 6px;
+    }
+
+    .sa-company-drawer .action-btns {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+
+    .sa-company-drawer .action-btn-table {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid #e4e6ef;
+        background: #ffffff;
+        color: #7e8299;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        padding: 0;
+        font-size: 12px;
+    }
+
+    .sa-company-drawer .action-btn-table:hover {
+        background: #f1faff;
+        border-color: #009ef7;
+        color: #009ef7;
+    }
+
+    .sa-company-drawer .action-btn-table.whatsapp:hover {
+        border-color: #25d366 !important;
+        color: #25d366 !important;
+        background: #e8f5e9 !important;
+    }
+
+    .sa-company-drawer .action-btn-table.more {
+        border: none !important;
+        background: transparent !important;
+        color: #b5b5c3 !important;
+        width: 24px;
+        height: 32px;
+    }
+
+    .sa-company-drawer .action-btn-table.more:hover {
+        color: #5e6278 !important;
+        background: transparent !important;
+    }
+
+    @media (max-width: 991.98px) {
+        .sa-company-drawer .contacts-table-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .sa-company-drawer .contacts-table-actions {
+            width: 100%;
+        }
+
+        .sa-company-drawer .contacts-table-actions .search-box {
+            flex: 1;
+        }
+
+        .sa-company-drawer .contacts-table-actions .search-box input {
+            width: 100%;
+        }
+    }
+
+    /* ── Jobs Tab Presentation (Reference Parity) ── */
+    .sa-company-drawer #requisitions {
+        --indigo: #3b55e6;
+        --orange: #f4682a;
+        --border: #eff2f5;
+        --text-dark: #181c32;
+        --text-mid: #6d7284;
+        --text-light: #a1a5b7;
+        --white: #ffffff;
+        --radius: 12px;
+    }
+
+    .sa-company-drawer #requisitions .table-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid #eff2f5;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .sa-company-drawer #requisitions .table-header,
+    .sa-company-drawer #requisitions .job-row {
+        display: grid;
+        grid-template-columns: 2.6fr 1.05fr 1.15fr 1.3fr 0.95fr 0.95fr 2.55fr;
+        align-items: start;
+        column-gap: 12px;
+        min-width: 1040px;
+    }
+
+    .sa-company-drawer #requisitions .table-header {
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-bottom: 1.5px solid #eff2f5;
+        align-items: center;
+    }
+
+    .sa-company-drawer #requisitions .th {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: #7e8299;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .sa-company-drawer #requisitions .job-row {
+        padding: 14px 14px 28px 14px;
+        border-bottom: 1px solid #f5f8fa;
+        transition: background 0.12s;
+        position: relative;
+        min-height: 112px;
+    }
+
+    .sa-company-drawer #requisitions .job-row:last-of-type {
+        border-bottom: none;
+    }
+
+    .sa-company-drawer #requisitions .job-row:hover {
+        background: #fafbff;
+    }
+
+    .sa-company-drawer #requisitions .col-job {
+        display: flex;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .sa-company-drawer #requisitions .job-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+        overflow: hidden;
+        align-self: flex-start;
+    }
+
+    .sa-company-drawer #requisitions .job-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .sa-company-drawer #requisitions .job-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sa-company-drawer #requisitions .job-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #181c32;
+        margin-bottom: 2px;
+        line-height: 1.3;
+    }
+
+    .sa-company-drawer #requisitions .job-dept {
+        font-size: 11px;
+        color: #6d7284;
+        margin-bottom: 2px;
+    }
+
+    .sa-company-drawer #requisitions .job-client {
+        font-size: 11px;
+        color: #7e8299;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .sa-company-drawer #requisitions .job-meta-line {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        font-size: 10.5px;
+        color: #a1a5b7;
+    }
+
+    .sa-company-drawer #requisitions .skills-inline {
+        font-size: 10.5px;
+        color: #a1a5b7;
+    }
+
+    .sa-company-drawer #requisitions .skills-inline b {
+        font-weight: 600;
+        color: #6d7284;
+    }
+
+    .sa-company-drawer #requisitions .col-exp {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .sa-company-drawer #requisitions .exp-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #181c32;
+    }
+
+    .sa-company-drawer #requisitions .exp-row svg,
+    .sa-company-drawer #requisitions .sal-row svg {
+        width: 13px;
+        height: 13px;
+        color: #a1a5b7;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer #requisitions .sal-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        width: 150px;
+        font-weight: 500;
+        color: #181c32;
+    }
+
+    .sa-company-drawer #requisitions .badge-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 9px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 600;
+        width: fit-content;
+        margin-top: 2px;
+    }
+
+    .sa-company-drawer #requisitions .badge-internal {
+        background: #eef2ff;
+        color: #3b55e6;
+    }
+
+    .sa-company-drawer #requisitions .badge-client {
+        background: #eefff6;
+        color: #09b760;
+    }
+
+    .sa-company-drawer #requisitions .it-job-type {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 9px;
+        font-weight: 600;
+    }
+
+    .sa-company-drawer #requisitions .it-job-id {
+        font-size: 10px;
+        color: #6a6b70;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .sa-company-drawer #requisitions .it-job-id:hover {
+        text-decoration: underline;
+    }
+
+    .sa-company-drawer #requisitions .it-dot-separator {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #a1a5b7;
+    }
+
+    .sa-company-drawer #requisitions .col-hl {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring {
+        padding: 2px 9px;
+        border-radius: 20px;
+        font-size: 10.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        width: fit-content;
+        background: #e8fff3;
+        color: #50cd89;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: #50cd89;
+        border-radius: 50%;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring.closed-bg,
+    .sa-company-drawer #requisitions .badge-hiring.inactive-bg {
+        background: #f5f8fa;
+        color: #7e8299;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring.closed-bg::before,
+    .sa-company-drawer #requisitions .badge-hiring.inactive-bg::before {
+        background: #b5b5c3;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring.hold-bg {
+        background: #fff8dd;
+        color: #ffc700;
+    }
+
+    .sa-company-drawer #requisitions .badge-hiring.hold-bg::before {
+        background: #ffc700;
+    }
+
+    .sa-company-drawer #requisitions .loc-row,
+    .sa-company-drawer #requisitions .mode-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11.5px;
+        color: #6d7284;
+        font-weight: 500;
+    }
+
+    .sa-company-drawer #requisitions .loc-row svg,
+    .sa-company-drawer #requisitions .mode-row svg {
+        width: 12px;
+        height: 12px;
+        color: #a1a5b7;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer #requisitions .col-hm {
+        font-size: 11.5px;
+    }
+
+    .sa-company-drawer #requisitions .hm-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #181c32;
+        margin-bottom: 2px;
+    }
+
+    .sa-company-drawer #requisitions .hm-title {
+        font-size: 11px;
+        color: #6d7284;
+        margin-bottom: 1px;
+    }
+
+    .sa-company-drawer #requisitions .hm-company {
+        font-size: 11px;
+        color: #a1a5b7;
+    }
+
+    .sa-company-drawer #requisitions .col-action {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 0 6px;
+    }
+
+    .sa-company-drawer #requisitions .action-count {
+        font-size: 11px;
+        color: #6d7284;
+    }
+
+    .sa-company-drawer #requisitions .col-pipeline {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-left: 10px;
+        border-left: 1px solid #eff2f5;
+    }
+
+    .sa-company-drawer #requisitions .pipeline-stages {
+        display: flex;
+        align-items: flex-start;
+        gap: 2px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        padding-bottom: 2px;
+    }
+
+    .sa-company-drawer #requisitions .stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sa-company-drawer #requisitions .stage-label {
+        font-size: 8.5px;
+        font-weight: 600;
+        color: #6d7284;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .sa-company-drawer #requisitions .stage-badge {
+        min-width: 22px;
+        width: 22px;
+        height: 19px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9.5px;
+        font-weight: 700;
+    }
+
+    .sa-company-drawer #requisitions .stage-badge a {
+        text-decoration: none;
+    }
+
+    .sa-company-drawer #requisitions .s-inw { background: #fffde6; color: #7c6d00; }
+    .sa-company-drawer #requisitions .s-sou { background: #efefef; color: #181c32; }
+    .sa-company-drawer #requisitions .s-scr { background: #fbf0ff; color: #8e14bc; }
+    .sa-company-drawer #requisitions .s-eva { background: #f0f8ff; color: #0b72cb; }
+    .sa-company-drawer #requisitions .s-neg { background: #fff0f7; color: #c01867; }
+    .sa-company-drawer #requisitions .s-off { background: #fff9ed; color: #b37400; }
+    .sa-company-drawer #requisitions .s-joi { background: #e8fff0; color: #058722; }
+    .sa-company-drawer #requisitions .s-rej { background: #ffebee; color: #c62828; }
+
+    .sa-company-drawer #requisitions .pipeline-total {
+        font-size: 10px;
+        font-weight: 600;
+        color: #6d7284;
+        text-align: right;
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .sa-company-drawer #requisitions .pipeline-total strong {
+        color: #181c32;
+    }
+
+    .sa-company-drawer #requisitions .add-date {
+        font-size: 10px;
+        color: #a1a5b7;
+    }
+
+    .sa-company-drawer #requisitions .drag-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .sa-company-drawer #requisitions .drag-handle {
+        color: #a1a5b7;
+        cursor: grab;
+    }
+
+    @media (max-width: 1600px) {
+        .sa-company-drawer #requisitions .table-header,
+        .sa-company-drawer #requisitions .job-row {
+            grid-template-columns: 2.3fr 1fr 1fr 1.2fr 0.9fr 0.9fr 2.8fr;
+        }
+    }
+
+    @media (max-width: 1366px) {
+        .sa-company-drawer #requisitions .table-header,
+        .sa-company-drawer #requisitions .job-row {
+            grid-template-columns: 2.6fr .95fr .95fr 1fr .85fr .85fr 1.8fr;
+        }
+    }
+
     /* ==========================================================================
        Unified Tab Background & Card Design (All Tabs Same Background and Design)
        ========================================================================== */
 
-    /* Ensure every top-level tab pane (Contacts, Jobs, Timeline, Op. Package,
-       Sales Package, Top Up Coins, History, Migration, Setting, Boost Keywords)
-       has the EXACT same crisp white card container as Overview cards */
-    .sa-company-drawer .tab-content > .tab-pane:not(#overview) {
+    /* Ensure legacy tabs have clean white card container, while Contacts and Jobs
+       use their dedicated zero-nesting table cards directly */
+    .sa-company-drawer .tab-content > .tab-pane:not(#overview):not(#contacts):not(#requisitions) {
         background: #ffffff !important;
         border-radius: 12px !important;
         border: 1px solid #eff2f5 !important;
@@ -715,8 +1593,17 @@
         margin-bottom: 20px !important;
     }
 
+    .sa-company-drawer .tab-content > .tab-pane#contacts,
+    .sa-company-drawer .tab-content > .tab-pane#requisitions {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+    }
+
     @media (max-width: 767.98px) {
-        .sa-company-drawer .tab-content > .tab-pane:not(#overview) {
+        .sa-company-drawer .tab-content > .tab-pane:not(#overview):not(#contacts):not(#requisitions) {
             padding: 16px !important;
         }
     }
@@ -941,6 +1828,17 @@
 
     .sa-company-drawer .payment-method.active {
         display: block;
+    }
+
+    /* Accessible Focus Indicators for Keyboard Navigation */
+    .sa-company-drawer .sa-nav-tabs .nav-link:focus-visible,
+    .sa-company-drawer .contacts-table-card a:focus-visible,
+    .sa-company-drawer .contacts-table-card button:focus-visible,
+    .sa-company-drawer .contacts-table-card input:focus-visible,
+    .sa-company-drawer .job-row .col-job:focus-visible,
+    .sa-company-drawer .table-row .show-detail-team:focus-visible {
+        outline: 2px solid #009ef7 !important;
+        outline-offset: 2px !important;
     }
 </style>
 <div class="card-body position-relative px-0 py-0 sa-company-drawer" id="kt_activities_body">
@@ -1169,26 +2067,26 @@
         <div class="card card-custom border-0 bg-transparent shadow-none">
             <!--Begin::Tabs Header-->
             <div class="sa-tabs-bar">
-                <ul class="nav nav-tabs sa-nav-tabs" role="tablist">
-                    <li class="nav-item"> <a class="nav-link active" data-toggle="tab" href="#overview">Overview</a> </li>
-                    <li class="nav-item TeamListOpen"> <a class="nav-link" data-toggle="tab" href="#contacts">Contacts <span class="tab-count">{{ count($client_contact_info ?? []) }}</span></a> </li>
-                    <li class="nav-item JobListOpen"> <a class="nav-link" data-toggle="tab" href="#requisitions">Jobs <span class="tab-count">{{ $active_requisition ?? 0 }}</span></a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#timeline">Timeline</a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#packages">Op. Package <span class="tab-count">{{ count($company_coins ?? []) }}</span></a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#invoices">Sales Package <span class="tab-count">{{ count($company_coins_sales ?? []) }}</span></a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#topupcoins">Top Up Coins</a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#transactionhistory">History</a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#migration">Migration</a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#codeSetting">Setting</a> </li>
-                    <li class="nav-item"> <a class="nav-link" data-toggle="tab" href="#boostkeyword">Boost Keywords</a> </li>            
+                <ul class="nav nav-tabs sa-nav-tabs" role="tablist" aria-label="Company Drawer Tabs">
+                    <li class="nav-item" role="presentation"> <a class="nav-link active" data-toggle="tab" role="tab" id="tab-overview" aria-controls="overview" aria-selected="true" tabindex="0" href="#overview">Overview</a> </li>
+                    <li class="nav-item TeamListOpen" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-contacts" aria-controls="contacts" aria-selected="false" tabindex="-1" href="#contacts">Contacts <span class="tab-count">{{ count($client_contact_info ?? []) }}</span></a> </li>
+                    <li class="nav-item JobListOpen" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-requisitions" aria-controls="requisitions" aria-selected="false" tabindex="-1" href="#requisitions">Jobs <span class="tab-count">{{ $active_requisition ?? 0 }}</span></a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-timeline" aria-controls="timeline" aria-selected="false" tabindex="-1" href="#timeline">Timeline</a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-packages" aria-controls="packages" aria-selected="false" tabindex="-1" href="#packages">Op. Package <span class="tab-count">{{ count($company_coins ?? []) }}</span></a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-invoices" aria-controls="invoices" aria-selected="false" tabindex="-1" href="#invoices">Sales Package <span class="tab-count">{{ count($company_coins_sales ?? []) }}</span></a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-topupcoins" aria-controls="topupcoins" aria-selected="false" tabindex="-1" href="#topupcoins">Top Up Coins</a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-transactionhistory" aria-controls="transactionhistory" aria-selected="false" tabindex="-1" href="#transactionhistory">History</a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-migration" aria-controls="migration" aria-selected="false" tabindex="-1" href="#migration">Migration</a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-codeSetting" aria-controls="codeSetting" aria-selected="false" tabindex="-1" href="#codeSetting">Setting</a> </li>
+                    <li class="nav-item" role="presentation"> <a class="nav-link" data-toggle="tab" role="tab" id="tab-boostkeyword" aria-controls="boostkeyword" aria-selected="false" tabindex="-1" href="#boostkeyword">Boost Keywords</a> </li>            
                 </ul>
             </div>
             <!--end::Tabs Header-->
             <!--Begin::Body-->
             <div class="card-body px-0 py-0">
-                <div class="tab-content pt-2">
+                <div class="tab-content pt-0">
                     <!--begin::Overview Content-->
-                    <div class="tab-pane active" id="overview" role="tabpanel">
+                    <div class="tab-pane active" id="overview" role="tabpanel" aria-labelledby="tab-overview">
                         <div class="content-grid">
                             <!-- Left Column: About the Company -->
                             <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1374,57 +2272,54 @@
                     </div>
                     <!--end::Overview Content-->
                     <!--begin::Contacts Content-->
-                    <div class="tab-pane" id="contacts" role="tabpanel">
-                        <!--begin::Contacts header-->
-                        <div class="card-header cursor-pointer px-0">
-                            <!--begin::Card title-->
-                            <div class="card-title m-0">
-                                <h3 class="fw-bolder m-0">Contact List</h3>
+                    <div class="tab-pane" id="contacts" role="tabpanel" aria-labelledby="tab-contacts">
+                        <div class="contacts-table-card">
+                            <div class="contacts-table-header">
+                                <div>
+                                    <div class="contacts-table-title">
+                                        Contacts <span id="contactsHeadingCount">({{ count($client_contact_info ?? []) }})</span>
+                                    </div>
+                                    <div class="contacts-table-subtitle">
+                                        Manage and view all contacts associated with this company.
+                                    </div>
+                                </div>
+                                <div class="contacts-table-actions">
+                                    <div class="search-box">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                        <input type="text" id="inputSearch" placeholder="Search contacts..." autocomplete="off" aria-label="Search contacts" />
+                                    </div>
+                                    <button type="button" class="btn btn-outline" id="contactsFilterBtn" aria-label="Filter contacts">
+                                        <i class="fas fa-filter" aria-hidden="true"></i> Filters
+                                    </button>
+                                    <a href="{{ route('superadmin.team.create') }}" class="btn btn-primary" id="addContactBtn" aria-label="Add new contact">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> Add Contact
+                                    </a>
+                                </div>
                             </div>
-                            <!--end::Card title-->
-                            <!--begin::Action-->
-
-
-                            {{-- <a href="javascript:void(0);" class="btn btn-primary align-self-center">Add Contact</a> --}}
-                            <!--end::Action-->
-                        </div>
-                        <!--end::Contacts header-->
-                        <!--begin::Contacts Content-->
-                        <div class="card-body px-0 py-7">
-                            <!--begin::Table-->
-                            <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute;">Processing...</div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5" id="contactListss">
-                                <!--begin::Table head-->
-                                <thead>
-                                    <!--begin::Table row-->
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="w-10px pe-0">
-                                            <div
-                                                class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                                    data-kt-check-target="#kt_table_users .form-check-input2"
-                                                    value="1" />
-                                            </div>
-                                        </th>
-                                        <th class="min-w-150px">Name</th>
-                                        <th class="min-w-150px">Role</th>
-                                        <th class="min-w-150px">Contacts</th>
-                                        <th class="min-w-15px">Status</th>
-                                        <th class="min-w-15px">Action</th>
-                                    </tr>
-                                    <!--end::Table row-->
-                                </thead>
-                                <!--end::Table head-->
-                               <tbody id="teamsListajax"> </tbody>
-                            </table>
-                            <!--end::Table-->
+                            <div class="table-wrapper position-relative">
+                                <div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10; background: rgba(255,255,255,0.95); padding: 8px 18px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 12px; font-weight: 600; color: #009ef7;">
+                                    <i class="fa fa-spinner fa-spin me-2" aria-hidden="true"></i> Loading contacts...
+                                </div>
+                                <table class="data-table" id="contactListss">
+                                    <thead>
+                                        <tr>
+                                            <th>Contact <i class="fas fa-sort" aria-hidden="true"></i></th>
+                                            <th>Department <i class="fas fa-sort"></i></th>
+                                            <th>Email <i class="fas fa-sort"></i></th>
+                                            <th>Last Contacted <i class="fas fa-sort"></i></th>
+                                            <th>Status <i class="fas fa-sort"></i></th>
+                                            <th style="text-align: right;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="teamsListajax"> </tbody>
+                                </table>
+                            </div>
                             <div id="paginationTeams"></div>
                         </div>
-                        <!--end::Contacts Content-->
                     </div>
                     <!--end::Contacts Content-->
                     <!--begin::invoices Content-->
-                    <div class="tab-pane" id="invoices" role="tabpanel">
+                    <div class="tab-pane" id="invoices" role="tabpanel" aria-labelledby="tab-invoices">
                         <div class="card-header cursor-pointer px-0" style="display: block;">
 
                             <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4"
@@ -1617,7 +2512,7 @@
                     </div>
                     <!--end::invoices Content-->
                     <!--begin::transactionhistory Content-->
-                    <div class="tab-pane" id="transactionhistory" role="tabpanel">
+                    <div class="tab-pane" id="transactionhistory" role="tabpanel" aria-labelledby="tab-transactionhistory">
                         <div class="card-header cursor-pointer px-0" style="display: block;">
                             <div class="row">
                                 <table
@@ -1789,7 +2684,7 @@
                     </div>
                     <!--end::transactionhistory Content-->
                     <!--begin::codeSetting Content-->
-                    <div class="tab-pane" id="codeSetting" role="tabpanel">
+                    <div class="tab-pane" id="codeSetting" role="tabpanel" aria-labelledby="tab-codeSetting">
                         <div class="card-header cursor-pointer px-0" style="display: block;">
                             <div class="row">
                                 <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class dataTable no-footer"
@@ -1870,7 +2765,7 @@
                     </div>
                     <!--end::codeSetting Content-->
                     <!--begin::migration Content-->
-                    <div class="tab-pane" id="migration" role="tabpanel">
+                    <div class="tab-pane" id="migration" role="tabpanel" aria-labelledby="tab-migration">
                         <div class="card-header cursor-pointer px-0">
                             <!--begin::Card title-->
 
@@ -2258,8 +3153,8 @@
                         </div>
                     </div>
                     <!--end::migration Content-->
-                    <!--begin::migration Content-->
-                    <div class="tab-pane" id="topupcoins" role="tabpanel">
+                    <!--begin::topupcoins Content-->
+                    <div class="tab-pane" id="topupcoins" role="tabpanel" aria-labelledby="tab-topupcoins">
                         <div class="card-header cursor-pointer px-0">
                             <!--begin::Card title-->
 
@@ -2629,7 +3524,7 @@
                     </div>
                     <!--end::migration Content-->
                     <!--begin::packages Content-->
-                    <div class="tab-pane" id="packages" role="tabpanel">
+                    <div class="tab-pane" id="packages" role="tabpanel" aria-labelledby="tab-packages">
                         <!--begin::Contacts header-->
                         <div class="card-header cursor-pointer px-0" style="display: block;">
 
@@ -2822,610 +3717,64 @@
                     </div>
                     <!--end::packages Content-->
                     <!--begin::Requisitions Content-->
-                    <div class="tab-pane" id="requisitions" role="tabpanel">
-                        <!--begin::Sub tabs-->
-                        <div class="card-header cursor-pointer px-0">
-                            <!--begin::Card title-->
-                            <div class="card-title m-0">
-                                <h3 class="fw-bolder m-0">All Jobs</h3>
+                    <div class="tab-pane" id="requisitions" role="tabpanel" aria-labelledby="tab-requisitions">
+                        <div class="contacts-table-card">
+                            <div class="contacts-table-header">
+                                <div>
+                                    <div class="contacts-table-title">
+                                        Jobs <span id="jobsHeadingCount">({{ $active_requisition ?? 0 }})</span>
+                                    </div>
+                                    <div class="contacts-table-subtitle">
+                                        View and manage all jobs and requisitions for this company.
+                                    </div>
+                                </div>
+                                <div class="contacts-table-actions">
+                                    <div class="search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs..." autocomplete="off" />
+                                    </div>
+                                    @if (in_array('add_jobs', $userPermissions))
+                                        <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}" class="btn btn-primary" id="addJobBtn">
+                                            <i class="fas fa-plus"></i>
+                                            Add Job
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
-                            <!--end::Card title-->
-                            <!--begin::Actions-->
-                            <div class="d-flex align-items-center py-1">
-                                <!--begin::Search-->
-                                <div class="d-flex align-items-center position-relative my-1 me-3">
-                                    <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                                    <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none">
-                                            <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2"
-                                                rx="1" transform="rotate(45 17.0365 15.1223)" fill="black" />
-                                            <path
-                                                d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                                fill="black" />
+
+                            <div class="table-card border-0 rounded-0 shadow-none mb-0">
+                                <!-- Column header -->
+                                <div class="table-header">
+                                    <div class="th">Job Details</div>
+                                    <div class="th">
+                                        Experience
+                                        <svg width="11" height="11" fill="none" viewBox="0 0 24 24">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8"/>
                                         </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                    <input type="text" id="inputJobSearch" name="inputJobSearch"
-                                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                                        placeholder="Search..." />
-                                </div>
-                                <!--end::Search-->
-                                <div class="card-toolbar">
-                                    <!--begin::Toolbar-->
-                                    <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                        @if (in_array('add_jobs', $userPermissions))
-                                            <!--begin::Add Requisitions-->
-                                            {{-- echo url('service_company/jobs/create'); --}}
-                                            <a href="{{ url('service_company/jobs/curstomcreate/' . $client->id) }}">
-                                                <button type="button"
-                                                    class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                            xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                            height="24px" viewBox="0 0 24 24" version="1.1">
-                                                            <g stroke="none" stroke-width="1" fill="none"
-                                                                fill-rule="evenodd">
-                                                                <polygon points="0 0 24 0 24 24 0 24" />
-                                                                <path
-                                                                    d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                    fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                                <path
-                                                                    d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                    fill="#000000" fill-rule="nonzero" />
-                                                            </g>
-                                                        </svg>
-                                                    </span> Add Job</button>
-                                            </a>
-                                            <!--end::Add Requisitions-->
-                                        @endif
                                     </div>
-                                    <!--end::Toolbar-->
+                                    <div class="th">Hiring &amp; Location</div>
+                                    <div class="th">Hiring Manager</div>
+                                    <div class="th">Team</div>
+                                    <div class="th">Agency</div>
+                                    <div class="th">
+                                        Hiring Pipeline
+                                        <svg width="11" height="11" fill="none" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </div>
                                 </div>
+                                <!-- Rows (AJAX) -->
+                                <div class="loadingMessage loadingMessagejobListAjax" style="display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.95); padding: 10px 24px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); z-index: 10; font-weight: 600; color: #009ef7;">Processing...</div>
+                                <div id="jobListAjax"></div>
                             </div>
-                            <!--end::Actions-->
+                            <div id="paginationJobs"></div>
                         </div>
-
-                        <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0">
-                            {{-- <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab" href="#all-requisitions">All Req.</a> </li> --}}
-                            {{-- <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#client-requisitions">HCL Req.</a> </li>
-                            <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#custom-requisitions">Custom Req.</a> </li>
-                            <li class="nav-item"> <a class="nav-link" data-bs-toggle="tab" href="#jobs">Jobs</a> </li> --}}
-                        </ul>
-                        <!--end::Sub tabs-->
-                        <!--begin::Requisitions Content-->
-                        <div class="tab-content" id="myTabContent">
-                            <!--begin::All Req.-->
-                            <div class="tab-pane fade show active" id="all-requisitions" role="tabpanel">
-                                <!--begin::All Req. header-->
-                                <!--end::All Req. header-->
-                                <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    {{-- @if (in_array('view_jobs', $userPermissions)) --}}
-                                    <div class="loadingMessage loadingMessagejobListAjax" style="display: none; position: absolute;">Processing...</div>
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="allreq">
-                                        <thead>
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input1"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Jobs</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="text-gray-600 fw-bold" id="jobListAjax">
-                                       </tbody>
-                                    </table>
-                                    <div id="paginationJobs"></div>
-                                    {{-- @endif  --}}
-                                </div>
-                                <!--end::All Req. Content-->
-                            </div>
-                            <!--end::All Req.-->
-                            <!--end::Client Req.-->
-                            <div class="tab-pane fade" id="client-requisitions" role="tabpanel">
-                                <!--begin::Client Req. header-->
-                                <div class="card-header cursor-pointer px-0">
-                                    <!--begin::Card title-->
-                                    <div class="card-title m-0">
-                                        <h3 class="fw-bolder m-0">HCL Requisitions</h3>
-                                    </div>
-                                    <!--end::Card title-->
-                                </div>
-                                <!--end::Client Req. header-->
-                                <!--begin::Client Req. Content-->
-                                <div class="card-body px-0 py-7">
-                                    <!--begin:Table-->
-                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <!--begin::Table row-->
-                                            <tr class="fw-bolder text-muted">
-                                                <th class="w-10px pe-0">
-                                                    <div
-                                                        class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            data-kt-check="true"
-                                                            data-kt-check-target="#kt_table_users .form-check-input2"
-                                                            value="1" />
-                                                    </div>
-                                                </th>
-                                                <th class="">Requisition</th>
-                                                <th class="">Exp.</th>
-                                                <th class="">Salary</th>
-                                                <th class="">Location</th>
-                                                <th class="">Status</th>
-                                                <th class="">Date</th>
-                                                <th class="">HM | CP</th>
-                                                <th class="">S.Partners</th>
-                                                <th class="">TOT</th>
-                                                <th class="">SOU</th>
-                                                <th class="">SCR</th>
-                                                <th class="">EVA</th>
-                                                <th class="">NEO</th>
-                                                <th class="">OFF</th>
-                                                <th class="">JOI</th>
-                                                <th class="">REJ</th>
-                                            </tr>
-                                            <!--end::Table row-->
-                                        </thead>
-                                        <!--end::Table head-->
-                                        <!--begin::Table body-->
-                                        <tbody class="text-gray-600 fw-bold">
-                                            <!--begin::Table row-->
-                                            <tr class="">
-                                                <!--begin::Checkbox-->
-                                                <td class="">
-                                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                        <input class="form-check-input form-check-input2" type="checkbox"
-                                                            value="1" />
-                                                    </div>
-                                                </td>
-                                                <!--end::Checkbox-->
-                                                <!--begin::Requisitions=-->
-                                                <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                    <div
-                                                        class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                                                        <a href="javascript:void(0);">
-                                                            <div
-                                                                class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                                U</div>
-                                                        </a> </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::User details-->
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">UI/UX
-                                                            Designer</a> <a href="javascript:void(0);"
-                                                            class="fw-bold text-muted d-block fs-7 text-hover-primary">Wipro</a>
-                                                    </div>
-                                                    <!--begin::User details-->
-                                                </td>
-                                                <!--end::Requisitions-->
-                                                <!--begin::Exp.-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <span
-                                                            class="text-dark fw-bolder fs-6">22+</span> <span
-                                                            class="text-muted fw-bold text-muted d-block fs-7">18+</span>
-                                                    </div>
-                                                </td>
-                                                <!--end::Exp.-->
-                                                <!--begin::Salary-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <span
-                                                            class="text-dark fw-bolder fs-6">50 LPA</span> <span
-                                                            class="fw-bold d-block fs-7">30 LPA</span> </div>
-                                                </td>
-                                                <!--end::Salary-->
-                                                <!--begin::Location-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <span
-                                                            class="text-dark fw-bolder fs-6">Gurgaon</span>
-                                                        <div class="d-flex align-items-center"> <span
-                                                                class="fw-bold text-muted d-block fs-7">Haryana</span>
-                                                            &nbsp;|&nbsp; <span
-                                                                class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                            <div> </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <!--end::Location-->
-                                                <!--begin::Status | Requisition ID-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                            class="fs-6 hold-bg text-hover-warning">Hold</a> <span
-                                                            class="fw-bold text-muted d-block fs-7">R2</span> </div>
-                                                </td>
-                                                <!--end::Status | Requisition ID-->
-                                                <!--begin::Date | Openings-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column"> <span
-                                                            class="text-dark fw-bolder fs-6">28-Apr-2021</span> <span
-                                                            class="text-muted fw-bold d-block fs-7">774</span> </div>
-                                                </td>
-                                                <!--end::Date | Openings-->
-                                                <!--begin::Hiring Manager | Contact Person-->
-                                                <td class="">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="symbol-group symbol-hover">
-                                                            <div class="symbol symbol-30 symbol-circle"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title="Pawan"> <img alt="Pic"
-                                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_4.jpg">
-                                                            </div>
-                                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title="" data-original-title="More users list..">
-                                                                <span class="symbol-label font-weight-bold">1+</span> </div>
-                                                        </div>
-                                                    </div>
-                                </div>
-
-                                </td>
-
-                                <!--end::Hiring Manager | Contact Person-->
-                                <!--begin::Staffing Partners-->
-                                <td class="">
-                                    <div class="d-flex flex-column">
-                                        <div class="symbol-group symbol-hover">
-                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                data-bs-placement="top" title="" data-original-title="Pradeep"> <img
-                                                    alt="Pic"
-                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_23.jpg">
-                                            </div>
-                                            <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                data-bs-placement="top" title="" data-original-title="Abinesh"> <img
-                                                    alt="Pic"
-                                                    src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_24.jpg">
-                                            </div>
-                                            <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                data-bs-toggle="tooltip" data-bs-placement="top" title=""
-                                                data-original-title="More users list.."> <span
-                                                    class="symbol-label font-weight-bold">2+</span> </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <!--end::Staffing Partners-->
-                                <!--begin::TOT-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">65</a> <a
-                                            href="javascript:void(0);"
-                                            class="text-muted fw-bold d-block fs-7 text-hover-primary">10</a> </div>
-                                </td>
-                                <!--end::TOT-->
-                                <!--begin::SOU-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> </div>
-                                </td>
-                                <!--end::SOU-->
-                                <!--begin::SCR-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">23</a> </div>
-                                </td>
-                                <!--end::SCR-->
-                                <!--begin::EVA-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> </div>
-                                </td>
-                                <!--end::EVA-->
-                                <!--begin::NEO-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">24</a> </div>
-                                </td>
-                                <!--end::NEO-->
-                                <!--begin::OFF-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">83</a> </div>
-                                </td>
-                                <!--end::OFF-->
-                                <!--begin::JOI-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">49</a> </div>
-                                </td>
-                                <!--end::JOI-->
-                                <!--begin::REJ-->
-                                <td class="">
-                                    <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder fs-6 text-hover-primary">0</a> </div>
-                                </td>
-                                <!--end::REJ-->
-                                </tr>
-                                <!--end::Table row-->
-                                </tbody>
-
-                                <!--end::Table body-->
-                                </table>
-                                <!--end::Table-->
-                            </div>
-                            <!--end::Client Req. Content-->
-                        </div>
-                            <!--end::Client Req.-->
-                            <!--begin::Custom Req.-->
-                        <div class="tab-pane fade" id="custom-requisitions" role="tabpanel">
-                            <!--begin::Custom Req. header-->
-                            <div class="card-header cursor-pointer px-0">
-                                <!--begin::Card title-->
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Custom Requisitions</h3>
-                                </div>
-                                <!--end::Card title-->
-                                <!--begin::Actions-->
-                                <div class="d-flex align-items-center py-1">
-                                    <div class="card-toolbar">
-                                        <!--begin::Toolbar-->
-                                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                                            <!--begin::Add Requisitions-->
-                                            <a href="{{ url('service_company/jobs/create') }}">
-                                                <button type="button"
-                                                    class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3">
-                                                    <!--begin::Svg Icon-->
-                                                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                            xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                            height="24px" viewBox="0 0 24 24" version="1.1">
-                                                            <g stroke="none" stroke-width="1" fill="none"
-                                                                fill-rule="evenodd">
-                                                                <polygon points="0 0 24 0 24 24 0 24" />
-                                                                <path
-                                                                    d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                                    fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                                <path
-                                                                    d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                                    fill="#000000" fill-rule="nonzero" />
-                                                            </g>
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    Add Requisitions </button>
-                                            </a>
-                                            <!--end::Add Requisitions-->
-                                        </div>
-                                        <!--end::Toolbar-->
-                                    </div>
-                                </div>
-                                <!--end::Actions-->
-                            </div>
-                            <!--end::Custom Req. header-->
-                            <!--begin::Custom Req. Content-->
-                            <div class="card-body px-0 py-7">
-                                <!--begin:Table-->
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_table_users">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <!--begin::Table row-->
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-0">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                    <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                                        data-kt-check-target="#kt_table_users .form-check-input3"
-                                                        value="1" />
-                                                </div>
-                                            </th>
-                                            <th class="">Requisition</th>
-                                            <th class="">Exp.</th>
-                                            <th class="">Salary</th>
-                                            <th class="">Location</th>
-                                            <th class="">Status</th>
-                                            <th class="">Date</th>
-                                            <th class="">HM | CP</th>
-                                            <th class="">S.Partners</th>
-                                            <th class="">TOT</th>
-                                            <th class="">SOU</th>
-                                            <th class="">SCR</th>
-                                            <th class="">EVA</th>
-                                            <th class="">NEO</th>
-                                            <th class="">OFF</th>
-                                            <th class="">JOI</th>
-                                            <th class="">REJ</th>
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <!--begin::Table body-->
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <!--begin::Table row-->
-                                        <tr class="">
-                                            <!--begin::Checkbox-->
-                                            <td class="">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input form-check-input3" type="checkbox"
-                                                        value="1" />
-                                                </div>
-                                            </td>
-                                            <!--end::Checkbox-->
-                                            <!--begin::Requisitions=-->
-                                            <td class="d-flex align-items-center border-0"><!--begin:: Avatar -->
-                                                <div
-                                                    class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5">
-                                                    <a href="javascript:void(0);">
-                                                        <div class="symbol-label border-radius-5"> <img
-                                                                src="https://www.hcltech.com/sites/default/files/styles/large/public/images/guideline_based_vectors-square.png?itok=KEUChzF3"
-                                                                alt="Company Logo" class="border-radius-5 w-100"> </div>
-                                                    </a> </div>
-                                                <!--end::Avatar-->
-                                                <!--begin::User details-->
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder text-hover-primary fs-6">Frontend
-                                                        Developer</a> <a href="javascript:void(0);"
-                                                        class="fw-bold text-muted d-block fs-7 text-hover-primary">HCl
-                                                        Technologies</a> </div>
-                                                <!--begin::User details-->
-                                            </td>
-                                            <!--end::Requisitions-->
-                                            <!--begin::Exp.-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">30+</span> <span
-                                                        class="text-muted fw-bold text-muted d-block fs-7">27+</span> 
-                                                        
-                                                </div>
-                                            </td>
-                                            <!--end::Exp.-->
-                                            <!--begin::Salary-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">70
-                                                        LPA</span> <span class="fw-bold d-block fs-7">67 LPA</span> 
-                                                </div>
-                                            </td>
-                                            <!--end::Salary-->
-                                            <!--begin::Location-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">Noida</span>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="fw-bold text-muted d-block fs-7">U.P</span> &nbsp;|&nbsp;
-                                                        <span class="fw-bold text-muted d-block fs-7">INDIA</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Location-->
-                                            <!--begin::Status | Requisition ID-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="fs-6 closed-bg text-hover-danger">Closed</a> <span
-                                                        class="fw-bold text-muted d-block fs-7">R3-Custom</span> </div>
-                                            </td>
-                                            <!--end::Status | Requisition ID-->
-                                            <!--begin::Date | Openings-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <span
-                                                        class="text-dark fw-bolder fs-6">29-Aug-2021</span> <span
-                                                        class="text-muted fw-bold d-block fs-7">33</span> </div>
-                                            </td>
-                                            <!--end::Date | Openings-->
-                                            <!--begin::Hiring Manager | Contact Person-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                            data-bs-placement="top" title="Priyanka"> <img alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_20.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list.."> <span
-                                                                class="symbol-label font-weight-bold">1+</span> </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Hiring Manager | Contact Person-->
-                                            <!--begin::Staffing Partners-->
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <div class="symbol-group symbol-hover">
-                                                        <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                            data-bs-placement="top" title=""
-                                                            data-original-title="One"> <img alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_1.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle" data-bs-toggle="tooltip"
-                                                            data-bs-placement="top" title=""
-                                                            data-original-title="Two"> <img alt="Pic"
-                                                                src="https://preview.keenthemes.com//metronic/theme/html/demo1/dist/assets/media/users/300_2.jpg">
-                                                        </div>
-                                                        <div class="symbol symbol-30 symbol-circle symbol-light"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="" data-original-title="More users list.."> <span
-                                                                class="symbol-label font-weight-bold">2+</span> </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <!--end::Staffing Partners-->
-                                            <!--begin::TOT-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">425</a> <a
-                                                        href="javascript:void(0);"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary">64</a>
-                                                </div>
-                                            </td>
-                                            <!--end::TOT-->
-                                            <!--begin::SOU-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">345</a> </div>
-                                            </td>
-                                            <!--end::SOU-->
-                                            <!--begin::SCR-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a> </div>
-                                            </td>
-                                            <!--end::SCR-->
-                                            <!--begin::EVA-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">94</a> </div>
-                                            </td>
-                                            <!--end::EVA-->
-                                            <!--begin::NEO-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">03</a> </div>
-                                            </td>
-                                            <!--end::NEO-->
-                                            <!--begin::OFF-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">0</a> </div>
-                                            </td>
-                                            <!--end::OFF-->
-                                            <!--begin::JOI-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">45</a> </div>
-                                            </td>
-                                            <!--end::JOI-->
-                                            <!--begin::REJ-->
-                                            <td class="">
-                                                <div class="d-flex flex-column"> <a href="javascript:void(0);"
-                                                        class="text-dark fw-bolder fs-6 text-hover-primary">540</a> </div>
-                                            </td>
-                                            <!--end::REJ-->
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </tbody>
-                                    <!--end::Table body-->
-                                </table>
-                                <!--end::Table-->
-                            </div>
-                            <!--end::Custom Req. Content-->
-                        </div>
-                        <!--end::Custom Req.-->
-                        <div class="tab-pane fade" id="jobs" role="tabpanel">Jobs - Content</div>
                     </div>
-                        <!--end::Requisitions Content-->
-                    </div>
-                    <!--begin::Requisitions Content-->
+                    <!--end::Requisitions Content-->
                     <!--begin::timeline Content-->
-                    <div class="tab-pane" id="timeline" role="tabpanel">
+                    <div class="tab-pane" id="timeline" role="tabpanel" aria-labelledby="tab-timeline">
                         {{-- <div class="card-header cursor-pointer px-0">
                         <div class="card-title m-0">
                             <h3 class="fw-bolder m-0">Timeline</h3>
@@ -3839,7 +4188,7 @@
                     </div>
 
                     <!--begin::boost keyword Content-->
-                    <div class="tab-pane" id="boostkeyword" role="tabpanel">
+                    <div class="tab-pane" id="boostkeyword" role="tabpanel" aria-labelledby="tab-boostkeyword">
                             <form id="boost_keyword_form" class="form" action="#">
                                     <div class="card-body px-0 py-7">
                                         
@@ -4105,6 +4454,46 @@ var input = document.querySelector('input[name=tags]');
             alert("Link copied to clipboard: " + textToCopy);
         }
 
+            $(document).on('shown.bs.tab', '.sa-company-drawer .sa-tabs-bar .nav-link', function (e) {
+                $('.sa-company-drawer .sa-tabs-bar .nav-link').attr('aria-selected', 'false').attr('tabindex', '-1');
+                $(e.target).attr('aria-selected', 'true').attr('tabindex', '0');
+            });
+
+            // W3C ARIA APG Keyboard Arrow Navigation for Tabs
+            $(document).on('keydown', '.sa-company-drawer .sa-tabs-bar .nav-link', function (e) {
+                var tabs = $('.sa-company-drawer .sa-tabs-bar .nav-link');
+                var index = tabs.index(this);
+                var targetIndex = -1;
+
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    targetIndex = (index + 1) % tabs.length;
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    targetIndex = (index - 1 + tabs.length) % tabs.length;
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    targetIndex = 0;
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    targetIndex = tabs.length - 1;
+                }
+
+                if (targetIndex !== -1) {
+                    var targetTab = tabs.eq(targetIndex);
+                    targetTab.focus();
+                    targetTab.trigger('click');
+                }
+            });
+
+            // Keyboard accessibility for clickable custom rows (Enter/Space triggers click)
+            $(document).on('keydown', '.sa-company-drawer [role="button"][tabindex="0"]', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $(this).trigger('click');
+                }
+            });
+
             $(document).on('click','.TeamListOpen',function(){
                 fetchTeams();
             });
@@ -4121,7 +4510,7 @@ var input = document.querySelector('input[name=tags]');
                             $(this).addClass('disabled');
 
                             // Fetch data
-                            fetchTeams(page, $('#search').val()).then(() => {
+                            fetchTeams(page, $('#inputSearch').val()).then(() => {
                                 // Re-enable the links after successful data fetch
                                 $('#paginationTeams .page-link').removeClass('disabled');
                             }).catch(() => {
@@ -4139,7 +4528,7 @@ var input = document.querySelector('input[name=tags]');
 
 			function fetchTeams(page = page_no, search = '') {
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
-				$.ajax({
+				return $.ajax({
 					url: `{!! route('superadmin.company.contactdata') !!}?page=${page}`,
 					type: 'GET',
 					data: {
@@ -4151,12 +4540,33 @@ var input = document.querySelector('input[name=tags]');
 					},
 					success: function(response) {
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
-                        localStorage.setItem('currentPageTeam', 1);
+                        localStorage.setItem('currentPageTeam', page);
 						$('#teamsListajax').html(response.html);
 						$('#paginationTeams').html(response.pagination);
-					}
+                        $('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]').tooltip();
+                        if (response.total !== undefined) {
+                            $('#contactsHeadingCount').text('(' + response.total + ')');
+                            $('.TeamListOpen .tab-count').text(response.total);
+                        }
+					},
+                    error: function() {
+                        $('.loadingMessageteamsListajax').css({ display: 'none' });
+                    }
 				});
 			}
+
+            var contactSearchTimer;
+            $(document).on('keyup', '#inputSearch', function() {
+                clearTimeout(contactSearchTimer);
+                contactSearchTimer = setTimeout(function() {
+                    fetchTeams(1);
+                }, 300);
+            });
+
+            $(document).on('change', '#checkAllContacts', function() {
+                var isChecked = $(this).is(':checked');
+                $('#teamsListajax .chk_list_item:not(:disabled)').prop('checked', isChecked);
+            });
 
             
 </script>
@@ -4174,8 +4584,12 @@ var input = document.querySelector('input[name=tags]');
         $('#successButtonoperationaltopup').hide();
         $('#errorButtonoperationaltopup').hide();
 
-        $('#inputJobSearch').keyup(function() {
-            fetchCompanyJobs();
+        var jobSearchTimer;
+        $('#inputJobSearch').on('keyup', function() {
+            clearTimeout(jobSearchTimer);
+            jobSearchTimer = setTimeout(function() {
+                fetchCompanyJobs(1);
+            }, 300);
         });
 
         var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
@@ -4275,7 +4689,7 @@ var input = document.querySelector('input[name=tags]');
                     $(this).addClass('disabled');
 
                     // Fetch data
-                    fetchCompanyJobs(page, $('#search').val()).then(() => {
+                    fetchCompanyJobs(page, $('#inputJobSearch').val()).then(() => {
                         // Re-enable the links after successful data fetch
                         $('#paginationJobs .page-link').removeClass('disabled');
                     }).catch(() => {
@@ -4293,7 +4707,7 @@ var input = document.querySelector('input[name=tags]');
 
 			function fetchCompanyJobs(page = page_no, search = '') {
 				$('.loadingMessagejobListAjax').css({ display: 'block' });
-				$.ajax({
+				return $.ajax({
 					url: `{!! route('superadmin.company.all_data') !!}?page=${page}`,
 					type: 'GET',
 					data: {
@@ -4305,10 +4719,17 @@ var input = document.querySelector('input[name=tags]');
 					},
 					success: function(response) {
 						$('.loadingMessagejobListAjax').css({ display: 'none' });
-                        localStorage.setItem('currentPageJobs', 1);
+                        localStorage.setItem('currentPageJobs', page);
 						$('#jobListAjax').html(response.html);
 						$('#paginationJobs').html(response.pagination);
-					}
+						if (response && response.total !== undefined) {
+							$('#jobsHeadingCount').text('(' + response.total + ')');
+							$('.JobListOpen .tab-count').text(response.total);
+						}
+					},
+                    error: function() {
+                        $('.loadingMessagejobListAjax').css({ display: 'none' });
+                    }
 				});
 			}
 

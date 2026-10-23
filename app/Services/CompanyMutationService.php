@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helper\Files;
+use App\Helper\GeneralMethod;
 use App\Jobs\ProcessCompanyOutboxEventJob;
 use App\Models\Company;
 use App\Models\CompanyPackage;
@@ -316,6 +317,255 @@ class CompanyMutationService
                     'action' => 'package_updated',
                     'package_id' => (int) ($packageData['package'] ?? 0),
                     'package_type' => ! empty($packageData['package_type']) ? 'annual' : 'monthly',
+                    'message' => __('messages.updatedSuccessfully'),
+                ];
+            }
+        );
+    }
+
+    /**
+     * Atomically update company profile details, tags, and locations under Outbox Architecture & Idempotency.
+     * Guarantees 0 duplicate executions under retries, zero stale Elasticsearch data, and Reverb broadcasting.
+     *
+     * @param  int  $companyId  Company primary key
+     * @param  array  $requestData  Form fields array
+     * @param  string|null  $idempotencyKey  Idempotency key from client header or form
+     * @param  mixed|null  $logoFile  Uploaded logo file if present
+     * @return array Result payload
+     */
+    public function updateCompanyDetails(int $companyId, array $requestData, ?string $idempotencyKey = null, mixed $logoFile = null): array
+    {
+        $tenantId = $companyId;
+        $cleanPayload = $requestData;
+        unset($cleanPayload['_token'], $cleanPayload['logo']);
+
+        return $this->executeMutation(
+            tenantId: $tenantId,
+            companyId: $companyId,
+            eventType: 'COMPANY_UPDATED',
+            operation: 'update_details',
+            payload: $cleanPayload,
+            idempotencyKey: $idempotencyKey,
+            domainLogic: function () use ($companyId, $requestData, $logoFile) {
+                $company = Company::withoutGlobalScopes()->findOrFail($companyId);
+
+                if (! empty($requestData['company_name'])) {
+                    $company->company_name = $requestData['company_name'];
+                }
+                if (! empty($requestData['website'])) {
+                    $company->website = $requestData['website'];
+                }
+                if (! empty($requestData['industries'])) {
+                    $company->industries = $requestData['industries'];
+                }
+                if (! empty($requestData['company_size'])) {
+                    $cSize = $requestData['company_size'];
+                    if (str_contains($cSize, '-')) {
+                        [$fSize, $tSize] = explode('-', $cSize, 2);
+                        $company->company_size_from = $fSize;
+                        $company->company_size = $tSize;
+                    } else {
+                        $company->company_size = $cSize;
+                    }
+                }
+                if (isset($requestData['company_type']) && $requestData['company_type'] !== '') {
+                    $company->company_type = $requestData['company_type'];
+                }
+                if (isset($requestData['industries_type']) && $requestData['industries_type'] !== '') {
+                    $company->industries_type = $requestData['industries_type'];
+                } elseif (isset($requestData['company_type']) && $requestData['company_type'] !== '') {
+                    $company->industries_type = $requestData['company_type'];
+                }
+                if (! empty($requestData['founded'])) {
+                    $company->founded = $requestData['founded'];
+                }
+                if (isset($requestData['career_page_link'])) {
+                    $company->career_page_link = $requestData['career_page_link'];
+                } elseif (isset($requestData['career_page_url'])) {
+                    $company->career_page_link = $requestData['career_page_url'];
+                }
+                if (! empty($requestData['company_email'])) {
+                    $company->company_email = $requestData['company_email'];
+                }
+                if (! empty($requestData['company_phone'])) {
+                    $company->company_phone = $requestData['company_phone'];
+                }
+
+                if (! empty($requestData['kt_docs_tinymce_hidden'])) {
+                    $company->description = htmlentities($requestData['kt_docs_tinymce_hidden'], ENT_QUOTES, 'UTF-8');
+                } elseif (! empty($requestData['description'])) {
+                    $company->description = htmlentities($requestData['description'], ENT_QUOTES, 'UTF-8');
+                }
+
+                if ($logoFile) {
+                    $company_logo_path = Files::upload($logoFile, 'company-logo');
+                    $company->logo = $company_logo_path;
+                } elseif (! empty($requestData['avatar_remove']) && $requestData['avatar_remove'] == 1) {
+                    if (! empty($company->logo) && ! str_starts_with($company->logo, 'http')) {
+                        Files::deleteFile($company->logo, 'company-logo');
+                    }
+                    $company->logo = null;
+                }
+
+                if (! empty($requestData['language'])) {
+                    $company->language = $requestData['language'];
+                }
+                if (! empty($requestData['timezone'])) {
+                    $company->timezone = $requestData['timezone'];
+                }
+                if (! empty($requestData['currency'])) {
+                    $company->currency = $requestData['currency'];
+                }
+                if (! empty($requestData['time_format'])) {
+                    $company->time_format = $requestData['time_format'];
+                }
+                if (! empty($requestData['date_format'])) {
+                    $company->date_format = $requestData['date_format'];
+                    if (($requestData['app_duplicate'] ?? 0) == 1) {
+                        $company->app_duplicate = 1;
+                        $company->app_duplicate_days = $requestData['app_duplicate_requisition_wise'] ?? null;
+                    } elseif (($requestData['app_duplicate'] ?? 0) == 2) {
+                        $company->app_duplicate = 2;
+                        $company->app_duplicate_days = $requestData['app_duplicate_overroll'] ?? null;
+                    } else {
+                        $company->app_duplicate = $requestData['app_duplicate'] ?? 0;
+                        $company->app_duplicate_days = '';
+                    }
+                }
+
+                if (! empty($requestData['accountVerify'])) {
+                    $company->accountVerify = 1;
+                } else {
+                    $company->accountVerify = 0;
+                }
+
+                $company->save();
+
+                // Update tags and company sizes in clients table
+                $clientUpdates = [];
+                if (! empty($requestData['tags'])) {
+                    $tags = $requestData['tags'];
+                    $strdata = '';
+                    if (is_string($tags)) {
+                        $decoded = json_decode($tags, true);
+                        if (is_array($decoded)) {
+                            $tagsArr = array_column($decoded, 'value');
+                            $strdata = implode(',', $tagsArr);
+                        } else {
+                            $strdata = $tags;
+                        }
+                    } elseif (is_array($tags)) {
+                        $strdata = implode(',', $tags);
+                    }
+                    $clientUpdates['tags'] = $strdata;
+                }
+
+                if (! empty($requestData['company_size'])) {
+                    $cSize = $requestData['company_size'];
+                    if (str_contains($cSize, '-')) {
+                        [$fSize, $tSize] = explode('-', $cSize, 2);
+                        $clientUpdates['company_size_from'] = $fSize;
+                        $clientUpdates['company_sizes'] = $tSize;
+                    } else {
+                        $clientUpdates['company_sizes'] = $cSize;
+                    }
+                }
+
+                if (isset($requestData['company_type']) && $requestData['company_type'] !== '') {
+                    $clientUpdates['company_type'] = $requestData['company_type'];
+                }
+
+                if (! empty($requestData['company_email'])) {
+                    $clientUpdates['email'] = $requestData['company_email'];
+                }
+                if (! empty($requestData['company_phone'])) {
+                    $clientUpdates['contact_number'] = $requestData['company_phone'];
+                }
+                if (! empty($requestData['founded'])) {
+                    $clientUpdates['founded'] = $requestData['founded'];
+                }
+
+                if (! empty($clientUpdates)) {
+                    DB::table('clients')
+                        ->where('company_id', $companyId)
+                        ->where('self_company', 1)
+                        ->limit(1)
+                        ->update($clientUpdates);
+                }
+
+                // Update locations in client_location table
+                if (($requestData['pagename'] ?? '') !== 'settings') {
+                    $clientObj = DB::table('clients')->select('id')->where('company_id', $companyId)->where('self_company', 1)->first();
+                    $clientId = $clientObj?->id;
+                    if ($clientId) {
+                        DB::table('client_location')->where('client_id', $clientId)->delete();
+                        $addressId = isset($requestData['addressId']) ? (int) $requestData['addressId'] : 0;
+                        $locationRows = [];
+
+                        for ($i = 0; $i <= $addressId; $i++) {
+                            $address = $requestData['address'][$i] ?? null;
+                            $workCityRaw = $requestData['kt_tagify_work_location'][$i] ?? null;
+                            if (! empty($workCityRaw)) {
+                                $workCityAll = is_array($workCityRaw) ? $workCityRaw : json_decode($workCityRaw, true);
+                                if (is_array($workCityAll)) {
+                                    foreach ($workCityAll as $cityVal) {
+                                        $val = is_array($cityVal) ? ($cityVal['value'] ?? '') : $cityVal;
+                                        $parts = explode('|', $val);
+                                        $cityName = trim($parts[0] ?? '');
+                                        $countryName = trim($parts[2] ?? '');
+
+                                        $cityRow = DB::table('city_list')
+                                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                            ->select('city_list.city_id', 'countries.id as country_id')
+                                            ->where('city_list.city', '!=', '')
+                                            ->where('city_list.city', '=', $cityName)
+                                            ->where('countries.country_name', '=', $countryName)
+                                            ->first();
+
+                                        if ($cityRow) {
+                                            $cityID = $cityRow->city_id;
+                                            $countryID = $cityRow->country_id;
+                                            $stateId = GeneralMethod::stateId($cityID);
+
+                                            $locationRows[] = [
+                                                'client_id' => $clientId,
+                                                'country_id' => $countryID,
+                                                'city' => $cityName,
+                                                'city_id' => $cityID,
+                                                'address' => $address ?? '',
+                                                'postcode' => '0',
+                                                'state' => $stateId,
+                                            ];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (! empty($locationRows)) {
+                            DB::table('client_location')->insert($locationRows);
+                        }
+                    }
+                }
+
+                return [
+                    'status' => 'success',
+                    'action' => 'updated',
+                    'company_id' => $companyId,
+                    'delta' => [
+                        'company_name' => $company->company_name,
+                        'website' => $company->website,
+                        'industries' => $company->industries,
+                        'company_size' => $company->company_size,
+                        'company_type' => $company->company_type,
+                        'industries_type' => $company->industries_type,
+                        'founded' => $company->founded,
+                        'description' => $company->description,
+                        'logo' => $company->logo,
+                        'accountVerify' => (int) $company->accountVerify,
+                        'status' => $company->status ?? 'active',
+                    ],
                     'message' => __('messages.updatedSuccessfully'),
                 ];
             }

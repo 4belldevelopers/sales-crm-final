@@ -3,819 +3,427 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
+    $salaryMode = $salaryMode ?? GeneralMethod::salaryMode();
+    $currencySymbole = $currencySymbole ?? GeneralMethod::currencySymbole();
+    $job_status = $job_status ?? GeneralMethod::job_status();
 @endphp
-@if (count($data) > 0)
-    @foreach ($data as $rowArr)
-     @php
-        $row = (object) $rowArr;
-        $targetJobId = $row->id;
-        $company_id = $row->comId;
-        $match = collect($row->recommendation_relation)->first(function ($item) use ($company_id) {
-            return ($item['from_company_id'] ?? null) == $company_id
-                || ($item['to_company_id'] ?? null) == $company_id;
-        });
-        $from_company_id = ($match['to_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-        $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-
-        $row->final_status   = ($match['to_company_id'] ?? null) == $company_id ? $match['final_status'] : null;
-
-        $final_status = collect($row->recommendation_relation)->first(function ($item) use ($targetJobId) {
-            return $item['job_id'] == $targetJobId;
-        })['final_status'] ?? null;
-
-        // $row->final_status = $final_status;
-        $row->recommendation_id =$recommendation_id;
-        $row->to_company_id = $recommendation_id;
-        $row->from_company_id = $from_company_id;
-        $row->companyidcount= $row->comId;
-        $row->clients_name = $row->client_name;
+@if (!empty($data) && count($data) > 0)
+    @php
+        $categoryIds = collect($data)->pluck('category_id')->filter()->unique()->toArray();
+        $categoriesMap = !empty($categoryIds) ? DB::table('job_categories')->select('id', 'name')->whereIn('id', $categoryIds)->get()->keyBy('id') : collect();
     @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input" type="checkbox" value="1" />
-                  </div>';
-                @endphp
-            </td>
-            <td class=" d-flex align-items-center">
-                @php
-                    $clients_name = '';
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->title);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+    @foreach ($data as $rowArr)
+        @php
+            $row = (object) $rowArr;
+            $targetJobId = $row->id;
+            $company_id = $row->comId ?? null;
+
+            // Recommendation relation matching
+            $match = collect($row->recommendation_relation ?? [])->first(function ($item) use ($company_id) {
+                return ($item['from_company_id'] ?? null) == $company_id
+                    || ($item['to_company_id'] ?? null) == $company_id;
+            });
+            $from_company_id = ($match['to_company_id'] ?? null) == $company_id ? ($match['from_company_id'] ?? null) : null;
+            $recommendation_id = ($match['to_company_id'] ?? null) == $company_id ? ($match['to_company_id'] ?? null) : null;
+            $final_status = ($match['to_company_id'] ?? null) == $company_id ? ($match['final_status'] ?? null) : null;
+
+            $row->final_status = $final_status;
+            $row->recommendation_id = $recommendation_id;
+            $row->to_company_id = $recommendation_id;
+            $row->from_company_id = $from_company_id;
+            $row->companyidcount = $row->comId ?? null;
+            $row->clients_name = $row->client_name ?? '';
+
+            // Initials & Background decoration
+            $str = trim(@$row->title ?? '');
+            $strVal = strtolower($str[0] ?? 'j');
+            $strAscii = ord($strVal);
+            if ($strAscii >= 97 && $strAscii <= 101) {
+                $bgTextDecore = 'bg-light-danger text-danger';
+            } elseif ($strAscii >= 102 && $strAscii <= 106) {
+                $bgTextDecore = 'bg-light-warning text-warning';
+            } elseif ($strAscii >= 107 && $strAscii <= 111) {
+                $bgTextDecore = 'bg-light-primary text-primary';
+            } elseif ($strAscii >= 112 && $strAscii <= 116) {
+                $bgTextDecore = 'bg-light-success text-success';
+            } elseif ($strAscii >= 117 && $strAscii <= 121) {
+                $bgTextDecore = 'bg-dark text-secondary';
+            } else {
+                $bgTextDecore = 'bg-light-secondary text-dark';
+            }
+
+            $profile_detail_class = 'show-detail';
+            if ($row->recommendation_id > 0) {
+                $profile_detail_class = 'client-show-detail';
+            }
+
+            $clients_name = ucwords(mb_substr(@$row->company_name ?: (@$row->clients_name ?: @$row->client_name), 0, 30));
+
+            $logo_path = GeneralMethod::companyDetailsSupper($row->id);
+            if (empty($logo_path) && !empty($row->logo_logical_path)) {
+                $logo_path = $row->logo_logical_path;
+            }
+
+            // Department / Category
+            $department = @$row->category_name;
+            if (empty($department)) {
+                $deptRow = $categoriesMap->get(@$row->category_id);
+                $department = $deptRow->name ?? '';
+            }
+            if (empty($department)) {
+                $department = 'Information Technology';
+            }
+
+            // Experience & Salary
+            $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode ?? ''] ?? '', 0, 1));
+            $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode ?? ''] ?? '', 0, 1));
+            $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '₹';
+            $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0);
+            $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0);
+            $max_salary = GeneralMethod::formatAmount($max_salary);
+            $min_salary = GeneralMethod::formatAmount($min_salary);
+
+            $recommendation_text = $row->recommendation_id > 0 ? 'Client' : 'Custom';
+            $badge = $row->recommendation_id > 0 ? 'badge-client' : 'badge-internal';
+            $svg = '<svg width="9" height="9" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2.5"/>
+                  </svg>';
+
+            // Status & Work Mode
+            $status = ucwords($row->status ?? 'Active');
+            $statusClass = $job_status[$row->status ?? ''] ?? '';
+            if ($status == 'Active') {
+                $status = 'Hiring';
+            } elseif ($status == 'Inactive') {
+                $status = 'Closed';
+            }
+
+            $ulink = '<span class="badge-hiring ' . @$statusClass . '">' . $status . '</span>';
+            if (($row->final_status == 2 || $row->final_status == 3)) {
+                $status = 'Removed';
+                $statusClass = 'closed-bg';
+                $ulink = '<span class="badge-hiring ' . @$statusClass . '">' . $status . '</span>';
+            }
+
+            $work_type = 'Office';
+            if ($row->work_type == 'yes') {
+                $work_type = 'Remote';
+            } elseif ($row->work_type == 'other' || $row->work_type == 'any') {
+                $work_type = 'Hybrid';
+            }
+
+            $employment_type = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
+            $created_at = $row->created_at ?? date('Y-m-d');
+            $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
+
+            // Skills
+            $skilltag = '';
+            if (!empty($row->job_metronics_skills)) {
+                foreach ($row->job_metronics_skills as $sval) {
+                    $sval = (object) $sval;
+                    $sName = $sval->skill_name ?? ($sval->name ?? '');
+                    if (!empty($sName)) {
+                        $skilltag .= '<span class="badge badge-light my-1 me-1">' . htmlspecialchars(ucfirst($sName)) . '</span> ';
                     }
-
-                    $profile_detail_class = 'show-detail';
-                    $clients_name = ucwords(mb_substr(@$row->clients_name, 0, 30));
-
-                    //  dd($ddudud);
-
-                    $recommendation_id = '';
-                    $recommendation_id = $row->recommendation_id;
-                    $recommendation_text = '&nbsp;<i class="bi bi-house" style="color:#00CC00"></i>';
-
-                    $logo_path = '';
-                    //$logo_path				=	url('img/client-default.png');
-                    if (!empty($row->logo_logical_path)) {
-                        $logo_path = @$row->logo_logical_path;
+                }
+            }
+            if (empty($skilltag) && empty($limit)) {
+                $skillArr = DB::table('job_metronics_skills')
+                    ->select('skill_name')
+                    ->where('job_id', $row->id)
+                    ->where('company_id', '=', $row->comId)
+                    ->get();
+                if (!empty($skillArr)) {
+                    foreach ($skillArr as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1 me-1">' . htmlspecialchars(ucfirst($sval->skill_name)) . '</span> ';
                     }
+                }
+            }
+            if (empty($skilltag)) {
+                $skilltag = '<span class="text-muted" style="font-size: 11px;">Not specified</span>';
+            }
 
-                    if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        $recommendation_text =
-                            '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
-                        $profile_detail_class = 'client-show-detail';
-                        $clients_name = ucwords(mb_substr(@$row->company_name, 0, 30));
+            // Location
+            $cityName = null;
+            if (!empty($row->client_city_jobs)) {
+                $firstCity = collect($row->client_city_jobs)->first();
+                $cityName = is_array($firstCity) ? ($firstCity['city_name'] ?? null) : ($firstCity->city_name ?? null);
+            }
+            if (empty($cityName)) {
+                $locRow = DB::table('client_city_jobs')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                    ->select('city_list.city as city_name')
+                    ->where('client_city_jobs.job_id', $row->id)
+                    ->first();
+                $cityName = $locRow->city_name ?? null;
+            }
+            if (empty($cityName)) {
+                $locRow = DB::table('client_location_jobs')
+                    ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->select('city_list.city as city_name', 'client_location.city as cl_city')
+                    ->where('client_location_jobs.job_id', $row->id)
+                    ->first();
+                $cityName = $locRow->city_name ?? ($locRow->cl_city ?? 'Multiple');
+            }
+            $city = mb_substr($cityName ?: 'Multiple', 0, 15);
 
-                        if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                            $logo_path = @$row->logo;
-                        }
-                    }
+            // Hiring Manager
+            $hiringManager = '--------';
+            $hiringManagerdesignation = '';
+            if (!empty($row->client_contact_info_jobs)) {
+                $firstHm = collect($row->client_contact_info_jobs)->first();
+                $hiringManager = is_array($firstHm) ? ($firstHm['contact_person_name'] ?? '--------') : ($firstHm->contact_person_name ?? '--------');
+                $hiringManagerdesignation = is_array($firstHm) ? ($firstHm['contact_person_designation'] ?? '') : ($firstHm->contact_person_designation ?? '');
+            }
+            if ($hiringManager === '--------') {
+                $hmRow = DB::table('client_contact_info_jobs')
+                    ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
+                    ->where('client_contact_info_jobs.job_id', $row->id)
+                    ->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_designation')
+                    ->first();
+                if ($hmRow) {
+                    $hiringManager = $hmRow->contact_person_name;
+                    $hiringManagerdesignation = $hmRow->contact_person_designation;
+                }
+            }
 
-                    if (@$row->self_company == 1) {
-                        if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                            $logo_path = @$row->logo;
-                        }
-                    }
-                    $clients_name = ucwords(mb_substr(@$row->company_name, 0, 30));
-                    $logo_path = GeneralMethod::companyDetailsSupper($row->id);
-                    $icon =
-                        '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="' .
-                        $profile_detail_class .
-                        '">
-                      <div class="symbol-label ' .
-                        $bgTextDecore .
-                        ' border-radius-5">' .
-                        ucwords($strVal) .
-                        '</div>
-                    </a>
-                  </div>';
+            // Team
+            $teamLeadName = 'Unassigned';
+            $teamMemberCount = 0;
+            if (!empty($row->job_assign)) {
+                $jobAssignColl = collect($row->job_assign);
+                $teamMemberCount = $jobAssignColl->unique('user_id')->count();
+                $firstMember = $jobAssignColl->first();
+                $teamLeadName = is_array($firstMember) ? ($firstMember['user_name'] ?? '') : ($firstMember->user_name ?? '');
+            }
+            if (empty($teamLeadName) || $teamLeadName === 'Unassigned') {
+                $partnersCount = DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.user_id')
+                    ->where('job_assign.job_id', '=', $row->id)
+                    ->where('job_assign.company_id', '=', $company_id)
+                    ->where('users.company_id', '=', $company_id)
+                    ->count();
+                $partnersData = DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.user_id')
+                    ->select('users.name')
+                    ->where('job_assign.job_id', '=', $row->id)
+                    ->where('job_assign.company_id', '=', $company_id)
+                    ->where('users.company_id', '=', $company_id)
+                    ->orderBy('users.name', 'ASC')
+                    ->first();
+                if ($partnersData) {
+                    $teamLeadName = $partnersData->name;
+                    $teamMemberCount = $partnersCount;
+                }
+            }
+            $teamMemberCountText = ($teamMemberCount > 1) ? '+' . ($teamMemberCount - 1) . ' Members' : ($teamMemberCount . ' Member');
 
-                    $skilltag = '';
-                    $skilltagclass = '';
-                    if (empty($limit)) {
-                        $skillArr = DB::table('job_metronics_skills')
-                            ->select('*')
-                            ->where('job_id', $row->id)
-                            ->where('job_metronics_skills.company_id', '=', $row->comId)
-                            ->get();
-                        if (!empty($skillArr)) {
-                            foreach ($skillArr as $sval) {
-                                $skilltag .=
-                                    '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
-                            }
-                        }
-                    } else {
-                        $skilltagclass = 'd-none';
-                    }
+            // Agency
+            $agencyCountData = GeneralMethod::agencyCount($company_id, $row->id, 1);
+            $agencyCountNum = is_countable($agencyCountData) ? count($agencyCountData) : 0;
+            $matchNumber = !empty($row->recommendation_relation) ? count($row->recommendation_relation) : 0;
 
-                    if (!empty($logo_path)) {
-                        $icon =
-                            '<div data-row-id="' .
-                            $row->id .
-                            '"  class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' .
-                            $profile_detail_class .
-                            ' border-radius-5">
-                                        <a href="javascript:void(0);">
-                                            <div class="symbol-label border-radius-5">
-                                            	<img src="' .
-                            str_replace('index.php', '', @$logo_path) .
-                            '" alt="Company Logo" class="border-radius-5 w-100">
-                                            </div>
-                                        </a>
-                                    </div>';
-                    }
+            // Pipeline Counters
+            $applicationCounter = DB::table('add_job_wise_condidates as job_applications')
+                ->select('job_applications.id')
+                ->where('job_applications.job_id', '=', $row->id)
+                ->where('job_applications.thirdparty_company_id', '=', 0)
+                ->orWhere(function ($query) use ($targetJobId) {
+                    return $query
+                        ->where('job_applications.thirdparty_company_id', '>', 0)
+                        ->where('job_applications.job_id', '=', $targetJobId)
+                        ->where('job_applications.master_status_id', '!=', 8)
+                        ->where('job_applications.master_status_id', '!=', 9);
+                })
+                ->count();
 
-                    echo $icon .
-                        '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $profile_detail_class .
-                        '"  data-toggle="tooltip1" title="' .
-                        ucwords(@$row->title) .
-                        '" >' .
-                        ucwords(mb_substr(@$row->title, 0, 30)) .
-                        '</a> 
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="fw-bold text-muted d-block fs-7 text-hover-primary ' .
-                        $profile_detail_class .
-                        '">' .
-                        $clients_name .
-                        '</a>
-                  </div>
-                  
-                  <div class="' .
-                        $skilltagclass .
-                        '" style="position: absolute; bottom: 0;">
-                                    <span class="badge badge-light-success my-1">Skills:</span>
-                                 
-                                  ' .
-                        $skilltag .
-                        '
-                                         
-                                   
-                                    </div> 
-                                    ';
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo '<div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">' .
-                        @$row->max_exp .
-                        '+</span>
-                    <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                        @$row->min_exp .
-                        '+</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary =
-                        '';
-                    $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
-                    $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
-                    $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-                    $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
-                    $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
-                    echo '<div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">' .
-                        $min_salary_currency .
-                        $max_salary .
-                        '/' .
-                        $min_sal_mode .
-                        '</span>                    
-                    <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                        $min_salary_currency .
-                        $min_salary .
-                        '/' .
-                        $max_sal_mode .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $country_id = $country_name = '';
-                    $jobid = $row->id;
-                    $client_loc = DB::table('client_location_jobs')
-                        ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                        ->select(
-                            'client_location.address',
-                            'client_location.city',
-                            'client_location.postcode',
-                            'client_location.country_id',
-                            'city_list.city as city_name',
-                        )
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->first();
+            $inreview_counter = DB::table('add_job_wise_condidates as job_applications')
+                ->select('job_applications.id')
+                ->where('job_applications.job_id', '=', $row->id)
+                ->where('job_applications.thirdparty_company_id', '=', 0)
+                ->where('job_applications.master_status_id', '=', 8)
+                ->count();
 
-                    $country_id = @$client_loc->country_id;
-                    if (@$country_id > 0) {
-                        $country_name = GeneralMethod::getCountryName($country_id);
-                        foreach ($country_name as $cval) {
-                            $country_name = ucwords($cval['sortname']);
-                        }
-                    }
+            $cnt_sou = GeneralMethod::statusCount($row->companyidcount, $row->id, 1);
+            $cnt_scr = GeneralMethod::statusCount($row->companyidcount, $row->id, 2);
+            $cnt_eva = GeneralMethod::statusCount($row->companyidcount, $row->id, 3);
+            $cnt_neg = GeneralMethod::statusCount($row->companyidcount, $row->id, 4);
+            $cnt_off = GeneralMethod::statusCount($row->companyidcount, $row->id, 5);
+            $cnt_joi = GeneralMethod::statusCount($row->companyidcount, $row->id, 6);
+            $cnt_rej = GeneralMethod::statusCount($row->companyidcount, $row->id, 7);
 
-                    $city = mb_substr(@$client_loc->city, 0, 6);
-                    // if (@$client_loc->country_id == 101) {
-                    $city = mb_substr(@$client_loc->city_name, 0, 6);
-                    // }
+            // Salary confidentiality check
+            $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$row->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                || ((empty($row->min_salary) || (float)$row->min_salary === 0.0) && (empty($row->max_salary) || (float)$row->max_salary === 0.0) && (@$row->salary_visibility === 'confidential'));
+        @endphp
 
-                    $jobLocation = DB::table('client_location_jobs')
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->count();
+        <!-- ══ JOB ROW ══ -->
+        <div class="job-row" data-job-id="{{ $row->id }}" data-status="{{ strtolower($row->status ?? '') }}">
+            <!-- Col 1: Job Details -->
+            <div style="display: flex; gap: 8px; align-items: flex-start">
+                <div class="drag-col">
+                    <div class="drag-handle" aria-hidden="true" title="Reorder job">
+                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                            <circle cx="9" cy="5" r="1.5" fill="currentColor" />
+                            <circle cx="15" cy="5" r="1.5" fill="currentColor" />
+                            <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                            <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+                            <circle cx="9" cy="19" r="1.5" fill="currentColor" />
+                            <circle cx="15" cy="19" r="1.5" fill="currentColor" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="col-job {{ $profile_detail_class }}" data-row-id="{{ $row->id }}" tabindex="0" role="button" aria-label="View details for job {{ @$row->title }}">
+                    <div class="job-logo {{ $bgTextDecore }}" aria-hidden="true">
+                        @if(!empty($logo_path))
+                            <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" class="border-radius-5 w-100">
+                        @else
+                            {{ ucwords($strVal) }}
+                        @endif
+                    </div>
+                    <div class="job-info">
+                        <div class="job-title" data-toggle="tooltip1" title="{{ ucwords(@$row->title ?? '') }}">{{ ucwords(mb_substr(@$row->title ?? '', 0, 30)) }}</div>
+                        <div class="job-dept">{{ @$department }}</div>
+                        <div class="job-client">{{ $clients_name }}</div>
+                    </div>
+                </div>
+            </div>
 
-                    $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
+            <!-- Col 2: Experience & Salary -->
+            <div class="col-exp">
+                <div class="exp-row">
+                    <svg fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                        <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
+                </div>
+                <div class="sal-row">
+                    @if($isSalConf)
+                        <span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" aria-hidden="true" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
+                    @else
+                        <svg fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M6 12h.01M18 12h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} {{ $min_sal_mode }}
+                    @endif
+                </div>
+                <span class="badge-type">
+                    {!! $svg !!}
+                    <span class="it-job-type {{ $badge }}">{{ $recommendation_text }}</span>
+                    <span class="it-dot-separator" aria-hidden="true"></span>
+                    <a href="javascript:void(0);" class="it-job-id" aria-label="Job ID {{ @$row->id }}">{{ @$row->id }}</a>
+                </span>
+            </div>
 
-                    $employment_type = 'Full-time';
-                    if ($row->employment_type == 1) {
-                        $employment_type = 'Contract';
-                    }
+            <!-- Col 3: Hiring & Location -->
+            <div class="col-hl">
+                {!! $ulink !!}
+                <div class="loc-row">
+                    <svg fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    {{ ucwords(mb_substr(@$city, 0, 15)) }}
+                </div>
+                <div class="mode-row">
+                    <svg fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/>
+                        <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    {{ $work_type }}
+                </div>
+            </div>
 
-                    if ($row->work_type == 'yes') {
-                        echo ' <div class="d-flex flex-column">
-						<span class="text-dark fw-bolder fs-6">Remote</span>
-						<div class="d-flex align-items-center">
-						  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                            ucwords(@$employment_type) .
-                            '" >' .
-                            ucwords(mb_substr(@$employment_type, 0, 10)) .
-                            '</span>
-						  </div>
-						</div>
-					  </div>';
-                    } elseif ($row->work_type == 'no') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
+            <!-- Col 4: Hiring Manager -->
+            <div class="col-hm">
+                <div class="hm-name">{{ ucwords(mb_substr(@$hiringManager, 0, 15)) }}</div>
+                <div class="hm-title">{{ @$hiringManagerdesignation ?: 'Hiring Manager' }}</div>
+                <div class="hm-company">{{ ucwords(@$employment_type) }}</div>
+            </div>
 
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    } elseif ($row->work_type == 'any') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
+            <!-- Col 5: Team -->
+            <div class="col-action">
+                <div class="hm-name" data-row-id="{{ $row->id }}">{{ ucwords(mb_substr(@$teamLeadName, 0, 15)) }}</div>
+                <div class="action-count">{{ $teamMemberCountText }}</div>
+            </div>
 
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-						<div class="d-flex align-items-center">
-						  <span class="text-dark fw-bolder fs-6">Remote</span>
-						  &nbsp;|&nbsp;
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
+            <!-- Col 6: Agency -->
+            <div class="col-action">
+                @if($agencyCountNum > 0)
+                    <div class="hm-name">{{ $agencyCountNum }} {{ __('messages.Agency') }}</div>
+                    <div class="action-count">{{ $matchNumber > 0 ? $matchNumber : $agencyCountNum }} Matching</div>
+                @else
+                    <div class="hm-name text-muted">No Agency</div>
+                    <div class="action-count">{{ $matchNumber > 0 ? $matchNumber : 0 }} Matching</div>
+                @endif
+            </div>
 
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    }
+            <!-- Col 7: Pipeline -->
+            <div class="col-pipeline">
+                <div class="pipeline-stages">
+                    <div class="stage">
+                        <div class="stage-label">INW</div>
+                        <div class="stage-badge s-inw"><a href="javascript:;" class="s-inw fw-bolder fs-6" aria-label="Inward stage: {{ $inreview_counter }} applications">{{ $inreview_counter }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">SOU</div>
+                        <div class="stage-badge s-sou"><a href="javascript:;" class="s-sou fs-6" aria-label="Sourced stage: {{ @$cnt_sou }} candidates">{{ @$cnt_sou }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">SCR</div>
+                        <div class="stage-badge s-scr"><a href="javascript:;" class="s-scr fs-6" aria-label="Screened stage: {{ @$cnt_scr }} candidates">{{ @$cnt_scr }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">EVA</div>
+                        <div class="stage-badge s-eva"><a href="javascript:;" class="s-eva fs-6" aria-label="Evaluated stage: {{ @$cnt_eva }} candidates">{{ @$cnt_eva }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">NEG</div>
+                        <div class="stage-badge s-neg"><a href="javascript:;" class="s-neg fs-6" aria-label="Negotiation stage: {{ @$cnt_neg }} candidates">{{ @$cnt_neg }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">OFF</div>
+                        <div class="stage-badge s-off"><a href="javascript:;" class="s-off fs-6" aria-label="Offered stage: {{ @$cnt_off }} candidates">{{ @$cnt_off }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">JOI</div>
+                        <div class="stage-badge s-joi"><a href="javascript:;" class="s-joi fs-6" aria-label="Joined stage: {{ @$cnt_joi }} candidates">{{ @$cnt_joi }}</a></div>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-label">REJ</div>
+                        <div class="stage-badge s-rej"><a href="javascript:;" class="s-rej fs-6" aria-label="Rejected stage: {{ @$cnt_rej }} candidates">{{ @$cnt_rej }}</a></div>
+                    </div>
+                </div>
+                <div class="pipeline-total">
+                    Total: <strong>{{ number_format($applicationCounter) }} Applications</strong> &nbsp;|&nbsp;
+                    Interview: <strong>{{ @$cnt_eva }}</strong>
+                </div>
+                <div class="add-date" style="display:flex; justify-content: flex-end; align-items: center; gap: 4px;">
+                    <svg fill="none" viewBox="0 0 24 24" aria-hidden="true" style="width: 12px; height: 12px; color: #a1a5b7;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span>{{ $newDate }}</span>
+                </div>
+            </div>
 
-                @endphp
-            </td>
-            <td>
-                @php
-                    $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                    $status = ucwords($row->status);
-                    $class = $job_status[$row->status];
-                    $recommendation_id = $row->recommendation_id;
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
-                    }
-
-                    $ulink =
-                        '<a href="javascript.void(0);" data-row-id="' .
-                        @$row->id .
-                        '" class="d-flex flex-column ' .
-                        @$class .
-                        ' status_stage text-hover-success" data-toggle="modal" data-target="#status_stage">' .
-                        $status .
-                        '</a>';
-
-                    $recommendation_text = 'Custom';
-
-                    echo '<div class="d-flex flex-column">
-                       ' .
-                        $ulink .
-                        '
-                      <span class="fw-bold text-muted d-block fs-7">R' .
-                        @$row->id .
-                        ' -' .
-                        $recommendation_text .
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $total_positions = '';
-                    $total_positions = number_format($row->total_positions);
-
-                    $created_at = '';
-                    $created_at = $row->created_at;
-                    $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                    echo '<div class="d-flex flex-column">
-                        <span class="text-dark fw-bolder fs-6">' .
-                        $newDate .
-                        '</span>
-                        <span class="text-muted fw-bold d-block fs-7">' .
-                        $total_positions .
-                        ' Opening</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $company_id = $row->comId;
-
-                    $html = '';
-                    //	Custom Client Job
-                    $partnersCount = DB::table('job_assign')
-                        ->join('users', 'users.id', '=', 'job_assign.user_id')
-                        ->select('users.id', 'users.name', 'users.image')
-                        ->where('job_assign.job_id', '=', $row->id)
-                        ->where('job_assign.company_id', '=', $company_id)
-                        ->where('users.company_id', '=', $company_id)
-                        ->count();
-                    $partnersData = DB::table('job_assign')
-                        ->join('users', 'users.id', '=', 'job_assign.user_id')
-                        ->select('users.id', 'users.name', 'users.image')
-                        ->where('job_assign.job_id', '=', $row->id)
-                        ->where('job_assign.company_id', '=', $company_id)
-                        ->where('users.company_id', '=', $company_id)
-                        ->orderBy('users.name', 'ASC')
-                        ->skip(0)
-                        ->take(1)
-                        ->get();
-
-                    $jobId = $row->id;
-                    $html = $temp = '';
-                    $showCount = 0;
-                    $html .=
-                        '<div class="d-flex flex-column">
-                     <div data-row-id="' .
-                        $row->id .
-                        '"  class="symbol-group symbol-hover hm-listing">';
-                    foreach ($partnersData as $pval) {
-                        $bgTextDecore = GeneralMethod::icoinText(@$pval->name);
-                        $image_path = ''; //url('public/avatar.png');
-                        if (!empty(@$pval->image) && strlen(@$pval->image) > 10) {
-                            $image_path = @$pval->image;
-                        }
-
-                        // if($showCount < 1){
-                        if (!empty($image_path)) {
-                            $html .=
-                                '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                                @$pval->name .
-                                '">
-                              <img alt="Pic" src="' .
-                                @$image_path .
-                                '">
-                         </div>';
-                        } else {
-                            $html .=
-                                '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="' .
-                                ucwords(@$pval->name) .
-                                '" >
-                             <div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-                             <a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-                                 <div class="symbol-label fs-8 fs-8 ' .
-                                $bgTextDecore .
-                                ' border-radius-100">' .
-                                mb_substr($pval->name, 0, 1) .
-                                '</div>
-                             </a>		 
-                             </div>
-                             </div>';
-                        }
-                        // }
-                        $showCount++;
-                    }
-                    $html .=
-                        '<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More users list.."><span class="symbol-label font-weight-bold" >' .
-                        $partnersCount .
-                        '+</span></div>';
-                    $html .= '</div></div><div class="fs-7 fw-bold text-muted">Team</div>';
-                    echo $html;
-                @endphp
-            </td>
-            <td>
-                @php
-                    $company_id = $row->comId;
-                    $html = '';
-
-                    $jobId = '';
-                    $jobId = $row->id;
-
-                    $recommendedDataListCnt = DB::table('recommendation_relation');
-                    $recommendedDataListCnt = $recommendedDataListCnt->select(
-                        'companies.id',
-                        'companies.company_name',
-                        'companies.logo',
-                    );
-                    $recommendedDataListCnt = $recommendedDataListCnt->join(
-                        'companies',
-                        'companies.id',
-                        'recommendation_relation.to_company_id',
-                    );
-                    $recommendedDataListCnt = $recommendedDataListCnt->join(
-                        'jobs',
-                        'jobs.id',
-                        'recommendation_relation.job_id',
-                    );
-                    //$recommendedDataListCnt 	=	$recommendedDataListCnt->leftJoin('td_industries', 'td_industries.ind_id', 'companies.industries');
-                    /*$recommendedDataListCnt 	=	$recommendedDataListCnt->leftJoin('job_applications', function($join) use ($jobId)
-											   {
-													   $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-													   $join->on('job_applications.job_id', '=', 'jobs.id' );
-											   });*/
-                    $recommendedDataListCnt = $recommendedDataListCnt->where('companies.id', '!=', $company_id);
-                    $recommendedDataListCnt = $recommendedDataListCnt->where('recommendation_relation.final_status', 1);
-                    $recommendedDataListCnt = $recommendedDataListCnt->where(
-                        'recommendation_relation.job_id',
-                        '=',
-                        $jobId,
-                    );
-                    $recommendedDataListCnt = $recommendedDataListCnt->groupBy('companies.id');
-                    $recommendedDataListCnt = $recommendedDataListCnt->count();
-
-                    $recommendedDataList = DB::table('recommendation_relation');
-                    $recommendedDataList = $recommendedDataList->select(
-                        'companies.id',
-                        'companies.company_name',
-                        'companies.logo',
-                    );
-                    $recommendedDataList = $recommendedDataList->join(
-                        'companies',
-                        'companies.id',
-                        'recommendation_relation.to_company_id',
-                    );
-                    $recommendedDataList = $recommendedDataList->join(
-                        'jobs',
-                        'jobs.id',
-                        'recommendation_relation.job_id',
-                    );
-                    //$recommendedDataList 	=	$recommendedDataList->leftJoin('td_industries', 'td_industries.ind_id', 'companies.industries');
-                    $recommendedDataList = $recommendedDataList->leftJoin('job_applications', function ($join) use ($jobId) {
-                        $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-                        $join->on('job_applications.job_id', '=', 'jobs.id');
-                    });
-                    $recommendedDataList = $recommendedDataList->where('companies.id', '!=', $company_id);
-                    $recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
-                    $recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $jobId);
-                    $recommendedDataList = $recommendedDataList->groupBy('companies.id');
-                    $recommendedDataList = $recommendedDataList->skip(0)->take(3)->get();
-
-                    $html = '<div class="d-flex flex-column">
-			         <div class="symbol-group symbol-hover">';
-
-                    foreach ($recommendedDataList as $pval) {
-                        $image_path = url('img/client-default.png');
-                        if (!empty(@$pval->logo) && strlen(@$pval->logo) > 10) {
-                            $image_path = url('public/user-uploads/company-logo/' . @$pval->logo);
-                        }
-
-                        $html .=
-                            '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                            @$pval->company_name .
-                            '"><img alt="Pic" src="' .
-                            @$image_path .
-                            '"></div>';
-                    }
-
-                    $html .=
-                        '
-						<div data-row-id="' .
-                        $row->id .
-                        '" class="symbol symbol-30 symbol-circle symbol-light spartner-listing" data-bs-placement="top" data-toggle="tooltip2" title="" data-bs-original-title="More users list..">
-							<span class="symbol-label font-weight-bold" >' .
-                        @$recommendedDataListCnt .
-                        '+</span>
-						</div>
-						</div>
-					</div><div class="fs-7 fw-bold text-muted">'.__('messages.Agency').'</div>';
-
-                    echo $html;
-                @endphp
-            </td>
-            <td>
-                @php
-                    $url_path = $total_application = $inreview_counter = '';
-                    $url_path = 'javascript:;'; // url('/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/all');
-
-                    $job_id = $row->id;
-                    $applicationCounter = DB::table('add_job_wise_condidates as job_applications')
-                        ->select('job_applications.id')
-                        ->where('job_applications.job_id', '=', $row->id)
-                        ->where('job_applications.thirdparty_company_id', '=', 0)
-                        ->orWhere(function ($query) use ($job_id) {
-                            return $query
-                                ->where('job_applications.thirdparty_company_id', '>', 0)
-                                ->where('job_applications.job_id', '=', $job_id)
-                                ->where('job_applications.master_status_id', '!=', 8)
-                                ->where('job_applications.master_status_id', '!=', 9);
-                        })
-                        ->count();
-
-                    $inreview_counter = DB::table('add_job_wise_condidates as job_applications')
-                        ->select('job_applications.id')
-                        ->where('job_applications.job_id', '=', $row->id)
-                        ->where('job_applications.thirdparty_company_id', '=', 0)
-                        ->where('job_applications.master_status_id', '=', 8)
-                        ->count();
-
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        $url_path = 'javascript:;'; //url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($row->id) . '/all');
-
-                        $applicationCounter = DB::table('add_job_wise_condidates as job_applications')
-                            ->select('job_applications.id')
-                            ->where('job_applications.job_id', '=', $row->id)
-                            ->where('job_applications.thirdparty_company_id', '=', $row->to_company_id)
-                            ->count();
-                        $inreview_counter = DB::table('add_job_wise_condidates as job_applications')
-                            ->select('job_applications.id')
-                            ->where('job_applications.job_id', '=', $row->id)
-                            ->where('job_applications.thirdparty_company_id', '=', $row->to_company_id)
-                            ->where('job_applications.master_status_id', '=', 8)
-                            ->count();
-                    }
-                    $applicationCounter = number_format($applicationCounter);
-                    $inreview_counter = number_format($inreview_counter);
-
-                    echo '<div class="d-flex flex-column">
-                        <a href="' .
-                        $url_path .
-                        '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                        @$applicationCounter .
-                        '</a>
-                        <a href="' .
-                        $url_path .
-                        '" class="text-muted fw-bold d-block fs-7 text-hover-primary">' .
-                        $inreview_counter .
-                        '</a>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $job_id = '';
-                    $master_status_id = 1;
-                    $cnt = 0;
-                    $job_id = $row->id;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = $total_application = $inreview_counter = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($job_id) . '/' . $master_status_id);
-                    
-                    if ($cnt == 0) {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 2;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($job_id) . '/' . $master_status_id);
-                    
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 3;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($job_id) . '/' . $master_status_id);
-                   
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 4;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($job_id) . '/' . $master_status_id);
-                    
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 5;
-                    $cnt = 0;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($job_id) . '/' . $master_status_id);
-                    
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 6;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/' . $master_status_id);
-
-                    
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 7;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    $cnt = GeneralMethod::statusCount($row->companyidcount, $row->id, $master_status_id);
-                    $url_path = '';
-                    $url_path = 'javascript:;'; //url('/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/' . $master_status_id);
-                    
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-        </tr>
+            <!-- Skills at bottom line -->
+            <div style="position: absolute; bottom: 5px; left: 30px; white-space: nowrap; width: 90%; overflow: hidden;">
+                <div class="job-meta-line">
+                    <span class="skills-inline">
+                        <b>Skills:</b> {!! $skilltag !!}
+                    </span>
+                </div>
+            </div>
+        </div>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="17" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div style="text-align: center; color: #a1a5b7; padding: 40px 12px; font-size: 13px;">
+        No data available in table
+    </div>
 @endif

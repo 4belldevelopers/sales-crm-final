@@ -172,6 +172,54 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
                         ],
                     ]);
                 }
+            } elseif ($eventType === 'COMPANY_UPDATED') {
+                if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                    $doc = [
+                        'id' => $companyId,
+                        'curr_date' => now()->toIso8601String(),
+                    ];
+                    if (isset($payload['company_name'])) {
+                        $doc['company_name'] = $payload['company_name'];
+                    }
+                    if (isset($payload['website'])) {
+                        $doc['website'] = $payload['website'];
+                    }
+                    if (isset($payload['industries'])) {
+                        $doc['industries'] = $payload['industries'];
+                    }
+                    if (isset($payload['company_size'])) {
+                        $doc['company_size'] = $payload['company_size'];
+                    }
+                    if (isset($payload['industries_type'])) {
+                        $doc['industries_type'] = $payload['industries_type'];
+                    }
+                    if (isset($payload['founded'])) {
+                        $doc['founded'] = $payload['founded'];
+                    }
+                    if (isset($payload['date_format'])) {
+                        $doc['date_format'] = $payload['date_format'];
+                    }
+                    if (isset($payload['description'])) {
+                        $doc['description'] = $payload['description'];
+                    }
+                    if (! empty($payload['logo'])) {
+                        $doc['logo'] = $payload['logo'];
+                    }
+                    if (isset($payload['accountVerify'])) {
+                        $doc['accountVerify'] = (int) $payload['accountVerify'];
+                    }
+
+                    $elasticService->getClient()->update([
+                        'index' => ELASTIC_COMPANIES_INDEX,
+                        'id' => (string) $companyId,
+                        'retry_on_conflict' => 5,
+                        'body' => [
+                            'doc' => $doc,
+                            'doc_as_upsert' => true,
+                            'detect_noop' => false,
+                        ],
+                    ]);
+                }
             }
 
             // 2. Broadcast real-time delta pulse to Super Admin sessions via Reverb
