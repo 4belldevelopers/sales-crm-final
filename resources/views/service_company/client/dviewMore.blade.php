@@ -6312,6 +6312,27 @@
         });
     };
 
+    // Direct Client Jobs Tab: Dynamic Search Bar (Keyup & Clear)
+    var directJobSearchTimer = null;
+    $(document).on('keyup', '#inputJobSearch', function() {
+        clearTimeout(directJobSearchTimer);
+        var searchVal = $(this).val();
+        if (searchVal.length > 0) {
+            $('#btnJobSearchClear').show();
+        } else {
+            $('#btnJobSearchClear').hide();
+        }
+        directJobSearchTimer = setTimeout(function() {
+            fetchJobsClientdirect(1, searchVal, window.currentJobStatusDirect || 'all');
+        }, 300);
+    });
+
+    $(document).on('click', '#btnJobSearchClear', function() {
+        $('#inputJobSearch').val('');
+        $(this).hide();
+        fetchJobsClientdirect(1, '', window.currentJobStatusDirect || 'all');
+    });
+
     // Direct Client Jobs Tab: Filter Button Interaction
     $(document).on('click', '.js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
