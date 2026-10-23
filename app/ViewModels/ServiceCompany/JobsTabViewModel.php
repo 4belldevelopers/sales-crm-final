@@ -29,12 +29,13 @@ class JobsTabViewModel
         public readonly int $projectionVersion = 1,  // Observable version identity
         public readonly string $queryHash = '',       // Observable query identity
         public readonly string $generatedAt = '',      // Generation timestamp for telemetry
-        public readonly array $tabs = []         // Fully dynamic status tabs
+        public readonly array $tabs = [],        // Fully dynamic status tabs
+        public readonly ?string $clientName = null   // Dynamically resolved client name
     ) {}
 
     public function hasJobs(): bool
     {
-        return !empty($this->jobs);
+        return ! empty($this->jobs);
     }
 
     public function getActiveFilter(): string

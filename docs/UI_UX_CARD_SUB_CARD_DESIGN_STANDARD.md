@@ -28,9 +28,11 @@ Raw, sprawling HTML tables, generic unstyled card heads, and unstructured flat l
 │  TIER 3: PRIMARY ENTITY CARD STREAM (Hover Elevation, Radius 10px, Border #e2e8f0)               │
 │  ┌─────────────────┬───────────────────┬────────────────┬─────────────────┬───────────────────┐  │
 │  │ SUB-CARD 1:     │ SUB-CARD 2:       │ SUB-CARD 3:    │ SUB-CARD 4:     │ SUB-CARD 5:       │  │
-│  │ Job Details     │ Comp & Location   │ Team           │ Agency          │ Hiring Pipeline   │  │
-│  │ Logo, Title, ID,│ Salary, Exp, Mode,│ Spok/Lead,     │ Hired Agencies  │ 8 Stages Counters,│  │
-│  │ Status Badge    │ Extra Cities      │ Member Count   │ Count (or "—")  │ Total Apps & Int  │  │
+│  │ Job Details     │ Comp & Exp        │ Team           │ Agency          │ Hiring Pipeline   │  │
+│  │ Logo, Title, ID,│ Row 1: Salary     │ Spok/Lead,     │ Hired Agencies  │ 8 Stages Counters,│  │
+│  │ Dept, Dynamic   │ Row 2: Clock+Exp  │ Member Count   │ Count (or "—")  │ Total Apps & Int  │  │
+│  │ Client • Full-  │ Row 3: Location • │                │                 │                   │  │
+│  │ Time, Status    │ Work From Office  │                │                 │                   │  │
 │  └─────────────────┴───────────────────┴────────────────┴─────────────────┴───────────────────┘  │
 │  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
 │  │ SUB-CARD 6 (BOTTOM STRIP): Posted Date • Hiring Manager (Role) • [Skill] [Skill] [Skill]    │  │
@@ -124,16 +126,13 @@ align-items: stretch !important;
 1. **Sub-Card 1: Primary Details (`.cd-subcard-details`)**
    - Company brand logo (`38px × 38px`, object-fit cover) or vibrant initial box with deterministic color mapping.
    - Entity Title (12.5px bold, with drawer trigger routing).
-   - Entity ID (`#99991` in primary blue).
-   - Department / Category name.
-   - Client / Parent company name.
+   - Entity ID (`#99991` in primary blue) & Department / Category name.
+   - **Dynamic Client Name & Employment Type:** Third row displays the dynamically populated Client Name (never a hardcoded company name) immediately followed by the Employment Type badge (`CLIENT NAME • 💼 Full-Time`).
    - Canonical Status Badge (Hiring `#dcfce7`, Hold `#fef3c7`, Closed `#fee2e2`, Inactive `#f1f5f9`).
-2. **Sub-Card 2: Compensation, Experience & Location (`.cd-subcard-comp-loc`)**
-   - Salary range formatted in compact Indian Lakhs (`₹X.XX L`) or Western Thousands (`$X - $Y`).
-   - Experience range (`Min - Max Yrs`).
-   - Employment type badge (`Contract`, `Full-time`).
-   - Primary City with extra cities counter pill (`+1`).
-   - Work mode indicator (`Office`, `Remote`, `Hybrid`).
+2. **Sub-Card 2: Compensation & Experience (`.cd-subcard-comp-loc`, Label: `COMPENSATION & EXP`)**
+   - **Row 1:** Salary range formatted cleanly in bold (`₹5,000 - 2.50 L`).
+   - **Row 2:** Experience range with dedicated clock icon (`🕒 6 - 10 Yrs`).
+   - **Row 3:** Location & Work Mode indicator (`📍 London +14 • Work From Office`). Standardized to **"Work From Office"** (never just "Office").
 3. **Sub-Card 3: Ownership / Internal Team (`.cd-subcard-team`)**
    - Spok / Lead recruiter name.
    - Member count (`1 Member` / `X Members`, or `—` if none).
@@ -279,4 +278,7 @@ $(document).on('click', '.js-job-filter-btn', function() {
 5. **Zero Horizontal Scrollbar (`overflow-x: hidden`):** The entire container must shrink gracefully without page-level or container horizontal scrollbars.
 6. **NO Artificial Matching Badges:** Do not inject placeholder badges like "15 Matching" or "7 Matching" in Team or Agency sub-cards. Show real metrics or clean em-dashes (`—`).
 7. **Strict CQRS Compliance:** The read pipeline for cards must execute with **0% MySQL reads**, drawing 100% of data from Elasticsearch read projections.
+8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time`) placed in the same row immediately next to the client name.
+9. **Compensation & Experience Sub-Card:** Sub-card 2 must be labeled `COMPENSATION & EXP` with Row 1 for salary, Row 2 for experience with clock icon (`🕒 X - Y Yrs`), and Row 3 for location & work mode.
+10. **Consistent Work Mode Wording:** Always use `"Work From Office"` (never just `"Office"`) across all entity views and tabs.
 8. **Multi-Tenant Scoping:** All client-side storage, caches, and requests must carry explicit tenant scoping (`company_id`).

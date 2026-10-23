@@ -6864,6 +6864,7 @@
     window.fetchJobsClientdirect = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusDirect || 'all';
+        var clientName = $('.cd-client-name').first().text().trim() || '{{ addslashes($detailName ?? "") }}';
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
@@ -6871,6 +6872,7 @@
                 search: search || $('#inputJobSearch').val() || '',
                 status: activeStatus,
                 client_id: $('#direct_client_id').val() || '{{ $directClientDetail->client_id }}',
+                client_name: clientName,
                 from_company_id: '{{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? 0 }}',
                 custom: false
             },
