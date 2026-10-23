@@ -586,6 +586,570 @@
             padding-right: 10px !important;
         }
     }
+
+    /* ===== Scoped Offer & Joining Tracker: Card + Sub-Card Proportional Layout ===== */
+    .oj-main-card {
+        width: 100% !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* 1. Top Card Header Toolbar (Milestone Filter Cards + Search Bar) */
+    .oj-toolbar-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 18px !important;
+        margin-bottom: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        flex-wrap: wrap !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .oj-toolbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 16px !important;
+        min-width: 0 !important;
+        flex-wrap: wrap !important;
+    }
+    .oj-header-icon {
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 8px !important;
+        background: #eff6ff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 15px !important;
+        flex-shrink: 0 !important;
+    }
+    .oj-title-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .oj-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.2px !important;
+        margin: 0 !important;
+    }
+    .oj-badge-count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1.5px 8px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #2563eb !important;
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 999px !important;
+    }
+    .oj-subtitle {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        margin-top: 2px !important;
+    }
+
+    /* Milestone Segment Buttons (Card Toolbar) */
+    .oj-segment-group {
+        display: inline-flex !important;
+        align-items: center !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 3px !important;
+        gap: 3px !important;
+    }
+    .oj-seg-btn {
+        border: none !important;
+        background: transparent !important;
+        padding: 5px 12px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease-in-out !important;
+        line-height: 1.2 !important;
+    }
+    .oj-seg-btn:hover {
+        color: #0f172a !important;
+        background: rgba(255, 255, 255, 0.6) !important;
+    }
+    .oj-seg-btn.active {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+    }
+    .oj-seg-badge {
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 1px 6px !important;
+        border-radius: 999px !important;
+        background: #e2e8f0 !important;
+        color: #475569 !important;
+    }
+    .oj-seg-btn.active .oj-seg-badge {
+        background: #0f172a !important;
+        color: #ffffff !important;
+    }
+    .oj-badge-warning {
+        background: #fef3c7 !important;
+        color: #b45309 !important;
+    }
+    .oj-seg-btn.active .oj-badge-warning {
+        background: #ea580c !important;
+        color: #ffffff !important;
+    }
+    .oj-badge-primary {
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+    }
+    .oj-seg-btn.active .oj-badge-primary {
+        background: #2563eb !important;
+        color: #ffffff !important;
+    }
+    .oj-badge-success {
+        background: #dcfce7 !important;
+        color: #15803d !important;
+    }
+    .oj-seg-btn.active .oj-badge-success {
+        background: #16a34a !important;
+        color: #ffffff !important;
+    }
+    .oj-dot {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        display: inline-block !important;
+    }
+    .oj-dot-warning { background: #f59e0b !important; }
+    .oj-dot-primary { background: #3b82f6 !important; }
+    .oj-dot-success { background: #10b981 !important; }
+
+    /* Search Bar Sub-Card */
+    .oj-toolbar-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .oj-search-subcard {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0 12px !important;
+        height: 36px !important;
+        min-width: 240px !important;
+        max-width: 320px !important;
+        width: 100% !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .oj-search-subcard:focus-within {
+        background: #ffffff !important;
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    }
+    .oj-search-subcard i {
+        color: #94a3b8 !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+    }
+    .oj-search-subcard input {
+        border: none !important;
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-size: 12px !important;
+        font-family: inherit !important;
+        color: #0f172a !important;
+        width: 100% !important;
+        padding: 0 !important;
+        line-height: 36px !important;
+    }
+    .oj-search-subcard input::placeholder {
+        color: #94a3b8 !important;
+        font-size: 11.5px !important;
+    }
+    .oj-search-clear {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        cursor: pointer !important;
+        padding: 2px 4px !important;
+        font-size: 11px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .oj-search-clear:hover {
+        color: #ef4444 !important;
+    }
+
+    /* Container for Cards List */
+    .oj-card-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* Proportional Grid for 8 Columns (Matches Mockup) */
+    .oj-card-header,
+    .oj-primary-card {
+        display: grid !important;
+        grid-template-columns: minmax(170px, 1.8fr) minmax(150px, 1.6fr) minmax(130px, 1.3fr) minmax(130px, 1.3fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(140px, 1.4fr) minmax(100px, 1fr) !important;
+        column-gap: 12px !important;
+        align-items: center !important;
+        min-width: 1020px !important;
+        box-sizing: border-box !important;
+    }
+
+    .oj-card-header {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 9px 14px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .oj-col-th {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Primary Job Card for Each Candidate Offer/Joining */
+    .oj-primary-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .oj-primary-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Subcard layout */
+    .oj-subcard {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 1. Candidate Subcard */
+    .oj-subcard-cand {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .oj-cand-avatar {
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        flex-shrink: 0 !important;
+        text-transform: uppercase !important;
+    }
+    .oj-avatar-red { background: #fee2e2 !important; color: #dc2626 !important; }
+    .oj-avatar-orange { background: #fef3c7 !important; color: #d97706 !important; }
+    .oj-avatar-blue { background: #dbeafe !important; color: #2563eb !important; }
+    .oj-avatar-green { background: #dcfce7 !important; color: #16a34a !important; }
+    .oj-avatar-purple { background: #f3e8ff !important; color: #9333ea !important; }
+    .oj-avatar-gray { background: #f1f5f9 !important; color: #475569 !important; }
+
+    .oj-cand-info {
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+    }
+    .oj-cand-name {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        text-decoration: none !important;
+        word-break: break-word !important;
+    }
+    .oj-cand-name:hover {
+        color: #2563eb !important;
+    }
+    .oj-cand-role {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+
+    /* 2. Job Subcard */
+    .oj-subcard-job {
+        gap: 2px !important;
+    }
+    .oj-job-title {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+    .oj-job-company {
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+    }
+
+    /* 3. Job Status, ID & Client */
+    .oj-subcard-meta {
+        gap: 3px !important;
+    }
+    .oj-meta-status-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 2px 7px !important;
+        border-radius: 999px !important;
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border: 1px solid #bbf7d0 !important;
+        width: fit-content !important;
+    }
+    .oj-meta-status-dot {
+        font-size: 5px !important;
+    }
+    .oj-meta-sub {
+        font-size: 11px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+
+    /* 4. Ownership Subcard */
+    .oj-subcard-owner {
+        gap: 2px !important;
+    }
+    .oj-owner-name {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        word-break: break-word !important;
+    }
+    .oj-owner-comp {
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
+        color: #64748b !important;
+        word-break: break-word !important;
+    }
+
+    /* 5. Compensation Subcard */
+    .oj-subcard-comp {
+        gap: 2px !important;
+    }
+    .oj-comp-amount {
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        letter-spacing: -0.2px !important;
+    }
+    .oj-comp-details {
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 10.5px !important;
+    }
+    .oj-comp-type {
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+    .oj-comp-sep {
+        color: #cbd5e1 !important;
+    }
+    .oj-comp-change {
+        color: #2563eb !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+    }
+    .oj-comp-change:hover {
+        text-decoration: underline !important;
+    }
+
+    /* 6. Offer Status Subcard */
+    .oj-subcard-offer-status {
+        gap: 3px !important;
+    }
+    .oj-status-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 4px 10px !important;
+        border-radius: 999px !important;
+        width: fit-content !important;
+        line-height: 1.2 !important;
+    }
+    .oj-pill-offered {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+    }
+    .oj-pill-joined {
+        background: #f0fdf4 !important;
+        color: #16a34a !important;
+        border: 1px solid #bbf7d0 !important;
+    }
+    .oj-status-subtext {
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        padding-left: 2px !important;
+    }
+
+    /* 7. Joining Subcard */
+    .oj-subcard-joining {
+        gap: 2px !important;
+    }
+    .oj-join-date {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+    .oj-join-time {
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+    .oj-join-countdown {
+        margin-top: 1px !important;
+    }
+    .oj-countdown-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 1px 6px !important;
+        border-radius: 4px !important;
+    }
+    .oj-countdown-soon {
+        color: #dc2626 !important;
+        background: #fef2f2 !important;
+    }
+    .oj-countdown-tomorrow {
+        color: #d97706 !important;
+        background: #fef3c7 !important;
+    }
+    .oj-countdown-today {
+        color: #b45309 !important;
+        background: #fef3c7 !important;
+    }
+    .oj-countdown-overdue {
+        color: #b91c1c !important;
+        background: #fee2e2 !important;
+    }
+    .oj-countdown-joined {
+        color: #16a34a !important;
+        background: #f0fdf4 !important;
+    }
+    .oj-countdown-neutral {
+        color: #64748b !important;
+        background: #f1f5f9 !important;
+    }
+
+    /* 8. Stage Subcard */
+    .oj-subcard-stage {
+        gap: 2px !important;
+    }
+    .oj-stage-badge-link {
+        text-decoration: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        width: fit-content !important;
+    }
+    .oj-stage-outline-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 3px 10px !important;
+        border-radius: 6px !important;
+        line-height: 1.2 !important;
+        width: fit-content !important;
+    }
+    .oj-stage-badge-orange {
+        color: #ea580c !important;
+        border: 1px solid #f97316 !important;
+        background: #fff7ed !important;
+    }
+    .oj-stage-badge-green {
+        color: #059669 !important;
+        border: 1px solid #10b981 !important;
+        background: #ecfdf5 !important;
+    }
+    .oj-stage-subtext {
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+
+    /* Empty Card State */
+    .oj-empty-card {
+        background: #ffffff !important;
+        border: 1px dashed #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 36px 20px !important;
+        text-align: center !important;
+        margin: 12px 0 !important;
+    }
+    .oj-empty-icon {
+        font-size: 28px !important;
+        color: #94a3b8 !important;
+        margin-bottom: 8px !important;
+        display: inline-block !important;
+    }
+    .oj-empty-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-bottom: 4px !important;
+    }
+    .oj-empty-desc {
+        font-size: 11.5px !important;
+        color: #64748b !important;
+    }
+
+    /* Pagination card wrapper */
+    .oj-pagination-card {
+        margin-top: 10px !important;
+    }
     @media only screen and (min-width: 900px) and (max-width: 2560px) {
 
         .table td,
@@ -3129,67 +3693,82 @@
 
                     <!--begin::candidate_joining Candidate List-->
                     <div class="tab-pane" id="candidate_joining" role="tabpanel">
+                        <div class="oj-main-card">
+                            <!-- 1. Top Card Header Toolbar (Title, Milestone Filter Cards & Search in Card) -->
+                            <div class="oj-toolbar-card">
+                                <div class="oj-toolbar-left">
+                                    <div class="oj-title-wrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="oj-header-icon">
+                                                <i class="fas fa-handshake fa-solid" style="color: #2563eb;"></i>
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h4 class="oj-title">Offer &amp; Joining Tracker</h4>
+                                                    <span class="oj-badge-count" id="ojCountAllBadgeDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                                </div>
+                                                <div class="oj-subtitle">Track direct candidate job offers, joining confirmations and onboardings.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Milestone Filter Cards / Segments -->
+                                    <div class="oj-segment-group" id="ojSegmentGroupDirect">
+                                        <button type="button" class="oj-seg-btn active cd-oj-seg-btn-direct" data-segment="all">
+                                            <span>All</span>
+                                            <span class="oj-seg-badge" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
+                                        </button>
+                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="offers">
+                                            <span class="oj-dot oj-dot-warning"></span>
+                                            <span>Offers</span>
+                                            <span class="oj-seg-badge oj-badge-warning" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
+                                        </button>
+                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="joining">
+                                            <span class="oj-dot oj-dot-primary"></span>
+                                            <span>Joining</span>
+                                            <span class="oj-seg-badge oj-badge-primary" id="ojCountJoiningDirect">0</span>
+                                        </button>
+                                        <button type="button" class="oj-seg-btn cd-oj-seg-btn-direct" data-segment="joined">
+                                            <span class="oj-dot oj-dot-success"></span>
+                                            <span>Joined</span>
+                                            <span class="oj-seg-badge oj-badge-success" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="oj-toolbar-right">
+                                    <div class="oj-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="ojSearchInputDirect" placeholder="Search candidate, job, CTC..." autocomplete="off">
+                                        <button type="button" class="oj-search-clear" id="ojSearchClearDirect" style="display:none;" title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                      <div class="card-body px-0 py-7">
-                          <!--begin::Offer & Joining Milestone Filter Toolbar-->
-                          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5 px-2">
-                              <div class="btn-group btn-group-sm" role="group" id="ojSegmentGroupDirect" aria-label="Offer and Joining Milestone Filter">
-                                  <button type="button" class="btn btn-sm btn-outline-secondary active fw-bold cd-oj-seg-btn-direct" data-segment="all">
-                                      All <span class="badge badge-secondary ms-1" id="ojCountAllDirect">{{ ($kpiOffers ?? 0) + ($kpiJoins ?? 0) }}</span>
-                                  </button>
-                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="offers">
-                                      Offers <span class="badge badge-light-warning text-warning ms-1" id="ojCountOffersDirect">{{ $kpiOffers ?? 0 }}</span>
-                                  </button>
-                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="joining">
-                                      Joining <span class="badge badge-light-primary text-primary ms-1" id="ojCountJoiningDirect">0</span>
-                                  </button>
-                                  <button type="button" class="btn btn-sm btn-outline-secondary fw-bold cd-oj-seg-btn-direct" data-segment="joined">
-                                      Joined <span class="badge badge-light-success text-success ms-1" id="ojCountJoinedDirect">{{ $kpiJoins ?? 0 }}</span>
-                                  </button>
-                              </div>
-                              <div class="d-flex align-items-center gap-2">
-                                  <div class="position-relative">
-                                      <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
-                                          <i class="fas fa-search fs-7"></i>
-                                      </span>
-                                      <input type="text" id="ojSearchInputDirect" class="form-control form-control-sm ps-9 fs-7 font-poppins" placeholder="Search offers & joined..." style="width: 220px; border-radius: 6px;">
-                                  </div>
-                              </div>
-                          </div>
-                          <!--end::Offer & Joining Milestone Filter Toolbar-->
+                            <!-- 2. Proportional Column Header Strip & Cards Container -->
+                            <div class="oj-card-container">
+                                <div class="oj-card-header">
+                                    <div class="oj-col-th oj-th-cand">Candidate</div>
+                                    <div class="oj-col-th oj-th-job">Job</div>
+                                    <div class="oj-col-th oj-th-meta">Job Status, ID &amp; Client</div>
+                                    <div class="oj-col-th oj-th-owner">Ownership</div>
+                                    <div class="oj-col-th oj-th-comp">Compensation</div>
+                                    <div class="oj-col-th oj-th-offer-status">Offer Status</div>
+                                    <div class="oj-col-th oj-th-joining">Joining</div>
+                                    <div class="oj-col-th oj-th-stage">Stage</div>
+                                </div>
 
-                          <!--begin::Table-->
-                          <table class="table align-middle table-row-dashed fs-6 gy-5">
-                              <!--begin::Table head-->
-                              <thead>
-                                  <!--begin::Table row-->
+                                <!-- Primary Cards List Container (populated via AJAX HTML) -->
+                                <div id="candidatetListJoin" class="oj-cards-list" data-role="offer-joining-list">
+                                </div>
+                            </div>
 
-                                  <tr class="fw-bolder text-muted">
-
-                                      <th class="min-w-150px">Name</th>
-                                      <th class="min-w-15px">Exp.</th>
-                                      <th class="min-w-15px">Salary</th>
-                                      <th class="min-w-15px">Notice Period</th>
-                                      <th class="min-w-15px">Location</th>
-                                      <th class="min-w-15px"> Source</th>
-                                      <th class="min-w-15px">Upload Date</th>
-                                      <th class="min-w-15px">Jobs</th>
-                                      <th class="min-w-15px">Stage</th>
-                                  </tr>
-                                  <!--end::Table row-->
-                              </thead>
-                              <!--end::Table head-->
-                              <tbody id="candidatetListJoin">
-
-                              </tbody>
-
-                          </table>
-                          <!--end::Table-->
-                          <div id="paginationcandidatejoin">
-                              <!-- Pagination links will be appended here -->
-                          </div>
-                      </div>
-                      <!--end::Contacts Content-->
+                            <!-- 3. Enterprise Pagination Card -->
+                            <div id="paginationcandidatejoin" class="oj-pagination-card" data-role="offer-joining-pagination">
+                            </div>
+                        </div>
                     </div>
                     <!--end::candidate_joining Candidate List-->
 
@@ -3862,18 +4441,8 @@
                                                 </div>
                                             </div>
 
-                                            <div class="table-card">
-                                                <div class="table-header">
-                                                    <div class="th">Job Details</div>
-                                                    <div class="th">Experience</div>
-                                                    <div class="th">Hiring &amp; Location</div>
-                                                    <div class="th">Hiring Manager</div>
-                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
-                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
-                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
-                                                </div>
-                                                <div id="directclientJobsListajax"></div>
-                                            </div>
+                                            <!-- Restored Card-Based Jobs Stream -->
+                                            <div id="directclientJobsListajax" class="cd-jobs-stream"></div>
                                         </div>
                                         <div id="directpaginationclientjobs" class="mt-3"></div>
                                     @endif
@@ -5722,6 +6291,9 @@
                     $('#ojCountOffersDirect').text(response.counts.offers || 0);
                     $('#ojCountJoiningDirect').text(response.counts.joining || 0);
                     $('#ojCountJoinedDirect').text(response.counts.joined || 0);
+                    if ($('#ojCountAllBadgeDirect').length) {
+                        $('#ojCountAllBadgeDirect').text(response.counts.all || 0);
+                    }
                     if ($('#ojDirectTabBadge').length) {
                         if (response.counts.all > 0) {
                             $('#ojDirectTabBadge').text(response.counts.all).show();
@@ -5756,9 +6328,20 @@
     $(document).on('keyup', '#ojSearchInputDirect', function() {
         clearTimeout(ojSearchTimerDirect);
         var search = $(this).val();
+        if (search && search.length > 0) {
+            $('#ojSearchClearDirect').show();
+        } else {
+            $('#ojSearchClearDirect').hide();
+        }
         ojSearchTimerDirect = setTimeout(function() {
             directfetchCandidatesJoin(1, search, window.currentOjSegmentDirect || 'all');
         }, 300);
+    });
+
+    $(document).on('click', '#ojSearchClearDirect', function() {
+        $('#ojSearchInputDirect').val('');
+        $(this).hide();
+        directfetchCandidatesJoin(1, '', window.currentOjSegmentDirect || 'all');
     });
 
     // ══════════════════════════════════════════════════════════════════════════
