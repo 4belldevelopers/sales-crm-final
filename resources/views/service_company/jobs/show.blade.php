@@ -1723,8 +1723,29 @@ $end_date   =	date('d-M-Y', $date);
                                     <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{@$job->required_columns ?? 'Rather Not Say'}}</span></div>
                                     <div class="info-row"><span class="info-label">No. of Openings</span><span class="info-value">
                                     {{ @$job->total_positions }}</span></div>
-                                    <div class="info-row"><span class="info-label">Job Location</span><span class="info-value">
-                                    {{ ucwords(@$jobCitySelected) }}</span></div>
+                                    <div class="info-row align-items-start"><span class="info-label" style="margin-top: 3px;">Job Location</span><span class="info-value">
+                                        @php
+                                            $displayCities = !empty($jobCities) && is_array($jobCities) ? $jobCities : (!empty($jobCitySel) && is_array($jobCitySel) ? $jobCitySel : []);
+                                            if (empty($displayCities) && !empty($jobCitySelected) && !in_array(strtolower(trim($jobCitySelected)), ['remote', 'n/a'])) {
+                                                $displayCities = array_filter(array_map('trim', explode(',', $jobCitySelected)));
+                                            }
+                                        @endphp
+                                        @if(!empty($displayCities) && count($displayCities) > 1)
+                                            <div class="d-flex flex-wrap gap-1 align-items-center" style="gap: 5px;">
+                                                @foreach($displayCities as $cCity)
+                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
+                                                        <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ ucwords(trim($cCity)) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @elseif(!empty($displayCities) && count($displayCities) === 1)
+                                            <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
+                                                <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ ucwords(trim($displayCities[0])) }}
+                                            </span>
+                                        @else
+                                            {{ ucwords(@$jobCitySelected ?: 'N/A') }}
+                                        @endif
+                                    </span></div>
                                     <div class="info-row"><span class="info-label">Work Mode</span><span class="info-value">{{@$work_type}}</span></div>
                                     <div class="info-row"><span class="info-label">Work Shift</span><span class="info-value">{{ @$job->work_shifts }}</span></div>
                                 </div>
