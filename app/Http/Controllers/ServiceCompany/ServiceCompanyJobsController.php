@@ -7335,9 +7335,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->currency = GeneralMethod::currency();
         $this->employmentType = GeneralMethod::employmentType();
 
+        $jobVersion = Cache::get('jobDetails_version_job_'.$id, 1);
         $cachePayload = [
             'company' => $company_id,
             'job_id' => $id,
+            'job_version' => $jobVersion,
             'bechshowtab' => @$request->bechshowtab,
             'user_id' => $this->user->id,
             // Intent: make cached drawer HTML expire when the company Agency Agreement is edited.
@@ -7667,32 +7669,53 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd(auth()->user()->id,$company_id,$this->job->id);
 
         $client_city_jobs = $this->job->client_city_jobs ?? [];
-        $this->jobLocationCount = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
-        $clientLocation = collect($client_city_jobs);
-        $this->jobCitySel = $clientLocation
-            ->filter(fn ($row) => ! empty($row['city_name']))
-            ->pluck('city_name')
-            ->map(fn ($c) => trim((string) $c))
-            ->values()
-            ->all();
-
-        // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location in ES document (0% MySQL reads)
-        if (empty($this->jobCitySel) && ! empty($this->job->client_location) && is_array($this->job->client_location)) {
-            foreach ($this->job->client_location as $locItem) {
-                $lObj = (object) $locItem;
-                $cName = trim((string) ($lObj->city ?? ''));
+        $this->jobCitySel = [];
+        if (! empty($client_city_jobs) && is_iterable($client_city_jobs)) {
+            foreach ($client_city_jobs as $ccj) {
+                $cName = trim((string) (data_get($ccj, 'city_name') ?: data_get($ccj, 'city') ?: ''));
                 if ($cName !== '') {
                     $this->jobCitySel[] = $cName;
                 }
             }
         }
+
+        // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location in ES document (0% MySQL reads)
+        if (empty($this->jobCitySel) && ! empty($this->job->client_location) && is_iterable($this->job->client_location)) {
+            foreach ($this->job->client_location as $locItem) {
+                $cName = trim((string) (data_get($locItem, 'city_name') ?: data_get($locItem, 'city') ?: ''));
+                if ($cName !== '') {
+                    $this->jobCitySel[] = $cName;
+                }
+            }
+        }
+
+        // Resilient DB fallback if ES document had not indexed locations yet (e.g. freshly created or updated job)
+        if (empty($this->jobCitySel)) {
+            $dbCityRows = DB::table('client_city_jobs')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->where('client_city_jobs.job_id', $this->job->id ?? $id)
+                ->pluck('city_list.city')
+                ->toArray();
+            foreach ($dbCityRows as $dbc) {
+                $cleanDbc = trim((string) $dbc);
+                if ($cleanDbc !== '') {
+                    $this->jobCitySel[] = $cleanDbc;
+                }
+            }
+        }
+
         $seenKeys = [];
         $dedupedCities = [];
         foreach ($this->jobCitySel as $cName) {
-            $k = mb_strtolower(trim($cName));
+            $displayName = $cName;
+            if (strpos($displayName, '/') !== false) {
+                $slashParts = explode('/', $displayName);
+                $displayName = end($slashParts);
+            }
+            $k = mb_strtolower(trim($displayName));
             if ($k !== '' && ! isset($seenKeys[$k])) {
                 $seenKeys[$k] = true;
-                $dedupedCities[] = trim($cName);
+                $dedupedCities[] = trim($displayName);
             }
         }
         if (count($dedupedCities) > 50) {
@@ -7707,7 +7730,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         } elseif ($work_type == 'no') {
             $this->jobCitySelected = implode(', ', $this->jobCitySel);
         } elseif ($work_type == 'any') {
-            $this->jobCitySelected = 'Remote / '.implode(', ', $this->jobCitySel);
+            $this->jobCitySelected = count($this->jobCitySel) > 0 ? ('Remote / '.implode(', ', $this->jobCitySel)) : 'Remote';
         } elseif ($work_type == 'other') {
             $this->jobCitySelected = implode(', ', $this->jobCitySel);
         }
@@ -14869,7 +14892,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         try {
             $jobService->updateJob($job, $request->all(), auth()->user());
 
-            /* Intent: Invalidate tenant career Redis caches so public page shows updated job details immediately */
+            /* Intent: Invalidate tenant career and Job Drawer Redis/Dragonfly caches so pages show updated job details immediately */
+            Cache::increment('jobDetails_version_job_'.$id);
+            Cache::increment('jobDetails_v3_version_user_'.auth()->id());
             GeneralMethod::invalidateCareerTenantCache($company_id, $id);
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));

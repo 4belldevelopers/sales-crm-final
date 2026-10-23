@@ -1730,26 +1730,19 @@ $end_date   =	date('d-M-Y', $date);
                                                 $displayCities = array_filter(array_map('trim', explode(',', $jobCitySelected)));
                                             }
                                         @endphp
-                                        @if(!empty($displayCities) && count($displayCities) > 1)
-                                            <div class="d-flex flex-wrap gap-1 align-items-center" style="gap: 5px;">
-                                                @foreach($displayCities as $idx => $cCity)
-                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap {{ $idx >= 3 ? 'js-drawer-extra-city' : '' }}" style="{{ $idx >= 3 ? 'display: none;' : '' }} font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
-                                                        <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ trim($cCity) }}
+                                        @if(!empty($displayCities) && count($displayCities) > 0)
+                                            <div class="d-flex flex-wrap gap-1 align-items-center" style="gap: 5px; max-width: 100%;">
+                                                @foreach($displayCities as $cCity)
+                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-map-marker-alt text-primary" style="font-size: 9.5px;"></i>{{ trim($cCity) }}
                                                     </span>
                                                 @endforeach
-                                                @if(count($displayCities) > 3)
-                                                    <button type="button" class="badge badge-light-primary fw-bold text-nowrap js-drawer-expand-btn" onclick="toggleDrawerExtraCities(this)" style="font-size: 10.5px; padding: 3px 6px; border: 1px dashed #009ef7; background: #f1faff; color: #009ef7; cursor: pointer; border-radius: 4px;">
-                                                        +{{ count($displayCities) - 3 }} more
-                                                    </button>
-                                                @endif
                                             </div>
-                                        @elseif(!empty($displayCities) && count($displayCities) === 1)
-                                            <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
-                                                <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ trim($displayCities[0]) }}
-                                            </span>
                                         @else
                                             @if(!empty($jobCitySelected) && strtolower(trim($jobCitySelected)) !== 'n/a')
-                                                {{ $jobCitySelected }}
+                                                <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <i class="fas fa-map-marker-alt text-primary" style="font-size: 9.5px;"></i>{{ trim($jobCitySelected) }}
+                                                </span>
                                             @else
                                                 <span class="text-muted" style="color: #a1a5b7;">Location not specified</span>
                                             @endif

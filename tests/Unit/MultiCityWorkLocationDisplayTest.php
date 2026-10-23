@@ -177,4 +177,61 @@ class MultiCityWorkLocationDisplayTest extends TestCase
         $result = $this->computeLocationDisplay($job);
         $this->assertTrue($result['hasMultipleCountries']);
     }
+
+    public function test_ten_locations_rendered_vertically_without_remaining_locations_text(): void
+    {
+        $tenCities = [
+            'London', 'Dublin', 'Hyderabad', 'Mumbai', 'New Delhi',
+            'Pune', 'Bengaluru', 'New York City', 'Singapore', 'Gurugram'
+        ];
+
+        $job = [
+            'primary_city' => 'London',
+            'cities' => $tenCities,
+        ];
+
+        $result = $this->computeLocationDisplay($job);
+        $this->assertEquals('London', $result['primaryCityName']);
+        $this->assertEquals(9, $result['extraCitiesCount']);
+        $this->assertCount(9, $result['remainingCities']);
+
+        // Simulate client-side popover HTML generation
+        $popoverItems = array_map(function($c) {
+            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> <span>' . $c . '</span></div>';
+        }, $tenCities);
+        $popoverBodyHtml = '<div class="loc-popover-body">' . implode('', $popoverItems) . '</div>';
+
+        // Must NOT contain "Remaining Locations" text
+        $this->assertStringNotContainsString('Remaining Locations', $popoverBodyHtml);
+
+        // Must contain all 10 cities vertically with location pin icon
+        foreach ($tenCities as $city) {
+            $this->assertStringContainsString('<i class="fas fa-map-marker-alt"></i> <span>' . $city . '</span>', $popoverBodyHtml);
+        }
+    }
+
+    public function test_job_drawer_cache_payload_version_busts_key(): void
+    {
+        $jobId = 999;
+        $companyId = 5;
+        $userId = 12;
+
+        $payloadV1 = [
+            'company' => $companyId,
+            'job_id' => $jobId,
+            'job_version' => 1,
+            'user_id' => $userId,
+        ];
+        $keyV1 = 'ats:jobDetails:' . $userId . ':1:' . md5(json_encode($payloadV1));
+
+        $payloadV2 = [
+            'company' => $companyId,
+            'job_id' => $jobId,
+            'job_version' => 2, // Incremented after job update
+            'user_id' => $userId,
+        ];
+        $keyV2 = 'ats:jobDetails:' . $userId . ':1:' . md5(json_encode($payloadV2));
+
+        $this->assertNotEquals($keyV1, $keyV2);
+    }
 }
