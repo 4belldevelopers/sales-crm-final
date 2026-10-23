@@ -3591,35 +3591,46 @@
                                     @if (in_array('view_jobs', $userPermissions))
                                         <div class="jobx">
                                             <!-- 5-Option Status Filter Group (4 Canonical States + All Jobs) -->
-                                            <div class="cd-jobs-tabs-wrap mb-3" id="directClientJobsDynamicTabs">
+                                            <div class="cl-jobs-filter-group mb-3">
                                                 <button type="button" 
-                                                        class="cd-jobs-tab-btn js-job-filter-btn active" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn active" 
                                                         data-status="all">
-                                                    All Jobs <span class="cd-tab-count count-primary" id="directFilterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                                    All Jobs <span class="badge badge-light-dark ms-1" id="directFilterCountAll">{{ $kpiActive ?? 0 }}</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
                                                         data-status="hiring">
-                                                    Hiring <span class="cd-tab-count count-success" id="directFilterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                                    Hiring <span class="badge badge-light-success ms-1" id="directFilterCountHiring">{{ $kpiActive ?? 0 }}</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
                                                         data-status="hold">
-                                                    On Hold <span class="cd-tab-count count-warning" id="directFilterCountHold">0</span>
+                                                    On Hold <span class="badge badge-light-warning ms-1" id="directFilterCountHold">0</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
                                                         data-status="closed">
-                                                    Closed <span class="cd-tab-count count-danger" id="directFilterCountClosed">0</span>
+                                                    Closed <span class="badge badge-light-danger ms-1" id="directFilterCountClosed">0</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
                                                         data-status="inactive">
-                                                    Inactive <span class="cd-tab-count count-neutral" id="directFilterCountInactive">0</span>
+                                                    Inactive <span class="badge badge-light-secondary ms-1" id="directFilterCountInactive">0</span>
                                                 </button>
                                             </div>
 
-                                            <div id="directclientJobsListajax"></div>
+                                            <div class="table-card">
+                                                <div class="table-header">
+                                                    <div class="th">Job Details</div>
+                                                    <div class="th">Experience</div>
+                                                    <div class="th">Hiring &amp; Location</div>
+                                                    <div class="th">Hiring Manager</div>
+                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
+                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
+                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
+                                                </div>
+                                                <div id="directclientJobsListajax"></div>
+                                            </div>
                                         </div>
                                         <div id="directpaginationclientjobs" class="mt-3"></div>
                                     @endif
@@ -5959,13 +5970,9 @@
         ClientInterviewStoreDirect.init();
     });
 
-    window.directJobRequestSeq = 0;
     window.fetchJobsClientdirect = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusDirect || 'all';
-        window.currentJobStatusDirect = activeStatus;
-        var currentSeq = ++window.directJobRequestSeq;
-
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
@@ -5977,54 +5984,32 @@
                 custom: false
             },
             success: function(response) {
-                if (currentSeq !== window.directJobRequestSeq) {
-                    return; // Prevent race conditions
-                }
                 $('.page-loader').css('display', 'none');
                 $('#directclientJobsListajax').html(response.html);
                 $('#directpaginationclientjobs').html(response.pagination);
 
-                // Fully Dynamic Tabs Rendering
-                if (response.tabs && response.tabs.length) {
-                    var tabsHtml = response.tabs.map(function(t) {
-                        var isAct = (t.key === activeStatus);
-                        return `
-                            <button type="button" 
-                                    class="cd-jobs-tab-btn js-job-filter-btn ${isAct ? 'active' : ''}" 
-                                    data-status="${t.key}">
-                                ${t.label} <span class="cd-tab-count ${t.badge_cls || 'count-neutral'}">${t.count}</span>
-                            </button>
-                        `;
-                    }).join('');
-                    $('#directClientJobsDynamicTabs').html(tabsHtml);
-                } else if (response.kpi) {
+                if (response.kpi) {
+                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
+                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
                     $('#directFilterCountAll').text(response.kpi.total);
                     $('#directFilterCountHiring').text(response.kpi.hiring);
                     $('#directFilterCountHold').text(response.kpi.hold);
                     $('#directFilterCountClosed').text(response.kpi.closed);
                     $('#directFilterCountInactive').text(response.kpi.inactive);
                 }
-
-                if (response.kpi) {
-                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
-                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
-                }
             },
             error: function() {
-                if (currentSeq === window.directJobRequestSeq) {
-                    $('.page-loader').css('display', 'none');
-                }
+                $('.page-loader').css('display', 'none');
             }
         });
     };
 
     // Direct Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '#directClientJobsDynamicTabs .js-job-filter-btn', function(e) {
-        e.preventDefault();
+    $(document).on('click', '.js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
-        $('#directClientJobsDynamicTabs .js-job-filter-btn').removeClass('active');
-        $(this).addClass('active');
         window.currentJobStatusDirect = status;
+        $('.js-job-filter-btn').removeClass('active');
+        $(this).addClass('active');
         fetchJobsClientdirect(1, $('#inputJobSearch').val(), status);
     });
 
