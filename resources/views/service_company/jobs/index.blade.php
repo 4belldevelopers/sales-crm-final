@@ -115,7 +115,7 @@
   padding-bottom: 0 !important;
 }
 
-/* Multi-City Work Location Badge & Tooltip (Zero-Server Strain Client Execution) */
+/* Multi-City Work Location Badge & Enterprise Popover (0% Server Load) */
 .loc-row {
   display: flex !important;
   align-items: center !important;
@@ -131,6 +131,11 @@
   white-space: nowrap;
   display: inline-block;
   vertical-align: middle;
+}
+.loc-more-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 .loc-more-badge {
   display: inline-flex;
@@ -149,11 +154,76 @@
   transition: all 0.15s ease-in-out;
   flex-shrink: 0;
 }
-.loc-more-badge:hover {
+.loc-more-badge:hover,
+.loc-more-badge-wrap:hover .loc-more-badge {
   background: #009ef7;
   color: #ffffff;
   border-color: #009ef7;
   box-shadow: 0 1px 3px rgba(0, 158, 247, 0.35);
+}
+.loc-popover-card {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e2d;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 7px 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  z-index: 1050;
+  min-width: 120px;
+  max-width: 210px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+.loc-more-badge-wrap:hover .loc-popover-card {
+  opacity: 1;
+  visibility: visible;
+}
+.loc-popover-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1e1e2d transparent transparent transparent;
+}
+.loc-popover-header {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #009ef7;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.loc-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.loc-popover-item {
+  font-size: 11px;
+  font-weight: 500;
+  color: #f1f1f2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.loc-popover-item i {
+  font-size: 8.5px;
+  color: #009ef7;
+  flex-shrink: 0;
 }
 
 </style>
@@ -1552,13 +1622,24 @@ $(document).on('click', '.client-hm-listing', function ()
                 if (primaryCityName) {
                     locContentHtml = '<span class="city-name-text">' + primaryCityName.substring(0, 10) + '</span>';
                     if (extraCitiesCount > 0) {
-                        locContentHtml += '<span class="loc-more-badge" title="' + allCitiesTooltip + '">+' + extraCitiesCount + '</span>';
+                        var popoverItems = allCitiesList.map(function(c) {
+                            var cleanC = formatJobPositionName(c);
+                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + cleanC + '</div>';
+                        }).join('');
+
+                        locContentHtml += '<div class="loc-more-badge-wrap">' +
+                            '<span class="loc-more-badge">+' + extraCitiesCount + '</span>' +
+                            '<div class="loc-popover-card">' +
+                                '<div class="loc-popover-header">Work Locations (' + allCitiesList.length + ')</div>' +
+                                '<div class="loc-popover-body">' + popoverItems + '</div>' +
+                            '</div>' +
+                        '</div>';
                     }
                 } else {
                     locContentHtml = '<span class="city-name-text">--------</span>';
                 }
 
-                var locRowHtml = '<div class="loc-row"' + (allCitiesTooltip ? ' title="' + allCitiesTooltip + '"' : '') + '>' +
+                var locRowHtml = '<div class="loc-row">' +
                     '<svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' +
                     locContentHtml +
                 '</div>';
@@ -1622,7 +1703,9 @@ $(document).on('click', '.client-hm-listing', function ()
                     var matchTitle = (job.title || '').toLowerCase().includes(searchTerm);
                     var matchDept = (job.department || '').toLowerCase().includes(searchTerm);
                     var matchClient = (job.clients_name || '').toLowerCase().includes(searchTerm);
-                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm) || (Array.isArray(job.cities) && job.cities.some(function(c) { return String(c).toLowerCase().includes(searchTerm); }));
+                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm) ||
+                        (Array.isArray(job.cities) && job.cities.some(function(c) { return String(c).toLowerCase().includes(searchTerm); })) ||
+                        (Array.isArray(job.work_locations) && job.work_locations.some(function(wl) { return (wl.city_name || '').toLowerCase().includes(searchTerm) || (wl.country_name || '').toLowerCase().includes(searchTerm); }));
                     var matchHM = (job.hiring_manager || '').toLowerCase().includes(searchTerm);
                     var matchSkills = (job.skills || []).some(function(s) { return s.toLowerCase().includes(searchTerm); });
                     var matchId = String(job.id) === searchTerm;

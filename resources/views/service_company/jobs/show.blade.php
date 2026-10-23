@@ -1732,18 +1732,23 @@ $end_date   =	date('d-M-Y', $date);
                                         @endphp
                                         @if(!empty($displayCities) && count($displayCities) > 1)
                                             <div class="d-flex flex-wrap gap-1 align-items-center" style="gap: 5px;">
-                                                @foreach($displayCities as $cCity)
-                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
-                                                        <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ ucwords(trim($cCity)) }}
+                                                @foreach($displayCities as $idx => $cCity)
+                                                    <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap {{ $idx >= 3 ? 'js-drawer-extra-city' : '' }}" style="{{ $idx >= 3 ? 'display: none;' : '' }} font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
+                                                        <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ trim($cCity) }}
                                                     </span>
                                                 @endforeach
+                                                @if(count($displayCities) > 3)
+                                                    <button type="button" class="badge badge-light-primary fw-bold text-nowrap js-drawer-expand-btn" onclick="toggleDrawerExtraCities(this)" style="font-size: 10.5px; padding: 3px 6px; border: 1px dashed #009ef7; background: #f1faff; color: #009ef7; cursor: pointer; border-radius: 4px;">
+                                                        +{{ count($displayCities) - 3 }} more
+                                                    </button>
+                                                @endif
                                             </div>
                                         @elseif(!empty($displayCities) && count($displayCities) === 1)
                                             <span class="badge badge-light-primary fw-semibold px-2 py-1 text-nowrap" style="font-size: 11px; background: #f1faff; color: #009ef7; border: 1px solid rgba(0, 158, 247, 0.25); border-radius: 4px;">
-                                                <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ ucwords(trim($displayCities[0])) }}
+                                                <i class="fas fa-map-marker-alt text-primary fs-9 me-1" style="font-size: 10px;"></i>{{ trim($displayCities[0]) }}
                                             </span>
                                         @else
-                                            {{ ucwords(@$jobCitySelected ?: 'N/A') }}
+                                            {{ @$jobCitySelected ?: 'N/A' }}
                                         @endif
                                     </span></div>
                                     <div class="info-row"><span class="info-label">Work Mode</span><span class="info-value">{{@$work_type}}</span></div>
@@ -3221,6 +3226,18 @@ $end_date   =	date('d-M-Y', $date);
             });
         }
 
+        function toggleDrawerExtraCities(btn) {
+            const container = btn.parentElement;
+            if (!container) return;
+            const extraPills = container.querySelectorAll('.js-drawer-extra-city');
+            const isExpanded = btn.getAttribute('data-expanded') === 'true';
+            extraPills.forEach(function(p) {
+                p.style.display = isExpanded ? 'none' : 'inline-flex';
+            });
+            btn.innerText = isExpanded ? ('+' + extraPills.length + ' more') : 'Show less';
+            btn.setAttribute('data-expanded', isExpanded ? 'false' : 'true');
+        }
+
         // Robust copy function that works on every card
         function copyCardText(cardId) {
             const card = document.getElementById(cardId);
@@ -3231,6 +3248,7 @@ $end_date   =	date('d-M-Y', $date);
 
             // Clone the card so we can strip out buttons/icons without affecting the page
             const clone = card.cloneNode(true);
+            clone.querySelectorAll('.js-drawer-extra-city').forEach(el => el.style.display = 'inline');
             clone.querySelectorAll('button, .info-card-actions, .info-card-edit, .copy-btn, .view-more, .view-all-btn, i.fas, i.far, i.fab').forEach(el => el.remove());
 
             // Gather text exactly as the user sees it

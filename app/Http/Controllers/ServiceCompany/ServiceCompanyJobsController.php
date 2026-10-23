@@ -3185,55 +3185,40 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $client_city_jobs = $row->client_city_jobs ?? [];
                 $firstCity = collect($client_city_jobs)->first();
-                $cityName = $firstCity['city_name'] ?? '';
-                $countryName = $firstCity['country_name'] ?? '';
+                $cityName = trim((string) ($firstCity['city_name'] ?? ''));
+                $countryName = trim((string) ($firstCity['country_name'] ?? ''));
 
                 $allCities = [];
+                $workLocations = [];
                 if (! empty($client_city_jobs) && is_array($client_city_jobs)) {
                     foreach ($client_city_jobs as $ccj) {
                         $ccjArr = (array) $ccj;
-                        if (! empty($ccjArr['city_name'])) {
-                            $allCities[] = ucwords(trim($ccjArr['city_name']));
+                        $cName = trim((string) ($ccjArr['city_name'] ?? ''));
+                        if ($cName !== '') {
+                            $allCities[] = $cName;
+                            $workLocations[] = [
+                                'city_id' => (int) ($ccjArr['city_id'] ?? 0),
+                                'city_name' => $cName,
+                                'country_id' => (int) ($ccjArr['country_id'] ?? 0),
+                                'country_name' => trim((string) ($ccjArr['country_name'] ?? '')),
+                            ];
                         }
                     }
                 }
 
-                // Fallback: If client_city_jobs is empty, resolve city from client_location or client_location_jobs
-                if (empty($cityName) && ! empty($row->client_location)) {
+                // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location inside ES document (0% MySQL reads)
+                if (empty($allCities) && ! empty($row->client_location) && is_array($row->client_location)) {
                     foreach ($row->client_location as $locItem) {
                         $locObj = (object) $locItem;
-                        $cName = ! empty($locObj->city) ? $locObj->city : '';
-                        if (empty($cName) && ! empty($locObj->city_id)) {
-                            $cName = DB::table('city_list')->where('city_id', $locObj->city_id)->value('city') ?? '';
-                        }
-                        if (empty($cName) && ! empty($locObj->address) && preg_match('/dublin/i', $locObj->address)) {
-                            $cName = 'Dublin';
-                        }
-                        if (! empty($cName)) {
-                            $allCities[] = ucwords(trim($cName));
-                        }
-                    }
-                    if (empty($cityName) && ! empty($allCities[0])) {
-                        $cityName = $allCities[0];
-                    }
-                }
-                if (empty($cityName) && ! empty($row->client_location_jobs)) {
-                    foreach ($row->client_location_jobs as $cljItem) {
-                        $cljObj = (object) $cljItem;
-                        if (! empty($cljObj->client_location_id)) {
-                            $cName = DB::table('city_list')->where('city_id', $cljObj->client_location_id)->value('city') ?? '';
-                            if (empty($cName)) {
-                                $clRow = DB::table('client_location')->where('id', $cljObj->client_location_id)->first();
-                                if ($clRow) {
-                                    $cName = ! empty($clRow->city) ? $clRow->city : (DB::table('city_list')->where('city_id', $clRow->city_id)->value('city') ?? '');
-                                    if (empty($cName) && ! empty($clRow->address) && preg_match('/dublin/i', $clRow->address)) {
-                                        $cName = 'Dublin';
-                                    }
-                                }
-                            }
-                            if (! empty($cName)) {
-                                $allCities[] = ucwords(trim($cName));
-                            }
+                        $cName = trim((string) ($locObj->city ?? ''));
+                        if ($cName !== '') {
+                            $allCities[] = $cName;
+                            $workLocations[] = [
+                                'city_id' => (int) ($locObj->city_id ?? 0),
+                                'city_name' => $cName,
+                                'country_id' => (int) ($locObj->country_id ?? 0),
+                                'country_name' => '',
+                            ];
                         }
                     }
                     if (empty($cityName) && ! empty($allCities[0])) {
@@ -3245,7 +3230,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 if (empty($cityName) && ! empty($allCities[0])) {
                     $cityName = $allCities[0];
                 } elseif (! empty($cityName) && empty($allCities)) {
-                    $allCities = [ucwords(trim($cityName))];
+                    $allCities = [$cityName];
                 }
 
                 $hiringManager = '';
@@ -3389,7 +3374,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'work_type' => $work_type,
                     'city' => $cityName,
                     'cities' => $allCities,
-                    'cities_count' => count($allCities),
+                    'work_locations' => $workLocations,
                     'country' => $countryName,
                     'badge' => $badge,
                     'recommendation_text' => $recommendation_text,
@@ -7676,52 +7661,23 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->jobCitySel = $clientLocation
             ->filter(fn ($row) => ! empty($row['city_name']))
             ->pluck('city_name')
-            ->map(fn ($c) => ucwords($c))
+            ->map(fn ($c) => trim((string) $c))
             ->values()
             ->all();
 
-        // Resilience: If jobCitySel is empty, fallback to resolve from client_location or client_location_jobs
-        if (empty($this->jobCitySel)) {
-            if (! empty($this->job->client_location)) {
-                foreach ($this->job->client_location as $locItem) {
-                    $lObj = (object) $locItem;
-                    $cName = ! empty($lObj->city) ? $lObj->city : '';
-                    if (empty($cName) && ! empty($lObj->city_id)) {
-                        $cName = DB::table('city_list')->where('city_id', $lObj->city_id)->value('city') ?? '';
-                    }
-                    if (empty($cName) && ! empty($lObj->address) && preg_match('/dublin/i', $lObj->address)) {
-                        $cName = 'Dublin';
-                    }
-                    if (! empty($cName)) {
-                        $this->jobCitySel[] = ucwords(trim($cName));
-                    }
+        // Pure CQRS fallback: If client_city_jobs is empty in ES, inspect client_location in ES document (0% MySQL reads)
+        if (empty($this->jobCitySel) && ! empty($this->job->client_location) && is_array($this->job->client_location)) {
+            foreach ($this->job->client_location as $locItem) {
+                $lObj = (object) $locItem;
+                $cName = trim((string) ($lObj->city ?? ''));
+                if ($cName !== '') {
+                    $this->jobCitySel[] = $cName;
                 }
             }
-            if (empty($this->jobCitySel)) {
-                $cljList = ! empty($this->job->client_location_jobs) ? $this->job->client_location_jobs : DB::table('client_location_jobs')->where('job_id', $id)->get();
-                foreach ($cljList as $cljItem) {
-                    $cljObj = (object) $cljItem;
-                    if (! empty($cljObj->client_location_id)) {
-                        $cName = DB::table('city_list')->where('city_id', $cljObj->client_location_id)->value('city');
-                        if (! $cName) {
-                            $clRow = DB::table('client_location')->where('id', $cljObj->client_location_id)->first();
-                            if ($clRow) {
-                                $cName = ! empty($clRow->city) ? $clRow->city : DB::table('city_list')->where('city_id', $clRow->city_id)->value('city');
-                                if (! $cName && ! empty($clRow->address) && preg_match('/dublin/i', $clRow->address)) {
-                                    $cName = 'Dublin';
-                                }
-                            }
-                        }
-                        if (! empty($cName)) {
-                            $this->jobCitySel[] = ucwords(trim($cName));
-                        }
-                    }
-                }
-            }
-            $this->jobCitySel = array_values(array_unique(array_filter($this->jobCitySel)));
-            if (count($this->jobCitySel) > 0) {
-                $this->jobLocationCount = count($this->jobCitySel);
-            }
+        }
+        $this->jobCitySel = array_values(array_unique(array_filter($this->jobCitySel)));
+        if (count($this->jobCitySel) > 0) {
+            $this->jobLocationCount = count($this->jobCitySel);
         }
 
         $work_type = $this->job->work_type ?? 'no';
