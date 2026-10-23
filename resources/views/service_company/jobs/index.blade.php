@@ -116,6 +116,14 @@
 }
 
 /* Multi-City Work Location Badge & Enterprise Popover (0% Server Load) */
+.table-card {
+  overflow: visible !important;
+}
+.table-header.table-header-standard,
+.table-header.table-header-request {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
 .loc-row {
   display: flex !important;
   align-items: center !important;
@@ -123,6 +131,7 @@
   font-size: 11.5px !important;
   color: var(--text-mid, #5e6278) !important;
   white-space: nowrap !important;
+  cursor: pointer;
 }
 .loc-row .city-name-text {
   max-width: 68px;
@@ -155,7 +164,8 @@
   flex-shrink: 0;
 }
 .loc-more-badge:hover,
-.loc-more-badge-wrap:hover .loc-more-badge {
+.loc-more-badge-wrap:hover .loc-more-badge,
+.loc-row:hover .loc-more-badge {
   background: #009ef7;
   color: #ffffff;
   border-color: #009ef7;
@@ -170,16 +180,17 @@
   color: #ffffff;
   border-radius: 6px;
   padding: 7px 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  z-index: 1050;
-  min-width: 120px;
-  max-width: 210px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  min-width: 140px;
+  max-width: 240px;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
 }
-.loc-more-badge-wrap:hover .loc-popover-card {
+.loc-more-badge-wrap:hover .loc-popover-card,
+.loc-row:hover .loc-popover-card {
   opacity: 1;
   visibility: visible;
 }
@@ -200,9 +211,21 @@
   letter-spacing: 0.4px;
   color: #009ef7;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding-bottom: 3px;
-  margin-bottom: 4px;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.loc-popover-count {
+  background: rgba(0, 158, 247, 0.25);
+  color: #009ef7;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 .loc-popover-body {
   display: flex;
@@ -224,6 +247,25 @@
   font-size: 8.5px;
   color: #009ef7;
   flex-shrink: 0;
+}
+.loc-popover-primary {
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-size: 9px;
+  color: #a1a5b7;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.loc-popover-primary i {
+  color: #50cd89;
+  font-size: 8.5px;
+}
+.loc-popover-primary strong {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 </style>
@@ -1614,28 +1656,59 @@ $(document).on('click', '.client-hm-listing', function ()
                 var allCitiesList = (Array.isArray(job.cities) && job.cities.length > 0)
                     ? job.cities.filter(Boolean)
                     : (locations.length > 0 ? locations.map(function(l) { return l.city_name; }).filter(Boolean) : (job.primary_city || job.city ? [job.primary_city || job.city] : []));
-                var primaryCityName = job.primary_city ? formatJobPositionName(job.primary_city) : (allCitiesList.length > 0 ? formatJobPositionName(allCitiesList[0]) : (job.city ? formatJobPositionName(job.city) : ''));
-                var extraCitiesCount = allCitiesList.length > 1 ? (allCitiesList.length - 1) : 0;
+
+                // Deduplicate cities case-insensitively while preserving canonical casing
+                var seenCityKeys = new Set();
+                var deduplicatedCities = [];
+                allCitiesList.forEach(function(c) {
+                    var cleanC = formatJobPositionName(c);
+                    var cKey = cleanC.toLowerCase().trim();
+                    if (cKey && !seenCityKeys.has(cKey)) {
+                        seenCityKeys.add(cKey);
+                        deduplicatedCities.push(cleanC);
+                    }
+                });
+                allCitiesList = deduplicatedCities;
+
+                var primaryCityName = job.primary_city ? formatJobPositionName(job.primary_city) : (allCitiesList.length > 0 ? allCitiesList[0] : (job.city ? formatJobPositionName(job.city) : ''));
+                var primaryKey = primaryCityName.toLowerCase().trim();
+
+                // Compute remaining cities (the +N additional cities beyond the primary city)
+                var remainingCities = allCitiesList.filter(function(c) {
+                    return c.toLowerCase().trim() !== primaryKey;
+                });
+                var extraCitiesCount = remainingCities.length;
+                var remainingCitiesText = remainingCities.join(', ');
 
                 var distinctCountries = locations.map(function(l) { return (l.country_name || '').trim(); }).filter(Boolean);
                 var hasMultipleCountries = (new Set(distinctCountries.map(function(c) { return c.toLowerCase(); }))).size > 1;
 
                 var locContentHtml = '';
                 if (primaryCityName) {
-                    locContentHtml = '<span class="city-name-text" title="' + primaryCityName + '">' + primaryCityName.substring(0, 10) + '</span>';
+                    var cityTitle = extraCitiesCount > 0
+                        ? 'Primary Location: ' + primaryCityName + ' | Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText
+                        : 'Location: ' + primaryCityName;
+
+                    locContentHtml = '<span class="city-name-text" title="' + cityTitle + '">' + primaryCityName.substring(0, 10) + '</span>';
                     if (extraCitiesCount > 0) {
-                        var popoverItems = allCitiesList.map(function(c) {
-                            var cleanC = formatJobPositionName(c);
-                            var matchLoc = locations.find(function(l) { return (l.city_name || '').toLowerCase() === String(c).toLowerCase(); });
+                        var remainingTooltip = 'Remaining Locations (+' + extraCitiesCount + '): ' + remainingCitiesText;
+                        var popoverItems = remainingCities.map(function(c) {
+                            var matchLoc = locations.find(function(l) { return (l.city_name || '').toLowerCase() === c.toLowerCase(); });
                             var countrySuffix = (hasMultipleCountries && matchLoc && matchLoc.country_name) ? ' <span style="opacity: 0.65; font-size: 9.5px;">(' + formatJobPositionName(matchLoc.country_name) + ')</span>' : '';
-                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + cleanC + countrySuffix + '</div>';
+                            return '<div class="loc-popover-item"><i class="fas fa-map-marker-alt"></i> ' + c + countrySuffix + '</div>';
                         }).join('');
 
-                        locContentHtml += '<div class="loc-more-badge-wrap">' +
-                            '<span class="loc-more-badge">+' + extraCitiesCount + '</span>' +
+                        locContentHtml += '<div class="loc-more-badge-wrap" title="' + remainingTooltip + '">' +
+                            '<span class="loc-more-badge" title="' + remainingTooltip + '">+' + extraCitiesCount + '</span>' +
                             '<div class="loc-popover-card">' +
-                                '<div class="loc-popover-header">Work Locations (' + allCitiesList.length + ')</div>' +
+                                '<div class="loc-popover-header">' +
+                                    '<span>Remaining Locations</span>' +
+                                    '<span class="loc-popover-count">+' + extraCitiesCount + '</span>' +
+                                '</div>' +
                                 '<div class="loc-popover-body">' + popoverItems + '</div>' +
+                                '<div class="loc-popover-primary">' +
+                                    '<i class="fas fa-check-circle"></i> Primary: <strong>' + primaryCityName + '</strong>' +
+                                '</div>' +
                             '</div>' +
                         '</div>';
                     }
@@ -1643,7 +1716,11 @@ $(document).on('click', '.client-hm-listing', function ()
                     locContentHtml = '<span class="city-name-text text-muted" style="color: #a1a5b7;" title="Location not specified">Not specified</span>';
                 }
 
-                var locRowHtml = '<div class="loc-row">' +
+                var locRowTitle = extraCitiesCount > 0
+                    ? 'Primary Location: ' + primaryCityName + ' | Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText
+                    : (primaryCityName ? 'Location: ' + primaryCityName : 'Location not specified');
+
+                var locRowHtml = '<div class="loc-row" title="' + locRowTitle + '">' +
                     '<svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' +
                     locContentHtml +
                 '</div>';
