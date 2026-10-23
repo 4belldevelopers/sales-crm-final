@@ -115,6 +115,47 @@
   padding-bottom: 0 !important;
 }
 
+/* Multi-City Work Location Badge & Tooltip (Zero-Server Strain Client Execution) */
+.loc-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 11.5px !important;
+  color: var(--text-mid, #5e6278) !important;
+  white-space: nowrap !important;
+}
+.loc-row .city-name-text {
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+.loc-more-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #009ef7;
+  border: 1px solid #c2e7ff;
+  border-radius: 9px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 0 4px;
+  line-height: 13px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+.loc-more-badge:hover {
+  background: #009ef7;
+  color: #ffffff;
+  border-color: #009ef7;
+  box-shadow: 0 1px 3px rgba(0, 158, 247, 0.35);
+}
+
 </style>
 
     
@@ -1499,6 +1540,29 @@ $(document).on('click', '.client-hm-listing', function ()
                     ? '<div class="sal-row"><span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span></div>'
                     : '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>';
 
+                var allCitiesList = (Array.isArray(job.cities) && job.cities.length > 0)
+                    ? job.cities.filter(Boolean)
+                    : (job.city ? [job.city] : []);
+                var primaryCityName = allCitiesList.length > 0 ? formatJobPositionName(allCitiesList[0]) : (displayCity || '');
+                var extraCitiesCount = allCitiesList.length > 1 ? (allCitiesList.length - 1) : 0;
+                var allCitiesText = allCitiesList.map(function(c) { return formatJobPositionName(c); }).join(', ');
+                var allCitiesTooltip = allCitiesText ? 'Work Locations: ' + allCitiesText.replace(/"/g, '&quot;') : '';
+
+                var locContentHtml = '';
+                if (primaryCityName) {
+                    locContentHtml = '<span class="city-name-text">' + primaryCityName.substring(0, 10) + '</span>';
+                    if (extraCitiesCount > 0) {
+                        locContentHtml += '<span class="loc-more-badge" title="' + allCitiesTooltip + '">+' + extraCitiesCount + '</span>';
+                    }
+                } else {
+                    locContentHtml = '<span class="city-name-text">--------</span>';
+                }
+
+                var locRowHtml = '<div class="loc-row"' + (allCitiesTooltip ? ' title="' + allCitiesTooltip + '"' : '') + '>' +
+                    '<svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' +
+                    locContentHtml +
+                '</div>';
+
                 html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
                     '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
                         '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
@@ -1516,7 +1580,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '</div>' +
 
                     '<div class="col-hl">' + ulink +
-                      '<div class="loc-row"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + (displayCity ? displayCity.substring(0, 10) : '') + '</div>' +
+                      locRowHtml +
                       '<div class="mode-row"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + job.work_type + '</div>' +
                     '</div>' +
 
@@ -1558,7 +1622,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     var matchTitle = (job.title || '').toLowerCase().includes(searchTerm);
                     var matchDept = (job.department || '').toLowerCase().includes(searchTerm);
                     var matchClient = (job.clients_name || '').toLowerCase().includes(searchTerm);
-                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm);
+                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm) || (Array.isArray(job.cities) && job.cities.some(function(c) { return String(c).toLowerCase().includes(searchTerm); }));
                     var matchHM = (job.hiring_manager || '').toLowerCase().includes(searchTerm);
                     var matchSkills = (job.skills || []).some(function(s) { return s.toLowerCase().includes(searchTerm); });
                     var matchId = String(job.id) === searchTerm;
@@ -1676,6 +1740,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
             const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
             const cacheKey = [
+                'v2',
                 window.currentKpiFilter || 'all',
                 $('#status').val() || 'all',
                 $('#hiringtype').val() || '',
