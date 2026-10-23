@@ -3501,46 +3501,35 @@ use Carbon\Carbon;
                                     @if (in_array('view_jobs', $userPermissions))
                                         <div class="jobx">
                                             <!-- 5-Option Status Filter Group (4 Canonical States + All Jobs) -->
-                                            <div class="cl-jobs-filter-group mb-3">
+                                            <div class="cd-jobs-tabs-wrap mb-3" id="clientJobsDynamicTabs">
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn active" 
+                                                        class="cd-jobs-tab-btn js-job-filter-btn active" 
                                                         data-status="all">
-                                                    All Jobs <span class="badge badge-light-dark ms-1" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                                    All Jobs <span class="cd-tab-count count-primary" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
                                                         data-status="hiring">
-                                                    Hiring <span class="badge badge-light-success ms-1" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                                    Hiring <span class="cd-tab-count count-success" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
                                                         data-status="hold">
-                                                    On Hold <span class="badge badge-light-warning ms-1" id="filterCountHold">0</span>
+                                                    On Hold <span class="cd-tab-count count-warning" id="filterCountHold">0</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
                                                         data-status="closed">
-                                                    Closed <span class="badge badge-light-danger ms-1" id="filterCountClosed">0</span>
+                                                    Closed <span class="cd-tab-count count-danger" id="filterCountClosed">0</span>
                                                 </button>
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        class="cd-jobs-tab-btn js-job-filter-btn" 
                                                         data-status="inactive">
-                                                    Inactive <span class="badge badge-light-secondary ms-1" id="filterCountInactive">0</span>
+                                                    Inactive <span class="cd-tab-count count-neutral" id="filterCountInactive">0</span>
                                                 </button>
                                             </div>
 
-                                            <div class="table-card">
-                                                <div class="table-header">
-                                                    <div class="th">Job Details</div>
-                                                    <div class="th">Experience</div>
-                                                    <div class="th">Hiring &amp; Location</div>
-                                                    <div class="th">Hiring Manager</div>
-                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
-                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
-                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
-                                                </div>
-                                                <div id="clientJobsListajax"></div>
-                                            </div>
+                                            <div id="clientJobsListajax"></div>
                                         </div>
                                         <div id="paginationclientjobs" class="mt-3"></div>
                                     @endif
@@ -5688,12 +5677,10 @@ use Carbon\Carbon;
             const $list = $('#candidatetListinterviewtracker');
             if (!forceRevalidate) {
                 $list.html(`
-                    <tr>
-                      <td colspan="7" class="text-center py-8">
+                    <div class="it-loading-card">
                         <span class="spinner-border spinner-border-sm text-primary me-2"></span>
                         <span class="text-gray-600 fs-7">Loading Authoritative Interview Projection...</span>
-                      </td>
-                    </tr>
+                    </div>
                 `);
             }
 
@@ -5734,12 +5721,10 @@ use Carbon\Carbon;
 
                     entry.state = 'ERROR';
                     $list.html(`
-                        <tr>
-                          <td colspan="7" class="text-center py-6 text-danger fs-7">
+                        <div class="it-error-card">
                             <i class="fas fa-exclamation-circle me-1"></i> Failed to retrieve interviews.
                             <button type="button" class="btn btn-sm btn-link text-primary ms-2 p-0" id="btnRetryInternalInterviews">Retry</button>
-                          </td>
-                        </tr>
+                        </div>
                     `);
                     $('#btnRetryInternalInterviews').one('click', function() {
                         fetchInterviews(clientId, cursor, true);
@@ -5752,12 +5737,10 @@ use Carbon\Carbon;
             const $list = $('#candidatetListinterviewtracker');
             if (!rows || !rows.length) {
                 $list.html(`
-                    <tr>
-                      <td colspan="7" class="text-center py-10 text-muted fs-7">
+                    <div class="it-empty-card">
                         <i class="fas fa-calendar-times fs-2 text-gray-300 d-block mb-2"></i>
                         No interviews scheduled for this client.
-                      </td>
-                    </tr>
+                    </div>
                 `);
                 return;
             }
@@ -5776,11 +5759,11 @@ use Carbon\Carbon;
                 let followupHtml = '';
                 if (fu.label) {
                     followupHtml = `
-                        <div class="it-candidate-meta">
+                        <div class="it-cand-meta">
                             <span class="it-meta-tag ${fu.style_class || 'info'}">
                                 ${fu.label}
                             </span>
-                            ${fu.formatted_at ? `<span class="it-meta-tag info" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">${fu.formatted_at}</span>` : ''}
+                            ${fu.formatted_at ? `<span class="it-meta-date">${fu.formatted_at}</span>` : ''}
                         </div>
                     `;
                 }
@@ -5790,16 +5773,16 @@ use Carbon\Carbon;
                 if (sch.meeting_link) {
                     if (sch.link_type === 'address') {
                         linkHtml = `
-                            <span class="it-date-row" style="color:var(--it-primary);font-weight:500;margin-top:2px;" title="${sch.meeting_link}">
+                            <span class="it-dt-link" title="${sch.meeting_link}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                ${sch.link_label || 'View Address'}
+                                <span>${sch.link_label || 'View Address'}</span>
                             </span>
                         `;
                     } else if (sch.link_type === 'link') {
                         linkHtml = `
-                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-date-row" style="color:var(--it-primary);font-weight:500;text-decoration:none;margin-top:2px;">
+                            <a href="${sch.meeting_link}" target="_blank" rel="noopener noreferrer" class="it-dt-link">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                ${sch.link_label || 'Interview Link'}
+                                <span>${sch.link_label || 'Interview Link'}</span>
                             </a>
                         `;
                     }
@@ -5832,126 +5815,110 @@ use Carbon\Carbon;
                 // Recommendation pill
                 let recHtml = '';
                 if (fb.recommendation) {
-                    recHtml = `<span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:${fb.recommendation.bg};color:${fb.recommendation.color};margin-top:2px;">${fb.recommendation.label}</span>`;
+                    recHtml = `<span class="it-rec-pill" style="background:${fb.recommendation.bg};color:${fb.recommendation.color};">${fb.recommendation.label}</span>`;
                 }
 
                 return `
-                    <tr data-interview-id="${intv.id}">
-                      <!-- 1. Candidate (20%) -->
-                      <td style="width: 20%; min-width: 170px;">
-                        <div class="it-candidate-cell">
-                          <div class="it-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
-                            ${cand.initial || 'C'}
-                          </div>
-                          <div class="it-candidate-info">
-                            <div class="it-candidate-name">
-                              <span class="text-dark fw-bolder fs-6" title="${cand.name || 'Candidate'}">
-                                ${cand.name ? (cand.name.length > 22 ? cand.name.substring(0, 22) + '...' : cand.name) : 'Candidate'}
-                              </span>
-                            </div>
-                            <div class="it-candidate-role">
-                              <span class="fw-bold text-muted d-block fs-7" title="${cand.designation || '—'}">
-                                ${cand.designation ? (cand.designation.length > 24 ? cand.designation.substring(0, 24) + '...' : cand.designation) : '—'}
-                              </span>
-                            </div>
-                            ${followupHtml}
-                          </div>
+                    <div class="it-primary-card" data-interview-id="${intv.id}">
+                      <!-- 1. Candidate Sub-Card (2.2fr) -->
+                      <div class="it-subcard it-subcard-cand">
+                        <div class="it-cand-avatar ${cand.avatar_color_class || 'it-avatar-blue'}">
+                          ${cand.initial || 'C'}
                         </div>
-                      </td>
+                        <div class="it-cand-info">
+                          <div class="it-cand-name" title="${cand.name || 'Candidate'}">
+                            ${cand.name || 'Candidate'}
+                          </div>
+                          <div class="it-cand-role" title="${cand.designation || '—'}">
+                            ${cand.designation || '—'}
+                          </div>
+                          ${followupHtml}
+                        </div>
+                      </div>
 
-                      <!-- 2. Job Requisitions (18%) -->
-                      <td style="width: 18%; min-width: 150px;">
+                      <!-- 2. Job Requisition Sub-Card (2.3fr) -->
+                      <div class="it-subcard it-subcard-job">
                         <div class="it-job-title" title="${job.title || 'Job Position'}">
-                          ${job.title ? (job.title.length > 20 ? job.title.substring(0, 20) + '...' : job.title) : 'Job Position'}
+                          ${job.title || 'Job Position'}
                         </div>
                         <div class="it-job-company" title="${job.display_company_name || job.client_name || ''}">
-                          ${(job.display_company_name || job.client_name || '').substring(0, 20)}
+                          ${job.display_company_name || job.client_name || 'Client Account'}
                         </div>
                         <div class="it-job-tags">
                           <span class="it-job-type ${job.job_type_class || 'it-job-type-internal'}">${job.job_type_label || 'Internal'}</span>
                           ${job.job_id_display ? `
-                            <span class="it-dot-separator"></span>
+                            <span class="it-dot-sep"></span>
                             <span class="it-job-id">${job.job_id_display}</span>
                           ` : ''}
                         </div>
-                      </td>
+                      </div>
 
-                      <!-- 3. Interview Date & Time (18%) -->
-                      <td style="width: 18%; min-width: 150px;">
-                        <div class="it-date-cell">
-                          <div class="it-date-row">
+                      <!-- 3. Interview Schedule Sub-Card (1.75fr) -->
+                      <div class="it-subcard it-subcard-datetime">
+                        <div class="it-dt-row it-dt-date">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          <span>${sch.date_formatted || '—'}</span>
+                        </div>
+                        ${sch.time_formatted ? `
+                          <div class="it-dt-row it-dt-time">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                             </svg>
-                            <span>${sch.date_formatted || '—'}</span>
+                            <span>${sch.time_formatted}</span>
                           </div>
-                          ${sch.time_formatted ? `
-                            <div class="it-date-row">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                              </svg>
-                              <span>${sch.time_formatted}</span>
-                            </div>
-                          ` : ''}
-                          <div class="it-date-row it-mode">
-                            ${modeSvg}
-                            <span>${sch.mode_label || 'Video Call'}</span>
-                          </div>
-                          ${linkHtml}
+                        ` : ''}
+                        <div class="it-dt-row it-dt-mode">
+                          ${modeSvg}
+                          <span>${sch.mode_label || 'Video Call'}</span>
                         </div>
-                      </td>
+                        ${linkHtml}
+                      </div>
 
-                      <!-- 4. Interviewers (13%) -->
-                      <td style="width: 13%; min-width: 120px;">
-                        <div class="it-person-cell">
-                          <div class="it-person-name">${intvs.lead_name || 'N/A'}</div>
-                          <div class="it-person-company" style="color:#009ef7;font-weight:500;">${intvs.lead_company || 'Panel'}</div>
-                          ${intvs.extra_count > 0 ? `
-                            <div class="it-person-extra">
-                              <span class="it-extra-badge">${intvs.extra_label}</span>
-                              <span class="it-extra-text">${intvs.extra_count + 1} Interviewers</span>
-                            </div>
-                          ` : ''}
-                        </div>
-                      </td>
-
-                      <!-- 5. Source (12%) -->
-                      <td style="width: 12%; min-width: 110px;">
-                        <div class="it-person-cell">
-                          <div class="it-person-name" title="${src.name || '—'}">
-                            ${src.name ? (src.name.length > 16 ? src.name.substring(0, 16) + '...' : src.name) : '—'}
+                      <!-- 4. Interviewers Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-interviewers">
+                        <div class="it-lead-name">${intvs.lead_name || 'N/A'}</div>
+                        <div class="it-lead-comp">${intvs.lead_company || 'Panel'}</div>
+                        ${intvs.extra_count > 0 ? `
+                          <div class="it-extra-wrap">
+                            <span class="it-extra-pill">${intvs.extra_label}</span>
+                            <span class="it-extra-lbl">${intvs.extra_count + 1} Interviewers</span>
                           </div>
-                          <div class="it-person-company" title="${src.company_name || ''}">
-                            ${src.company_name ? (src.company_name.length > 16 ? src.company_name.substring(0, 16) + '...' : src.company_name) : ''}
-                          </div>
-                        </div>
-                      </td>
+                        ` : ''}
+                      </div>
 
-                      <!-- 6. Stage (9%) -->
-                      <td style="width: 9%; min-width: 90px;">
-                        <div class="it-stage-cell">
-                          <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
-                            ${stg.master_status_name || 'Interview'}
+                      <!-- 5. Source Sub-Card (1.1fr) -->
+                      <div class="it-subcard it-subcard-source">
+                        <div class="it-src-name" title="${src.name || '—'}">
+                          ${src.name || '—'}
+                        </div>
+                        <div class="it-src-comp" title="${src.company_name || ''}">
+                          ${src.company_name || ''}
+                        </div>
+                      </div>
+
+                      <!-- 6. Stage Sub-Card (0.75fr) -->
+                      <div class="it-subcard it-subcard-stage">
+                        <span class="it-badge ${stg.badge_class || 'it-badge-blue'}">
+                          ${stg.master_status_name || 'Interview'}
+                        </span>
+                        ${stg.child_status_name ? `
+                          <span class="it-stage-sub">
+                            ${stg.child_status_name}
                           </span>
-                          ${stg.child_status_name ? `
-                            <span class="text-muted fw-bold d-block fs-7" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">
-                              ${stg.child_status_name}
-                            </span>
-                          ` : ''}
-                        </div>
-                      </td>
+                        ` : ''}
+                      </div>
 
-                      <!-- 7. Feedback (10% - Pure View Only) -->
-                      <td style="width: 10%; min-width: 100px;">
-                        <div class="it-feedback-cell">
-                          <span style="font-size:11px;font-weight:600;color:${fb.status_color || '#f59e0b'};display:inline-flex;align-items:center;gap:4px;">
-                            ${fbIconSvg}
-                            ${fb.status_text || 'Pending'}
-                          </span>
-                          ${recHtml}
-                        </div>
-                      </td>
-                    </tr>
+                      <!-- 7. Feedback Sub-Card (0.8fr) -->
+                      <div class="it-subcard it-subcard-feedback">
+                        <span class="it-fb-status" style="color:${fb.status_color || '#f59e0b'};">
+                          ${fbIconSvg}
+                          <span>${fb.status_text || 'Pending'}</span>
+                        </span>
+                        ${recHtml}
+                      </div>
+                    </div>
                 `;
             }).join('');
 
@@ -6088,9 +6055,13 @@ use Carbon\Carbon;
         }
     });
 
+    window.jobRequestSeq = 0;
     window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
+        window.currentJobStatusInternal = activeStatus;
+        var currentSeq = ++window.jobRequestSeq;
+
         return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
@@ -6101,32 +6072,54 @@ use Carbon\Carbon;
                 custom: true
             },
             success: function(response) {
+                if (currentSeq !== window.jobRequestSeq) {
+                    return; // Prevent race conditions
+                }
                 $('.page-loader').css('display', 'none');
                 $('#clientJobsListajax').html(response.html);
                 $('#paginationclientjobs').html(response.pagination);
 
-                if (response.kpi) {
-                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
-                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
+                // Fully Dynamic Tabs Rendering
+                if (response.tabs && response.tabs.length) {
+                    var tabsHtml = response.tabs.map(function(t) {
+                        var isAct = (t.key === activeStatus);
+                        return `
+                            <button type="button" 
+                                    class="cd-jobs-tab-btn js-job-filter-btn ${isAct ? 'active' : ''}" 
+                                    data-status="${t.key}">
+                                ${t.label} <span class="cd-tab-count ${t.badge_cls || 'count-neutral'}">${t.count}</span>
+                            </button>
+                        `;
+                    }).join('');
+                    $('#clientJobsDynamicTabs').html(tabsHtml);
+                } else if (response.kpi) {
                     $('#filterCountAll').text(response.kpi.total);
                     $('#filterCountHiring').text(response.kpi.hiring);
                     $('#filterCountHold').text(response.kpi.hold);
                     $('#filterCountClosed').text(response.kpi.closed);
                     $('#filterCountInactive').text(response.kpi.inactive);
                 }
+
+                if (response.kpi) {
+                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
+                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
+                }
             },
             error: function() {
-                $('.page-loader').css('display', 'none');
+                if (currentSeq === window.jobRequestSeq) {
+                    $('.page-loader').css('display', 'none');
+                }
             }
         });
     };
 
     // Internal Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '.js-job-filter-btn', function() {
+    $(document).on('click', '#clientJobsDynamicTabs .js-job-filter-btn', function(e) {
+        e.preventDefault();
         var status = $(this).data('status') || 'all';
-        window.currentJobStatusInternal = status;
-        $('.js-job-filter-btn').removeClass('active');
+        $('#clientJobsDynamicTabs .js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
+        window.currentJobStatusInternal = status;
         fetchJobsClient(1, $('#inputJobSearch').val(), status);
     });
 
