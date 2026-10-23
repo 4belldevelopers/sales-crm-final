@@ -11,6 +11,7 @@ use Carbon\Carbon;
         $startDate = Carbon::today()->subDays(6)->startOfDay();
 
   @endphp
+@include('service_company.client.components.tab-jobs-style')
 <style>
     /* Scoped Interview Tracker Styling (Metronic Theme Aligned) */
     .cit-fb-pill {
@@ -1373,6 +1374,376 @@ use Carbon\Carbon;
               grid-template-columns: 1fr;
             }
           }
+
+          /* ── Candidates Tab God-Level Card & Sub-Card Redesign ── */
+          .cd-cand-tab-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 18px 20px 24px;
+            margin: 12px 14px 20px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+          }
+
+          /* 1. Searchbar & Filter Toolbar Card */
+          .cd-cand-toolbar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+          }
+          .cd-cand-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 300px;
+          }
+          .cd-cand-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          /* Sub-Cards for Search & Filter */
+          .cd-cand-search-subcard {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 14px;
+            height: 38px;
+            width: 100%;
+            max-width: 440px;
+            transition: all 0.15s ease-in-out;
+          }
+          .cd-cand-search-subcard:focus-within {
+            background: #ffffff;
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+          }
+          .cd-cand-search-subcard i {
+            color: #94a3b8;
+            font-size: 13px;
+            flex-shrink: 0;
+          }
+          .cd-cand-search-subcard input {
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 12.5px !important;
+            color: #0f172a !important;
+            width: 100%;
+            padding: 0 !important;
+            line-height: 38px;
+            font-family: inherit;
+          }
+          .cd-cand-search-subcard input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+          }
+
+          .cd-cand-filter-subcard {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            height: 38px;
+            padding: 0 10px;
+            transition: all 0.15s ease-in-out;
+          }
+          .cd-cand-filter-subcard:focus-within,
+          .cd-cand-filter-subcard:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+          }
+          .cd-cand-filter-subcard i {
+            color: #94a3b8;
+            font-size: 11.5px;
+            flex-shrink: 0;
+          }
+          .cd-cand-filter-subcard select {
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: #1e293b !important;
+            cursor: pointer;
+            padding: 0 16px 0 0 !important;
+            line-height: 38px;
+            font-family: inherit;
+          }
+
+          .cd-cand-action-subcard {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+          }
+          .cd-cand-action-subcard:hover {
+            background: #eff6ff;
+            color: #009ef7;
+            border-color: #bfdbfe;
+          }
+
+          .cd-cand-count-subcard {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 38px;
+            padding: 0 14px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            color: #1d4ed8;
+            font-weight: 600;
+            font-size: 12px;
+          }
+          .cd-cand-count-subcard i {
+            font-size: 11.5px;
+            color: #2563eb;
+          }
+
+          /* 2. Candidate Table & Floating Card Rows */
+          .cd-cand-table-wrap {
+            background: #ffffff;
+            border-radius: 10px;
+          }
+          .cd-cand-table {
+            width: 100%;
+            border-collapse: separate !important;
+            border-spacing: 0 8px !important;
+            margin: 0 !important;
+          }
+          .cd-cand-table thead tr th {
+            background: #f8fafc !important;
+            color: #64748b !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.3px;
+            padding: 10px 14px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            white-space: nowrap;
+          }
+          .cd-cand-table thead tr th:first-child {
+            border-left: 1px solid #e2e8f0 !important;
+            border-top-left-radius: 8px !important;
+            border-bottom-left-radius: 8px !important;
+          }
+          .cd-cand-table thead tr th:last-child {
+            border-right: 1px solid #e2e8f0 !important;
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+          }
+
+          /* Candidate Row Card */
+          .cd-cand-row-card {
+            background: #ffffff !important;
+            transition: all 0.15s ease-in-out !important;
+          }
+          .cd-cand-row-card td {
+            background: #ffffff !important;
+            border-top: 1px solid #eef2f6 !important;
+            border-bottom: 1px solid #eef2f6 !important;
+            padding: 12px 14px !important;
+            vertical-align: middle !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+          }
+          .cd-cand-row-card td:first-child {
+            border-left: 1px solid #eef2f6 !important;
+            border-top-left-radius: 10px !important;
+            border-bottom-left-radius: 10px !important;
+          }
+          .cd-cand-row-card td:last-child {
+            border-right: 1px solid #eef2f6 !important;
+            border-top-right-radius: 10px !important;
+            border-bottom-right-radius: 10px !important;
+          }
+          .cd-cand-row-card:hover {
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+          }
+          .cd-cand-row-card:hover td {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+          }
+
+          /* Micro Sub-Cards inside Candidate Cells */
+          .cd-cell-subcard {
+            display: flex;
+            flex-direction: column;
+          }
+          .cd-cand-avatar-subcard {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #ffe4e6;
+            color: #e11d48;
+            font-weight: 700;
+            font-size: 15px;
+            border: 1px solid #fecdd3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+          .cd-cand-name {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #dc2626 !important;
+            line-height: 1.3 !important;
+            text-decoration: none !important;
+            letter-spacing: -0.2px;
+          }
+          .cd-cand-name:hover {
+            color: #009ef7 !important;
+          }
+          .cd-cand-desig {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #dc2626 !important;
+            line-height: 1.2 !important;
+          }
+          .cd-cand-match-pill {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+          }
+          .cd-val-primary {
+            color: #0f172a !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+          }
+          .cd-val-secondary {
+            color: #64748b !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+          }
+          .cd-val-sub {
+            color: #94a3b8 !important;
+            font-size: 10px !important;
+            font-weight: 400 !important;
+          }
+
+          /* Notice Sub-Card Chips */
+          .cd-notice-chip {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .cd-notice-snp {
+            background: #f5f3ff;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe;
+          }
+          .cd-notice-immediate {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+          }
+          .cd-notice-days {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+          }
+          .cd-notice-default {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+          }
+
+          /* Status & Stage Sub-Card Chips */
+          .cd-status-chip {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .cd-status-hiring {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+          }
+          .cd-status-hold {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+          }
+          .cd-status-closed {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecdd3;
+          }
+
+          .cd-stage-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+            text-decoration: none !important;
+            cursor: pointer;
+            transition: filter 0.15s ease;
+          }
+          .cd-stage-chip:hover {
+            filter: brightness(0.95);
+          }
+
+          /* Skeleton & Empty State Sub-Cards */
+          .cd-cand-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+          }
+          .cd-cand-skeleton-pulse {
+            background: #f1f5f9;
+            border-radius: 6px;
+            animation: cdpulse 1.5s infinite;
+          }
         </style>
 
         @php
@@ -1645,7 +2016,7 @@ use Carbon\Carbon;
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#requisitions">
+                <a class="nav-link" data-bs-toggle="tab" data-toggle="tab" href="#requisitions">
                   <i class="fas fa-briefcase fa-solid" style="color:#8b5cf6;"></i> Jobs
                   @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
                 </a>
@@ -1934,83 +2305,106 @@ use Carbon\Carbon;
                     <!--end::Contacts Content-->
 
                     <!--begin::candidate_list Candidate List-->
-                    <div class="tab-pane" id="candidate_list" role="tabpanel">
-                        <!-- Candidate Search & Filter Toolbar -->
-                        <div class="card-header border-0 pt-3 pb-2 px-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                            <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 420px;">
-                                <div class="position-relative w-100">
-                                    <span class="position-absolute top-50 translate-middle-y ms-3 text-muted">
-                                        <i class="fas fa-search fa-solid"></i>
-                                    </span>
-                                    <input type="text" id="cdCandSearchInput" class="form-control form-control-sm form-control-solid ps-9" placeholder="Search candidates by name, email, skills..." autocomplete="off">
+                    <div class="tab-pane" id="candidate_list" role="tabpanel" style="background:#ffffff; min-height: 520px;">
+                        <div class="cd-cand-tab-container">
+                            <!-- Candidate Search & Filter Toolbar Card -->
+                            <div class="cd-cand-toolbar-card">
+                                <div class="cd-cand-toolbar-left">
+                                    <!-- Search Sub-Card -->
+                                    <div class="cd-cand-search-subcard">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="cdCandSearchInput" placeholder="Search candidates by name, email, skills..." autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="cd-cand-toolbar-right">
+                                    <!-- Status Filter Sub-Card -->
+                                    <div class="cd-cand-filter-subcard">
+                                        <i class="fas fa-filter"></i>
+                                        <select id="cdCandStatusFilter">
+                                            <option value="">All Statuses</option>
+                                            <option value="1">Sourced</option>
+                                            <option value="2">Screening</option>
+                                            <option value="3">Interview</option>
+                                            <option value="4">Shortlisted</option>
+                                            <option value="5">Offer</option>
+                                            <option value="6">Joined</option>
+                                            <option value="7">On Hold</option>
+                                            <option value="8">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <!-- Reset Button Sub-Card -->
+                                    <button type="button" id="cdCandResetBtn" class="cd-cand-action-subcard" title="Reset Filters">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                    <!-- Candidate Count Sub-Card -->
+                                    <div class="cd-cand-count-subcard" id="cdCandidateCountBadge">
+                                        <i class="fas fa-user-check"></i>
+                                        <span id="cdCandidateCountText">0</span> Candidates
+                                    </div>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <select id="cdCandStatusFilter" class="form-select form-select-sm form-select-solid" style="min-width: 140px;">
-                                    <option value="">All Statuses</option>
-                                    <option value="1">Sourced</option>
-                                    <option value="2">Screening</option>
-                                    <option value="3">Interview</option>
-                                    <option value="4">Shortlisted</option>
-                                    <option value="5">Offer</option>
-                                    <option value="6">Joined</option>
-                                    <option value="7">On Hold</option>
-                                    <option value="8">Rejected</option>
-                                </select>
-                                <button type="button" id="cdCandResetBtn" class="btn btn-sm btn-icon btn-light-secondary" title="Reset Filters">
-                                    <i class="fas fa-sync-alt fa-solid"></i>
-                                </button>
-                                <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2" id="cdCandidateCountBadge">
-                                    <span id="cdCandidateCountText">0</span> Candidates
-                                </span>
+
+                            <!-- Local Skeleton Loader Sub-Cards (Zero Main-Thread / Full-Screen Freeze) -->
+                            <div id="cdCandSkeletonLoader" style="display:none;" class="py-2">
+                                <div class="cd-cand-skeleton-card">
+                                    <div class="cd-cand-skeleton-pulse" style="width: 38px; height: 38px; border-radius: 8px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 180px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 60px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 100px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 100px; height: 18px;"></div>
+                                </div>
+                                <div class="cd-cand-skeleton-card">
+                                    <div class="cd-cand-skeleton-pulse" style="width: 38px; height: 38px; border-radius: 8px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 180px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 60px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 100px; height: 18px;"></div>
+                                    <div class="cd-cand-skeleton-pulse" style="width: 100px; height: 18px;"></div>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Local Skeleton Loader (Zero Main-Thread / Full-Screen Freeze) -->
-                        <div id="cdCandSkeletonLoader" style="display:none;" class="py-4">
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                            <div class="p-3 mb-2 bg-light rounded" style="height: 52px; animation: pulse 1.5s infinite;"></div>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div id="cdCandEmptyState" class="text-center py-12" style="display:none;">
-                            <div class="text-muted fs-5 fw-bold mb-2">No candidates found</div>
-                            <div class="text-gray-400 fs-7">Try adjusting your search query or filters.</div>
-                        </div>
-
-                        <div class="card-body px-0 py-2" id="cdCandidateTableWrap">
-                            <!--begin::Table-->
-                            <div class="table-responsive">
-                                <table class="table align-middle table-row-dashed fs-7 gy-4">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <tr class="fw-bolder text-muted fs-7 gs-0 border-bottom border-gray-200">
-                                            <th class="w-25px pe-2">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="checkbox" id="cdCandCheckAll" value="1" />
-                                                </div>
-                                            </th>
-                                            <th class="min-w-220px">Candidate Name</th>
-                                            <th class="min-w-60px">Exp.</th>
-                                            <th class="min-w-130px">Salary</th>
-                                            <th class="min-w-120px">Notice</th>
-                                            <th class="min-w-120px">Location</th>
-                                            <th class="min-w-110px">Ownership</th>
-                                            <th class="min-w-130px">Jobs</th>
-                                            <th class="min-w-90px">Status</th>
-                                            <th class="min-w-90px">Stage</th>
-                                        </tr>
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <tbody id="candidatetList">
-                                    </tbody>
-                                </table>
+                            <!-- Empty State Sub-Card -->
+                            <div id="cdCandEmptyState" class="text-center py-12" style="display:none; background:#ffffff; border-radius:10px; border:1px dashed #cbd5e1; margin:8px 0;">
+                                <div class="symbol symbol-50px mx-auto mb-3">
+                                    <span class="symbol-label bg-light-primary text-primary fs-2">
+                                        <i class="fas fa-user-slash fa-solid"></i>
+                                    </span>
+                                </div>
+                                <div class="text-dark fs-6 fw-bold mb-1">No candidates found</div>
+                                <div class="text-muted fs-7">Try adjusting your search query or filters.</div>
                             </div>
-                            <!--end::Table-->
-                            <div id="paginationcandidate" class="d-flex align-items-center justify-content-between pt-4">
-                                <!-- Pagination links rendered dynamically by ClientCandidateStore -->
+
+                            <div class="cd-cand-table-wrap" id="cdCandidateTableWrap">
+                                <!--begin::Table-->
+                                <div class="table-responsive">
+                                    <table class="table cd-cand-table align-middle fs-7">
+                                        <!--begin::Table head-->
+                                        <thead>
+                                            <tr>
+                                                <th class="w-30px pe-0">
+                                                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                        <input class="form-check-input" type="checkbox" id="cdCandCheckAll" value="1" />
+                                                    </div>
+                                                </th>
+                                                <th class="min-w-220px">Candidate Name</th>
+                                                <th class="min-w-60px">Exp.</th>
+                                                <th class="min-w-130px">Salary</th>
+                                                <th class="min-w-120px">Notice</th>
+                                                <th class="min-w-120px">Location</th>
+                                                <th class="min-w-110px">Ownership</th>
+                                                <th class="min-w-130px">Jobs</th>
+                                                <th class="min-w-90px">Status</th>
+                                                <th class="min-w-90px">Stage</th>
+                                            </tr>
+                                        </thead>
+                                        <!--end::Table head-->
+                                        <tbody id="candidatetList">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!--end::Table-->
+                                <div id="paginationcandidate" class="d-flex align-items-center justify-content-between pt-4">
+                                    <!-- Pagination links rendered dynamically by ClientCandidateStore -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2687,6 +3081,35 @@ use Carbon\Carbon;
                                 <div class="card-body px-0 py-4">
                                     @if (in_array('view_jobs', $userPermissions))
                                         <div class="jobx">
+                                            <!-- 5-Option Status Filter Group (4 Canonical States + All Jobs) -->
+                                            <div class="cl-jobs-filter-group mb-3">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn active" 
+                                                        data-status="all">
+                                                    All Jobs <span class="badge badge-light-dark ms-1" id="filterCountAll">{{ $kpiActive ?? 0 }}</span>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        data-status="hiring">
+                                                    Hiring <span class="badge badge-light-success ms-1" id="filterCountHiring">{{ $kpiActive ?? 0 }}</span>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        data-status="hold">
+                                                    On Hold <span class="badge badge-light-warning ms-1" id="filterCountHold">0</span>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        data-status="closed">
+                                                    Closed <span class="badge badge-light-danger ms-1" id="filterCountClosed">0</span>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-light js-job-filter-btn" 
+                                                        data-status="inactive">
+                                                    Inactive <span class="badge badge-light-secondary ms-1" id="filterCountInactive">0</span>
+                                                </button>
+                                            </div>
+
                                             <div class="table-card">
                                                 <div class="table-header">
                                                     <div class="th">Job Details</div>
@@ -3769,11 +4192,21 @@ use Carbon\Carbon;
         } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
             initContactsDataTable();
             loadedTabs['contacts'] = true;
+        } else if ($('#requisitions').hasClass('active') || $('a[href="#requisitions"]').hasClass('active')) {
+            fetchJobsClient();
+            loadedTabs['requisitions'] = true;
         } else if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
             initPerformanceDashboard();
             fetchInternalClientDashboardAnalytics();
             loadedTabs['candidateDashboard'] = true;
         }
+
+        $(document).on('click', 'a[href="#requisitions"], .cd-kpi-card[data-target-tab="#requisitions"]', function(e) {
+            if (!loadedTabs['requisitions']) {
+                fetchJobsClient();
+                loadedTabs['requisitions'] = true;
+            }
+        });
 
         $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
             var target = $(e.target).attr('href');
@@ -4109,37 +4542,37 @@ use Carbon\Carbon;
             var designation = row.current_designation || '----';
             var matchPct = (row.skill_match !== undefined && row.skill_match !== null) ? Math.round(row.skill_match) : 0;
 
-            // 1. Candidate Name Column (Pink/Red text + initial box + match badge)
+            // 1. Candidate Name Sub-Card (Avatar box + Pink/Red name + Red designation + Match Pill)
             var nameColHtml = `
-                <div class="d-flex align-items-center">
-                    <div class="symbol symbol-35px me-3">
-                        <span class="symbol-label bg-light-danger text-danger fs-4 fw-bolder rounded">${firstChar}</span>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="cd-cand-avatar-subcard">
+                        <span>${firstChar}</span>
                     </div>
-                    <div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="text-danger fw-bolder text-hover-primary fs-6 show-application-detail" data-row-id="${cid}" title="${fullName}">
+                    <div class="cd-cell-subcard min-w-0">
+                        <a href="javascript:void(0);" class="cd-cand-name text-truncate show-application-detail" data-row-id="${cid}" title="${fullName}">
                             ${fullName}
                         </a>
-                        <span class="text-danger fw-bold fs-7 text-truncate" style="max-width: 200px;" title="${designation}">
+                        <span class="cd-cand-desig text-truncate" style="max-width: 200px;" title="${designation}">
                             ${designation}
                         </span>
                         <div class="mt-1">
-                            <span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">Match ${matchPct}%</span>
+                            <span class="cd-cand-match-pill"><i class="fas fa-check-circle" style="font-size:8.5px;"></i> Match ${matchPct}%</span>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 2. Experience Column (Total exp bold black, rel exp gray)
+            // 2. Experience Sub-Card (Total exp bold black, rel exp gray)
             var totalExp = (row.total_exp !== undefined && row.total_exp !== null && row.total_exp !== '') ? (row.total_exp + '. Y') : '----';
             var relExp = (row.rel_exp !== undefined && row.rel_exp !== null && row.rel_exp !== '') ? (row.rel_exp + '. Y') : '';
             var expColHtml = `
-                <div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">${totalExp}</span>
-                    ${relExp ? `<span class="text-muted fw-bold fs-7">${relExp}</span>` : ''}
+                <div class="cd-cell-subcard">
+                    <span class="cd-val-primary">${totalExp}</span>
+                    ${relExp ? `<span class="cd-val-secondary">${relExp}</span>` : ''}
                 </div>
             `;
 
-            // 3. Salary Column (Formatted currency: Current & Expected)
+            // 3. Salary Sub-Card (Formatted currency: Current & Expected)
             var currencySymbol = row.current_ctc_cur || row.salary_currency || row.job_currency || '₹';
             if (currencySymbol === '0' || !currencySymbol || currencySymbol === 'INR') currencySymbol = '₹';
             if (currencySymbol === 'USD' || currencySymbol === '4') currencySymbol = '$';
@@ -4158,41 +4591,41 @@ use Carbon\Carbon;
             var ctcVal = formatMoney(row.ctc_yearly || row.ctc);
 
             var salaryColHtml = `
-                <div class="d-flex flex-column">
-                    ${ectcVal ? `<span class="text-dark fw-bolder fs-6">${currencySymbol}${ectcVal}<span class="fs-8 fw-normal text-muted">/Annual</span></span>` : '<span class="text-dark fw-bolder fs-6">----</span>'}
-                    ${ctcVal ? `<span class="text-muted fw-bold fs-7">${currencySymbol}${ctcVal}<span class="fs-8 fw-normal text-muted">/Annual</span></span>` : ''}
+                <div class="cd-cell-subcard">
+                    ${ectcVal ? `<span class="cd-val-primary">${currencySymbol}${ectcVal}<span class="cd-val-sub">/Annual</span></span>` : '<span class="cd-val-primary">----</span>'}
+                    ${ctcVal ? `<span class="cd-val-secondary">${currencySymbol}${ctcVal}<span class="cd-val-sub">/Annual</span></span>` : ''}
                 </div>
             `;
 
-            // 4. Notice Column (SNP LWD in purple #9333ea, Immediate in green #16a34a, Days in orange #d97706)
+            // 4. Notice Sub-Card (SNP LWD in purple, Immediate in green, Days in amber)
             var noticeText = 'Immediate';
-            var noticeColor = '#16a34a';
+            var noticeClass = 'cd-notice-immediate';
             var rawNotice = String(row.np_id || row.notice || '').trim();
 
             if (row.serving_notice_period_mode == 1 || (rawNotice && rawNotice.includes('-'))) {
                 var cleanDate = rawNotice.replace('SNP LWD', '').trim();
                 noticeText = 'SNP LWD ' + cleanDate;
-                noticeColor = '#9333ea';
+                noticeClass = 'cd-notice-snp';
             } else if (rawNotice === 'Immediate' || rawNotice === '0' || rawNotice === '') {
                 noticeText = 'Immediate';
-                noticeColor = '#16a34a';
+                noticeClass = 'cd-notice-immediate';
             } else if (!isNaN(Number(rawNotice))) {
                 noticeText = rawNotice + ' Days';
-                noticeColor = '#d97706';
+                noticeClass = 'cd-notice-days';
             } else {
                 noticeText = rawNotice;
-                noticeColor = '#1e293b';
+                noticeClass = 'cd-notice-default';
             }
 
             var currCompany = row.current_company || '----';
             var noticeColHtml = `
-                <div class="d-flex flex-column">
-                    <span class="fw-bolder fs-6" style="color: ${noticeColor};">${noticeText}</span>
-                    <span class="text-muted fw-bold fs-7 text-truncate" style="max-width: 120px;" title="${currCompany}">${currCompany}</span>
+                <div class="cd-cell-subcard align-items-start">
+                    <span class="cd-notice-chip ${noticeClass}">${noticeText}</span>
+                    <span class="cd-val-secondary text-truncate mt-1" style="max-width: 120px;" title="${currCompany}">${currCompany}</span>
                 </div>
             `;
 
-            // 5. Location Column (City, Country bold black; Qualification gray)
+            // 5. Location Sub-Card (City, Country bold black; Qualification gray)
             var city = row.city_name || row.city || '----';
             var country = row.country_name || '';
             var locLine1 = city;
@@ -4201,88 +4634,84 @@ use Carbon\Carbon;
             }
             var qualification = row.qualification_name || '----';
             var locColHtml = `
-                <div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width: 130px;" title="${locLine1}">${locLine1}</span>
-                    <span class="text-muted fw-bold fs-7 text-uppercase text-truncate" style="max-width: 130px;" title="${qualification}">${qualification}</span>
+                <div class="cd-cell-subcard">
+                    <span class="cd-val-primary text-truncate" style="max-width: 130px;" title="${locLine1}">${locLine1}</span>
+                    <span class="cd-val-secondary text-uppercase text-truncate mt-1" style="max-width: 130px;" title="${qualification}">${qualification}</span>
                 </div>
             `;
 
-            // 6. Ownership Column (Recruiter bold black; Company/Agency gray)
+            // 6. Ownership Sub-Card (Recruiter bold black; Company/Agency gray)
             var recruiter = row.posted_by_name || row.posted_by || row.submitted_by_name || row.agency_root_name || 'Vibhanshu';
             var submitterCompany = row.submitted_by_company_name || row.post_company_name || row.apl_company_name || row.company_name || '4bell tech';
             var ownershipColHtml = `
-                <div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width: 120px;" title="${recruiter}">${recruiter}</span>
-                    <span class="text-muted fw-bold fs-7 text-truncate" style="max-width: 120px;" title="${submitterCompany}">${submitterCompany}</span>
+                <div class="cd-cell-subcard">
+                    <span class="cd-val-primary text-truncate" style="max-width: 120px;" title="${recruiter}">${recruiter}</span>
+                    <span class="cd-val-secondary text-truncate mt-1" style="max-width: 120px;" title="${submitterCompany}">${submitterCompany}</span>
                 </div>
             `;
 
-            // 7. Jobs Column (Linked to this company only!)
+            // 7. Jobs Sub-Card (Linked to this company only!)
             var jobTitle = row.title || row.job_title || ('Job #' + jobId);
             var companyName = row.cur_company_name || row.client_name || '4Bell Technology';
             var jobUrl = jobId ? `{{ url('service_company/jobs') }}/${jobId}` : 'javascript:void(0);';
             var jobsColHtml = `
-                <div class="d-flex flex-column">
-                    <a href="${jobUrl}" target="_blank" class="text-dark fw-bolder text-hover-primary fs-6 text-truncate d-block" style="max-width: 130px;" title="${jobTitle}">
+                <div class="cd-cell-subcard">
+                    <a href="${jobUrl}" target="_blank" class="cd-val-primary text-hover-primary text-truncate d-block" style="max-width: 140px; text-decoration:none;" title="${jobTitle}">
                         ${jobTitle}
                     </a>
-                    <span class="text-muted fw-bold fs-7 text-truncate d-block" style="max-width: 130px;" title="${companyName}">
+                    <span class="cd-val-secondary text-truncate d-block mt-1" style="max-width: 140px;" title="${companyName}">
                         ${companyName}
                     </span>
                 </div>
             `;
 
-            // 8. Status Column (Job Status badge: e.g. Hiring in badge-light-success, ID - Internal)
+            // 8. Status Sub-Card (Job Status chip: Hiring, Hold, Closed)
             var rawJobStatus = String(row.job_status || 'active').toLowerCase();
             var statusPillText = 'Hiring';
-            var statusBadgeClass = 'badge-light-success text-success';
+            var statusChipClass = 'cd-status-hiring';
             if (rawJobStatus === 'active' || rawJobStatus === 'hiring') {
                 statusPillText = 'Hiring';
-                statusBadgeClass = 'badge-light-success text-success';
+                statusChipClass = 'cd-status-hiring';
             } else if (rawJobStatus === 'hold') {
                 statusPillText = 'Hold';
-                statusBadgeClass = 'badge-light-warning text-warning';
+                statusChipClass = 'cd-status-hold';
             } else if (rawJobStatus === 'inactive' || rawJobStatus === 'closed') {
                 statusPillText = 'Closed';
-                statusBadgeClass = 'badge-light-danger text-danger';
+                statusChipClass = 'cd-status-closed';
             }
             var statusColHtml = `
-                <div class="d-flex flex-column">
-                    <div>
-                        <span class="badge ${statusBadgeClass} fs-7 fw-bolder px-2 py-1" style="background:#dcfce7;color:#16a34a;">${statusPillText}</span>
-                    </div>
-                    <span class="text-muted fw-bold fs-7 mt-1">${jobId ? jobId + ' - Internal' : 'Internal'}</span>
+                <div class="cd-cell-subcard align-items-start">
+                    <span class="cd-status-chip ${statusChipClass}">${statusPillText}</span>
+                    <span class="cd-val-secondary mt-1">${jobId ? jobId + ' - Internal' : 'Internal'}</span>
                 </div>
             `;
 
-            // 9. Stage Column (Stage Pill: InReview in yellow pill, Private/childStatus gray)
+            // 9. Stage Sub-Card (Stage chip modal button)
             var stageName = row.child_status_name || row.master_status_name || row.name || 'InReview';
-            var stagePillStyle = 'background:#fef9c3;color:#854d0e;';
+            var stageChipStyle = 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
             if (stageName.toLowerCase().includes('offer')) {
-                stagePillStyle = 'background:#cffafe;color:#0e7490;';
+                stageChipStyle = 'background:#cffafe;color:#0e7490;border:1px solid #a5f3fc;';
             } else if (stageName.toLowerCase().includes('join')) {
-                stagePillStyle = 'background:#dcfce7;color:#16a34a;';
+                stageChipStyle = 'background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;';
             } else if (stageName.toLowerCase().includes('reject')) {
-                stagePillStyle = 'background:#fee2e2;color:#dc2626;';
+                stageChipStyle = 'background:#fee2e2;color:#dc2626;border:1px solid #fecdd3;';
             } else if (stageName.toLowerCase().includes('source')) {
-                stagePillStyle = 'background:#e0e7ff;color:#4338ca;';
+                stageChipStyle = 'background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;';
             }
 
             var subStageText = row.childStatus ? (row.child_status_name || 'Private') : 'Private';
             var stageColHtml = `
-                <div class="d-flex flex-column">
-                    <div>
-                        <a href="javascript:void(0);" class="badge fs-7 fw-bolder px-3 py-1 stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stagePillStyle}border-radius:4px;display:inline-block;">
-                            ${stageName}
-                        </a>
-                    </div>
-                    <span class="text-muted fw-bold fs-7 mt-1">${subStageText}</span>
+                <div class="cd-cell-subcard align-items-start">
+                    <a href="javascript:void(0);" class="cd-stage-chip stage_sub_stage" data-row-id="${cid}" data-toggle="modal" data-target="#stage_sub_stage" style="${stageChipStyle}">
+                        ${stageName}
+                    </a>
+                    <span class="cd-val-secondary mt-1">${subStageText}</span>
                 </div>
             `;
 
             return `
-                <tr data-candidate-id="${cid}" style="height: 72px;">
-                    <td class="w-25px">
+                <tr class="cd-cand-row-card" data-candidate-id="${cid}">
+                    <td class="w-30px pe-0">
                         <div class="form-check form-check-sm form-check-custom form-check-solid">
                             <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="${cid}" data-candidate-id="${cid}" data-jobId="${jobId}" data-wiseId="${cid}" />
                         </div>
@@ -5096,7 +5525,7 @@ use Carbon\Carbon;
         }
     });
 
-    function fetchJobsClient(page = 1, search = '', status = 'all') {
+    window.fetchJobsClient = function(page = 1, search = '', status = 'all') {
         $('.page-loader').css('display', 'flex');
         var activeStatus = status || window.currentJobStatusInternal || 'all';
         return $.ajax({
@@ -5114,21 +5543,26 @@ use Carbon\Carbon;
                 $('#paginationclientjobs').html(response.pagination);
 
                 if (response.kpi) {
-                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-val').text(response.kpi.hiring);
-                    $('a[href="#requisitions"] .badge').text(response.kpi.hiring);
+                    $('.cd-kpi-card[data-target-tab="#requisitions"] .cd-kpi-num').text(response.kpi.hiring);
+                    $('a[href="#requisitions"] .cd-tab-badge').text(response.kpi.hiring);
+                    $('#filterCountAll').text(response.kpi.total);
+                    $('#filterCountHiring').text(response.kpi.hiring);
+                    $('#filterCountHold').text(response.kpi.hold);
+                    $('#filterCountClosed').text(response.kpi.closed);
+                    $('#filterCountInactive').text(response.kpi.inactive);
                 }
             },
             error: function() {
                 $('.page-loader').css('display', 'none');
             }
         });
-    }
+    };
 
     // Internal Client Jobs Tab: Filter Button Interaction
-    $(document).on('click', '#clientJobsListajax .js-job-filter-btn', function() {
+    $(document).on('click', '.js-job-filter-btn', function() {
         var status = $(this).data('status') || 'all';
         window.currentJobStatusInternal = status;
-        $('#clientJobsListajax .js-job-filter-btn').removeClass('active');
+        $('.js-job-filter-btn').removeClass('active');
         $(this).addClass('active');
         fetchJobsClient(1, $('#inputJobSearch').val(), status);
     });
