@@ -234,4 +234,78 @@ class MultiCityWorkLocationDisplayTest extends TestCase
 
         $this->assertNotEquals($keyV1, $keyV2);
     }
+
+    public function test_popular_hub_chips_match_database_city_formats(): void
+    {
+        // Simulates the JS isCityMatch logic in PHP for testing
+        $matcher = function(string $item, string $canonical, string $label): bool {
+            $getVariants = function(string $raw): array {
+                $str = mb_strtolower(trim($raw));
+                $parts = preg_split('/[,|(]/', $str);
+                $primary = trim($parts[0] ?? '');
+                if ($primary === '') return [];
+
+                $variants = [$primary];
+                if (str_contains($primary, '/')) {
+                    foreach (explode('/', $primary) as $sub) {
+                        $sub = trim($sub);
+                        if ($sub !== '') $variants[] = $sub;
+                    }
+                }
+
+                $expanded = [];
+                $aliases = [
+                    'bangalore' => 'bengaluru',
+                    'bengaluru' => 'bengaluru',
+                    'gurgaon' => 'gurugram',
+                    'gurugram' => 'gurugram',
+                    'mumbai' => 'mumbai',
+                    'bombay' => 'mumbai',
+                    'poona' => 'pune',
+                    'pune' => 'pune',
+                ];
+                foreach ($variants as $v) {
+                    $expanded[] = $v;
+                    if (isset($aliases[$v])) $expanded[] = $aliases[$v];
+                    if (in_array($v, ['new york', 'new york city', 'nyc', 'ny'], true)) {
+                        $expanded = array_merge($expanded, ['new york', 'new york city', 'nyc', 'ny']);
+                    }
+                    if (in_array($v, ['delhi', 'new delhi', 'delhi ncr'], true)) {
+                        $expanded = array_merge($expanded, ['delhi', 'new delhi', 'delhi ncr']);
+                    }
+                }
+                return array_unique(array_filter($expanded));
+            };
+
+            $itemVariants = $getVariants($item);
+            $queryVariants = array_merge($getVariants($label), $getVariants($canonical));
+
+            return count(array_intersect($itemVariants, $queryVariants)) > 0;
+        };
+
+        // 1. Bengaluru pill vs Bangalore/Bengaluru from DB
+        $this->assertTrue(
+            $matcher('Bangalore/Bengaluru | Karnataka | India', 'Bengaluru, Karnataka, India', 'Bengaluru')
+        );
+
+        // 2. New York pill vs New York City from DB
+        $this->assertTrue(
+            $matcher('New York City | New York | America (USA)', 'New York City, New York, United States', 'New York')
+        );
+
+        // 3. Delhi NCR pill vs New Delhi from DB
+        $this->assertTrue(
+            $matcher('New Delhi | Delhi | India', 'New Delhi, Delhi, India', 'Delhi NCR')
+        );
+
+        // 4. Mumbai, Hyderabad, Pune, London, Singapore
+        $this->assertTrue($matcher('Mumbai | Maharashtra | India', 'Mumbai, Maharashtra, India', 'Mumbai'));
+        $this->assertTrue($matcher('Hyderabad | Telangana | India', 'Hyderabad, Telangana, India', 'Hyderabad'));
+        $this->assertTrue($matcher('Pune | Maharashtra | India', 'Pune, Maharashtra, India', 'Pune'));
+        $this->assertTrue($matcher('London | England | United Kingdom', 'London, England, United Kingdom', 'London'));
+        $this->assertTrue($matcher('Singapore | Central Singapore | Singapore', 'Singapore, Singapore', 'Singapore'));
+
+        // 5. Negative test: London should NOT match New York
+        $this->assertFalse($matcher('London | England | United Kingdom', 'New York City, New York, United States', 'New York'));
+    }
 }
